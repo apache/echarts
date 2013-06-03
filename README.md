@@ -1,117 +1,83 @@
-ZRender
+ECharts
 =======
-http://ecomfe.github.com/zrender
+http://ecomfe.github.com/echarts
 
-一个轻量级的Canvas类库，MVC封装，数据驱动，提供类Dom事件模型，让canvas绘图大不同！
+基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。创新的拖拽重计算、数据视图等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。
+
+**———— 大数据时代，重新定义数据图表的时候到了**
 
 Architecture
 ------------
-MVC核心封装实现图形仓库、视图渲染和交互控制：
-* Stroage(M) : shape数据CURD管理
-* Painter(V) : canvase元素生命周期管理，视图渲染，绘画，更新控制
-* Handler(C) : 事件交互处理，实现完整dom事件模拟封装
-* shape : 图形实体，分而治之的图形策略，可定义扩展
-* tool : 绘画扩展相关实用方法，工具及脚手架
+ECharts (Enterprise Charts 商业产品图表库)
 
-![ZRender Architecture](doc/asset/img/zrender.png)
+提供商业产品常用图表库，底层基于ZRender，创建了坐标系，图例，提示，工具箱等基础组件，并在此上构建出折线图（区域图）、柱状图（条状图）、饼图（环形图），同时支持任意维度的堆积和多图表混合展现。
+
+<img src="doc/asset/img/device.png" />
+<img src="doc/asset/img/explorer.png" />
+<i>(IE8- supported by <a href="https://code.google.com/p/explorercanvas/" target="_blank">excanvas</a> )</i>
+
+![ECharts Architecture](doc/asset/img/architecture.png)
 
 特色
 ----
-### 简单
-无需canvas基础，精简的接口方法，符合AMD标准，易学易用。
+### 混搭
+标准图库支持3种基本图表类型及其任意混搭：
 
-    require(
-        ['zrender/zrender'],
-        function(zrender) {
-            // just init to get a zrender Instance
-            var zr = zrender.init(document.getElementById('main'));
-            // zr can be used now!
-            ...
-        }
-    );
+折线图line（包含区域图）、柱状图bar（包含横向条状图）、饼图pie。（散点图scatter、雷达图radar，暂不提供）
 
-### 数据驱动
-利用zrender绘图，你只需做的是定义图形数据，剩下的事情就交给zrender吧~
+混搭情况下一个标准图表：包含唯一图例模块，一个直角坐标系（可包含一条或多条类目轴线，一条或多条值轴线，最多上下左右四条）
 
-哦，对了，差点忘记告诉你，只要在你定义图形数据时设置draggable属性为true，图形拖拽就已经可用了！
+![ECharts 混搭](doc/asset/img/mix.jpg)
 
-    zr.addShape({
-        shape : 'circle',
-        style : {
-            x : 100, 
-            y : 100, 
-            r : 50, 
-            color : 'rgba(220, 20, 60, 0.8)'
-        }
-    });
-    zr.render();
-    
-### 完整的事件封装
-用你再熟悉不过的dom事件模型去操作canvas里的图形元素是件很cool的事情~
+### 拖拽重计算
+拖拽重计算特性（已申请专利）带来了数据统计图表从未有过的用户体验，允许用户对统计数据进行有效的提取、整合，甚至在多个图表间交换数据，赋予了用户对数据进行挖掘、整合的能力。
 
-你不仅可以响应zrender全局事件，你甚至可以为在特定shape上添加特定事件，后续发生的一切都会按你想的那样去运行~
+![ECharts 拖拽重计算](doc/asset/img/draggable.gif)
 
-    zr.addShape({
-    shape : 'circle',
-    style : {...},
-        // 图形元素上绑定事件
-        onmouseover : function(params) {concole.log('catch you!')}
-    });
-    
-    // 全局事件
-    zr.on('click', function(params) {alert('Hello, zrender!')});
-    
-### 高效的分层刷新
-正如css中zlevel的作用一样，你可以定义把不同的shape分别放在不同的层中，这不仅实现了视觉上的上下覆盖，
-更重要的是当图形元素发生变化后的refresh将局限在发生了变化的图形层中，这在你利用zrender做各种动画效果时将十分有用，
-性能自然也更加出色~
+### 数据视图
+如果你所呈现的数据足够让用户所关心，那么他们将不满足于查看可视化的图表，要去逐一迎合他们下载保存，数据分享，加工整合已有数据等等需求？
 
-    zr.addShape(shapeA);    // shapeA.zlevel = 0; (default) 
-    zr.addShape(shapeB);    // shapeB.zlevel = 1;
-    zr.render();
-    
-    zr.modShape(shapeB.id, {color:'red'}); 
-    // Don't worry! Is merge!
-    
-    zr.refresh();  
-    // Just the level 1 canvas has been refresh~
-    
-### 丰富的图形选项
-当前内置多种图形元素（圆形、椭圆、圆环、扇形、矩形、多边形、直线、曲线、心形、水滴、路径、文字、图片。Will be more..），统一且丰富的图形属性充分满足你的个性化需求！
+或许你只要给予一个“,”分隔的数据文本他们就懂了，这就是ECharts的数据视图！当然，你可以重载数据视图的输出方法，用你独特的方式去呈现数据。
 
-    var myShape = {
-        shape : 'circle',   // sector | ring | rectangle | ...
-        zlevel : 1,
-        style : {
-            ... // color | strokeColor | text | textFont | ... 
-        },
-        draggable : true
-    };
+如果你的用户足够的高端，你甚至可以打开数据视图的编辑功能，跟拖拽重计算相比，这可是批量的数据修改！
 
-### 强大的动画支持
-提供promise式的动画接口和常用缓动函数，轻松实现各种动画需求~
+![ECharts 数据视图](doc/asset/img/dataView.gif)
 
-    function MyShape() { ... }
+### 动态类型切换
+很多图表类型本身所表现的能力是相似的，但由于数据差异、表现需求和个人喜好的不同导致最终图表所呈现的张力又大不一样，比如折线图和柱状图的选择总是让人头疼。
 
-    var shape = require('zrender/shape');
-    shape.define('myShape', new MyShape());     // define your shape
+ECharts提供了动态类型切换，让用户随心所欲的切换到他所需要的图表类型。
 
-    zr.addShape({                               // and use it!
-        shape : 'myShape',
-        ...
-    });
-    
-### 易于扩展
-分而治之的图形定义策略允许你扩展自己独有的图形元素，你既可以完整实现三个接口方法（brush、drift、isCover），
-也可以通过base派生后仅实现你所关心的图形细节。
+![ECharts 动态类型切换](doc/asset/img/magicType.gif)
 
-    function MyShape() { ... }
+### 图例开关
+ECharts提供了方便快捷的图例开关，可以随时切换到你所关心的数据系列。
 
-    var shape = require('zrender/shape');
-    shape.define('myShape', new MyShape());     // define your shape
-    
-    zr.addShape({                               // and use it!
-        shape : 'myShape',
-        ...
-    });
-    
+![ECharts 图例开关](doc/asset/img/legendSelected.gif)
+
+### 数据区域选择
+数据可以是无限的，但显示空间总是有限的，数据区域选择组件提供了大数据量中漫游的能力，让用户选择并呈现他所关心的数据区域。
+
+![ECharts 数据区域选择](doc/asset/img/datazoom.gif)
+
+### 标线辅助
+趋势线？平均线？未来走势？修正值？有需求用户自然知道用意~
+
+提供标线辅助在K线图中可是必要的功能！是的，K线图我们正在开发中~
+
+![ECharts 标线辅助](doc/asset/img/mark.gif)
+
+### 多维度堆积
+支持多系列，多维度的数据堆积，配合自动伸缩的图形实体和直角坐标系，能呈现出更有内涵的统计图表~
+
+![ECharts 多维度堆积](doc/asset/img/multiStack.png)
+
+### 个性化定制
+近300个可配置选项结合多级控制设计满足高度定制的个性化需求。
+
+![ECharts 个性化定制](doc/asset/img/custom.png)
+
+### 事件交互
+可以捕获的用户交互和数据变化事件实现图表与外界的联动。
+
+<a href="doc/example/event.html" target="_blank">try this &raquo;</a>

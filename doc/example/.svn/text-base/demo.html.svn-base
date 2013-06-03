@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+
+    <script src="../asset/js/esl/esl.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+</head>
+
+<body>
+    <!-- NAVBAR
+    ================================================== -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="../../index.html">ECharts</a>
+          <div class="nav-collapse collapse">
+              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
+              <ul class="nav">
+                <li><a href="../../index.html"><i class="icon-home icon-white"></i> Home</a></li>
+                <li class="active"><a href="../example.html" class="active">Example</a></li>
+                <li><a href="../doc.html" >API &amp; Doc</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="https://github.com/ecomfe/echarts/archive/1.0.0.zip">ZIP (1.0.0)</a></li>
+                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
+                  </ul>
+                </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
+                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
+                    <li class="divider"></li>
+                    <!--li class="nav-header">Library</li-->
+                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
+                    <li><a href="http://tangram.baidu.com/" target="_blank">Tangram</a></li>
+                  </ul>
+                </li>
+              </ul>
+           </div><!--/.nav-collapse -->
+        </div><!-- /.container -->
+      </div><!-- /.navbar-inner -->
+    </div><!-- /.navbar-wrapper -->
+
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div id="sidebar-code" class="span4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+option = {
+    // color : []
+    tooltip : {
+        // show : true,        // default : true
+        trigger: 'axis',
+        borderWidth : 1,
+        borderColor : 'yellow',
+        padding : [8,12],
+        textStyle : {
+            color : '#eee',
+            fontSize : '16',
+            fontWeight:'blod',
+            fontFamily:'微软雅黑'
+        },
+        formatter: "Template : <br/>{b}<br/>{a}:{c}<br/>{a1}:{c1}<br/>{a2}:{c2}",
+        formatter: function(params) {
+            var res = 'Function : <br/>' + params[0][1];
+            for (var i = 0, l = params.length; i < l; i++) {
+                res += '<br/>' + params[i][0] + ' : ' + params[i][2];
+            }
+            return res;
+        }
+    },
+    legend: {
+        // orient : 'vertical',
+        // x : 'right',
+        borderWidth:0,
+        padding:[5,5],
+        //data:['Kener','Amy','apple','orange','peach','banana'],
+        data:['serie1','serie2','serie3','serie4']
+    },
+    grid : {
+        //x : 50,
+        //y : 30,
+        //width : 600,
+        //height : 320
+    },
+    xAxis : [
+        {
+            type : 'category',
+            position:'bottom',
+            // axisTick : {show:true, lineStyle:{color:'red'}},
+            // splitLine : {show:false},
+            // splitArea : {show:false, areaStyle:{color:['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']}},
+            data : ['2012-02-01','2012-02-02','2012-02-03','2012-02-04','2012-02-05']
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value',
+            position:'left'
+        }
+    ],
+    series : [
+        {
+            name:'serie1',
+            type:'line',
+            itemStyle: {normal: {areaStyle: {color: 'rgba(144, 238, 144, 0.3)'}}},
+            data:[1,2,8,{value:20,tooltip : {trigger: 'item'}}]
+        },
+        {
+            name:'serie2',
+            stack: 'stack1',
+            type:'line',
+            itemStyle: {normal: {areaStyle: {color: 'rgba(98, 130, 10, 0.3)'}}},
+            data:[12,20,'-', 15, 9]
+        },
+        {
+            name:'serie3',
+            stack: 'stack1',
+            type:'line',
+            itemStyle: {normal: {areaStyle: {color: 'rgba(170, 130, 180, 0.3)'}}},
+            data:[13,3,33,9,7]
+        },
+        {
+            name:'serie4',
+            type:'line',
+            itemStyle: {normal: {areaStyle: {color: 'rgba(70, 30, 180, 0.3)'}}},
+            data:[4,14,3,6,4]
+        },
+        /*
+        {
+            name:'fruit',
+            type:'pie',
+            radius : [80, 120],
+            center: [400,200],
+            data:[
+                {value:10, name:'apple'},
+                {value:34, name:'orange'},
+                {value:35, name:'peach'},
+                {value:48, name:'banana'}
+            ]
+        },
+        {
+            name:'people',
+            type:'pie',
+            radius : [20, 60],
+            center: [400,200],
+            itemStyle :　{
+                normal : {
+                    label : {
+                        position:'inner'
+                    },
+                    labelLine : {
+                        show : false
+                    }
+                }
+            },
+            data:[
+                {value:12, name:'Kener'},
+                {value:24, name:'Amy'},
+                {value:35, name:'Lily'},
+                {value:48, name:'Eric'}
+            ]
+        }
+        */
+    ]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="span8">
+                <div id="main" class="main"></div>
+                <div>
+                    <button onclick="refresh(true)">Refresh ~</button>
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        <hr>
+        <!-- FOOTER -->
+        <footer>
+          <p class="pull-right"><a href="#">Back to top</a></p>
+          <p>&copy; 2013 Ecom-FE. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
+        </footer>
+    </div><!--/.fluid-container-->
+
+    <script src="../asset/js/jquery.js"></script>
+    <script src="../asset/js/bootstrap-transition.js"></script>
+    <script src="../asset/js/bootstrap-alert.js"></script>
+    <script src="../asset/js/bootstrap-modal.js"></script>
+    <script src="../asset/js/bootstrap-dropdown.js"></script>
+    <script src="../asset/js/bootstrap-scrollspy.js"></script>
+    <script src="../asset/js/bootstrap-tab.js"></script>
+    <script src="../asset/js/bootstrap-tooltip.js"></script>
+    <script src="../asset/js/bootstrap-popover.js"></script>
+    <script src="../asset/js/bootstrap-button.js"></script>
+    <script src="../asset/js/bootstrap-collapse.js"></script>
+    <script src="../asset/js/bootstrap-carousel.js"></script>
+    <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>
