@@ -1,0 +1,14 @@
+{
+    "name": "echarts",
+    "description": "Enterprise Charts，基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。",
+    "version": "1.0.0",
+    "maintainers": [
+        { "name": "Kener", "email": "linzhifeng@baidu.com" }
+    ],
+    "dependencies": {
+        "zrender": "~1.0.0"
+    },
+    "repository": "git://github.com/ecomfe/echarts",
+    "main": "echarts",
+    "homepage": "http://ecomfe.github.com/echarts"
+}
