@@ -591,6 +591,17 @@ define(function (require) {
             hideDataView();
         }
 
+        function resize() {
+            _resetMark();
+            self.clear();
+            if (option.toolbox.show) {
+               _buildShape();
+           }
+           if (_dataView) {
+               _dataView.resize();
+           }
+        }
+
         function hideDataView() {
             if (_dataView) {
                 _dataView.hide();
@@ -614,6 +625,7 @@ define(function (require) {
         self.dispose = dispose;
 
         self.render = render;
+        self.resize = resize;
         self.hideDataView = hideDataView;
         self.getMagicOption = getMagicOption;
         self.resetMagicType = resetMagicType;

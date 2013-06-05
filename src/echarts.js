@@ -627,8 +627,11 @@ define(function(require) {
             // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
             // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
+                _chartList[i].resize && _chartList[i].resize();
                 _chartList[i].refresh && _chartList[i].refresh();
             }
+            _island.resize();
+            _toolbox.resize();
             _zr.refresh();
         }
 
