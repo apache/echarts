@@ -371,6 +371,10 @@ define(function (require) {
                                + 'height:' + _zrHeight + 'px;'
                                + 'background-color:#fff;';
                 _tDom.style.cssText = _gCssText + _sizeCssText;
+                _textArea.style.cssText = 'display:block;margin:0 0 8px 0;'
+                                        + 'padding:4px 6px;overflow:auto;'
+                                        + 'width:' + (_zrWidth - 15) + 'px;'
+                                        + 'height:' + (_zrHeight - 100) + 'px;';
             }
         }
 

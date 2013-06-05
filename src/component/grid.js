@@ -61,7 +61,7 @@ define(function (require) {
                 _height = gridOption.height;
             }
 
-            zr.addShape({
+            self.shapeList.push({
                 shape : 'rectangle',
                 id : zr.newShapeId('grid'),
                 zlevel : _zlevelBase,
@@ -78,6 +78,7 @@ define(function (require) {
                     // type : option.splitArea.areaStyle.type,
                 }
             });
+            zr.addShape(self.shapeList[0]);
         }
 
         function getX() {
@@ -112,6 +113,12 @@ define(function (require) {
                 height : _height
             };
         }
+
+        function refresh() {
+            self.clear();
+            init(option);
+        }
+
         self.init = init;
         self.getX = getX;
         self.getY = getY;
@@ -120,6 +127,7 @@ define(function (require) {
         self.getXend = getXend;
         self.getYend = getYend;
         self.getArea = getArea;
+        self.refresh = refresh;
 
         init(option);
     }
