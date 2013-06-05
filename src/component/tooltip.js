@@ -595,14 +595,6 @@ define(function (require) {
         }
 
         /**
-         * zrender事件响应：窗口大小改变
-         */
-        function _onresize() {
-            _zrHeight = zr.getHeight();
-            _zrWidth = zr.getWidth();
-        }
-
-        /**
          * zrender事件响应：鼠标移动
          */
         function _onmousemove(param) {
@@ -708,12 +700,19 @@ define(function (require) {
         }
 
         /**
+         * zrender事件响应：窗口大小改变
+         */
+        function resize() {
+            _zrHeight = zr.getHeight();
+            _zrWidth = zr.getWidth();
+        }
+
+        /**
          * 释放后实例不可用，重载基类方法
          */
         function dispose() {
             clearTimeout(_hidingTicket);
             clearTimeout(_showingTicket);
-            zr.un(zrConfig.EVENT.RESIZE, _onresize);
             zr.un(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
 
             if (self.hasAppend) {
@@ -726,13 +725,13 @@ define(function (require) {
             self = null;
         }
 
-        zr.on(zrConfig.EVENT.RESIZE, _onresize);
         zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
 
         // 重载基类方法
         self.dispose = dispose;
 
         self.init = init;
+        self.resize = resize;
         self.setComponent = setComponent;
         init(option, dom);
     }

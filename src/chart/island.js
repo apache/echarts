@@ -33,6 +33,8 @@ define(function (require) {
         var _zlevelBase = self.getZlevelBase();
         var _nameConnector;
         var _valueConnector;
+        var _zrHeight = zr.getHeight();
+        var _zrWidth = zr.getWidth();
 
         /**
          * 孤岛合并
@@ -68,6 +70,29 @@ define(function (require) {
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 zr.addShape(self.shapeList[i]);
+            }
+        }
+
+        function resize() {
+            var newWidth = zr.getWidth();
+            var newHieght = zr.getHeight();
+            var xScale = newWidth / (_zrWidth || newWidth);
+            var yScale = newHieght / (_zrHeight || newHieght);
+            if (xScale == 1 && yScale == 1) {
+                return;
+            }
+            _zrWidth = newWidth;
+            _zrHeight = newHieght;
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                zr.modShape(
+                    self.shapeList[i].id,
+                    {
+                        style: {
+                            x: Math.round(self.shapeList[i].style.x * xScale),
+                            y: Math.round(self.shapeList[i].style.y * yScale)
+                        }
+                    }
+                );
             }
         }
 
@@ -201,6 +226,7 @@ define(function (require) {
         };
 
         self.render = render;
+        self.resize = resize;
         self.add = add;
         self.del = del;
         self.ondrop = ondrop;
