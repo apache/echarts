@@ -347,6 +347,11 @@ myChart.setOption(option);
                             <td>过渡控制，隐藏loading（读取中） </td>
                         </tr>
                         <tr>
+                            <td>{void} resize</td>
+                            <td>{void}</td>
+                            <td>ECharts没有绑定resize事件，显示区域大小发生改变内部并不知道，使用方可以根据自己的需求绑定关心的事件，主动调用resize达到区域更新的效果。</td>
+                        </tr>
+                        <tr>
                             <td>{void} clear</td>
                             <td>{void}</td>
                             <td>清空绘画内容，清空后实例可用 </td>
