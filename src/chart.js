@@ -36,6 +36,8 @@ define(function(require) {    //chart
     self.define('bar', require('./chart/bar'));
 
     self.define('line', require('./chart/line'));
+    
+    self.define('map', require('./chart/map'));
 
     return self;
 });

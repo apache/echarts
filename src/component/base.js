@@ -34,6 +34,7 @@ define(function(require) {
                 case ecConfig.CHART_TYPE_SCATTER :
                 case ecConfig.CHART_TYPE_PIE :
                 case ecConfig.CHART_TYPE_RADAR :
+                case ecConfig.CHART_TYPE_MAP :
                     return 2;
 
                 case ecConfig.COMPONENT_TYPE_LEGEND :

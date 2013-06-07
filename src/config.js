@@ -15,6 +15,7 @@ define(function() {
         CHART_TYPE_SCATTER: 'scatter',
         CHART_TYPE_PIE: 'pie',
         CHART_TYPE_RADAR: 'radar',
+        CHART_TYPE_MAP: 'map',
         CHART_TYPE_ISLAND: 'island',
 
         // 组件类型
@@ -303,6 +304,44 @@ define(function() {
                             // color: 各异,
                             width: 1,
                             style: 'solid'
+                        }
+                    }
+                }
+            }
+        },
+        
+        map: {
+            mapType: 'china',
+            itemStyle: {
+                normal: {
+                    // color: 各异,
+                    lineStyle: {
+                        width: 2,
+                        color: '#fff'
+                    },
+                    areaStyle: {
+                        color: 'rgba(135,206,250,0.8)'
+                    },
+                    label: {
+                        show: false,
+                        textStyle: {
+                            color: 'rgba(139,69,19,1)'
+                        }
+                    }
+                },
+                emphasis: {                 // 也是选中样式
+                    // color: 各异,
+                    lineStyle: {
+                        width: 2,
+                        color: '#fff'
+                    },
+                    areaStyle: {
+                        color: 'rgba(255,215,0,0.8)'
+                    },
+                    label: {
+                        show: false,
+                        textStyle: {
+                            color: 'rgba(139,69,19,1)'
                         }
                     }
                 }
