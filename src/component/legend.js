@@ -181,6 +181,7 @@ define(function (require) {
             var itemGap = legendOption.itemGap;
             var itemWidth = legendOption.itemWidth + 5; // 5px是图形和文字的间隔，不可配
             var itemHeight = legendOption.itemHeight;
+            var font = self.getFont(legendOption.textStyle);
             var totalWidth = 0;
             var totalHeight = 0;
 
@@ -190,7 +191,7 @@ define(function (require) {
                     totalWidth += itemWidth
                                   + zrArea.getTextWidth(
                                         data[i],
-                                        self.getFont()
+                                        font
                                     )
                                   + itemGap;
                 }
@@ -207,7 +208,7 @@ define(function (require) {
                         maxWidth,
                         zrArea.getTextWidth(
                             data[i],
-                            self.getFont()
+                            font
                         )
                     );
                 }
@@ -338,7 +339,7 @@ define(function (require) {
                         zlevel : _zlevelBase,
                         style : {
                             x : x,
-                            y : y,
+                            y : y + 1,
                             width : width,
                             height : height - 2,
                             color : color
@@ -356,19 +357,6 @@ define(function (require) {
                 param.event,
                 {selected : _selectedMap}
             );
-        }
-
-        /**
-         * 清除图形数据，实例仍可用，重载基类方法
-         */
-        function clear() {
-            //_colorIndex = 0;
-            //_colorMap = {};
-
-            for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                zr.delShape(self.shapeList[i].id);
-            }
-            self.shapeList = [];
         }
 
         function init(newOption) {
@@ -472,9 +460,6 @@ define(function (require) {
                 return true;
             }
         }
-
-        // 重载基类方法
-        self.clear = clear;
 
         self.init = init;
         self.refresh = refresh;

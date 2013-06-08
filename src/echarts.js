@@ -71,6 +71,9 @@ define(function(require) {
                 ecConfig.EVENT.DATA_VIEW_CHANGED, _ondataViewChanged
             );
             _messageCenter.bind(
+                ecConfig.EVENT.RESTORE, _onrestore
+            );
+            _messageCenter.bind(
                 ecConfig.EVENT.REFRESH, _onrefresh
             );
 
@@ -236,15 +239,9 @@ define(function(require) {
                     param.event,
                     _eventPackage(param.target)
                 );
-                // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
-                // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
-                for (var i = 0, l = _chartList.length; i < l; i++) {
-                    _chartList[i].refresh && _chartList[i].refresh();
-                }
-                _zr.refresh();
+                _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
             }
         }
-
 
         function _onlegendSelected(param) {
             // 用于图表间通信
@@ -257,10 +254,7 @@ define(function(require) {
             _selectedMap = param.selected;
 
             if (_status.needRefresh) {
-                for (var i = 0, l = _chartList.length; i < l; i++) {
-                    _chartList[i].refresh && _chartList[i].refresh();
-                }
-                _zr.refresh();
+                _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
             }
         }
 
@@ -274,10 +268,7 @@ define(function(require) {
             }
 
             if (_status.needRefresh) {
-                for (var i = 0, l = _chartList.length; i < l; i++) {
-                    _chartList[i].refresh && _chartList[i].refresh();
-                }
-                _zr.refresh();
+                _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
             }
         }
 
@@ -321,12 +312,13 @@ define(function(require) {
             _messageCenter.dispatch(
                 ecConfig.EVENT.DATA_CHANGED
             );
-            for (var i = 0, l = _chartList.length; i < l; i++) {
-                _chartList[i].refresh && _chartList[i].refresh();
-            }
-            _zr.refresh();
+            _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
         }
 
+        function _onrestore() {
+            _restore();
+        }
+        
         function _onrefresh() {
             _refresh();
         }
@@ -368,6 +360,16 @@ define(function(require) {
                     _messageCenter, _zr, magicOption, _selectedMap
                 );
                 _chartList.push(legend);
+            }
+            
+            // 色尺
+            var dataRange;
+            if (magicOption.dataRange) {
+                var DataRange = new componentLibrary.get('dataRange');
+                dataRange = new DataRange(
+                    _messageCenter, _zr, magicOption
+                );
+                _chartList.push(dataRange);
             }
 
             var grid;
@@ -439,6 +441,7 @@ define(function(require) {
                             {
                                 'tooltip' : tooltip,
                                 'legend' : legend,
+                                'dataRange' : dataRange,
                                 'grid' : grid,
                                 'xAxis' : xAxis,
                                 'yAxis' : yAxis
@@ -463,13 +466,22 @@ define(function(require) {
             _zr.render();
         }
 
-        function _refresh() {
+        function _restore() {
             var zrUtil = require('zrender/tool/util');
             _selectedMap = {};
             _option = zrUtil.clone(_optionBackup);
             _island.clear();
             _toolbox.resetMagicType(_option);
             _render(_option);
+        }
+        
+        function _refresh() {
+            // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
+            // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
+            for (var i = 0, l = _chartList.length; i < l; i++) {
+                _chartList[i].refresh && _chartList[i].refresh();
+            }
+            _zr.refresh();
         }
         /**
          * 释放图表实例

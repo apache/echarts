@@ -20,6 +20,7 @@ define(function() {
 
         // 组件类型
         COMPONENT_TYPE_LEGEND: 'legend',
+        COMPONENT_TYPE_DATARANGE: 'dataRange',
         COMPONENT_TYPE_DATAVIEW: 'dataView',
         COMPONENT_TYPE_DATAZOOM: 'dataZoom',
         COMPONENT_TYPE_TOOLBOX: 'toolbox',
@@ -59,6 +60,35 @@ define(function() {
             itemHeight: 14,            // 图例图形高度，非标准参数
             textStyle: {
                 color: '#333'          // 图例文字颜色
+            }
+        },
+        
+        // 色尺
+        dataRange: {
+            orient: 'vertical',        // 布局方式，默认为垂直布局，可选为：
+                                       // 'horizontal' ¦ 'vertical'
+            x: 'left',                 // 水平安放位置，默认为全图左对齐，可选为：
+                                       // 'center' ¦ 'left' ¦ 'right'
+                                       // ¦ {number}（x坐标，单位px）
+            y: 'bottom',               // 垂直安放位置，默认为全图底部，可选为：
+                                       // 'top' ¦ 'bottom' ¦ 'center'
+                                       // ¦ {number}（y坐标，单位px）
+            backgroundColor: 'rgba(0,0,0,0)',
+            borderColor: '#ccc',       // 色尺边框颜色
+            borderWidth: 0,            // 色尺边框线宽，单位px，默认为0（无边框）
+            padding: 5,                // 色尺内边距，单位px，默认各方向内边距为5，
+                                       // 接受数组分别设定上右下左边距，同css
+            itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
+                                       // 横向布局时为水平间隔，纵向布局时为纵向间隔
+            itemWidth: 20,             // 色尺图形宽度，非标准参数
+            itemHeight: 14,            // 色尺图形高度，非标准参数
+            // min: null,              // 最小值
+            // max: null,              // 最大值
+            splitNumber: 5,            // 分割段数，默认为5
+            color:['#4169e1','#e0ffff'],//颜色 
+            //text:['高','低'],           // 文本，默认为数值文本
+            textStyle: {
+                color: '#333'          // 色尺文字颜色
             }
         },
 
@@ -320,7 +350,7 @@ define(function() {
                         color: '#fff'
                     },
                     areaStyle: {
-                        color: 'rgba(135,206,250,0.8)'
+                        color: '#ccc'//rgba(135,206,250,0.8)
                     },
                     label: {
                         show: false,
@@ -363,6 +393,7 @@ define(function() {
 
         EVENT: {
             REFRESH: 'refresh',
+            RESTORE: 'restore',
             CLICK: 'click',
             HOVER: 'hover',
             // -------

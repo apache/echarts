@@ -38,6 +38,7 @@ define(function(require) {
                     return 2;
 
                 case ecConfig.COMPONENT_TYPE_LEGEND :
+                case ecConfig.COMPONENT_TYPE_DATARANGE:
                 case ecConfig.COMPONENT_TYPE_DATAZOOM :
                     return 4;
 

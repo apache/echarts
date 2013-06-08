@@ -41,6 +41,8 @@ define(function(require) {    //component
     self.define('dataZoom', require('./component/dataZoom'));
 
     self.define('legend', require('./component/legend'));
+    
+    self.define('dataRange', require('./component/dataRange'));
 
     self.define('tooltip', require('./component/tooltip'));
 

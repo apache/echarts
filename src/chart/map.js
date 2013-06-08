@@ -18,6 +18,9 @@ define(function(require) {
         // 基类装饰
         var ComponentBase = require('../component/base');
         ComponentBase.call(this, zr);
+        // 可计算特性装饰
+        var CalculableBase = require('./calculableBase');
+        CalculableBase.call(this, zr, option);
 
         var ecConfig = require('../config');
         var ecData = require('../util/ecData');
@@ -37,7 +40,7 @@ define(function(require) {
             
             var legend = component.legend;
             var seriesName;
-            var mapData = {};
+            var valueData = {};
             var mapType;
             var data;
             var name;
@@ -54,32 +57,32 @@ define(function(require) {
                         data = series[i].data;
                         for (var j = 0, k = data.length; j < k; j++) {
                             name = data[j].name;
-                            mapData[name] = mapData[name] 
+                            valueData[name] = valueData[name] 
                                 || {
                                     value: 0,
                                     seriesIndex : []
                                 };
                             for (var key in data[j]) {
                                 if (key != 'value') {
-                                    mapData[name][key] = data[j][key];
+                                    valueData[name][key] = data[j][key];
                                 }
                                 else {
                                     if (!isNaN(data[j].value)) {
-                                        mapData[name].value += data[j].value;
+                                        valueData[name].value += data[j].value;
                                     }
                                 }
                             }
-                            //索引最后一个有改区域的系列样式
-                            mapData[name].seriesIndex.push(i);
+                            //索引有该区域的系列样式
+                            valueData[name].seriesIndex.push(i);
                         }
                     }
                 }
             }
             
-            console.log(mapData)
+//            console.log(valueData)
             switch (mapType) {
                 case 'china':
-                    _buildMapOfChina(mapData);
+                    _buildMap(_getMapDataOfChina(), valueData);
                     break;
             }
 
@@ -89,9 +92,13 @@ define(function(require) {
             }
         }
         
-        function _buildMapOfChina(mapData) {
+        function _getMapDataOfChina() {
             var province = require('../util/mapData/china');
-            var valueLegend = component.valueLegend;
+            return province;
+        }
+        
+        function _buildMap(mapData, valueData) {
+            var dataRange = component.dataRange;
             var seriesName;
             var name;
             var data;
@@ -103,11 +110,11 @@ define(function(require) {
             var highlightStyle;
             
             var shape;
-            for (var i = 0, l = province.length; i < l; i++) {
-                style = zrUtil.clone(province[i]);
+            for (var i = 0, l = mapData.length; i < l; i++) {
+                style = zrUtil.clone(mapData[i]);
                 highlightStyle = {};
                 name = style.text;
-                data = mapData[name];
+                data = valueData[name];
                 if (data) {
                     queryTarget = [data];
                     seriesName = '';
@@ -125,8 +132,8 @@ define(function(require) {
                 }
                 
                 style.brushType = 'both';
-                style.color = valueLegend && !isNaN(value)
-                    ? valueLegend.getColor(value)
+                style.color = dataRange && !isNaN(value)
+                    ? dataRange.getColor(value)
                     : self.deepQuery(
                         queryTarget,
                         'itemStyle.normal.areaStyle.color'
@@ -223,14 +230,8 @@ define(function(require) {
             _buildShape();
         }
 
-        function onclick(param) {
-            console.log(param)
-        }
-
-
         self.init = init;
         self.refresh = refresh;
-        self.onclick = onclick;
         
         init(option, component);
     }

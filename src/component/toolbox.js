@@ -418,7 +418,7 @@ define(function (require) {
 
         function _onRefresh(){
             _resetMark();
-            messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+            messageCenter.dispatch(ecConfig.EVENT.RESTORE);
             return true;
         }
 
