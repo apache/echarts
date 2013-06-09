@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -77,11 +77,20 @@ option = {
     },
     dataRange: {
         min: 0,
-        max: 2000
         //orient: 'horizontal', // 'vertical'
-       // backgroundColor: '#eee',
+        //x: 'right', // 'center' | 'left' | {number},
+        //y: 'top', // 'center' | 'top' | {number}
+        //backgroundColor: '#eee',
         //borderColor: 'rgba(178,34,34,0.8)',
-       // borderWidth: 4,
+        //borderWidth: 4,
+        //padding: 10,    // [5, 10, 15, 20]
+        //itemGap: 5,
+        //textStyle: {color: 'red'},
+        splitNumber: 0,            // 分割段数，默认为5
+        color:['red','yellow'],//颜色 
+        //text:['高','低'],           // 文本，默认为数值文本
+        calculable : true,
+        max: 2000
     },
     toolbox: {
         show : true,

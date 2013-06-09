@@ -63,7 +63,7 @@ define(function() {
             }
         },
         
-        // 色尺
+        // 值域
         dataRange: {
             orient: 'vertical',        // 布局方式，默认为垂直布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
@@ -80,11 +80,14 @@ define(function() {
                                        // 接受数组分别设定上右下左边距，同css
             itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
-            itemWidth: 20,             // 色尺图形宽度，非标准参数
-            itemHeight: 14,            // 色尺图形高度，非标准参数
+            itemWidth: 20,             // 色尺图形宽度，线性渐变水平布局宽度为该值 * 10
+            itemHeight: 14,            // 色尺图形高度，线性渐变垂直布局高度为该值 * 10
+            precision: 0,              // 小数精度，默认为0，无小数点
             // min: null,              // 最小值
             // max: null,              // 最大值
-            splitNumber: 5,            // 分割段数，默认为5
+            splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变
+            calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
+            realtime: true,
             color:['#4169e1','#e0ffff'],//颜色 
             //text:['高','低'],           // 文本，默认为数值文本
             textStyle: {
@@ -399,6 +402,7 @@ define(function() {
             // -------
             DATA_CHANGED: 'dataChanged',
             DATA_ZOOM: 'dataZoom',
+            DATA_RANGE: 'dataRange',
             LEGEND_SELECTED: 'legendSelected',
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',
             DATA_VIEW_CHANGED: 'dataViewChanged'

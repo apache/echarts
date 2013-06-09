@@ -79,7 +79,6 @@ define(function(require) {
                 }
             }
             
-//            console.log(valueData)
             switch (mapType) {
                 case 'china':
                     _buildMap(_getMapDataOfChina(), valueData);
@@ -98,6 +97,7 @@ define(function(require) {
         }
         
         function _buildMap(mapData, valueData) {
+            var legend = component.legend;
             var dataRange = component.dataRange;
             var seriesName;
             var name;
@@ -121,6 +121,23 @@ define(function(require) {
                     for (var j = 0, k = data.seriesIndex.length; j < k; j++) {
                         queryTarget.push(series[data.seriesIndex[j]]);
                         seriesName += series[data.seriesIndex[j]].name + ' ';
+                        if (legend 
+                            && legend.hasColor(series[data.seriesIndex[j]].name)
+                        ) {
+                            self.shapeList.push({
+                                shape : 'circle',
+                                zlevel : _zlevelBase + 1,
+                                style : {
+                                    x : style.textX + 3 + j * 7,
+                                    y : style.textY - 10,
+                                    r : 3,
+                                    color : legend.getColor(
+                                        series[data.seriesIndex[j]].name
+                                    )
+                                },
+                                hoverable : false
+                            });
+                        }
                     }
                     queryTarget.push(defaultOption);
                     value = data.value;
@@ -229,9 +246,18 @@ define(function(require) {
             self.clear();
             _buildShape();
         }
+        
+        function ondataRange(param, status) {
+            if (component.dataRange) {
+                refresh();
+                status.needRefresh = true;
+            }
+            return;
+        }
 
         self.init = init;
         self.refresh = refresh;
+        self.ondataRange = ondataRange;
         
         init(option, component);
     }

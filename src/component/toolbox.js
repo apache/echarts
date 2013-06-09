@@ -241,6 +241,7 @@ define(function (require) {
                     break;
                 default :
                     x = toolboxOption.x - 0;
+                    x = isNaN(x) ? 0 : x;
                     break;
             }
 
@@ -261,6 +262,7 @@ define(function (require) {
                     break;
                 default :
                     y = toolboxOption.y - 0;
+                    y = isNaN(y) ? 0 : y;
                     break;
             }
 

@@ -65,6 +65,9 @@ define(function(require) {
                 ecConfig.EVENT.DATA_ZOOM, _ondataZoom
             );
             _messageCenter.bind(
+                ecConfig.EVENT.DATA_RANGE, _ondataRange
+            );
+            _messageCenter.bind(
                 ecConfig.EVENT.MAGIC_TYPE_CHANGED, _onmagicTypeChanged
             );
             _messageCenter.bind(
@@ -269,6 +272,21 @@ define(function(require) {
 
             if (_status.needRefresh) {
                 _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+            }
+        }
+        
+        function _ondataRange(param) {
+            // 用于图表间通信
+            _status.needRefresh = false;
+            for (var l = _chartList.length - 1; l >= 0; l--) {
+                if (_chartList[l].ondataRange) {
+                    _chartList[l].ondataRange(param, _status);
+                }
+            }
+
+            // 没有相互影响，直接刷新即可
+            if (_status.needRefresh) {
+                _zr.refresh();
             }
         }
 

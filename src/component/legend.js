@@ -232,6 +232,7 @@ define(function (require) {
                     break;
                 default :
                     x = legendOption.x - 0;
+                    x = isNaN(x) ? 0 : x;
                     break;
             }
 
@@ -252,6 +253,7 @@ define(function (require) {
                     break;
                 default :
                     y = legendOption.y - 0;
+                    y = isNaN(y) ? 0 : y;
                     break;
             }
 
@@ -429,6 +431,10 @@ define(function (require) {
             }
             return _colorMap[legendName];
         }
+        
+        function hasColor(legendName) {
+            return _colorMap[legendName] ? _colorMap[legendName] : false;
+        }
 
         function add(name,color){
             legendOption.data.push(name);
@@ -465,6 +471,7 @@ define(function (require) {
         self.refresh = refresh;
         self.setColor = setColor;
         self.getColor = getColor;
+        self.hasColor = hasColor;
         self.add = add;
         self.del = del;
         self.isSelected = isSelected;
