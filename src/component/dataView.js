@@ -179,7 +179,9 @@ define(function (require) {
                 valueList = [];
                 for (j = 0, k = series[i].data.length; j < k; j++) {
                     data = series[i].data[j];
-                    if (series[i].type == ecConfig.CHART_TYPE_PIE) {
+                    if (series[i].type == ecConfig.CHART_TYPE_PIE
+                        || series[i].type == ecConfig.CHART_TYPE_MAP
+                    ) {
                         itemName = (data.name || '-') + ':';
                     }
                     else {

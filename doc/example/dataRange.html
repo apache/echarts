@@ -81,12 +81,20 @@ option = {
     },
     dataRange: {
         min: 0,
-        max: 2500,
-        text:['高','低'],           // 文本，默认为数值文本
+        //orient: 'horizontal', // 'vertical'
+        //x: 'right', // 'center' | 'left' | {number},
+        //y: 'top', // 'center' | 'top' | {number}
+        //backgroundColor: '#eee',
+        //borderColor: 'rgba(178,34,34,0.8)',
+        //borderWidth: 4,
+        //padding: 10,    // [5, 10, 15, 20]
+        //itemGap: 5,
+        //textStyle: {color: 'red'},
+        splitNumber: 0,            // 分割段数，默认为5
+        color:['red','yellow'],//颜色 
+        //text:['高','低'],           // 文本，默认为数值文本
         calculable : true,
-        textStyle: {
-            color: 'orange'
-        }
+        max: 2000
     },
     toolbox: {
         show : true,
@@ -104,10 +112,8 @@ option = {
             name: 'iphone3',
             type: 'map',
             mapType: 'china',
-            itemStyle:{
-                normal:{label:{show:true}, color:'#ffd700'},// for legend
-                emphasis:{label:{show:true}}
-            },
+           // width:400,
+            itemStyle:{normal:{label:{show:true}}},
             data:[
                 {name: '北京',value: Math.round(Math.random()*1000)},
                 {name: '天津',value: Math.round(Math.random()*1000)},
@@ -142,8 +148,7 @@ option = {
                 {name: '海南',value: Math.round(Math.random()*1000)},
                 {name: '台湾',value: Math.round(Math.random()*1000)},
                 {name: '香港',value: Math.round(Math.random()*1000)},
-                {name: '澳门',value: Math.round(Math.random()*1000)},
-                {name: '南海诸岛',value: Math.round(Math.random()*1000)}
+                {name: '澳门',value: Math.round(Math.random()*1000)}
             ]
         },
         {
@@ -168,6 +173,7 @@ option = {
                 {name: '西藏',value: Math.round(Math.random()*1000)},
                 {name: '四川',value: Math.round(Math.random()*1000)},
                 {name: '宁夏',value: Math.round(Math.random()*1000)},
+                {name: '海南',value: Math.round(Math.random()*1000)},
                 {name: '香港',value: Math.round(Math.random()*1000)},
                 {name: '澳门',value: Math.round(Math.random()*1000)}
             ]
@@ -176,9 +182,6 @@ option = {
             name: 'iphone5',
             type: 'map',
             mapType: 'china',
-            itemStyle:{
-                normal:{color:'#da70d6'}    // for legend
-            },
             data:[
                 {name: '北京',value: Math.round(Math.random()*1000)},
                 {name: '天津',value: Math.round(Math.random()*1000)},

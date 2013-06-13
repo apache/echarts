@@ -334,11 +334,11 @@ define(function(require) {
         }
 
         function _onrestore() {
-            _restore();
+            restore();
         }
         
         function _onrefresh() {
-            _refresh();
+            refresh();
         }
 
         /**
@@ -484,7 +484,7 @@ define(function(require) {
             _zr.render();
         }
 
-        function _restore() {
+        function restore() {
             var zrUtil = require('zrender/tool/util');
             _selectedMap = {};
             _option = zrUtil.clone(_optionBackup);
@@ -493,7 +493,7 @@ define(function(require) {
             _render(_option);
         }
         
-        function _refresh() {
+        function refresh() {
             // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
             // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
@@ -688,6 +688,8 @@ define(function(require) {
         self.showLoading = showLoading;
         self.hideLoading = hideLoading;
         self.resize = resize;
+        self.refresh = refresh;
+        self.restore = restore;
         self.clear = clear;
         self.dispose = dispose;
     }

@@ -34,6 +34,10 @@ define(function(require) {
         var series;                 // 共享数据源，不要修改跟自己无关的项
 
         var _zlevelBase = self.getZlevelBase();
+        var _mapSeries;
+        var _scale;
+        var _selectedMode;
+        var _selected = {};
 
         function _buildShape() {
             self.selectedMap = {};
@@ -44,9 +48,14 @@ define(function(require) {
             var mapType;
             var data;
             var name;
+            _mapSeries = {};
+            _selectedMode = false;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type == ecConfig.CHART_TYPE_MAP) {
                     series[i] = self.reformOption(series[i]);
+                    _mapSeries[i] = true;
+                    
+                    _selectedMode = _selectedMode || series[i].selectedMode;
                     mapType = series[i].mapType;
                     
                     seriesName = series[i].name;
@@ -93,7 +102,40 @@ define(function(require) {
         
         function _getMapDataOfChina() {
             var province = require('../util/mapData/china');
-            return province;
+            _scale = _getScale(province.width, province.height);
+            return province.data;
+        }
+        
+        function _getScale(mapWidth, mapHeight) {
+            var scale = [1, 1];
+            for (var key in _mapSeries) {
+                if (typeof series[key].height == 'undefined'
+                    && typeof series[key].width != 'undefined'
+                ) {
+                    scale = [
+                        series[key].width / mapWidth,
+                        series[key].width / mapWidth
+                    ];
+                }
+                else if (typeof series[key].height != 'undefined'
+                    && typeof series[key].width == 'undefined'
+                ) {
+                    scale = [
+                        series[key].height / mapHeight,
+                        series[key].height / mapHeight
+                    ];
+                } 
+                else if (
+                    typeof series[key].height != 'undefined'
+                    && typeof series[key].width != 'undefined'
+                ) {
+                    scale = [
+                        series[key].width / mapWidth,
+                        series[key].height / mapHeight
+                    ];
+                }
+            }
+            return scale
         }
         
         function _buildMap(mapData, valueData) {
@@ -106,13 +148,15 @@ define(function(require) {
             var queryTarget;
             var defaultOption = ecConfig.map;
             
+            var color;
+            var font;
             var style;
             var highlightStyle;
             
             var shape;
             for (var i = 0, l = mapData.length; i < l; i++) {
                 style = zrUtil.clone(mapData[i]);
-                highlightStyle = {};
+                highlightStyle = zrUtil.clone(style);
                 name = style.text;
                 data = valueData[name];
                 if (data) {
@@ -127,6 +171,7 @@ define(function(require) {
                             self.shapeList.push({
                                 shape : 'circle',
                                 zlevel : _zlevelBase + 1,
+                                scale: _scale,
                                 style : {
                                     x : style.textX + 3 + j * 7,
                                     y : style.textY - 10,
@@ -144,13 +189,20 @@ define(function(require) {
                 }
                 else {
                     seriesName = '';
-                    queryTarget = [defaultOption];
+                    queryTarget = [];
+                    for (var key in _mapSeries) {
+                        queryTarget.push(series[key]);
+                    }
+                    queryTarget.push(defaultOption);
                     value = '-';
                 }
                 
                 style.brushType = 'both';
-                style.color = dataRange && !isNaN(value)
-                    ? dataRange.getColor(value)
+                color = dataRange && !isNaN(value)
+                        ? dataRange.getColor(value)
+                        : null;
+                style.color = color
+                    ? color
                     : self.deepQuery(
                         queryTarget,
                         'itemStyle.normal.areaStyle.color'
@@ -172,12 +224,18 @@ define(function(require) {
                         queryTarget,
                         'itemStyle.normal.label.textStyle.color'
                     );
+                    font = self.deepQuery(
+                        queryTarget,
+                        'itemStyle.normal.label.textStyle'
+                    );
+                    style.textFont = self.getFont(font);
                     style.textPosition = 'specific';
                 }
                 else {
                     style.text = null;
                 }
                 
+                highlightStyle.brushType = 'both';
                 highlightStyle.color = self.deepQuery(
                     queryTarget,
                     'itemStyle.emphasis.areaStyle.color'
@@ -200,26 +258,155 @@ define(function(require) {
                         queryTarget,
                         'itemStyle.emphasis.label.textStyle.color'
                     ) || style.textColor;
+                    font = self.deepQuery(
+                        queryTarget,
+                        'itemStyle.emphasis.label.textStyle'
+                    ) || font;
+                    highlightStyle.textFont = self.getFont(font);
                     highlightStyle.textPosition = 'specific';
                 }
                 else {
-                    highlightStyle.text = '';
+                    highlightStyle.text = null;
+                }
+                
+                if ((style.text || highlightStyle.text) && style.tooSmall) {
+                    var textShape = {
+                        shape : 'text',
+                        zlevel : _zlevelBase,
+                        scale: _scale,
+                        style : {
+                            x : style.textX,
+                            y : style.textY,
+                            text : style.text || highlightStyle.text,
+                            color : style.text
+                                    ? style.textColor
+                                    : 'rgba(0,0,0,0)',
+                            textFont : style.textFont,
+                            textPosition : style.textPosition
+                        },
+                        highlightStyle : {
+                            brushType: 'both',
+                            x : style.textX,
+                            y : style.textY,
+                            text : highlightStyle.text || style.text,
+                            color : highlightStyle.textColor,
+                            strokeColor: highlightStyle.color,
+                            textFont : highlightStyle.textFont,
+                            textPosition : highlightStyle.textPosition
+                        }
+                    };
+                    textShape._style = textShape.style;
+                    if (_selectedMode &&
+                        _selected[name]
+                        || (data && data.selected && _selected[name] !== false)
+                    ) {
+                        textShape.style = zrUtil.clone(
+                            textShape.highlightStyle
+                        );
+                    }
+                    if (_selectedMode) {
+                        textShape.clickable = true;
+                        textShape.onclick = self.shapeHandler.onclick;
+                    }
+                
+                    ecData.pack(
+                        textShape,
+                        {
+                            name: seriesName,
+                            tooltip: self.deepQuery(queryTarget, 'tooltip')
+                        },
+                        0,
+                        data, 0,
+                        name
+                    );
+                    self.shapeList.push(textShape);
+                    style.text = null;
+                    highlightStyle.text = null;
                 }
                 
                 shape = {
                     shape : 'path',
-                   // scale:[0.8,0.8],
+                    zlevel : _zlevelBase,
+                    scale: _scale,
                     style : style,
-                    highlightStyle : highlightStyle
+                    highlightStyle : highlightStyle,
+                    _style: style
                 };
+                if (_selectedMode &&
+                     _selected[name]
+                     || (data && data.selected && _selected[name] !== false) 
+                ) {
+                    shape.style = zrUtil.clone(shape.highlightStyle);
+                }
+                
+                if (_selectedMode) {
+                    _selected[name] = typeof _selected[name] != 'undefined'
+                                      ? _selected[name]
+                                      : (data && data.selected);
+                    shape.clickable = true;
+                    shape.onclick = self.shapeHandler.onclick;
+                }
+                // console.log(name,shape);
+                
                 ecData.pack(
                     shape,
-                    {name: seriesName}, 0,
+                    {
+                        name: seriesName,
+                        tooltip: self.deepQuery(queryTarget, 'tooltip')
+                    },
+                    0,
                     data, 0,
                     name
                 );
                 self.shapeList.push(shape);
             }
+            //console.log(_selected);
+        }
+        
+        function onclick(param) {
+            if (!self.isClick || !param.target) {
+                // 没有在当前实例上发生点击直接返回
+                return;
+            }
+
+            var target = param.target;
+            var name = target.style.text;
+            var len = self.shapeList.length;
+            if (_selectedMode == 'single') {
+                for (var p in _selected) {
+                    if (_selected[p]) {
+                        //找到那个shape
+                        for (var i = 0; i < len; i++) {
+                            if (self.shapeList[i].style.text == p) {
+                                self.shapeList[i].style = 
+                                    self.shapeList[i]._style;
+                                zr.modShape(
+                                    self.shapeList[i].id, self.shapeList[i]
+                                );
+                            }
+                        }
+                        p != name && (_selected[p] = false);
+                    }
+                }
+            }
+
+            _selected[name] = !_selected[name];
+            
+            if (_selected[name]) {
+                target.style = zrUtil.clone(target.highlightStyle);
+            }
+            else {
+                target.style = target._style;
+            }
+            zr.modShape(target.id, target);
+            
+            messageCenter.dispatch(
+                ecConfig.EVENT.MAP_SELECTED,
+                param.event,
+                {selected : _selected}
+            );
+            
+            zr.refresh();
         }
 
         
@@ -234,6 +421,8 @@ define(function(require) {
             component = newComponent;
 
             series = option.series;
+            
+            _selected = {};
 
             self.clear();
             _buildShape();
@@ -258,6 +447,7 @@ define(function(require) {
         self.init = init;
         self.refresh = refresh;
         self.ondataRange = ondataRange;
+        self.onclick = onclick;
         
         init(option, component);
     }

@@ -189,6 +189,27 @@ define(function (require) {
                                   + _defaultCssText
                                   + (specialCssText ? specialCssText : '')
                                   + 'left:' + x + 'px;top:' + y + 'px;';
+            if (_zrWidth - x < 100 || _zrHeight - y < 100) {
+                // 太靠边的做一次refixed
+                setTimeout(_refixed, 20);
+            }
+        }
+        
+        function _refixed() {
+            if (_tDom) {
+                var cssText = '';
+                var domHeight = _tDom.offsetHeight;
+                var domWidth = _tDom.offsetWidth;
+                if (_tDom.offsetLeft + domWidth > _zrWidth) {
+                    cssText += 'left:' + (_zrWidth - domWidth) + 'px;';
+                }
+                if (_tDom.offsetTop + domHeight > _zrHeight) {
+                    cssText += 'top:' + (_zrHeight - domHeight) + 'px;';
+                }
+                if (cssText !== '') {
+                    _tDom.style.cssText += cssText;
+                }
+            }
         }
 
         function _tryShow() {
@@ -240,6 +261,9 @@ define(function (require) {
             var series = option.series;
             var xAxisIndex;
             var yAxisIndex;
+            if (!xAxis || !yAxis) {
+                return;
+            }
             for (var i = 0, l = series.length; i < l; i++) {
                 // 找到第一个axis触发tooltip的系列
                 if (self.deepQuery(
@@ -601,7 +625,7 @@ define(function (require) {
             clearTimeout(_hidingTicket);
             clearTimeout(_showingTicket);
             var target = param.target;
-            if (!target) {
+            if (!target && grid) {
                 // 判断是否落到直角系里，axis触发的tooltip
                 if (_needAxisTrigger
                     && zrArea.isInside(
@@ -651,6 +675,13 @@ define(function (require) {
             }
             if (cssText !== '') {
                 _tDom.style.cssText += cssText;
+            }
+            
+            if (_zrWidth - _tDom.offsetLeft < 100 
+                || _zrHeight - _tDom.offsetTop < 100
+            ) {
+                // 太靠边的做一次refixed
+                setTimeout(_refixed, 20);
             }
         }
 

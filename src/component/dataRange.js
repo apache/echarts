@@ -225,7 +225,7 @@ define(function (require) {
             }
             
             var zrColor = require('zrender/tool/color');
-            var per = 1 / dataRangeOption.color.length;
+            var per = 1 / (dataRangeOption.color.length - 1);
             var colorList = [];
             for (var i = 0, l = dataRangeOption.color.length; i < l; i++) {
                 colorList.push([i * per, dataRangeOption.color[i]]);
@@ -463,6 +463,7 @@ define(function (require) {
                 ondrift : _ondrift,
                 ondragend : _ondragend
             };
+            
             _endShape = {
                 shape : 'polygon',
                 zlevel : _zlevelBase + 1,
@@ -1044,6 +1045,7 @@ define(function (require) {
                 (splitNumber - dataRangeOption.color.length)
                 / (dataRangeOption.color.length - 1) + 1
             );
+            // console.log(_colorList.length)
             
             if (dataRangeOption.precision === 0) {
                 _gap = Math.round(
@@ -1091,13 +1093,20 @@ define(function (require) {
 
         function getColor(value) {
             if (isNaN(value)) {
-                return '#ccc';
+                return null;
+            }
+            
+            if (value < dataRangeOption.min) {
+                value = dataRangeOption.min;
+            }
+            else if (value > dataRangeOption.max) {
+                value = dataRangeOption.max;
             }
             
             if (dataRangeOption.calculable) {
                 if (value > _gap * _range.start + dataRangeOption.min
                     || value < _gap * _range.end + dataRangeOption.min) {
-                     return '#ccc';
+                     return null;
                 }
             }
             
@@ -1114,7 +1123,7 @@ define(function (require) {
                 return _colorList[idx];
             }
             else {
-                return '#ccc'
+                return null;
             }
         }
 

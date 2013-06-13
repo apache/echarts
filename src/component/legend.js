@@ -88,7 +88,7 @@ define(function (require) {
                     if (zrWidth - lastX < 200   // 最后200px做分行预判
                         && (itemWidth + 5
                          + zrArea.getTextWidth(itemName, font)
-                         + itemGap)
+                         + (i < dataLength - 1 ? itemGap : 0))
                         >= zrWidth - lastX
                     ) {
                         lastX = 0;

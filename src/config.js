@@ -74,24 +74,24 @@ define(function() {
                                        // 'top' ¦ 'bottom' ¦ 'center'
                                        // ¦ {number}（y坐标，单位px）
             backgroundColor: 'rgba(0,0,0,0)',
-            borderColor: '#ccc',       // 色尺边框颜色
-            borderWidth: 0,            // 色尺边框线宽，单位px，默认为0（无边框）
-            padding: 5,                // 色尺内边距，单位px，默认各方向内边距为5，
+            borderColor: '#ccc',       // 值域边框颜色
+            borderWidth: 0,            // 值域边框线宽，单位px，默认为0（无边框）
+            padding: 5,                // 值域内边距，单位px，默认各方向内边距为5，
                                        // 接受数组分别设定上右下左边距，同css
             itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
-            itemWidth: 20,             // 色尺图形宽度，线性渐变水平布局宽度为该值 * 10
-            itemHeight: 14,            // 色尺图形高度，线性渐变垂直布局高度为该值 * 10
+            itemWidth: 20,             // 值域图形宽度，线性渐变水平布局宽度为该值 * 10
+            itemHeight: 14,            // 值域图形高度，线性渐变垂直布局高度为该值 * 10
             precision: 0,              // 小数精度，默认为0，无小数点
             // min: null,              // 最小值
             // max: null,              // 最大值
             splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变
             calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
             realtime: true,
-            color:['#4169e1','#e0ffff'],//颜色 
+            color:['#1e90ff','#f0ffff'],//颜色 
             //text:['高','低'],           // 文本，默认为数值文本
             textStyle: {
-                color: '#333'          // 色尺文字颜色
+                color: '#333'          // 值域文字颜色
             }
         },
 
@@ -404,6 +404,7 @@ define(function() {
             DATA_ZOOM: 'dataZoom',
             DATA_RANGE: 'dataRange',
             LEGEND_SELECTED: 'legendSelected',
+            MAP_SELECTED: 'mapSelected',
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',
             DATA_VIEW_CHANGED: 'dataViewChanged'
         },
