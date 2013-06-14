@@ -16,6 +16,7 @@ define(function() {
         CHART_TYPE_PIE: 'pie',
         CHART_TYPE_RADAR: 'radar',
         CHART_TYPE_MAP: 'map',
+        CHART_TYPE_K: 'k',
         CHART_TYPE_ISLAND: 'island',
 
         // 组件类型
@@ -226,6 +227,7 @@ define(function() {
             boundaryGap: [0, 0],   // 数值起始和结束两端空白策略
             // min: null,          // 最小值
             // max: null,          // 最大值
+            // scale: false,       // 脱离0值比例，放大聚焦到最终_min，_max区间
             precision: 0,          // 小数精度，默认为0，无小数点
             power: 100,            // 整数精度，默认为100，个位和百位为0
             splitNumber: 5,        // 分割段数，默认为5
@@ -299,6 +301,26 @@ define(function() {
             },
             //brokenPoint: null,     // 拐点图形类型，非标准参数
             brokenPointSize: 4           // 可计算特性参数，空数据拖拽提示图形大小
+        },
+        
+        // K线图默认参数
+        k: {
+            xAxisIndex: 0,
+            yAxisIndex: 0,
+            itemStyle: {
+                normal: {
+                    color: '#fff',       // 阳线填充颜色
+                    color0: '#00aa11',    // 阴线填充颜色
+                    lineStyle: {
+                        width: 1,
+                        color: '#ff3200',   // 阳线边框颜色
+                        color0: '#00aa11' // 阴线边框颜色
+                    }
+                },
+                emphasis: {
+                    // color: 各异,
+                }
+            }
         },
 
         // 饼图默认参数

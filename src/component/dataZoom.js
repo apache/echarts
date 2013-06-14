@@ -286,6 +286,11 @@ define(function (require) {
                         ? (typeof data[i].value != 'undefined'
                           ? data[i].value : data[i])
                         : 0;
+                if (option.series[_zoom.seriesIndex[0]].type 
+                    == ecConfig.CHART_TYPE_K
+                ) {
+                    value = value[1];   // 收盘价
+                }
                 if (isNaN(value)) {
                     value = 0;
                 }
@@ -301,6 +306,11 @@ define(function (require) {
                         ? (typeof data[i].value != 'undefined'
                           ? data[i].value : data[i])
                         : 0;
+                if (option.series[_zoom.seriesIndex[0]].type 
+                    == ecConfig.CHART_TYPE_K
+                ) {
+                    value = value[1];   // 收盘价
+                }
                 if (isNaN(value)) {
                     value = 0;
                 }

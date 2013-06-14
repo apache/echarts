@@ -38,6 +38,8 @@ define(function(require) {    //chart
     self.define('line', require('./chart/line'));
     
     self.define('map', require('./chart/map'));
+    
+    self.define('k', require('./chart/k'));
 
     return self;
 });

@@ -77,6 +77,8 @@
  */
 define(
     function(require) {
+        var matrix = require('zrender/tool/matrix');
+        
         function Icon() {
             this.type = 'icon';
             this.brushTypeOnly = 'stroke';

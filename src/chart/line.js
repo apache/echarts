@@ -548,7 +548,7 @@ define(function(require) {
                                 },
                                 hoverable : false,
                                 _main : true,
-                                _serie : serie,
+                                _seriesIndex : seriesIndex,
                                 _orient : orient
                             });
                         }
@@ -567,7 +567,7 @@ define(function(require) {
                                 },
                                 hoverable : false,
                                 _main : true,
-                                _serie : serie,
+                                _seriesIndex : seriesIndex,
                                 _orient : orient
                             });
                         }
@@ -749,7 +749,7 @@ define(function(require) {
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 if (self.shapeList[i]._main) {
-                    serie = self.shapeList[i]._serie;
+                    serie = series[self.shapeList[i]._seriesIndex];
                     dataIndex += 1;
                     x = self.shapeList[i].style.pointList[0][0];
                     y = self.shapeList[i].style.pointList[0][1];

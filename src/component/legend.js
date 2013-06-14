@@ -335,6 +335,25 @@ define(function (require) {
                         },
                         clickable : true
                     };
+                case 'k' :
+                    return {
+                        shape : 'candle',
+                        zlevel : _zlevelBase,
+                        style : {
+                            x : x + width / 2,
+                            y : [y + 1, y + 1, y + height - 6, y + height],
+                            width : width - 6,
+                            color : self.deepQuery(
+                                [ecConfig], 'k.itemStyle.normal.color'
+                            ) || '#fff',
+                            strokeColor : self.deepQuery(
+                                [ecConfig], 'k.itemStyle.normal.lineStyle.color'
+                            ) || '#ff3200',
+                            lineWidth : 2,
+                            brushType : 'both'
+                        },
+                        clickable : true
+                    }
                 default :
                     return {
                         shape : 'rectangle',
