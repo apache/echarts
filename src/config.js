@@ -329,6 +329,8 @@ define(function() {
             // radius: [0, min(width,height) - 50],
             startAngle: 0,
             minAngle: 5,
+            selectedOffset: 10,             // 选中是扇区偏移量
+            // selectedMode: false,         // 选中模式，默认关闭，可选single，multiple
             itemStyle: {
                 normal: {
                     label: {
@@ -367,6 +369,7 @@ define(function() {
         
         map: {
             mapType: 'china',
+            // selectedMode: false,         // 选中模式，默认关闭，可选single，multiple
             itemStyle: {
                 normal: {
                     // color: 各异,
@@ -427,6 +430,7 @@ define(function() {
             DATA_RANGE: 'dataRange',
             LEGEND_SELECTED: 'legendSelected',
             MAP_SELECTED: 'mapSelected',
+            PIE_SELECTED: 'pieSelected',
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',
             DATA_VIEW_CHANGED: 'dataViewChanged'
         },

@@ -85,13 +85,14 @@ option = {
             refresh : true
         }
     },
-    calculable : true,
+    calculable : false,
     series : [
         {
             name:'访问来源',
             type:'pie',
+            selectedMode: 'single',
             radius : [0, 70],
-            itemStyle :　{
+            itemStyle : {
                 normal : {
                     label : {
                         position : 'inner'
@@ -104,7 +105,7 @@ option = {
             data:[
                 {value:335, name:'直达'},
                 {value:679, name:'营销广告'},
-                {value:1548, name:'搜索引擎'}
+                {value:1548, name:'搜索引擎', selected:true}
             ]
         },
         {
@@ -124,6 +125,22 @@ option = {
         }
     ]
 };
+var ecConfig = require('echarts/config');
+myChart.on(ecConfig.EVENT.PIE_SELECTED, function(param){
+    var selected = param.selected;
+    var serie;
+    var str = '当前选择： ';
+    for (var idx in selected) {
+        serie = option.series[idx];
+        for (var i = 0, l = serie.data.length; i < l; i++) {
+            if (selected[idx][i]) {
+                str += '【系列' + idx + '】' + serie.name + ' : ' + 
+                       '【数据' + i + '】' + serie.data[i].name + ' ';
+            }
+        }
+    }
+    document.getElementById('wrong-message').innerHTML = str;
+})
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->

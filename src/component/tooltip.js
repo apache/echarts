@@ -262,6 +262,7 @@ define(function (require) {
             var xAxisIndex;
             var yAxisIndex;
             if (!xAxis || !yAxis) {
+                _hidingTicket = setTimeout(_hide, _hideDelay);
                 return;
             }
             for (var i = 0, l = series.length; i < l; i++) {
