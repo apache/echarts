@@ -93,7 +93,7 @@ define(function(require) {
 
 
             var shape = require('zrender/shape');
-            var Icon = require('./util/icon');
+            var Icon = require('./util/shape/icon');
             shape.define('icon', new Icon());
 
             // 孤岛

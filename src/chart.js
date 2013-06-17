@@ -40,6 +40,8 @@ define(function(require) {    //chart
     self.define('map', require('./chart/map'));
     
     self.define('k', require('./chart/k'));
+    
+    self.define('scatter', require('./chart/scatter'));
 
     return self;
 });

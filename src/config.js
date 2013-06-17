@@ -322,6 +322,14 @@ define(function() {
                 }
             }
         },
+        
+        // 散点图默认参数
+        scatter: {
+            xAxisIndex: 0,
+            yAxisIndex: 0,
+            //symbol: null,         // 图形类型，非标准参数
+            symbolSize: 4           // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+        },
 
         // 饼图默认参数
         pie: {

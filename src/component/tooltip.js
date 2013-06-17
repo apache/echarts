@@ -592,11 +592,21 @@ define(function (require) {
                 _tDom.innerHTML = formatter;
             }
             else {
-                _tDom.innerHTML = serie.name + '<br/>' +
-                                  name + ' : ' + value +
-                                  (typeof speical == 'undefined'
-                                  ? ''
-                                  : (' (' + speical + ')'));
+                if (serie.type != ecConfig.CHART_TYPE_SCATTER) {
+                    _tDom.innerHTML = serie.name + '<br/>' +
+                                      name + ' : ' + value +
+                                      (typeof speical == 'undefined'
+                                      ? ''
+                                      : (' (' + speical + ')'));
+                }
+                else {
+                    _tDom.innerHTML = serie.name + '<br/>' +
+                                      (name == '' ? '' : (name + ' : ')) 
+                                      + value +
+                                      (typeof speical == 'undefined'
+                                      ? ''
+                                      : (' (' + speical + ')'));
+                }
             }
 
             if (!self.hasAppend) {

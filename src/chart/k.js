@@ -45,14 +45,11 @@ define(function(require) {
             var xAxisIndex;
             var yAxisIndex;
             var xAxis;
-            var yAxis;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type == ecConfig.CHART_TYPE_K) {
                     series[i] = self.reformOption(series[i]);
                     xAxisIndex = series[i].xAxisIndex;
-                    yAxisIndex = series[i].yAxisIndex;
                     xAxis = component.xAxis.getAxis(xAxisIndex);
-                    yAxis = component.yAxis.getAxis(yAxisIndex);
                     if (xAxis.type == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         _position2sIndexMap[xAxis.getPosition()].push(i);
@@ -167,7 +164,6 @@ define(function(require) {
                         // 数据格式不符
                         continue;
                     }
-                    y = valueAxis.getCoord(value);
                     pointList[seriesIndex].push([
                         categoryAxis.getCoordByIndex(i),    // 横坐标
                         candleWidth,
@@ -442,7 +438,7 @@ define(function(require) {
     }
     
     var shape = require('zrender/shape');
-    var Candle = require('../util/candle');
+    var Candle = require('../util/shape/candle');
     shape.define('candle', new Candle());
 
     return K;

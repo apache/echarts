@@ -455,7 +455,7 @@ define(function (require) {
             return _colorMap[legendName] ? _colorMap[legendName] : false;
         }
 
-        function add(name,color){
+        function add(name, color){
             legendOption.data.push(name);
             setColor(name,color);
             _selectedMap[name] = true;

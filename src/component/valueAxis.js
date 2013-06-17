@@ -433,7 +433,15 @@ define(function (require) {
                             value = typeof oriData[j].value != 'undefined'
                                     ? oriData[j].value
                                     : oriData[j];
-                            if (series[i].type == ecConfig.CHART_TYPE_K) {
+                            if (series[i].type == ecConfig.CHART_TYPE_SCATTER) {
+                                if (option.xAxisIndex != -1) {
+                                    data[key].push(value[0]);
+                                }
+                                if (option.yAxisIndex != -1) {
+                                    data[key].push(value[1]);
+                                }
+                            }
+                            else if (series[i].type == ecConfig.CHART_TYPE_K) {
                                 data[key].push(value[0]);
                                 data[key].push(value[1]);
                                 data[key].push(value[2]);
@@ -491,7 +499,6 @@ define(function (require) {
                     }
                 }
             }
-
             _min = isNaN(option.min)
                    ? (_min - Math.abs(_min * option.boundaryGap[0]))
                    : option.min;    // 指定min忽略boundaryGay[0]
