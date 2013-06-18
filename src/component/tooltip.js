@@ -601,7 +601,7 @@ define(function (require) {
                 }
                 else {
                     _tDom.innerHTML = serie.name + '<br/>' +
-                                      (name == '' ? '' : (name + ' : ')) 
+                                      (name === '' ? '' : (name + ' : ')) 
                                       + value +
                                       (typeof speical == 'undefined'
                                       ? ''

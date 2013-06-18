@@ -25,8 +25,6 @@ define(function(require) {
         var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
-        var zrColor = require('zrender/tool/color');
-
         var self = this;
         self.type = ecConfig.CHART_TYPE_K;
 
@@ -42,14 +40,11 @@ define(function(require) {
                 top : [],
                 bottom : []
             };
-            var xAxisIndex;
-            var yAxisIndex;
             var xAxis;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type == ecConfig.CHART_TYPE_K) {
                     series[i] = self.reformOption(series[i]);
-                    xAxisIndex = series[i].xAxisIndex;
-                    xAxis = component.xAxis.getAxis(xAxisIndex);
+                    xAxis = component.xAxis.getAxis(series[i].xAxisIndex);
                     if (xAxis.type == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         _position2sIndexMap[xAxis.getPosition()].push(i);

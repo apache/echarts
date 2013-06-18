@@ -25,7 +25,6 @@ define(function(require) {
         var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
-        var zrMath = require('zrender/tool/math');
         var zrUtil = require('zrender/tool/util');
 
         var self = this;
@@ -75,10 +74,8 @@ define(function(require) {
                                 if (key != 'value') {
                                     valueData[name][key] = data[j][key];
                                 }
-                                else {
-                                    if (!isNaN(data[j].value)) {
-                                        valueData[name].value += data[j].value;
-                                    }
+                                else if (!isNaN(data[j].value)) {
+                                    valueData[name].value += data[j].value;
                                 }
                             }
                             //索引有该区域的系列样式
@@ -135,7 +132,7 @@ define(function(require) {
                     ];
                 }
             }
-            return scale
+            return scale;
         }
         
         function _buildMap(mapData, valueData) {

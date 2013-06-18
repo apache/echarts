@@ -647,7 +647,7 @@ define(function (require) {
                     }
                 }
                 
-                _min = -splitGap * splitNumber + _max;;
+                _min = -splitGap * splitNumber + _max;
             }
             else {
                 // 一正一负，确保0被选中

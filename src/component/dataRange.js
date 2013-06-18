@@ -14,7 +14,7 @@ define(function (require) {
      * @param {Object} option 图表参数
      * @param {Object=} selected 用于状态保持
      */
-    function DataRange(messageCenter, zr, option, selected) {
+    function DataRange(messageCenter, zr, option) {
         var Base = require('./base');
         Base.call(this, zr);
 
@@ -75,7 +75,6 @@ define(function (require) {
             var textShape;
             var font = self.getFont(dataRangeOption.textStyle);
 
-            var zrWidth = zr.getWidth();
             var lastX = _itemGroupLocation.x;
             var lastY = _itemGroupLocation.y;
             var itemWidth = dataRangeOption.itemWidth;
@@ -187,19 +186,15 @@ define(function (require) {
          * 构建渐变型的值域元素 
          */
         function _buildGradient() {
-            var itemName;
             var itemShape;
             var textShape;
             var font = self.getFont(dataRangeOption.textStyle);
 
-            var zrWidth = zr.getWidth();
             var lastX = _itemGroupLocation.x;
             var lastY = _itemGroupLocation.y;
             var itemWidth = dataRangeOption.itemWidth;
             var itemHeight = dataRangeOption.itemHeight;
-            var itemGap = dataRangeOption.itemGap;
             var textHeight = zrArea.getTextWidth('国', font);
-            var color;
 
             
             var needValueText = true;
@@ -270,7 +265,7 @@ define(function (require) {
             if (dataRangeOption.calculable) {
                 _calculableLocation = itemShape.style;
                 _buildFiller();
-                _bulidMask()
+                _bulidMask();
                 _bulidHandle();
             }
             
@@ -335,8 +330,8 @@ define(function (require) {
                     // 手柄统统在下方
                     pointListStart = [
                         [x, y],
-                        [x, y + height + textHieght + textHieght / 2],
-                        [x - textWidth, y + height + textHieght + textHieght / 2],
+                        [x, y + height + textHieght / 2 * 3],
+                        [x - textWidth, y + height + textHieght / 2 * 3],
                         [x - textWidth, y + height + textHieght / 2],
                         [x - textHieght / 2, y + height + textHieght / 2],
                         [x - 1, y + height],
@@ -348,10 +343,10 @@ define(function (require) {
                     
                     pointListEnd = [
                         [x + width, y],
-                        [x + width, y + height + textHieght + textHieght / 2],
-                        [x + width + textWidth, y + height + textHieght + textHieght / 2],
+                        [x + width, y + height + textHieght / 2 * 3],
+                        [x + width + textWidth, y + height + textHieght/2*3],
                         [x + width + textWidth, y + height + textHieght / 2],
-                        [x  + width + textHieght / 2, y + height + textHieght / 2],
+                        [x + width + textHieght / 2, y + height + textHieght/2],
                         [x + width + 1, y + height],
                         [x + width + 1, y]
                     ];
@@ -362,8 +357,8 @@ define(function (require) {
                     // 手柄在上方
                     pointListStart = [
                         [x, y + height],
-                        [x, y - textHieght - textHieght / 2],
-                        [x - textWidth, y - textHieght - textHieght / 2],
+                        [x, y - textHieght / 2 * 3],
+                        [x - textWidth, y - textHieght / 2 * 3],
                         [x - textWidth, y - textHieght / 2],
                         [x - textHieght / 2, y - textHieght / 2],
                         [x - 1, y],
@@ -375,8 +370,8 @@ define(function (require) {
                     
                     pointListEnd = [
                         [x + width, y + height],
-                        [x + width, y - textHieght - textHieght / 2],
-                        [x + width + textWidth, y - textHieght - textHieght / 2],
+                        [x + width, y - textHieght / 2 * 3],
+                        [x + width + textWidth, y - textHieght / 2 * 3],
                         [x + width + textWidth, y - textHieght / 2],
                         [x  + width + textHieght / 2, y - textHieght / 2],
                         [x + width + 1, y],
@@ -767,7 +762,7 @@ define(function (require) {
                     textAlign: (dataRangeOption.orient == 'horizontal'
                                ? 'left' : 'center')
                 }
-            }
+            };
         }
 
         // 色尺legend item shape
@@ -928,7 +923,7 @@ define(function (require) {
                 }
                 else if (e.id == _endShape.id && a >= b) {
                     // _endShape触发
-                    a = b;;
+                    a = b;
                     _startShape.style.x = a;
                 }
                 _fillerShae.style.x = a;
@@ -950,7 +945,7 @@ define(function (require) {
                 }
                 else if (e.id == _endShape.id && a >= b) {
                     // _endShape触发
-                    a = b;;
+                    a = b;
                     _startShape.style.y = a;
                 }
                 _fillerShae.style.y = a;

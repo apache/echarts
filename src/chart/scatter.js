@@ -90,7 +90,7 @@ define(function(require) {
             var data;
             var value;
             var xAxis;
-            var yAxis 
+            var yAxis; 
 
             var pointList = {};
             var x;
@@ -99,7 +99,7 @@ define(function(require) {
             for (var j = 0, k = seriesArray.length; j < k; j++) {
                 seriesIndex = seriesArray[j];
                 serie = series[seriesIndex];
-                if (serie.data.length == 0) {
+                if (serie.data.length === 0) {
                     continue;
                 }
                 
@@ -142,7 +142,6 @@ define(function(require) {
          * 生成折线和折线上的拐点
          */
         function _buildPointList(pointList) {
-            var zrColor = require('zrender/tool/color');
             var nColor;     // normal
             var eColor;     // emphasis
 
@@ -297,7 +296,7 @@ define(function(require) {
                     };
                     break;
             }
-            itemShape._serieIndex = seriesIndex
+            itemShape._serieIndex = seriesIndex;
             itemShape.zlevel = _zlevelBase;
             itemShape.style.color = nColor;
             itemShape.style.strokeColor = nColor;
@@ -370,7 +369,6 @@ define(function(require) {
          * 动画设定
          */
         function animation() {
-            return;
             var duration = self.deepQuery([option], 'animationDuration');
             var easing = self.deepQuery([option], 'animationEasing');
             var x;

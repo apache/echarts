@@ -74,8 +74,6 @@
  */
 define(
     function(require) {
-        var matrix = require('zrender/tool/matrix');
-        
         function Symbol() {
             this.type = 'symbol';
         }
@@ -166,8 +164,8 @@ define(
             buildPath : function(ctx, style) {
                 var pointList = style.pointList;
                 var rect = this.getRect(style);
-                console.log(rect)
-                var ti = new Date();
+                // console.log(rect)
+                // var ti = new Date();
                 var pixels = ctx.getImageData(
                     rect.x, rect.y, rect.width, rect.height
                 );
@@ -190,7 +188,7 @@ define(
                     data[idx + 3] = 255;
                 }
                 ctx.putImageData(pixels, rect.x, rect.y);
-                console.log(new Date() - ti);
+                // console.log(new Date() - ti);
                 return;
             },
 
@@ -203,8 +201,7 @@ define(
                 return shape.get('polygon').getRect(style);
             },
             
-            
-            isCover : function(e, x, y) {
+            isCover : function() {
                 return false;
             }
         };

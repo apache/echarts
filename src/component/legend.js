@@ -353,7 +353,7 @@ define(function (require) {
                             brushType : 'both'
                         },
                         clickable : true
-                    }
+                    };
                 default :
                     return {
                         shape : 'rectangle',
