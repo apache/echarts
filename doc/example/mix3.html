@@ -98,7 +98,9 @@ option = {
             name: 'iphone销量',
             type: 'map',
             mapType: 'china',
-            height: 400,
+            mapLocation: {
+                x: 'left'
+            },
             selectedMode : 'multiple',
             itemStyle:{
                 normal:{label:{show:true,textStyle:{fontSize:16}}},
@@ -149,7 +151,7 @@ option = {
                 trigger: 'item',
                 formatter: "{a} <br/>{b} : {c} ({d}%)"
             },
-            center: [document.getElementById('main').offsetWidth - 300, 225],
+            center: [document.getElementById('main').offsetWidth - 250, 225],
             radius: [50, 120],
             data:[
                 {name: '北京', value: 1234},

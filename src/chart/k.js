@@ -342,6 +342,7 @@ define(function(require) {
             var itemShape = {
                 shape : 'candle',
                 zlevel : _zlevelBase,
+                clickable: true,
                 style : {
                     x : x,
                     y : [y0, y1, y2, y3],

@@ -98,8 +98,28 @@ option = {
         {
             name:'scatter1',
             type:'scatter',
+            symbol: 'emptyCircle', //'circle', 'rectangle', 'triangle', 'diamond', 'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
             symbolSize: function(value){
-                return Math.round(value[2] * 3);
+                if (value[0] < 2) {
+                    return 2;
+                }
+                else if (value[0] < 8) {
+                    return Math.round(value[2] * 3);
+                }
+                else {
+                    return 20;
+                }
+            },
+            itemStyle: {
+                normal: {
+                    color: 'lightblue',
+                    lineStyle: {
+                        width: 8
+                    }
+                },
+                emphasis: {
+                    color: 'lightgreen',
+                }
             },
             data: (function() {
                 var d = [];
@@ -117,6 +137,7 @@ option = {
         {
             name:'scatter2',
             type:'scatter',
+            symbol: 'diamond',
             symbolSize: function(value){
                 return Math.round(value[2] * 3);
             },
@@ -130,6 +151,25 @@ option = {
                         (Math.random()*10).toFixed(2) - 0
                     ]);
                 }
+                d.push({
+                    value : [5,5,1000],
+                    itemStyle: {
+                        normal: {
+                            color: 'orange',
+                            lineStyle: {
+                                width: 8
+                            }
+                        },
+                        emphasis: {
+                            color: '#ff4500',
+                            lineStyle: {
+                                width: 12
+                            }
+                        }
+                    },
+                    symbol: 'emptyTriangle',
+                    symbolSize:30
+                })
                 return d;
             })()
         }

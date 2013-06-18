@@ -35,6 +35,7 @@ define(function(require) {
         var _zlevelBase = self.getZlevelBase();
         var _mapSeries;
         var _scale;
+        var _position;
         var _selectedMode;
         var _selected = {};
 
@@ -97,44 +98,98 @@ define(function(require) {
             }
         }
         
+        /**
+         * 按需加载相关地图 
+         */
         function _getMapDataOfChina() {
             var province = require('../util/mapData/china');
-            _scale = _getScale(province.width, province.height);
+            _getTransform(province.width, province.height);
             return province.data;
         }
         
-        function _getScale(mapWidth, mapHeight) {
-            var scale = [1, 1];
+        /**
+         * 获取缩放 
+         */
+        function _getTransform(mapWidth, mapHeight) {
+            var mapLocation;
+            var x;
+            var cusX;
+            var y;
+            var cusY;
+            var width;
+            var height;
+            var zrWidth = zr.getWidth();
+            var zrHeight = zr.getHeight();
             for (var key in _mapSeries) {
-                if (typeof series[key].height == 'undefined'
-                    && typeof series[key].width != 'undefined'
-                ) {
-                    scale = [
-                        series[key].width / mapWidth,
-                        series[key].width / mapWidth
-                    ];
-                }
-                else if (typeof series[key].height != 'undefined'
-                    && typeof series[key].width == 'undefined'
-                ) {
-                    scale = [
-                        series[key].height / mapHeight,
-                        series[key].height / mapHeight
-                    ];
-                } 
-                else if (
-                    typeof series[key].height != 'undefined'
-                    && typeof series[key].width != 'undefined'
-                ) {
-                    scale = [
-                        series[key].width / mapWidth,
-                        series[key].height / mapHeight
-                    ];
+                mapLocation = series[key].mapLocation;
+                cusX = mapLocation.x || cusX;
+                cusY = mapLocation.y || cusY;
+                width = mapLocation.width || width;
+                height = mapLocation.height || height;
+            }
+            
+            x = isNaN(cusX) ? 0 : cusX;
+            y = isNaN(cusY) ? 0 : cusY;
+            
+            if (typeof width == 'undefined') {
+                width = zrWidth;
+            }
+            if (x + width > zrWidth) {
+                width = zrWidth - x;
+            }
+            
+            if (typeof height == 'undefined') {
+                height = zrHeight;
+            }
+            if (y + height > zrHeight) {
+                height = zrHeight - y;
+            }
+            // console.log(width,height,x,y)
+            var minScale = Math.min(
+                width / mapWidth,
+                height / mapHeight
+            );
+            _scale = [minScale, minScale];
+            
+            width = Math.round(mapWidth * minScale);
+            height = Math.round(mapHeight * minScale);
+            if (isNaN(cusX)) {
+                switch (cusX + '') {
+                    case 'center' :
+                        x = Math.floor((zrWidth - width) / 2);
+                        break;
+                    case 'right' :
+                        x = zrWidth - width;
+                        break;
+                    case 'left' :
+                    default:
+                        x = 0;
+                        break;
                 }
             }
-            return scale;
+            if (isNaN(cusY)) {
+                switch (cusY + '') {
+                    case 'center' :
+                        y = Math.floor((zrHeight - height) / 2);
+                        break;
+                    case 'bottom' :
+                        y = zrHeight - height;
+                        break;
+                    case 'top' :
+                    default:
+                        y = 0;
+                        break;
+                }
+            }
+            
+            _position = [x, y];
         }
         
+        /**
+         * 构建地图
+         * @param {Object} mapData 图形数据
+         * @param {Object} valueData 用户数据
+         */
         function _buildMap(mapData, valueData) {
             var legend = component.legend;
             var dataRange = component.dataRange;
@@ -169,6 +224,7 @@ define(function(require) {
                                 shape : 'circle',
                                 zlevel : _zlevelBase + 1,
                                 scale: _scale,
+                                position : _position,
                                 style : {
                                     x : style.textX + 3 + j * 7,
                                     y : style.textY - 10,
@@ -271,6 +327,8 @@ define(function(require) {
                         shape : 'text',
                         zlevel : _zlevelBase,
                         scale: _scale,
+                        position : _position,
+                        clickable : true,
                         style : {
                             x : style.textX,
                             y : style.textY,
@@ -302,7 +360,6 @@ define(function(require) {
                         );
                     }
                     if (_selectedMode) {
-                        textShape.clickable = true;
                         textShape.onclick = self.shapeHandler.onclick;
                     }
                 
@@ -324,7 +381,9 @@ define(function(require) {
                 shape = {
                     shape : 'path',
                     zlevel : _zlevelBase,
+                    clickable : true,
                     scale: _scale,
+                    position : _position,
                     style : style,
                     highlightStyle : highlightStyle,
                     _style: style
@@ -340,7 +399,6 @@ define(function(require) {
                     _selected[name] = typeof _selected[name] != 'undefined'
                                       ? _selected[name]
                                       : (data && data.selected);
-                    shape.clickable = true;
                     shape.onclick = self.shapeHandler.onclick;
                 }
                 // console.log(name,shape);
@@ -360,6 +418,9 @@ define(function(require) {
             //console.log(_selected);
         }
         
+        /**
+         * 点击响应 
+         */
         function onclick(param) {
             if (!self.isClick || !param.target) {
                 // 没有在当前实例上发生点击直接返回
@@ -433,6 +494,11 @@ define(function(require) {
             _buildShape();
         }
         
+        /**
+         * 值域响应
+         * @param {Object} param
+         * @param {Object} status
+         */
         function ondataRange(param, status) {
             if (component.dataRange) {
                 refresh();

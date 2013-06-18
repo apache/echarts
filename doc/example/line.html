@@ -102,7 +102,7 @@ option = {
             name:'邮件营销',
             type:'line',
             stack: '总量',
-            brokenPoint: 'none',
+            symbol: 'none',
             itemStyle: {
                 normal: {
                     areaStyle: {
@@ -123,18 +123,18 @@ option = {
             name:'联盟广告',
             type:'line',
             stack: '总量',
-            brokenPoint: 'emptyCircle',     // 系列级个性化拐点图形
-            brokenPointSize: 8,
+            symbol: 'emptyCircle',     // 系列级个性化拐点图形
+            symbolSize: 8,
             data:[
                 120, 82,
                 {
                     value:201,
-                    brokenPoint: 'circle',  // 数据级个性化拐点图形
-                    brokenPointSize : 10
+                    symbol: 'circle',  // 数据级个性化拐点图形
+                    symbolSize : 10
                 },
                 {
                     value:134,
-                    brokenPoint: 'none'
+                    symbol: 'none'
                 },
                 190, 230, 110
             ]
@@ -159,7 +159,7 @@ option = {
                 320, 332, '-', 334,
                 {
                     value: 390,
-                    brokenPointSize : 10,
+                    symbolSize : 10,
                     itemStyle: {        // 数据级个性化折线样式
                         normal: {
                             color: 'green'

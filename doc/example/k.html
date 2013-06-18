@@ -94,8 +94,8 @@ option = {
     dataZoom : {
         show : true,
         realtime: true,
-        start : 50,
-        end : 100
+        start : 0,
+        end : 50
     },
     xAxis : [
         {
@@ -144,8 +144,37 @@ option = {
         {
             name:'上证指数',
             type:'k',
+            itemStyle: {
+                normal: {
+                    color: 'red',           // 阳线填充颜色
+                    color0: 'lightgreen',   // 阴线填充颜色
+                    lineStyle: {
+                        width: 2,
+                        color: 'orange',    // 阳线边框颜色
+                        color0: 'green'     // 阴线边框颜色
+                    }
+                },
+                emphasis: {
+                    color: 'black',         // 阳线填充颜色
+                    color0: 'white'         // 阴线填充颜色
+                }
+            },
             data:[ // 开盘，收盘，最低，最高
-                [2190.1, 2148.35, 2126.22, 2190.1],
+                {
+                    value:[2190.1, 2148.35, 2126.22, 2190.1],
+                    itemStyle: {
+                        normal: {
+                            color: 'blue',           // 阳线填充颜色
+                            lineStyle: {
+                                width: 3,
+                                color: 'blue',    // 阳线边框颜色
+                            }
+                        },
+                        emphasis: {
+                            color: 'blue',         // 阳线填充颜色
+                        }
+                    }
+                },
                 [2242.26, 2210.9, 2205.07, 2250.63],
                 [2264.43, 2242.11, 2240.07, 2266.69],
                 [2270.71, 2270.93, 2260.87, 2276.86],

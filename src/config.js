@@ -299,8 +299,8 @@ define(function() {
                     // color: 各异,
                 }
             },
-            //brokenPoint: null,     // 拐点图形类型，非标准参数
-            brokenPointSize: 4           // 可计算特性参数，空数据拖拽提示图形大小
+            //symbol: null,     // 拐点图形类型，非标准参数
+            symbolSize: 4           // 可计算特性参数，空数据拖拽提示图形大小
         },
         
         // K线图默认参数
@@ -338,7 +338,7 @@ define(function() {
             startAngle: 0,
             minAngle: 5,
             selectedOffset: 10,             // 选中是扇区偏移量
-            // selectedMode: false,         // 选中模式，默认关闭，可选single，multiple
+            // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
             itemStyle: {
                 normal: {
                     label: {
@@ -377,7 +377,13 @@ define(function() {
         
         map: {
             mapType: 'china',
-            // selectedMode: false,         // 选中模式，默认关闭，可选single，multiple
+            mapLocation: {
+                x : 'center',
+                y : 'center'
+                // width    // 自适应
+                // height   // 自适应
+            },
+            // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
             itemStyle: {
                 normal: {
                     // color: 各异,

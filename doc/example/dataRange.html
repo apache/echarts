@@ -72,125 +72,29 @@
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
 option = {
-    tooltip : {
-        trigger: 'item'
-    },
-    legend: {
-        x:'left',
-        data:['iphone3','iphone4','iphone5']
-    },
     dataRange: {
         min: 0,
-        //orient: 'horizontal', // 'vertical'
-        //x: 'right', // 'center' | 'left' | {number},
-        //y: 'top', // 'center' | 'top' | {number}
-        //backgroundColor: '#eee',
-        //borderColor: 'rgba(178,34,34,0.8)',
-        //borderWidth: 4,
+        orient: 'horizontal', // 'vertical'
+        x: 'right', // 'center' | 'left' | {number},
+        y: 'top', // 'center' | 'top' | {number}
+        backgroundColor: '#eee',
+        borderColor: 'rgba(178,34,34,0.8)',
+        borderWidth: 4,
         //padding: 10,    // [5, 10, 15, 20]
-        //itemGap: 5,
+        itemGap: 5,
         //textStyle: {color: 'red'},
-        splitNumber: 0,            // 分割段数，默认为5
+        splitNumber: 6,            // 分割段数，默认为5
         color:['red','yellow'],//颜色 
-        //text:['高','低'],           // 文本，默认为数值文本
-        calculable : true,
+        text:['高','低'],           // 文本，默认为数值文本
+        //calculable : true,
         max: 2000
-    },
-    toolbox: {
-        show : true,
-        orient : 'vertical',
-        x: 'right',
-        y: 'center',
-        feature : {
-            mark : true,
-            dataView : {readOnly: false},
-            refresh : true
-        }
     },
     series : [
         {
             name: 'iphone3',
             type: 'map',
             mapType: 'china',
-           // width:400,
-            itemStyle:{normal:{label:{show:true}}},
-            data:[
-                {name: '北京',value: Math.round(Math.random()*1000)},
-                {name: '天津',value: Math.round(Math.random()*1000)},
-                {name: '上海',value: Math.round(Math.random()*1000)},
-                {name: '重庆',value: Math.round(Math.random()*1000)},
-                {name: '河北',value: Math.round(Math.random()*1000)},
-                {name: '河南',value: Math.round(Math.random()*1000)},
-                {name: '云南',value: Math.round(Math.random()*1000)},
-                {name: '辽宁',value: Math.round(Math.random()*1000)},
-                {name: '黑龙江',value: Math.round(Math.random()*1000)},
-                {name: '湖南',value: Math.round(Math.random()*1000)},
-                {name: '安徽',value: Math.round(Math.random()*1000)},
-                {name: '山东',value: Math.round(Math.random()*1000)},
-                {name: '新疆',value: Math.round(Math.random()*1000)},
-                {name: '江苏',value: Math.round(Math.random()*1000)},
-                {name: '浙江',value: Math.round(Math.random()*1000)},
-                {name: '江西',value: Math.round(Math.random()*1000)},
-                {name: '湖北',value: Math.round(Math.random()*1000)},
-                {name: '广西',value: Math.round(Math.random()*1000)},
-                {name: '甘肃',value: Math.round(Math.random()*1000)},
-                {name: '山西',value: Math.round(Math.random()*1000)},
-                {name: '内蒙古',value: Math.round(Math.random()*1000)},
-                {name: '陕西',value: Math.round(Math.random()*1000)},
-                {name: '吉林',value: Math.round(Math.random()*1000)},
-                {name: '福建',value: Math.round(Math.random()*1000)},
-                {name: '贵州',value: Math.round(Math.random()*1000)},
-                {name: '广东',value: Math.round(Math.random()*1000)},
-                {name: '青海',value: Math.round(Math.random()*1000)},
-                {name: '西藏',value: Math.round(Math.random()*1000)},
-                {name: '四川',value: Math.round(Math.random()*1000)},
-                {name: '宁夏',value: Math.round(Math.random()*1000)},
-                {name: '海南',value: Math.round(Math.random()*1000)},
-                {name: '台湾',value: Math.round(Math.random()*1000)},
-                {name: '香港',value: Math.round(Math.random()*1000)},
-                {name: '澳门',value: Math.round(Math.random()*1000)}
-            ]
-        },
-        {
-            name: 'iphone4',
-            type: 'map',
-            mapType: 'china',
-            data:[
-                {name: '北京',value: Math.round(Math.random()*1000)},
-                {name: '天津',value: Math.round(Math.random()*1000)},
-                {name: '上海',value: Math.round(Math.random()*1000)},
-                {name: '重庆',value: Math.round(Math.random()*1000)},
-                {name: '河北',value: Math.round(Math.random()*1000)},
-                {name: '安徽',value: Math.round(Math.random()*1000)},
-                {name: '新疆',value: Math.round(Math.random()*1000)},
-                {name: '浙江',value: Math.round(Math.random()*1000)},
-                {name: '江西',value: Math.round(Math.random()*1000)},
-                {name: '山西',value: Math.round(Math.random()*1000)},
-                {name: '内蒙古',value: Math.round(Math.random()*1000)},
-                {name: '吉林',value: Math.round(Math.random()*1000)},
-                {name: '福建',value: Math.round(Math.random()*1000)},
-                {name: '广东',value: Math.round(Math.random()*1000)},
-                {name: '西藏',value: Math.round(Math.random()*1000)},
-                {name: '四川',value: Math.round(Math.random()*1000)},
-                {name: '宁夏',value: Math.round(Math.random()*1000)},
-                {name: '海南',value: Math.round(Math.random()*1000)},
-                {name: '香港',value: Math.round(Math.random()*1000)},
-                {name: '澳门',value: Math.round(Math.random()*1000)}
-            ]
-        },
-        {
-            name: 'iphone5',
-            type: 'map',
-            mapType: 'china',
-            data:[
-                {name: '北京',value: Math.round(Math.random()*1000)},
-                {name: '天津',value: Math.round(Math.random()*1000)},
-                {name: '上海',value: Math.round(Math.random()*1000)},
-                {name: '广东',value: Math.round(Math.random()*1000)},
-                {name: '台湾',value: Math.round(Math.random()*1000)},
-                {name: '香港',value: Math.round(Math.random()*1000)},
-                {name: '澳门',value: Math.round(Math.random()*1000)}
-            ]
+            data:[]
         }
     ]
 };
@@ -198,7 +102,7 @@ option = {
               </div><!--/.well -->
             </div><!--/span-->
             <div id="graphic" class="span8">
-                <div id="main" class="main" style="height: 530px;width:630px"></div>
+                <div id="main" class="main" style="height: 530px;"></div>
                 <div>
                     <button onclick="refresh(true)">Refresh ~</button>
                     <span id='wrong-message' style="color:red"></span>

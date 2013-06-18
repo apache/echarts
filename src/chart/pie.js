@@ -211,6 +211,7 @@ define(function(require) {
             var sector = {
                 shape : 'sector',             // 扇形
                 zlevel : _zlevelBase,
+                clickable : true,
                 style : {
                     x : serie.center[0],          // 圆心横坐标
                     y : serie.center[1],          // 圆心纵坐标
@@ -247,7 +248,6 @@ define(function(require) {
             
             
             if (_selectedMode) {
-                sector.clickable = true;
                 sector.onclick = self.shapeHandler.onclick;
             }
             

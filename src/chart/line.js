@@ -35,7 +35,7 @@ define(function(require) {
         var _zlevelBase = self.getZlevelBase();
 
         var _sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
-        var _brokenPoint = [
+        var _symbol = [
               'circle', 'rectangle', 'triangle', 'diamond',
               'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
             ];
@@ -142,11 +142,8 @@ define(function(require) {
                 }
                 _sIndex2ShapeMap[seriesArray[i]]
                     = _sIndex2ShapeMap[seriesArray[i]]
-                      || self.deepQuery(
-                             [serie],
-                             'brokenPoint'
-                         )
-                      || _brokenPoint[i % _brokenPoint.length];
+                      || self.deepQuery([serie],'symbol')
+                      || _symbol[i % _symbol.length];
 
                 if (self.selectedMap[serieName]) {
                     stackKey = serie.stack || (magicStackKey + seriesArray[i]);
@@ -264,7 +261,7 @@ define(function(require) {
                 }
                 // 补充空数据的拖拽提示
                 lastYP = component.grid.getY();
-                var brokenPointSize;
+                var symbolSize;
                 for (var j = 0, k = locationMap.length; j < k; j++) {
                     for (var m = 0, n = locationMap[j].length; m < n; m++) {
                         seriesIndex = locationMap[j][m];
@@ -283,11 +280,11 @@ define(function(require) {
                                 [data, serie, option], 'calculable'
                             )
                         ) {
-                            brokenPointSize = self.deepQuery(
+                            symbolSize = self.deepQuery(
                                 [data, serie],
-                                'brokenPointSize'
+                                'symbolSize'
                             );
-                            lastYP += brokenPointSize * 2 + 2;
+                            lastYP += symbolSize * 2 + 2;
                             y = lastYP;
                             self.shapeList.push(_getCalculableItem(
                                 seriesIndex, i, categoryAxis.getNameByIndex(i),
@@ -384,7 +381,7 @@ define(function(require) {
                 }
                 // 补充空数据的拖拽提示
                 lastXP = component.grid.getXend();
-                var brokenPointSize;
+                var symbolSize;
                 for (var j = 0, k = locationMap.length; j < k; j++) {
                     for (var m = 0, n = locationMap[j].length; m < n; m++) {
                         seriesIndex = locationMap[j][m];
@@ -403,11 +400,11 @@ define(function(require) {
                                 [data, serie, option], 'calculable'
                             )
                         ) {
-                            brokenPointSize = self.deepQuery(
+                            symbolSize = self.deepQuery(
                                 [data, serie],
-                                'brokenPointSize'
+                                'symbolSize'
                             );
-                            lastXP -= brokenPointSize * 2 + 2;
+                            lastXP -= symbolSize * 2 + 2;
                             x = lastXP;
                             self.shapeList.push(_getCalculableItem(
                                 seriesIndex, i, categoryAxis.getNameByIndex(i),
@@ -494,7 +491,7 @@ define(function(require) {
                             data = serie.data[singlePL[j][2]];
                             if ((categoryAxis.isMainAxis(singlePL[j][2]) // 主轴
                                  && self.deepQuery(                      // 非空
-                                        [data, serie], 'brokenPoint'
+                                        [data, serie], 'symbol'
                                     ) != 'none'
                                 )
                                 || self.deepQuery(                      // 可计算
@@ -502,7 +499,7 @@ define(function(require) {
                                         'calculable'
                                    )
                             ) {
-                                self.shapeList.push(_getBrokenPoint(
+                                self.shapeList.push(_getSymbol(
                                     seriesIndex,
                                     singlePL[j][2], // dataIndex
                                     singlePL[j][3], // name
@@ -583,7 +580,7 @@ define(function(require) {
             var color = series[seriesIndex].calculableHolderColor
                         || ecConfig.calculableHolderColor;
 
-            var itemShape = _getBrokenPoint(
+            var itemShape = _getSymbol(
                 seriesIndex, dataIndex, name,
                 x, y,
                 color,
@@ -600,21 +597,21 @@ define(function(require) {
         /**
          * 生成折线图上的拐点图形
          */
-        function _getBrokenPoint(
+        function _getSymbol(
             seriesIndex, dataIndex, name, x, y, normalColor, emphasisColor
         ) {
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
-            var brokenPoint = self.deepQuery([data], 'brokenPoint')
-                              || _sIndex2ShapeMap[seriesIndex]
-                              || 'cricle';
-            var brokenPointSize = self.deepQuery(
+            var symbol = self.deepQuery([data], 'symbol')
+                         || _sIndex2ShapeMap[seriesIndex]
+                         || 'cricle';
+            var symbolSize = self.deepQuery(
                 [data, serie],
-                'brokenPointSize'
+                'symbolSize'
             );
 
             var itemShape;
-            switch (brokenPoint) {
+            switch (symbol) {
                 case 'circle' :
                 case 'emptyCircle' :
                     itemShape = {
@@ -622,8 +619,8 @@ define(function(require) {
                         style : {
                             x : x,
                             y : y,
-                            r : brokenPointSize,
-                            brushType : brokenPoint == 'circle'
+                            r : symbolSize,
+                            brushType : symbol == 'circle'
                                         ? 'fill' : 'stroke'
                         }
                     };
@@ -633,11 +630,11 @@ define(function(require) {
                     itemShape = {
                         shape : 'rectangle',
                         style : {
-                            x : x - brokenPointSize,
-                            y : y - brokenPointSize,
-                            width : brokenPointSize * 2,
-                            height : brokenPointSize * 2,
-                            brushType : brokenPoint == 'rectangle'
+                            x : x - symbolSize,
+                            y : y - symbolSize,
+                            width : symbolSize * 2,
+                            height : symbolSize * 2,
+                            brushType : symbol == 'rectangle'
                                         ? 'fill' : 'stroke'
                         }
                     };
@@ -648,11 +645,11 @@ define(function(require) {
                         shape : 'polygon',
                         style : {
                             pointList : [
-                                [x, y - brokenPointSize],
-                                [x + brokenPointSize, y + brokenPointSize],
-                                [x - brokenPointSize, y + brokenPointSize]
+                                [x, y - symbolSize],
+                                [x + symbolSize, y + symbolSize],
+                                [x - symbolSize, y + symbolSize]
                             ],
-                            brushType : brokenPoint == 'triangle'
+                            brushType : symbol == 'triangle'
                                         ? 'fill' : 'stroke'
                         }
                     };
@@ -663,12 +660,12 @@ define(function(require) {
                         shape : 'polygon',
                         style : {
                             pointList : [
-                                [x, y - brokenPointSize],
-                                [x + brokenPointSize, y],
-                                [x, y + brokenPointSize],
-                                [x - brokenPointSize, y]
+                                [x, y - symbolSize],
+                                [x + symbolSize, y],
+                                [x, y + symbolSize],
+                                [x - symbolSize, y]
                             ],
-                            brushType : brokenPoint == 'diamond'
+                            brushType : symbol == 'diamond'
                                         ? 'fill' : 'stroke'
                         }
                     };
@@ -679,7 +676,7 @@ define(function(require) {
                         style : {
                             x : x,
                             y : y,
-                            r : brokenPointSize,
+                            r : symbolSize,
                             brushType : 'fill'
                         }
                     };

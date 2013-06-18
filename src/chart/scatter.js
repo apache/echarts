@@ -124,9 +124,8 @@ define(function(require) {
                     pointList[seriesIndex].push([
                         x,  // 横坐标
                         y,  // 纵坐标
-                        (typeof value[2] != 'undefined' 
-                         && typeof symbolSize == 'function'
-                        ? symbolSize(value[2])
+                        (typeof symbolSize == 'function'
+                        ? symbolSize(value)
                         : symbolSize),                  // 图形大小
                         _sIndex2ShapeMap[seriesIndex],  // 图形类型
                         i,                              // 数据index
@@ -143,8 +142,10 @@ define(function(require) {
          */
         function _buildPointList(pointList) {
             var nColor;     // normal
+            var nLineWidth;
             var eColor;     // emphasis
-
+            var eLineWidth;
+            
             var serie;
             var queryTarget;
             var data;
@@ -159,9 +160,15 @@ define(function(require) {
                 nColor = self.deepQuery(
                     queryTarget, 'itemStyle.normal.color'
                 ) || _sIndex2ColorMap[seriesIndex];
+                nLineWidth = self.deepQuery(
+                    queryTarget, 'itemStyle.normal.lineStyle.width'
+                );
                 
                 eColor = self.deepQuery(
                     queryTarget, 'itemStyle.emphasis.color'
+                );
+                eLineWidth = self.deepQuery(
+                    queryTarget, 'itemStyle.emphasis.lineStyle.width'
                 );
                 
                 if (serie.large) {
@@ -195,7 +202,7 @@ define(function(require) {
                         
                         // 大小
                         self.deepQuery(queryTarget, 'symbolSize')
-                        || singlePoint[2],          
+                        || singlePoint[2],
                         
                         // 类型
                         self.deepQuery(queryTarget, 'symbol')
@@ -204,12 +211,20 @@ define(function(require) {
                         // 填充颜色
                         self.deepQuery(queryTarget, 'itemStyle.normal.color')
                         || nColor,
+                        // 线宽
+                        self.deepQuery(
+                            queryTarget, 'itemStyle.normal.lineStyle.width'
+                        )|| nLineWidth,
                         
                         //------------高亮
                         // 填充颜色
                         self.deepQuery(
                             queryTarget, 'itemStyle.emphasis.color'
-                        ) || eColor || nColor
+                        ) || eColor || nColor,
+                        // 线宽
+                        self.deepQuery(
+                            queryTarget, 'itemStyle.emphasis.lineStyle.width'
+                        )|| eLineWidth || nLineWidth
                     ));
                 }
             }
@@ -222,7 +237,7 @@ define(function(require) {
         function _getSymbol(
             seriesIndex, dataIndex, name, 
             x, y, symbolSize, symbolType,
-            nColor, eColor
+            nColor, nLineWidth, eColor, eLineWidth
         ) {
             var itemShape;
             switch (symbolType) {
@@ -296,13 +311,16 @@ define(function(require) {
                     };
                     break;
             }
+            itemShape.clickable = true;
             itemShape._serieIndex = seriesIndex;
             itemShape.zlevel = _zlevelBase;
             itemShape.style.color = nColor;
             itemShape.style.strokeColor = nColor;
+            itemShape.style.lineWidth = nLineWidth;
             itemShape.highlightStyle = {
                 color : eColor,
-                strokeColor : eColor
+                strokeColor : eColor,
+                lineWidth : eLineWidth
             };
             /*
             if (self.deepQuery([data, serie, option], 'calculable')) {
