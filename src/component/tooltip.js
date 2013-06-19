@@ -778,5 +778,7 @@ define(function (require) {
         init(option, dom);
     }
 
+    require('../component').define('tooltip', Tooltip);
+
     return Tooltip;
 });

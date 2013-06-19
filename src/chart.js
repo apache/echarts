@@ -28,20 +28,5 @@ define(function(require) {    //chart
         return _chartLibrary[name];
     };
 
-    // 内置图表注册
-    self.define('island', require('./chart/island'));
-
-    self.define('pie', require('./chart/pie'));
-
-    self.define('bar', require('./chart/bar'));
-
-    self.define('line', require('./chart/line'));
-    
-    self.define('map', require('./chart/map'));
-    
-    self.define('k', require('./chart/k'));
-    
-    self.define('scatter', require('./chart/scatter'));
-
     return self;
 });

@@ -65,6 +65,7 @@ require.config({
         {
             name: 'zrender',
             location: 'http://ecomfe.github.io/zrender/src',
+            //location: '../../../zrender/src',
             main: 'zrender'
         }
     ]
@@ -72,7 +73,15 @@ require.config({
 
 var echarts;
 require(
-    ['echarts/echarts'],
+    [
+        'echarts/echarts',
+        'echarts/chart/line',
+        'echarts/chart/bar',
+        'echarts/chart/scatter',
+        'echarts/chart/k',
+        'echarts/chart/pie',
+        'echarts/chart/map'
+    ],
     function(ec) {
         echarts = ec;
         if (myChart && myChart.dispose) {

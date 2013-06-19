@@ -184,5 +184,7 @@ define(function (require) {
         init(option, component, axisType);
     }
 
+    require('../component').define('axis', Axis);
+     
     return Axis;
 });

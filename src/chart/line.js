@@ -797,5 +797,8 @@ define(function(require) {
         init(option, component);
     }
 
+    // 图表注册
+    require('../chart').define('line', Line);
+    
     return Line;
 });

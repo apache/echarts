@@ -1130,6 +1130,8 @@ define(function (require) {
         init(option);
     }
 
+    require('../component').define('dataRange', DataRange);
+
     return DataRange;
 });
 

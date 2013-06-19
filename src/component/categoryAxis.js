@@ -639,5 +639,7 @@ define(function (require) {
         init(option, grid);
     }
 
+    require('../component').define('categoryAxis', CategoryAxis);
+    
     return CategoryAxis;
 });

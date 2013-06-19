@@ -498,6 +498,8 @@ define(function (require) {
         init(option);
     }
 
+    require('../component').define('legend', Legend);
+    
     return Legend;
 });
 

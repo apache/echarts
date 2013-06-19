@@ -328,9 +328,9 @@ define(
             }
         };
 
-        var base = require('zrender/shape/base');
-            base.derive(Icon);
-
+        require('zrender/shape/base').derive(Icon);
+        require('zrender/shape').define('icon', new Icon());
+            
         return Icon;
     }
 );

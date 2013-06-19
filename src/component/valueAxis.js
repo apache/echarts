@@ -790,6 +790,8 @@ define(function (require) {
         init(option, grid, series);
     }
 
+    require('../component').define('valueAxis', ValueAxis);
+    
     return ValueAxis;
 });
 

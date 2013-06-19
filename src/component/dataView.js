@@ -433,5 +433,7 @@ define(function (require) {
         _init();
     }
 
+    require('../component').define('dataView', DataView);
+    
     return DataView;
 });

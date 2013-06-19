@@ -420,9 +420,11 @@ define(function(require) {
         init(option, component);
     }
     
-    var shape = require('zrender/shape');
-    var Symbol = require('../util/shape/symbol');
-    shape.define('symbol', new Symbol());
-
+    // 动态扩展zrender shape：symbol
+    require('../util/shape/symbol');
+    
+    // 自注册
+    require('../chart').define('scatter', Scatter);
+    
     return Scatter;
 });

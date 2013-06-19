@@ -633,5 +633,10 @@ define(function (require) {
         self.resetMagicType = resetMagicType;
     }
 
+    // 动态扩展zrender shape：icon
+    require('../util/shape/icon');
+
+    require('../component').define('toolbox', Toolbox);
+    
     return Toolbox;
 });

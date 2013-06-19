@@ -233,5 +233,8 @@ define(function (require) {
         self.ondragend = ondragend;
     }
 
+    // 图表注册
+    require('../chart').define('island', Island);
+    
     return Island;
 });

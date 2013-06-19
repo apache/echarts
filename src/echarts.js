@@ -92,17 +92,27 @@ define(function(require) {
             _zr.on(zrConfig.EVENT.DROP, _ondrop);
 
 
-            var shape = require('zrender/shape');
-            var Icon = require('./util/shape/icon');
-            shape.define('icon', new Icon());
-
-            // 孤岛
+            // 内置图表注册
             var chartLibrary = require('./chart');
+            require('./chart/island');
+            // 孤岛
             var Island = chartLibrary.get('island');
             _island = new Island(_messageCenter, _zr);
-
-            // 工具箱
+            
+    
+            // 内置组件注册
             var componentLibrary = require('./component');
+            require('./component/axis');
+            require('./component/categoryAxis');
+            require('./component/valueAxis');
+            require('./component/grid');
+            require('./component/dataZoom');
+            require('./component/legend');
+            require('./component/dataRange');
+            require('./component/tooltip');
+            require('./component/toolbox');
+            require('./component/dataView');
+            // 工具箱
             var Toolbox = componentLibrary.get('toolbox');
             _toolbox = new Toolbox(_messageCenter, _zr, dom);
         }

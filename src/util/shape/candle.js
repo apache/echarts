@@ -183,9 +183,9 @@ define(
             }
         };
 
-        var base = require('zrender/shape/base');
-            base.derive(Candle);
-
+        require('zrender/shape/base').derive(Candle);
+        require('zrender/shape').define('candle', new Candle());
+        
         return Candle;
     }
 );

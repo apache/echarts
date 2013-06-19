@@ -679,5 +679,7 @@ define(function (require) {
         init(option);
     }
 
+    require('../component').define('dataZoom', DataZoom);
+    
     return DataZoom;
 });

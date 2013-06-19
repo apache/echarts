@@ -433,9 +433,11 @@ define(function(require) {
         init(option, component);
     }
     
-    var shape = require('zrender/shape');
-    var Candle = require('../util/shape/candle');
-    shape.define('candle', new Candle());
+    // 动态扩展zrender shape：candle
+    require('../util/shape/candle');
 
+    // 图表注册
+    require('../chart').define('k', K);
+    
     return K;
 });

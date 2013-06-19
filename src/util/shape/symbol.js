@@ -206,9 +206,9 @@ define(
             }
         };
 
-        var base = require('zrender/shape/base');
-            base.derive(Symbol);
-
+        require('zrender/shape/base').derive(Symbol);
+        require('zrender/shape').define('symbol', new Symbol());
+        
         return Symbol;
     }
 );
