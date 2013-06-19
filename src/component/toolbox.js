@@ -118,7 +118,8 @@ define(function (require) {
                         shadowColor: '#ccc',
                         shadowBlur : 2,
                         shadowOffsetX : 2,
-                        shadowOffsetY : 2
+                        shadowOffsetY : 2,
+                        brushType: 'stroke'
                     },
                     highlightStyle : {
                         lineWidth : 2,
@@ -632,9 +633,6 @@ define(function (require) {
         self.getMagicOption = getMagicOption;
         self.resetMagicType = resetMagicType;
     }
-
-    // 动态扩展zrender shape：icon
-    require('../util/shape/icon');
 
     require('../component').define('toolbox', Toolbox);
     

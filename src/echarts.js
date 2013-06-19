@@ -91,6 +91,8 @@ define(function(require) {
             _zr.on(zrConfig.EVENT.DRAGLEAVE, _ondragleave);
             _zr.on(zrConfig.EVENT.DROP, _ondrop);
 
+            // 动态扩展zrender shape：icon
+            require('./util/shape/icon');
 
             // 内置图表注册
             var chartLibrary = require('./chart');
@@ -99,7 +101,6 @@ define(function(require) {
             var Island = chartLibrary.get('island');
             _island = new Island(_messageCenter, _zr);
             
-    
             // 内置组件注册
             var componentLibrary = require('./component');
             require('./component/axis');

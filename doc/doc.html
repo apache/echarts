@@ -1395,13 +1395,17 @@ feature : {
                             <td> {string} symbol </td>
                             <td> null </td>
                             <td> 折线图，散点图 </td>
-                            <td> 拐点图形类型，默认自动选择（8种类型循环使用，不显示拐点图形可设为'none'），支持类型有：<br/>'circle' | 'rectangle' | 'triangle' | 'diamond' |<br/>'emptyCircle' | 'emptyRectangle' | 'emptyTriangle' | 'emptyDiamond'</td>
+                            <td> 标志图形类型，默认自动选择（8种类型循环使用，不显示标志图形可设为'none'），支持类型有：<br/>
+                                'circle' | 'rectangle' | 'triangle' | 'diamond' |<br/>
+                                'emptyCircle' | 'emptyRectangle' | 'emptyTriangle' | 'emptyDiamond'<br/>
+                                (另外，还支持一种更特别的标志图形'star'（五角星），这并不出现在常规的8类图形中，但无论是在系列级还是数据级上你都可以指定使用，同时，'star' + n（n>=3)可变化出N角星，如指定为'star6'则可以显示6角星)
+                            </td>
                         </tr>
                         <tr>
                             <td> {number | Function} symbolSize </td>
                             <td> 4 </td>
                             <td> 折线图 ，散点图 </td>
-                            <td> 拐点图形大小，可计算特性启用情况建议增大以提高交互体验。实现气泡图时symbolSize需为Function，气泡大小取决于该方法返回值，传入参数为当前数据项（value数组）</td>
+                            <td> 标志图形大小，可计算特性启用情况建议增大以提高交互体验。实现气泡图时symbolSize需为Function，气泡大小取决于该方法返回值，传入参数为当前数据项（value数组）</td>
                         </tr>
                         <tr>
                             <td> {Array} center </td>

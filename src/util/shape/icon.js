@@ -81,7 +81,6 @@ define(
         
         function Icon() {
             this.type = 'icon';
-            this.brushTypeOnly = 'stroke';
             this._iconLibrary = {
                 mark : _iconMark,
                 markUndo : _iconMarkUndo,
@@ -89,7 +88,14 @@ define(
                 refresh : _iconRefresh,
                 lineChart : _iconLineChart,
                 barChart : _iconBarChart,
-                dataView : _iconDataView
+                dataView : _iconDataView,
+                
+                cross : _iconCross,
+                circle : _iconCircle,
+                rectangle : _iconRectangle,
+                triangle : _iconTriangle,
+                diamond : _iconDiamond,
+                star : _iconStar
             };
         }
 
@@ -169,6 +175,7 @@ define(
             ctx.moveTo(style.x + 13 * dx,       style.y);
             ctx.lineTo(style.x + style.width,   style.y + 4 * dy);
             ctx.lineTo(style.x + 11 * dx,       style.y + 5 * dy);
+            ctx.moveTo(style.x, style.y); // 避免closePath
         }
 
         function _iconLineChart(ctx, style) {
@@ -183,6 +190,7 @@ define(
             ctx.lineTo(style.x + 7 * dx,    style.y + 6 * dy);
             ctx.lineTo(style.x + 11 * dx,   style.y + 11 * dy);
             ctx.lineTo(style.x + 15 * dx,   style.y + 2 * dy);
+            ctx.moveTo(style.x, style.y); // 避免closePath
         }
 
         function _iconBarChart(ctx, style) {
@@ -227,7 +235,71 @@ define(
 
             ctx.moveTo(style.x + 3 * dx, style.y + 12 * dx);
             ctx.lineTo(style.x + 9 * dx, style.y + 12 * dx);
-
+        }
+        
+        function _iconCross(ctx, style) {
+            var x = style.x;
+            var y = style.y;
+            var width = style.width;
+            var height = style.height;
+            ctx.moveTo(x, y + height / 2);
+            ctx.lineTo(x + width, y + height / 2);
+            
+            ctx.moveTo(x + width / 2, y);
+            ctx.lineTo(x + width / 2, y + height);
+        }
+        
+        function _iconCircle(ctx, style) {
+            var width = style.width / 2;
+            var height = style.height / 2;
+            ctx.arc(
+                style.x + width, 
+                style.y + height, 
+                Math.min(width, height),
+                0, 
+                Math.PI * 2
+            );
+        }
+        
+        function _iconRectangle(ctx, style) {
+            ctx.rect(style.x, style.y, style.width, style.height);
+        }
+        
+        function _iconTriangle(ctx, style) {
+            var width = style.width / 2;
+            var height = style.height / 2;
+            var x = style.x + width;
+            var y = style.y + height;
+            var symbolSize = Math.min(width, height);
+            ctx.moveTo(x, y - symbolSize);
+            ctx.lineTo(x + symbolSize, y + symbolSize);
+            ctx.lineTo(x - symbolSize, y + symbolSize);
+            ctx.lineTo(x, y - symbolSize);
+        }
+        
+        function _iconDiamond(ctx, style) {
+            var width = style.width / 2;
+            var height = style.height / 2;
+            var x = style.x + width;
+            var y = style.y + height;
+            var symbolSize = Math.min(width, height);
+            ctx.moveTo(x, y - symbolSize);
+            ctx.lineTo(x + symbolSize, y);
+            ctx.lineTo(x, y + symbolSize);
+            ctx.lineTo(x - symbolSize, y);
+            ctx.lineTo(x, y - symbolSize);
+        }
+        
+        function _iconStar(ctx, style) {
+            var width = style.width / 2;
+            var height = style.height / 2;
+            var star = require('zrender/shape').get('star');
+            star.buildPath(ctx, {
+                x : style.x + width,
+                y : style.y + height,
+                r : Math.min(width, height),
+                n : style.n || 5
+            });
         }
 
         Icon.prototype =  {
@@ -320,11 +392,11 @@ define(
             },
 
             define : function(iconType, pathMethod) {
-                _iconLibrary[iconType] = pathMethod;
+                this._iconLibrary[iconType] = pathMethod;
             },
 
             get : function(iconType) {
-                return _iconLibrary[iconType];
+                return this._iconLibrary[iconType];
             }
         };
 

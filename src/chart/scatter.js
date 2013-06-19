@@ -48,22 +48,32 @@ define(function(require) {
             var seriesArray = [];
             var serie;                              // 临时映射变量
             var serieName;                          // 临时映射变量
+            var iconShape;
             for (var i = 0, l = series.length; i < l; i++) {
                 serie = series[i];
                 serieName = serie.name;
                 if (serie.type == ecConfig.CHART_TYPE_SCATTER) {
                     series[i] = self.reformOption(series[i]);
+                    _sIndex2ShapeMap[i] = self.deepQuery([serie], 'symbol')
+                                          || _symbol[i % _symbol.length];
                     if (legend){
                         self.selectedMap[serieName] = 
                             legend.isSelected(serieName);
+                            
                         _sIndex2ColorMap[i] = 
                             zrColor.alpha(legend.getColor(serieName),0.5);
+                            
+                        iconShape = legend.getItemShape(serieName);
+                        if (iconShape) {
+                            // 回调legend，换一个更形象的icon
+                            iconShape.shape = 'icon';
+                            iconShape.style.iconType = _sIndex2ShapeMap[i];
+                            legend.setItemShape(serieName, iconShape);
+                        }
                     } else {
                         self.selectedMap[serieName] = true;
                         _sIndex2ColorMap[i] = zr.getColor(i);
                     }
-                    _sIndex2ShapeMap[i] = self.deepQuery([serie], 'symbol')
-                                          || _symbol[i % _symbol.length];
                       
                     if (self.selectedMap[serieName]) {
                         seriesArray.push(i);
@@ -236,102 +246,49 @@ define(function(require) {
          */
         function _getSymbol(
             seriesIndex, dataIndex, name, 
-            x, y, symbolSize, symbolType,
+            x, y, symbolSize, symbol,
             nColor, nLineWidth, eColor, eLineWidth
         ) {
-            var itemShape;
-            switch (symbolType) {
-                case 'circle' :
-                case 'emptyCircle' :
-                    itemShape = {
-                        shape : 'circle',
-                        style : {
-                            x : x,
-                            y : y,
-                            r : symbolSize,
-                            brushType : symbolType == 'circle'
-                                        ? 'fill' : 'stroke'
-                        }
-                    };
-                    break;
-                case 'rectangle' :
-                case 'emptyRectangle' :
-                    itemShape = {
-                        shape : 'rectangle',
-                        style : {
-                            x : x - symbolSize,
-                            y : y - symbolSize,
-                            width : symbolSize * 2,
-                            height : symbolSize * 2,
-                            brushType : symbolType == 'rectangle'
-                                        ? 'fill' : 'stroke'
-                        }
-                    };
-                    break;
-                case 'triangle' :
-                case 'emptyTriangle' :
-                    itemShape = {
-                        shape : 'polygon',
-                        style : {
-                            pointList : [
-                                [x, y - symbolSize],
-                                [x + symbolSize, y + symbolSize],
-                                [x - symbolSize, y + symbolSize]
-                            ],
-                            brushType : symbolType == 'triangle'
-                                        ? 'fill' : 'stroke'
-                        }
-                    };
-                    break;
-                case 'diamond' :
-                case 'emptyDiamond' :
-                    itemShape = {
-                        shape : 'polygon',
-                        style : {
-                            pointList : [
-                                [x, y - symbolSize],
-                                [x + symbolSize, y],
-                                [x, y + symbolSize],
-                                [x - symbolSize, y]
-                            ],
-                            brushType : symbolType == 'diamond'
-                                        ? 'fill' : 'stroke'
-                        }
-                    };
-                    break;
-                default:
-                    itemShape = {
-                        shape : 'circle',
-                        style : {
-                            x : x,
-                            y : y,
-                            r : symbolSize,
-                            brushType : 'fill'
-                        }
-                    };
-                    break;
-            }
-            itemShape.clickable = true;
-            itemShape._serieIndex = seriesIndex;
-            itemShape.zlevel = _zlevelBase;
-            itemShape.style.color = nColor;
-            itemShape.style.strokeColor = nColor;
-            itemShape.style.lineWidth = nLineWidth;
-            itemShape.highlightStyle = {
-                color : eColor,
-                strokeColor : eColor,
-                lineWidth : eLineWidth
+            var itemShape = {
+                shape : 'icon',
+                zlevel : _zlevelBase,
+                style : {
+                    iconType : symbol.replace('empty', '').toLowerCase(),
+                    x : x - symbolSize,
+                    y : y - symbolSize,
+                    width : symbolSize * 2,
+                    height : symbolSize * 2,
+                    brushType : symbol.match('empty') ? 'stroke' : 'fill',
+                    color : nColor,
+                    strokeColor : nColor,
+                    lineWidth: nLineWidth
+                },
+                highlightStyle : {
+                    color : eColor,
+                    strokeColor : eColor,
+                    lineWidth : eLineWidth
+                },
+                clickable : true,
             };
+            
+            if (symbol.match('star')) {
+                itemShape.style.iconType = 'star';
+                itemShape.style.n = 
+                    (symbol.replace('empty', '').replace('star','') - 0) || 5;
+            }
+            
+            if (symbol == 'none') {
+                itemShape.invisible = true;
+                itemShape.hoverable = false;
+            }
+
             /*
             if (self.deepQuery([data, serie, option], 'calculable')) {
                 self.setCalculable(itemShape);
                 itemShape.draggable = true;
             }
             */
-            // for animation
-            itemShape._x = x;
-            itemShape._y = y;
-            
+
             ecData.pack(
                 itemShape,
                 series[seriesIndex], seriesIndex,
@@ -339,6 +296,10 @@ define(function(require) {
                 name
             );
 
+            // for animation
+            itemShape._x = x;
+            itemShape._y = y;
+            
             return itemShape;
         }
         

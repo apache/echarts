@@ -33,6 +33,11 @@ define(function (require) {
         var _colorMap = {};
         var _selectedMap = {};
 
+        var icon = require('zrender/shape').get('icon');
+        for (var k in legendIcon) {
+            icon.define('legendicon' + k, legendIcon[k]);
+            //console.log('legendicon' + k, legendIcon[k])
+        }
 
         function _buildShape() {
             _itemGroupLocation = _getItemGroupLocation();
@@ -80,7 +85,7 @@ define(function (require) {
                 if (itemType) {
                     itemType = itemType.type;
                 } else {
-                    itemType = '';
+                    itemType = 'bar';
                 }
                 color = getColor(itemName);
 
@@ -100,10 +105,8 @@ define(function (require) {
                 itemShape = _getItemShapeByType(
                     lastX, lastY,
                     itemWidth, itemHeight,
-                    (_selectedMap[itemName]
-                     ? color : '#ccc'),
-                    itemType,
-                    _selectedMap[itemName]
+                    (_selectedMap[itemName] ? color : '#ccc'),
+                    itemType
                 );
                 itemShape._name = itemName;
                 itemShape.onclick = _legendSelected;
@@ -305,69 +308,39 @@ define(function (require) {
         }
 
         function _getItemShapeByType(x, y, width, height, color, itemType) {
+            var itemShape = {
+                shape : 'icon',
+                zlevel : _zlevelBase,
+                style : {
+                    iconType : 'legendicon' + itemType,
+                    x : x,
+                    y : y,
+                    width : width,
+                    height : height,
+                    color : color,
+                    strokeColor : color,
+                    lineWidth : 2
+                },
+                clickable : true
+            };
+            
+            // 特殊设置
             switch (itemType) {
                 case 'line' :
-                    return {
-                        shape : 'line',
-                        zlevel : _zlevelBase,
-                        style : {
-                            xStart : x,
-                            yStart : y + height / 2,
-                            xEnd : x + width,
-                            yEnd : y + height / 2,
-                            strokeColor : color,
-                            lineWidth : 5
-                        },
-                        clickable : true
-                    };
-                case 'pie' :
-                    return {
-                        shape : 'sector',
-                        zlevel : _zlevelBase,
-                        style : {
-                            x : x + width / 2,
-                            y : y + height + 2,
-                            r : height + 2,
-                            r0 : 6,
-                            startAngle : 45,
-                            endAngle : 135,
-                            color : color
-                        },
-                        clickable : true
-                    };
+                    itemShape.style.brushType = 'stroke';
+                    break;
                 case 'k' :
-                    return {
-                        shape : 'candle',
-                        zlevel : _zlevelBase,
-                        style : {
-                            x : x + width / 2,
-                            y : [y + 1, y + 1, y + height - 6, y + height],
-                            width : width - 6,
-                            color : self.deepQuery(
-                                [ecConfig], 'k.itemStyle.normal.color'
-                            ) || '#fff',
-                            strokeColor : self.deepQuery(
-                                [ecConfig], 'k.itemStyle.normal.lineStyle.color'
-                            ) || '#ff3200',
-                            lineWidth : 2,
-                            brushType : 'both'
-                        },
-                        clickable : true
-                    };
-                default :
-                    return {
-                        shape : 'rectangle',
-                        zlevel : _zlevelBase,
-                        style : {
-                            x : x,
-                            y : y + 1,
-                            width : width,
-                            height : height - 2,
-                            color : color
-                        },
-                        clickable : true
-                    };
+                    itemShape.style.brushType = 'both';
+                    itemShape.style.color = self.deepQuery(
+                        [ecConfig], 'k.itemStyle.normal.color'
+                    ) || '#fff';
+                    itemShape.style.strokeColor = color != '#ccc' 
+                        ? self.deepQuery(
+                              [ecConfig], 'k.itemStyle.normal.lineStyle.color'
+                          ) || '#ff3200'
+                        : color;
             }
+            return itemShape;
         }
 
         function _legendSelected(param) {
@@ -475,6 +448,40 @@ define(function (require) {
             }
             legendOption.data = finalData;
         }
+        
+        /**
+         * 特殊图形元素回调设置
+         * @param {Object} name
+         * @param {Object} itemShape
+         */
+        function getItemShape(name) {
+            var shape;
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                shape = self.shapeList[i];
+                if (shape._name == name && shape.shape != 'text') {
+                    return shape;
+                }
+            }
+        }
+        
+        /**
+         * 特殊图形元素回调设置
+         * @param {Object} name
+         * @param {Object} itemShape
+         */
+        function setItemShape(name, itemShape) {
+            var shape;
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                shape = self.shapeList[i];
+                if (shape._name == name && shape.shape != 'text') {
+                    if (!_selectedMap[name]) {
+                        itemShape.style.color = '#ccc';
+                        itemShape.style.strokeColor = '#ccc';
+                    }
+                    zr.modShape(shape.id, itemShape)
+                }
+            }
+        }
 
         function isSelected(itemName) {
             if (typeof _selectedMap[itemName] != 'undefined') {
@@ -493,11 +500,51 @@ define(function (require) {
         self.hasColor = hasColor;
         self.add = add;
         self.del = del;
+        self.getItemShape = getItemShape;
+        self.setItemShape = setItemShape;
         self.isSelected = isSelected;
 
         init(option);
     }
-
+    
+    var legendIcon = {
+        line : function (ctx, style) {
+            var dy = style.height / 2;
+            ctx.moveTo(style.x,     style.y + dy);
+            ctx.lineTo(style.x + style.width,style.y + dy);
+        },
+        pie : function (ctx, style) {
+            var x = style.x;
+            var y = style.y;
+            var width = style.width;
+            var height = style.height;
+            var sector = require('zrender/shape').get('sector');
+            sector.buildPath(ctx, {
+                x : x + width / 2,
+                y : y + height + 2,
+                r : height + 2,
+                r0 : 6,
+                startAngle : 45,
+                endAngle : 135
+            });
+        },
+        k : function (ctx, style) {
+            var x = style.x;
+            var y = style.y;
+            var width = style.width;
+            var height = style.height;
+            var candle = require('zrender/shape').get('candle');
+            candle.buildPath(ctx, {
+                x : x + width / 2,
+                y : [y + 1, y + 1, y + height - 6, y + height],
+                width : width - 6
+            });
+        },
+        bar : function (ctx, style) {
+            ctx.rect(style.x, style.y + 1, style.width, style.height - 2);
+        }
+    }
+    
     require('../component').define('legend', Legend);
     
     return Legend;

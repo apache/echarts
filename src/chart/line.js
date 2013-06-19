@@ -41,6 +41,10 @@ define(function(require) {
             ];
         var _sIndex2ShapeMap = {};  // series拐点图形类型，seriesIndex索引到shape type
 
+        require('zrender/shape').get('icon').define(
+            'legendLineIcon', legendLineIcon
+        );
+        
         function _buildShape() {
             self.selectedMap = {};
 
@@ -127,23 +131,37 @@ define(function(require) {
             var legend = component.legend;
             var locationMap = [];                   // 需要返回的东西：数组位置映射到系列索引
             var maxDataLength = 0;                  // 需要返回的东西：最大数据长度
+            var iconShape;
             // 计算需要显示的个数和分配位置并记在下面这个结构里
             for (var i = 0, l = seriesArray.length; i < l; i++) {
                 serie = series[seriesArray[i]];
                 serieName = serie.name;
+                
+                _sIndex2ShapeMap[seriesArray[i]]
+                    = _sIndex2ShapeMap[seriesArray[i]]
+                      || self.deepQuery([serie],'symbol')
+                      || _symbol[i % _symbol.length];
+                      
                 if (legend){
                     self.selectedMap[serieName] = legend.isSelected(serieName);
+                    
                     _sIndex2ColorMap[seriesArray[i]]
                         = legend.getColor(serieName);
+                        
+                    iconShape = legend.getItemShape(serieName);
+                    if (iconShape) {
+                        // 回调legend，换一个更形象的icon
+                        iconShape.shape = 'icon';
+                        iconShape.style.iconType = 'legendLineIcon';
+                        iconShape.style.symbol = 
+                            _sIndex2ShapeMap[seriesArray[i]];
+                        legend.setItemShape(serieName, iconShape);
+                    }
                 } else {
                     self.selectedMap[serieName] = true;
                     _sIndex2ColorMap[seriesArray[i]]
                         = zr.getColor(seriesArray[i]);
                 }
-                _sIndex2ShapeMap[seriesArray[i]]
-                    = _sIndex2ShapeMap[seriesArray[i]]
-                      || self.deepQuery([serie],'symbol')
-                      || _symbol[i % _symbol.length];
 
                 if (self.selectedMap[serieName]) {
                     stackKey = serie.stack || (magicStackKey + seriesArray[i]);
@@ -605,91 +623,39 @@ define(function(require) {
             var symbol = self.deepQuery([data], 'symbol')
                          || _sIndex2ShapeMap[seriesIndex]
                          || 'cricle';
-            var symbolSize = self.deepQuery(
-                [data, serie],
-                'symbolSize'
-            );
+            var symbolSize = self.deepQuery([data, serie],'symbolSize');
 
-            var itemShape;
-            switch (symbol) {
-                case 'circle' :
-                case 'emptyCircle' :
-                    itemShape = {
-                        shape : 'circle',
-                        style : {
-                            x : x,
-                            y : y,
-                            r : symbolSize,
-                            brushType : symbol == 'circle'
-                                        ? 'fill' : 'stroke'
-                        }
-                    };
-                    break;
-                case 'rectangle' :
-                case 'emptyRectangle' :
-                    itemShape = {
-                        shape : 'rectangle',
-                        style : {
-                            x : x - symbolSize,
-                            y : y - symbolSize,
-                            width : symbolSize * 2,
-                            height : symbolSize * 2,
-                            brushType : symbol == 'rectangle'
-                                        ? 'fill' : 'stroke'
-                        }
-                    };
-                    break;
-                case 'triangle' :
-                case 'emptyTriangle' :
-                    itemShape = {
-                        shape : 'polygon',
-                        style : {
-                            pointList : [
-                                [x, y - symbolSize],
-                                [x + symbolSize, y + symbolSize],
-                                [x - symbolSize, y + symbolSize]
-                            ],
-                            brushType : symbol == 'triangle'
-                                        ? 'fill' : 'stroke'
-                        }
-                    };
-                    break;
-                case 'diamond' :
-                case 'emptyDiamond' :
-                    itemShape = {
-                        shape : 'polygon',
-                        style : {
-                            pointList : [
-                                [x, y - symbolSize],
-                                [x + symbolSize, y],
-                                [x, y + symbolSize],
-                                [x - symbolSize, y]
-                            ],
-                            brushType : symbol == 'diamond'
-                                        ? 'fill' : 'stroke'
-                        }
-                    };
-                    break;
-                default:
-                    itemShape = {
-                        shape : 'circle',
-                        style : {
-                            x : x,
-                            y : y,
-                            r : symbolSize,
-                            brushType : 'fill'
-                        }
-                    };
-                    break;
-            }
-            itemShape.clickable = true;
-            itemShape.zlevel = _zlevelBase + 1;
-            itemShape.style.color = normalColor;
-            itemShape.style.strokeColor = normalColor;
-            itemShape.highlightStyle = {
-                color : emphasisColor,
-                strokeColor : emphasisColor
+            var itemShape = {
+                shape : 'icon',
+                zlevel : _zlevelBase + 1,
+                style : {
+                    iconType : symbol.replace('empty', '').toLowerCase(),
+                    x : x - symbolSize,
+                    y : y - symbolSize,
+                    width : symbolSize * 2,
+                    height : symbolSize * 2,
+                    brushType : 'both',
+                    color : symbol.match('empty') ? '#fff' : normalColor,
+                    strokeColor : normalColor,
+                    lineWidth: 2
+                },
+                highlightStyle : {
+                    color : emphasisColor,
+                    strokeColor : emphasisColor
+                },
+                clickable : true,
             };
+            
+            if (symbol.match('star')) {
+                itemShape.style.iconType = 'star';
+                itemShape.style.n = 
+                    (symbol.replace('empty', '').replace('star','') - 0) || 5;
+            }
+            
+            if (symbol == 'none') {
+                itemShape.invisible = true;
+                itemShape.hoverable = false;
+            }
 
             if (self.deepQuery([data, serie, option], 'calculable')) {
                 self.setCalculable(itemShape);
@@ -797,6 +763,44 @@ define(function(require) {
         init(option, component);
     }
 
+    function legendLineIcon(ctx, style) {
+        var x = style.x;
+        var y = style.y;
+        var width = style.width;
+        var height = style.height;
+        
+        var dy = height / 2;
+        ctx.moveTo(x, y + dy);
+        ctx.lineTo(x + width, y + dy);
+        
+        if (style.symbol.match('empty')) {
+            ctx.fillStyle = '#fff';
+        }
+        style.brushType = 'both';
+        
+        var symbol = style.symbol.replace('empty', '').toLowerCase();
+        if (symbol.match('star')) {
+            dy = (symbol.replace('star','') - 0) || 5;
+            y -= 1;
+            symbol = 'star';
+        } 
+        else if (symbol == 'rectangle') {
+            x += (width - height) / 2;
+            width = height;
+        }
+        symbol = require('zrender/shape').get('icon').get(symbol);
+        
+        if (symbol) {
+            symbol(ctx, {
+                x : x + 3,
+                y : y + 3,
+                width : width - 6,
+                height : height - 6,
+                n : dy
+            });
+        }
+    }
+        
     // 图表注册
     require('../chart').define('line', Line);
     
