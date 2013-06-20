@@ -18,6 +18,7 @@ define(function() {
         CHART_TYPE_MAP: 'map',
         CHART_TYPE_K: 'k',
         CHART_TYPE_ISLAND: 'island',
+        CHART_TYPE_FORCE : 'force',
 
         // 组件类型
         COMPONENT_TYPE_LEGEND: 'legend',
@@ -431,6 +432,23 @@ define(function() {
             fontSize: 12,
             fontStyle: 'normal',
             fontWeight: 'normal'
+        },
+
+        force : {
+            // 数据map到圆的半径的最小值和最大值
+            minRadius : 10,
+            maxRadius : 20,
+            density : 1.0,
+            // 分类里如果有样式会覆盖节点默认样式
+            categories : [],
+            nodeStyle : {
+                brushType : 'both',
+                color : '#f08c2e',
+                strokeColor : '#5182ab'
+            },
+            linkStyle : {
+                strokeColor : '#5182ab'
+            },
         },
 
         EVENT: {

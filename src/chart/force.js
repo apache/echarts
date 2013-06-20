@@ -1,0 +1,429 @@
+/**
+ * echarts图表类：力导向图
+ * Copyright 2013 Baidu Inc. All rights reserved.
+ *
+ * @author pissang (shenyi01@baidu.com)
+ *
+ */
+
+define(function(require) {
+    
+    /**
+     * 构造函数
+     * @param {Object} messageCenter echart消息中心
+     * @param {ZRender} zr zrender实例
+     * @param {Object} series 数据
+     * @param {Object} component 组件
+     */
+    function Force(messageCenter, zr, option, component) {
+        
+        var ComponentBase = require('../component/base');
+        ComponentBase.call(this, zr);
+
+        var ecConfig = require('../config');
+        var ecData = require('../util/ecData');
+
+        var zrColor = require('zrender/tool/color');
+        var zrUtil = require('zrender/tool/util');
+        var vec2 = require('zrender/tool/vector');
+
+        var self = this;
+        self.type = ecConfig.CHART_TYPE_FORCE;
+
+        var series;
+
+        var nodeShapes = [];
+        var linkShapes = [];
+
+        // 节点分类
+        var categories = [];
+        // 默认节点样式
+        var nodeStyle;
+        // 默认边样式
+        var linkStyle;
+        // nodes和links的原始数据
+        var nodesRawData = [];
+        var linksRawData = [];
+
+        // nodes和links的权重, 用来计算引力和斥力
+        var nodeWeights = [];
+        var linkWeights = [];
+
+        // 节点的受力
+        var nodeForces = [];
+        // 节点的加速度
+        var nodeAccelerations = [];
+        // 节点的位置
+        var nodePositions = [];
+        var nodePrePositions = [];
+        // 节点的质量
+        var nodeMasses = [];
+
+        var temperature;
+        var k;
+        var density;
+
+        var stepTime = 1/20;
+        
+        var viewportWidth;
+        var viewportHeight;
+        var centroid = [];
+
+        function _buildShape() {
+
+            temperature = 1.0;
+            viewportWidth = zr.getWidth();
+            viewportHeight = zr.getHeight();
+            centroid = [viewportWidth/2, viewportHeight/2]
+
+            for (var i = 0, l = series.length; i < l; i++) {
+                var serie = series[i];
+                if (serie.type === ecConfig.CHART_TYPE_FORCE) {
+
+                    series[i] = self.reformOption(series[i]);
+
+                    var minRadius = self.deepQuery([serie], 'minRadius');
+                    var maxRadius = self.deepQuery([serie], 'maxRadius');
+
+                    density = self.deepQuery([serie], 'density');
+
+                    categories = self.deepQuery([serie], 'categories');
+
+                    linkStyle = self.deepQuery([serie], 'linkStyle');
+                    nodeStyle = self.deepQuery([serie], 'nodeStyle');
+                    
+                    nodesRawData = self.deepQuery([serie], 'nodes');
+                    linksRawData = self.deepQuery([serie], 'links');
+
+                    var area = viewportWidth * viewportHeight;
+                    // Formula in 'Graph Drawing by Force-directed Placement'
+                    k = 0.5 * Math.sqrt( area / nodesRawData.length );
+
+                    _buildLinkShapes(nodesRawData, linksRawData);
+                    _buildNodeShapes(nodesRawData, minRadius, maxRadius);
+                }
+            }
+        }
+
+        function _buildNodeShapes(nodes, minRadius, maxRadius) {
+            // 将值映射到minRadius-maxRadius的范围上
+            var radius = [];
+            var l = nodes.length;
+            for (var i = 0; i < l; i++) {
+                var node = nodes[i];
+                radius.push(node.value);
+            }
+            _map(radius, radius, minRadius, maxRadius);
+            _normalize(nodeWeights, radius);
+
+
+            for (var i = 0; i < l; i++) {
+                var node = nodes[i];
+                var x, y;
+                var r = radius[i];
+
+                var random = _randomInSquare(viewportWidth/2, 
+                                            viewportHeight/2, 
+                                            300);
+                x = typeof(node.initial) === "undefined" 
+                    ? random.x
+                    : node.initial.x;
+                y = typeof(node.initial) === "undefined"
+                    ? random.y
+                    : node.initial.y;
+                // 初始化位置
+                nodePositions[i] = [x, y];
+                nodePrePositions[i] = [x, y];
+                // 初始化受力
+                nodeForces[i] = [0, 0];
+                // 初始化加速度
+                nodeAccelerations[i] = [0, 0];
+                // 初始化质量
+                nodeMasses[i] = r * r * density;
+
+                var shape = {
+                    id : zr.newShapeId(self.type),
+                    shape : 'circle',
+                    style : {
+                        r : r,
+                        x : x,
+                        y : y
+                    }
+                };
+
+                // 优先级 node.style > category.style > defaultStyle
+                zrUtil.merge(shape.style, nodeStyle);
+                if (typeof(node.category) !== 'undefined') {
+                    var category = categories[node.category];
+                    if (category){
+                        var style = category.style;
+                        if(style){
+                            zrUtil.merge(shape.style, style, {
+                                overwrite : true
+                            });
+                        }
+                    }
+                }
+                if (typeof(node.style) !== 'undefined') {
+                    zrUtil.merge(shape.style, node.style, {
+                        overwrite : true
+                    });
+                }
+
+                nodeShapes.push(shape);
+                self.shapeList.push(shape);
+
+                zr.addShape(shape);
+            }
+
+            // _normalize(nodeMasses, nodeMasses);
+        }
+
+        function _buildLinkShapes(nodes, links) {
+            var l = links.length;
+
+            for (var i = 0; i < l; i++) {
+                var link = links[i];
+                var source = nodes[link.source];
+                var target = nodes[link.target];
+                var weight = link.weight || 1;
+                linkWeights.push(weight);
+
+                var shape = {
+                    id : zr.newShapeId(self.type),
+                    shape : 'line',
+                    style : {
+                        xStart : 0,
+                        yStart : 0,
+                        xEnd : 0,
+                        yEnd : 0
+                    }
+                };
+
+                zrUtil.merge(shape.style, linkStyle);
+                if (typeof(link.style) !== 'undefined') {
+                    zrUtil.merge(shape.style, link.style, {
+                        overwrite : true
+                    })
+                }
+
+                linkShapes.push(shape);
+                self.shapeList.push(shape);
+
+                zr.addShape(shape);
+            }
+            _normalize(linkWeights, linkWeights);
+        }
+
+        function _updateLinkShapes(){
+            for (var i = 0, l = linksRawData.length; i < l; i++) {
+                var link = linksRawData[i];
+                var linkShape = linkShapes[i];
+                var sourceShape = nodeShapes[link.source];
+                var targetShape = nodeShapes[link.target];
+
+                linkShape.style.xStart = sourceShape.style.x;
+                linkShape.style.yStart = sourceShape.style.y;
+                linkShape.style.xEnd = targetShape.style.x;
+                linkShape.style.yEnd = targetShape.style.y;
+            }
+        }
+
+        function _update(stepTime) {
+            var len = nodePositions.length;
+            var v12 = [];
+            // 计算节点之间斥力
+            var k2 = k*k;
+            // Reset force
+            for (var i = 0; i < len; i++) {
+                nodeForces[i][0] = 0;
+                nodeForces[i][1] = 0;
+            }
+            for (var i = 0; i < len; i++) {
+                for (var j = i+1; j < len; j++){
+                    var w1 = nodeWeights[i];
+                    var w2 = nodeWeights[j];
+                    var p1 = nodePositions[i];
+                    var p2 = nodePositions[j];
+
+                    // 节点1到2的向量
+                    vec2.sub(v12, p2, p1);
+                    var d = vec2.length(v12);
+                    // 距离大于500忽略斥力
+                    if(d > 500){
+                        continue;
+                    }
+                    vec2.scale(v12, v12, 1/d);
+                    var forceFactor = 1 * (w1 + w2) * k2 / d;
+
+                    vec2.scale(v12, v12, forceFactor);
+                    //节点1受到的力
+                    vec2.sub(nodeForces[i], nodeForces[i], v12);
+                    //节点2受到的力
+                    vec2.add(nodeForces[j], nodeForces[j], v12);
+                }
+            }
+            // 计算节点之间引力
+            for (var i = 0, l = linksRawData.length; i < l; i++) {
+                var link = linksRawData[i];
+                var w = linkWeights[i];
+                var s = link.source;
+                var t = link.target;
+                var p1 = nodePositions[s];
+                var p2 = nodePositions[t];
+
+                vec2.sub(v12, p2, p1);
+                var d2 = vec2.lengthSquare(v12);
+                vec2.normalize(v12, v12);
+
+                var forceFactor = w * d2 / k;
+                // 节点1受到的力
+                vec2.scale(v12, v12, forceFactor);
+                vec2.add(nodeForces[s], nodeForces[s], v12);
+                //节点2受到的力
+                vec2.sub(nodeForces[t], nodeForces[t], v12);
+            }
+            // 到质心的向心力
+            for (var i = 0, l = nodesRawData.length; i < l; i++){
+                var p = nodePositions[i];
+                vec2.sub(v12, centroid, p);
+                var d2 = vec2.lengthSquare(v12);
+                vec2.normalize(v12, v12);
+                // 100是可调参数
+                var forceFactor = d2 / 100;
+                vec2.scale(v12, v12, forceFactor);
+                vec2.add(nodeForces[i], nodeForces[i], v12);
+
+            }
+            // 计算加速度
+            for (var i = 0, l = nodeAccelerations.length; i < l; i++) {
+                vec2.scale(nodeAccelerations[i], nodeForces[i], 1 / nodeMasses[i]);
+            }
+            var velocity = [];
+            var tmp = [];
+            // 计算位置(verlet积分)
+            for (var i = 0, l = nodePositions.length; i < l; i++) {
+                var p = nodePositions[i];
+                var p_ = nodePrePositions[i];
+                vec2.sub(velocity, p, p_);
+                p_[0] = p[0];
+                p_[1] = p[1];
+                vec2.add(velocity, velocity, vec2.scale(tmp, nodeAccelerations[i], stepTime));
+                // Damping
+                vec2.scale(velocity, velocity, temperature);
+                vec2.add(p, p, velocity);
+                nodeShapes[i].style.x = p[0];
+                nodeShapes[i].style.y = p[1];
+            }
+        }
+
+        function _step(){
+            if (temperature < 0.005) {
+                return;
+            }
+
+            _update(stepTime);
+            _updateLinkShapes();
+
+            for (var i = 0; i < nodeShapes.length; i++) {
+                var shape = nodeShapes[i];
+                zr.modShape(shape.id, shape);
+            }
+            for (var i = 0; i < linkShapes.length; i++) {
+                var shape = linkShapes[i];
+                zr.modShape(shape.id, shape);
+            }
+
+            zr.refresh();
+
+            // Cool Down
+            temperature *= 0.999;
+        }
+
+        function init(newOption, newComponent) {
+            option = newOption;
+            component = newComponent;
+
+            series = option.series;
+
+            self.clear();
+            _buildShape();
+
+            setInterval(function(){
+                _step();
+            }, stepTime);
+        }
+
+        function refresh() {
+            self.clear();
+            _buildShape();
+        }
+
+
+        self.init = init;
+        self.refresh = refresh;
+
+        init(option, component);
+    }
+
+
+    function _map(output, input, mappedMin, mappedMax) {
+        var min = input[0];
+        var max = input[0];
+        var l = input.length;
+        for (var i = 1; i < l; i++) {
+            var val = input[i];
+            if (val < min) {
+                min = val;
+            }
+            if (val > max) {
+                max = val;
+            }
+        }
+        var range = max - min;
+        var mappedRange = mappedMax - mappedMin;
+        for (var i = 0; i < l; i++) {
+            if (range === 0) {
+                output[i] = mappedMin;
+            } else {
+                var val = input[i];
+                var percent = (val - min) / range;
+                output[i] = mappedRange * percent + mappedMin;
+            }
+        }
+    }
+
+    function _normalize(output, input) {
+        var l = input.length;
+        var max = input[0];
+        for (var i = 1; i < l; i++) {
+            if (input[i] > max) {
+                max = input[i];
+            }
+        }
+        for (var i = 0; i < l; i++) {
+            output[i] = input[i] / max;
+        }
+    }
+
+    function _randomInCircle(x, y, radius) {
+        var theta = Math.random() * Math.PI * 2;
+        var r = radius * Math.random();
+        return {
+            x : Math.cos(theta) * r + x,
+            y : Math.sin(theta) * r + y
+        }
+    }
+
+    function _randomInSquare(x, y, size) {
+        return {
+            x : (Math.random() - 0.5) * size + x,
+            y : (Math.random() - 0.5) * size + y
+        }
+    }
+
+    // 图表注册
+    require('../chart').define('force', Force);
+
+    return Force;
+})

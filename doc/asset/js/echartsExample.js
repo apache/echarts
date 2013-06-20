@@ -80,7 +80,8 @@ require(
         'echarts/chart/scatter',
         'echarts/chart/k',
         'echarts/chart/pie',
-        'echarts/chart/map'
+        'echarts/chart/map',
+        'echarts/chart/force'
     ],
     function(ec) {
         echarts = ec;
