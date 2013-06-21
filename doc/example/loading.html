@@ -78,7 +78,7 @@ myChart.showLoading({
 });
 clearTimeout(loadingTicket);
 loadingTicket = setTimeout(function(){
-    refreshing = false;
+    restoreing = false;
     myChart.setSeries([
         {
             name:'蒸发量',
@@ -153,7 +153,7 @@ loadingTicket = setTimeout(function(){
         function focusGraphic() {
             domCode.className = 'span4 ani';
             domGraphic.className = 'span8 ani';
-            refresh()
+            restore()
         }
 
         var editor = CodeMirror.fromTextArea(
@@ -166,7 +166,7 @@ loadingTicket = setTimeout(function(){
         editor.on('change', function(){needRefresh = true;});
 
         var effectIndex = -1;
-        function refresh(isBtnRefresh){
+        function restore(isBtnRefresh){
             if (isBtnRefresh) {
                 needRefresh = true;
                 focusGraphic();
@@ -216,7 +216,7 @@ loadingTicket = setTimeout(function(){
                             mark : true,
                             dataView : {readOnly: false},
                             magicType:['line', 'bar'],
-                            refresh : true
+                            restore : true
                         }
                     },
                     legend: {
@@ -236,7 +236,7 @@ loadingTicket = setTimeout(function(){
                     ]},
                     true
                 );
-                refresh();
+                restore();
             }
         )
     </script>

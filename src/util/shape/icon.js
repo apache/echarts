@@ -85,7 +85,7 @@ define(
                 mark : _iconMark,
                 markUndo : _iconMarkUndo,
                 markClear : _iconMarkClear,
-                refresh : _iconRefresh,
+                restore : _iconRestore,
                 lineChart : _iconLineChart,
                 barChart : _iconBarChart,
                 dataView : _iconDataView,
@@ -160,7 +160,7 @@ define(
             ctx.lineTo(style.x + style.width,        style.y + 5 * dy);
         }
 
-        function _iconRefresh(ctx, style) {
+        function _iconRestore(ctx, style) {
             var dx = style.width / 16;
             var dy = style.height / 16;
             var r = style.width / 2;

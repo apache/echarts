@@ -364,7 +364,7 @@ myChart.setOption(option);
                         <tr>
                             <td>{void} on</td>
                             <td>{string} eventName, <br/>{Function} eventListener</td>
-                            <td>事件绑定，支持事件有：<br/>REFRESH，CLICK，HOVER，<br/>DATA_CHANGED，DATA_ZOOM，LEGEND_SELECTED，MAGIC_TYPE_CHANGED </td>
+                            <td>事件绑定，支持事件有：<br/>REFRESH，RESTORE，CLICK，HOVER，<br/>DATA_CHANGED，MAGIC_TYPE_CHANGED，DATA_VIEW_CHANGED，<br/>DATA_ZOOM，DATA_RANGE，LEGEND_SELECTED，MAP_SELECTED</td>
                         </tr>
                         <tr>
                             <td>{void} un</td>
@@ -718,6 +718,7 @@ myChart.setOption(option);
                     <pre>
 feature : {
     mark : true,                    // 辅助线标志
+    dataZoom : true,                // 框选区域缩放，自动与存在的dataZoom控件同步
     dataView : true,                // 数据视图
     magicType:['line', 'bar'],      // 图表类型切换，当前仅支持直角系下的折线图、柱状图转换
     restore : true                  // 还原，复位原始图表

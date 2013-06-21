@@ -152,8 +152,8 @@ define(function (require) {
                         }
                         itemShape.onclick = _onDataView;
                         break;
-                    case 'refresh':
-                        itemShape.onclick = _onRefresh;
+                    case 'restore':
+                        itemShape.onclick = _onRestore;
                         break;
                     default:
                         if (_iconList[i].match('Chart')) {
@@ -419,7 +419,7 @@ define(function (require) {
             return true;
         }
 
-        function _onRefresh(){
+        function _onRestore(){
             _resetMark();
             messageCenter.dispatch(ecConfig.EVENT.RESTORE);
             return true;
