@@ -458,9 +458,13 @@ define(function (require) {
                 if (typeof formatter == 'function') {
                     var params = [];
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
-                        data = seriesArray[i].data[dataIndex] || '-';
-                        data = typeof data.value != 'undefined'
-                               ? data.value : data;
+                        data = seriesArray[i].data[dataIndex];
+                        data = typeof data != 'undefined'
+                               ? (typeof data.value != 'undefined'
+                                   ? data.value
+                                   : data)
+                               : '-';
+                               
                         params.push([
                             seriesArray[i].name,
                             categoryAxis.getNameByIndex(dataIndex),
@@ -485,9 +489,12 @@ define(function (require) {
                             '{b' + i + '}',
                             categoryAxis.getNameByIndex(dataIndex)
                         );
-                        data = seriesArray[i].data[dataIndex] || '-';
-                        data = typeof data.value != 'undefined'
-                               ? data.value : data;
+                        data = seriesArray[i].data[dataIndex];
+                        data = typeof data != 'undefined'
+                               ? (typeof data.value != 'undefined'
+                                   ? data.value
+                                   : data)
+                               : '-';
                         formatter = formatter.replace(
                             '{c' + i + '}',
                             data
@@ -499,9 +506,12 @@ define(function (require) {
                     formatter = categoryAxis.getNameByIndex(dataIndex);
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
                         formatter += '<br/>' + seriesArray[i].name + ' : ';
-                        data = seriesArray[i].data[dataIndex] || '-';
-                        data = typeof data.value != 'undefined'
-                               ? data.value : data;
+                        data = seriesArray[i].data[dataIndex];
+                        data = data = typeof data != 'undefined'
+                               ? (typeof data.value != 'undefined'
+                                   ? data.value
+                                   : data)
+                               : '-';
                         formatter += data;
                     }
                     _tDom.innerHTML = formatter;

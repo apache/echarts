@@ -665,7 +665,7 @@ define(function(require) {
             ecData.pack(
                 itemShape,
                 series[seriesIndex], seriesIndex,
-                series[seriesIndex].data[dataIndex] || '-', dataIndex,
+                series[seriesIndex].data[dataIndex], dataIndex,
                 name
             );
 

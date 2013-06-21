@@ -603,7 +603,7 @@ define(function(require) {
             ecData.pack(
                 barShape,
                 series[seriesIndex], seriesIndex,
-                series[seriesIndex].data[dataIndex] || '-', dataIndex,
+                series[seriesIndex].data[dataIndex], dataIndex,
                 name
             );
 
