@@ -74,6 +74,8 @@ define(function(require) {
         var viewportHeight;
         var centroid = [];
 
+        var mouseX, mouseY;
+
         function _buildShape() {
 
             temperature = 1.0;
@@ -151,9 +153,12 @@ define(function(require) {
                     shape : 'circle',
                     style : {
                         r : r,
-                        x : x,
-                        y : y
-                    }
+                        x : 0,
+                        y : 0
+                    },
+                    position : [x, y],
+
+                    __force_index__ : i
                 };
 
                 // 优先级 node.style > category.style > defaultStyle
@@ -232,10 +237,10 @@ define(function(require) {
                 var sourceShape = nodeShapes[link.source];
                 var targetShape = nodeShapes[link.target];
 
-                linkShape.style.xStart = sourceShape.style.x;
-                linkShape.style.yStart = sourceShape.style.y;
-                linkShape.style.xEnd = targetShape.style.x;
-                linkShape.style.yEnd = targetShape.style.y;
+                linkShape.style.xStart = sourceShape.position[0];
+                linkShape.style.yStart = sourceShape.position[1];
+                linkShape.style.xEnd = targetShape.position[0];
+                linkShape.style.yEnd = targetShape.position[1];
             }
         }
 
@@ -313,6 +318,16 @@ define(function(require) {
             var tmp = [];
             // 计算位置(verlet积分)
             for (var i = 0, l = nodePositions.length; i < l; i++) {
+                if (nodesRawData[i].fixed) {
+                    // 拖拽同步
+                    nodePositions[i][0] = mouseX;
+                    nodePositions[i][1] = mouseY;
+                    nodePrePositions[i][0] = mouseX;
+                    nodePrePositions[i][1] = mouseY;
+                    nodeShapes[i].position[0] = mouseX;
+                    nodeShapes[i].position[1] = mouseY;
+                    continue;
+                }
                 var p = nodePositions[i];
                 var p_ = nodePrePositions[i];
                 vec2.sub(velocity, p, p_);
@@ -322,13 +337,13 @@ define(function(require) {
                 // Damping
                 vec2.scale(velocity, velocity, temperature);
                 vec2.add(p, p, velocity);
-                nodeShapes[i].style.x = p[0];
-                nodeShapes[i].style.y = p[1];
+                nodeShapes[i].position[0] = p[0];
+                nodeShapes[i].position[1] = p[1];
             }
         }
 
         function _step(){
-            if (temperature < 0.005) {
+            if (temperature < 0.01) {
                 return;
             }
 
@@ -384,7 +399,11 @@ define(function(require) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
             }
-            console.log('dragstart', param.target);
+            var shape = param.target;
+            var idx = shape.__force_index__;
+            var node = nodesRawData[idx];
+            node.fixed = true;
+
             // 处理完拖拽事件后复位
             self.isDragstart = false;
             
@@ -400,9 +419,11 @@ define(function(require) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
             }
-            
-            console.log('dragend', param.target);
-            
+            var shape = param.target;
+            var idx = shape.__force_index__;
+            var node = nodesRawData[idx];
+            node.fixed = false;
+
             // 别status = {}赋值啊！！
             status.dragIn = true;
             //你自己refresh的话把他设为false，设true就会重新掉refresh接口
@@ -416,11 +437,9 @@ define(function(require) {
 
         // 拖拽中位移信息
         function _onmousemove(param) {
-            console.log(
-                param,
-                zrEvent.getX(param.event),
-                zrEvent.getY(param.event)
-            )
+            temperature = 0.8;
+            mouseX = zrEvent.getX(param.event);
+            mouseY = zrEvent.getY(param.event)
         }
         
         self.init = init;
