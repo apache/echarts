@@ -402,6 +402,7 @@ define(function(require) {
             }
 
             var grid;
+            var dataZoom;
             var xAxis;
             var yAxis;
             if (magicOption.grid || magicOption.xAxis || magicOption.yAxis) {
@@ -410,14 +411,15 @@ define(function(require) {
                 _chartList.push(grid);
 
                 var DataZoom = componentLibrary.get('dataZoom');
-                _chartList.push(new DataZoom(
+                dataZoom = new DataZoom(
                     _messageCenter,
                     _zr,
                     magicOption,
                     {
                         'grid' : grid
                     }
-                ));
+                );
+                _chartList.push(dataZoom);
 
                 var Axis = componentLibrary.get('axis');
                 xAxis = new Axis(
@@ -483,7 +485,7 @@ define(function(require) {
 
             _island.render(magicOption);
 
-            _toolbox.render(magicOption);
+            _toolbox.render(magicOption, {dataZoom: dataZoom});
 
             if (magicOption.animation) {
                 var len = _chartList.length;

@@ -85,6 +85,8 @@ define(
                 mark : _iconMark,
                 markUndo : _iconMarkUndo,
                 markClear : _iconMarkClear,
+                dataZoom : _iconDataZoom,
+                dataZoomReset : _iconDataZoomReset,
                 restore : _iconRestore,
                 lineChart : _iconLineChart,
                 barChart : _iconBarChart,
@@ -160,6 +162,48 @@ define(
             ctx.lineTo(style.x + style.width,        style.y + 5 * dy);
         }
 
+        function _iconDataZoom(ctx, style) {
+            var dx = style.width / 16;
+            var dy = style.height / 16;
+
+            ctx.moveTo(style.x,             style.y + 3 * dy);
+            ctx.lineTo(style.x + 6 * dx,    style.y + 3 * dy);
+            
+            ctx.moveTo(style.x + 3 * dx,    style.y);
+            ctx.lineTo(style.x + 3 * dx,    style.y + 6 * dy);
+
+            ctx.moveTo(style.x + 3 * dx,      style.y + 8 * dy);
+            ctx.lineTo(style.x + 3 * dx,      style.y + style.height);
+            ctx.lineTo(style.x + style.width, style.y + style.height);
+            ctx.lineTo(style.x + style.width, style.y + 3 * dy);
+            ctx.lineTo(style.x + 8 * dx,      style.y + 3 * dy);
+            
+            ctx.moveTo(style.x, style.y); // 避免closePath
+        }
+        
+        function _iconDataZoomReset(ctx, style) {
+            var dx = style.width / 16;
+            var dy = style.height / 16;
+
+            ctx.moveTo(style.x + 6 * dx,      style.y);
+            ctx.lineTo(style.x + 2 * dx,          style.y + 3 * dy);
+            ctx.lineTo(style.x + 6 * dx,          style.y + 6 * dy);
+            
+            ctx.moveTo(style.x + 2 * dx,          style.y + 3 * dy);
+            ctx.lineTo(style.x + 14 * dx,     style.y + 3 * dy);
+            ctx.lineTo(style.x + 14 * dx,     style.y + 11 * dy);
+            
+            ctx.moveTo(style.x + 2 * dx,          style.y + 5 * dy);
+            ctx.lineTo(style.x + 2 * dx,          style.y + 13 * dy);
+            ctx.lineTo(style.x + 14 * dx,     style.y + 13 * dy);
+            
+            ctx.moveTo(style.x + 10 * dx,     style.y + 10 * dy);
+            ctx.lineTo(style.x + 14 * dx,     style.y + 13 * dy);
+            ctx.lineTo(style.x + 10 * dx,     style.y + style.height);
+            
+            ctx.moveTo(style.x, style.y); // 避免closePath
+        }
+        
         function _iconRestore(ctx, style) {
             var dx = style.width / 16;
             var dy = style.height / 16;

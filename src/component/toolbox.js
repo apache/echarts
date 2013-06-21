@@ -22,6 +22,8 @@ define(function (require) {
         var zrEvent = require('zrender/tool/event');
 
         var option;
+        var component;
+        
         var self = this;
         self.type = ecConfig.COMPONENT_TYPE_TOOLBOX;
 
@@ -37,8 +39,12 @@ define(function (require) {
         var _markStart;
         var _marking;
         var _markShape;
+        
+        var _zoomStart;
+        var _zooming;
+        var _zoomShape;
+        var _hasZoom;
 
-        var _markPencil;
         var _dataView;
 
         function _buildShape() {
@@ -46,18 +52,24 @@ define(function (require) {
             var feature = option.toolbox.feature;
             for (var key in feature){
                 if (feature[key]) {
-                    if (key == 'mark') {
-                        _iconList.push('mark');
-                        _iconList.push('markUndo');
-                        _iconList.push('markClear');
-                    }
-                    else if (key == 'magicType') {
-                        for (var i = 0, l = feature[key].length; i < l; i++) {
-                            _iconList.push(feature[key][i] + 'Chart');
-                        }
-                    }
-                    else {
-                        _iconList.push(key);
+                    switch (key) {
+                        case 'mark' :
+                            _iconList.push('mark');
+                            _iconList.push('markUndo');
+                            _iconList.push('markClear');
+                            break;
+                        case 'magicType' :
+                            for (var i = 0, l = feature[key].length; i < l; i++) {
+                                _iconList.push(feature[key][i] + 'Chart');
+                            }
+                            break;
+                        case 'dataZoom' :
+                            _iconList.push('dataZoom');
+                            _iconList.push('dataZoomReset');
+                            break;
+                        default :
+                            _iconList.push(key);
+                            break;
                     }
                 }
             }
@@ -71,8 +83,13 @@ define(function (require) {
                     self.shapeList[i].id = zr.newShapeId(self.type);
                     zr.addShape(self.shapeList[i]);
                 }
-                _iconDisable(_iconShapeMap['markUndo']);
-                _iconDisable(_iconShapeMap['markClear']);
+                if (_iconShapeMap['mark']) {
+                    _iconDisable(_iconShapeMap['markUndo']);
+                    _iconDisable(_iconShapeMap['markClear']);
+                }
+                if (_iconShapeMap['dataZoomReset']) {
+                    _iconDisable(_iconShapeMap['dataZoomReset']);
+                }
             }
         }
 
@@ -133,7 +150,6 @@ define(function (require) {
                 switch(_iconList[i]) {
                     case 'mark':
                         itemShape.onclick = _onMark;
-                        _markPencil = itemShape;
                         _markColor = itemShape.style.strokeColor;
                         break;
                     case 'markUndo':
@@ -141,6 +157,12 @@ define(function (require) {
                         break;
                     case 'markClear':
                         itemShape.onclick = _onMarkClear;
+                        break;
+                    case 'dataZoom':
+                        itemShape.onclick = _onDataZoom;
+                        break;
+                    case 'dataZoomReset':
+                        itemShape.onclick = _onDataZoomReset;
                         break;
                     case 'dataView' :
                         if (!_dataView) {
@@ -280,15 +302,12 @@ define(function (require) {
             if (_marking || _markStart) {
                 // 取消
                 _resetMark();
-                zr.modShape(
-                    target.id,
-                    {style: {strokeColor: target.highlightStyle.strokeColor}}
-                );
                 zr.refresh();
-                return true; // 阻塞全局事件
             }
             else {
-                // 启用
+                // 启用Mark
+                _resetZoom();   // mark与dataZoom互斥
+                
                 zr.modShape(target.id, {style: {strokeColor: _enableColor}});
                 zr.refresh();
                 _markStart = true;
@@ -298,16 +317,102 @@ define(function (require) {
                     && zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
                 }, 10);
             }
+            return true; // 阻塞全局事件
+        }
+        
+        function _onDataZoom(param) {
+            var target = param.target;
+            if (_zooming || _zoomStart) {
+                // 取消
+                _resetZoom();
+                zr.refresh();
+            }
+            else {
+                // 启用Zoom
+                _resetMark();   // mark与dataZoom互斥
+                
+                zr.modShape(target.id, {style: {strokeColor: _enableColor}});
+                zr.refresh();
+                _zoomStart = true;
+                setTimeout(function(){
+                    zr
+                    && zr.on(zrConfig.EVENT.MOUSEDOWN, _onmousedown)
+                    && zr.on(zrConfig.EVENT.MOUSEUP, _onmouseup)
+                    && zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
+                }, 10);
+            }
+            return true; // 阻塞全局事件
         }
 
         function _onmousemove(param) {
             if (_marking) {
-               _markShape.style.xEnd = zrEvent.getX(param.event);
-               _markShape.style.yEnd = zrEvent.getY(param.event);
-               zr.addHoverShape(_markShape);
+                _markShape.style.xEnd = zrEvent.getX(param.event);
+                _markShape.style.yEnd = zrEvent.getY(param.event);
+                zr.addHoverShape(_markShape);
+            }
+            if (_zooming) {
+                _zoomShape.style.width = 
+                    zrEvent.getX(param.event) - _zoomShape.style.x;
+                _zoomShape.style.height = 
+                    zrEvent.getY(param.event) - _zoomShape.style.y;
+                zr.addHoverShape(_zoomShape);
             }
         }
 
+        function _onmousedown(param) {
+            if (param.target) {
+                return;
+            }
+            _zooming = true;
+            var x = zrEvent.getX(param.event);
+            var y = zrEvent.getY(param.event);
+            _zoomShape = {
+                shape : 'rectangle',
+                id : zr.newShapeId('zoom'),
+                zlevel : _zlevelBase,
+                style : {
+                    x : x,
+                    y : y,
+                    width : 1,
+                    height : 1,
+                    brushType: 'stroke'
+                },
+                highlightStyle : {
+                    lineWidth : 1,
+                    strokeColor : 'red',
+                    brushType: 'stroke'
+                }
+            };
+            zr.addHoverShape(_zoomShape);
+            return true; // 阻塞全局事件
+        }
+        
+        function _onmouseup(param) {
+            if (!_zoomShape 
+                || Math.abs(_zoomShape.style.width) < 10 
+                || Math.abs(_zoomShape.style.height) < 10
+            ) {
+                _zooming = false;
+                return true;
+            }
+            if (_zooming && component.dataZoom) {
+                _zooming = false;
+                _hasZoom = component.dataZoom.rectZoom(_zoomShape.style);
+                if (_hasZoom) {
+                    _iconEnable(_iconShapeMap['dataZoomReset']);
+                    zr.refresh();
+                    // console.log('data zoom',_zoomShape.style);
+                    setTimeout(function(){
+                        return;
+                        zr
+                        && _resetZoom()
+                        && zr.refresh();
+                    }, 10);
+                }
+            }
+            return true; // 阻塞全局事件
+        }
+        
         function _onclick(param) {
             if (_marking) {
                 _marking = false;
@@ -384,12 +489,61 @@ define(function (require) {
             }
             return true;
         }
+        
+        function _onDataZoomReset() {
+            if (_zooming) {
+                _zooming = false;
+            }
+            _iconDisable(_iconShapeMap['dataZoomReset']);
+            zr.refresh();
+            _hasZoom = false;
+            component.dataZoom.rectZoom();
+            return true;
+        }
 
         function _resetMark() {
             _marking = false;
             if (_markStart) {
                 _markStart = false;
+                if (_iconShapeMap['mark']) {
+                    // 还原图标为未生效状态
+                    zr.modShape(
+                        _iconShapeMap['mark'].id,
+                        {
+                            style: {
+                                strokeColor: _iconShapeMap['mark']
+                                                 .highlightStyle
+                                                 .strokeColor
+                            }
+                         }
+                    );
+                }
+                
                 zr.un(zrConfig.EVENT.CLICK, _onclick);
+                zr.un(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
+            }
+        }
+        
+        function _resetZoom() {
+            _zooming = false;
+            if (_zoomStart) {
+                _zoomStart = false;
+                if (_iconShapeMap['dataZoom']) {
+                    // 还原图标为未生效状态
+                    zr.modShape(
+                        _iconShapeMap['dataZoom'].id,
+                        {
+                            style: {
+                                strokeColor: _iconShapeMap['dataZoom']
+                                                 .highlightStyle
+                                                 .strokeColor
+                            }
+                         }
+                    );
+                }
+                
+                zr.un(zrConfig.EVENT.MOUSEDOWN, _onmousedown)
+                zr.un(zrConfig.EVENT.MOUSEUP, _onmouseup)
                 zr.un(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
             }
         }
@@ -421,6 +575,7 @@ define(function (require) {
 
         function _onRestore(){
             _resetMark();
+            _resetZoom();
             messageCenter.dispatch(ecConfig.EVENT.RESTORE);
             return true;
         }
@@ -576,7 +731,7 @@ define(function (require) {
             return option;
         }
 
-        function render(newOption){
+        function render(newOption, newComponent){
             _resetMark();
             newOption.toolbox = self.reformOption(newOption.toolbox);
             // 补全padding属性
@@ -584,6 +739,7 @@ define(function (require) {
                 newOption.toolbox.padding
             );
             option = newOption;
+            component = newComponent;
 
             self.shapeList = [];
 
