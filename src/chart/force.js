@@ -16,13 +16,18 @@ define(function(require) {
      * @param {Object} component 组件
      */
     function Force(messageCenter, zr, option, component) {
-        
+        // 基类装饰
         var ComponentBase = require('../component/base');
         ComponentBase.call(this, zr);
+        // 可计算特性装饰
+        var CalculableBase = require('./calculableBase');
+        CalculableBase.call(this, zr, option);
 
         var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
+        var zrConfig = require('zrender/config');
+        var zrEvent = require('zrender/tool/event');
         var zrColor = require('zrender/tool/color');
         var zrUtil = require('zrender/tool/util');
         var vec2 = require('zrender/tool/vector');
@@ -169,7 +174,12 @@ define(function(require) {
                         overwrite : true
                     });
                 }
-
+                
+                // 拖拽特性
+                self.setCalculable(shape);
+                shape.ondragstart = self.shapeHandler.ondragstart;
+                shape.draggable = true;
+                
                 nodeShapes.push(shape);
                 self.shapeList.push(shape);
 
@@ -358,10 +368,65 @@ define(function(require) {
             self.clear();
             _buildShape();
         }
+        
+        /**
+         * 输出动态视觉引导线
+         */
+        self.shapeHandler.ondragstart = function() {
+            self.isDragstart = true;
+        }
+        
+        /**
+         * 拖拽开始
+         */
+        function ondragstart(param, status) {
+            if (!self.isDragstart || !param.target) {
+                // 没有在当前实例上发生拖拽行为则直接返回
+                return;
+            }
+            console.log('dragstart', param.target);
+            // 处理完拖拽事件后复位
+            self.isDragstart = false;
+            
+            // 我想你需要这个
+            zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
+        }
+        
+        /**
+         * 数据项被拖拽出去，重载基类方法
+         */
+        function ondragend(param, status) {
+            if (!self.isDragend || !param.target) {
+                // 没有在当前实例上发生拖拽行为则直接返回
+                return;
+            }
+            
+            console.log('dragend', param.target);
+            
+            // 别status = {}赋值啊！！
+            status.dragIn = true;
+            //你自己refresh的话把他设为false，设true就会重新掉refresh接口
+            status.needRefresh = false;
 
+            // 处理完拖拽事件后复位
+            self.isDragend = false;
+            
+            zr.un(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
+        }
 
+        // 拖拽中位移信息
+        function _onmousemove(param) {
+            console.log(
+                param,
+                zrEvent.getX(param.event),
+                zrEvent.getY(param.event)
+            )
+        }
+        
         self.init = init;
         self.refresh = refresh;
+        self.ondragstart = ondragstart;
+        self.ondragend = ondragend;
 
         init(option, component);
     }
