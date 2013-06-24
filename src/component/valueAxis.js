@@ -31,11 +31,16 @@ define(function (require) {
         var _zlevelBase = self.getZlevelBase();
         var _min;
         var _max;
+        var _hasData;
         var _valueList;
         var _valueLabel;
 
         function _buildShape() {
+            _hasData = false;
             _calculateValue();
+            if (!_hasData) {
+                return;
+            }
             option.splitArea.show && _buildSplitArea();
             option.splitLine.show && _buildSplitLine();
             option.axisLine.show && _buildAxisLine();
@@ -487,8 +492,20 @@ define(function (require) {
                     }
                 }
                 // 找极值
-                _min = Number.MAX_VALUE;
-                _max = Number.MIN_VALUE;
+                for (var i in data){
+                    oriData = data[i];
+                    for (var j = 0, k = oriData.length; j < k; j++) {
+                        if (!isNaN(oriData[j])){
+                            _hasData = true;
+                            _min = oriData[j];
+                            _max = oriData[j];
+                            break;
+                        }
+                    }
+                    if (_hasData) {
+                        break;
+                    }
+                }
                 for (var i in data){
                     oriData = data[i];
                     for (var j = 0, k = oriData.length; j < k; j++) {
@@ -499,6 +516,7 @@ define(function (require) {
                     }
                 }
             }
+            //console.log(_min,_max,'vvvvv111111')
             _min = isNaN(option.min)
                    ? (_min - Math.abs(_min * option.boundaryGap[0]))
                    : option.min;    // 指定min忽略boundaryGay[0]
@@ -506,7 +524,7 @@ define(function (require) {
             _max = isNaN(option.max)
                    ? (_max + Math.abs(_max * option.boundaryGap[1]))
                    : option.max;    // 指定max忽略boundaryGay[1]
-            
+            //console.log(_min,_max,'vvvvv')
             _reformValue(option.scale);
         }
 
@@ -598,8 +616,9 @@ define(function (require) {
                 power = Math.pow(10, precision);
                 _min *= power;
                 _max *= power;
+                power = option.power;
             }
-            
+            // console.log(_min,_max)
             var total;
             if (_min >= 0 && _max >= 0) {
                 // 双正
@@ -614,7 +633,9 @@ define(function (require) {
                 // 粗算
                 splitGap = Math.ceil((total / splitNumber) / power) * power;
                 if (scale) {
-                    _min = Math.floor(_min / splitGap) * splitGap;
+                    if (precision === 0) {    // 整数
+                        _min = Math.floor(_min / splitGap) * splitGap;
+                    }
                     // 修正
                     if (_min + splitGap * splitNumber < _max) {
                         splitGap = 
@@ -638,7 +659,9 @@ define(function (require) {
                 total = _min - _max;
                 splitGap = -Math.ceil((total / splitNumber) / power) * power;
                 if (scale) {
-                    _max = Math.ceil(_max / splitGap) * splitGap;
+                    if (precision === 0) {    // 整数
+                        _max = Math.ceil(_max / splitGap) * splitGap;
+                    }
                     // 修正
                     if (_max - splitGap * splitNumber > _min) {
                         splitGap = 
@@ -672,7 +695,7 @@ define(function (require) {
                 _max = splitGap * partSplitNumber;
                 _min = splitGap * (partSplitNumber - splitNumber);
             }
-
+            //console.log(_min,_max,'vvvvvrrrrrr')
             _valueList = [];
             for (var i = 0; i <= splitNumber; i++) {
                 _valueList.push(_min + splitGap * i);
@@ -711,6 +734,14 @@ define(function (require) {
             }
 
         }
+        
+        function getExtremum() {
+            _calculateValue();
+            return {
+                min: _min,
+                max: _max
+            }
+        }
 
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
@@ -744,7 +775,9 @@ define(function (require) {
             series = newSeries;
 
             self.clear();
-            _buildShape();
+            if (zr) {   // 数值轴的另外一个功能只是用来计算极值
+                _buildShape();
+            }
         }
 
         /**
@@ -784,6 +817,7 @@ define(function (require) {
 
         self.init = init;
         self.refresh = refresh;
+        self.getExtremum = getExtremum;
         self.getCoord = getCoord;
         self.getPosition = getPosition;
 

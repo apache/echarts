@@ -733,6 +733,7 @@ define(function (require) {
 
         function render(newOption, newComponent){
             _resetMark();
+            _resetZoom();
             newOption.toolbox = self.reformOption(newOption.toolbox);
             // 补全padding属性
             newOption.toolbox.padding = self.reformCssArray(

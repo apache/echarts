@@ -416,6 +416,7 @@ define(function(require) {
                     _zr,
                     magicOption,
                     {
+                        'legend' : legend,
                         'grid' : grid
                     }
                 );

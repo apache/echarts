@@ -181,7 +181,7 @@ define(function(require) {
                     queryTarget, 'itemStyle.emphasis.lineStyle.width'
                 );
                 
-                if (serie.large) {
+                if (serie.large && serie.data.length > serie.largeThreshold) {
                     self.shapeList.push(_getLargeSymbol(
                         seriesPL, nColor, eColor
                     ));

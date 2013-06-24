@@ -328,8 +328,10 @@ define(function() {
         scatter: {
             xAxisIndex: 0,
             yAxisIndex: 0,
-            //symbol: null,    // 图形类型，非标准参数
-            symbolSize: 4      // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            //symbol: null,      // 图形类型，非标准参数
+            symbolSize: 4,       // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            large: false,        // 大规模散点图
+            largeThreshold: 2000 // 大规模阀值，large为true且数据量大于largeThreshold才启用大规模模式
         },
 
         // 饼图默认参数
