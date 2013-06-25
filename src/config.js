@@ -443,6 +443,41 @@ define(function() {
             density : 1.0,
             // 分类里如果有样式会覆盖节点默认样式
             categories : [],
+            itemStyle: {
+                normal: {
+                    // color: 各异,
+                    label: {
+                        show: true,
+                        position: 'outer'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
+                    nodeStyle : {
+                        brushType : 'both',
+                        color : '#f08c2e',
+                        strokeColor : '#5182ab'
+                    },
+                    lineStyle : {
+                        strokeColor : '#5182ab'
+                    }
+                },
+                emphasis: {
+                    // color: 各异,
+                    label: {
+                        show: false,
+                        position: 'outer'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
+                    nodeStyle : {
+                        brushType : 'both',
+                        color : '#f08c2e',
+                        strokeColor : '#5182ab'
+                    },
+                    lineStyle : {
+                        strokeColor : '#5182ab'
+                    }
+                }
+            },
+            //建议下面两个改成上面的格式
             nodeStyle : {
                 brushType : 'both',
                 color : '#f08c2e',
@@ -450,7 +485,7 @@ define(function() {
             },
             linkStyle : {
                 strokeColor : '#5182ab'
-            },
+            }
         },
 
         EVENT: {

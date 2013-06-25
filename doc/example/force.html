@@ -72,77 +72,82 @@ option = {
         trigger: 'axis'
     },
     legend: {
-        data:['利润', '支出', '收入']
+        data:['收入','支出']
     },
     series : [
         {
             type:'force',
-            categories : [{
-                style : {
-                    brushType : 'both',
-                    color : '#f08c2e',
-                    strokeColor : '#5182ab',
-                    lineWidth : 2
+            categories : [
+                {
+                    name: '收入',
+                    itemStyle: {
+                        normal: {
+                            color : '#f08c2e',
+                            label: {
+                                show: true,
+                                position: 'outer'
+                                // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                            },
+                            nodeStyle : {
+                                brushType : 'both',
+                                color : '#f08c2e',
+                                strokeColor : '#5182ab',
+                                lineWidth : 2
+                            },
+                            lineStyle : {
+                                strokeColor : '#5182ab'
+                            }
+                        },
+                        emphasis: {
+                            //同上
+                        }
+                    },
+                    style : {   //这个改为上面的格式吧，跟其他保持一致，legend就有效了
+                        brushType : 'both',
+                        color : '#f08c2e',
+                        strokeColor : '#5182ab',
+                        lineWidth : 2
+                    }
+                },
+                {
+                    name:'支出',
+                     itemStyle: {
+                        normal: {
+                            color : '#c5dcf0'
+                        }
+                    },
+                    style : {
+                        brushType : 'both',
+                        color : '#c5dcf0',
+                        strokeColor : '#5182ab',
+                        lineWidth : 2
+                    }
                 }
-            }, {
-                style : {
-                    brushType : 'both',
-                    color : '#c5dcf0',
-                    strokeColor : '#5182ab',
-                    lineWidth : 2
-                }
-            }],
+            ],
             minRadius : 5,
             maxRadius : 10,
             density : 1.2,
-            nodes:[{
-                category : 0,
-                value : 200,
-            }, {
-                category : 0,
-                value : 200, 
-            }, {
-                category : 1,
-                value : 200,
-            }, {
-                category : 1,
-                value : 200
-            }, {
-                //孤立点
-                value : 300,
-                style : {
-                    color : '#b10101'
+            nodes:[
+                {category : 0, value : 200},
+                {category : 0, value : 200},
+                {category : 1, value : 200},
+                {category : 1, value : 200},
+                {
+                    value : 300,    //孤立点
+                    style : {
+                        color : '#b10101'
+                    }
                 }
-            }],
-            links : [{
-                source : 0,
-                target : 1,
-                weight : 1
-            }, {
-                source : 1,
-                target : 2,
-                weight : 1
-            }, {
-                source : 2,
-                target : 3,
-                weight : 1
-            }, {
-                source : 3,
-                target : 0,
-                weight : 1
-            }, {
-                source : 0,
-                target : 2,
-                weight : 1
-            }, {
-                source : 1,
-                target : 3,
-                weight : 1
-            }, {
-                source : 1,
-                target : 4,
-                weight : 2
-            }]
+            ],
+            links : [
+                {source : 0, target : 1, weight : 1},
+                {source : 1, target : 2, weight : 1},
+                {source : 2, target : 3, weight : 1},
+                {source : 3, target : 0, weight : 1}, 
+                {source : 0, target : 2, weight : 1}, 
+                {source : 1, target : 3, weight : 1}, 
+                {source : 1, target : 4, weight : 2}
+            ]
         }
     ]
 };

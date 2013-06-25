@@ -283,6 +283,8 @@ define(function (require) {
          */
         function _getSeriesByName(name) {
             var series = option.series;
+            var hasFind;
+            var data;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].name == name) {
                     // 系列名称优先
@@ -291,8 +293,8 @@ define(function (require) {
 
                 if (series[i].type == ecConfig.CHART_TYPE_PIE) {
                     // 饼图得查找里面的数据名字
-                    var hasFind = false;
-                    var data = series[i].data;
+                    hasFind = false;
+                    data = series[i].data;
                     for (var j = 0, k = data.length; j < k; j++) {
                         if (data[j].name == name) {
                             hasFind = true;
@@ -301,6 +303,22 @@ define(function (require) {
                     }
                     if (hasFind) {
                         return series[i];
+                    }
+                }
+                else if (series[i].type == ecConfig.CHART_TYPE_FORCE) {
+                    // 力导布局查找categories配置
+                    hasFind = false;
+                    data = series[i].categories;
+                    for (var j = 0, k = data.length; j < k; j++) {
+                        if (data[j].name == name) {
+                            data = data[j];
+                            data.type = ecConfig.CHART_TYPE_FORCE;
+                            hasFind = true;
+                            break;
+                        }
+                    }
+                    if (hasFind) {
+                        return data;
                     }
                 }
             }
@@ -542,6 +560,9 @@ define(function (require) {
         },
         bar : function (ctx, style) {
             ctx.rect(style.x, style.y + 1, style.width, style.height - 2);
+        },
+        force : function(ctx, style) {
+            require('zrender/shape').get('icon').get('circle')(ctx, style);
         }
     }
     

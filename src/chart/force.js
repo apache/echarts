@@ -77,7 +77,7 @@ define(function(require) {
         var mouseX, mouseY;
 
         function _buildShape() {
-
+            var legend = component.legend;
             temperature = 1.0;
             viewportWidth = zr.getWidth();
             viewportHeight = zr.getHeight();
@@ -95,6 +95,18 @@ define(function(require) {
                     density = self.deepQuery([serie], 'density');
 
                     categories = self.deepQuery([serie], 'categories');
+                    
+                    // 同步selected状态
+                    for (var j = 0, len = categories.length; j < len; j++) {
+                        if (categories[j].name) {
+                            if (legend){
+                                self.selectedMap[categories[j].name] = 
+                                    legend.isSelected(categories[j].name);
+                            } else {
+                                self.selectedMap[categories[j].name] = true;
+                            }
+                        }
+                    }
 
                     linkStyle = self.deepQuery([serie], 'linkStyle');
                     nodeStyle = self.deepQuery([serie], 'nodeStyle');
@@ -105,7 +117,8 @@ define(function(require) {
                     var area = viewportWidth * viewportHeight;
                     // Formula in 'Graph Drawing by Force-directed Placement'
                     k = 0.5 * Math.sqrt( area / nodesRawData.length );
-
+                    
+                    // 这两方法里需要加上读取self.selectedMap判断当前系列是否显示的逻辑
                     _buildLinkShapes(nodesRawData, linksRawData);
                     _buildNodeShapes(nodesRawData, minRadius, maxRadius);
                 }
@@ -407,7 +420,6 @@ define(function(require) {
             // 处理完拖拽事件后复位
             self.isDragstart = false;
             
-            // 我想你需要这个
             zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
         }
         
@@ -426,7 +438,7 @@ define(function(require) {
 
             // 别status = {}赋值啊！！
             status.dragIn = true;
-            //你自己refresh的话把他设为false，设true就会重新掉refresh接口
+            //你自己refresh的话把他设为false，设true就会重新调refresh接口
             status.needRefresh = false;
 
             // 处理完拖拽事件后复位
