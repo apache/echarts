@@ -245,13 +245,22 @@ define(function (require) {
             _zoom.scatterMap = _zoom.scatterMap || {};
             _zoom.scatterMap[seriesIndex] = _zoom.scatterMap[seriesIndex] || {};
             var componentLibrary = require('../component');
+            var zrUtil = require('zrender/tool/util');
             // x轴极值
             var Axis = componentLibrary.get('axis');
+            var axisOption = zrUtil.clone(option.xAxis);
+            if (axisOption instanceof Array) {
+                axisOption[0].type = 'value';
+                axisOption[1] && (axisOption[1].type = 'value');
+            }
+            else {
+                axisOption.type = 'value';
+            }
             var vAxis = new Axis(
                 null,   // messageCenter
                 false,  // zr
                 {
-                    xAxis: option.xAxis,
+                    xAxis: axisOption,
                     series : option.series
                 }, 
                 component,
@@ -260,13 +269,22 @@ define(function (require) {
             var axisIndex = option.series[seriesIndex].xAxisIndex || 0;
             _zoom.scatterMap[seriesIndex].x = 
                 vAxis.getAxis(axisIndex).getExtremum();
+            vAxis.dispose();
             
             // y轴极值
+            axisOption = zrUtil.clone(option.yAxis);
+            if (axisOption instanceof Array) {
+                axisOption[0].type = 'value';
+                axisOption[1] && (axisOption[1].type = 'value');
+            }
+            else {
+                axisOption.type = 'value';
+            }
             vAxis = new Axis(
                 null,   // messageCenter
                 false,  // zr
                 {
-                    yAxis: option.yAxis,
+                    yAxis: axisOption,
                     series : option.series
                 }, 
                 component,
@@ -275,7 +293,8 @@ define(function (require) {
             axisIndex = option.series[seriesIndex].yAxisIndex || 0;
             _zoom.scatterMap[seriesIndex].y = 
                 vAxis.getAxis(axisIndex).getExtremum();
-            //console.log(_zoom.scatterMap);
+            vAxis.dispose();
+            // console.log(_zoom.scatterMap);
         }
 
         function _buildBackground() {
@@ -788,6 +807,17 @@ define(function (require) {
             return;
         }
         
+        function absoluteZoom(param) {
+            zoomOption.start = _zoom.start = param.start;
+            zoomOption.end = _zoom.end = param.end;
+            zoomOption.start2 = _zoom.start2 = param.start2;
+            zoomOption.end2 = _zoom.end2 = param.end2;
+            //console.log(rect,gridArea,_zoom,total)
+            _syncShape();
+            _syncData(true);
+            return;
+        }
+        
         function rectZoom(param) {
             if (!param) {
                 // 重置拖拽
@@ -803,7 +833,7 @@ define(function (require) {
                 
                 _syncShape();
                 _syncData(true);
-                return true;
+                return _zoom;
             }
             var gridArea = component.grid.getArea();
             var rect = {
@@ -873,7 +903,7 @@ define(function (require) {
             //console.log(rect,gridArea,_zoom,total)
             _syncShape();
             _syncData(true);
-            return true;
+            return _zoom;
         }
 
         function init(newOption) {
@@ -903,6 +933,7 @@ define(function (require) {
         }
         
         self.init = init;
+        self.absoluteZoom = absoluteZoom;
         self.rectZoom = rectZoom
         self.ondragend = ondragend;
         self.ondataZoom = ondataZoom;

@@ -69,7 +69,12 @@
                     <textarea id="code" name="code">
 option = {
     tooltip : {
-        trigger: 'item'
+        trigger: 'item',
+        formatter : function(value) {
+            return value[0] + ' :<br/>'
+                   + value[2][0] + 'cm ' 
+                   + value[2][1] + 'kg ';
+        }
     },
     legend: {
         data:['女性','男性']
@@ -83,7 +88,6 @@ option = {
             restore : true
         }
     },
-    calculable : true,
     xAxis : [
         {
             type : 'value',
