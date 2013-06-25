@@ -44,8 +44,10 @@ define(function(require) {
         var categories = [];
         // 默认节点样式
         var nodeStyle;
+        var nodeEmphasisStyle;
         // 默认边样式
         var linkStyle;
+        var linkEmphasisStyle;
         // nodes和links的原始数据
         var nodesRawData = [];
         var linksRawData = [];
@@ -100,16 +102,18 @@ define(function(require) {
                     for (var j = 0, len = categories.length; j < len; j++) {
                         if (categories[j].name) {
                             if (legend){
-                                self.selectedMap[categories[j].name] = 
+                                self.selectedMap[j] = 
                                     legend.isSelected(categories[j].name);
                             } else {
-                                self.selectedMap[categories[j].name] = true;
+                                self.selectedMap[j] = true;
                             }
                         }
                     }
 
-                    linkStyle = self.deepQuery([serie], 'linkStyle');
-                    nodeStyle = self.deepQuery([serie], 'nodeStyle');
+                    linkStyle = self.deepQuery([serie], 'itemStyle.normal.linkStyle');
+                    linkEmphasisStyle = self.deepQuery([serie], 'itemStyle.emphasis.linkStyle');
+                    nodeStyle = self.deepQuery([serie], 'itemStyle.normal.nodeStyle');
+                    nodeEmphasisStyle = self.deepQuery([serie], 'itemStyle.emphasis.nodeStyle');
                     
                     nodesRawData = self.deepQuery([serie], 'nodes');
                     linksRawData = self.deepQuery([serie], 'links');
@@ -135,7 +139,6 @@ define(function(require) {
             }
             _map(radius, radius, minRadius, maxRadius);
             _normalize(nodeWeights, radius);
-
 
             for (var i = 0; i < l; i++) {
                 var node = nodes[i];
@@ -169,6 +172,7 @@ define(function(require) {
                         x : 0,
                         y : 0
                     },
+                    highlightStyle : {},
                     position : [x, y],
 
                     __force_index__ : i
@@ -176,21 +180,38 @@ define(function(require) {
 
                 // 优先级 node.style > category.style > defaultStyle
                 zrUtil.merge(shape.style, nodeStyle);
+                zrUtil.merge(shape.highlightStyle, nodeEmphasisStyle);
+
                 if (typeof(node.category) !== 'undefined') {
                     var category = categories[node.category];
-                    if (category){
-                        var style = category.style;
-                        if(style){
-                            zrUtil.merge(shape.style, style, {
-                                overwrite : true
-                            });
+                    if (category) {
+                        var style = category.itemStyle;
+                        if (style) {
+                            if (style.normal) {
+                                zrUtil.merge(shape.style, style.normal, {
+                                    overwrite : true
+                                });
+                            }
+                            if (style.emphasis) {
+                                zrUtil.merge(shape.highlightStyle, style.emphasis, {
+                                    overwrite : true
+                                });
+                            }
                         }
                     }
                 }
-                if (typeof(node.style) !== 'undefined') {
-                    zrUtil.merge(shape.style, node.style, {
-                        overwrite : true
-                    });
+                if (typeof(node.itemStyle) !== 'undefined') {
+                    var style = node.itemStyle;
+                    if( style.normal ){ 
+                        zrUtil.merge(shape.style, style.normal, {
+                            overwrite : true
+                        });
+                    }
+                    if( style.normal ){ 
+                        zrUtil.merge(shape.highlightStyle, style.emphasis, {
+                            overwrite : true
+                        });
+                    }
                 }
                 
                 // 拖拽特性
@@ -225,14 +246,23 @@ define(function(require) {
                         yStart : 0,
                         xEnd : 0,
                         yEnd : 0
-                    }
+                    },
+                    highlightStyle : {}
                 };
 
                 zrUtil.merge(shape.style, linkStyle);
-                if (typeof(link.style) !== 'undefined') {
-                    zrUtil.merge(shape.style, link.style, {
-                        overwrite : true
-                    })
+                zrUtil.merge(shape.highlightStyle, linkEmphasisStyle);
+                if (typeof(link.itemStyle) !== 'undefined') {
+                    if(link.itemStyle.normal){
+                        zrUtil.merge(shape.style, link.itemStyle.normal, {
+                            overwrite : true
+                        });
+                    }
+                    if(link.itemStyle.emphasis){
+                        zrUtil.merge(shape.highlightStyle, link.itemStyle.emphasis, {
+                            overwrite : true
+                        })
+                    }
                 }
 
                 linkShapes.push(shape);
@@ -393,8 +423,7 @@ define(function(require) {
         }
 
         function refresh() {
-            self.clear();
-            _buildShape();
+            
         }
         
         /**
@@ -516,6 +545,17 @@ define(function(require) {
             x : (Math.random() - 0.5) * size + x,
             y : (Math.random() - 0.5) * size + y
         }
+    }
+
+    function _filter(array, callback){
+        var len = array.length;
+        var result = [];
+        for(var i = 0; i < len; i++){
+            if(callback(array[i], i)){
+                result.push(array[i]);
+            }
+        }
+        return result;
     }
 
     // 图表注册

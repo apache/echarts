@@ -456,7 +456,7 @@ define(function() {
                         color : '#f08c2e',
                         strokeColor : '#5182ab'
                     },
-                    lineStyle : {
+                    linkStyle : {
                         strokeColor : '#5182ab'
                     }
                 },
@@ -468,23 +468,10 @@ define(function() {
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     nodeStyle : {
-                        brushType : 'both',
-                        color : '#f08c2e',
-                        strokeColor : '#5182ab'
                     },
-                    lineStyle : {
-                        strokeColor : '#5182ab'
+                    linkStyle : {
                     }
                 }
-            },
-            //建议下面两个改成上面的格式
-            nodeStyle : {
-                brushType : 'both',
-                color : '#f08c2e',
-                strokeColor : '#5182ab'
-            },
-            linkStyle : {
-                strokeColor : '#5182ab'
             }
         },
 

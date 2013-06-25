@@ -99,28 +99,19 @@ option = {
                             }
                         },
                         emphasis: {
-                            //同上
+                            
                         }
-                    },
-                    style : {   //这个改为上面的格式吧，跟其他保持一致，legend就有效了
-                        brushType : 'both',
-                        color : '#f08c2e',
-                        strokeColor : '#5182ab',
-                        lineWidth : 2
                     }
                 },
                 {
                     name:'支出',
-                     itemStyle: {
+                    itemStyle: {
                         normal: {
-                            color : '#c5dcf0'
+                            brushType : 'both',
+                            color : '#c5dcf0',
+                            strokeColor : '#5182ab',
+                            lineWidth : 2
                         }
-                    },
-                    style : {
-                        brushType : 'both',
-                        color : '#c5dcf0',
-                        strokeColor : '#5182ab',
-                        lineWidth : 2
                     }
                 }
             ],
@@ -134,8 +125,14 @@ option = {
                 {category : 1, value : 200},
                 {
                     value : 300,    //孤立点
-                    style : {
-                        color : '#b10101'
+                    category : 1,
+                    itemStyle : {
+                        normal : {
+                            color : '#b10101'
+                        },
+                        emphasis : {
+                            r : 15
+                        }
                     }
                 }
             ],
