@@ -311,6 +311,10 @@ define(function(require) {
                     if(d > 500){
                         continue;
                     }
+                    if(d < 5){
+                        d = 5;
+                    }
+
                     vec2.scale(v12, v12, 1/d);
                     var forceFactor = 1 * (w1 + w2) * k2 / d;
 
@@ -382,6 +386,10 @@ define(function(require) {
                 vec2.add(p, p, velocity);
                 nodeShapes[i].position[0] = p[0];
                 nodeShapes[i].position[1] = p[1];
+
+                if(p[0] === NaN || p[1] === NaN){
+                    throw new Error("NaN");
+                }
             }
         }
 

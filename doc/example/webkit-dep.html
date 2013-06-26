@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Webkit Class Dependencies</title>
+</head>
+<body>
+    <div id="Main" style="width:1280px; height:600px;"></div>
+    <script src="../asset/js/esl/esl.js"></script>
+    <script type="text/javascript">
+
+        require.config({
+            paths: {
+                'js': '../asset/js/esl/js'
+            },
+            packages: [
+                {
+                    name: 'echarts',
+                    location: '../../src',
+                    main: 'echarts'
+                },
+                {
+                    name: 'zrender',
+                    // location: 'http://ecomfe.github.io/zrender/src',
+                    location: '../../../zrender/src',
+                    main: 'zrender'
+                }
+            ]
+        });
+
+        var echarts;
+        require(['echarts/echarts',
+                './webkit-dep',
+                'echarts/chart/force'],
+            
+            function(ec, webkitDepData) {
+
+                myChart = ec.init(document.getElementById("Main"));
+                myChart.setOption({
+                    series : [webkitDepData]
+                }, true);
+            }
+        )
+
+    </script>
+</body>
+</html>
