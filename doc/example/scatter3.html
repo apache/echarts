@@ -83,7 +83,6 @@ option = {
             restore : true
         }
     },
-    calculable : true,
     xAxis : [
         {
             type : 'value',
@@ -111,11 +110,11 @@ option = {
                 var len = 15000;
                 var x = 0;
                 while (len--) {
-                    x = Math.random() * 10;
+                    x = (Math.random() * 10).toFixed(3) - 0;
                     d.push([
                         x,
                         //Math.random() * 10
-                        Math.sin(x).toFixed(2) - x * (len % 2 ? 0.1 : -0.1) * Math.random()
+                        (Math.sin(x) - x * (len % 2 ? 0.1 : -0.1) * Math.random()).toFixed(3) - 0
                     ]);
                 }
                 //console.log(d)
@@ -131,11 +130,11 @@ option = {
                 var len = 15000;
                 var x = 0;
                 while (len--) {
-                    x = Math.random() * 10;
+                    x = (Math.random() * 10).toFixed(3) - 0;
                     d.push([
                         x,
                         //Math.random() * 10
-                        Math.cos(x).toFixed(2) - x * (len % 2 ? 0.1 : -0.1) * Math.random()
+                        (Math.cos(x) - x * (len % 2 ? 0.1 : -0.1) * Math.random()).toFixed(3) - 0
                     ]);
                 }
                 //console.log(d)

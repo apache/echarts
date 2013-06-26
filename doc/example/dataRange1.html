@@ -71,67 +71,57 @@ option = {
     tooltip : {
         trigger: 'item'
     },
-    legend: {
-        data:['scatter1','scatter2']
-    },
     toolbox: {
         show : true,
         feature : {
             mark : true,
-            dataZoom : true,
+            dataZoom: true,
             dataView : {readOnly: false},
             restore : true
         }
     },
+    dataRange: {
+        min: 0,
+        max: 100,
+        y: 'center',
+        text:['高','低'],           // 文本，默认为数值文本
+        color:['skyblue','lightgreen'],
+        calculable : true
+    },
     xAxis : [
         {
             type : 'value',
-            power: 1,
-            scale: true
+            power : 1,
+            scale : true
         }
     ],
     yAxis : [
         {
             type : 'value',
-            power: 1,
-            scale: true,
+            position:'right',
+            power : 1,
+            scale : true,
             splitArea : {show : true}
         }
     ],
+    animation: false,
     series : [
         {
             name:'scatter1',
             type:'scatter',
             symbolSize: function(value){
-                return Math.round(value[2] / 5);
+                return Math.round(value[2] / 10);
             },
             data: (function() {
                 var d = [];
-                var len = 100;
+                var len = 500;
+                var value;
                 while (len--) {
+                    value = (Math.random()*100).toFixed(2) - 0;
                     d.push([
-                        (Math.random()*100).toFixed(2) - 0,
-                        (Math.random()*100).toFixed(2) - 0,
-                        (Math.random()*100).toFixed(2) - 0
-                    ]);
-                }
-                return d;
-            })()
-        },
-        {
-            name:'scatter2',
-            type:'scatter',
-            symbolSize: function(value){
-                return Math.round(value[2] / 5);
-            },
-            data: (function() {
-                var d = [];
-                var len = 100;
-                while (len--) {
-                    d.push([
-                        (Math.random()*100).toFixed(2) - 0,
-                        (Math.random()*100).toFixed(2) - 0,
-                        (Math.random()*100).toFixed(2) - 0
+                        (Math.random()*value + value).toFixed(2) - 0,
+                        (Math.random()*value).toFixed(2) - 0,
+                        value
                     ]);
                 }
                 return d;

@@ -43,7 +43,7 @@ define(function (require) {
         var _zoomStart;
         var _zooming;
         var _zoomShape;
-        var _hasZoom;
+        var _zoomQueue;
 
         var _dataView;
 
@@ -87,7 +87,7 @@ define(function (require) {
                     _iconDisable(_iconShapeMap['markUndo']);
                     _iconDisable(_iconShapeMap['markClear']);
                 }
-                if (_iconShapeMap['dataZoomReset']) {
+                if (_iconShapeMap['dataZoomReset'] && _zoomQueue.length === 0) {
                     _iconDisable(_iconShapeMap['dataZoomReset']);
                 }
             }
@@ -397,17 +397,17 @@ define(function (require) {
             }
             if (_zooming && component.dataZoom) {
                 _zooming = false;
-                _hasZoom = component.dataZoom.rectZoom(_zoomShape.style);
-                if (_hasZoom) {
+                
+                var zoom = component.dataZoom.rectZoom(_zoomShape.style)
+                if (zoom) {
+                    _zoomQueue.push({
+                        start : zoom.start,
+                        end : zoom.end,
+                        start2 : zoom.start2,
+                        end2 : zoom.end2
+                    });
                     _iconEnable(_iconShapeMap['dataZoomReset']);
                     zr.refresh();
-                    // console.log('data zoom',_zoomShape.style);
-                    setTimeout(function(){
-                        return;
-                        zr
-                        && _resetZoom()
-                        && zr.refresh();
-                    }, 10);
                 }
             }
             return true; // 阻塞全局事件
@@ -494,10 +494,19 @@ define(function (require) {
             if (_zooming) {
                 _zooming = false;
             }
-            _iconDisable(_iconShapeMap['dataZoomReset']);
-            zr.refresh();
-            _hasZoom = false;
-            component.dataZoom.rectZoom();
+            _zoomQueue.pop();
+            //console.log(_zoomQueue)
+            if (_zoomQueue.length > 0) {
+                component.dataZoom.absoluteZoom(
+                    _zoomQueue[_zoomQueue.length - 1]
+                );
+            }
+            else {
+                component.dataZoom.rectZoom();
+                _iconDisable(_iconShapeMap['dataZoomReset']);
+                zr.refresh();
+            }
+            
             return true;
         }
 
@@ -599,7 +608,7 @@ define(function (require) {
             return true;
         }
 
-        function resetMagicType(newOption) {
+        function reset(newOption) {
             if (newOption.toolbox
                 && newOption.toolbox.show
                 && newOption.toolbox.feature.magicType
@@ -643,6 +652,33 @@ define(function (require) {
                 }
             }
             _magicType = false;
+            
+            var zoomOption = newOption.dataZoom;
+            if (zoomOption && zoomOption.show) {
+                var start = typeof zoomOption.start != 'undefined'
+                            && zoomOption.start >= 0
+                            && zoomOption.start <= 100
+                            ? zoomOption.start : 0;
+                var end = typeof zoomOption.end != 'undefined'
+                          && zoomOption.end >= 0
+                          && zoomOption.end <= 100
+                          ? zoomOption.end : 100;
+                if (start > end) {
+                    // 大小颠倒自动翻转
+                    start = start + end;
+                    end = start - end;
+                    start = start - end;
+                }
+                _zoomQueue = [{
+                    start : start,
+                    end : end,
+                    start2 : 0,
+                    end2 : 100
+                }];
+            }
+            else {
+                _zoomQueue = []
+            }
         }
 
         function getMagicOption(){
@@ -788,7 +824,7 @@ define(function (require) {
         self.resize = resize;
         self.hideDataView = hideDataView;
         self.getMagicOption = getMagicOption;
-        self.resetMagicType = resetMagicType;
+        self.reset = reset;
     }
 
     require('../component').define('toolbox', Toolbox);

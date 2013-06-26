@@ -1046,7 +1046,7 @@ define(function (require) {
                 _gap = Math.round(
                     (dataRangeOption.max - dataRangeOption.min)
                     / splitNumber
-                );
+                ) || 1;
             } else {
                 _gap = (dataRangeOption.max - dataRangeOption.min)
                         / splitNumber;

@@ -503,7 +503,7 @@ define(function(require) {
             _selectedMap = {};
             _option = zrUtil.clone(_optionBackup);
             _island.clear();
-            _toolbox.resetMagicType(_option);
+            _toolbox.reset(_option);
             _render(_option);
         }
         
@@ -593,7 +593,7 @@ define(function(require) {
             _selectedMap = {};
 
             _island.clear();
-            _toolbox.resetMagicType(_option);
+            _toolbox.reset(_option);
             _render(_option);
             return self;
         }

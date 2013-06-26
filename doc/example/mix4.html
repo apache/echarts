@@ -69,49 +69,82 @@
                     <textarea id="code" name="code">
 option = {
     tooltip : {
-        trigger: 'item'
-    },
-    legend: {
-        data:['scatter1','scatter2']
+        trigger: 'axis'
     },
     toolbox: {
         show : true,
         feature : {
             mark : true,
-            dataZoom : true,
             dataView : {readOnly: false},
             restore : true
         }
     },
+    dataRange: {
+        min: 0,
+        max: 100,
+        orient: 'horizontal',
+        y: 'top',
+        //text:['高','低'],           // 文本，默认为数值文本
+        color:['lightgreen','yellow'],
+        splitNumber: 5
+    },
     xAxis : [
         {
+            type : 'category',
+            boundaryGap : false,
+            data : function(){
+                var list = [];
+                for (var i = 1; i <= 30; i++) {
+                    list.push('2013-03-' + i);
+                }
+                return list;
+            }()
+        },
+        {
             type : 'value',
-            power: 1,
-            scale: true
+            scale : true,
+            splitNumber: 29,
+            axisLabel: {show:false},
+            splitLine: {show:false}
         }
     ],
     yAxis : [
         {
             type : 'value',
-            power: 1,
-            scale: true,
             splitArea : {show : true}
+        },
+        {
+            type : 'value'
         }
     ],
+    animation: false,
     series : [
         {
-            name:'scatter1',
+            name:'散点',
             type:'scatter',
+            tooltip : {
+                trigger: 'item',
+                formatter : function(value) {
+                    return '2013-03-' + value[2][0] + '<br/>'
+                           + value[0] + ' : ' 
+                           + value[2][1] + ', ' 
+                           + value[2][2]; 
+                }
+            },
+            yAxisIndex:1,
+            xAxisIndex:1,
+            symbol: 'circle',
             symbolSize: function(value){
-                return Math.round(value[2] / 5);
+                return Math.round(value[2]/10);
             },
             data: (function() {
                 var d = [];
-                var len = 100;
+                var len = 200;
+                var value;
                 while (len--) {
                     d.push([
-                        (Math.random()*100).toFixed(2) - 0,
-                        (Math.random()*100).toFixed(2) - 0,
+                        Math.round(Math.random()*29) + 1,
+                        (Math.random()*30).toFixed(2) - 0,
                         (Math.random()*100).toFixed(2) - 0
                     ]);
                 }
@@ -119,23 +152,15 @@ option = {
             })()
         },
         {
-            name:'scatter2',
-            type:'scatter',
-            symbolSize: function(value){
-                return Math.round(value[2] / 5);
-            },
-            data: (function() {
-                var d = [];
-                var len = 100;
-                while (len--) {
-                    d.push([
-                        (Math.random()*100).toFixed(2) - 0,
-                        (Math.random()*100).toFixed(2) - 0,
-                        (Math.random()*100).toFixed(2) - 0
-                    ]);
+            name:'折线',
+            type:'line',
+            data:function(){
+                var list = [];
+                for (var i = 1; i <= 30; i++) {
+                    list.push(Math.round(Math.random()* 30));
                 }
-                return d;
-            })()
+                return list;
+            }()
         }
     ]
 };

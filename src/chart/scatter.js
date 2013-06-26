@@ -151,6 +151,8 @@ define(function(require) {
          * 生成折线和折线上的拐点
          */
         function _buildPointList(pointList) {
+            var dataRange = component.dataRange;
+            var rangColor;  // 更高优先级
             var nColor;     // normal
             var nLineWidth;
             var eColor;     // emphasis
@@ -201,6 +203,20 @@ define(function(require) {
                 for (var i = 0, l = seriesPL.length; i < l; i++) {
                     singlePoint = seriesPL[i];
                     data = serie.data[singlePoint[4]];
+                    
+                    if (dataRange) {
+                        if (isNaN(data[2])) {
+                            continue;
+                        }
+                        rangColor = dataRange.getColor(data[2]);
+                        if (!rangColor) {
+                            continue;
+                        }
+                    }
+                    else {
+                        rangColor = nColor;
+                    }
+                    
                     queryTarget = [data];
                     self.shapeList.push(_getSymbol(
                         seriesIndex,    // seriesIndex
@@ -220,7 +236,7 @@ define(function(require) {
                         
                         // 填充颜色
                         self.deepQuery(queryTarget, 'itemStyle.normal.color')
-                        || nColor,
+                        || rangColor,
                         // 线宽
                         self.deepQuery(
                             queryTarget, 'itemStyle.normal.lineStyle.width'
@@ -343,6 +359,19 @@ define(function(require) {
             self.clear();
             _buildShape();
         }
+        
+        /**
+         * 值域响应
+         * @param {Object} param
+         * @param {Object} status
+         */
+        function ondataRange(param, status) {
+            if (component.dataRange) {
+                refresh();
+                status.needRefresh = true;
+            }
+            return;
+        }
 
         /**
          * 动画设定
@@ -376,6 +405,7 @@ define(function(require) {
 
         self.init = init;
         self.refresh = refresh;
+        self.ondataRange = ondataRange;
         self.animation = animation;
 
         init(option, component);
