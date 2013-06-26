@@ -69,7 +69,7 @@
                     <textarea id="code" name="code">
 option = {
     tooltip : {
-        trigger: 'axis'
+        trigger: 'item'
     },
     legend: {
         data:['收入','支出']
@@ -82,24 +82,13 @@ option = {
                     name: '收入',
                     itemStyle: {
                         normal: {
+                            brushType : 'both',
                             color : '#f08c2e',
-                            label: {
-                                show: true,
-                                position: 'outer'
-                                // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                            },
-                            nodeStyle : {
-                                brushType : 'both',
-                                color : '#f08c2e',
-                                strokeColor : '#5182ab',
-                                lineWidth : 2
-                            },
-                            lineStyle : {
-                                strokeColor : '#5182ab'
-                            }
+                            strokeColor : '#5182ab',
+                            lineWidth : 2
                         },
                         emphasis: {
-                            
+
                         }
                     }
                 },

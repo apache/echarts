@@ -36,7 +36,12 @@
             function(ec, webkitDepData) {
 
                 myChart = ec.init(document.getElementById("Main"));
+                webkitDepData.minRadius = 5;
+                webkitDepData.density = 0.8;
                 myChart.setOption({
+                    tooltip : {
+                        trigger: 'item'
+                    },
                     series : [webkitDepData]
                 }, true);
             }

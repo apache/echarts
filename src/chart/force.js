@@ -37,6 +37,9 @@ define(function(require) {
 
         var series;
 
+        var forceSerie;
+        var forceSerieIndex;
+
         var nodeShapes = [];
         var linkShapes = [];
 
@@ -88,8 +91,8 @@ define(function(require) {
             for (var i = 0, l = series.length; i < l; i++) {
                 var serie = series[i];
                 if (serie.type === ecConfig.CHART_TYPE_FORCE) {
-
                     series[i] = self.reformOption(series[i]);
+                    forceSerie = serie;
 
                     var minRadius = self.deepQuery([serie], 'minRadius');
                     var maxRadius = self.deepQuery([serie], 'maxRadius');
@@ -115,8 +118,19 @@ define(function(require) {
                     nodeStyle = self.deepQuery([serie], 'itemStyle.normal.nodeStyle');
                     nodeEmphasisStyle = self.deepQuery([serie], 'itemStyle.emphasis.nodeStyle');
                     
-                    nodesRawData = self.deepQuery([serie], 'nodes');
-                    linksRawData = self.deepQuery([serie], 'links');
+                    _filterData(
+                                zrUtil.clone(self.deepQuery([serie], 'nodes')),
+                                zrUtil.clone(self.deepQuery([serie], 'links'))
+                                );
+                    // Reset data
+                    nodePositions = [];
+                    nodePrePositions = [];
+                    nodeMasses = [];
+                    nodeWeights = [];
+                    linkWeights = [];
+                    nodeMasses = [];
+                    nodeShapes = [];
+                    linkShapes = [];
 
                     var area = viewportWidth * viewportHeight;
                     // Formula in 'Graph Drawing by Force-directed Placement'
@@ -127,6 +141,41 @@ define(function(require) {
                     _buildNodeShapes(nodesRawData, minRadius, maxRadius);
                 }
             }
+        }
+
+        function _filterData(nodes, links) {
+
+
+            var filteredNodeMap = [];
+            var cursor = 0;
+            nodesRawData = _filter(nodes, function(node, idx) {
+                if (self.selectedMap[node.category]) {
+                    filteredNodeMap[idx] = cursor++;
+                    return true;
+                }else{
+                    filteredNodeMap[idx] = -1;
+                }
+            });
+            var source;
+            var target;
+            var ret;
+            linksRawData = _filter(links, function(link, idx){
+                source = link.source;
+                target = link.target;
+                ret = true;
+                if (filteredNodeMap[source] >= 0) {
+                    link.source = filteredNodeMap[source];
+                } else {
+                    ret = false;
+                }
+                if (filteredNodeMap[target] >= 0) {
+                    link.target = filteredNodeMap[target];
+                } else {
+                    ret = false;
+                }
+
+                return ret;
+            });
         }
 
         function _buildNodeShapes(nodes, minRadius, maxRadius) {
@@ -223,6 +272,22 @@ define(function(require) {
                 self.shapeList.push(shape);
 
                 zr.addShape(shape);
+
+
+                var categoryName = ""
+                if (typeof(node.category) !== 'undefined') {
+                    var category = categories[node.category];
+                    categoryName = (category && category.name) || ""
+                }
+                ecData.pack(
+                    shape,
+                    {
+                        name : categoryName
+                    },
+                    0,
+                    node, 0,
+                    node.name || ""
+                )
             }
 
             // _normalize(nodeMasses, nodeMasses);
@@ -383,6 +448,10 @@ define(function(require) {
                 vec2.add(velocity, velocity, vec2.scale(tmp, nodeAccelerations[i], stepTime));
                 // Damping
                 vec2.scale(velocity, velocity, temperature);
+                // 防止速度太大
+                velocity[0] = Math.min(velocity[0], 100);
+                velocity[1] = Math.min(velocity[1], 100);
+
                 vec2.add(p, p, velocity);
                 nodeShapes[i].position[0] = p[0];
                 nodeShapes[i].position[1] = p[1];
@@ -431,7 +500,9 @@ define(function(require) {
         }
 
         function refresh() {
-            
+            self.clear();
+            _buildShape();
+            temperature = 1.0;
         }
         
         /**

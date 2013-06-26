@@ -26,7 +26,7 @@ function getNodeIdx(name){
     if(typeof(nodesIdxMap[name]) === "undefined"){
         nodesIdxMap[name] = nodes.length;
         nodes.push({
-            title : name,
+            name : name,
             value : 1,
             category : 0
         })
@@ -36,8 +36,6 @@ function getNodeIdx(name){
 
 var res = {
     type : "force",
-    minRadius : 5,
-    maxRadius : 5,
     categories : [{
         name : 'Webkit Class Dependencies'  ,
         itemStyle : {
