@@ -4,6 +4,7 @@ var fs = require("fs");
 
 var nodes = [];
 var links = [];
+var categories = [];
 
 var nodesIdxMap = {};
 

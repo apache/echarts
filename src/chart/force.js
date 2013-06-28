@@ -144,8 +144,6 @@ define(function(require) {
         }
 
         function _filterData(nodes, links) {
-
-
             var filteredNodeMap = [];
             var cursor = 0;
             nodesRawData = _filter(nodes, function(node, idx) {
@@ -485,6 +483,8 @@ define(function(require) {
             temperature *= 0.999;
         }
 
+        var interval;
+
         function init(newOption, newComponent) {
             option = newOption;
             component = newComponent;
@@ -494,7 +494,7 @@ define(function(require) {
             self.clear();
             _buildShape();
 
-            setInterval(function(){
+            interval = setInterval(function(){
                 _step();
             }, stepTime);
         }
@@ -503,6 +503,10 @@ define(function(require) {
             self.clear();
             _buildShape();
             temperature = 1.0;
+        }
+
+        function dispose(){
+            clearInterval(interval);
         }
         
         /**
@@ -566,6 +570,7 @@ define(function(require) {
         self.refresh = refresh;
         self.ondragstart = ondragstart;
         self.ondragend = ondragend;
+        self.dispose = dispose;
 
         init(option, component);
     }
