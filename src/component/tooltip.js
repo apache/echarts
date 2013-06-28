@@ -185,6 +185,9 @@ define(function (require) {
             if (y + domHeight > _zrHeight) {
                 y = _zrHeight - domHeight;
             }
+            if (y < 20) {
+                y = 0;
+            }
             _tDom.style.cssText = _gCssText
                                   + _defaultCssText
                                   + (specialCssText ? specialCssText : '')

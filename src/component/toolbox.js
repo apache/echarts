@@ -366,6 +366,7 @@ define(function (require) {
             _zooming = true;
             var x = zrEvent.getX(param.event);
             var y = zrEvent.getY(param.event);
+            var zoomOption = option.dataZoom || {};
             _zoomShape = {
                 shape : 'rectangle',
                 id : zr.newShapeId('zoom'),
@@ -375,12 +376,15 @@ define(function (require) {
                     y : y,
                     width : 1,
                     height : 1,
-                    brushType: 'stroke'
+                    brushType: 'both'
                 },
                 highlightStyle : {
-                    lineWidth : 1,
-                    strokeColor : 'red',
-                    brushType: 'stroke'
+                    lineWidth : 2,
+                    color: zoomOption.fillerColor 
+                           || ecConfig.dataZoom.fillerColor,
+                    strokeColor : zoomOption.handleColor 
+                                  || ecConfig.dataZoom.handleColor,
+                    brushType: 'both'
                 }
             };
             zr.addHoverShape(_zoomShape);

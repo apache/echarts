@@ -1040,7 +1040,7 @@ define(function (require) {
                 (splitNumber - dataRangeOption.color.length)
                 / (dataRangeOption.color.length - 1) + 1
             );
-            // console.log(_colorList.length)
+            //console.log(_colorList.length)
             
             if (dataRangeOption.precision === 0) {
                 _gap = Math.round(
@@ -1113,7 +1113,7 @@ define(function (require) {
             if (idx == _colorList.length) {
                 idx--;
             }
-            
+            //console.log(value, idx,_colorList[idx])
             if (_selectedMap[idx]) {
                 return _colorList[idx];
             }
