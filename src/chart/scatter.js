@@ -284,7 +284,7 @@ define(function(require) {
                     strokeColor : eColor,
                     lineWidth : eLineWidth
                 },
-                clickable : true,
+                clickable : true
             };
             
             if (symbol.match('star')) {

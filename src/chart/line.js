@@ -643,7 +643,7 @@ define(function(require) {
                     color : emphasisColor,
                     strokeColor : emphasisColor
                 },
-                clickable : true,
+                clickable : true
             };
             
             if (symbol.match('star')) {
