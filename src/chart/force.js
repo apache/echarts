@@ -133,8 +133,9 @@ define(function(require) {
                     linkShapes = [];
 
                     var area = viewportWidth * viewportHeight;
+                    var attractiveness = self.deepQuery([serie], 'attractiveness');
                     // Formula in 'Graph Drawing by Force-directed Placement'
-                    k = 0.5 * Math.sqrt( area / nodesRawData.length );
+                    k = 0.5 / attractiveness * Math.sqrt( area / nodesRawData.length );
                     
                     // 这两方法里需要加上读取self.selectedMap判断当前系列是否显示的逻辑
                     _buildLinkShapes(nodesRawData, linksRawData);

@@ -7,45 +7,42 @@ var links = [];
 var categories = [{
     name : 'HTMLElement',
     keyword : /^HTML/,
+    base : 'HTMLElement',
     itemStyle : {
         normal: {
-            brushType : 'both',
-            color : '#D0D102',
-            strokeColor : '#5182ab',
-            lineWidth : 2
+            brushType : 'fill',
+            color : '#58b4c1',
         }
     }
 }, {
     name : 'WebGL',
     keyword : /^WebGL/,
+    base : 'WebGLRenderingContext',
     itemStyle : {
         normal: {
-            brushType : 'both',
-            color : '#01A4A4',
-            strokeColor : '#5182ab',
+            brushType : 'fill',
+            color : '#4F57AA',
             lineWidth : 2
         }
     }
 }, {
     name : 'SVG',
     keyword : /^SVG/,
+    base : 'SVGElement',
     itemStyle : {
         normal: {
-            brushType : 'both',
-            color : '#00A1CB',
-            strokeColor : '#5182ab',
-            lineWidth : 2
+            brushType : 'fill',
+            color : '#72818B',
         }
     }
 }, {
     name : 'CSS',
     keyword : /^CSS/,
+    base : 'CSSRule',
     itemStyle : {
         normal: {
-            brushType : 'both',
-            color : '#61AE24',
-            strokeColor : '#5182ab',
-            lineWidth : 2
+            brushType : 'fill',
+            color : '#8F002E',
         }
     }
 }, {
@@ -53,10 +50,7 @@ var categories = [{
     keyword : /.*/,
     itemStyle : {
         normal: {
-            brushType : 'both',
-            // color : '#E54028',
-            strokeColor : '#5182ab',
-            lineWidth : 2
+            brushType : 'fill',
         }
     }
 }];
@@ -84,7 +78,7 @@ function getNodeIdx(name){
 
         nodes.push({
             name : name,
-            value : 1,
+            value : calculateValue(name),
             category : findCategory(name)
         });
     }
@@ -97,6 +91,15 @@ function findCategory(name){
             return i;
         }
     }
+}
+
+function calculateValue(name){
+    for (var i = 0; i < categories.length; i++) {
+        if (name === categories[i].base){
+            return 3;
+        }
+    }
+    return 1;
 }
 
 var res = {

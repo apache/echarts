@@ -441,6 +441,7 @@ define(function() {
             minRadius : 10,
             maxRadius : 20,
             density : 1.0,
+            attractiveness : 1.0,
             // 分类里如果有样式会覆盖节点默认样式
             categories : [],
             itemStyle: {

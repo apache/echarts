@@ -37,7 +37,17 @@
 
                 myChart = ec.init(document.getElementById("Main"));
                 webkitDepData.minRadius = 5;
-                webkitDepData.density = 1;
+                webkitDepData.maxRadius = 8;
+                webkitDepData.density = 1.1;
+                webkitDepData.attractiveness = 1.1;
+                webkitDepData.itemStyle = {
+                    normal : {
+                        linkStyle : {
+                            opacity : 0.2
+                        }
+                    }
+                }
+
                 myChart.setOption({
                     tooltip : {
                         trigger: 'item'
