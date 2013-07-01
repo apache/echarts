@@ -10,8 +10,10 @@ var categories = [{
     base : 'HTMLElement',
     itemStyle : {
         normal: {
-            brushType : 'fill',
-            color : '#58b4c1',
+            "brushType": "both",
+            "color": "#D0D102",
+            "strokeColor": "#5182ab",
+            "lineWidth": 2
         }
     }
 }, {
@@ -20,9 +22,10 @@ var categories = [{
     base : 'WebGLRenderingContext',
     itemStyle : {
         normal: {
-            brushType : 'fill',
-            color : '#4F57AA',
-            lineWidth : 2
+            "brushType": "both",
+            "color": "#00A1CB",
+            "strokeColor": "#5182ab",
+            "lineWidth": 2
         }
     }
 }, {
@@ -31,8 +34,10 @@ var categories = [{
     base : 'SVGElement',
     itemStyle : {
         normal: {
-            brushType : 'fill',
-            color : '#72818B',
+            "brushType": "both",
+             "color": "#dda0dd",
+             "strokeColor": "#5182ab",
+             "lineWidth": 2
         }
     }
 }, {
@@ -41,8 +46,10 @@ var categories = [{
     base : 'CSSRule',
     itemStyle : {
         normal: {
-            brushType : 'fill',
-            color : '#8F002E',
+            "brushType": "both",
+            "color": "#61AE24",
+            "strokeColor": "#5182ab",
+            "lineWidth": 2
         }
     }
 }, {
@@ -50,7 +57,9 @@ var categories = [{
     keyword : /.*/,
     itemStyle : {
         normal: {
-            brushType : 'fill',
+            "brushType": "both",
+             "strokeColor": "#5182ab",
+             "lineWidth": 2
         }
     }
 }];

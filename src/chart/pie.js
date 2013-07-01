@@ -166,7 +166,7 @@ define(function(require) {
 
             // 文本标签，需要显示则会有返回
             var label = _getLabel(
-                    seriesIndex, dataIndex,
+                    seriesIndex, dataIndex, percent,
                     startAngle, endAngle, defaultColor,
                     false
                 );
@@ -262,7 +262,9 @@ define(function(require) {
                     'itemStyle.normal.label.position'
                 ) == 'inner'
             ) {
-                sector.style.text = data.name;
+                sector.style.text = _getLabelText(
+                    seriesIndex, dataIndex, percent, 'normal'
+                );
                 sector.style.textPosition = 'specific';
                 sector.style.textColor = self.deepQuery(
                     [data, serie],
@@ -298,7 +300,9 @@ define(function(require) {
                     'itemStyle.emphasis.label.position'
                 ) == 'inner'
             ) {
-                sector.highlightStyle.text = data.name;
+                sector.highlightStyle.text = _getLabelText(
+                    seriesIndex, dataIndex, percent, 'emphasis'
+                );
                 sector.highlightStyle.textPosition = 'specific';
                 sector.highlightStyle.textColor = self.deepQuery(
                     [data, serie],
@@ -341,7 +345,7 @@ define(function(require) {
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
         function _getLabel(
-            seriesIndex, dataIndex,
+            seriesIndex, dataIndex, percent,
             startAngle, endAngle, defaultColor,
             isEmphasis
         ) {
@@ -388,7 +392,9 @@ define(function(require) {
                             x : centerX + radius * zrMath.cos(midAngle, true),
                             y : centerY - radius * zrMath.sin(midAngle, true),
                             color : textStyle.color || defaultColor,
-                            text : data.name,
+                            text : _getLabelText(
+                                seriesIndex, dataIndex, percent, status
+                            ),
                             textAlign : textStyle.align
                                         || textAlign,
                             textBaseline : textStyle.baseline || 'middle',
@@ -408,7 +414,9 @@ define(function(require) {
                             x : centerX,
                             y : centerY,
                             color : textStyle.color || defaultColor,
-                            text : data.name,
+                            text : _getLabelText(
+                                seriesIndex, dataIndex, percent, status
+                            ),
                             textAlign : textStyle.align
                                         || 'center',
                             textBaseline : textStyle.baseline || 'middle',
@@ -434,6 +442,44 @@ define(function(require) {
             }
         }
 
+        /**
+         * 根据lable.format计算label text
+         */
+        function _getLabelText(seriesIndex, dataIndex, percent, status) {
+            var serie = series[seriesIndex];
+            var data = serie.data[dataIndex];
+            var formatter = self.deepQuery(
+                [data, serie],
+                'itemStyle.' + status + '.label.formatter'
+            );
+            
+            if (formatter) {
+                if (typeof formatter == 'function') {
+                    return formatter(
+                        serie.name,
+                        data.name,
+                        data.value,
+                        percent
+                    );
+                }
+                else if (typeof formatter == 'string') {
+                    formatter = formatter.replace('{a}','{a0}')
+                                         .replace('{b}','{b0}')
+                                         .replace('{c}','{c0}')
+                                         .replace('{d}','{d0}');
+                    formatter = formatter.replace('{a0}', serie.name)
+                                         .replace('{b0}', data.name)
+                                         .replace('{c0}', data.value)
+                                         .replace('{d0}', percent);
+    
+                    return formatter;
+                }
+            }
+            else {
+                return data.name;
+            }
+        }
+        
         /**
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
@@ -838,6 +884,7 @@ define(function(require) {
             var shape = param.target;
             var seriesIndex = ecData.get(shape, 'seriesIndex');
             var dataIndex = ecData.get(shape, 'dataIndex');
+            var percent = ecData.get(shape, 'special');
 
             var startAngle = shape.style.startAngle;
             var endAngle = shape.style.endAngle;
@@ -845,7 +892,7 @@ define(function(require) {
 
             // 文本标签，需要显示则会有返回
             var label = _getLabel(
-                    seriesIndex, dataIndex,
+                    seriesIndex, dataIndex, percent,
                     startAngle, endAngle, defaultColor,
                     true
                 );

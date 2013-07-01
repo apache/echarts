@@ -95,7 +95,8 @@ option = {
             itemStyle : {
                 normal : {
                     label : {
-                        position : 'inner'
+                        position : 'inner',
+                        formatter : function(a,b,c,d) {return (d - 0).toFixed(0) + ' %'},
                     },
                     labelLine : {
                         show : false
@@ -117,6 +118,7 @@ option = {
                         emphasis : {
                             label : {
                                 show : true,
+                                formatter : "{b} : {d}%",
                                 position : 'inner'
                             }
                         }
@@ -220,6 +222,7 @@ option = {
                     label : {
                         show : true,
                         position : 'center',
+                        formatter : "{d}%",
                         textStyle : {
                             color : 'red',
                             fontSize : '30',

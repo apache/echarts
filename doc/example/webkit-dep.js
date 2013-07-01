@@ -21,9 +21,9 @@ define({
             "itemStyle": {
                 "normal": {
                     "brushType": "both",
-                     "color": "#00A1CB",
-                     "strokeColor": "#5182ab",
-                     "lineWidth": 2
+                    "color": "#00A1CB",
+                    "strokeColor": "#5182ab",
+                    "lineWidth": 2
                 }
             }
         },
