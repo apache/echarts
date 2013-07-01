@@ -4,7 +4,62 @@ var fs = require("fs");
 
 var nodes = [];
 var links = [];
-var categories = [];
+var categories = [{
+    name : 'HTMLElement',
+    keyword : /^HTML/,
+    itemStyle : {
+        normal: {
+            brushType : 'both',
+            color : '#D0D102',
+            strokeColor : '#5182ab',
+            lineWidth : 2
+        }
+    }
+}, {
+    name : 'WebGL',
+    keyword : /^WebGL/,
+    itemStyle : {
+        normal: {
+            brushType : 'both',
+            color : '#01A4A4',
+            strokeColor : '#5182ab',
+            lineWidth : 2
+        }
+    }
+}, {
+    name : 'SVG',
+    keyword : /^SVG/,
+    itemStyle : {
+        normal: {
+            brushType : 'both',
+            color : '#00A1CB',
+            strokeColor : '#5182ab',
+            lineWidth : 2
+        }
+    }
+}, {
+    name : 'CSS',
+    keyword : /^CSS/,
+    itemStyle : {
+        normal: {
+            brushType : 'both',
+            color : '#61AE24',
+            strokeColor : '#5182ab',
+            lineWidth : 2
+        }
+    }
+}, {
+    name : 'Other',
+    keyword : /.*/,
+    itemStyle : {
+        normal: {
+            brushType : 'both',
+            // color : '#E54028',
+            strokeColor : '#5182ab',
+            lineWidth : 2
+        }
+    }
+}];
 
 var nodesIdxMap = {};
 
@@ -26,28 +81,27 @@ data.forEach(function(item){
 function getNodeIdx(name){
     if(typeof(nodesIdxMap[name]) === "undefined"){
         nodesIdxMap[name] = nodes.length;
+
         nodes.push({
             name : name,
             value : 1,
-            category : 0
-        })
+            category : findCategory(name)
+        });
     }
     return nodesIdxMap[name];
 }
 
+function findCategory(name){
+    for (var i = 0; i < categories.length; i++) {
+        if (name.match(categories[i].keyword) ){
+            return i;
+        }
+    }
+}
+
 var res = {
     type : "force",
-    categories : [{
-        name : 'Webkit Class Dependencies'  ,
-        itemStyle : {
-            normal: {
-                brushType : 'both',
-                color : '#f08c2e',
-                strokeColor : '#5182ab',
-                lineWidth : 2
-            }
-        }
-    }],
+    categories : categories,
     nodes : nodes,
     links : links
 }

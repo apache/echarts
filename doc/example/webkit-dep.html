@@ -37,10 +37,15 @@
 
                 myChart = ec.init(document.getElementById("Main"));
                 webkitDepData.minRadius = 5;
-                webkitDepData.density = 0.8;
+                webkitDepData.density = 1;
                 myChart.setOption({
                     tooltip : {
                         trigger: 'item'
+                    },
+                    legend : {
+                        data : ['HTMLElement', 'WebGL', 'SVG', 'CSS', 'Other'],
+                        orient : 'vertical',
+                        x : 'left'
                     },
                     series : [webkitDepData]
                 }, true);
