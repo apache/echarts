@@ -113,15 +113,23 @@ define(function(require) {
                         }
                     }
 
-                    linkStyle = self.deepQuery([serie], 'itemStyle.normal.linkStyle');
-                    linkEmphasisStyle = self.deepQuery([serie], 'itemStyle.emphasis.linkStyle');
-                    nodeStyle = self.deepQuery([serie], 'itemStyle.normal.nodeStyle');
-                    nodeEmphasisStyle = self.deepQuery([serie], 'itemStyle.emphasis.nodeStyle');
+                    linkStyle = self.deepQuery(
+                        [serie], 'itemStyle.normal.linkStyle'
+                    );
+                    linkEmphasisStyle = self.deepQuery(
+                        [serie], 'itemStyle.emphasis.linkStyle'
+                    );
+                    nodeStyle = self.deepQuery(
+                        [serie], 'itemStyle.normal.nodeStyle'
+                    );
+                    nodeEmphasisStyle = self.deepQuery(
+                        [serie], 'itemStyle.emphasis.nodeStyle'
+                    );
                     
                     _filterData(
-                                zrUtil.clone(self.deepQuery([serie], 'nodes')),
-                                zrUtil.clone(self.deepQuery([serie], 'links'))
-                                );
+                        zrUtil.clone(self.deepQuery([serie], 'nodes')),
+                        zrUtil.clone(self.deepQuery([serie], 'links'))
+                    );
                     // Reset data
                     nodePositions = [];
                     nodePrePositions = [];
@@ -133,9 +141,12 @@ define(function(require) {
                     linkShapes = [];
 
                     var area = viewportWidth * viewportHeight;
-                    var attractiveness = self.deepQuery([serie], 'attractiveness');
+                    var attractiveness = self.deepQuery(
+                        [serie], 'attractiveness'
+                    );
                     // Formula in 'Graph Drawing by Force-directed Placement'
-                    k = 0.5 / attractiveness * Math.sqrt( area / nodesRawData.length );
+                    k = 0.5 / attractiveness 
+                        * Math.sqrt( area / nodesRawData.length );
                     
                     // 这两方法里需要加上读取self.selectedMap判断当前系列是否显示的逻辑
                     _buildLinkShapes(nodesRawData, linksRawData);
@@ -227,22 +238,35 @@ define(function(require) {
                 };
 
                 // Label 
-                if (self.deepQuery([forceSerie], 'itemStyle.normal.label.show')) {
+                var labelStyle;
+                if (self.deepQuery([forceSerie], 'itemStyle.normal.label.show')
+                ) {
                     shape.style.text = node.name;
-                    shape.style.textPosition = 'specific';
-                    shape.style.textColor = self.deepQuery([forceSerie], 'itemStyle.normal.label.textStyle.color') || '#fff';
-                    shape.style.textAlign = self.deepQuery([forceSerie], 'itemStyle.normal.label.textStyle.align') || 'center';
-                    shape.style.textBaseLine = self.deepQuery([forceSerie], 'itemStyle.normal.label.textStyle.baseline') || 'middle';
-                    shape.style.textFont = self.getFont(self.deepQuery([forceSerie], 'itemStyle.normal.label.textStyle'));
+                    shape.style.textPosition = 'inside';
+                    labelStyle = self.deepQuery(
+                        [forceSerie], 'itemStyle.normal.label.textStyle'
+                    ) || {};
+                    shape.style.textColor = labelStyle.color || '#fff';
+                    shape.style.textAlign = labelStyle.align || 'center';
+                    shape.style.textBaseLine = labelStyle.baseline || 'middle';
+                    shape.style.textFont = self.getFont(labelStyle);
                 }
 
-                if (self.deepQuery([forceSerie], 'itemStyle.emphasis.label.show')) {
+                if (self.deepQuery(
+                        [forceSerie], 'itemStyle.emphasis.label.show'
+                    )
+                ) {
                     shape.highlightStyle.text = node.name;
-                    shape.highlightStyle.textPosition = 'specific';
-                    shape.highlightStyle.textColor = self.deepQuery([forceSerie], 'itemStyle.emphasis.label.textStyle.color') || '#fff';
-                    shape.highlightStyle.textAlign = self.deepQuery([forceSerie], 'itemStyle.emphasis.label.textStyle.align') || 'center';
-                    shape.highlightStyle.textBaseLine = self.deepQuery([forceSerie], 'itemStyle.emphasis.label.textStyle.baseline') || 'middle';
-                    shape.highlightStyle.textFont = self.getFont(self.deepQuery([forceSerie], 'itemStyle.emphasis.label.textStyle'));
+                    shape.highlightStyle.textPosition = 'inside';
+                    labelStyle = self.deepQuery(
+                        [forceSerie], 'itemStyle.emphasis.label.textStyle'
+                    ) || {};
+                    shape.highlightStyle.textColor = labelStyle.color || '#fff';
+                    shape.highlightStyle.textAlign = labelStyle.align 
+                                                     || 'center';
+                    shape.highlightStyle.textBaseLine = labelStyle.baseline 
+                                                        || 'middle';
+                    shape.highlightStyle.textFont = self.getFont(labelStyle);
                 }
 
                 // 优先级 node.style > category.style > defaultStyle
@@ -260,9 +284,11 @@ define(function(require) {
                                 });
                             }
                             if (style.emphasis) {
-                                zrUtil.merge(shape.highlightStyle, style.emphasis, {
-                                    overwrite : true
-                                });
+                                zrUtil.merge(
+                                    shape.highlightStyle, 
+                                    style.emphasis, 
+                                    { overwrite : true }
+                                );
                             }
                         }
                     }
@@ -342,9 +368,11 @@ define(function(require) {
                         });
                     }
                     if(link.itemStyle.emphasis){
-                        zrUtil.merge(shape.highlightStyle, link.itemStyle.emphasis, {
-                            overwrite : true
-                        })
+                        zrUtil.merge(
+                            shape.highlightStyle, 
+                            link.itemStyle.emphasis, 
+                            { overwrite : true }
+                        );
                     }
                 }
 
@@ -442,7 +470,9 @@ define(function(require) {
             }
             // 计算加速度
             for (var i = 0, l = nodeAccelerations.length; i < l; i++) {
-                vec2.scale(nodeAccelerations[i], nodeForces[i], 1 / nodeMasses[i]);
+                vec2.scale(
+                    nodeAccelerations[i], nodeForces[i], 1 / nodeMasses[i]
+                );
             }
             var velocity = [];
             var tmp = [];
@@ -463,7 +493,11 @@ define(function(require) {
                 vec2.sub(velocity, p, p_);
                 p_[0] = p[0];
                 p_[1] = p[1];
-                vec2.add(velocity, velocity, vec2.scale(tmp, nodeAccelerations[i], stepTime));
+                vec2.add(
+                    velocity, 
+                    velocity, 
+                    vec2.scale(tmp, nodeAccelerations[i], stepTime)
+                );
                 // Damping
                 vec2.scale(velocity, velocity, temperature);
                 // 防止速度太大

@@ -69,71 +69,103 @@
                     <textarea id="code" name="code">
 option = {
     tooltip : {
-        trigger: 'item'
+        trigger: 'item',
+        formatter: '{a} : {b}'
     },
     legend: {
-        data:['收入','支出']
+        x: 'left',
+        data:['家人','朋友']
     },
     series : [
         {
             type:'force',
             categories : [
                 {
-                    name: '收入',
+                    name: '人物',
                     itemStyle: {
                         normal: {
-                            brushType : 'both',
-                            color : '#f08c2e',
-                            strokeColor : '#5182ab',
-                            lineWidth : 2
-                        },
-                        emphasis: {
-
+                            color : '#ff7f50'
                         }
                     }
                 },
                 {
-                    name:'支出',
+                    name: '家人',
                     itemStyle: {
                         normal: {
-                            brushType : 'both',
-                            color : '#c5dcf0',
-                            strokeColor : '#5182ab',
-                            lineWidth : 2
+                            color : '#87cdfa'
+                        }
+                    }
+                },
+                {
+                    name:'朋友',
+                    itemStyle: {
+                        normal: {
+                            color : '#9acd32'
                         }
                     }
                 }
             ],
-            minRadius : 5,
-            maxRadius : 10,
-            density : 1.2,
-            nodes:[
-                {category : 0, value : 200},
-                {category : 0, value : 200},
-                {category : 1, value : 200},
-                {category : 1, value : 200},
-                {
-                    value : 300,    //孤立点
-                    category : 1,
-                    name : "Daemon",
-                    itemStyle : {
-                        normal : {
-                            color : '#b10101'
-                        },
-                        emphasis : {
-                            r : 15
+            itemStyle: {
+                normal: {
+                    label: {
+                        show: true,
+                        textStyle: {
+                            color: '#800080'
                         }
+                    },
+                    nodeStyle : {
+                        brushType : 'both',
+                        strokeColor : 'rgba(255,215,0,0.4)',
+                        lineWidth : 8
                     }
+                },
+                emphasis: {
+                    label: {
+                        show: false
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
+                    nodeStyle : {
+                        r: 30
+                    },
+                    linkStyle : {}
                 }
+            },
+            minRadius : 15,
+            maxRadius : 25,
+            density : 1,
+            attractiveness: 1.2,
+            nodes:[
+                {category:0, name: '乔布斯', value : 10},
+                {category:1, name: '丽萨-乔布斯',value : 2},
+                {category:1, name: '保罗-乔布斯',value : 3},
+                {category:1, name: '克拉拉-乔布斯',value : 3},
+                {category:1, name: '劳伦-鲍威尔',value : 7},
+                {category:2, name: '史蒂夫-沃兹尼艾克',value : 5},
+                {category:2, name: '奥巴马',value : 8},
+                {category:2, name: '比尔-盖茨',value : 9},
+                {category:2, name: '乔纳森-艾夫',value : 4},
+                {category:2, name: '蒂姆-库克',value : 4},
+                {category:2, name: '龙-韦恩',value : 1},
             ],
             links : [
-                {source : 0, target : 1, weight : 1},
-                {source : 1, target : 2, weight : 1},
-                {source : 2, target : 3, weight : 1},
-                {source : 3, target : 0, weight : 1}, 
-                {source : 0, target : 2, weight : 1}, 
-                {source : 1, target : 3, weight : 1}, 
-                {source : 1, target : 4, weight : 2}
+                {source : 1, target : 0, weight : 1},
+                {source : 2, target : 0, weight : 2},
+                {source : 3, target : 0, weight : 1},
+                {source : 4, target : 0, weight : 2},
+                {source : 5, target : 0, weight : 3},
+                {source : 6, target : 0, weight : 6},
+                {source : 7, target : 0, weight : 6},
+                {source : 8, target : 0, weight : 1},
+                {source : 9, target : 0, weight : 1},
+                {source : 10, target : 0, weight : 1},
+                {source : 3, target : 2, weight : 1},
+                {source : 6, target : 2, weight : 1},
+                {source : 6, target : 3, weight : 1},
+                {source : 6, target : 4, weight : 1},
+                {source : 6, target : 5, weight : 1},
+                {source : 7, target : 6, weight : 6},
+                {source : 7, target : 3, weight : 1},
+                {source : 9, target : 6, weight : 1}
             ]
         }
     ]

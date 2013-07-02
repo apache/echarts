@@ -448,7 +448,7 @@ define(function() {
                 normal: {
                     // color: 各异,
                     label: {
-                        show: true,
+                        show: false
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     nodeStyle : {
@@ -463,12 +463,11 @@ define(function() {
                 emphasis: {
                     // color: 各异,
                     label: {
+                        show: false
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
-                    nodeStyle : {
-                    },
-                    linkStyle : {
-                    }
+                    nodeStyle : {},
+                    linkStyle : {}
                 }
             }
         },
