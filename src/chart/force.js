@@ -226,6 +226,25 @@ define(function(require) {
                     __force_index__ : i
                 };
 
+                // Label 
+                if (self.deepQuery([forceSerie], 'itemStyle.normal.label.show')) {
+                    shape.style.text = node.name;
+                    shape.style.textPosition = 'specific';
+                    shape.style.textColor = self.deepQuery([forceSerie], 'itemStyle.normal.label.textStyle.color') || '#fff';
+                    shape.style.textAlign = self.deepQuery([forceSerie], 'itemStyle.normal.label.textStyle.align') || 'center';
+                    shape.style.textBaseLine = self.deepQuery([forceSerie], 'itemStyle.normal.label.textStyle.baseline') || 'middle';
+                    shape.style.textFont = self.getFont(self.deepQuery([forceSerie], 'itemStyle.normal.label.textStyle'));
+                }
+
+                if (self.deepQuery([forceSerie], 'itemStyle.emphasis.label.show')) {
+                    shape.highlightStyle.text = node.name;
+                    shape.highlightStyle.textPosition = 'specific';
+                    shape.highlightStyle.textColor = self.deepQuery([forceSerie], 'itemStyle.emphasis.label.textStyle.color') || '#fff';
+                    shape.highlightStyle.textAlign = self.deepQuery([forceSerie], 'itemStyle.emphasis.label.textStyle.align') || 'center';
+                    shape.highlightStyle.textBaseLine = self.deepQuery([forceSerie], 'itemStyle.emphasis.label.textStyle.baseline') || 'middle';
+                    shape.highlightStyle.textFont = self.getFont(self.deepQuery([forceSerie], 'itemStyle.emphasis.label.textStyle'));
+                }
+
                 // 优先级 node.style > category.style > defaultStyle
                 zrUtil.merge(shape.style, nodeStyle);
                 zrUtil.merge(shape.highlightStyle, nodeEmphasisStyle);

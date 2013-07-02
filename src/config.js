@@ -449,7 +449,6 @@ define(function() {
                     // color: 各异,
                     label: {
                         show: true,
-                        position: 'outer'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     nodeStyle : {
@@ -464,8 +463,6 @@ define(function() {
                 emphasis: {
                     // color: 各异,
                     label: {
-                        show: false,
-                        position: 'outer'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     nodeStyle : {
