@@ -161,7 +161,7 @@ define(function(require) {
                     case 'right' :
                         x = zrWidth - width;
                         break;
-                    case 'left' :
+                    //case 'left' :
                     default:
                         x = 0;
                         break;
@@ -175,7 +175,7 @@ define(function(require) {
                     case 'bottom' :
                         y = zrHeight - height;
                         break;
-                    case 'top' :
+                    //case 'top' :
                     default:
                         y = 0;
                         break;

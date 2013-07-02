@@ -236,7 +236,7 @@ define(function (require) {
                 serie = series[seriesIndex[i]];
                 _originalData.series[seriesIndex[i]] = serie.data;
                 if (serie.type == ecConfig.CHART_TYPE_SCATTER) {
-                    _calculScatterMap(seriesIndex[i])
+                    _calculScatterMap(seriesIndex[i]);
                 }
             }
         }
@@ -934,7 +934,7 @@ define(function (require) {
         
         self.init = init;
         self.absoluteZoom = absoluteZoom;
-        self.rectZoom = rectZoom
+        self.rectZoom = rectZoom;
         self.ondragend = ondragend;
         self.ondataZoom = ondataZoom;
 

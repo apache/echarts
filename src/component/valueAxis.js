@@ -740,7 +740,7 @@ define(function (require) {
             return {
                 min: _min,
                 max: _max
-            }
+            };
         }
 
         /**

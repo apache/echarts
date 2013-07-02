@@ -496,7 +496,7 @@ define(function (require) {
                         itemShape.style.color = '#ccc';
                         itemShape.style.strokeColor = '#ccc';
                     }
-                    zr.modShape(shape.id, itemShape)
+                    zr.modShape(shape.id, itemShape);
                 }
             }
         }
@@ -564,7 +564,7 @@ define(function (require) {
         force : function(ctx, style) {
             require('zrender/shape').get('icon').get('circle')(ctx, style);
         }
-    }
+    };
     
     require('../component').define('legend', Legend);
     

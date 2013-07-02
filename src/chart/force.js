@@ -28,7 +28,7 @@ define(function(require) {
 
         var zrConfig = require('zrender/config');
         var zrEvent = require('zrender/tool/event');
-        var zrColor = require('zrender/tool/color');
+        // var zrColor = require('zrender/tool/color');
         var zrUtil = require('zrender/tool/util');
         var vec2 = require('zrender/tool/vector');
 
@@ -38,7 +38,7 @@ define(function(require) {
         var series;
 
         var forceSerie;
-        var forceSerieIndex;
+        // var forceSerieIndex;
 
         var nodeShapes = [];
         var linkShapes = [];
@@ -86,7 +86,7 @@ define(function(require) {
             temperature = 1.0;
             viewportWidth = zr.getWidth();
             viewportHeight = zr.getHeight();
-            centroid = [viewportWidth/2, viewportHeight/2]
+            centroid = [viewportWidth/2, viewportHeight/2];
 
             for (var i = 0, l = series.length; i < l; i++) {
                 var serie = series[i];
@@ -169,7 +169,7 @@ define(function(require) {
             var source;
             var target;
             var ret;
-            linksRawData = _filter(links, function(link, idx){
+            linksRawData = _filter(links, function(link/*, idx*/){
                 source = link.source;
                 target = link.target;
                 ret = true;
@@ -204,13 +204,13 @@ define(function(require) {
                 var x, y;
                 var r = radius[i];
 
-                var random = _randomInSquare(viewportWidth/2, 
-                                            viewportHeight/2, 
-                                            300);
-                x = typeof(node.initial) === "undefined" 
+                var random = _randomInSquare(
+                    viewportWidth/2, viewportHeight/2, 300
+                );
+                x = typeof(node.initial) === 'undefined' 
                     ? random.x
                     : node.initial.x;
-                y = typeof(node.initial) === "undefined"
+                y = typeof(node.initial) === 'undefined'
                     ? random.y
                     : node.initial.y;
                 // 初始化位置
@@ -234,7 +234,7 @@ define(function(require) {
                     highlightStyle : {},
                     position : [x, y],
 
-                    __force_index__ : i
+                    __forceIndex : i
                 };
 
                 // Label 
@@ -318,10 +318,10 @@ define(function(require) {
                 zr.addShape(shape);
 
 
-                var categoryName = ""
+                var categoryName = '';
                 if (typeof(node.category) !== 'undefined') {
                     var category = categories[node.category];
-                    categoryName = (category && category.name) || ""
+                    categoryName = (category && category.name) || '';
                 }
                 ecData.pack(
                     shape,
@@ -330,8 +330,8 @@ define(function(require) {
                     },
                     0,
                     node, 0,
-                    node.name || ""
-                )
+                    node.name || ''
+                );
             }
 
             // _normalize(nodeMasses, nodeMasses);
@@ -342,8 +342,8 @@ define(function(require) {
 
             for (var i = 0; i < l; i++) {
                 var link = links[i];
-                var source = nodes[link.source];
-                var target = nodes[link.target];
+                //var source = nodes[link.source];
+                // var target = nodes[link.target];
                 var weight = link.weight || 1;
                 linkWeights.push(weight);
 
@@ -489,10 +489,10 @@ define(function(require) {
                     continue;
                 }
                 var p = nodePositions[i];
-                var p_ = nodePrePositions[i];
-                vec2.sub(velocity, p, p_);
-                p_[0] = p[0];
-                p_[1] = p[1];
+                var __P = nodePrePositions[i];
+                vec2.sub(velocity, p, __P);
+                __P[0] = p[0];
+                __P[1] = p[1];
                 vec2.add(
                     velocity, 
                     velocity, 
@@ -508,8 +508,8 @@ define(function(require) {
                 nodeShapes[i].position[0] = p[0];
                 nodeShapes[i].position[1] = p[1];
 
-                if(p[0] === NaN || p[1] === NaN){
-                    throw new Error("NaN");
+                if(isNaN(p[0]) || isNaN(p[1])){
+                    throw new Error('NaN');
                 }
             }
         }
@@ -568,18 +568,18 @@ define(function(require) {
          */
         self.shapeHandler.ondragstart = function() {
             self.isDragstart = true;
-        }
+        };
         
         /**
          * 拖拽开始
          */
-        function ondragstart(param, status) {
+        function ondragstart(param) {
             if (!self.isDragstart || !param.target) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
             }
             var shape = param.target;
-            var idx = shape.__force_index__;
+            var idx = shape.__forceIndex;
             var node = nodesRawData[idx];
             node.fixed = true;
 
@@ -598,7 +598,7 @@ define(function(require) {
                 return;
             }
             var shape = param.target;
-            var idx = shape.__force_index__;
+            var idx = shape.__forceIndex;
             var node = nodesRawData[idx];
             node.fixed = false;
 
@@ -617,7 +617,7 @@ define(function(require) {
         function _onmousemove(param) {
             temperature = 0.8;
             mouseX = zrEvent.getX(param.event);
-            mouseY = zrEvent.getY(param.event)
+            mouseY = zrEvent.getY(param.event);
         }
         
         self.init = init;
@@ -668,21 +668,23 @@ define(function(require) {
             output[i] = input[i] / max;
         }
     }
-
+    
+    /*
     function _randomInCircle(x, y, radius) {
         var theta = Math.random() * Math.PI * 2;
         var r = radius * Math.random();
         return {
             x : Math.cos(theta) * r + x,
             y : Math.sin(theta) * r + y
-        }
+        };
     }
-
+    */
+   
     function _randomInSquare(x, y, size) {
         return {
             x : (Math.random() - 0.5) * size + x,
             y : (Math.random() - 0.5) * size + y
-        }
+        };
     }
 
     function _filter(array, callback){
@@ -700,4 +702,4 @@ define(function(require) {
     require('../chart').define('force', Force);
 
     return Force;
-})
+});

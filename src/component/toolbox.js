@@ -59,7 +59,8 @@ define(function (require) {
                             _iconList.push('markClear');
                             break;
                         case 'magicType' :
-                            for (var i = 0, l = feature[key].length; i < l; i++) {
+                            for (var i = 0, l = feature[key].length; i < l; i++
+                            ) {
                                 _iconList.push(feature[key][i] + 'Chart');
                             }
                             break;
@@ -391,7 +392,7 @@ define(function (require) {
             return true; // 阻塞全局事件
         }
         
-        function _onmouseup(param) {
+        function _onmouseup(/*param*/) {
             if (!_zoomShape 
                 || Math.abs(_zoomShape.style.width) < 10 
                 || Math.abs(_zoomShape.style.height) < 10
@@ -402,7 +403,7 @@ define(function (require) {
             if (_zooming && component.dataZoom) {
                 _zooming = false;
                 
-                var zoom = component.dataZoom.rectZoom(_zoomShape.style)
+                var zoom = component.dataZoom.rectZoom(_zoomShape.style);
                 if (zoom) {
                     _zoomQueue.push({
                         start : zoom.start,
@@ -555,8 +556,8 @@ define(function (require) {
                     );
                 }
                 
-                zr.un(zrConfig.EVENT.MOUSEDOWN, _onmousedown)
-                zr.un(zrConfig.EVENT.MOUSEUP, _onmouseup)
+                zr.un(zrConfig.EVENT.MOUSEDOWN, _onmousedown);
+                zr.un(zrConfig.EVENT.MOUSEUP, _onmouseup);
                 zr.un(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
             }
         }
@@ -681,7 +682,7 @@ define(function (require) {
                 }];
             }
             else {
-                _zoomQueue = []
+                _zoomQueue = [];
             }
         }
 
