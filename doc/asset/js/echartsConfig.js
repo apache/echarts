@@ -296,7 +296,9 @@
             xAxisIndex: 0,
             yAxisIndex: 0,
             //symbol: null,    // 图形类型，非标准参数
-            symbolSize: 4      // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            symbolSize: 4,       // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            large: false,        // 大规模散点图
+            largeThreshold: 2000 // 大规模阀值，large为true且数据量大于largeThreshold才启用大规模模式
         },
 
         // 饼图默认参数
@@ -388,6 +390,42 @@
             }
         },
 
+		force : {
+            // 数据map到圆的半径的最小值和最大值
+            minRadius : 10,
+            maxRadius : 20,
+            density : 1.0,
+            attractiveness : 1.0,
+            // 分类里如果有样式会覆盖节点默认样式
+            categories : [],
+            itemStyle: {
+                normal: {
+                    // color: 各异,
+                    label: {
+                        show: false
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
+                    nodeStyle : {
+                        brushType : 'both',
+                        color : '#f08c2e',
+                        strokeColor : '#5182ab'
+                    },
+                    linkStyle : {
+                        strokeColor : '#5182ab'
+                    }
+                },
+                emphasis: {
+                    // color: 各异,
+                    label: {
+                        show: false
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
+                    nodeStyle : {},
+                    linkStyle : {}
+                }
+            }
+        },
+
         island: {
             r: 15,
             calculateStep: 0.1  // 滚轮可计算步长 0.1 = 10%
@@ -423,8 +461,10 @@
         CHART_TYPE_PIE: 'pie',
         CHART_TYPE_MAP: 'map',
         CHART_TYPE_K: 'k',
+		CHART_TYPE_FORCE : 'force',
         // CHART_TYPE_RADAR: 'radar',
         // CHART_TYPE_ISLAND: 'island',
+
         // 事件类型
         EVENT: {
             REFRESH: 'refresh',

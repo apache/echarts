@@ -65,19 +65,58 @@
         <h2>修改记录</h2>
         <div class="row-fluid">
             <div>
-                <h3>1.0.0</h3>
+                <h3>1.1.0</h3>
                 <ul>
-                    <li>ddd</li>
-                    <li>ddd</li>
-                    <li>ddd</li>
+                    <li>新增图表</li>
+                    <ul>
+                        <li>散点图（气泡图）</li>
+                        <li>K线图</li>
+                        <li>地图（地图类型支持：中国）</li>
+                        <li>力导向布局图</li>
+                    </ul>
+                    <li>新增组件</li>
+                    <ul>
+                        <li>dataRange</li>
+                    </ul>
+                    <li>新增特性</li>
+                    <ul>
+                        <li>数据区域选择（支持框选）</li>
+                        <li>值域漫游</li>
+                        <li>大数据模式（仅散点图支持）</li>
+                    </ul>
+                    <li>新增事件：RESTORE，DATA_RANGE，MAP_SELECTED</li>
+                    <li>新增接口：</li>
+                    <ul>
+                        <li>resize，显示区域大小更新</li>
+                        <li>refresh，刷新图表，图例选择、数据区域缩放，拖拽状态均保持</li>
+                        <li>restore，还原图表，各种状态均被清除，还原为最初展现时的状态。</li>
+                        <li>getZrender，获取当前图表所用ZRender实例，可用于添加额外图形或进行深度定制</li>
+                    </ul>
+                    <li>【重要】图表按需加载，需要使用方主动require</li>
+                    <li>toolbox.feature.refresh改为restore</li>
+                    <li>tooltip 0值bug fixed</li>
+                    <li>饼图升级selected Mode，label支持formatter</li>
+                    <li>图例升级为icon，折线图例有更形象的展现和更易点击</li>
+                    <li>数值轴升级scale模式，可以脱离0值，聚焦到数值变化区间</li>
                 </ul>
             </div>
             <div>
                 <h3>1.0.0</h3>
                 <ul>
-                    <li>ddd</li>
-                    <li>ddd</li>
-                    <li>ddd</li>
+                    <li>提供商业产品常用图表库，支持折线图（区域图）、柱状图（条状图）、饼图（环形图）</li>
+                    <li>特性</li>
+                    <ul>
+                        <li>图表混搭</li>
+                        <li>拖拽重计算</li>
+                        <li>数据视图</li>
+                        <li>动态类型切换</li>
+                        <li>图例开关</li>
+                        <li>数据区域选择</li>
+                        <li>标线辅助</li>
+                        <li>多维度堆积</li>
+                    </ul>
+                    <li>多级控制，个性化定制</li>
+                    <li>事件交互：REFRESH，CLICK，HOVER，DATA_CHANGED，MAGIC_TYPE_CHANGED，DATA_VIEW_CHANGED，DATA_ZOOM，LEGEND_SELECTED</li>
                 </ul>
             </div>
         </div>

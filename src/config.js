@@ -422,20 +422,7 @@ define(function() {
                 }
             }
         },
-
-        island: {
-            r: 15,
-            calculateStep: 0.1  // 滚轮可计算步长 0.1 = 10%
-        },
-
-        textStyle: {
-            decoration: 'none',
-            fontFamily: 'Arial, Verdana, sans-serif',
-            fontSize: 12,
-            fontStyle: 'normal',
-            fontWeight: 'normal'
-        },
-
+        
         force : {
             // 数据map到圆的半径的最小值和最大值
             minRadius : 10,
@@ -470,6 +457,19 @@ define(function() {
                     linkStyle : {}
                 }
             }
+        },
+
+        island: {
+            r: 15,
+            calculateStep: 0.1  // 滚轮可计算步长 0.1 = 10%
+        },
+
+        textStyle: {
+            decoration: 'none',
+            fontFamily: 'Arial, Verdana, sans-serif',
+            fontSize: 12,
+            fontStyle: 'normal',
+            fontWeight: 'normal'
         },
 
         EVENT: {

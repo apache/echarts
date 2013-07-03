@@ -179,6 +179,7 @@ define(
             ctx.lineTo(style.x + 8 * dx,      style.y + 3 * dy);
             
             ctx.moveTo(style.x, style.y); // 避免closePath
+            ctx.lineTo(style.x, style.y); // 避免closePath
         }
         
         function _iconDataZoomReset(ctx, style) {
@@ -202,6 +203,7 @@ define(
             ctx.lineTo(style.x + 10 * dx,     style.y + style.height);
             
             ctx.moveTo(style.x, style.y); // 避免closePath
+            ctx.lineTo(style.x, style.y); // 避免closePath
         }
         
         function _iconRestore(ctx, style) {
@@ -219,7 +221,9 @@ define(
             ctx.moveTo(style.x + 13 * dx,       style.y);
             ctx.lineTo(style.x + style.width,   style.y + 4 * dy);
             ctx.lineTo(style.x + 11 * dx,       style.y + 5 * dy);
+            
             ctx.moveTo(style.x, style.y); // 避免closePath
+            ctx.lineTo(style.x, style.y); // 避免closePath
         }
 
         function _iconLineChart(ctx, style) {
@@ -234,7 +238,9 @@ define(
             ctx.lineTo(style.x + 7 * dx,    style.y + 6 * dy);
             ctx.lineTo(style.x + 11 * dx,   style.y + 11 * dy);
             ctx.lineTo(style.x + 15 * dx,   style.y + 2 * dy);
+            
             ctx.moveTo(style.x, style.y); // 避免closePath
+            ctx.lineTo(style.x, style.y); // 避免closePath
         }
 
         function _iconBarChart(ctx, style) {

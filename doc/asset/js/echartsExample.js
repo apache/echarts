@@ -74,7 +74,7 @@ require.config({
 var echarts;
 require(
     [
-        'echarts/echarts',
+        'echarts',
         'echarts/chart/line',
         'echarts/chart/bar',
         'echarts/chart/scatter',

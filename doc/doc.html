@@ -1628,7 +1628,7 @@ feature : {
                         <tr>
                             <td> {Object} label </td>
                             <td> {show: true,  position:'outer'} </td>
-                            <td> 饼图 ，地图</td>
+                            <td> 饼图 ，地图，力导向</td>
                             <td> 标签，饼图默认显示在外部，离饼图距离由labelLine.length决定，地图标签不可指定位置 </td>
                         </tr>
                         <tr>
@@ -1920,7 +1920,8 @@ feature : {
                     <p>查看更多实例 <a href="example.html" target="_blank">example</a></p>
                     <div class="code">
                         <pre>// 图表实例化------------------
-var echarts = require('echarts/echarts');
+var echarts = require('echarts');
+require('echarts/chart/line');  // 图表按需加载，需要主动require
 var myChart = echarts.init(document.getElementById('main'));
 
 // ajax getting data...............

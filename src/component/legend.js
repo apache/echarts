@@ -337,7 +337,7 @@ define(function (require) {
                     height : height,
                     color : color,
                     strokeColor : color,
-                    lineWidth : 2
+                    lineWidth : 3
                 },
                 clickable : true
             };
