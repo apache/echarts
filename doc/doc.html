@@ -152,7 +152,7 @@
                 </p>
                 <div id="doc">
                     <h3>简介<a name="简介"> </a></h3>
-                    <p>ECharts，纯Javascript图表库，基于Canvas，底层依赖<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>，商业产品常用图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。创新的拖拽重计算、数据视图等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。图表类型支持折线图（区域图）、柱状图（条状图）、饼图（环形图），同时支持任意维度的堆积和多图表混合展现。</P>
+                    <p>ECharts，纯Javascript图表库，基于Canvas，底层依赖<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>，商业产品常用图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。创新的拖拽重计算、数据视图、值域漫游等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。图表类型支持折线图（区域图）、柱状图（条状图）、饼图（环形图），同时支持任意维度的堆积和多图表混合展现。</P>
                     <img src="asset/img/architecture.png" />
                     <h3>名词解析<a name="名词解析"> </a></h3>
                     <p>基本名词</p>
@@ -1604,6 +1604,11 @@ feature : {
                             <td> 标签显示位置，可选为：'outer'（外部） | 'inner'（内部），地图标签不可指定位置</td>
                         </tr>
                         <tr>
+                            <td> {string | Function} formatter </td>
+                            <td> null </td>
+                            <td> 标签文本格式器，仅饼图支持，同<a href="#Tooltip" title="">Tooltip.formatter</a>，不支持回调</td>
+                        </tr>
+                        <tr>
                             <td> {Object} textStyle </td>
                             <td> null </td>
                             <td> 标签的文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
@@ -1940,7 +1945,7 @@ myChart.dispose();
         <!-- FOOTER -->
         <footer>
           <p class="pull-right"><a href="#">Back to top</a></p>
-          <p>&copy; 2013 Ecom-FE. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
+          <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="doc/changelog.html" target="_blank" class="link">Changelog</a></p>
         </footer>
     </div><!--/.fluid-container-->
 
