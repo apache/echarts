@@ -159,6 +159,9 @@ define(function(require) {
             var filteredNodeMap = [];
             var cursor = 0;
             nodesRawData = _filter(nodes, function(node, idx) {
+                if(!node){
+                    return;
+                }
                 if (self.selectedMap[node.category]) {
                     filteredNodeMap[idx] = cursor++;
                     return true;
@@ -453,7 +456,7 @@ define(function(require) {
                 // 节点1受到的力
                 vec2.scale(v12, v12, forceFactor);
                 vec2.add(nodeForces[s], nodeForces[s], v12);
-                //节点2受到的力
+                // 节点2受到的力
                 vec2.sub(nodeForces[t], nodeForces[t], v12);
             }
             // 到质心的向心力
@@ -537,7 +540,7 @@ define(function(require) {
             temperature *= 0.999;
         }
 
-        var interval;
+        var _updating;
 
         function init(newOption, newComponent) {
             option = newOption;
@@ -548,9 +551,14 @@ define(function(require) {
             self.clear();
             _buildShape();
 
-            interval = setInterval(function(){
-                _step();
-            }, stepTime);
+            _updating = true;
+            function cb() {
+                if (_updating) {
+                    _step();
+                    setTimeout(cb, stepTime);
+                }
+            }
+            setTimeout(cb, stepTime);
         }
 
         function refresh() {
@@ -560,7 +568,7 @@ define(function(require) {
         }
 
         function dispose(){
-            clearInterval(interval);
+            _updating = false;
         }
         
         /**
