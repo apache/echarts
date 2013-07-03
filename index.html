@@ -71,8 +71,8 @@
           <div class="container">
             <div class="carousel-caption">
               <h1>ECharts</h1>
-              <h6>（1.0.0）</h6>
-              <p>基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。创新的拖拽重计算、数据视图等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。</p>
+              <h6>（1.1.0 <a href="doc/changelog.html" target="_blank" class="link">Changelog</a>）</h6>
+              <p>基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据可视化图表。创新的拖拽重计算、数据视图、值域漫游等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。</p>
               <p style="text-align: right;"><strong>———— 大数据时代，重新定义数据图表的时候到了</strong></p>
             </div>
           </div>
@@ -104,7 +104,7 @@
             <img src="doc/asset/img/architecture.png" />
         </div>
         <p class="lead">ECharts (Enterprise Charts 商业产品图表库)</p>
-        <p>提供商业产品常用图表库，底层基于<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>，创建了坐标系，图例，提示，工具箱等基础组件，并在此上构建出折线图（区域图）、柱状图（条状图）、饼图（环形图），同时支持任意维度的堆积和多图表混合展现。</p>
+        <p>提供商业产品常用图表库，底层基于<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>，创建了坐标系，图例，提示，工具箱等基础组件，并在此上构建出折线图（区域图）、柱状图（条状图）、散点图（气泡图）、K线图、饼图（环形图）、地图、力导向布局图，同时支持任意维度的堆积和多图表混合展现。</p>
         <div style="float:left;margin:10px 10px 30px 10px;"><img src="doc/asset/img/device.png" /></div>
         <div>
             <img src="doc/asset/img/explorer.png" />
@@ -118,10 +118,9 @@
             <img src="doc/asset/img/mix.jpg" />
         </div>
         <h2 class="featurette-heading">混搭</h2>
-        <p>标准图库支持3种基本图表类型及其任意混搭：</p>
-        <p>折线图line（包含区域图）、柱状图bar（包含横向条状图）、饼图pie。</p>
-        <p>（散点图scatter、雷达图radar，暂不提供）</p>
-        <p>混搭情况下一个标准图表：包含唯一图例模块，一个直角坐标系（可包含一条或多条类目轴线，一条或多条值轴线，最多上下左右四条）</p>
+        <p>混搭的图表会更具表现力也更有有趣味，ECharts提供的图表（共7类11种）支持任意混搭：</p>
+        <p>折线图（区域图）、柱状图（条状图）、散点图（气泡图）、K线图、<br/>饼图（环形图）、地图、力导布局图。</p>
+        <p>混搭情况下一个标准图表：包含唯一图例、工具箱、数据区域缩放、值域漫游模块，一个直角坐标系（可包含一条或多条类目轴线，一条或多条值轴线，最多上下左右四条）</p>
       </div>
       <hr class="featurette-divider">
       <div class="featurette">
@@ -129,7 +128,7 @@
             <img src="doc/asset/img/draggable.gif" />
         </div>
         <h2 class="featurette-heading">拖拽重计算</h2>
-        <p>拖拽重计算特性（已申请专利）带来了数据统计图表从未有过的用户体验，允许用户对统计数据进行有效的提取、整合，甚至在多个图表间交换数据，赋予了用户对数据进行挖掘、整合的能力。</p>
+        <p>拖拽重计算特性（专利）带来了数据统计图表从未有过的用户体验，允许用户对统计数据进行有效的提取、整合，甚至在多个图表间交换数据，赋予了用户对数据进行挖掘、整合的能力。</p>
       </div>
       <hr class="featurette-divider">
       <div class="featurette">
@@ -156,6 +155,7 @@
             <img src="doc/asset/img/legendSelected.gif" />
         </div>
         <h2 class="featurette-heading">图例开关</h2>
+        <p>多系列数据的同时展现呈现出丰富内容，但如何让用户切换到他所关心的个别系列上？</p>
         <p>ECharts提供了方便快捷的图例开关，可以随时切换到你所关心的数据系列。</p>
       </div>
       <hr class="featurette-divider">
@@ -168,12 +168,30 @@
       </div>
       <hr class="featurette-divider">
       <div class="featurette">
+        <div class="span5 pull-left">
+            <img src="doc/asset/img/dataRange.gif" />
+        </div>
+        <h2 class="featurette-heading">值域漫游</h2>
+        <p>基于坐标的图表（如地图、散点图）通过色彩变化表现数值的大小能直观形象的展示数据分布。</p>
+        <p>但如何聚焦到我所关心的数值上？我们创造了称为值域漫游的功能，让你可以轻松进行数值筛选。</p>
+      </div>
+      <hr class="featurette-divider">
+      <div class="featurette">
+          <div class="span5 pull-right">
+            <img src="doc/asset/img/scatter.gif" />
+        </div>
+        <h2 class="featurette-heading">大规模散点图</h2>
+        <p>如何展现成千上百万的离散数据从而找出他们的分布和聚类？貌似除了用专业的统计工具（如MATLAB）外别无选择？</p>
+        <p>不，ECharts发明了基于像素的大规模散点图（专利），一个900 x 400的散点区域就能够毫不重复的呈现35万组数据，这对于常规的应用，用现代浏览器就足以轻松展现百万级的散点数据！</p>
+      </div>
+      <hr class="featurette-divider">
+      <div class="featurette">
         <div class="span6 pull-left">
             <img src="doc/asset/img/mark.gif" />
         </div>
         <h2 class="featurette-heading">标线辅助</h2>
-        <p>趋势线？平均线？未来走势？修正值？有需求用户自然知道用意~</p>
-        <p>提供标线辅助在K线图中可是必要的功能！是的，K线图我们正在开发中~</p>
+        <p>趋势线？平均线？上升通道？支持位？专业的你自然知道该怎么用</p>
+        <p>提供标线辅助在K线图中可是必要的功能！当然，ECharts中的任何图标都可以使用。</p>
       </div>
       <hr class="featurette-divider">
       <div class="featurette">
@@ -206,7 +224,7 @@
       <!-- FOOTER -->
       <footer>
         <p class="pull-right"><a href="#">Back to top</a></p>
-        <p>&copy; 2013 Ecom-FE. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
+        <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="doc/changelog.html" target="_blank" class="link">Changelog</a></p>
       </footer>
 
     </div><!-- /.container -->

@@ -33,6 +33,11 @@ define(function (require) {
         var _colorMap = {};
         var _selectedMap = {};
 
+        var icon = require('zrender/shape').get('icon');
+        for (var k in legendIcon) {
+            icon.define('legendicon' + k, legendIcon[k]);
+            //console.log('legendicon' + k, legendIcon[k])
+        }
 
         function _buildShape() {
             _itemGroupLocation = _getItemGroupLocation();
@@ -80,7 +85,7 @@ define(function (require) {
                 if (itemType) {
                     itemType = itemType.type;
                 } else {
-                    itemType = '';
+                    itemType = 'bar';
                 }
                 color = getColor(itemName);
 
@@ -88,7 +93,7 @@ define(function (require) {
                     if (zrWidth - lastX < 200   // 最后200px做分行预判
                         && (itemWidth + 5
                          + zrArea.getTextWidth(itemName, font)
-                         + itemGap)
+                         + (i < dataLength - 1 ? itemGap : 0))
                         >= zrWidth - lastX
                     ) {
                         lastX = 0;
@@ -100,10 +105,8 @@ define(function (require) {
                 itemShape = _getItemShapeByType(
                     lastX, lastY,
                     itemWidth, itemHeight,
-                    (_selectedMap[itemName]
-                     ? color : '#ccc'),
-                    itemType,
-                    _selectedMap[itemName]
+                    (_selectedMap[itemName] ? color : '#ccc'),
+                    itemType
                 );
                 itemShape._name = itemName;
                 itemShape.onclick = _legendSelected;
@@ -181,6 +184,7 @@ define(function (require) {
             var itemGap = legendOption.itemGap;
             var itemWidth = legendOption.itemWidth + 5; // 5px是图形和文字的间隔，不可配
             var itemHeight = legendOption.itemHeight;
+            var font = self.getFont(legendOption.textStyle);
             var totalWidth = 0;
             var totalHeight = 0;
 
@@ -190,7 +194,7 @@ define(function (require) {
                     totalWidth += itemWidth
                                   + zrArea.getTextWidth(
                                         data[i],
-                                        self.getFont()
+                                        font
                                     )
                                   + itemGap;
                 }
@@ -207,7 +211,7 @@ define(function (require) {
                         maxWidth,
                         zrArea.getTextWidth(
                             data[i],
-                            self.getFont()
+                            font
                         )
                     );
                 }
@@ -231,6 +235,7 @@ define(function (require) {
                     break;
                 default :
                     x = legendOption.x - 0;
+                    x = isNaN(x) ? 0 : x;
                     break;
             }
 
@@ -251,6 +256,7 @@ define(function (require) {
                     break;
                 default :
                     y = legendOption.y - 0;
+                    y = isNaN(y) ? 0 : y;
                     break;
             }
 
@@ -277,6 +283,8 @@ define(function (require) {
          */
         function _getSeriesByName(name) {
             var series = option.series;
+            var hasFind;
+            var data;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].name == name) {
                     // 系列名称优先
@@ -285,8 +293,8 @@ define(function (require) {
 
                 if (series[i].type == ecConfig.CHART_TYPE_PIE) {
                     // 饼图得查找里面的数据名字
-                    var hasFind = false;
-                    var data = series[i].data;
+                    hasFind = false;
+                    data = series[i].data;
                     for (var j = 0, k = data.length; j < k; j++) {
                         if (data[j].name == name) {
                             hasFind = true;
@@ -297,55 +305,60 @@ define(function (require) {
                         return series[i];
                     }
                 }
+                else if (series[i].type == ecConfig.CHART_TYPE_FORCE) {
+                    // 力导布局查找categories配置
+                    hasFind = false;
+                    data = series[i].categories;
+                    for (var j = 0, k = data.length; j < k; j++) {
+                        if (data[j].name == name) {
+                            data = data[j];
+                            data.type = ecConfig.CHART_TYPE_FORCE;
+                            hasFind = true;
+                            break;
+                        }
+                    }
+                    if (hasFind) {
+                        return data;
+                    }
+                }
             }
             return;
         }
 
         function _getItemShapeByType(x, y, width, height, color, itemType) {
+            var itemShape = {
+                shape : 'icon',
+                zlevel : _zlevelBase,
+                style : {
+                    iconType : 'legendicon' + itemType,
+                    x : x,
+                    y : y,
+                    width : width,
+                    height : height,
+                    color : color,
+                    strokeColor : color,
+                    lineWidth : 3
+                },
+                clickable : true
+            };
+            
+            // 特殊设置
             switch (itemType) {
                 case 'line' :
-                    return {
-                        shape : 'line',
-                        zlevel : _zlevelBase,
-                        style : {
-                            xStart : x,
-                            yStart : y + height / 2,
-                            xEnd : x + width,
-                            yEnd : y + height / 2,
-                            strokeColor : color,
-                            lineWidth : 5
-                        },
-                        clickable : true
-                    };
-                case 'pie' :
-                    return {
-                        shape : 'sector',
-                        zlevel : _zlevelBase,
-                        style : {
-                            x : x + width / 2,
-                            y : y + height + 2,
-                            r : height + 2,
-                            r0 : 6,
-                            startAngle : 45,
-                            endAngle : 135,
-                            color : color
-                        },
-                        clickable : true
-                    };
-                default :
-                    return {
-                        shape : 'rectangle',
-                        zlevel : _zlevelBase,
-                        style : {
-                            x : x,
-                            y : y,
-                            width : width,
-                            height : height - 2,
-                            color : color
-                        },
-                        clickable : true
-                    };
+                    itemShape.style.brushType = 'stroke';
+                    break;
+                case 'k' :
+                    itemShape.style.brushType = 'both';
+                    itemShape.style.color = self.deepQuery(
+                        [ecConfig], 'k.itemStyle.normal.color'
+                    ) || '#fff';
+                    itemShape.style.strokeColor = color != '#ccc' 
+                        ? self.deepQuery(
+                              [ecConfig], 'k.itemStyle.normal.lineStyle.color'
+                          ) || '#ff3200'
+                        : color;
             }
+            return itemShape;
         }
 
         function _legendSelected(param) {
@@ -356,19 +369,6 @@ define(function (require) {
                 param.event,
                 {selected : _selectedMap}
             );
-        }
-
-        /**
-         * 清除图形数据，实例仍可用，重载基类方法
-         */
-        function clear() {
-            //_colorIndex = 0;
-            //_colorMap = {};
-
-            for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                zr.delShape(self.shapeList[i].id);
-            }
-            self.shapeList = [];
         }
 
         function init(newOption) {
@@ -441,8 +441,12 @@ define(function (require) {
             }
             return _colorMap[legendName];
         }
+        
+        function hasColor(legendName) {
+            return _colorMap[legendName] ? _colorMap[legendName] : false;
+        }
 
-        function add(name,color){
+        function add(name, color){
             legendOption.data.push(name);
             setColor(name,color);
             _selectedMap[name] = true;
@@ -462,6 +466,40 @@ define(function (require) {
             }
             legendOption.data = finalData;
         }
+        
+        /**
+         * 特殊图形元素回调设置
+         * @param {Object} name
+         * @param {Object} itemShape
+         */
+        function getItemShape(name) {
+            var shape;
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                shape = self.shapeList[i];
+                if (shape._name == name && shape.shape != 'text') {
+                    return shape;
+                }
+            }
+        }
+        
+        /**
+         * 特殊图形元素回调设置
+         * @param {Object} name
+         * @param {Object} itemShape
+         */
+        function setItemShape(name, itemShape) {
+            var shape;
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                shape = self.shapeList[i];
+                if (shape._name == name && shape.shape != 'text') {
+                    if (!_selectedMap[name]) {
+                        itemShape.style.color = '#ccc';
+                        itemShape.style.strokeColor = '#ccc';
+                    }
+                    zr.modShape(shape.id, itemShape);
+                }
+            }
+        }
 
         function isSelected(itemName) {
             if (typeof _selectedMap[itemName] != 'undefined') {
@@ -473,20 +511,63 @@ define(function (require) {
             }
         }
 
-        // 重载基类方法
-        self.clear = clear;
-
         self.init = init;
         self.refresh = refresh;
         self.setColor = setColor;
         self.getColor = getColor;
+        self.hasColor = hasColor;
         self.add = add;
         self.del = del;
+        self.getItemShape = getItemShape;
+        self.setItemShape = setItemShape;
         self.isSelected = isSelected;
 
         init(option);
     }
-
+    
+    var legendIcon = {
+        line : function (ctx, style) {
+            var dy = style.height / 2;
+            ctx.moveTo(style.x,     style.y + dy);
+            ctx.lineTo(style.x + style.width,style.y + dy);
+        },
+        pie : function (ctx, style) {
+            var x = style.x;
+            var y = style.y;
+            var width = style.width;
+            var height = style.height;
+            var sector = require('zrender/shape').get('sector');
+            sector.buildPath(ctx, {
+                x : x + width / 2,
+                y : y + height + 2,
+                r : height + 2,
+                r0 : 6,
+                startAngle : 45,
+                endAngle : 135
+            });
+        },
+        k : function (ctx, style) {
+            var x = style.x;
+            var y = style.y;
+            var width = style.width;
+            var height = style.height;
+            var candle = require('zrender/shape').get('candle');
+            candle.buildPath(ctx, {
+                x : x + width / 2,
+                y : [y + 1, y + 1, y + height - 6, y + height],
+                width : width - 6
+            });
+        },
+        bar : function (ctx, style) {
+            ctx.rect(style.x, style.y + 1, style.width, style.height - 2);
+        },
+        force : function(ctx, style) {
+            require('zrender/shape').get('icon').get('circle')(ctx, style);
+        }
+    };
+    
+    require('../component').define('legend', Legend);
+    
     return Legend;
 });
 

@@ -79,8 +79,11 @@
                                 <li><a href="#Line">line</a></li>
                                 <li><a href="#Bar">bar</a></li>
                                 <li><a href="#Scatter">scatter</a></li>
+                                <li><a href="#K">k</a></li>
                                 <li><a href="#Pie">pie</a></li>
                                 <li><a href="#Radar">radar</a></li>
+                                <li><a href="#Map">map</a></li>
+                                <li><a href="#Force">force</a></li>
                             </ul>
                             <li><a href="#初始化">初始化</a></li>
                             <li><a href="#方法">方法</a></li>
@@ -88,6 +91,7 @@
                             <ul>
                                 <li><a href="#Option">option</a></li>
                                 <li><a href="#Legend">legend</a></li>
+                                <li><a href="#DataRange">dataRange</a></li>
                                 <li><a href="#Toolbox">toolbox</a></li>
                                 <li><a href="#Tooltip">tooltip</a></li>
                                 <li><a href="#DataZoom">dataZoom</a></li>
@@ -149,7 +153,7 @@
                 </p>
                 <div id="doc">
                     <h3>简介<a name="简介"> </a></h3>
-                    <p>ECharts，纯Javascript图表库，基于Canvas，底层依赖<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>，商业产品常用图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。创新的拖拽重计算、数据视图等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。图表类型支持折线图（区域图）、柱状图（条状图）、饼图（环形图），同时支持任意维度的堆积和多图表混合展现。</P>
+                    <p>ECharts，纯Javascript图表库，基于Canvas，底层依赖<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>，商业产品常用图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。创新的拖拽重计算、数据视图、值域漫游等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。图表类型支持折线图（区域图）、柱状图（条状图）、饼图（环形图），同时支持任意维度的堆积和多图表混合展现。</P>
                     <img src="asset/img/architecture.png" />
                     <h3>名词解析<a name="名词解析"> </a></h3>
                     <p>基本名词</p>
@@ -181,6 +185,10 @@
                         <tr>
                             <td> legend </td>
                             <td> 图例 </td>
+                        </tr>
+                        <tr>
+                            <td> dataRange </td>
+                            <td> 值域选择，常用于展现地域数据时选择值域范围 </td>
                         </tr>
                         <tr>
                             <td> toolbox </td>
@@ -215,7 +223,11 @@
                         </tr>
                         <tr>
                             <td> scatter </td>
-                            <td> 散点图，气泡图（暂不支持） </td>
+                            <td> 散点图，气泡图</td>
+                        </tr>
+                        <tr>
+                            <td> k </td>
+                            <td> K线图</td>
                         </tr>
                         <tr>
                             <td> pie </td>
@@ -224,6 +236,10 @@
                         <tr>
                             <td> radar </td>
                             <td> 雷达图，填充雷达图（暂不支持） </td>
+                        </tr>
+                        <tr>
+                            <td> map </td>
+                            <td> 地图（暂时仅支持中国地图） </td>
                         </tr>
                     </table>
                     <h3>图表类型<a name="图表类型"> </a></h3>
@@ -262,15 +278,25 @@
                         </tr>
                     </table>
 
-                    <h4>单图表类型：scatter（暂不支持）<a name="Scatter"> </a></h4>
+                    <h4>单图表类型：scatter<a name="Scatter"> </a></h4>
                     <table cellspacing="0" class="ADoc_table">
                         <tr>
                             <th> 散点图 </th>
                             <th> 气泡图 </th>
                         </tr>
                         <tr>
-                            <td><img src="./asset/img/example/scatter1.jpg" title="" alt="散点图"/></td>
-                            <td><img src="./asset/img/example/scatter2.jpg" title="" alt="气泡图"/></td>
+                            <td><img src="./asset/img/example/scatter1.png" title="" alt="散点图"/></td>
+                            <td><img src="./asset/img/example/scatter2.png" title="" alt="气泡图"/></td>
+                        </tr>
+                    </table>
+                    
+                    <h4>单图表类型：k<a name="K"> </a></h4>
+                    <table cellspacing="0" class="ADoc_table">
+                        <tr>
+                            <th> K线图 </th>
+                        </tr>
+                        <tr>
+                            <td><img src="./asset/img/example/k1.png" title="" alt="K线图" height="200"/></td>
                         </tr>
                     </table>
 
@@ -297,6 +323,25 @@
                             <td><img src="./asset/img/example/radar2.jpg" title="" alt="填充雷达图"/></td>
                         </tr>
                     </table>
+                    
+                    <h4>单图表类型：map<a name="Map"> </a></h4>
+                    <table cellspacing="0" class="ADoc_table">
+                        <tr>
+                            <th> 中国地图 </th>
+                        </tr>
+                        <tr>
+                            <td><img src="./asset/img/example/map1.png" title="" alt="中国地图"/></td>
+                        </tr>
+                    </table>
+                    <h4>单图表类型：force<a name="Force"> </a></h4>
+                    <table cellspacing="0" class="ADoc_table">
+                        <tr>
+                            <th> Webkit中的类依赖。 </th>
+                        </tr>
+                        <tr>
+                            <td><img src="./asset/img/example/webkit-dep.png" title="" alt="中国地图"/></td>
+                        </tr>
+                    </table>
                     <h3>初始化<a name="初始化"> </a></h3>
                     <P> 图表库实现为多实例的，实例选项在新建时传入，同时也可在实例新建后通过实例方法setOption（见<a href="#方法" title="">方法</a>）传入，两种初始化方式最终产出效果是等价的，即如下两组代码产出效果相同。</P>
                     <div class="code">
@@ -318,22 +363,22 @@ myChart.setOption(option);
                         </tr>
                         <tr>
                             <td>{void} setOption</td>
-                            <td>{Object} option, {boolean=} notMerge</td>
+                            <td>{Object} option, <br/>{boolean=} notMerge</td>
                             <td>万能接口，配置图表实例任何可配置选项（详见<a href="#Option" title="">option</a>），多次调用时option选项是默认是合并（merge）的，<br/>如果不需求，可以通过notMerger参数为true阻止与上次option的合并。 </td>
                         </tr>
                         <tr>
                             <td>{void} setSeries</td>
-                            <td>{Array} series, {boolean=} notMerge</td>
+                            <td>{Array} series, <br/>{boolean=} notMerge</td>
                             <td>数据接口，驱动图表生成的数据内容（详见<a href="#Series" title="">series</a>），效果等同调用setOption({series:{...}}) </td>
                         </tr>
                         <tr>
                             <td>{void} on</td>
-                            <td>{string} eventName, {Function} eventListener</td>
-                            <td>事件绑定，支持事件有：<br/>REFRESH，CLICK，HOVER，<br/>DATA_CHANGED，DATA_ZOOM，LEGEND_SELECTED，MAGIC_TYPE_CHANGED </td>
+                            <td>{string} eventName, <br/>{Function} eventListener</td>
+                            <td>事件绑定，支持事件有：<br/>REFRESH，RESTORE，CLICK，HOVER，<br/>DATA_CHANGED，MAGIC_TYPE_CHANGED，DATA_VIEW_CHANGED，<br/>DATA_ZOOM，DATA_RANGE，LEGEND_SELECTED，MAP_SELECTED</td>
                         </tr>
                         <tr>
                             <td>{void} un</td>
-                            <td>{string} eventName, {Function} eventListener</td>
+                            <td>{string} eventName, <br/>{Function} eventListener</td>
                             <td>事件解绑定 </td>
                         </tr>
                         <tr>
@@ -347,9 +392,24 @@ myChart.setOption(option);
                             <td>过渡控制，隐藏loading（读取中） </td>
                         </tr>
                         <tr>
+                            <td>{ZRender} getZrender</td>
+                            <td>{void}</td>
+                            <td>获取当前图表所用ZRender实例，可用于添加额外图形或进行深度定制，zrender接口详见<a href="http://ecomfe.github.io/zrender/doc/doc.html#zrenderInstance" target="_blank">ZRender</a> </td>
+                        </tr>
+                        <tr>
                             <td>{void} resize</td>
                             <td>{void}</td>
-                            <td>ECharts没有绑定resize事件，显示区域大小发生改变内部并不知道，使用方可以根据自己的需求绑定关心的事件，主动调用resize达到区域更新的效果。</td>
+                            <td>ECharts没有绑定resize事件，显示区域大小发生改变内部并不知道，<br/>使用方可以根据自己的需求绑定关心的事件，主动调用resize达到区域更新的效果。</td>
+                        </tr>
+                        <tr>
+                            <td>{void} refresh</td>
+                            <td>{void}</td>
+                            <td>刷新图表，图例选择、数据区域缩放，拖拽状态均保持。</td>
+                        </tr>
+                        <tr>
+                            <td>{void} restore</td>
+                            <td>{void}</td>
+                            <td>还原图表，各种状态均被清除，还原为最初展现时的状态。</td>
                         </tr>
                         <tr>
                             <td>{void} clear</td>
@@ -378,6 +438,10 @@ myChart.setOption(option);
                         <tr>
                             <td> {Object} legend </td>
                             <td> 图例（详见<a href="#Legend" title="">legend</a>），每个图表最多仅有一个图例，混搭图表共享 </td>
+                        </tr>
+                        <tr>
+                            <td> {Object} dataRange </td>
+                            <td> 值域选择（详见<a href="#DataRange" title="">dataRange</a>）,值域范围 </td>
                         </tr>
                         <tr>
                             <td> {Object} toolbox </td>
@@ -482,6 +546,114 @@ myChart.setOption(option);
                     </table>
                     <p><img src="./asset/img/doc/legend.png" title="" alt="图例"/></P>
 
+                    <h4>dataRange<a name="DataRange"> </a></h4>
+                    <P> 值域选择，每个图表最多仅有一个值域控件。<a href="example/dataRange.html" target="_blank">try this »</a></P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {string} orient </td>
+                            <td> 'vertical' </td>
+                            <td> 布局方式，默认为垂直布局，可选为：'horizontal' | 'vertical' </td>
+                        </tr>
+                        <tr>
+                            <td> {string | number} x </td>
+                            <td> 'left' </td>
+                            <td> 水平安放位置，默认为全图左对齐，可选为：'center' | 'left' | 'right' | {number}（x坐标，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> {string | number} y </td>
+                            <td> 'bottom' </td>
+                            <td> 垂直安放位置，默认为全图底部，可选为：'top' | 'bottom' | 'center' | {number}（y坐标，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> {color} backgroundColor </td>
+                            <td> 'rgba(0,0,0,0)' </td>
+                            <td> 值域控件背景颜色，默认透明 </td>
+                        </tr>
+                        <tr>
+                            <td> {string} borderColor </td>
+                            <td> '#ccc' </td>
+                            <td> 值域控件边框颜色 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} borderWidth </td>
+                            <td> 0 </td>
+                            <td> 值域控件边框线宽，单位px，默认为0（无边框） </td>
+                        </tr>
+                        <tr>
+                            <td> {number | Array} padding </td>
+                            <td> 5 </td>
+                            <td> 值域控件内边距，单位px，默认各方向内边距为5，接受数组分别设定上右下左边距，同css，见下图 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} itemGap </td>
+                            <td> 10 </td>
+                            <td> 各个item之间的间隔，单位px，默认为10，横向布局时为水平间隔，纵向布局时为纵向间隔，见下图 </td>
+                        </tr>
+                        <!--
+                        <tr>
+                            <td> {number} itemWidth </td>
+                            <td> 20 </td>
+                            <td> 值域控件图形宽度 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} itemHeight </td>
+                            <td> 14 </td>
+                            <td> 值域控件图形高度 </td>
+                        </tr>
+                        -->
+                        <tr>
+                            <td> {Object} textStyle </td>
+                            <td> {color: '#333'} </td>
+                            <td> 默认只设定了值域控件文字颜色（详见<a href="#TextStyle" title="">textStyle</a>） </td>
+                        </tr>
+                        <tr>
+                            <td> {number} min </td>
+                            <td> null </td>
+                            <td> 指定的最小值，eg: 0，默认无，会自动根据具体数值调整</td>
+                        </tr>
+                        <tr>
+                            <td> {number} max </td>
+                            <td> null </td>
+                            <td> 指定的最大值，eg: 100，默认无，会自动根据具体数值调整</td>
+                        </tr>
+                        <tr>
+                            <td> {number} precision </td>
+                            <td> 0 </td>
+                            <td> 小数精度，默认为0，无小数点 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} splitNumber </td>
+                            <td> 5 </td>
+                            <td> 分割段数，默认为5，为0时为线性渐变 </td>
+                        </tr>
+                        <tr>
+                            <td> {boolean} calculable </td>
+                            <td> false </td>
+                            <td> 是否启用值域漫游，启用后无视splitNumber，值域显示为线性渐变 </td>
+                        </tr>
+                        <tr>
+                            <td> {boolean} realtime </td>
+                            <td> true </td>
+                            <td> 值域漫游是否实时显示 </td>
+                        </tr>
+                        <tr>
+                            <td> {Array} color </td>
+                            <td> ['#1e90ff','#f0ffff'] </td>
+                            <td> 值域颜色标识，颜色数组长度必须>=2，颜色代表从数值高导低的变化，即颜色数组低位代表数值高的颜色标识 </td>
+                        </tr>
+                        <tr>
+                            <td> {Array} text </td>
+                            <td> null </td>
+                            <td> 值域文字显示，splitNumber生效时默认以计算所得数值作为值域文字显示，可指定长度为2的文本数组显示简介的值域文本，如['高', '低']</td>
+                        </tr>
+                    </table>
+                    <p><img src="./asset/img/doc/dataRange.png" title="" alt="值域"/></P>
+
                     <h4>toolbox<a name="Toolbox"> </a></h4>
                     <P> 工具箱，每个图表最多仅有一个工具箱。</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -556,9 +728,10 @@ myChart.setOption(option);
                     <pre>
 feature : {
     mark : true,                    // 辅助线标志
+    dataZoom : true,                // 框选区域缩放，自动与存在的dataZoom控件同步
     dataView : true,                // 数据视图
     magicType:['line', 'bar'],      // 图表类型切换，当前仅支持直角系下的折线图、柱状图转换
-    refresh : true                  // 刷新，复位原始图表
+    restore : true                  // 还原，复位原始图表
 }
                     </pre>
                     </div>
@@ -663,8 +836,8 @@ feature : {
                                 <li> 多值下则存在多套{a1}, {b1}, {c1}, {d1}, {a2}, {b2}, {c2}, {d2}, ...</li>
                                 <li> 其中变量a、b、c在不同图表类型下代表数据含义为：
                                     <ul>
-                                        <li>折线（区域）图、柱状（条形）图、散点图 : a（系列名称），b（类目值），c（数值）, d（无）</li>
-                                        <li>气泡图 : a（系列名称），b（横轴值），c（纵轴值）, d（数值）</li>
+                                        <li>折线（区域）图、柱状（条形）图: a（系列名称），b（类目值），c（数值）, d（无）</li>
+                                        <li>散点图（气泡）图 : a（系列名称），b（数据名称），c（数值数组）, d（无）</li>
                                         <li>饼图、雷达图 : a（系列名称），b（数据项名称），c（数值）, d（百分比）</li>
                                     </ul>
                                 </li>
@@ -886,6 +1059,12 @@ feature : {
                             <td> 指定的最大值，eg: 100，默认无，会自动根据具体数值调整，指定后将忽略boundaryGap[1] </td>
                         </tr>
                         <tr>
+                            <td> {boolean} scale </td>
+                            <td> false </td>
+                            <td> 数值型 </td>
+                            <td> 脱离0值比例，放大聚焦到最终_min，_max区间 </td>
+                        </tr>
+                        <tr>
                             <td> {number} precision </td>
                             <td> 0 </td>
                             <td> 数值型 </td>
@@ -953,6 +1132,19 @@ feature : {
                         <tr>
                             <td> boundaryGap: false </td>
                             <td><img src="./asset/img/doc/axisBoundaryGap.png" title="" alt="axisBoundaryGap"/></td>
+                        </tr>
+                    </table>
+                    <P> scale策略</P>
+                    <table cellspacing="0" class="ADoc_table">
+                        <tr>
+                            <th> 设置 </th>
+                            <td>scale: false</td>
+                            <td>scale: true</td>
+                        </tr>
+                        <tr>
+                            <th> 效果 </th>
+                            <td><img src="./asset/img/doc/axisScale1.png" title="" alt="axisScale1"/></td>
+                            <td><img src="./asset/img/doc/axisScale2.png" title="" alt="axisScale2"/></td>
                         </tr>
                     </table>
                     <P> axis属性说明</P>
@@ -1172,7 +1364,7 @@ feature : {
                             <td> {string} type </td>
                             <td> null </td>
                             <td> 通用 </td>
-                            <td> 图表类型，必要参数！如为空或不支持类型，则该系列数据不被显示。<br/>可选为：'line'（折线图） | 'bar'（柱状图） | 'pie'（饼图） | 'scatter'（散点图，暂不支持） | 'radar'（雷达图，暂不支持） </td>
+                            <td> 图表类型，必要参数！如为空或不支持类型，则该系列数据不被显示。可选为：<br/>'line'（折线图） | 'bar'（柱状图） | 'pie'（饼图） | 'scatter'（散点图） | 'k'（K线图） | 'map'（地图） </td>
                         </tr>
                         <tr>
                             <td> {Object} itemStyle </td>
@@ -1189,13 +1381,13 @@ feature : {
                         <tr>
                             <td> {number} xAxisIndex </td>
                             <td> 0 </td>
-                            <td> 折线图，柱状图，散点图 </td>
+                            <td> 折线图，柱状图，散点图 ，K线图</td>
                             <td><a href="#Xaxis" title="">xAxis</a>坐标轴数组的索引，指定该系列数据所用的横坐标轴 </td>
                         </tr>
                         <tr>
                             <td> {number} yAxisIndex </td>
                             <td> 0 </td>
-                            <td> 折线图，柱状图，散点图 </td>
+                            <td> 折线图，柱状图，散点图，K线图 </td>
                             <td><a href="#Yaxis" title="">yAxis</a>坐标轴数组的索引，指定该系列数据所用的纵坐标轴 </td>
                         </tr>
                         <tr>
@@ -1211,16 +1403,20 @@ feature : {
                             <td> 柱条宽度，不设时自适应 </td>
                         </tr>
                         <tr>
-                            <td> {string} brokenPoint </td>
+                            <td> {string} symbol </td>
                             <td> null </td>
-                            <td> 折线图 </td>
-                            <td> 拐点图形类型，默认自动选择（8种类型循环使用），支持类型有：<br/>'circle' | 'rectangle' | 'triangle' | 'diamond' |<br/>'emptyCircle' | 'emptyRectangle' | 'emptyTriangle' | 'emptyDiamond'</td>
+                            <td> 折线图，散点图 </td>
+                            <td> 标志图形类型，默认自动选择（8种类型循环使用，不显示标志图形可设为'none'），支持类型有：<br/>
+                                'circle' | 'rectangle' | 'triangle' | 'diamond' |<br/>
+                                'emptyCircle' | 'emptyRectangle' | 'emptyTriangle' | 'emptyDiamond'<br/>
+                                (另外，还支持一种更特别的标志图形'star'（五角星），这并不出现在常规的8类图形中，但无论是在系列级还是数据级上你都可以指定使用，同时，'star' + n（n>=3)可变化出N角星，如指定为'star6'则可以显示6角星)
+                            </td>
                         </tr>
                         <tr>
-                            <td> {number} brokenPointSize </td>
+                            <td> {number | Function} symbolSize </td>
                             <td> 4 </td>
-                            <td> 折线图 </td>
-                            <td> 拐点图形大小，可计算特性启用情况建议增大以提高交互体验。</td>
+                            <td> 折线图 ，散点图 </td>
+                            <td> 标志图形大小，可计算特性启用情况建议增大以提高交互体验。实现气泡图时symbolSize需为Function，气泡大小取决于该方法返回值，传入参数为当前数据项（value数组）</td>
                         </tr>
                         <tr>
                             <td> {Array} center </td>
@@ -1247,21 +1443,87 @@ feature : {
                             <td> 最小角度，防止某item的值过小而影响交互 </td>
                         </tr>
                         <tr>
+                            <td> {number} selectedOffset </td>
+                            <td> 10 </td>
+                            <td> 饼图 </td>
+                            <td> 选中是扇区偏移量 </td>
+                        </tr>
+                        <tr>
+                            <td> {string} selectedMode </td>
+                            <td> null </td>
+                            <td> 饼图，地图 </td>
+                            <td> 选中模式，默认关闭，可选single，multiple </td>
+                        </tr>
+                        <tr>
+                            <td> {string} mapType </td>
+                            <td> 'china' </td>
+                            <td> 地图 </td>
+                            <td> 地图类型，目前仅支持中国地图 </td>
+                        </tr>
+                        <tr>
+                            <td> {Object} mapLocation </td>
+                            <td> {x:'center',y:'center'} </td>
+                            <td> 地图 </td>
+                            <td> 地图位置设置，默认只适应上下左右居中可配x，y，width，height，任意参数为空都将根据其他参数自适应 </td>
+                        </tr>
+                        <tr>
                             <td> {Array} data </td>
                             <td> [] </td>
                             <td> 通用 </td>
                             <td> 数据（详见<a href="#SeriesData" title="">series.data</a>） </td>
                         </tr>
+                        <tr>
+                            <td> {Array} categories </td>
+                            <td> [] </td>
+                            <td> 力导向 </td>
+                            <td> 力导向图中节点的分类, 每一项有name和itemStyle两个属性，itemStyle配置详见<a href="#ItemStyle">itemStyle</a></td>
+                        </tr>
+                        <tr>
+                            <td> {Array} nodes </td>
+                            <td> [] </td>
+                            <td> 力导向 </td>
+                            <td> 力导向图的顶点数据, 每一项都有 name, value, category三个属性，分别表示节点的名称， 节点的值和节点的分类</td>
+                        </tr>
+                        <tr>
+                            <td> {Array} links </td>
+                            <td> [] </td>
+                            <td> 力导向 </td>
+                            <td> 力导向图的边数据, 每一项都有 source, target, weight三个属性, source和target是顶点的索引值， 边的权重(weight)越大则两个顶点之间的联系越大(最后稳定之后的距离越小)</td>
+                        </tr>
+                        <tr>
+                            <td> {number} minRadius </td>
+                            <td> 10 </td>
+                            <td> 力导向 </td>
+                            <td> 顶点数据映射成圆半径后的最小半径 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} maxRadius </td>
+                            <td> 20 </td>
+                            <td> 力导向 </td>
+                            <td> 顶点数据映射成圆半径后的最大半径 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} density </td>
+                            <td> 1 </td>
+                            <td> 力导向 </td>
+                            <td> 顶点的密度，影响布局时顶点运动的速度，值越大速度越慢 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} attractiveness </td>
+                            <td> 1 </td>
+                            <td> 力导向 </td>
+                            <td> 顶点之间的引力系数，影响到布局稳定之后的大小，值越大则稳定之后顶点之间的距离越小 </td>
+                        </tr>
                     </table><h5>series.data<a name="SeriesData"> </a></h5>
                     <P> 系列中的数据内容数组，折线图以及柱状图时数组长度等于所使用类目轴文本标签数组<a href="#AxisData" title="">axis.data</a>的长度，并且他们间是一一对应的。数组项通常为数值，如:</P>
                     <div class="code">
-                        <pre>[12, 34, 56, ..., 10, 23]
-</pre>
-</div>                        <P> 当某类目对应数据不存在时（ps：'不存在' 不代表值为 0），可用'-'表示，无数据在折线图中表现为折线在该点断开，在柱状图中表现为该点无柱形，如：</P>
+                        <pre>[12, 34, 56, ..., 10, 23]</pre>
+                    </div>
+                    <P> 当某类目对应数据不存在时（ps：'不存在' 不代表值为 0），可用'-'表示，无数据在折线图中表现为折线在该点断开，在柱状图中表现为该点无柱形，如：</P>
                     <div class="code">
-                        <pre>[12, &#39;-&#39;, 56, ..., 10, 23]
-</pre>
-</div>                        <P> 当需要对个别内容进行个性化定义时，数组项可用对象，如：</P>
+                        <pre>[12, &#39;-&#39;, 56, ..., 10, 23]</pre>
+                    </div>
+                    <P> 当需要对个别内容进行个性化定义时，数组项可用对象，如：</P>
                     <div class="code">
                         <pre>[
     12, 34,
@@ -1273,37 +1535,56 @@ feature : {
     ..., 10, 23
 ]
 </pre>
-</div>                        <P> 当图表类型为scatter（散点图或气泡图）时，其数值设置比较特殊，他的横纵坐标轴都可能为数值型，并且气泡图时需要指定气泡大小，所以scatter型图表设置为：</P>
+                    </div>                        
+                    <P> 当图表类型为scatter（散点图或气泡图）时，其数值设置比较特殊，他的横纵坐标轴都可能为数值型，并且气泡图时需要指定气泡大小，所以scatter型图表设置为：</P>
                     <div class="code">
                         <pre>[
     {
-        value : [10, 25, 5]     //[xValue, yValue, rValue]，数组内依次为横值，纵值，大小
+        value : [10, 25, 5]     //[xValue, yValue, rValue]，数组内依次为横值，纵值，大小(可选)
     },
-    ...,
-    {
-        value : [30, 128, 15],  //同上
-        tooltip:{},             //自定义特殊tooltip，仅对该item有效，详见tooltip
-        itemStyle:{}            //自定义特殊itemStyle，仅对该item有效，详见itemStyle
-    }
+    [12, 15, 1]
+    ...
 ]
 </pre>
-</div>                        <P> 当图表类型为饼图时，需要说明每部分数据的名称name，所以设置为：</P>
+                    </div>
+                    <P> 当图表类型为K线图时，其数值设置比较特殊，他的数值内容为长度为4的数组，分别代表[开盘价，收盘价，最低值，最高值]</P>
+                    <div class="code">
+                        <pre>[
+    {
+        value : [2190.1, 2148.35, 2126.22, 2190.1] // // 开盘，收盘，最低，最高
+    },
+    [2242.26, 2210.9, 2205.07, 2250.63],
+    ...
+]
+</pre>
+                    </div>
+                    <P> 当图表类型为饼图时，需要说明每部分数据的名称name，可设置选中状态，所以设置为：</P>
                     <div class="code">
                         <pre>[
     {
         value : 12，
         name : &#39;apple&#39;          //每部分数据的名称
     },
-    ...,
-    {
-        value : 23,             //同上
-        name : &#39;orange&#39;         //同上
-        tooltip:{},             //自定义特殊tooltip，仅对该item有效，详见tooltip
-        itemStyle:{}            //自定义特殊itemStyle，仅对该item有效，详见itemStyle
-    }
+    ...
 ]
 </pre>
-</div>
+                    </div>
+                    <P> 当图表类型为地图时，需要说明每部分数据对应的省份，可设置选中状态，所以设置为：</P>
+                    <div class="code">
+                        <pre>[
+    {
+        name: '北京',
+        value: 1234,
+        selected: true
+    },
+    {
+        name: '天津',
+        value: 321
+    },
+    ...
+]
+</pre>
+                    </div>
 
                     <h4>itemStyle<a name="ItemStyle"> </a></h4>
                     <P> 图形样式，可设置图表内图形的默认样式和强调样式（悬浮时样式）：</P>
@@ -1317,7 +1598,8 @@ feature : {
     }
 }
 </pre>
-</div>                        <P> 其中normal和emphasis属性为对象，其包含：</P>
+                    </div>
+                    <P> 其中normal和emphasis属性为对象，其包含：</P>
                     <table cellspacing="0" class="ADoc_table">
                         <tr>
                             <th> 名称 </th>
@@ -1334,20 +1616,20 @@ feature : {
                         <tr>
                             <td> {Object} lineStyle </td>
                             <td> 图表各异 </td>
-                            <td> 折线图 </td>
+                            <td> 折线图，K线图 ，地图</td>
                             <td> 线条样式，详见<a href="#LineStyle" title="">lineStyle</a></td>
                         </tr>
                         <tr>
                             <td> {Object} areaStyle </td>
                             <td> 图表各异 </td>
-                            <td> 堆积折线图，填充雷达图</td>
+                            <td> 堆积折线图，地图</td>
                             <td> 区域样式，详见<a href="#AreaStyle" title="">areaStyle</a></td>
                         </tr>
                         <tr>
                             <td> {Object} label </td>
                             <td> {show: true,  position:'outer'} </td>
-                            <td> 饼图 </td>
-                            <td> 饼图标签，默认显示在外部，离饼图距离由labelLine.length决定 </td>
+                            <td> 饼图 ，地图，力导向</td>
+                            <td> 标签，饼图默认显示在外部，离饼图距离由labelLine.length决定，地图标签不可指定位置 </td>
                         </tr>
                         <tr>
                             <td> {Object} labelLine </td>
@@ -1356,7 +1638,7 @@ feature : {
                             <td> 饼图标签视觉引导线，默认显示 </td>
                         </tr>
                     </table>
-                    <P> 其中饼图标签label属性为对象，其包含：</P>
+                    <P> 其中标签label属性为对象，其包含：</P>
                     <table cellspacing="0" class="ADoc_table">
                         <tr>
                             <th> 名称 </th>
@@ -1371,7 +1653,12 @@ feature : {
                         <tr>
                             <td> {string} position </td>
                             <td> 'outer' </td>
-                            <td> 标签显示位置，可选为：'outer'（外部） | 'inner'（内部） </td>
+                            <td> 标签显示位置，可选为：'outer'（外部） | 'inner'（内部），地图标签不可指定位置</td>
+                        </tr>
+                        <tr>
+                            <td> {string | Function} formatter </td>
+                            <td> null </td>
+                            <td> 标签文本格式器，仅饼图支持，同<a href="#Tooltip" title="">Tooltip.formatter</a>，不支持回调</td>
                         </tr>
                         <tr>
                             <td> {Object} textStyle </td>
@@ -1432,7 +1719,10 @@ feature : {
                     <ul>
                         <li>折线图 <a href="example/line.html" target="_blank">try this »</a></li>
                         <li>柱状图 <a href="example/bar.html" target="_blank">try this »</a></li>
+                        <li>K线图 <a href="example/k.html" target="_blank">try this »</a></li>
+                        <li>散点图<a href="example/scatter.html" target="_blank">try this »</a></li>
                         <li>饼图 <a href="example/pie.html" target="_blank">try this »</a></li>
+                        <li>地图 <a href="example/map.html" target="_blank">try this »</a></li>
                     </ul>
 
                     <h4>lineStyle<a name="LineStyle"> </a></h4>
@@ -1630,7 +1920,8 @@ feature : {
                     <p>查看更多实例 <a href="example.html" target="_blank">example</a></p>
                     <div class="code">
                         <pre>// 图表实例化------------------
-var echarts = require('echarts/echarts');
+var echarts = require('echarts');
+require('echarts/chart/line');  // 图表按需加载，需要主动require
 var myChart = echarts.init(document.getElementById('main'));
 
 // ajax getting data...............
@@ -1707,7 +1998,7 @@ myChart.dispose();
         <!-- FOOTER -->
         <footer>
           <p class="pull-right"><a href="#">Back to top</a></p>
-          <p>&copy; 2013 Ecom-FE. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
+          <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="doc/changelog.html" target="_blank" class="link">Changelog</a></p>
         </footer>
     </div><!--/.fluid-container-->
 

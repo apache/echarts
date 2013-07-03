@@ -179,11 +179,20 @@ define(function (require) {
                 valueList = [];
                 for (j = 0, k = series[i].data.length; j < k; j++) {
                     data = series[i].data[j];
-                    if (series[i].type == ecConfig.CHART_TYPE_PIE) {
+                    if (series[i].type == ecConfig.CHART_TYPE_PIE
+                        || series[i].type == ecConfig.CHART_TYPE_MAP
+                    ) {
                         itemName = (data.name || '-') + ':';
                     }
                     else {
                         itemName = '';
+                    }
+                    
+                    if (series[i].type == ecConfig.CHART_TYPE_SCATTER) {
+                        data = typeof data.value != 'undefined' 
+                               ? data.value
+                               : data;
+                        data = data.join(', ');
                     }
                     valueList.push(
                         itemName
@@ -191,7 +200,10 @@ define(function (require) {
                     );
                 }
                 content += (series[i].name || '-') + ' : \n';
-                content += valueList.join(', ') + '\n\n';
+                content += valueList.join(
+                    series[i].type == ecConfig.CHART_TYPE_SCATTER ? '\n': ', '
+                );
+                content += '\n\n';
             }
 
             return content;
@@ -296,23 +308,39 @@ define(function (require) {
             var series = option.series;
             for (i = 0, len = series.length; i < len; i++) {
                 contentIdx++;
-                contentValueList = content[contentIdx].split(',');
-                for (var j = 0, k = series[i].data.length; j < k; j++) {
-                    value = (contentValueList[j] || '').replace(/.*:/,'');
-                    value = _trim(value);
-                    value = (value != '-' && value !== '')
-                            ? (value - 0)
-                            : '-';
-                    if (typeof series[i].data[j].value != 'undefined'
-                    ) {
-                        series[i].data[j].value = value;
-
-                    }
-                    else {
-                        series[i].data[j] = value;
+                if (series[i].type == ecConfig.CHART_TYPE_SCATTER) {
+                    for (var j = 0, k = series[i].data.length; j < k; j++) {
+                        contentValueList = content[contentIdx];
+                        value = contentValueList.replace(' ','').split(',');
+                        if (typeof series[i].data[j].value != 'undefined'
+                        ) {
+                            series[i].data[j].value = value;
+                        }
+                        else {
+                            series[i].data[j] = value;
+                        }
+                        contentIdx++;
                     }
                 }
-                contentIdx++;
+                else {
+                    contentValueList = content[contentIdx].split(',');
+                    for (var j = 0, k = series[i].data.length; j < k; j++) {
+                        value = (contentValueList[j] || '').replace(/.*:/,'');
+                        value = _trim(value);
+                        value = (value != '-' && value !== '')
+                                ? (value - 0)
+                                : '-';
+                        if (typeof series[i].data[j].value != 'undefined'
+                        ) {
+                            series[i].data[j].value = value;
+                        }
+                        else {
+                            series[i].data[j] = value;
+                        }
+                    }
+                    contentIdx++;
+                }
+                
             }
         }
 
@@ -431,5 +459,7 @@ define(function (require) {
         _init();
     }
 
+    require('../component').define('dataView', DataView);
+    
     return DataView;
 });

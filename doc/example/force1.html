@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+
+    <script src="../asset/js/esl/esl.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+</head>
+
+<body>
+    <!-- NAVBAR
+    ================================================== -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="../../index.html">ECharts</a>
+          <div class="nav-collapse collapse">
+              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
+              <ul class="nav">
+                <li><a href="../../index.html"><i class="icon-home icon-white"></i> Home</a></li>
+                <li class="active"><a href="../example.html" class="active">Example</a></li>
+                <li><a href="../doc.html" >API &amp; Doc</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="https://github.com/ecomfe/echarts/archive/1.0.0.zip">ZIP (1.0.0)</a></li>
+                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
+                  </ul>
+                </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
+                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
+                    <li class="divider"></li>
+                    <!--li class="nav-header">Library</li-->
+                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
+                    <li><a href="http://tangram.baidu.com/" target="_blank">Tangram</a></li>
+                  </ul>
+                </li>
+              </ul>
+           </div><!--/.nav-collapse -->
+        </div><!-- /.container -->
+      </div><!-- /.navbar-inner -->
+    </div><!-- /.navbar-wrapper -->
+
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div id="sidebar-code" class="span4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+option = {
+    tooltip : {
+        trigger: 'item',
+        formatter: '{a} : {b}'
+    },
+    legend: {
+        x: 'left',
+        data:['家人','朋友']
+    },
+    series : [
+        {
+            type:'force',
+            categories : [
+                {
+                    name: '人物',
+                    itemStyle: {
+                        normal: {
+                            color : '#ff7f50'
+                        }
+                    }
+                },
+                {
+                    name: '家人',
+                    itemStyle: {
+                        normal: {
+                            color : '#87cdfa'
+                        }
+                    }
+                },
+                {
+                    name:'朋友',
+                    itemStyle: {
+                        normal: {
+                            color : '#9acd32'
+                        }
+                    }
+                }
+            ],
+            itemStyle: {
+                normal: {
+                    label: {
+                        show: true,
+                        textStyle: {
+                            color: '#800080'
+                        }
+                    },
+                    nodeStyle : {
+                        brushType : 'both',
+                        strokeColor : 'rgba(255,215,0,0.4)',
+                        lineWidth : 8
+                    }
+                },
+                emphasis: {
+                    label: {
+                        show: false
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
+                    nodeStyle : {
+                        r: 30
+                    },
+                    linkStyle : {}
+                }
+            },
+            minRadius : 15,
+            maxRadius : 25,
+            density : 0.05,
+            attractiveness: 1.2,
+            nodes:[
+                {category:0, name: '乔布斯', value : 10},
+                {category:1, name: '丽萨-乔布斯',value : 2},
+                {category:1, name: '保罗-乔布斯',value : 3},
+                {category:1, name: '克拉拉-乔布斯',value : 3},
+                {category:1, name: '劳伦-鲍威尔',value : 7},
+                {category:2, name: '史蒂夫-沃兹尼艾克',value : 5},
+                {category:2, name: '奥巴马',value : 8},
+                {category:2, name: '比尔-盖茨',value : 9},
+                {category:2, name: '乔纳森-艾夫',value : 4},
+                {category:2, name: '蒂姆-库克',value : 4},
+                {category:2, name: '龙-韦恩',value : 1},
+            ],
+            links : [
+                {source : 1, target : 0, weight : 1},
+                {source : 2, target : 0, weight : 2},
+                {source : 3, target : 0, weight : 1},
+                {source : 4, target : 0, weight : 2},
+                {source : 5, target : 0, weight : 3},
+                {source : 6, target : 0, weight : 6},
+                {source : 7, target : 0, weight : 6},
+                {source : 8, target : 0, weight : 1},
+                {source : 9, target : 0, weight : 1},
+                {source : 10, target : 0, weight : 1},
+                {source : 3, target : 2, weight : 1},
+                {source : 6, target : 2, weight : 1},
+                {source : 6, target : 3, weight : 1},
+                {source : 6, target : 4, weight : 1},
+                {source : 6, target : 5, weight : 1},
+                {source : 7, target : 6, weight : 6},
+                {source : 7, target : 3, weight : 1},
+                {source : 9, target : 6, weight : 1}
+            ]
+        }
+    ]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="span8">
+                <div id="main" class="main"></div>
+                <div>
+                    <button onclick="refresh(true)">Refresh ~</button>
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        <hr>
+        <!-- FOOTER -->
+        <footer>
+          <p class="pull-right"><a href="#">Back to top</a></p>
+          <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="doc/changelog.html" target="_blank" class="link">Changelog</a></p>
+        </footer>
+    </div><!--/.fluid-container-->
+
+    <script src="../asset/js/jquery.js"></script>
+    <script src="../asset/js/bootstrap-transition.js"></script>
+    <script src="../asset/js/bootstrap-alert.js"></script>
+    <script src="../asset/js/bootstrap-modal.js"></script>
+    <script src="../asset/js/bootstrap-dropdown.js"></script>
+    <script src="../asset/js/bootstrap-scrollspy.js"></script>
+    <script src="../asset/js/bootstrap-tab.js"></script>
+    <script src="../asset/js/bootstrap-tooltip.js"></script>
+    <script src="../asset/js/bootstrap-popover.js"></script>
+    <script src="../asset/js/bootstrap-button.js"></script>
+    <script src="../asset/js/bootstrap-collapse.js"></script>
+    <script src="../asset/js/bootstrap-carousel.js"></script>
+    <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>

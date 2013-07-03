@@ -5,7 +5,7 @@
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  */
-define(function(require) {    //chart
+define(function(/*require*/) {    //chart
     var self = {};
 
     var _chartLibrary = {};     //echart图表库
@@ -27,15 +27,6 @@ define(function(require) {    //chart
     self.get = function(name) {
         return _chartLibrary[name];
     };
-
-    // 内置图表注册
-    self.define('island', require('./chart/island'));
-
-    self.define('pie', require('./chart/pie'));
-
-    self.define('bar', require('./chart/bar'));
-
-    self.define('line', require('./chart/line'));
 
     return self;
 });

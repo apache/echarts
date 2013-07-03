@@ -82,7 +82,7 @@ option = {
         feature : {
             mark : true,
             dataView : {readOnly: false},
-            refresh : true
+            restore : true
         }
     },
     calculable : true,
@@ -95,7 +95,8 @@ option = {
             itemStyle : {
                 normal : {
                     label : {
-                        position : 'inner'
+                        position : 'inner',
+                        formatter : function(a,b,c,d) {return (d - 0).toFixed(0) + ' %'},
                     },
                     labelLine : {
                         show : false
@@ -117,6 +118,7 @@ option = {
                         emphasis : {
                             label : {
                                 show : true,
+                                formatter : "{b} : {d}%",
                                 position : 'inner'
                             }
                         }
@@ -220,6 +222,7 @@ option = {
                     label : {
                         show : true,
                         position : 'center',
+                        formatter : "{d}%",
                         textStyle : {
                             color : 'red',
                             fontSize : '30',
@@ -254,7 +257,7 @@ option = {
         <!-- FOOTER -->
         <footer>
           <p class="pull-right"><a href="#">Back to top</a></p>
-          <p>&copy; 2013 Ecom-FE. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
+          <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="doc/changelog.html" target="_blank" class="link">Changelog</a></p>
         </footer>
     </div><!--/.fluid-container-->
 
