@@ -496,7 +496,7 @@ define(function() {
         valueConnector: ' : ',
         animation: true,
         animationDuration: 2000,
-        animationEasing: 'BounceOut'    //ExponentialOut
+        animationEasing: 'ExponentialOut'    //BounceOut
     };
 
     return config;
