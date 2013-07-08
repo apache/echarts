@@ -37,7 +37,7 @@
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
                   <ul class="dropdown-menu">
-                    <li><a href="https://github.com/ecomfe/echarts/archive/1.0.0.zip">ZIP (1.0.0)</a></li>
+                    <li><a href="https://github.com/ecomfe/echarts/archive/1.1.0.zip">ZIP (1.1.0)</a></li>
                     <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
                   </ul>
                 </li>
@@ -153,7 +153,7 @@
                 </p>
                 <div id="doc">
                     <h3>简介<a name="简介"> </a></h3>
-                    <p>ECharts，纯Javascript图表库，基于Canvas，底层依赖<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>，商业产品常用图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。创新的拖拽重计算、数据视图、值域漫游等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。图表类型支持折线图（区域图）、柱状图（条状图）、饼图（环形图），同时支持任意维度的堆积和多图表混合展现。</P>
+                    <p>ECharts，纯Javascript图表库，基于Canvas，底层依赖<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>，商业产品常用图表库，提供直观，生动，可交互，可个性化定制的数据可视化图表。创新的拖拽重计算、数据视图、值域漫游等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。图表类型支持折线图（区域图）、柱状图（条状图）、散点图（气泡图）、K线图、饼图（环形图）、地图、力导向布局图，同时支持任意维度的堆积和多图表混合展现。</P>
                     <img src="asset/img/architecture.png" />
                     <h3>名词解析<a name="名词解析"> </a></h3>
                     <p>基本名词</p>
@@ -223,23 +223,23 @@
                         </tr>
                         <tr>
                             <td> scatter </td>
-                            <td> 散点图，气泡图</td>
+                            <td> 散点图，气泡图，大规模散点图</td>
                         </tr>
                         <tr>
                             <td> k </td>
-                            <td> K线图</td>
+                            <td> K线图，蜡烛图，</td>
                         </tr>
                         <tr>
                             <td> pie </td>
                             <td> 饼图，圆环图 </td>
                         </tr>
                         <tr>
-                            <td> radar </td>
-                            <td> 雷达图，填充雷达图（暂不支持） </td>
-                        </tr>
-                        <tr>
                             <td> map </td>
                             <td> 地图（暂时仅支持中国地图） </td>
+                        </tr>
+                        <tr>
+                            <td> force </td>
+                            <td> 力导布局图 </td>
                         </tr>
                     </table>
                     <h3>图表类型<a name="图表类型"> </a></h3>
@@ -727,11 +727,11 @@ myChart.setOption(option);
                     <div class="code">
                     <pre>
 feature : {
-    mark : true,                    // 辅助线标志
-    dataZoom : true,                // 框选区域缩放，自动与存在的dataZoom控件同步
-    dataView : true,                // 数据视图
-    magicType:['line', 'bar'],      // 图表类型切换，当前仅支持直角系下的折线图、柱状图转换
-    restore : true                  // 还原，复位原始图表
+    mark : true,                    // 辅助线标志，上图icon左数1/2/3，分别是启用，删除上一条，删除全部
+    dataZoom : true,                // 框选区域缩放，自动与存在的dataZoom控件同步，上图icon左数4/5，分别是启用，缩放后退
+    magicType:['line', 'bar'],      // 图表类型切换，当前仅支持直角系下的折线图、柱状图转换，上图icon左数6/7，分别是切换折线图，切换柱形图
+    dataView : true,                // 数据视图，上图icon左数8，打开数据视图
+    restore : true                  // 还原，复位原始图表，上图icon左数9，还原
 }
                     </pre>
                     </div>
@@ -865,7 +865,7 @@ feature : {
                     </table>
 
                     <h4>dataZoom<a name="DataZoom"> </a></h4>
-                    <P> 数据区域缩放。仅对直角坐标系图表有效。<a href="example/dataZoom.html" target="_blank">try this »</a></P>
+                    <P> 数据区域缩放。与toolbox.feature.dataZoom同步，仅对直角坐标系图表有效。<a href="example/dataZoom.html" target="_blank">try this »</a></P>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
                             <th> 名称 </th>
@@ -953,6 +953,7 @@ feature : {
                             <td> 数据缩放锁，默认为false，当设置为true时选择区域不能伸缩，即(end - start)值保持不变，仅能做数据漫游。</td>
                         </tr>
                     </table>
+                    <p><img src="./asset/img/doc/dataZoom.png" title="" alt="工具箱"/></P>
 
                     <h4>grid<a name="Grid"> </a></h4>
                     <P> 直角坐标系内绘图网格</P>
@@ -1998,7 +1999,7 @@ myChart.dispose();
         <!-- FOOTER -->
         <footer>
           <p class="pull-right"><a href="#">Back to top</a></p>
-          <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="doc/changelog.html" target="_blank" class="link">Changelog</a></p>
+          <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="changelog.html" target="_blank">Changelog</a></p>
         </footer>
     </div><!--/.fluid-container-->
 

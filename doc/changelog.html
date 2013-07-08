@@ -7,8 +7,6 @@
     <meta name="description" content="ECharts">
     <meta name="author" content="linzhifeng@baidu.com">
 
-    <script src="asset/js/esl/esl.js"></script>
-
     <!-- Le styles -->
     <link href="asset/css/bootstrap.css" rel="stylesheet">
     <link href="asset/css/bootstrap-responsive.css" rel="stylesheet">
@@ -40,7 +38,7 @@
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
                   <ul class="dropdown-menu">
-                    <li><a href="https://github.com/ecomfe/echarts/archive/1.0.0.zip">ZIP (1.0.0)</a></li>
+                    <li><a href="https://github.com/ecomfe/echarts/archive/1.1.0.zip">ZIP (1.1.0)</a></li>
                     <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
                   </ul>
                 </li>
@@ -92,12 +90,13 @@
                         <li>restore，还原图表，各种状态均被清除，还原为最初展现时的状态。</li>
                         <li>getZrender，获取当前图表所用ZRender实例，可用于添加额外图形或进行深度定制</li>
                     </ul>
-                    <li>【重要】图表按需加载，需要使用方主动require</li>
+                    <li>【重要】 图表按需加载，需要使用方主动require</li>
                     <li>toolbox.feature.refresh改为restore</li>
-                    <li>tooltip 0值bug fixed</li>
+                    <li>[bug fixed] tooltip 0值</li>
                     <li>饼图升级selected Mode，label支持formatter</li>
                     <li>图例升级为icon，折线图例有更形象的展现和更易点击</li>
                     <li>数值轴升级scale模式，可以脱离0值，聚焦到数值变化区间</li>
+                    <li>默认动画缓动效果从'BounceOut'改为'ExponentialOut'</li>
                 </ul>
             </div>
             <div>
@@ -123,7 +122,7 @@
       <hr>
       <footer>
         <p class="pull-right"><a href="#">Back to top</a></p>
-        <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="doc/changelog.html" target="_blank" class="link">Changelog</a></p>
+        <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="changelog.html">Changelog</a></p>
       </footer>
 
     </div> <!-- /container -->

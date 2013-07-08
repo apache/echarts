@@ -65,7 +65,7 @@ require.config({
         {
             name: 'zrender',
             location: 'http://ecomfe.github.io/zrender/src',
-            location: '../../../zrender/src',
+            //location: '../../../zrender/src',
             main: 'zrender'
         }
     ]
