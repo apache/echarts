@@ -6,7 +6,7 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function(require) {    //component
+define(function(/*require*/) {    //component
     var self = {};
 
     var _componentLibrary = {};     //echart组件库
@@ -28,25 +28,6 @@ define(function(require) {    //component
     self.get = function(name) {
         return _componentLibrary[name];
     };
-
-    // 内置组件注册
-    self.define('axis', require('./component/axis'));
-
-    self.define('categoryAxis', require('./component/categoryAxis'));
-
-    self.define('valueAxis', require('./component/valueAxis'));
-
-    self.define('grid', require('./component/grid'));
-
-    self.define('dataZoom', require('./component/dataZoom'));
-
-    self.define('legend', require('./component/legend'));
-
-    self.define('tooltip', require('./component/tooltip'));
-
-    self.define('toolbox', require('./component/toolbox'));
-
-    self.define('dataView', require('./component/dataView'));
 
     return self;
 });

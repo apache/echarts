@@ -65,10 +65,16 @@ define(function(require) {
                 ecConfig.EVENT.DATA_ZOOM, _ondataZoom
             );
             _messageCenter.bind(
+                ecConfig.EVENT.DATA_RANGE, _ondataRange
+            );
+            _messageCenter.bind(
                 ecConfig.EVENT.MAGIC_TYPE_CHANGED, _onmagicTypeChanged
             );
             _messageCenter.bind(
                 ecConfig.EVENT.DATA_VIEW_CHANGED, _ondataViewChanged
+            );
+            _messageCenter.bind(
+                ecConfig.EVENT.RESTORE, _onrestore
             );
             _messageCenter.bind(
                 ecConfig.EVENT.REFRESH, _onrefresh
@@ -85,18 +91,29 @@ define(function(require) {
             _zr.on(zrConfig.EVENT.DRAGLEAVE, _ondragleave);
             _zr.on(zrConfig.EVENT.DROP, _ondrop);
 
+            // 动态扩展zrender shape：icon
+            require('./util/shape/icon');
 
-            var shape = require('zrender/shape');
-            var Icon = require('./util/icon');
-            shape.define('icon', new Icon());
-
-            // 孤岛
+            // 内置图表注册
             var chartLibrary = require('./chart');
+            require('./chart/island');
+            // 孤岛
             var Island = chartLibrary.get('island');
             _island = new Island(_messageCenter, _zr);
-
-            // 工具箱
+            
+            // 内置组件注册
             var componentLibrary = require('./component');
+            require('./component/axis');
+            require('./component/categoryAxis');
+            require('./component/valueAxis');
+            require('./component/grid');
+            require('./component/dataZoom');
+            require('./component/legend');
+            require('./component/dataRange');
+            require('./component/tooltip');
+            require('./component/toolbox');
+            require('./component/dataView');
+            // 工具箱
             var Toolbox = componentLibrary.get('toolbox');
             _toolbox = new Toolbox(_messageCenter, _zr, dom);
         }
@@ -236,15 +253,9 @@ define(function(require) {
                     param.event,
                     _eventPackage(param.target)
                 );
-                // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
-                // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
-                for (var i = 0, l = _chartList.length; i < l; i++) {
-                    _chartList[i].refresh && _chartList[i].refresh();
-                }
-                _zr.refresh();
+                _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
             }
         }
-
 
         function _onlegendSelected(param) {
             // 用于图表间通信
@@ -257,10 +268,7 @@ define(function(require) {
             _selectedMap = param.selected;
 
             if (_status.needRefresh) {
-                for (var i = 0, l = _chartList.length; i < l; i++) {
-                    _chartList[i].refresh && _chartList[i].refresh();
-                }
-                _zr.refresh();
+                _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
             }
         }
 
@@ -274,9 +282,21 @@ define(function(require) {
             }
 
             if (_status.needRefresh) {
-                for (var i = 0, l = _chartList.length; i < l; i++) {
-                    _chartList[i].refresh && _chartList[i].refresh();
+                _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+            }
+        }
+        
+        function _ondataRange(param) {
+            // 用于图表间通信
+            _status.needRefresh = false;
+            for (var l = _chartList.length - 1; l >= 0; l--) {
+                if (_chartList[l].ondataRange) {
+                    _chartList[l].ondataRange(param, _status);
                 }
+            }
+
+            // 没有相互影响，直接刷新即可
+            if (_status.needRefresh) {
                 _zr.refresh();
             }
         }
@@ -321,14 +341,15 @@ define(function(require) {
             _messageCenter.dispatch(
                 ecConfig.EVENT.DATA_CHANGED
             );
-            for (var i = 0, l = _chartList.length; i < l; i++) {
-                _chartList[i].refresh && _chartList[i].refresh();
-            }
-            _zr.refresh();
+            _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
         }
 
+        function _onrestore() {
+            restore();
+        }
+        
         function _onrefresh() {
-            _refresh();
+            refresh();
         }
 
         /**
@@ -369,8 +390,19 @@ define(function(require) {
                 );
                 _chartList.push(legend);
             }
+            
+            // 色尺
+            var dataRange;
+            if (magicOption.dataRange) {
+                var DataRange = new componentLibrary.get('dataRange');
+                dataRange = new DataRange(
+                    _messageCenter, _zr, magicOption
+                );
+                _chartList.push(dataRange);
+            }
 
             var grid;
+            var dataZoom;
             var xAxis;
             var yAxis;
             if (magicOption.grid || magicOption.xAxis || magicOption.yAxis) {
@@ -379,14 +411,16 @@ define(function(require) {
                 _chartList.push(grid);
 
                 var DataZoom = componentLibrary.get('dataZoom');
-                _chartList.push(new DataZoom(
+                dataZoom = new DataZoom(
                     _messageCenter,
                     _zr,
                     magicOption,
                     {
+                        'legend' : legend,
                         'grid' : grid
                     }
-                ));
+                );
+                _chartList.push(dataZoom);
 
                 var Axis = componentLibrary.get('axis');
                 xAxis = new Axis(
@@ -439,6 +473,7 @@ define(function(require) {
                             {
                                 'tooltip' : tooltip,
                                 'legend' : legend,
+                                'dataRange' : dataRange,
                                 'grid' : grid,
                                 'xAxis' : xAxis,
                                 'yAxis' : yAxis
@@ -451,7 +486,7 @@ define(function(require) {
 
             _island.render(magicOption);
 
-            _toolbox.render(magicOption);
+            _toolbox.render(magicOption, {dataZoom: dataZoom});
 
             if (magicOption.animation) {
                 var len = _chartList.length;
@@ -463,13 +498,22 @@ define(function(require) {
             _zr.render();
         }
 
-        function _refresh() {
+        function restore() {
             var zrUtil = require('zrender/tool/util');
             _selectedMap = {};
             _option = zrUtil.clone(_optionBackup);
             _island.clear();
-            _toolbox.resetMagicType(_option);
+            _toolbox.reset(_option);
             _render(_option);
+        }
+        
+        function refresh() {
+            // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
+            // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
+            for (var i = 0, l = _chartList.length; i < l; i++) {
+                _chartList[i].refresh && _chartList[i].refresh();
+            }
+            _zr.refresh();
         }
         /**
          * 释放图表实例
@@ -549,7 +593,7 @@ define(function(require) {
             _selectedMap = {};
 
             _island.clear();
-            _toolbox.resetMagicType(_option);
+            _toolbox.reset(_option);
             _render(_option);
             return self;
         }
@@ -658,6 +702,8 @@ define(function(require) {
         self.showLoading = showLoading;
         self.hideLoading = hideLoading;
         self.resize = resize;
+        self.refresh = refresh;
+        self.restore = restore;
         self.clear = clear;
         self.dispose = dispose;
     }

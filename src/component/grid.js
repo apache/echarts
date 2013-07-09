@@ -132,5 +132,7 @@ define(function (require) {
         init(option);
     }
 
+    require('../component').define('grid', Grid);
+    
     return Grid;
 });

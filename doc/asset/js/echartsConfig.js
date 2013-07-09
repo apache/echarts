@@ -34,6 +34,38 @@
             }
         },
 
+        // 值域
+        dataRange: {
+            orient: 'vertical',        // 布局方式，默认为垂直布局，可选为：
+                                       // 'horizontal' ¦ 'vertical'
+            x: 'left',                 // 水平安放位置，默认为全图左对齐，可选为：
+                                       // 'center' ¦ 'left' ¦ 'right'
+                                       // ¦ {number}（x坐标，单位px）
+            y: 'bottom',               // 垂直安放位置，默认为全图底部，可选为：
+                                       // 'top' ¦ 'bottom' ¦ 'center'
+                                       // ¦ {number}（y坐标，单位px）
+            backgroundColor: 'rgba(0,0,0,0)',
+            borderColor: '#ccc',       // 值域边框颜色
+            borderWidth: 0,            // 值域边框线宽，单位px，默认为0（无边框）
+            padding: 5,                // 值域内边距，单位px，默认各方向内边距为5，
+                                       // 接受数组分别设定上右下左边距，同css
+            itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
+                                       // 横向布局时为水平间隔，纵向布局时为纵向间隔
+            itemWidth: 20,             // 值域图形宽度，线性渐变水平布局宽度为该值 * 10
+            itemHeight: 14,            // 值域图形高度，线性渐变垂直布局高度为该值 * 10
+            precision: 0,              // 小数精度，默认为0，无小数点
+            // min: null,              // 最小值
+            // max: null,              // 最大值
+            splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变
+            calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
+            realtime: true,
+            color:['#1e90ff','#f0ffff'],//颜色 
+            //text:['高','低'],           // 文本，默认为数值文本
+            textStyle: {
+                color: '#333'          // 值域文字颜色
+            }
+        },
+
         toolbox: {
             show : false,
             orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
@@ -164,6 +196,7 @@
             boundaryGap: [0, 0],   // 数值起始和结束两端空白策略
             // min: null,          // 最小值
             // max: null,          // 最大值
+            // scale: false,       // 脱离0值比例，放大聚焦到最终_min，_max区间
             precision: 0,          // 小数精度，默认为0，无小数点
             power: 100,            // 整数精度，默认为100，个位和百位为0
             splitNumber: 5,        // 分割段数，默认为5
@@ -234,8 +267,38 @@
                         // color: 各异,
                 }
             },
-            //brokenPoint: null,     // 拐点图形类型，非标准参数
-            brokenPointSize: 4           // 可计算特性参数，空数据拖拽提示图形大小
+            //symbol: null,     // 拐点图形类型，非标准参数
+            symbolSize: 4           // 可计算特性参数，空数据拖拽提示图形大小
+        },
+
+        // K线图默认参数
+        k: {
+            xAxisIndex: 0,
+            yAxisIndex: 0,
+            itemStyle: {
+                normal: {
+                    color: '#fff',       // 阳线填充颜色
+                    color0: '#00aa11',    // 阴线填充颜色
+                    lineStyle: {
+                        width: 1,
+                        color: '#ff3200',   // 阳线边框颜色
+                        color0: '#00aa11' // 阴线边框颜色
+                    }
+                },
+                emphasis: {
+                    // color: 各异,
+                }
+            }
+        },
+        
+        // 散点图默认参数
+        scatter: {
+            xAxisIndex: 0,
+            yAxisIndex: 0,
+            //symbol: null,    // 图形类型，非标准参数
+            symbolSize: 4,       // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            large: false,        // 大规模散点图
+            largeThreshold: 2000 // 大规模阀值，large为true且数据量大于largeThreshold才启用大规模模式
         },
 
         // 饼图默认参数
@@ -244,6 +307,8 @@
             // radius: [0, min(width,height) - 50],
             startAngle: 0,
             minAngle: 5,
+            selectedOffset: 10,             // 选中是扇区偏移量
+            // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
             itemStyle: {
                 normal: {
                     label: {
@@ -279,6 +344,88 @@
                 }
             }
         },
+        
+        map: {
+            mapType: 'china',
+            mapLocation: {
+                x : 'center',
+                y : 'center'
+                // width    // 自适应
+                // height   // 自适应
+            },
+            // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
+            itemStyle: {
+                normal: {
+                    // color: 各异,
+                    lineStyle: {
+                        width: 2,
+                        color: '#fff'
+                    },
+                    areaStyle: {
+                        color: '#ccc'//rgba(135,206,250,0.8)
+                    },
+                    label: {
+                        show: false,
+                        textStyle: {
+                            color: 'rgba(139,69,19,1)'
+                        }
+                    }
+                },
+                emphasis: {                 // 也是选中样式
+                    // color: 各异,
+                    lineStyle: {
+                        width: 2,
+                        color: '#fff'
+                    },
+                    areaStyle: {
+                        color: 'rgba(255,215,0,0.8)'
+                    },
+                    label: {
+                        show: false,
+                        textStyle: {
+                            color: 'rgba(139,69,19,1)'
+                        }
+                    }
+                }
+            }
+        },
+
+		force : {
+            // 数据map到圆的半径的最小值和最大值
+            minRadius : 10,
+            maxRadius : 20,
+            density : 1.0,
+            attractiveness : 1.0,
+            // 分类里如果有样式会覆盖节点默认样式
+            categories : [],
+            itemStyle: {
+                normal: {
+                    // color: 各异,
+                    label: {
+                        show: false
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
+                    nodeStyle : {
+                        brushType : 'both',
+                        color : '#f08c2e',
+                        strokeColor : '#5182ab'
+                    },
+                    linkStyle : {
+                        strokeColor : '#5182ab'
+                    }
+                },
+                emphasis: {
+                    // color: 各异,
+                    label: {
+                        show: false
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
+                    nodeStyle : {},
+                    linkStyle : {}
+                }
+            }
+        },
+
         island: {
             r: 15,
             calculateStep: 0.1  // 滚轮可计算步长 0.1 = 10%
@@ -308,21 +455,29 @@
         animationEasing: 'BounceOut',
 
         // 图表类型
-        CHART_TYPE_LINE: 'line',
+		CHART_TYPE_LINE: 'line',
         CHART_TYPE_BAR: 'bar',
-        // CHART_TYPE_SCATTER: 'scatter',
+        CHART_TYPE_SCATTER: 'scatter',
         CHART_TYPE_PIE: 'pie',
+        CHART_TYPE_MAP: 'map',
+        CHART_TYPE_K: 'k',
+		CHART_TYPE_FORCE : 'force',
         // CHART_TYPE_RADAR: 'radar',
         // CHART_TYPE_ISLAND: 'island',
+
         // 事件类型
         EVENT: {
             REFRESH: 'refresh',
+            RESTORE: 'restore',
             CLICK: 'click',
             HOVER: 'hover',
             // -------
             DATA_CHANGED: 'dataChanged',
             DATA_ZOOM: 'dataZoom',
+            DATA_RANGE: 'dataRange',
             LEGEND_SELECTED: 'legendSelected',
+            MAP_SELECTED: 'mapSelected',
+            PIE_SELECTED: 'pieSelected',
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',
             DATA_VIEW_CHANGED: 'dataViewChanged'
         }

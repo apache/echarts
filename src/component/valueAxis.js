@@ -31,11 +31,16 @@ define(function (require) {
         var _zlevelBase = self.getZlevelBase();
         var _min;
         var _max;
+        var _hasData;
         var _valueList;
         var _valueLabel;
 
         function _buildShape() {
+            _hasData = false;
             _calculateValue();
+            if (!_hasData) {
+                return;
+            }
             option.splitArea.show && _buildSplitArea();
             option.splitLine.show && _buildSplitLine();
             option.axisLine.show && _buildAxisLine();
@@ -405,6 +410,7 @@ define(function (require) {
                     if (series[i].type != ecConfig.CHART_TYPE_LINE
                         && series[i].type != ecConfig.CHART_TYPE_BAR
                         && series[i].type != ecConfig.CHART_TYPE_SCATTER
+                        && series[i].type != ecConfig.CHART_TYPE_K
                     ) {
                         // 非坐标轴支持的不算极值
                         continue;
@@ -425,13 +431,30 @@ define(function (require) {
                     }
 
                     if (!series[i].stack) {
-                        data[series[i].name || ''] = [];
+                        var key = series[i].name || '';
+                        data[key] = [];
                         oriData = series[i].data;
                         for (var j = 0, k = oriData.length; j < k; j++) {
                             value = typeof oriData[j].value != 'undefined'
                                     ? oriData[j].value
                                     : oriData[j];
-                            data[series[i].name || ''].push(value);
+                            if (series[i].type == ecConfig.CHART_TYPE_SCATTER) {
+                                if (option.xAxisIndex != -1) {
+                                    data[key].push(value[0]);
+                                }
+                                if (option.yAxisIndex != -1) {
+                                    data[key].push(value[1]);
+                                }
+                            }
+                            else if (series[i].type == ecConfig.CHART_TYPE_K) {
+                                data[key].push(value[0]);
+                                data[key].push(value[1]);
+                                data[key].push(value[2]);
+                                data[key].push(value[3]);
+                            }
+                            else {
+                                data[key].push(value);
+                            }
                         }
                     }
                     else {
@@ -469,8 +492,20 @@ define(function (require) {
                     }
                 }
                 // 找极值
-                _min = Number.MAX_VALUE;
-                _max = Number.MIN_VALUE;
+                for (var i in data){
+                    oriData = data[i];
+                    for (var j = 0, k = oriData.length; j < k; j++) {
+                        if (!isNaN(oriData[j])){
+                            _hasData = true;
+                            _min = oriData[j];
+                            _max = oriData[j];
+                            break;
+                        }
+                    }
+                    if (_hasData) {
+                        break;
+                    }
+                }
                 for (var i in data){
                     oriData = data[i];
                     for (var j = 0, k = oriData.length; j < k; j++) {
@@ -481,7 +516,7 @@ define(function (require) {
                     }
                 }
             }
-
+            //console.log(_min,_max,'vvvvv111111')
             _min = isNaN(option.min)
                    ? (_min - Math.abs(_min * option.boundaryGap[0]))
                    : option.min;    // 指定min忽略boundaryGay[0]
@@ -489,7 +524,8 @@ define(function (require) {
             _max = isNaN(option.max)
                    ? (_max + Math.abs(_max * option.boundaryGap[1]))
                    : option.max;    // 指定max忽略boundaryGay[1]
-            _reformValue();
+            //console.log(_min,_max,'vvvvv')
+            _reformValue(option.scale);
         }
 
         /**
@@ -567,7 +603,7 @@ define(function (require) {
                 (_min == -2.4 && _max == 0.6) ? 'success' : 'failed');
          * --------
          */
-        function _reformValue() {
+        function _reformValue(scale) {
             var splitNumber = option.splitNumber;
             var precision = option.precision;
             var splitGap;
@@ -580,32 +616,65 @@ define(function (require) {
                 power = Math.pow(10, precision);
                 _min *= power;
                 _max *= power;
+                power = option.power;
             }
-
+            // console.log(_min,_max)
+            var total;
             if (_min >= 0 && _max >= 0) {
                 // 双正
-                _min = 0;
+                if (!scale) {
+                    _min = 0;
+                }
                 // power自动降级
                 while ((_max / power < splitNumber) && power != 1) {
                     power = power / 10;
                 }
-                splitGap = Math.ceil((_max / splitNumber) / power) * power;
-                _max = splitGap * splitNumber;
+                total = _max - _min;
+                // 粗算
+                splitGap = Math.ceil((total / splitNumber) / power) * power;
+                if (scale) {
+                    if (precision === 0) {    // 整数
+                        _min = Math.floor(_min / splitGap) * splitGap;
+                    }
+                    // 修正
+                    if (_min + splitGap * splitNumber < _max) {
+                        splitGap = 
+                            Math.ceil(((_max - _min) / splitNumber) / power)
+                            * power;
+                    }
+                }
+                
+                _max = _min + splitGap * splitNumber;
             }
             else if (_min <= 0 && _max <= 0) {
                 // 双负
-                _max = 0;
+                if (!scale) {
+                    _max = 0;
+                }
                 power = -power;
                 // power自动降级
                 while ((_min / power < splitNumber) && power != -1) {
                     power = power / 10;
                 }
-                splitGap = -Math.ceil((_min / splitNumber) / power) * power;
-                _min = -splitGap * splitNumber;
+                total = _min - _max;
+                splitGap = -Math.ceil((total / splitNumber) / power) * power;
+                if (scale) {
+                    if (precision === 0) {    // 整数
+                        _max = Math.ceil(_max / splitGap) * splitGap;
+                    }
+                    // 修正
+                    if (_max - splitGap * splitNumber > _min) {
+                        splitGap = 
+                            Math.ceil(((_min - _max) / splitNumber) / power)
+                            * power;
+                    }
+                }
+                
+                _min = -splitGap * splitNumber + _max;
             }
             else {
                 // 一正一负，确保0被选中
-                var total = _max - _min;
+                total = _max - _min;
                 // power自动降级
                 while ((total / power < splitNumber) && power != 1) {
                     power = power/10;
@@ -626,7 +695,7 @@ define(function (require) {
                 _max = splitGap * partSplitNumber;
                 _min = splitGap * (partSplitNumber - splitNumber);
             }
-
+            //console.log(_min,_max,'vvvvvrrrrrr')
             _valueList = [];
             for (var i = 0; i <= splitNumber; i++) {
                 _valueList.push(_min + splitGap * i);
@@ -641,7 +710,7 @@ define(function (require) {
                     _valueList[i] = (_valueList[i] / power).toFixed(precision);
                 }
             }
-
+            
             _reformLabelData();
         }
 
@@ -664,6 +733,14 @@ define(function (require) {
                 _valueLabel = _valueList;
             }
 
+        }
+        
+        function getExtremum() {
+            _calculateValue();
+            return {
+                min: _min,
+                max: _max
+            };
         }
 
         /**
@@ -698,7 +775,9 @@ define(function (require) {
             series = newSeries;
 
             self.clear();
-            _buildShape();
+            if (zr) {   // 数值轴的另外一个功能只是用来计算极值
+                _buildShape();
+            }
         }
 
         /**
@@ -738,12 +817,15 @@ define(function (require) {
 
         self.init = init;
         self.refresh = refresh;
+        self.getExtremum = getExtremum;
         self.getCoord = getCoord;
         self.getPosition = getPosition;
 
         init(option, grid, series);
     }
 
+    require('../component').define('valueAxis', ValueAxis);
+    
     return ValueAxis;
 });
 
