@@ -4,7 +4,7 @@
     "version": "1.1.0",
     "maintainers": [
         { "name": "Kener", "email": "linzhifeng@baidu.com" },
-        { "name": "Pissang", "email": "shenyi01@baidu.com" },
+        { "name": "Pissang", "email": "shenyi01@baidu.com" }
     ],
     "dependencies": {
         "zrender": "~1.0.1"
