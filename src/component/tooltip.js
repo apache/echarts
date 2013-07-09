@@ -185,10 +185,34 @@ define(function (require) {
             if (y + domHeight > _zrHeight) {
                 y = _zrHeight - domHeight;
             }
+            if (y < 20) {
+                y = 0;
+            }
             _tDom.style.cssText = _gCssText
                                   + _defaultCssText
                                   + (specialCssText ? specialCssText : '')
                                   + 'left:' + x + 'px;top:' + y + 'px;';
+            if (_zrWidth - x < 100 || _zrHeight - y < 100) {
+                // 太靠边的做一次refixed
+                setTimeout(_refixed, 20);
+            }
+        }
+        
+        function _refixed() {
+            if (_tDom) {
+                var cssText = '';
+                var domHeight = _tDom.offsetHeight;
+                var domWidth = _tDom.offsetWidth;
+                if (_tDom.offsetLeft + domWidth > _zrWidth) {
+                    cssText += 'left:' + (_zrWidth - domWidth) + 'px;';
+                }
+                if (_tDom.offsetTop + domHeight > _zrHeight) {
+                    cssText += 'top:' + (_zrHeight - domHeight) + 'px;';
+                }
+                if (cssText !== '') {
+                    _tDom.style.cssText += cssText;
+                }
+            }
         }
 
         function _tryShow() {
@@ -240,6 +264,10 @@ define(function (require) {
             var series = option.series;
             var xAxisIndex;
             var yAxisIndex;
+            if (!xAxis || !yAxis) {
+                _hidingTicket = setTimeout(_hide, _hideDelay);
+                return;
+            }
             for (var i = 0, l = series.length; i < l; i++) {
                 // 找到第一个axis触发tooltip的系列
                 if (self.deepQuery(
@@ -433,9 +461,13 @@ define(function (require) {
                 if (typeof formatter == 'function') {
                     var params = [];
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
-                        data = seriesArray[i].data[dataIndex] || '-';
-                        data = typeof data.value != 'undefined'
-                               ? data.value : data;
+                        data = seriesArray[i].data[dataIndex];
+                        data = typeof data != 'undefined'
+                               ? (typeof data.value != 'undefined'
+                                   ? data.value
+                                   : data)
+                               : '-';
+                               
                         params.push([
                             seriesArray[i].name,
                             categoryAxis.getNameByIndex(dataIndex),
@@ -460,9 +492,12 @@ define(function (require) {
                             '{b' + i + '}',
                             categoryAxis.getNameByIndex(dataIndex)
                         );
-                        data = seriesArray[i].data[dataIndex] || '-';
-                        data = typeof data.value != 'undefined'
-                               ? data.value : data;
+                        data = seriesArray[i].data[dataIndex];
+                        data = typeof data != 'undefined'
+                               ? (typeof data.value != 'undefined'
+                                   ? data.value
+                                   : data)
+                               : '-';
                         formatter = formatter.replace(
                             '{c' + i + '}',
                             data
@@ -474,9 +509,12 @@ define(function (require) {
                     formatter = categoryAxis.getNameByIndex(dataIndex);
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
                         formatter += '<br/>' + seriesArray[i].name + ' : ';
-                        data = seriesArray[i].data[dataIndex] || '-';
-                        data = typeof data.value != 'undefined'
-                               ? data.value : data;
+                        data = seriesArray[i].data[dataIndex];
+                        data = data = typeof data != 'undefined'
+                               ? (typeof data.value != 'undefined'
+                                   ? data.value
+                                   : data)
+                               : '-';
                         formatter += data;
                     }
                     _tDom.innerHTML = formatter;
@@ -567,11 +605,21 @@ define(function (require) {
                 _tDom.innerHTML = formatter;
             }
             else {
-                _tDom.innerHTML = serie.name + '<br/>' +
-                                  name + ' : ' + value +
-                                  (typeof speical == 'undefined'
-                                  ? ''
-                                  : (' (' + speical + ')'));
+                if (serie.type != ecConfig.CHART_TYPE_SCATTER) {
+                    _tDom.innerHTML = serie.name + '<br/>' +
+                                      name + ' : ' + value +
+                                      (typeof speical == 'undefined'
+                                      ? ''
+                                      : (' (' + speical + ')'));
+                }
+                else {
+                    _tDom.innerHTML = serie.name + '<br/>' +
+                                      (name === '' ? '' : (name + ' : ')) 
+                                      + value +
+                                      (typeof speical == 'undefined'
+                                      ? ''
+                                      : (' (' + speical + ')'));
+                }
             }
 
             if (!self.hasAppend) {
@@ -601,7 +649,7 @@ define(function (require) {
             clearTimeout(_hidingTicket);
             clearTimeout(_showingTicket);
             var target = param.target;
-            if (!target) {
+            if (!target && grid) {
                 // 判断是否落到直角系里，axis触发的tooltip
                 if (_needAxisTrigger
                     && zrArea.isInside(
@@ -651,6 +699,13 @@ define(function (require) {
             }
             if (cssText !== '') {
                 _tDom.style.cssText += cssText;
+            }
+            
+            if (_zrWidth - _tDom.offsetLeft < 100 
+                || _zrHeight - _tDom.offsetTop < 100
+            ) {
+                // 太靠边的做一次refixed
+                setTimeout(_refixed, 20);
             }
         }
 
@@ -735,6 +790,8 @@ define(function (require) {
         self.setComponent = setComponent;
         init(option, dom);
     }
+
+    require('../component').define('tooltip', Tooltip);
 
     return Tooltip;
 });

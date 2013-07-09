@@ -40,10 +40,6 @@ define(function (require) {
         var _originalData;
 
         function _buildShape() {
-            _location = _getLocation();
-            _zoom =  _getZoom();
-            _backupData();
-
             _buildBackground();
             _buildDataBackground();
             _buildFiller();
@@ -175,6 +171,13 @@ define(function (require) {
                         break;
                     }
                 }
+                // 不指定接管坐标轴，则散点图被纳入接管范围
+                if (series[i].type == ecConfig.CHART_TYPE_SCATTER
+                    && typeof zoomOption.xAxisIndex == 'undefined'
+                    && typeof zoomOption.yAxisIndex == 'undefined'
+                ) {
+                    zoomSeriesIndex.push(i);
+                }
             }
 
             var start = typeof zoomOption.start != 'undefined'
@@ -199,6 +202,8 @@ define(function (require) {
             return {
                 start : start,
                 end : end,
+                start2 : 0,
+                end2 : 100,
                 size : size,
                 xAxisIndex : xAxisIndex,
                 yAxisIndex : yAxisIndex,
@@ -226,10 +231,70 @@ define(function (require) {
 
             var series = option.series;
             var seriesIndex = _zoom.seriesIndex;
+            var serie;
             for (var i = 0, l = seriesIndex.length; i < l; i++) {
-                _originalData.series[seriesIndex[i]]
-                    = series[seriesIndex[i]].data;
+                serie = series[seriesIndex[i]];
+                _originalData.series[seriesIndex[i]] = serie.data;
+                if (serie.type == ecConfig.CHART_TYPE_SCATTER) {
+                    _calculScatterMap(seriesIndex[i]);
+                }
             }
+        }
+        
+        function _calculScatterMap(seriesIndex) {
+            _zoom.scatterMap = _zoom.scatterMap || {};
+            _zoom.scatterMap[seriesIndex] = _zoom.scatterMap[seriesIndex] || {};
+            var componentLibrary = require('../component');
+            var zrUtil = require('zrender/tool/util');
+            // x轴极值
+            var Axis = componentLibrary.get('axis');
+            var axisOption = zrUtil.clone(option.xAxis);
+            if (axisOption instanceof Array) {
+                axisOption[0].type = 'value';
+                axisOption[1] && (axisOption[1].type = 'value');
+            }
+            else {
+                axisOption.type = 'value';
+            }
+            var vAxis = new Axis(
+                null,   // messageCenter
+                false,  // zr
+                {
+                    xAxis: axisOption,
+                    series : option.series
+                }, 
+                component,
+                'xAxis'
+            );
+            var axisIndex = option.series[seriesIndex].xAxisIndex || 0;
+            _zoom.scatterMap[seriesIndex].x = 
+                vAxis.getAxis(axisIndex).getExtremum();
+            vAxis.dispose();
+            
+            // y轴极值
+            axisOption = zrUtil.clone(option.yAxis);
+            if (axisOption instanceof Array) {
+                axisOption[0].type = 'value';
+                axisOption[1] && (axisOption[1].type = 'value');
+            }
+            else {
+                axisOption.type = 'value';
+            }
+            vAxis = new Axis(
+                null,   // messageCenter
+                false,  // zr
+                {
+                    yAxis: axisOption,
+                    series : option.series
+                }, 
+                component,
+                'yAxis'
+            );
+            axisIndex = option.series[seriesIndex].yAxisIndex || 0;
+            _zoom.scatterMap[seriesIndex].y = 
+                vAxis.getAxis(axisIndex).getExtremum();
+            vAxis.dispose();
+            // console.log(_zoom.scatterMap);
         }
 
         function _buildBackground() {
@@ -286,6 +351,11 @@ define(function (require) {
                         ? (typeof data[i].value != 'undefined'
                           ? data[i].value : data[i])
                         : 0;
+                if (option.series[_zoom.seriesIndex[0]].type 
+                    == ecConfig.CHART_TYPE_K
+                ) {
+                    value = value[1];   // 收盘价
+                }
                 if (isNaN(value)) {
                     value = 0;
                 }
@@ -301,6 +371,11 @@ define(function (require) {
                         ? (typeof data[i].value != 'undefined'
                           ? data[i].value : data[i])
                         : 0;
+                if (option.series[_zoom.seriesIndex[0]].type 
+                    == ecConfig.CHART_TYPE_K
+                ) {
+                    value = value[1];   // 收盘价
+                }
                 if (isNaN(value)) {
                     value = 0;
                 }
@@ -589,8 +664,44 @@ define(function (require) {
             zr.modShape(_fillerShae.id, _fillerShae);
             zr.refresh();
         }
+        
+        function _syncShape() {
+            if (!zoomOption.show) {
+                // 没有伸缩控件
+                return;
+            }
+            if (zoomOption.orient == 'horizontal') {
+                _startShape.style.x = _location.x 
+                                      + _zoom.start / 100 * _location.width;
+                _endShape.style.x = _location.x 
+                                    + _zoom.end / 100 * _location.width
+                                    - _handleSize;
+                    
+                _fillerShae.style.x = _startShape.style.x + _handleSize;
+                _fillerShae.style.width = _endShape.style.x 
+                                          - _startShape.style.x
+                                          - _handleSize;
+            }
+            else {
+                _startShape.style.y = _location.y 
+                                      + _zoom.start / 100 * _location.height;
+                _endShape.style.y = _location.y 
+                                    + _zoom.end / 100 * _location.height
+                                    - _handleSize;
+                    
+                _fillerShae.style.y = _startShape.style.y + _handleSize;
+                _fillerShae.style.height = _endShape.style.y 
+                                          - _startShape.style.y
+                                          - _handleSize;
+            }
+            
+            zr.modShape(_startShape.id, _startShape);
+            zr.modShape(_endShape.id, _endShape);
+            zr.modShape(_fillerShae.id, _fillerShae);
+            zr.refresh();
+        }
 
-        function  _syncData() {
+        function  _syncData(dispatchNow) {
             var target;
             var start;
             var end;
@@ -603,16 +714,64 @@ define(function (require) {
                     length = data.length;
                     start = Math.floor(_zoom.start / 100 * length);
                     end = Math.ceil(_zoom.end / 100 * length);
-                    option[key][idx].data = data.slice(start, end);
+                    if (option[key][idx].type != ecConfig.CHART_TYPE_SCATTER) {
+                        option[key][idx].data = data.slice(start, end);
+                    }
+                    else {
+                        // 散点图特殊处理
+                        option[key][idx].data = _synScatterData(idx, data);
+                    }
                 }
             }
 
-            if (zoomOption.realtime) {
+            if (zoomOption.realtime || dispatchNow) {
                 messageCenter.dispatch(ecConfig.EVENT.DATA_ZOOM);
             }
 
             zoomOption.start = _zoom.start;
             zoomOption.end = _zoom.end;
+        }
+        
+        function _synScatterData(seriesIndex, data) {
+            var newData = [];
+            var scale = _zoom.scatterMap[seriesIndex];
+            var total;
+            var xStart;
+            var xEnd;
+            var yStart;
+            var yEnd;
+            
+            if (zoomOption.orient == 'horizontal') {
+                total = scale.x.max - scale.x.min;
+                xStart = _zoom.start / 100 * total + scale.x.min;
+                xEnd = _zoom.end / 100 * total + scale.x.min;
+                
+                total = scale.y.max - scale.y.min;
+                yStart = _zoom.start2 / 100 * total + scale.y.min;
+                yEnd = _zoom.end2 / 100 * total + scale.y.min;
+            }
+            else {
+                total = scale.x.max - scale.x.min;
+                xStart = _zoom.start2 / 100 * total + scale.x.min;
+                xEnd = _zoom.end2 / 100 * total + scale.x.min;
+                
+                total = scale.y.max - scale.y.min;
+                yStart = _zoom.start / 100 * total + scale.y.min;
+                yEnd = _zoom.end / 100 * total + scale.y.min;
+            }
+            
+            // console.log(xStart,xEnd,yStart,yEnd);
+            for (var i = 0, l = data.length; i < l; i++) {
+                if (data[i][0] >= xStart 
+                    && data[i][0] <= xEnd
+                    && data[i][1] >= yStart
+                    && data[i][1] <= yEnd
+                ) {
+                    newData.push(data[i]);
+                }
+            }
+            
+            return newData;
         }
 
         function _ondragend() {
@@ -647,6 +806,105 @@ define(function (require) {
             status.needRefresh = true;
             return;
         }
+        
+        function absoluteZoom(param) {
+            zoomOption.start = _zoom.start = param.start;
+            zoomOption.end = _zoom.end = param.end;
+            zoomOption.start2 = _zoom.start2 = param.start2;
+            zoomOption.end2 = _zoom.end2 = param.end2;
+            //console.log(rect,gridArea,_zoom,total)
+            _syncShape();
+            _syncData(true);
+            return;
+        }
+        
+        function rectZoom(param) {
+            if (!param) {
+                // 重置拖拽
+                zoomOption.start = 
+                zoomOption.start2 = 
+                _zoom.start = 
+                _zoom.start2 = 0;
+                    
+                zoomOption.end =
+                zoomOption.end2 = 
+                _zoom.end = 
+                _zoom.end2 = 100;
+                
+                _syncShape();
+                _syncData(true);
+                return _zoom;
+            }
+            var gridArea = component.grid.getArea();
+            var rect = {
+                x : param.x,
+                y : param.y,
+                width : param.width,
+                height : param.height
+            };
+            // 修正方向框选
+            if (rect.width < 0) {
+                rect.x += rect.width;
+                rect.width = -rect.width;
+            }
+            if (rect.height < 0) {
+                rect.y += rect.height;
+                rect.height = -rect.height;
+            }
+            // console.log(rect,_zoom);
+            
+            // 剔除无效缩放
+            if (rect.x > gridArea.x + gridArea.width
+                || rect.y > gridArea.y + gridArea.height
+            ) {
+                return false; // 无效缩放
+            }
+            
+            // 修正框选超出
+            if (rect.x < gridArea.x) {
+                rect.x = gridArea.x;
+            }
+            if (rect.x + rect.width > gridArea.x + gridArea.width) {
+                rect.width = gridArea.x + gridArea.width - rect.x;
+            }
+            if (rect.y + rect.height > gridArea.y + gridArea.height) {
+                rect.height = gridArea.y + gridArea.height - rect.y;
+            }
+            
+            var total;
+            var sdx = (rect.x - gridArea.x) / gridArea.width;
+            var edx = 1- (rect.x + rect.width - gridArea.x) / gridArea.width;
+            var sdy = 1- (rect.y + rect.height - gridArea.y) / gridArea.height;
+            var edy = (rect.y - gridArea.y) / gridArea.height;
+            //console.log('this',sdy,edy,_zoom.start,_zoom.end)
+            if (zoomOption.orient == 'horizontal') {
+                total = _zoom.end - _zoom.start;
+                _zoom.start += total * sdx;
+                _zoom.end -= total * edx;
+                
+                total = _zoom.end2 - _zoom.start2;
+                _zoom.start2 += total * sdy;
+                _zoom.end2 -= total * edy;
+            }
+            else {
+                total = _zoom.end - _zoom.start;
+                _zoom.start += total * sdy;
+                _zoom.end -= total * edy;
+                
+                total = _zoom.end2 - _zoom.start2;
+                _zoom.start2 += total * sdx;
+                _zoom.end2 -= total * edx;
+            }
+            //console.log(_zoom.start,_zoom.end,_zoom.start2,_zoom.end2)
+            zoomOption.start = _zoom.start;
+            zoomOption.end = _zoom.end;
+            zoomOption.start2 = _zoom.start2;
+            zoomOption.end2 = _zoom.end2;
+            //console.log(rect,gridArea,_zoom,total)
+            _syncShape();
+            _syncData(true);
+            return _zoom;
+        }
 
         function init(newOption) {
             option = newOption;
@@ -656,18 +914,34 @@ define(function (require) {
             zoomOption = option.dataZoom;
 
             self.clear();
-
+            
+            // 自己show 或者 toolbox启用且dataZoom有效
+            if (option.dataZoom.show
+                || (
+                    self.deepQuery([option], 'toolbox.show')
+                    && self.deepQuery([option], 'toolbox.feature.dataZoom')
+                )
+            ) {
+                _location = _getLocation();
+                _zoom =  _getZoom();
+                _backupData();
+            }
+            
             if (option.dataZoom.show) {
                 _buildShape();
             }
         }
-
+        
         self.init = init;
+        self.absoluteZoom = absoluteZoom;
+        self.rectZoom = rectZoom;
         self.ondragend = ondragend;
         self.ondataZoom = ondataZoom;
 
         init(option);
     }
 
+    require('../component').define('dataZoom', DataZoom);
+    
     return DataZoom;
 });

@@ -9,7 +9,6 @@ body {
     background-color:#181818;
 }
 
-
 #forkme_banner {
     display: block;
     position: absolute;
@@ -74,6 +73,16 @@ body {
   margin-top: 10px;
 }
 
+.carousel-caption a.link {
+  color: #666;
+  text-decoration: underline;
+}
+
+.carousel-caption a.link:hover,
+.carousel-caption a.link:focus {
+  color: #0088cc;
+  text-decoration: underline;
+}
 /* Featurettes
 ------------------------- */
 .featurette-divider {

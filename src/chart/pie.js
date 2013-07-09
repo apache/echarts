@@ -34,14 +34,21 @@ define(function(require) {
         var series;                 // 共享数据源，不要修改跟自己无关的项
 
         var _zlevelBase = self.getZlevelBase();
+        
+        var _selectedMode;
+        var _selected = {};
 
         function _buildShape() {
             self.selectedMap = {};
+            _selected = {};
 
             var pieCase;        // 饼图箱子
+            _selectedMode = false;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type == ecConfig.CHART_TYPE_PIE) {
                     series[i] = self.reformOption(series[i]);
+                    _selectedMode = _selectedMode || series[i].selectedMode;
+                    _selected[i] = [];
                     if (self.deepQuery([series[i], option], 'calculable')) {
                         pieCase = {
                             shape : series[i].radius[0] <= 10
@@ -128,7 +135,7 @@ define(function(require) {
                 percent = (percent * 100).toFixed(2);
 
                 _buildItem(
-                    seriesIndex, i, percent,
+                    seriesIndex, i, percent, data[i].selected,
                     startAngle, endAngle, defaultColor
                 );
                 startAngle = endAngle;
@@ -139,12 +146,12 @@ define(function(require) {
          * 构建单个扇形及指标
          */
         function _buildItem(
-            seriesIndex, dataIndex, percent,
+            seriesIndex, dataIndex, percent, isSelected,
             startAngle, endAngle, defaultColor
         ) {
             // 扇形
             var sector = _getSector(
-                    seriesIndex, dataIndex, percent,
+                    seriesIndex, dataIndex, percent, isSelected,
                     startAngle, endAngle, defaultColor
                 );
             // 图形需要附加的私有数据
@@ -159,7 +166,7 @@ define(function(require) {
 
             // 文本标签，需要显示则会有返回
             var label = _getLabel(
-                    seriesIndex, dataIndex,
+                    seriesIndex, dataIndex, percent,
                     startAngle, endAngle, defaultColor,
                     false
                 );
@@ -184,7 +191,7 @@ define(function(require) {
          * 构建扇形
          */
         function _getSector(
-            seriesIndex, dataIndex, percent,
+            seriesIndex, dataIndex, percent, isSelected,
             startAngle, endAngle, defaultColor
         ) {
             var serie = series[seriesIndex];
@@ -204,6 +211,7 @@ define(function(require) {
             var sector = {
                 shape : 'sector',             // 扇形
                 zlevel : _zlevelBase,
+                clickable : true,
                 style : {
                     x : serie.center[0],          // 圆心横坐标
                     y : serie.center[1],          // 圆心纵坐标
@@ -218,10 +226,31 @@ define(function(require) {
                 },
                 highlightStyle : {
                     color : emphasisColor || normalColor || defaultColor
-                },
-                clickable : true,
-                onclick : self.shapeHandler.onclick
+                }
             };
+            
+            if (isSelected) {
+                var midAngle = 
+                    ((sector.style.startAngle + sector.style.endAngle) / 2)
+                    .toFixed(2) - 0;
+                sector.style._hasSelected = true;
+                sector.style._x = sector.style.x;
+                sector.style._y = sector.style.y;
+                var offset = self.deepQuery([serie], 'selectedOffset');
+                sector.style.x += zrMath.cos(midAngle, true) * offset;
+                sector.style.y -= zrMath.sin(midAngle, true) * offset;
+                
+                _selected[seriesIndex][dataIndex] = true;
+            }
+            else {
+                _selected[seriesIndex][dataIndex] = false;
+            }
+            
+            
+            if (_selectedMode) {
+                sector.onclick = self.shapeHandler.onclick;
+            }
+            
             if (self.deepQuery([data, serie, option], 'calculable')) {
                 self.setCalculable(sector);
                 sector.draggable = true;
@@ -233,7 +262,9 @@ define(function(require) {
                     'itemStyle.normal.label.position'
                 ) == 'inner'
             ) {
-                sector.style.text = data.name;
+                sector.style.text = _getLabelText(
+                    seriesIndex, dataIndex, percent, 'normal'
+                );
                 sector.style.textPosition = 'specific';
                 sector.style.textColor = self.deepQuery(
                     [data, serie],
@@ -269,7 +300,9 @@ define(function(require) {
                     'itemStyle.emphasis.label.position'
                 ) == 'inner'
             ) {
-                sector.highlightStyle.text = data.name;
+                sector.highlightStyle.text = _getLabelText(
+                    seriesIndex, dataIndex, percent, 'emphasis'
+                );
                 sector.highlightStyle.textPosition = 'specific';
                 sector.highlightStyle.textColor = self.deepQuery(
                     [data, serie],
@@ -312,7 +345,7 @@ define(function(require) {
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
         function _getLabel(
-            seriesIndex, dataIndex,
+            seriesIndex, dataIndex, percent,
             startAngle, endAngle, defaultColor,
             isEmphasis
         ) {
@@ -359,7 +392,9 @@ define(function(require) {
                             x : centerX + radius * zrMath.cos(midAngle, true),
                             y : centerY - radius * zrMath.sin(midAngle, true),
                             color : textStyle.color || defaultColor,
-                            text : data.name,
+                            text : _getLabelText(
+                                seriesIndex, dataIndex, percent, status
+                            ),
                             textAlign : textStyle.align
                                         || textAlign,
                             textBaseline : textStyle.baseline || 'middle',
@@ -379,7 +414,9 @@ define(function(require) {
                             x : centerX,
                             y : centerY,
                             color : textStyle.color || defaultColor,
-                            text : data.name,
+                            text : _getLabelText(
+                                seriesIndex, dataIndex, percent, status
+                            ),
                             textAlign : textStyle.align
                                         || 'center',
                             textBaseline : textStyle.baseline || 'middle',
@@ -405,6 +442,44 @@ define(function(require) {
             }
         }
 
+        /**
+         * 根据lable.format计算label text
+         */
+        function _getLabelText(seriesIndex, dataIndex, percent, status) {
+            var serie = series[seriesIndex];
+            var data = serie.data[dataIndex];
+            var formatter = self.deepQuery(
+                [data, serie],
+                'itemStyle.' + status + '.label.formatter'
+            );
+            
+            if (formatter) {
+                if (typeof formatter == 'function') {
+                    return formatter(
+                        serie.name,
+                        data.name,
+                        data.value,
+                        percent
+                    );
+                }
+                else if (typeof formatter == 'string') {
+                    formatter = formatter.replace('{a}','{a0}')
+                                         .replace('{b}','{b0}')
+                                         .replace('{c}','{c0}')
+                                         .replace('{d}','{d0}');
+                    formatter = formatter.replace('{a0}', serie.name)
+                                         .replace('{b0}', data.name)
+                                         .replace('{c0}', data.value)
+                                         .replace('{d0}', percent);
+    
+                    return formatter;
+                }
+            }
+            else {
+                return data.name;
+            }
+        }
+        
         /**
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
@@ -652,27 +727,65 @@ define(function(require) {
                 // 没有在当前实例上发生点击直接返回
                 return;
             }
-            var deviation = 10;             // 偏移
+            var offset;             // 偏移
             var target = param.target;
             var style = target.style;
+            var seriesIndex = ecData.get(target, 'seriesIndex');
+            var dataIndex = ecData.get(target, 'dataIndex');
 
-            if (!style._hasClick) {
-                var midAngle = ((style.startAngle + style.endAngle) / 2)
-                               .toFixed(2) - 0;
-                target.style._hasClick = true;
-                target.style._x = target.style.x;
-                target.style._y = target.style.y;
-                target.style.x += zrMath.cos(midAngle, true) * deviation;
-                target.style.y -= zrMath.sin(midAngle, true) * deviation;
+            for (var i = 0, len = self.shapeList.length; i < len; i++) {
+                if (self.shapeList[i].id == target.id) {
+                    seriesIndex = ecData.get(target, 'seriesIndex');
+                    dataIndex = ecData.get(target, 'dataIndex');
+                    // 当前点击的
+                    if (!style._hasSelected) {
+                        var midAngle = 
+                            ((style.startAngle + style.endAngle) / 2)
+                            .toFixed(2) - 0;
+                        target.style._hasSelected = true;
+                        _selected[seriesIndex][dataIndex] = true;
+                        target.style._x = target.style.x;
+                        target.style._y = target.style.y;
+                        offset = self.deepQuery(
+                            [series[seriesIndex]],
+                            'selectedOffset'
+                        );
+                        target.style.x += zrMath.cos(midAngle, true) 
+                                          * offset;
+                        target.style.y -= zrMath.sin(midAngle, true) 
+                                          * offset;
+                    }
+                    else {
+                        // 复位
+                        target.style.x = target.style._x;
+                        target.style.y = target.style._y;
+                        target.style._hasSelected = false;
+                        _selected[seriesIndex][dataIndex] = false;
+                    }
+                    
+                    zr.modShape(target.id, target);
+                }
+                else if (self.shapeList[i].style._hasSelected
+                         && _selectedMode == 'single'
+                ) {
+                    seriesIndex = ecData.get(self.shapeList[i], 'seriesIndex');
+                    dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
+                    // 单选模式下需要取消其他已经选中的
+                    self.shapeList[i].style.x = self.shapeList[i].style._x;
+                    self.shapeList[i].style.y = self.shapeList[i].style._y;
+                    self.shapeList[i].style._hasSelected = false;
+                    _selected[seriesIndex][dataIndex] = false;
+                    zr.modShape(
+                        self.shapeList[i].id, self.shapeList[i]
+                    );
+                }
             }
-            else {
-                // 复位
-                target.style.x = target.style._x;
-                target.style.y = target.style._y;
-                target.style._hasClick = false;
-            }
-
-            zr.modShape(target.id, target);
+            
+            messageCenter.dispatch(
+                ecConfig.EVENT.PIE_SELECTED,
+                param.event,
+                {selected : _selected}
+            );
             zr.refresh();
         }
 
@@ -771,6 +884,7 @@ define(function(require) {
             var shape = param.target;
             var seriesIndex = ecData.get(shape, 'seriesIndex');
             var dataIndex = ecData.get(shape, 'dataIndex');
+            var percent = ecData.get(shape, 'special');
 
             var startAngle = shape.style.startAngle;
             var endAngle = shape.style.endAngle;
@@ -778,7 +892,7 @@ define(function(require) {
 
             // 文本标签，需要显示则会有返回
             var label = _getLabel(
-                    seriesIndex, dataIndex,
+                    seriesIndex, dataIndex, percent,
                     startAngle, endAngle, defaultColor,
                     true
                 );
@@ -809,5 +923,8 @@ define(function(require) {
         init(option, component);
     }
 
+    // 图表注册
+    require('../chart').define('pie', Pie);
+    
     return Pie;
 });

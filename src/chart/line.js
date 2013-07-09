@@ -35,12 +35,16 @@ define(function(require) {
         var _zlevelBase = self.getZlevelBase();
 
         var _sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
-        var _brokenPoint = [
+        var _symbol = [
               'circle', 'rectangle', 'triangle', 'diamond',
               'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
             ];
         var _sIndex2ShapeMap = {};  // series拐点图形类型，seriesIndex索引到shape type
 
+        require('zrender/shape').get('icon').define(
+            'legendLineIcon', legendLineIcon
+        );
+        
         function _buildShape() {
             self.selectedMap = {};
 
@@ -127,26 +131,37 @@ define(function(require) {
             var legend = component.legend;
             var locationMap = [];                   // 需要返回的东西：数组位置映射到系列索引
             var maxDataLength = 0;                  // 需要返回的东西：最大数据长度
+            var iconShape;
             // 计算需要显示的个数和分配位置并记在下面这个结构里
             for (var i = 0, l = seriesArray.length; i < l; i++) {
                 serie = series[seriesArray[i]];
                 serieName = serie.name;
+                
+                _sIndex2ShapeMap[seriesArray[i]]
+                    = _sIndex2ShapeMap[seriesArray[i]]
+                      || self.deepQuery([serie],'symbol')
+                      || _symbol[i % _symbol.length];
+                      
                 if (legend){
                     self.selectedMap[serieName] = legend.isSelected(serieName);
+                    
                     _sIndex2ColorMap[seriesArray[i]]
                         = legend.getColor(serieName);
+                        
+                    iconShape = legend.getItemShape(serieName);
+                    if (iconShape) {
+                        // 回调legend，换一个更形象的icon
+                        iconShape.shape = 'icon';
+                        iconShape.style.iconType = 'legendLineIcon';
+                        iconShape.style.symbol = 
+                            _sIndex2ShapeMap[seriesArray[i]];
+                        legend.setItemShape(serieName, iconShape);
+                    }
                 } else {
                     self.selectedMap[serieName] = true;
                     _sIndex2ColorMap[seriesArray[i]]
                         = zr.getColor(seriesArray[i]);
                 }
-                _sIndex2ShapeMap[seriesArray[i]]
-                    = _sIndex2ShapeMap[seriesArray[i]]
-                      || self.deepQuery(
-                             [serie],
-                             'brokenPoint'
-                         )
-                      || _brokenPoint[i % _brokenPoint.length];
 
                 if (self.selectedMap[serieName]) {
                     stackKey = serie.stack || (magicStackKey + seriesArray[i]);
@@ -264,7 +279,7 @@ define(function(require) {
                 }
                 // 补充空数据的拖拽提示
                 lastYP = component.grid.getY();
-                var brokenPointSize;
+                var symbolSize;
                 for (var j = 0, k = locationMap.length; j < k; j++) {
                     for (var m = 0, n = locationMap[j].length; m < n; m++) {
                         seriesIndex = locationMap[j][m];
@@ -283,11 +298,11 @@ define(function(require) {
                                 [data, serie, option], 'calculable'
                             )
                         ) {
-                            brokenPointSize = self.deepQuery(
+                            symbolSize = self.deepQuery(
                                 [data, serie],
-                                'brokenPointSize'
+                                'symbolSize'
                             );
-                            lastYP += brokenPointSize * 2 + 2;
+                            lastYP += symbolSize * 2 + 2;
                             y = lastYP;
                             self.shapeList.push(_getCalculableItem(
                                 seriesIndex, i, categoryAxis.getNameByIndex(i),
@@ -384,7 +399,7 @@ define(function(require) {
                 }
                 // 补充空数据的拖拽提示
                 lastXP = component.grid.getXend();
-                var brokenPointSize;
+                var symbolSize;
                 for (var j = 0, k = locationMap.length; j < k; j++) {
                     for (var m = 0, n = locationMap[j].length; m < n; m++) {
                         seriesIndex = locationMap[j][m];
@@ -403,11 +418,11 @@ define(function(require) {
                                 [data, serie, option], 'calculable'
                             )
                         ) {
-                            brokenPointSize = self.deepQuery(
+                            symbolSize = self.deepQuery(
                                 [data, serie],
-                                'brokenPointSize'
+                                'symbolSize'
                             );
-                            lastXP -= brokenPointSize * 2 + 2;
+                            lastXP -= symbolSize * 2 + 2;
                             x = lastXP;
                             self.shapeList.push(_getCalculableItem(
                                 seriesIndex, i, categoryAxis.getNameByIndex(i),
@@ -494,7 +509,7 @@ define(function(require) {
                             data = serie.data[singlePL[j][2]];
                             if ((categoryAxis.isMainAxis(singlePL[j][2]) // 主轴
                                  && self.deepQuery(                      // 非空
-                                        [data, serie], 'brokenPoint'
+                                        [data, serie], 'symbol'
                                     ) != 'none'
                                 )
                                 || self.deepQuery(                      // 可计算
@@ -502,7 +517,7 @@ define(function(require) {
                                         'calculable'
                                    )
                             ) {
-                                self.shapeList.push(_getBrokenPoint(
+                                self.shapeList.push(_getSymbol(
                                     seriesIndex,
                                     singlePL[j][2], // dataIndex
                                     singlePL[j][3], // name
@@ -548,7 +563,7 @@ define(function(require) {
                                 },
                                 hoverable : false,
                                 _main : true,
-                                _serie : serie,
+                                _seriesIndex : seriesIndex,
                                 _orient : orient
                             });
                         }
@@ -567,7 +582,7 @@ define(function(require) {
                                 },
                                 hoverable : false,
                                 _main : true,
-                                _serie : serie,
+                                _seriesIndex : seriesIndex,
                                 _orient : orient
                             });
                         }
@@ -583,7 +598,7 @@ define(function(require) {
             var color = series[seriesIndex].calculableHolderColor
                         || ecConfig.calculableHolderColor;
 
-            var itemShape = _getBrokenPoint(
+            var itemShape = _getSymbol(
                 seriesIndex, dataIndex, name,
                 x, y,
                 color,
@@ -600,99 +615,47 @@ define(function(require) {
         /**
          * 生成折线图上的拐点图形
          */
-        function _getBrokenPoint(
+        function _getSymbol(
             seriesIndex, dataIndex, name, x, y, normalColor, emphasisColor
         ) {
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
-            var brokenPoint = self.deepQuery([data], 'brokenPoint')
-                              || _sIndex2ShapeMap[seriesIndex]
-                              || 'cricle';
-            var brokenPointSize = self.deepQuery(
-                [data, serie],
-                'brokenPointSize'
-            );
+            var symbol = self.deepQuery([data], 'symbol')
+                         || _sIndex2ShapeMap[seriesIndex]
+                         || 'cricle';
+            var symbolSize = self.deepQuery([data, serie],'symbolSize');
 
-            var itemShape;
-            switch (brokenPoint) {
-                case 'circle' :
-                case 'emptyCircle' :
-                    itemShape = {
-                        shape : 'circle',
-                        style : {
-                            x : x,
-                            y : y,
-                            r : brokenPointSize,
-                            brushType : brokenPoint == 'circle'
-                                        ? 'fill' : 'stroke'
-                        }
-                    };
-                    break;
-                case 'rectangle' :
-                case 'emptyRectangle' :
-                    itemShape = {
-                        shape : 'rectangle',
-                        style : {
-                            x : x - brokenPointSize,
-                            y : y - brokenPointSize,
-                            width : brokenPointSize * 2,
-                            height : brokenPointSize * 2,
-                            brushType : brokenPoint == 'rectangle'
-                                        ? 'fill' : 'stroke'
-                        }
-                    };
-                    break;
-                case 'triangle' :
-                case 'emptyTriangle' :
-                    itemShape = {
-                        shape : 'polygon',
-                        style : {
-                            pointList : [
-                                [x, y - brokenPointSize],
-                                [x + brokenPointSize, y + brokenPointSize],
-                                [x - brokenPointSize, y + brokenPointSize]
-                            ],
-                            brushType : brokenPoint == 'triangle'
-                                        ? 'fill' : 'stroke'
-                        }
-                    };
-                    break;
-                case 'diamond' :
-                case 'emptyDiamond' :
-                    itemShape = {
-                        shape : 'polygon',
-                        style : {
-                            pointList : [
-                                [x, y - brokenPointSize],
-                                [x + brokenPointSize, y],
-                                [x, y + brokenPointSize],
-                                [x - brokenPointSize, y]
-                            ],
-                            brushType : brokenPoint == 'diamond'
-                                        ? 'fill' : 'stroke'
-                        }
-                    };
-                    break;
-                default:
-                    itemShape = {
-                        shape : 'circle',
-                        style : {
-                            x : x,
-                            y : y,
-                            r : brokenPointSize,
-                            brushType : 'fill'
-                        }
-                    };
-                    break;
-            }
-            itemShape.clickable = true;
-            itemShape.zlevel = _zlevelBase + 1;
-            itemShape.style.color = normalColor;
-            itemShape.style.strokeColor = normalColor;
-            itemShape.highlightStyle = {
-                color : emphasisColor,
-                strokeColor : emphasisColor
+            var itemShape = {
+                shape : 'icon',
+                zlevel : _zlevelBase + 1,
+                style : {
+                    iconType : symbol.replace('empty', '').toLowerCase(),
+                    x : x - symbolSize,
+                    y : y - symbolSize,
+                    width : symbolSize * 2,
+                    height : symbolSize * 2,
+                    brushType : 'both',
+                    color : symbol.match('empty') ? '#fff' : normalColor,
+                    strokeColor : normalColor,
+                    lineWidth: 2
+                },
+                highlightStyle : {
+                    color : emphasisColor,
+                    strokeColor : emphasisColor
+                },
+                clickable : true
             };
+            
+            if (symbol.match('star')) {
+                itemShape.style.iconType = 'star';
+                itemShape.style.n = 
+                    (symbol.replace('empty', '').replace('star','') - 0) || 5;
+            }
+            
+            if (symbol == 'none') {
+                itemShape.invisible = true;
+                itemShape.hoverable = false;
+            }
 
             if (self.deepQuery([data, serie, option], 'calculable')) {
                 self.setCalculable(itemShape);
@@ -702,7 +665,7 @@ define(function(require) {
             ecData.pack(
                 itemShape,
                 series[seriesIndex], seriesIndex,
-                series[seriesIndex].data[dataIndex] || '-', dataIndex,
+                series[seriesIndex].data[dataIndex], dataIndex,
                 name
             );
 
@@ -749,7 +712,7 @@ define(function(require) {
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 if (self.shapeList[i]._main) {
-                    serie = self.shapeList[i]._serie;
+                    serie = series[self.shapeList[i]._seriesIndex];
                     dataIndex += 1;
                     x = self.shapeList[i].style.pointList[0][0];
                     y = self.shapeList[i].style.pointList[0][1];
@@ -800,5 +763,46 @@ define(function(require) {
         init(option, component);
     }
 
+    function legendLineIcon(ctx, style) {
+        var x = style.x;
+        var y = style.y;
+        var width = style.width;
+        var height = style.height;
+        
+        var dy = height / 2;
+        ctx.moveTo(x, y + dy);
+        ctx.lineTo(x + width, y + dy);
+        
+        if (style.symbol.match('empty')) {
+            ctx.fillStyle = '#fff';
+        }
+        style.brushType = 'both';
+        
+        var symbol = style.symbol.replace('empty', '').toLowerCase();
+        if (symbol.match('star')) {
+            dy = (symbol.replace('star','') - 0) || 5;
+            y -= 1;
+            symbol = 'star';
+        } 
+        else if (symbol == 'rectangle') {
+            x += (width - height) / 2;
+            width = height;
+        }
+        symbol = require('zrender/shape').get('icon').get(symbol);
+        
+        if (symbol) {
+            symbol(ctx, {
+                x : x + 3,
+                y : y + 3,
+                width : width - 6,
+                height : height - 6,
+                n : dy
+            });
+        }
+    }
+        
+    // 图表注册
+    require('../chart').define('line', Line);
+    
     return Line;
 });

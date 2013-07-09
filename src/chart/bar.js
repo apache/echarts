@@ -603,7 +603,7 @@ define(function(require) {
             ecData.pack(
                 barShape,
                 series[seriesIndex], seriesIndex,
-                series[seriesIndex].data[dataIndex] || '-', dataIndex,
+                series[seriesIndex].data[dataIndex], dataIndex,
                 name
             );
 
@@ -760,5 +760,8 @@ define(function(require) {
         init(option, component);
     }
 
+    // 图表注册
+    require('../chart').define('bar', Bar);
+    
     return Bar;
 });
