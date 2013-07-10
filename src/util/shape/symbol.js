@@ -164,10 +164,11 @@ define(
             buildPath : function(ctx, style) {
                 var pointList = style.pointList;
                 var rect = this.getRect(style);
+                var ratio = window.devicePixelRatio || 1;
                 // console.log(rect)
                 // var ti = new Date();
                 var pixels = ctx.getImageData(
-                    rect.x, rect.y, rect.width, rect.height
+                    rect.x*ratio, rect.y*ratio, rect.width*ratio, rect.height*ratio
                 );
                
                 var data = pixels.data;
@@ -178,16 +179,17 @@ define(
                 var g = color[1];
                 var b = color[2];
                 var width = rect.width;
+
                 for (var i = 1, l = pointList.length; i < l; i++) {
-                    idx = (pointList[i][0] - rect.x 
-                           + (pointList[i][1]- rect.y) * width
+                    idx = ( (pointList[i][0] - rect.x) * ratio
+                           + (pointList[i][1]- rect.y) * width * ratio * ratio
                           ) * 4;
                     data[idx] = r;
                     data[idx + 1] = g;
                     data[idx + 2] = b;
-                    data[idx + 3] = 255;
+                    data[idx + 3] = 255; 
                 }
-                ctx.putImageData(pixels, rect.x, rect.y);
+                ctx.putImageData(pixels, rect.x * ratio, rect.y * ratio);
                 // console.log(new Date() - ti);
                 return;
             },
