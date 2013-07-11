@@ -516,6 +516,9 @@ define(function (require) {
                     }
                 }
             }
+            else {
+                _hasData = true;
+            }
             //console.log(_min,_max,'vvvvv111111')
             _min = isNaN(option.min)
                    ? (_min - Math.abs(_min * option.boundaryGap[0]))
