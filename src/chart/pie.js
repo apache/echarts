@@ -222,7 +222,7 @@ define(function(require) {
                     brushType : 'both',
                     color : normalColor || defaultColor,
                     strokeColor : '#fff',
-                    lineWidth: 2
+                    lineWidth: 1
                 },
                 highlightStyle : {
                     color : emphasisColor || normalColor || defaultColor
