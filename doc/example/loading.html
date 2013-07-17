@@ -153,7 +153,7 @@ loadingTicket = setTimeout(function(){
         function focusGraphic() {
             domCode.className = 'span4 ani';
             domGraphic.className = 'span8 ani';
-            restore()
+            refresh()
         }
 
         var editor = CodeMirror.fromTextArea(
@@ -166,7 +166,7 @@ loadingTicket = setTimeout(function(){
         editor.on('change', function(){needRefresh = true;});
 
         var effectIndex = -1;
-        function restore(isBtnRefresh){
+        function refresh(isBtnRefresh){
             if (isBtnRefresh) {
                 needRefresh = true;
                 focusGraphic();
@@ -200,7 +200,11 @@ loadingTicket = setTimeout(function(){
         });
 
         require(
-            ['echarts/echarts'],
+            [
+                'echarts/echarts',
+                'echarts/chart/line',
+                'echarts/chart/bar'
+            ],
             function(echarts) {
                 if (myChart && myChart.dispose) {
                     myChart.dispose();
@@ -236,7 +240,7 @@ loadingTicket = setTimeout(function(){
                     ]},
                     true
                 );
-                restore();
+                refresh();
             }
         )
     </script>
