@@ -48,7 +48,8 @@ define(function (require) {
                         + '-moz-transition:left 1s,top 1s;'
                         + '-webkit-transition:left 1s,top 1s;'
                         + '-o-transition:left 1s,top 1s;'
-                        + 'border-style:solid;';
+                        + 'border-style:solid;'
+                        + 'white-space:nowrap;';
         // 默认样式
         var _defaultCssText;                    // css样式缓存
 

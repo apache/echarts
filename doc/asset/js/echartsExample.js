@@ -53,9 +53,6 @@ function refresh(isBtnRefresh){
 }
 
 require.config({
-    paths: {
-        'js': '../asset/js/esl/js'
-    },
     packages: [
         {
             name: 'echarts',

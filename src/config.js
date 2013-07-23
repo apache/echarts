@@ -293,7 +293,11 @@ define(function() {
                     // color: 各异,
                     lineStyle: {
                         width: 1,
-                        style: 'solid'
+                        style: 'solid',
+                        shadowColor : 'rgba(0,0,0,0)', //默认透明
+                        shadowBlur: 5,
+                        shadowOffsetX: 3,
+                        shadowOffsetY: 3
                     }
                 },
                 emphasis: {

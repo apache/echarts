@@ -120,6 +120,9 @@ define(function (require) {
                 onmousewheel : self.shapeHandler.onmousewheel,
                 _type : 'island'
             };
+            if (islandShape.style.color == '#fff') {
+                islandShape.style.color = shape.style.strokeColor;
+            }
             self.setCalculable(islandShape);
             ecData.pack(
                 islandShape,
