@@ -531,7 +531,8 @@ define(function(require) {
                                         [data], 'itemStyle.emphasis.color'
                                     ) || emphasisColor
                                       || normalColor
-                                      || defaultColor
+                                      || defaultColor,
+                                    lineWidth
                                 ));
                             }
 
@@ -578,7 +579,23 @@ define(function(require) {
                                                   || normalColor
                                                   || defaultColor,
                                     lineWidth : lineWidth,
-                                    lineType : lineType
+                                    lineType : lineType,
+                                    shadowColor : self.deepQuery(
+                                      [serie],
+                                      'itemStyle.normal.lineStyle.shadowColor'
+                                    ),
+                                    shadowBlur: self.deepQuery(
+                                      [serie],
+                                      'itemStyle.normal.lineStyle.shadowBlur'
+                                    ),
+                                    shadowOffsetX: self.deepQuery(
+                                      [serie],
+                                      'itemStyle.normal.lineStyle.shadowOffsetX'
+                                    ),
+                                    shadowOffsetY: self.deepQuery(
+                                      [serie],
+                                      'itemStyle.normal.lineStyle.shadowOffsetY'
+                                    )
                                 },
                                 hoverable : false,
                                 _main : true,
@@ -602,7 +619,8 @@ define(function(require) {
                 seriesIndex, dataIndex, name,
                 x, y,
                 color,
-                _sIndex2ColorMap[seriesIndex]
+                _sIndex2ColorMap[seriesIndex],
+                2
             );
 
             itemShape.hoverable = false;
@@ -616,7 +634,8 @@ define(function(require) {
          * 生成折线图上的拐点图形
          */
         function _getSymbol(
-            seriesIndex, dataIndex, name, x, y, normalColor, emphasisColor
+            seriesIndex, dataIndex, name, x, y,
+            normalColor, emphasisColor, lineWidth
         ) {
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
@@ -637,7 +656,7 @@ define(function(require) {
                     brushType : 'both',
                     color : symbol.match('empty') ? '#fff' : normalColor,
                     strokeColor : normalColor,
-                    lineWidth: 2
+                    lineWidth: lineWidth * 2
                 },
                 highlightStyle : {
                     color : emphasisColor,
