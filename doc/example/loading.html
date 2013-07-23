@@ -182,9 +182,6 @@ loadingTicket = setTimeout(function(){
         }
 
         require.config({
-            paths: {
-                'js': '../asset/js/esl/js'
-            },
             packages: [
                 {
                     name: 'echarts',
@@ -193,7 +190,8 @@ loadingTicket = setTimeout(function(){
                 },
                 {
                     name: 'zrender',
-                    location: '../../../zrender/src',
+                    location: 'http://ecomfe.github.io/zrender/src',
+                    //location: '../../../zrender/src',
                     main: 'zrender'
                 }
             ]
