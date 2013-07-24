@@ -64,17 +64,17 @@ define(function (require) {
                 case 'left' :
                     axShape.style = {
                         xStart : grid.getX(),
-                        yStart : grid.getY(),
+                        yStart : grid.getYend(),
                         xEnd : grid.getX(),
-                        yEnd : grid.getYend()
+                        yEnd : grid.getY()
                     };
                     break;
                 case 'right' :
                     axShape.style = {
                         xStart : grid.getXend(),
-                        yStart : grid.getY(),
+                        yStart : grid.getYend(),
                         xEnd : grid.getXend(),
-                        yEnd : grid.getYend()
+                        yEnd : grid.getY()
                     };
                     break;
                 case 'bottom' :
@@ -94,7 +94,10 @@ define(function (require) {
                     };
                     break;
             }
-
+            if (option.name !== '') {
+                axShape.style.text = option.name;
+                axShape.style.textPosition = option.nameLocation;
+            }
             axShape.style.strokeColor = option.axisLine.lineStyle.color;
             axShape.style.lineWidth = option.axisLine.lineStyle.width;
             axShape.style.lineType = option.axisLine.lineStyle.type;
@@ -190,7 +193,11 @@ define(function (require) {
                             color : textStyle.color,
                             text : _valueLabel[i],
                             textFont : self.getFont(textStyle),
-                            textAlign : 'center',
+                            textAlign : i === 0
+                                        ? 'left'
+                                        : i == (dataLength - 1)
+                                          ? 'right'
+                                          : 'center',
                             textBaseline : baseLine
                         }
                     };
@@ -234,9 +241,14 @@ define(function (require) {
                             text : _valueLabel[i],
                             textFont : self.getFont(textStyle),
                             textAlign : align,
-                            textBaseline : 'middle'
+                            textBaseline : i === 0 
+                                           ? 'bottom'
+                                           : (i == dataLength - 1)
+                                             ? 'top'
+                                             : 'middle'
                         }
                     };
+                    
                     if (rotate) {
                         axShape.rotation = [
                             rotate * Math.PI / 180,
