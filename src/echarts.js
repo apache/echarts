@@ -103,6 +103,7 @@ define(function(require) {
             
             // 内置组件注册
             var componentLibrary = require('./component');
+            require('./component/title');
             require('./component/axis');
             require('./component/categoryAxis');
             require('./component/valueAxis');
@@ -373,6 +374,16 @@ define(function(require) {
             var chartLibrary = require('./chart');
             var componentLibrary = require('./component');
 
+            // 标题
+            var title;
+            if (magicOption.title) {
+                var Title = new componentLibrary.get('title');
+                title = new Title(
+                    _messageCenter, _zr, magicOption
+                );
+                _chartList.push(title);
+            }
+            
             // 提示
             var tooltip;
             if (magicOption.tooltip) {
