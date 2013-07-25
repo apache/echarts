@@ -178,6 +178,8 @@ define(function() {
         // 类目轴
         categoryAxis: {
             position: 'bottom',    // 位置
+            name: '',              // 坐标轴名字，默认为空
+            nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
             boundaryGap: true,     // 类目起始和结束两端空白策略
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
@@ -225,6 +227,8 @@ define(function() {
         // 数值型坐标轴默认参数
         valueAxis: {
             position: 'left',      // 位置
+            name: '',              // 坐标轴名字，默认为空
+            nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
             boundaryGap: [0, 0],   // 数值起始和结束两端空白策略
             // min: null,          // 最小值
             // max: null,          // 最大值
