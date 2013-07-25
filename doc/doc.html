@@ -90,6 +90,7 @@
                             <li><a href="#选项">选项</a></li>
                             <ul>
                                 <li><a href="#Option">option</a></li>
+                                <li><a href="#Title">title</a></li>
                                 <li><a href="#Legend">legend</a></li>
                                 <li><a href="#DataRange">dataRange</a></li>
                                 <li><a href="#Toolbox">toolbox</a></li>
@@ -435,6 +436,10 @@ myChart.setOption(option);
                             <td> {Array} color </td>
                             <td> 数值系列的颜色列表，默认为null则采用内置颜色，可配数组，eg：['#87cefa', 'rgba(123,123,123,0.5)','...']，当系列数量个数比颜色列表长度大时将循环选取 </td>
                         </tr>
+                         <tr>
+                            <td> {Object} title </td>
+                            <td> 标题（详见<a href="#Title" title="">title</a>），每个图表最多仅有一个标题控件 </td>
+                        </tr>
                         <tr>
                             <td> {Object} legend </td>
                             <td> 图例（详见<a href="#Legend" title="">legend</a>），每个图表最多仅有一个图例，混搭图表共享 </td>
@@ -472,6 +477,81 @@ myChart.setOption(option);
                             <td> 驱动图表生成的数据内容（详见<a href="#Series" title="">series</a>），数组中每一项代表一个系列的特殊选项及数据 </td>
                         </tr>
                     </table>
+                    
+                    <h4>title<a name="Title"> </a></h4>
+                    <P> 标题，每个图表最多仅有一个标题控件，每个标题控件可设主副标题。</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {string} text </td>
+                            <td> '' </td>
+                            <td> 主标题文本 </td>
+                        </tr>
+                        <tr>
+                            <td> {string} subtext </td>
+                            <td> '' </td>
+                            <td> 副标题文本 </td>
+                        </tr>
+                        <tr>
+                            <td> {string | number} x </td>
+                            <td> 'left' </td>
+                            <td> 水平安放位置，默认为左侧，可选为：'center' | 'left' | 'right' | {number}（x坐标，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> {string | number} y </td>
+                            <td> 'top' </td>
+                            <td> 垂直安放位置，默认为全图顶端，可选为：'top' | 'bottom' | 'center' | {number}（y坐标，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> {string} textAlign </td>
+                            <td> null </td>
+                            <td> 水平对齐方式，默认根据x设置自动调整，可选为： left' | 'right' | 'center</td>
+                        </tr>
+                        
+                        <tr>
+                            <td> {color} backgroundColor </td>
+                            <td> 'rgba(0,0,0,0)' </td>
+                            <td> 标题背景颜色，默认透明 </td>
+                        </tr>
+                        <tr>
+                            <td> {string} borderColor </td>
+                            <td> '#ccc' </td>
+                            <td> 标题边框颜色 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} borderWidth </td>
+                            <td> 0 </td>
+                            <td> 标题边框线宽，单位px，默认为0（无边框） </td>
+                        </tr>
+                        <tr>
+                            <td> {number | Array} padding </td>
+                            <td> 5 </td>
+                            <td> 标题内边距，单位px，默认各方向内边距为5，接受数组分别设定上右下左边距，同css，见下图 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} itemGap </td>
+                            <td> 10 </td>
+                            <td> 主副标题纵向间隔，单位px，默认为10</td>
+                        </tr>
+                        
+                        <tr>
+                            <td> {Object} textStyle </td>
+                            <td> {<br/>fontSize: 18, <br/>fontWeight: 'bolder', <br/>color: '#333'<br/>} </td>
+                            <td> 主标题文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
+                        </tr>
+                        <tr>
+                            <td> {Object} subtextStyle </td>
+                            <td> {color: '#aaa'} </td>
+                            <td> 副标题文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
+                        </tr>
+                        
+                    </table>
+                    <p><img src="./asset/img/doc/title.png" title="" alt="标题"/></P>
+
 
                     <h4>legend<a name="Legend"> </a></h4>
                     <P> 图例，每个图表最多仅有一个图例。<a href="example/legend.html" target="_blank">try this »</a></P>
