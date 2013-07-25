@@ -68,6 +68,11 @@
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
 option = {
+    title : {
+        text: '某站点用户访问来源',
+        subtext: '纯属虚构',
+        x:'center'
+    },
     tooltip : {
         trigger: 'item',
         formatter: "{a} <br/>{b} : {c} ({d}%)"
@@ -90,7 +95,8 @@ option = {
         {
             name:'访问来源',
             type:'pie',
-            radius : [0, 120],
+            radius : [0, 110],
+            center: [,225],
             data:[
                 {value:335, name:'直接访问'},
                 {value:310, name:'邮件营销'},

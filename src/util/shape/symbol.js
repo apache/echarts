@@ -168,7 +168,8 @@ define(
                 // console.log(rect)
                 // var ti = new Date();
                 var pixels = ctx.getImageData(
-                    rect.x*ratio, rect.y*ratio, rect.width*ratio, rect.height*ratio
+                    rect.x * ratio, rect.y * ratio, 
+                    rect.width * ratio, rect.height * ratio
                 );
                
                 var data = pixels.data;

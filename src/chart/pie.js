@@ -584,11 +584,20 @@ define(function(require) {
                   );
 
             // 圆心坐标，无则为自适应居中
-            if (!opt.center) {
+            if (!opt.center 
+                || (opt.center && !(opt.center instanceof Array))) {
                 opt.center = [
                     Math.round(zr.getWidth() / 2),
                     Math.round(zr.getHeight() / 2)
                 ];
+            }
+            else {
+                if (typeof opt.center[0] == 'undefined') {
+                    opt.center[0] = Math.round(zr.getWidth() / 2);
+                }
+                if (typeof opt.center[1] == 'undefined') {
+                    opt.center[1] = Math.round(zr.getHeight() / 2);
+                }
             }
 
             // 传数组实现环形图，[内半径，外半径]，传单个则默认为外半径为
