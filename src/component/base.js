@@ -48,6 +48,7 @@ define(function(require) {
 
                 case ecConfig.COMPONENT_TYPE_TOOLTIP :
                 case ecConfig.COMPONENT_TYPE_TOOLBOX :
+                case ecConfig.COMPONENT_TYPE_TITLE :
                     return 6;
 
                 default :
