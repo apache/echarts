@@ -37,6 +37,7 @@ define(function(require) {
         var _scale;
         var _position;
         var _selectedMode;
+        var _valueCalculation;
         var _selected = {};
 
         function _buildShape() {
@@ -50,12 +51,15 @@ define(function(require) {
             var name;
             _mapSeries = {};
             _selectedMode = false;
+            _valueCalculation = null;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type == ecConfig.CHART_TYPE_MAP) {
                     series[i] = self.reformOption(series[i]);
                     _mapSeries[i] = true;
                     
                     _selectedMode = _selectedMode || series[i].selectedMode;
+                    _valueCalculation = _valueCalculation 
+                                        || series[i].mapValueCalculation;
                     mapType = series[i].mapType;
                     
                     seriesName = series[i].name;
@@ -82,6 +86,19 @@ define(function(require) {
                             //索引有该区域的系列样式
                             valueData[name].seriesIndex.push(i);
                         }
+                    }
+                }
+            }
+            
+            if (_valueCalculation && _valueCalculation == 'mean') {
+                for (var k in valueData) {
+                    valueData[k].value = valueData[k].value 
+                                         / valueData[k].seriesIndex.length;
+                    if (valueData[k].value > 10) {
+                        valueData[k].value = Math.round(valueData[k].value);
+                    }
+                    else {
+                        valueData[k].value = valueData[k].value.toFixed(2) - 0;
                     }
                 }
             }

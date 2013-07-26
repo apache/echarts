@@ -314,8 +314,21 @@ define(function (require) {
             var font = self.getFont(dataRangeOption.textStyle);
             var textHieght = zrArea.getTextWidth('国', font) + 2;
             var textWidth = Math.max(
-                    zrArea.getTextWidth(dataRangeOption.max, font),
-                    zrArea.getTextWidth(dataRangeOption.min, font)
+                    zrArea.getTextWidth(
+                        dataRangeOption.precision === 0
+                        ? dataRangeOption.max
+                        : dataRangeOption.max.toFixed(
+                            dataRangeOption.precision
+                          ),
+                        font),
+                    zrArea.getTextWidth(
+                        dataRangeOption.precision === 0
+                        ? dataRangeOption.min
+                        : dataRangeOption.min.toFixed(
+                            dataRangeOption.precision
+                          ), 
+                        font
+                    )
                 ) + 2;
                             
             var pointListStart;
@@ -966,23 +979,38 @@ define(function (require) {
                 _startShape.style.x - _startShape.style._x,
                 _startShape.style.y - _startShape.style._y
             ];
-            _startShape.style.text = Math.round(
-                _gap * _range.start + dataRangeOption.min
-            ) + '';
+            
+            if (dataRangeOption.precision === 0) {
+                _startShape.style.text = Math.round(
+                    _gap * _range.start + dataRangeOption.min
+                ) + '';
+            } else {
+                _startShape.style.text =(
+                    _gap * _range.start + dataRangeOption.min
+                ).toFixed(dataRangeOption.precision);
+            }
             _startShape.style.color = getColor(
-                Math.floor(_gap * _range.start + dataRangeOption.min)
+                _gap * _range.start + dataRangeOption.min
             );
+            
             zr.modShape(_startShape.id, _startShape);
             
             _endShape.position = [
                 _endShape.style.x - _endShape.style._x,
                 _endShape.style.y - _endShape.style._y
             ];
-            _endShape.style.text = Math.round(
-                _gap * _range.end + dataRangeOption.min
-            ) + '';
+            
+            if (dataRangeOption.precision === 0) {
+                _endShape.style.text = Math.round(
+                    _gap * _range.end + dataRangeOption.min
+                ) + '';
+            } else {
+                _endShape.style.text = (
+                    _gap * _range.end + dataRangeOption.min
+                ).toFixed(dataRangeOption.precision);
+            }
             _endShape.style.color = getColor(
-                Math.ceil(_gap * _range.end + dataRangeOption.min)
+                _gap * _range.end + dataRangeOption.min
             );
             zr.modShape(_endShape.id, _endShape);
 
@@ -1054,12 +1082,16 @@ define(function (require) {
             }
             
             _valueTextList = [];
-            for (var i = 0; i < splitNumber; i++){
+            for (var i = 0; i < splitNumber; i++) {
                 _selectedMap[i] = true;
                 _valueTextList.unshift(
-                    (i * _gap + dataRangeOption.min) 
+                    (i * _gap + dataRangeOption.min).toFixed(
+                        dataRangeOption.precision
+                    )
                     + ' - ' 
-                    + ((i + 1) * _gap + dataRangeOption.min)
+                    + ((i + 1) * _gap + dataRangeOption.min).toFixed(
+                        dataRangeOption.precision
+                    )
                 );
             }
             
