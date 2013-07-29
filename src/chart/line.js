@@ -302,7 +302,7 @@ define(function(require) {
                                 [data, serie],
                                 'symbolSize'
                             );
-                            lastYP += symbolSize * 2 + 2;
+                            lastYP += symbolSize * 2 + 5;
                             y = lastYP;
                             self.shapeList.push(_getCalculableItem(
                                 seriesIndex, i, categoryAxis.getNameByIndex(i),
@@ -422,7 +422,7 @@ define(function(require) {
                                 [data, serie],
                                 'symbolSize'
                             );
-                            lastXP -= symbolSize * 2 + 2;
+                            lastXP -= symbolSize * 2 + 5;
                             x = lastXP;
                             self.shapeList.push(_getCalculableItem(
                                 seriesIndex, i, categoryAxis.getNameByIndex(i),

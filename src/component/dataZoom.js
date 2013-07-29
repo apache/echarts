@@ -159,6 +159,13 @@ define(function (require) {
 
             // 找到缩放控制的所有series
             for (var i = 0, l = series.length; i < l; i++) {
+                if (series[i].type != ecConfig.CHART_TYPE_LINE
+                    && series[i].type != ecConfig.CHART_TYPE_BAR
+                    && series[i].type != ecConfig.CHART_TYPE_SCATTER
+                    && series[i].type != ecConfig.CHART_TYPE_K
+                ) {
+                    continue;
+                }
                 for (var j = 0, k = xAxisIndex.length; j < k; j++) {
                     if (xAxisIndex[j] == (series[i].xAxisIndex || 0)) {
                         zoomSeriesIndex.push(i);
@@ -905,6 +912,45 @@ define(function (require) {
             _syncData(true);
             return _zoom;
         }
+        
+        function syncBackupData(curOption, optionBackup) {
+            var start;
+            var target = _originalData['series'];
+            var curSeries = curOption.series;
+            var curData;
+            for (var i = 0, l = curSeries.length; i < l; i++) {
+                curData = curSeries[i].data;
+                if (target[i]) {
+                    // dataZoom接管的
+                    start = Math.floor(_zoom.start / 100 * target[i].length);
+                }
+                else {
+                    // 非dataZoom接管
+                    start = 0;
+                }
+                for (var j = 0, k = curData.length; j < k; j++) {
+                    if (typeof optionBackup.series[i].data[j + start].value 
+                        != 'undefined'
+                    ) {
+                        optionBackup.series[i].data[j + start].value 
+                            = curData[j].value;
+                        if (target[i]) {
+                            // 同步内部备份
+                            target[i][j + start].value 
+                                = curData[j].value;
+                        }
+                    }
+                    else {
+                        optionBackup.series[i].data[j + start] = curData[j];
+                        if (target[i]) {
+                            // 同步内部备份
+                            target[i][j + start] 
+                                = curData[j];
+                        }
+                    }
+                }
+            }
+        }
 
         function init(newOption) {
             option = newOption;
@@ -933,6 +979,7 @@ define(function (require) {
         }
         
         self.init = init;
+        self.syncBackupData = syncBackupData;
         self.absoluteZoom = absoluteZoom;
         self.rectZoom = rectZoom;
         self.ondragend = ondragend;
