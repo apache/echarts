@@ -496,7 +496,6 @@ define(function (require) {
                 ondrift : _ondrift,
                 ondragend : _ondragend
             };
-            
             self.shapeList.push(_startShape);
             self.shapeList.push(_endShape);
         }
@@ -1068,6 +1067,7 @@ define(function (require) {
                 (splitNumber - dataRangeOption.color.length)
                 / (dataRangeOption.color.length - 1) + 1
             );
+            _colorList = _colorList.slice(0, splitNumber);
             //console.log(_colorList.length)
             
             if (dataRangeOption.precision === 0) {
