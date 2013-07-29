@@ -732,7 +732,11 @@ define(function (require) {
             }
 
             if (zoomOption.realtime || dispatchNow) {
-                messageCenter.dispatch(ecConfig.EVENT.DATA_ZOOM);
+                messageCenter.dispatch(
+                    ecConfig.EVENT.DATA_ZOOM,
+                    null,
+                    {zoom: _zoom}
+                );
             }
 
             zoomOption.start = _zoom.start;
@@ -800,7 +804,11 @@ define(function (require) {
             status.dragOut = true;
             status.dragIn = true;
             if (!zoomOption.realtime) {
-                messageCenter.dispatch(ecConfig.EVENT.DATA_ZOOM);
+                messageCenter.dispatch(
+                    ecConfig.EVENT.DATA_ZOOM,
+                    null,
+                    {zoom: _zoom}
+                );
             }
             status.needRefresh = false; // 会有消息触发fresh，不用再刷一遍
             // 处理完拖拽事件后复位
