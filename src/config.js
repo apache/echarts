@@ -78,6 +78,7 @@ define(function() {
             y: 'top',                  // 垂直安放位置，默认为全图顶端，可选为：
                                        // 'top' ¦ 'bottom' ¦ 'center'
                                        // ¦ {number}（y坐标，单位px）
+            selectedMode: true,        // 选择模式，默认开启图例开关
             backgroundColor: 'rgba(0,0,0,0)',
             borderColor: '#ccc',       // 图例边框颜色
             borderWidth: 0,            // 图例边框线宽，单位px，默认为0（无边框）
@@ -145,9 +146,11 @@ define(function() {
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
             itemSize: 16,             // 工具箱图形宽度，非标准参数
             feature : {
-                //mark : false,
-                //refresh : false,
-                //magicType: []
+                //mark : true,
+                //dataView : {readOnly: false},
+                //magicType: ['line', 'bar'],
+                //restore : true,
+                //saveAsImage : true
             }
         },
 

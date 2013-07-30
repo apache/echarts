@@ -68,6 +68,11 @@ define(function (require) {
                             _iconList.push('dataZoom');
                             _iconList.push('dataZoomReset');
                             break;
+                        case 'saveAsImage' :
+                            if (!G_vmlCanvasManager) {
+                                _iconList.push('saveAsImage');
+                            }
+                            break;
                         default :
                             _iconList.push(key);
                             break;
@@ -177,6 +182,9 @@ define(function (require) {
                         break;
                     case 'restore':
                         itemShape.onclick = _onRestore;
+                        break;
+                    case 'saveAsImage':
+                        itemShape.onclick = _onSaveAsImage;
                         break;
                     default:
                         if (_iconList[i].match('Chart')) {
@@ -592,6 +600,69 @@ define(function (require) {
             _resetZoom();
             messageCenter.dispatch(ecConfig.EVENT.RESTORE);
             return true;
+        }
+        
+        function _onSaveAsImage() {
+            var saveOption = option.toolbox.feature.saveAsImage;
+            var imgType = saveOption.type || 'png';
+            if (imgType != 'png' && imgType != 'jpeg') {
+                imgType = 'png';
+            }
+            var image = zr.toDataURL('image/' + imgType); 
+            var downloadDiv = document.createElement('div');
+            downloadDiv.id = '__echarts_download_wrap__';
+            downloadDiv.style.cssText = 'position:absolute;'
+                + 'z-index:99999;'
+                + 'display:block;'
+                + 'top:0;left:0;'
+                + 'background-color:rgba(33,33,33,0.5);'
+                + 'text-align:center;'
+                + 'width:' + document.documentElement.clientWidth + 'px;'
+                + 'height:' + document.documentElement.clientHeight + 'px;'
+                + 'line-height:' 
+                + document.documentElement.clientHeight + 'px;';
+                
+            downloadDiv.onclick = _close;
+            var downloadLink = document.createElement('a');
+            //downloadLink.onclick = _saveImageForIE;
+            downloadLink.href = image;
+            downloadLink.setAttribute(
+                'download',
+                (saveOption.name 
+                 ? saveOption.name 
+                 : (option.title && (option.title.text || option.title.subtext))
+                   ? (option.title.text || option.title.subtext)
+                   : 'ECharts')
+                + '.' + imgType 
+            );
+            downloadLink.innerHTML = '<img src="' + image 
+                + '" title="'
+                + (!!(window.attachEvent 
+                     && navigator.userAgent.indexOf('Opera') === -1)
+                  ? '右键->图片另存为'
+                  : (saveOption.lang ? saveOption.lang : '点击保存'))
+                + '"/>';
+            
+            downloadDiv.appendChild(downloadLink);
+            document.body.appendChild(downloadDiv);
+            downloadLink = null;
+            downloadDiv = null;
+            
+            function _close() {
+                var d = document.getElementById('__echarts_download_wrap__');
+                d.onclick = null;
+                d.innerHTML = '';
+                document.body.removeChild(d);
+                d = null;
+            }
+            /*
+            function _saveImageForIE() {
+                window.win = window.open(image);
+                win.document.execCommand("SaveAs");
+                win.close()
+            }
+            */
+            return;
         }
 
         function _onMagicType(param) {

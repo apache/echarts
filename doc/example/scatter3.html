@@ -40,7 +40,7 @@
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
                   <ul class="dropdown-menu">
-                    <li><a href="https://github.com/ecomfe/echarts/archive/1.1.0.zip">ZIP (1.1.0)</a></li>
+                    <li><a id="last-release-link" href=""> </a></li>
                     <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
                   </ul>
                 </li>
@@ -52,7 +52,7 @@
                     <li class="divider"></li>
                     <!--li class="nav-header">Library</li-->
                     <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
-                    <li><a href="http://tangram.baidu.com/" target="_blank">Tangram</a></li>
+                    
                   </ul>
                 </li>
               </ul>
@@ -80,7 +80,8 @@ option = {
             mark : true,
             dataZoom : true,
             dataView : {readOnly: false},
-            restore : true
+            restore : true,
+            saveAsImage : true
         }
     },
     xAxis : [
@@ -107,7 +108,7 @@ option = {
             large: true,
             data: (function() {
                 var d = [];
-                var len = 15000;
+                var len = 5000;
                 var x = 0;
                 while (len--) {
                     x = (Math.random() * 10).toFixed(3) - 0;
@@ -127,7 +128,7 @@ option = {
             large: true,
             data: (function() {
                 var d = [];
-                var len = 15000;
+                var len = 5000;
                 var x = 0;
                 while (len--) {
                     x = (Math.random() * 10).toFixed(3) - 0;

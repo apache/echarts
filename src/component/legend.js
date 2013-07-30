@@ -109,7 +109,9 @@ define(function (require) {
                     itemType
                 );
                 itemShape._name = itemName;
-                itemShape.onclick = _legendSelected;
+                if (legendOption.selectedMode) {
+                    itemShape.onclick = _legendSelected;
+                }
                 self.shapeList.push(itemShape);
 
                 // 文字
@@ -126,7 +128,8 @@ define(function (require) {
                         textFont: font,
                         textBaseline: 'top'
                     },
-                    clickable : true
+                    hoverable : legendOption.selectedMode,
+                    clickable : legendOption.selectedMode
                 };
 
                 if (legendOption.orient == 'vertical'
@@ -137,7 +140,9 @@ define(function (require) {
                 }
 
                 textShape._name = itemName;
-                textShape.onclick = _legendSelected;
+                if (legendOption.selectedMode) {
+                    textShape.onclick = _legendSelected;
+                }
                 self.shapeList.push(textShape);
 
                 if (legendOption.orient == 'horizontal') {
@@ -339,9 +344,9 @@ define(function (require) {
                     strokeColor : color,
                     lineWidth : 3
                 },
-                clickable : true
+                hoverable : legendOption.selectedMode,
+                clickable : legendOption.selectedMode
             };
-            
             // 特殊设置
             switch (itemType) {
                 case 'line' :
