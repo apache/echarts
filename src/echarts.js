@@ -29,7 +29,8 @@ define(function(require) {
         var self = this;
         var _zr;
         var _option;
-        var _optionBackup;
+        var _optionBackup;          // for各种change和zoom
+        var _optionRestore;         // for restore;
         var _chartList;             // 图表实例
         var _messageCenter;         // Echarts层的消息中心，做zrender原始事件转换
 
@@ -249,6 +250,7 @@ define(function(require) {
 
             // 发生过重计算
             if (_status.needRefresh) {
+                _syncBackupData(_island.getOption());
                 _messageCenter.dispatch(
                     ecConfig.EVENT.DATA_CHANGED,
                     param.event,
@@ -338,9 +340,12 @@ define(function(require) {
             _render(magicOption);
         }
 
-        function _ondataViewChanged() {
+        function _ondataViewChanged(param) {
+            _syncBackupData(param.option);
             _messageCenter.dispatch(
-                ecConfig.EVENT.DATA_CHANGED
+                ecConfig.EVENT.DATA_CHANGED,
+                null,
+                param
             );
             _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
         }
@@ -353,6 +358,42 @@ define(function(require) {
             refresh();
         }
 
+        function _syncBackupData(curOption) {
+            if ((curOption.dataZoom && curOption.dataZoom.show)
+                || (curOption.toolbox
+                    && curOption.toolbox.show
+                    && curOption.toolbox.feature
+                    && curOption.toolbox.feature.dataZoom
+                )
+            ) {
+                // 有dataZoom就dataZoom做同步
+                for (var i = 0, l = _chartList.length; i < l; i++) {
+                    if (_chartList[i].type == ecConfig.COMPONENT_TYPE_DATAZOOM
+                    ) {
+                        _chartList[i].syncBackupData(curOption, _optionBackup);
+                        return;
+                    }
+                }
+            }
+            
+            // 没有就ECharts做
+            var curSeries = curOption.series;
+            var curData;
+            for (var i = 0, l = curSeries.length; i < l; i++) {
+                curData = curSeries[i].data;
+                for (var j = 0, k = curData.length; j < k; j++) {
+                    if (typeof _optionBackup.series[i].data[j].value 
+                        != 'undefined'
+                    ) {
+                        _optionBackup.series[i].data[j].value 
+                            = curData[j].value;
+                    }
+                    else {
+                        _optionBackup.series[i].data[j] = curData[j];
+                    }
+                }
+            }
+        }
         /**
          * 打包Echarts层的事件附件
          */
@@ -512,7 +553,8 @@ define(function(require) {
         function restore() {
             var zrUtil = require('zrender/tool/util');
             _selectedMap = {};
-            _option = zrUtil.clone(_optionBackup);
+            _optionBackup = zrUtil.clone(_optionRestore);
+            _option = zrUtil.clone(_optionRestore);
             _island.clear();
             _toolbox.reset(_option);
             _render(_option);
@@ -601,6 +643,7 @@ define(function(require) {
             };
 
             _optionBackup = zrUtil.clone(_option);
+            _optionRestore = zrUtil.clone(_option);
             _selectedMap = {};
 
             _island.clear();

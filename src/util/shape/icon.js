@@ -91,6 +91,7 @@ define(
                 lineChart : _iconLineChart,
                 barChart : _iconBarChart,
                 dataView : _iconDataView,
+                saveAsImage : _iconSave,
                 
                 cross : _iconCross,
                 circle : _iconCircle,
@@ -285,6 +286,31 @@ define(
 
             ctx.moveTo(style.x + 3 * dx, style.y + 12 * dx);
             ctx.lineTo(style.x + 9 * dx, style.y + 12 * dx);
+        }
+        
+        function _iconSave(ctx, style) {
+            var dx = style.width / 16;
+            var dy = style.height / 16;
+
+            ctx.moveTo(style.x, style.y);
+            ctx.lineTo(style.x, style.y + style.height);
+            ctx.lineTo(style.x + style.width, style.y + style.height);
+            ctx.lineTo(style.x + style.width, style.y);
+            ctx.lineTo(style.x, style.y);
+
+            ctx.moveTo(style.x + 4 * dx,    style.y);
+            ctx.lineTo(style.x + 4 * dx,    style.y + 8 * dy);
+            ctx.lineTo(style.x + 12 * dx,   style.y + 8 * dy);
+            ctx.lineTo(style.x + 12 * dx,   style.y);
+            
+            ctx.moveTo(style.x + 6 * dx,    style.y + 11 * dy);
+            ctx.lineTo(style.x + 6 * dx,    style.y + 13 * dy);
+            ctx.lineTo(style.x + 10 * dx,   style.y + 13 * dy);
+            ctx.lineTo(style.x + 10 * dx,   style.y + 11 * dy);
+            ctx.lineTo(style.x + 6 * dx,    style.y + 11 * dy);
+            
+            ctx.moveTo(style.x, style.y); // 避免closePath
+            ctx.lineTo(style.x, style.y); // 避免closePath
         }
         
         function _iconCross(ctx, style) {

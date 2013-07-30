@@ -95,7 +95,8 @@ var optionMap = {
             show : true,
             feature : {
                 dataView : {readOnly: false},
-                restore : true
+                restore : true,
+                saveAsImage : true
             }
         },
         calculable : true,
@@ -129,7 +130,8 @@ var optionMap = {
                 mark : true,
                 dataView : {readOnly: false},
                 magicType:['line', 'bar'],
-                restore : true
+                restore : true,
+                saveAsImage : true
             }
         },
         calculable : true,
@@ -179,7 +181,8 @@ var optionMap = {
                 mark : true,
                 dataView : {readOnly: false},
                 magicType:['line', 'bar'],
-                restore : true
+                restore : true,
+                saveAsImage : true
             }
         },
         calculable : true,
@@ -242,7 +245,8 @@ var optionMap = {
                 mark : true,
                 dataView : {readOnly: false},
                 magicType:['line', 'bar'],
-                restore : true
+                restore : true,
+                saveAsImage : true
             }
         },
         calculable : true,
@@ -295,7 +299,8 @@ var optionMap = {
             feature : {
                 mark : true,
                 dataView : {readOnly: false},
-                restore : true
+                restore : true,
+                saveAsImage : true
             }
         },
         series : [
@@ -366,7 +371,8 @@ var optionMap = {
                 mark : true,
                 dataZoom : true,
                 dataView : {readOnly: false},
-                restore : true
+                restore : true,
+                saveAsImage : true
             }
         },
         dataZoom : {
@@ -554,7 +560,8 @@ var optionMap = {
                 mark : true,
                 dataZoom : true,
                 dataView : {readOnly: false},
-                restore : true
+                restore : true,
+                saveAsImage : true
             }
         },
         xAxis : [
@@ -581,7 +588,7 @@ var optionMap = {
                 large: true,
                 data: (function() {
                     var d = [];
-                    var len = 15000;
+                    var len = 5000;
                     var x = 0;
                     while (len--) {
                         x = (Math.random() * 10).toFixed(3) - 0;
@@ -600,7 +607,7 @@ var optionMap = {
                 large: true,
                 data: (function() {
                     var d = [];
-                    var len = 15000;
+                    var len = 5000;
                     var x = 0;
                     while (len--) {
                         x = (Math.random() * 10).toFixed(3) - 0;
@@ -752,7 +759,8 @@ var optionMap = {
                 mark : true,
                 dataView : {readOnly: false},
                 magicType:['line', 'bar'],
-                restore : true
+                restore : true,
+                saveAsImage : true
             }
         },
         calculable : true,
@@ -812,7 +820,8 @@ var optionMap = {
                 mark : true,
                 dataView : {readOnly: false},
                 magicType:['line', 'bar'],
-                restore : true
+                restore : true,
+                saveAsImage : true
             }
         },
         calculable : true,
@@ -894,7 +903,8 @@ var optionMap = {
                 mark : true,
                 dataView : {readOnly: false},
                 magicType:['line', 'bar'],
-                restore : true
+                restore : true,
+                saveAsImage : true
             }
         },
         calculable : true,
@@ -954,7 +964,8 @@ var optionMap = {
                 mark : true,
                 dataView : {readOnly: false},
                 magicType:['line', 'bar'],
-                restore : true
+                restore : true,
+                saveAsImage : true
             }
         },
         calculable : true,
@@ -1168,7 +1179,8 @@ var optionMap = {
             feature : {
                 mark : true,
                 dataView : {readOnly: false},
-                restore : true
+                restore : true,
+                saveAsImage : true
             }
         },
         series : (function(){
