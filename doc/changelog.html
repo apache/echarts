@@ -38,7 +38,7 @@
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
                   <ul class="dropdown-menu">
-                    <li><a href="https://github.com/ecomfe/echarts/archive/1.1.0.zip">ZIP (1.1.0)</a></li>
+                    <li><a id="last-release-link" href=""> </a></li>
                     <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
                   </ul>
                 </li>
@@ -50,7 +50,7 @@
                     <li class="divider"></li>
                     <!--li class="nav-header">Library</li-->
                     <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
-                    <li><a href="http://tangram.baidu.com/" target="_blank">Tangram</a></li>
+                    
                   </ul>
                 </li>
               </ul>
@@ -64,17 +64,21 @@
         <span>[+]新增 [-]删除 [^]升级 [#]修复 【】重要</span>
         <div class="row-fluid">
             <div>
-                <h3>undergoing</h3>
+                <h3>1.1.1</h3>
                 <ul>
                     <li>[+] [compoent] 新增Title组件，图表标题支持</li>
+                    <li>【+】 图片导出支持（IE8-不支持）</li>
                     <li>[^] [line] 折线图主线支持阴影（IE8-不支持），调整symbo描边与主线等宽</li>
-                    <li>[^] [valueAxis] 支持数值坐标轴上显示项目文字</li>
+                    <li>[^] [valueAxis] 支持数值坐标轴上显示项目文字，边界值线条显示有货</li>
                     <li>[^] [map] 数值计算方式支持均值和求和</li>
                     <li>[^] Retina视网屏优化</li>
-                    <li>[#] [map] 修正福建省hover</li>
+                    <li>[^] [legend] 图例选择增加可控开关</li>
+                    <li>[#] [axis] 修正福建省hover</li>
                     <li>[#] [tooltip] 修正气泡边界自动折行</li>
                     <li>[#] [island] 修正拖拽折线图的empty symbo生成白色孤岛数据</li>
                     <li>[#] [dataRange] 修正小数状态下的取整显示</li>
+                    <li>[#] [line] 折线堆积图描边修正</li>
+                    <li>【#】 数据修改后（拖拽，数据视图）的反向同步及restore还原修复</li>
                 </ul>
             </div>
             <div>

@@ -234,10 +234,12 @@ define(function (require) {
             setTimeout(
                 function(){
                     messageCenter && messageCenter.dispatch(
-                        ecConfig.EVENT.DATA_VIEW_CHANGED
+                        ecConfig.EVENT.DATA_VIEW_CHANGED,
+                        null,
+                        {option : option}
                     );
                 },
-                document.createElement('canvas').getContext ? 800 : 100
+                !G_vmlCanvasManager ? 800 : 100
             );
         }
 
@@ -340,7 +342,6 @@ define(function (require) {
                     }
                     contentIdx++;
                 }
-                
             }
         }
 

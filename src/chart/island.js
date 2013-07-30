@@ -72,6 +72,10 @@ define(function (require) {
                 zr.addShape(self.shapeList[i]);
             }
         }
+        
+        function getOption() {
+            return option;
+        }
 
         function resize() {
             var newWidth = zr.getWidth();
@@ -230,6 +234,7 @@ define(function (require) {
 
         self.render = render;
         self.resize = resize;
+        self.getOption = getOption;
         self.add = add;
         self.del = del;
         self.ondrop = ondrop;

@@ -580,7 +580,9 @@ define(function (require) {
                         // 纵向
                         position = grid.getYend() - position;
                     }
-                    return Math.floor(position);
+                    return (i === 0 || i == dataLength - 1)
+                           ? position
+                           : Math.floor(position);
                 }
                 position += gap;
             }
