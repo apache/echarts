@@ -193,9 +193,10 @@ define(function (require) {
                             color : textStyle.color,
                             text : _valueLabel[i],
                             textFont : self.getFont(textStyle),
-                            textAlign : i === 0
+                            textAlign : (i === 0 && option.name !== '')
                                         ? 'left'
-                                        : i == (dataLength - 1)
+                                        : (i == (dataLength - 1) 
+                                           && option.name !== '')
                                           ? 'right'
                                           : 'center',
                             textBaseline : baseLine
@@ -241,9 +242,10 @@ define(function (require) {
                             text : _valueLabel[i],
                             textFont : self.getFont(textStyle),
                             textAlign : align,
-                            textBaseline : i === 0 
+                            textBaseline : (i === 0 && option.name !== '')
                                            ? 'bottom'
-                                           : (i == dataLength - 1)
+                                           : (i == (dataLength - 1) 
+                                              && option.name !== '')
                                              ? 'top'
                                              : 'middle'
                         }

@@ -37,7 +37,7 @@
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
                   <ul class="dropdown-menu">
-                    <li><a href="https://github.com/ecomfe/echarts/archive/1.1.0.zip">ZIP (1.1.0)</a></li>
+                    <li><a id="last-release-link" href=""> </a></li>
                     <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
                   </ul>
                 </li>
@@ -49,7 +49,7 @@
                     <li class="divider"></li>
                     <!--li class="nav-header">Library</li-->
                     <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
-                    <li><a href="http://tangram.baidu.com/" target="_blank">Tangram</a></li>
+                    
                   </ul>
                 </li>
               </ul>
@@ -812,6 +812,7 @@ feature : {
     magicType:['line', 'bar'],      // 图表类型切换，当前仅支持直角系下的折线图、柱状图转换，上图icon左数6/7，分别是切换折线图，切换柱形图
     dataView : true,                // 数据视图，上图icon左数8，打开数据视图
     restore : true                  // 还原，复位原始图表，上图icon左数9，还原
+    saveAsImage : true              // 保存为图片，上图icon左数10，保存
 }
                     </pre>
                     </div>
@@ -841,6 +842,18 @@ feature : {
                             magicType，图表类型切换，当前仅支持直角系下的折线图、柱状图转换
                             <ul>
                                 <li>['line', 'bar']</li>
+                            </ul>
+                        </li>
+                        <li>
+                            saveAsImage，保存图片（IE8-不支持）
+                            <ul>
+                                <li>简单传入true启动保存功能</li>
+                                <li>传入{Object}设置更多属性</li>
+                                <ul>
+                                    <li>{string=} type 默认保存图片类型为'png'，需改为'jpeg'</li>
+                                    <li>{string=} name 指定图片名称，如不指定，则用图表title标题，如无title标题则图片名称默认为“ECharts”</li>
+                                    <li>{string=} lang 非IE浏览器支持点击下载，有保存话术，默认是“点击保存”，可修改</li>
+                                </ul>
                             </ul>
                         </li>
                     </ul>

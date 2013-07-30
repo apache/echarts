@@ -537,65 +537,59 @@ define(function(require) {
                             }
 
                         }
+                        // 折线图
+                        self.shapeList.push({
+                            shape : 'brokenLine',
+                            zlevel : _zlevelBase,
+                            style : {
+                                pointList : singlePL,
+                                strokeColor : lineColor
+                                              || normalColor
+                                              || defaultColor,
+                                lineWidth : lineWidth,
+                                lineType : lineType,
+                                shadowColor : self.deepQuery(
+                                  [serie],
+                                  'itemStyle.normal.lineStyle.shadowColor'
+                                ),
+                                shadowBlur: self.deepQuery(
+                                  [serie],
+                                  'itemStyle.normal.lineStyle.shadowBlur'
+                                ),
+                                shadowOffsetX: self.deepQuery(
+                                  [serie],
+                                  'itemStyle.normal.lineStyle.shadowOffsetX'
+                                ),
+                                shadowOffsetY: self.deepQuery(
+                                  [serie],
+                                  'itemStyle.normal.lineStyle.shadowOffsetY'
+                                )
+                            },
+                            hoverable : false,
+                            _main : true,
+                            _seriesIndex : seriesIndex,
+                            _orient : orient
+                        });
+                        
                         if (isFill) {
-                            // 区域图添加垂直两点
-                            singlePL.push([
-                                singlePL[singlePL.length - 1][4],
-                                singlePL[singlePL.length - 1][5] - 2
-                            ]);
-                            singlePL.push([
-                                singlePL[0][4],
-                                singlePL[0][5] - 2
-                            ]);
                             self.shapeList.push({
                                 shape : 'polygon',
                                 zlevel : _zlevelBase,
                                 style : {
-                                    pointList : singlePL,
-                                    brushType : 'both',
-                                    strokeColor : lineColor
-                                                  || normalColor
-                                                  || defaultColor,
+                                    pointList : singlePL.concat([
+                                        [
+                                            singlePL[singlePL.length - 1][4],
+                                            singlePL[singlePL.length - 1][5] - 2
+                                        ],
+                                        [
+                                            singlePL[0][4],
+                                            singlePL[0][5] - 2
+                                        ]
+                                    ]),
+                                    brushType : 'fill',
                                     color : fillNormalColor
                                             ? fillNormalColor
-                                            : zrColor.alpha(defaultColor,0.5),
-                                    lineWidth : lineWidth,
-                                    lineType : lineType
-                                },
-                                hoverable : false,
-                                _main : true,
-                                _seriesIndex : seriesIndex,
-                                _orient : orient
-                            });
-                        }
-                        else {
-                            // 折线图
-                            self.shapeList.push({
-                                shape : 'brokenLine',
-                                zlevel : _zlevelBase,
-                                style : {
-                                    pointList : singlePL,
-                                    strokeColor : lineColor
-                                                  || normalColor
-                                                  || defaultColor,
-                                    lineWidth : lineWidth,
-                                    lineType : lineType,
-                                    shadowColor : self.deepQuery(
-                                      [serie],
-                                      'itemStyle.normal.lineStyle.shadowColor'
-                                    ),
-                                    shadowBlur: self.deepQuery(
-                                      [serie],
-                                      'itemStyle.normal.lineStyle.shadowBlur'
-                                    ),
-                                    shadowOffsetX: self.deepQuery(
-                                      [serie],
-                                      'itemStyle.normal.lineStyle.shadowOffsetX'
-                                    ),
-                                    shadowOffsetY: self.deepQuery(
-                                      [serie],
-                                      'itemStyle.normal.lineStyle.shadowOffsetY'
-                                    )
+                                            : zrColor.alpha(defaultColor,0.5)
                                 },
                                 hoverable : false,
                                 _main : true,
