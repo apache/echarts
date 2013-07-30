@@ -823,7 +823,9 @@ define(function (require) {
             }
 
             // Math.floor可能引起一些偏差，但性能会更好
-            return Math.floor(result);
+            return (value == _min || value == _max)
+                   ? result
+                   : Math.floor(result);
         }
 
         function getPosition() {
