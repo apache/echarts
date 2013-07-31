@@ -912,6 +912,16 @@ feature : {
                             <td> 提示内边距，单位px，默认各方向内边距为5，接受数组分别设定上右下左边距，同css </td>
                         </tr>
                         <tr>
+                            <td> {Object} axisPointer </td>
+                            <td> {<br/>
+                                type : 'line',<br/>
+                                lineStyle : {<br/>&nbsp;&nbsp;color: '#48b',<br/>&nbsp;&nbsp;width: 2,<br/>&nbsp;&nbsp;type: 'solid'<br/>},<br/>
+                                areaStyle : {<br/>&nbsp;&nbsp;size: 'auto',<br/>&nbsp;&nbsp;color: 'rgba(150,150,150,0.3)'<br/>}<br/>
+                                } 
+                            </td>
+                            <td> 坐标轴指示器，坐标轴触发有效，默认type为line，可选为：'line' | 'shadow'，<br/>lineStyle设置直线指示器（详见<a href="#LineStyle" title="">lineStyle</a>）,<br/>areaStyle设置阴影指示器（详见<a href="#AreaStyle" title="">areaStyle</a>），areaStyle.size默认为'auto'自动计算，可指定具体宽度</td>
+                        </tr>
+                        <tr>
                             <td> {Object} textStyle </td>
                             <td> { color:'#fff' } </td>
                             <td> 文本样式，默认为白色字体（详见<a href="#TextStyle" title="">textStyle</a>） </td>
