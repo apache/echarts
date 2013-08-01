@@ -552,7 +552,12 @@ define(function(require) {
 
         function restore() {
             var zrUtil = require('zrender/tool/util');
-            _selectedMap = {};
+            if (_optionRestore.legend && _optionRestore.legend.selected) {
+                _selectedMap = _optionRestore.legend.selected;
+            }
+            else {
+                _selectedMap = {};
+            }
             _optionBackup = zrUtil.clone(_optionRestore);
             _option = zrUtil.clone(_optionRestore);
             _island.clear();
@@ -644,7 +649,13 @@ define(function(require) {
 
             _optionBackup = zrUtil.clone(_option);
             _optionRestore = zrUtil.clone(_option);
-            _selectedMap = {};
+            
+            if (_option.legend && _option.legend.selected) {
+                _selectedMap = _option.legend.selected;
+            }
+            else {
+                _selectedMap = {};
+            }
 
             _island.clear();
             _toolbox.reset(_option);

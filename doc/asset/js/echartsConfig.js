@@ -19,7 +19,7 @@
             y: 'top',                  // 垂直安放位置，默认为全图顶端，可选为：
                                        // 'top' ¦ 'bottom' ¦ 'center'
                                        // ¦ {number}（y坐标，单位px）
-            //textAlign: null          // 水平对齐方式，默认根据x设置自动调整
+            textAlign: null,            // 水平对齐方式，默认根据x设置自动调整
             backgroundColor: 'rgba(0,0,0,0)',
             borderColor: '#ccc',       // 标题边框颜色
             borderWidth: 0,            // 标题边框线宽，单位px，默认为0（无边框）
@@ -46,6 +46,7 @@
             y: 'top',                  // 垂直安放位置，默认为全图顶端，可选为：
                                        // 'top' ¦ 'bottom' ¦ 'center'
                                        // ¦ {number}（y坐标，单位px）
+            selectedMode: true,        // 选择模式，默认开启图例开关
             backgroundColor: 'rgba(0,0,0,0)',
             borderColor: '#ccc',       // 图例边框颜色
             borderWidth: 0,            // 图例边框线宽，单位px，默认为0（无边框）
@@ -81,13 +82,13 @@
             itemWidth: 20,             // 值域图形宽度，线性渐变水平布局宽度为该值 * 10
             itemHeight: 14,            // 值域图形高度，线性渐变垂直布局高度为该值 * 10
             precision: 0,              // 小数精度，默认为0，无小数点
-            // min: null,              // 最小值
-            // max: null,              // 最大值
+            min: null,              // 最小值
+            max: null,              // 最大值
             splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变
             calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
             realtime: true,
             color:['#1e90ff','#f0ffff'],//颜色 
-            //text:['高','低'],           // 文本，默认为数值文本
+            text:null,           // 文本，默认为数值文本
             textStyle: {
                 color: '#333'          // 值域文字颜色
             }
@@ -113,9 +114,11 @@
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
             itemSize: 16,             // 工具箱图形宽度，非标准参数
             feature : {
-                //mark : false,
-                //refresh : false,
-                //magicType: []
+                //mark : true,
+                //dataView : {readOnly: false},
+                //magicType: ['line', 'bar'],
+                //restore : true,
+                //saveAsImage : true
             }
         },
 
@@ -123,7 +126,7 @@
         tooltip: {
             show: true,
             trigger: 'item',           // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
-            // formatter: null         // 内容格式器：{string}（Template） ¦ {Function}
+            formatter: null,            // 内容格式器：{string}（Template） ¦ {Function}
             islandFormatter: '{a} <br/>{b} : {c}',  // 数据孤岛内容格式器，非标准参数
             backgroundColor: 'rgba(0,0,0,0.7)',     // 提示背景颜色，默认为透明度为0.7的黑色
             borderColor: '#333',       // 提示边框颜色
@@ -131,6 +134,18 @@
             borderWidth: 0,            // 提示边框线宽，单位px，默认为0（无边框）
             padding: 5,                // 提示内边距，单位px，默认各方向内边距为5，
                                        // 接受数组分别设定上右下左边距，同css
+            axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+                type : 'line',         // 默认为直线，可选为：'line' | 'shadow'
+                lineStyle : {          // 直线指示器样式设置
+                    color: '#48b',
+                    width: 2,
+                    type: 'solid'
+                },
+                areaStyle : {                       // 阴影指示器样式设置
+                    size: 'auto',                   // 阴影大小
+                    color: 'rgba(150,150,150,0.3)'  // 阴影颜色
+                }
+            },
             textStyle: {
                 color: '#fff'
             }
@@ -145,27 +160,27 @@
             backgroundColor: '#eee',       // 背景颜色
             dataBackgroundColor: '#ccc',   // 数据背景颜色
             fillerColor: 'rgba(50,205,50,0.4)',        // 填充颜色
-            handleColor: 'rgba(70,130,180,0.8)'         // 手柄颜色
+            handleColor: 'rgba(70,130,180,0.8)',         // 手柄颜色
 
-            // x: {number},            // 水平安放位置，默认为根据grid参数适配，可选为：
+            x: null,            // 水平安放位置，默认为根据grid参数适配，可选为：
                                        // {number}（x坐标，单位px）
-            // y: {number},            // 垂直安放位置，默认为根据grid参数适配，可选为：
+            y: null,            // 垂直安放位置，默认为根据grid参数适配，可选为：
                                        // {number}（y坐标，单位px）
-            // width: {number},        // 指定宽度，横向布局时默认为根据grid参数适配
-            // height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
-            // xAxisIndex: [],         // 默认控制所有横向类目
-            // yAxisIndex: [],         // 默认控制所有横向类目
-            // start: 0,               // 默认为0
-            // end: 100,               // 默认为全部 100%
-            // zoomLock: false         // 是否锁定选择区域大小
+            width: null,        // 指定宽度，横向布局时默认为根据grid参数适配
+            height: null,       // 指定高度，纵向布局时默认为根据grid参数适配
+            xAxisIndex: [],         // 默认控制所有横向类目
+            yAxisIndex: [],         // 默认控制所有横向类目
+            start: 0,               // 默认为0
+            end: 100,               // 默认为全部 100%
+            zoomLock: false         // 是否锁定选择区域大小
         },
 
         // 网格
         grid: {
             x: 80,
             y: 60,
-            // width: {totalWidth} - (2 * x),
-            // height: {totalHeight} - (2 * y)
+            width: null,
+            height: null,
             backgroundColor: '#fff',
             borderWidth: 1,
             borderColor: '#ccc'
@@ -182,7 +197,7 @@
                 lineStyle: {       // 属性lineStyle控制线条样式
                     color: '#48b',
                     width: 2,
-                    style: 'solid'
+                    type: 'solid'
                 }
             },
             axisTick: {            // 坐标轴小标记
@@ -198,7 +213,7 @@
                 interval: 'auto',
                 rotate: 0,
                 margin:  8,
-                // formatter: null,
+                formatter: null,
                 textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
                     color: '#333'
                 }
@@ -208,7 +223,7 @@
                 lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
                     color: '#ccc',
                     width: 1,
-                    style: 'solid'
+                    type: 'solid'
                 }
             },
             splitArea: {           // 分隔区域
@@ -225,9 +240,9 @@
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
             boundaryGap: [0, 0],   // 数值起始和结束两端空白策略
-            // min: null,          // 最小值
-            // max: null,          // 最大值
-            // scale: false,       // 脱离0值比例，放大聚焦到最终_min，_max区间
+            min: null,          // 最小值
+            max: null,          // 最大值
+            scale: false,       // 脱离0值比例，放大聚焦到最终_min，_max区间
             precision: 0,          // 小数精度，默认为0，无小数点
             power: 100,            // 整数精度，默认为100，个位和百位为0
             splitNumber: 5,        // 分割段数，默认为5
@@ -236,7 +251,7 @@
                 lineStyle: {       // 属性lineStyle控制线条样式
                     color: '#48b',
                     width: 2,
-                    style: 'solid'
+                    type: 'solid'
                 }
             },
             axisTick: {            // 坐标轴小标记
@@ -251,7 +266,7 @@
                 show: true,
                 rotate: 0,
                 margin: 8,
-                // formatter: null,
+                formatter: null,
                 textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
                     color: '#333'
                 }
@@ -261,7 +276,7 @@
                 lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
                     color: '#ccc',
                     width: 1,
-                    style: 'solid'
+                    type: 'solid'
                 }
             },
             splitArea: {           // 分隔区域
@@ -277,13 +292,13 @@
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
-            barMinHeight: 20
-            // barWidth: null        // 默认自适应
+            barMinHeight: 20,
+            barWidth: null        // 默认自适应
         },
 
         // 折线图默认参数
         line: {
-            // stack: null
+            stack: null,
             xAxisIndex: 0,
             yAxisIndex: 0,
             itemStyle: {
@@ -291,7 +306,7 @@
                         // color: 各异,
                     lineStyle: {
                         width: 1,
-                        style: 'solid',
+                        type: 'solid',
                         shadowColor : 'rgba(0,0,0,0)', //默认透明
                         shadowBlur: 5,
                         shadowOffsetX: 3,
@@ -302,7 +317,7 @@
                         // color: 各异,
                 }
             },
-            //symbol: null,     // 拐点图形类型，非标准参数
+            symbol: null,     // 拐点图形类型，非标准参数
             symbolSize: 4           // 可计算特性参数，空数据拖拽提示图形大小
         },
 
@@ -330,7 +345,7 @@
         scatter: {
             xAxisIndex: 0,
             yAxisIndex: 0,
-            //symbol: null,    // 图形类型，非标准参数
+            symbol: null,    // 图形类型，非标准参数
             symbolSize: 4,       // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             large: false,        // 大规模散点图
             largeThreshold: 2000 // 大规模阀值，large为true且数据量大于largeThreshold才启用大规模模式
@@ -338,18 +353,18 @@
 
         // 饼图默认参数
         pie: {
-            // center: null,                   // 默认全局居中
-            // radius: [0, min(width,height) - 50],
+            center: null,                   // 默认全局居中
+            radius: null,
             startAngle: 0,
             minAngle: 5,
             selectedOffset: 10,             // 选中是扇区偏移量
-            // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
+            selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
             itemStyle: {
                 normal: {
                     label: {
                         show: true,
-                        position: 'outer'
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                        position: 'outer',
+                        textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     labelLine: {
                         show: true,
@@ -357,15 +372,15 @@
                         lineStyle: {
                             // color: 各异,
                             width: 1,
-                            style: 'solid'
+                            type: 'solid'
                         }
                     }
                 },
                 emphasis: {
                     label: {
                         show: false,
-                        position: 'outer'
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                        position: 'outer',
+                        textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     labelLine: {
                         show: false,
@@ -373,7 +388,7 @@
                         lineStyle: {
                             // color: 各异,
                             width: 1,
-                            style: 'solid'
+                            type: 'solid'
                         }
                     }
                 }
@@ -384,11 +399,12 @@
             mapType: 'china',
             mapLocation: {
                 x : 'center',
-                y : 'center'
-                // width    // 自适应
-                // height   // 自适应
+                y : 'center',
+                width: null,    // 自适应
+                height:null   // 自适应
             },
-            // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
+            mapValueCalculation: 'sum',    // 数值合并方式，默认加和，可选为：'sum' | 'mean'
+            selectedMode: false,           // 选择模式，默认关闭，可选single，multiple
             itemStyle: {
                 normal: {
                     // color: 各异,
@@ -437,8 +453,8 @@
                 normal: {
                     // color: 各异,
                     label: {
-                        show: false
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                        show: false,
+                        textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     nodeStyle : {
                         brushType : 'both',
@@ -452,8 +468,8 @@
                 emphasis: {
                     // color: 各异,
                     label: {
-                        show: false
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                        show: false,
+                        textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     nodeStyle : {},
                     linkStyle : {}
