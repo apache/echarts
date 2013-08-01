@@ -396,7 +396,6 @@ define(function (require) {
             _selectedMap = {};
 
             var data = legendOption.data || [];
-            var finalData = [];
             var itemName;
             var serie;
             var color;
@@ -404,9 +403,9 @@ define(function (require) {
                 itemName = data[i];
                 serie = _getSeriesByName(itemName);
                 if (!serie) {
-                    continue;
-                } else {
-                    finalData.push(data[i]);
+                    _selectedMap[itemName] = false;
+                } 
+                else {
                     color = self.deepQuery(
                         [serie], 'itemStyle.normal.color'
                     );
@@ -416,15 +415,12 @@ define(function (require) {
                     _selectedMap[itemName] = true;
                 }
             }
-            if (finalData.length > 0) {
-                legendOption.data = finalData;
-                if (selected) {
-                    for (var k in selected) {
-                        _selectedMap[k] = selected[k];
-                    }
+            if (selected) {
+                for (var k in selected) {
+                    _selectedMap[k] = selected[k];
                 }
-                _buildShape();
             }
+            _buildShape();
         }
 
         /**
@@ -464,7 +460,8 @@ define(function (require) {
             for (var i = 0, dataLength = data.length; i < dataLength; i++) {
                 if (found || data[i] != name) {
                     finalData.push(data[i]);
-                } else {
+                }
+                else {
                     found = true;
                     continue;
                 }

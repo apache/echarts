@@ -74,11 +74,23 @@ define(function (require) {
             invisible : true,
             hoverable: false,
             style : {
-                lineWidth : 2,
-                strokeColor : ecConfig.categoryAxis.axisLine.lineStyle.color
+                // lineWidth : 2,
+                // strokeColor : ecConfig.categoryAxis.axisLine.lineStyle.color
+            }
+        };
+        var _axisShadowShape = {
+            shape : 'line',
+            id : zr.newShapeId('tooltip'),
+            zlevel: 1,                      // grid上，chart下
+            invisible : true,
+            hoverable: false,
+            style : {
+                // lineWidth : 10,
+                // strokeColor : ecConfig.categoryAxis.axisLine.lineStyle.color
             }
         };
         zr.addShape(_axisLineShape);
+        zr.addShape(_axisShadowShape);
 
         /**
          * 根据配置设置dom样式
@@ -170,11 +182,18 @@ define(function (require) {
             if (_tDom) {
                 _tDom.style.display = 'none';
             }
+            var needRefresh = false;
             if (!_axisLineShape.invisible) {
                 _axisLineShape.invisible = true;
                 zr.modShape(_axisLineShape.id, _axisLineShape);
-                zr.refresh();
+                needRefresh = true;
             }
+            if (!_axisShadowShape.invisible) {
+                _axisShadowShape.invisible = true;
+                zr.modShape(_axisShadowShape.id, _axisShadowShape);
+                needRefresh = true;
+            }
+            needRefresh && zr.refresh(); 
         }
 
         function _show(x, y, specialCssText) {
@@ -420,15 +439,17 @@ define(function (require) {
                 }
                 y = zrEvent.getY(_event) + 10;
                 x = categoryAxis.getCoordByIndex(dataIndex);
-                _axisLineShape.style.xStart = x;
-                _axisLineShape.style.yStart = component.grid.getY();
-                _axisLineShape.style.xEnd = x;
-                _axisLineShape.style.yEnd = component.grid.getYend();
+                _styleAxisPointer(
+                    seriesArray,
+                    x, grid.getY(), 
+                    x, grid.getYend(),
+                    categoryAxis.getGap()
+                );
                 x += 10;
             }
             else if (yAxisIndex != -1
-                       && yAxis.getAxis(yAxisIndex).type
-                          == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                     && yAxis.getAxis(yAxisIndex).type
+                        == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
             ) {
                 // 纵轴为类目轴，找到所有用这条纵轴并且axis触发的系列数据
                 categoryAxis = yAxis.getAxis(yAxisIndex);
@@ -450,10 +471,12 @@ define(function (require) {
                 }
                 x = zrEvent.getX(_event) + 10;
                 y = categoryAxis.getCoordByIndex(dataIndex);
-                _axisLineShape.style.xStart = component.grid.getX();
-                _axisLineShape.style.yStart = y;
-                _axisLineShape.style.xEnd = component.grid.getXend();
-                _axisLineShape.style.yEnd = y;
+                _styleAxisPointer(
+                    seriesArray,
+                    grid.getX(), y, 
+                    grid.getXend(), y,
+                    categoryAxis.getGap()
+                );
                 y += 10;
             }
 
@@ -528,13 +551,9 @@ define(function (require) {
                     self.hasAppend = true;
                 }
                 _show(x, y, specialCssText);
-
-                _axisLineShape.invisible = false;
-                zr.modShape(_axisLineShape.id, _axisLineShape);
-                zr.refresh();
             }
         }
-
+        
         function _showItemTrigger() {
             var serie = ecData.get(_curTarget, 'series');
             var data = ecData.get(_curTarget, 'data');
@@ -639,6 +658,125 @@ define(function (require) {
             if (!_axisLineShape.invisible) {
                 _axisLineShape.invisible = true;
                 zr.modShape(_axisLineShape.id, _axisLineShape);
+                zr.refresh();
+            }
+        }
+
+        /**
+         * 设置坐标轴指示器样式 
+         */
+        function _styleAxisPointer(
+            seriesArray, xStart, yStart, xEnd, yEnd, gap
+        ) {
+            if (seriesArray.length > 0) {
+                var queryTarget;
+                var curType;
+                var axisPointer = option.tooltip.axisPointer;
+                var pointType = axisPointer.type;
+                var lineColor = axisPointer.lineStyle.color;
+                var lineWidth = axisPointer.lineStyle.width;
+                var lineType = axisPointer.lineStyle.type;
+                var areaSize = axisPointer.areaStyle.size;
+                var areaColor = axisPointer.areaStyle.color;
+                
+                for (var i = 0, l = seriesArray.length; i < l; i++) {
+                    if (self.deepQuery(
+                           [seriesArray[i], option], 'tooltip.trigger'
+                       ) == 'axis'
+                    ) {
+                        queryTarget = [seriesArray[i]];
+                        curType = self.deepQuery(
+                            queryTarget,
+                            'tooltip.axisPointer.type'
+                        );
+                        pointType = curType || pointType; 
+                        if (curType == 'line') {
+                            lineColor = self.deepQuery(
+                                queryTarget,
+                                'tooltip.axisPointer.lineStyle.color'
+                            ) || lineColor;
+                            lineWidth = self.deepQuery(
+                                queryTarget,
+                                'tooltip.axisPointer.lineStyle.width'
+                            ) || lineWidth;
+                            lineType = self.deepQuery(
+                                queryTarget,
+                                'tooltip.axisPointer.lineStyle.type'
+                            ) || lineType;
+                        }
+                        else if (curType == 'shadow') {
+                            areaSize = self.deepQuery(
+                                queryTarget,
+                                'tooltip.axisPointer.areaStyle.size'
+                            ) || areaSize;
+                            areaColor = self.deepQuery(
+                                queryTarget,
+                                'tooltip.axisPointer.areaStyle.color'
+                            ) || areaColor;
+                        }
+                    }
+                }
+                
+                if (pointType == 'line') {
+                    _axisLineShape.style = {
+                        xStart : xStart,
+                        yStart : yStart,
+                        xEnd : xEnd,
+                        yEnd : yEnd,
+                        strokeColor : lineColor,
+                        lineWidth : lineWidth,
+                        lineType : lineType
+                    };
+                    _axisLineShape.invisible = false;
+                    zr.modShape(_axisLineShape.id, _axisLineShape);
+                }
+                else if (pointType == 'shadow') {
+                    if (typeof areaSize == 'undefined' 
+                        || areaSize == 'auto'
+                        || isNaN(areaSize)
+                    ) {
+                        lineWidth = gap;
+                    }
+                    else {
+                        lineWidth = areaSize;
+                    }
+                    if (xStart == xEnd) {
+                        // 纵向
+                        if (Math.abs(grid.getX() - xStart) < 2) {
+                            // 最左边
+                            lineWidth /= 2;
+                            xStart = xEnd = xEnd + lineWidth / 2;
+                        }
+                        else if (Math.abs(grid.getXend() - xStart) < 2) {
+                            // 最右边
+                            lineWidth /= 2;
+                            xStart = xEnd = xEnd - lineWidth / 2;
+                        }
+                    }
+                    else if (yStart == yEnd) {
+                        // 横向
+                        if (Math.abs(grid.getY() - yStart) < 2) {
+                            // 最上边
+                            lineWidth /= 2;
+                            yStart = yEnd = yEnd + lineWidth / 2;
+                        }
+                        else if (Math.abs(grid.getYend() - yStart) < 2) {
+                            // 最右边
+                            lineWidth /= 2;
+                            yStart = yEnd = yEnd - lineWidth / 2;
+                        }
+                    }
+                    _axisShadowShape.style = {
+                        xStart : xStart,
+                        yStart : yStart,
+                        xEnd : xEnd,
+                        yEnd : yEnd,
+                        strokeColor : areaColor,
+                        lineWidth : lineWidth
+                    };
+                    _axisShadowShape.invisible = false;
+                    zr.modShape(_axisShadowShape.id, _axisShadowShape);
+                }
                 zr.refresh();
             }
         }
