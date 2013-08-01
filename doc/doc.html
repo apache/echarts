@@ -619,9 +619,14 @@ myChart.setOption(option);
                             <td> 默认只设定了图例文字颜色（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
                         <tr>
+                            <td> {Object} selected </td>
+                            <td> null </td>
+                            <td> 配置默认选中状态，可配合LEGEND.SELECTED事件做动态数据载入，<a href="example/legend.html" target="_blank">try this »</a> </td>
+                        </tr>
+                        <tr>
                             <td> {Array &lt;string&gt;} data </td>
                             <td> [ ] </td>
-                            <td> 图例内容数组，数组项为{string}，每一项代表一个系列的name。<br/>使用根据该值索引<a href="#Series" title="">series</a>中同名系列所用的图表类型和itemStyle，如果索引不到，该item将不显示。</td>
+                            <td> 图例内容数组，数组项为{string}，每一项代表一个系列的name。<br/>使用根据该值索引<a href="#Series" title="">series</a>中同名系列所用的图表类型和itemStyle，如果索引不到，该item将默认为没启用状态。</td>
                         </tr>
                     </table>
                     <p><img src="./asset/img/doc/legend.png" title="" alt="图例"/></P>
