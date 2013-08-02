@@ -611,14 +611,14 @@ define(function (require) {
             var image = zr.toDataURL('image/' + imgType); 
             var downloadDiv = document.createElement('div');
             downloadDiv.id = '__echarts_download_wrap__';
-            downloadDiv.style.cssText = 'position:absolute;'
+            downloadDiv.style.cssText = 'position:fixed;'
                 + 'z-index:99999;'
                 + 'display:block;'
                 + 'top:0;left:0;'
                 + 'background-color:rgba(33,33,33,0.5);'
                 + 'text-align:center;'
-                + 'width:' + document.documentElement.clientWidth + 'px;'
-                + 'height:' + document.documentElement.clientHeight + 'px;'
+                + 'width:100%;'
+                + 'height:100%;'
                 + 'line-height:' 
                 + document.documentElement.clientHeight + 'px;';
                 
