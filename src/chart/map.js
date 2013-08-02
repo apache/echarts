@@ -90,7 +90,7 @@ define(function(require) {
                 }
             }
             
-            if (_valueCalculation && _valueCalculation == 'mean') {
+            if (_valueCalculation && _valueCalculation == 'average') {
                 for (var k in valueData) {
                     valueData[k].value = valueData[k].value 
                                          / valueData[k].seriesIndex.length;
@@ -227,12 +227,12 @@ define(function(require) {
                 style = zrUtil.clone(mapData[i]);
                 highlightStyle = zrUtil.clone(style);
                 name = style.text;
-                data = valueData[name];
+                data = valueData[name]; // 多系列合并后的数据
                 if (data) {
-                    queryTarget = [data];
+                    queryTarget = [data]; // level 3
                     seriesName = '';
                     for (var j = 0, k = data.seriesIndex.length; j < k; j++) {
-                        queryTarget.push(series[data.seriesIndex[j]]);
+                        queryTarget.push(series[data.seriesIndex[j]]);// level 2
                         seriesName += series[data.seriesIndex[j]].name + ' ';
                         if (legend 
                             && legend.hasColor(series[data.seriesIndex[j]].name)
@@ -254,7 +254,7 @@ define(function(require) {
                             });
                         }
                     }
-                    queryTarget.push(defaultOption);
+                    queryTarget.push(defaultOption); // level 1
                     value = data.value;
                 }
                 else {

@@ -403,7 +403,7 @@
                 width: null,    // 自适应
                 height:null   // 自适应
             },
-            mapValueCalculation: 'sum',    // 数值合并方式，默认加和，可选为：'sum' | 'mean'
+            mapValueCalculation: 'sum',    // 数值合并方式，默认加和，可选为：'sum' | 'average'
             selectedMode: false,           // 选择模式，默认关闭，可选single，multiple
             itemStyle: {
                 normal: {
