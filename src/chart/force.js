@@ -80,7 +80,7 @@ define(function(require) {
         var attractiveness;
         //- ----------
 
-        var stepTime = 1/20;
+        var stepTime = 1/60;
         
         var viewportWidth;
         var viewportHeight;
@@ -237,7 +237,7 @@ define(function(require) {
                 // 初始化加速度
                 nodeAccelerations[i] = [0, 0];
                 // 初始化质量
-                nodeMasses[i] = r * r * density;
+                nodeMasses[i] = r * r * density * 0.035;
 
                 var shape = {
                     id : zr.newShapeId(self.type),
