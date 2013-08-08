@@ -568,7 +568,7 @@ define(function(require) {
             function cb() {
                 if (_updating) {
                     _step();
-                    setTimeout(cb, stepTime);
+                    setTimeout(cb, stepTime * 1000);
                 }
             }
             setTimeout(cb, stepTime * 1000);
