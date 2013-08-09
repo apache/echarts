@@ -10,19 +10,6 @@
 // 只能暂时使用具名id
 define( 'js', {
     load: function ( resourceId, req, load, config ) {
-        var script = document.createElement( 'script' );
-        script.src = req.toUrl( resourceId );
-        script.async = true;
-        if ( script.readyState ) {
-            script.onreadystatechange = onload;
-        }
-        else {
-            script.onload = onload;
-        }
-
-        var parent = document.getElementsByTagName( 'head' )[ 0 ] || document.body;
-        parent.appendChild( script ) && ( parent = null );
-        
         function onload() {
             var readyState = script.readyState;
             if ( 
@@ -34,5 +21,19 @@ define( 'js', {
                 load( true );
             }
         }
+
+        var script = document.createElement( 'script' );
+        script.src = req.toUrl( resourceId );
+        script.async = true;
+        if ( script.readyState ) {
+            script.onreadystatechange = onload;
+        }
+        else {
+            script.onload = onload;
+        }
+
+        var parent = document.getElementsByTagName( 'head' )[ 0 ] 
+            || document.body;
+        parent.appendChild( script ) && ( parent = null );
     }
 } );
