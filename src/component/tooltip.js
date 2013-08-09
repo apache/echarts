@@ -117,7 +117,7 @@ define(function (require) {
             }
 
             if (typeof opt.borderColor != 'undefined') {
-                cssText.push('border-color:' + opt.borderColor + 'px');
+                cssText.push('border-color:' + opt.borderColor);
             }
 
             if (typeof opt.borderRadius != 'undefined') {
