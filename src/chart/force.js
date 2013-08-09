@@ -1,6 +1,5 @@
 /**
  * echarts图表类：力导向图
- * Copyright 2013 Baidu Inc. All rights reserved.
  *
  * @author pissang (shenyi01@baidu.com)
  *
