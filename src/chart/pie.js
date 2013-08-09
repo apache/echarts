@@ -130,8 +130,8 @@ define(function(require) {
                 }
 
                 percent = data[i].value / totalValue;
-                endAngle = (percent * totalAngle
-                            + startAngle + minAngle).toFixed(2) - 0;
+                endAngle = (percent * totalAngle + startAngle + minAngle)
+                           .toFixed(2) - 0;
                 percent = (percent * 100).toFixed(2);
 
                 _buildItem(
@@ -921,7 +921,8 @@ define(function(require) {
         };
 
         self.reformOption = reformOption;   // 重载基类方法
-
+        
+        // 接口方法
         self.init = init;
         self.refresh = refresh;
         self.animation = animation;
