@@ -1,6 +1,5 @@
 /**
  * echarts扩展zrender shape
- * Copyright 2013 Baidu Inc. All rights reserved.
  *
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *

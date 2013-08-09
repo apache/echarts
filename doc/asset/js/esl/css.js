@@ -15,7 +15,8 @@ define( 'css', {
         link.setAttribute( 'type', 'text/css' );
         link.setAttribute( 'href', req.toUrl( resourceId ) );
 
-        var parent = document.getElementsByTagName( 'head' )[ 0 ] || document.body;
+        var parent = document.getElementsByTagName( 'head' )[ 0 ] 
+            || document.body;
         parent.appendChild( link );
 
         parent = null;

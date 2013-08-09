@@ -85,6 +85,7 @@
                                 <li><a href="#Map">map</a></li>
                                 <li><a href="#Force">force</a></li>
                             </ul>
+                            <li><a href="#引入ECharts">引入ECharts</a></li>
                             <li><a href="#初始化">初始化</a></li>
                             <li><a href="#方法">方法</a></li>
                             <li><a href="#选项">选项</a></li>
@@ -343,6 +344,46 @@
                             <td><img src="./asset/img/example/webkit-dep.png" title="" alt="中国地图"/></td>
                         </tr>
                     </table>
+                    
+                    <h3>引入ECharts<a name="引入ECharts"> </a></h3>
+                    <P>如果你的项目本身就是模块化的，那引入echarts将很简单，只需要配置好packet路径指向src即可，而且你还可以实现图表的按需加载，由于echarts依赖底层zrender，建议你同时下载<a href="https://github.com/ecomfe/zrender" target="_blank">zrender</a>到本地，可参考<a href="example/demo.html" target="_blank">demo</a>，你需要配置如下</P>
+                    <div class="code">
+                        <pre>//from echarts example
+require.config({
+    packages: [
+        {
+            name: 'echarts',
+            location: '../../src',      
+            main: 'echarts'
+        },
+        {
+            name: 'zrender',
+            location: '../../../zrender/src', // zrender与echarts在同一级目录
+            main: 'zrender'
+        }
+    ]
+});
+</pre>
+                    </div>
+                    <P>你也可以使用单一文件引入，node环境下安装<a href="http://requirejs.org/docs/optimization.html" target="_blank">require.js</a>，build文件夹内为你准备好配置项，可根据你的项目需求修改并压缩生成单一文件。</P>
+                    <p>如你所发现的，build文件夹下已经生成了两个单一文件（包含全部图表），echarts.js经过压缩，如需调试，可以用echarts-original.js，采用单一文件使用例子见<a href="example/www/index.html" target="_blank">ECharts单一文件引入</a>，存放在example/www下，你需要配置如下</p>
+                    <div class="code">
+                        <pre>//初始化实例时传入选项
+require.config({
+    paths:{ 
+        echarts:'./js/echarts'
+    }
+});
+</pre>
+                    </div>
+                    <p>不管如何引入ECharts，你都需要如下4步：</p>
+                    <ol>
+                        <li>引入一个模块加载器，如<a href="https://github.com/ecomfe/esl" target="_blank">esl.js</a>或者<a href="http://requirejs.org" target="_blank">require.js</a></li>
+                        <li>为ECharts准备一个具备大小（宽高）的Dom（当然可以是动态生成的）</li>
+                        <li>为模块加载器配置echarts的路径，从当前页面链接到echarts.js，见上述说明</li>
+                        <li>动态加载echarts然后在回调函数中开始使用</li>
+                    </ol>
+
                     <h3>初始化<a name="初始化"> </a></h3>
                     <P> 图表库实现为多实例的，实例选项在新建时传入，同时也可在实例新建后通过实例方法setOption（见<a href="#方法" title="">方法</a>）传入，两种初始化方式最终产出效果是等价的，即如下两组代码产出效果相同。</P>
                     <div class="code">
@@ -2064,7 +2105,7 @@ feature : {
                     <p><img src="./asset/img/doc/multiControl.jpg" title="" alt="多级控制"/></P>
 
                     <h3>附录：一个直观的事例<a name="附录一个直观的事例"> </a></h3>
-                    <p>查看更多实例 <a href="example.html" target="_blank">example</a>，或者使用这个<a href="example/demo.html" target="_blank">demo</a>作为你的模板</p>
+                    <p>查看更多实例 <a href="example.html" target="_blank">example</a>，或者使用这个<a href="example/demo.html" target="_blank">demo</a> 或 <a href="example/www/index.html" target="_blank">ECharts单一文件引入</a>作为你的模板</p>
                     <div class="code">
                         <pre>// 图表实例化------------------
 var echarts = require('echarts');

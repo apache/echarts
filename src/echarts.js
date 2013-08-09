@@ -1,13 +1,58 @@
+/*!
+ * ECharts, a javascript interactive chart library.
+ *  
+ * Copyright (c) 2013, Baidu Inc.
+ * All rights reserved.
+ * 
+ * Redistribution and use of this software in source and binary forms, with or 
+ * without modification, are permitted provided that the following conditions 
+ * are met:
+ * 
+ * Redistributions of source code must retain the above copyright notice, this 
+ * list of conditions and the following disclaimer.
+ * 
+ * Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * Neither the name of Baidu Inc. nor the names of its contributors may be used
+ * to endorse or promote products derived from this software without specific 
+ * prior written permission of Baidu Inc.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /**
  * echarts
- * Copyright 2013 Baidu Inc. All rights reserved.
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
 define(function(require) {
+    // for build require
+    // require('./chart/line');
+    // require('./chart/bar');
+    // require('./chart/scatter');
+    // require('./chart/k');
+    // require('./chart/pie');
+    // require('./chart/map');
+    // require('./chart/force');
+    
     var self = {};
+    /**
+     * 入口方法 
+     */
     self.init = function(dom, libOption) {
         libOption = libOption || {type : 'canvas'};
         if (libOption.type == 'canvas') {
@@ -260,6 +305,9 @@ define(function(require) {
             }
         }
 
+        /**
+         * 图例选择响应
+         */
         function _onlegendSelected(param) {
             // 用于图表间通信
             _status.needRefresh = false;
@@ -275,6 +323,9 @@ define(function(require) {
             }
         }
 
+        /**
+         * 数据区域缩放响应 
+         */
         function _ondataZoom(param) {
             // 用于图表间通信
             _status.needRefresh = false;
@@ -288,7 +339,10 @@ define(function(require) {
                 _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
             }
         }
-        
+
+        /**
+         * 值域漫游响应 
+         */
         function _ondataRange(param) {
             // 用于图表间通信
             _status.needRefresh = false;
@@ -304,9 +358,13 @@ define(function(require) {
             }
         }
 
+        /**
+         * 动态类型切换响应 
+         */
         function _onmagicTypeChanged() {
             var magicOption = _toolbox.getMagicOption();
             var len;
+            // 横轴数据还原
             if (_optionBackup.xAxis) {
                 if (_optionBackup.xAxis instanceof Array) {
                     len = _optionBackup.xAxis.length;
@@ -319,6 +377,8 @@ define(function(require) {
                     magicOption.xAxis.data = _optionBackup.xAxis.data;
                 }
             }
+            
+            // 纵轴数据还原
             if (_optionBackup.yAxis) {
                 if (_optionBackup.yAxis instanceof Array) {
                     len = _optionBackup.yAxis.length;
@@ -332,6 +392,7 @@ define(function(require) {
                 }
             }
 
+            // 系列数据还原
             len = magicOption.series.length;
             while (len--) {
                 magicOption.series[len].data = _optionBackup.series[len].data;
@@ -340,6 +401,9 @@ define(function(require) {
             _render(magicOption);
         }
 
+        /**
+         * 数据视图修改响应 
+         */
         function _ondataViewChanged(param) {
             _syncBackupData(param.option);
             _messageCenter.dispatch(
@@ -350,14 +414,23 @@ define(function(require) {
             _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
         }
 
+        /**
+         * 还原 
+         */
         function _onrestore() {
             restore();
         }
-        
+
+        /**
+         * 刷新 
+         */
         function _onrefresh() {
             refresh();
         }
 
+        /**
+         * 数据修改后的反向同步备份数据 
+         */
         function _syncBackupData(curOption) {
             if ((curOption.dataZoom && curOption.dataZoom.show)
                 || (curOption.toolbox
@@ -394,6 +467,7 @@ define(function(require) {
                 }
             }
         }
+
         /**
          * 打包Echarts层的事件附件
          */
@@ -408,6 +482,9 @@ define(function(require) {
             return;
         }
 
+        /**
+         * 图表渲染 
+         */
         function _render(magicOption) {
             _disposeChartList();
             _zr.clear();
@@ -550,6 +627,9 @@ define(function(require) {
             _zr.render();
         }
 
+        /**
+         * 还原 
+         */
         function restore() {
             var zrUtil = require('zrender/tool/util');
             if (_optionRestore.legend && _optionRestore.legend.selected) {
@@ -564,7 +644,10 @@ define(function(require) {
             _toolbox.reset(_option);
             _render(_option);
         }
-        
+
+        /**
+         * 刷新 
+         */
         function refresh() {
             // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
             // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
@@ -573,6 +656,7 @@ define(function(require) {
             }
             _zr.refresh();
         }
+
         /**
          * 释放图表实例
          */
@@ -681,20 +765,37 @@ define(function(require) {
             return self;
         }
 
+        /**
+         * 获取当前zrender实例，可用于添加额为的shape和深度控制 
+         */
         function getZrender() {
             return _zr;
         }
 
+        /**
+         * 绑定事件
+         * @param {Object} eventName 事件名称
+         * @param {Object} eventListener 事件响应函数
+         */
         function on(eventName, eventListener) {
             _messageCenter.bind(eventName, eventListener);
             return self;
         }
 
+        /**
+         * 解除事件绑定
+         * @param {Object} eventName 事件名称
+         * @param {Object} eventListener 事件响应函数
+         */
         function un(eventName, eventListener) {
             _messageCenter.unbind(eventName, eventListener);
             return self;
         }
 
+        /**
+         * 显示loading过渡 
+         * @param {Object} loadingOption
+         */
         function showLoading(loadingOption) {
             _toolbox.hideDataView();
 
@@ -726,11 +827,17 @@ define(function(require) {
             return self;
         }
 
+        /**
+         * 隐藏loading过渡 
+         */
         function hideLoading() {
             _zr.hideLoading();
             return self;
         }
 
+        /**
+         * 视图区域大小变化更新，不默认绑定，供使用方按需调用 
+         */
         function resize() {
             _zr.resize();
             // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
@@ -744,11 +851,17 @@ define(function(require) {
             _zr.refresh();
         }
 
+        /**
+         * 清楚已渲染内容 ，clear后echarts实例可用
+         */
         function clear() {
             _zr.clear();
             return self;
         }
 
+        /**
+         * 释放，dispose后echarts实例不可用
+         */
         function dispose() {
             _island.dispose();
             _toolbox.dispose();
@@ -759,6 +872,7 @@ define(function(require) {
             return;
         }
 
+        // 接口方法暴漏
         self.setOption = setOption;
         self.setSeries = setSeries;
         self.getZrender = getZrender;
