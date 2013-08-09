@@ -71,9 +71,16 @@ define(function(require) {
 
         var temperature;
         var k;
+        
+        //- ----------外部参数
         var density;
+        var coolDown;
+        var centripetal;
+        var initializeSize;
+        var attractiveness;
+        //- ----------
 
-        var stepTime = 1/20;
+        var stepTime = 1/60;
         
         var viewportWidth;
         var viewportHeight;
@@ -97,7 +104,15 @@ define(function(require) {
                     var minRadius = self.deepQuery([serie], 'minRadius');
                     var maxRadius = self.deepQuery([serie], 'maxRadius');
 
+                    // ----------获取外部参数
+                    attractiveness = self.deepQuery(
+                        [serie], 'attractiveness'
+                    );
                     density = self.deepQuery([serie], 'density');
+                    initSize = self.deepQuery([serie], 'initSize');
+                    centripetal = self.deepQuery([serie], 'centripetal');
+                    coolDown = self.deepQuery([serie], 'coolDown');
+                    // ----------
 
                     categories = self.deepQuery([serie], 'categories');
                     
@@ -141,9 +156,7 @@ define(function(require) {
                     linkShapes = [];
 
                     var area = viewportWidth * viewportHeight;
-                    var attractiveness = self.deepQuery(
-                        [serie], 'attractiveness'
-                    );
+
                     // Formula in 'Graph Drawing by Force-directed Placement'
                     k = 0.5 / attractiveness 
                         * Math.sqrt( area / nodesRawData.length );
@@ -208,7 +221,7 @@ define(function(require) {
                 var r = radius[i];
 
                 var random = _randomInSquare(
-                    viewportWidth/2, viewportHeight/2, 300
+                    viewportWidth/2, viewportHeight/2, initSize
                 );
                 x = typeof(node.initial) === 'undefined' 
                     ? random.x
@@ -224,7 +237,7 @@ define(function(require) {
                 // 初始化加速度
                 nodeAccelerations[i] = [0, 0];
                 // 初始化质量
-                nodeMasses[i] = r * r * density;
+                nodeMasses[i] = r * r * density * 0.035;
 
                 var shape = {
                     id : zr.newShapeId(self.type),
@@ -466,7 +479,7 @@ define(function(require) {
                 var d2 = vec2.lengthSquare(v12);
                 vec2.normalize(v12, v12);
                 // 100是可调参数
-                var forceFactor = d2 / 100;
+                var forceFactor = d2 / 100 * centripetal;
                 vec2.scale(v12, v12, forceFactor);
                 vec2.add(nodeForces[i], nodeForces[i], v12);
 
@@ -504,8 +517,8 @@ define(function(require) {
                 // Damping
                 vec2.scale(velocity, velocity, temperature);
                 // 防止速度太大
-                velocity[0] = Math.min(velocity[0], 100);
-                velocity[1] = Math.min(velocity[1], 100);
+                velocity[0] = Math.max(Math.min(velocity[0], 100), -100);
+                velocity[1] = Math.max(Math.min(velocity[1], 100), -100);
 
                 vec2.add(p, p, velocity);
                 nodeShapes[i].position[0] = p[0];
@@ -537,7 +550,7 @@ define(function(require) {
             zr.refresh();
 
             // Cool Down
-            temperature *= 0.999;
+            temperature *= coolDown;
         }
 
         var _updating;
@@ -555,10 +568,10 @@ define(function(require) {
             function cb() {
                 if (_updating) {
                     _step();
-                    setTimeout(cb, stepTime);
+                    setTimeout(cb, stepTime * 1000);
                 }
             }
-            setTimeout(cb, stepTime);
+            setTimeout(cb, stepTime * 1000);
         }
 
         function refresh() {
