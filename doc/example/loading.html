@@ -180,7 +180,7 @@ loadingTicket = setTimeout(function(){
             //    domMessage.innerHTML = e;
            // }
         }
-
+        /*
         require.config({
             packages: [
                 {
@@ -196,12 +196,16 @@ loadingTicket = setTimeout(function(){
                 }
             ]
         });
+        */
+        require.config({
+            paths:{ 
+                echarts:'./www/js/echarts'
+            }
+        });
 
         require(
             [
-                'echarts/echarts',
-                'echarts/chart/line',
-                'echarts/chart/bar'
+                'echarts'
             ],
             function(echarts) {
                 if (myChart && myChart.dispose) {

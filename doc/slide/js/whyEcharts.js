@@ -1,3 +1,4 @@
+/*
 require.config({
     packages: [
         {
@@ -13,20 +14,20 @@ require.config({
         }
     ]
 });
+*/
+require.config({
+    paths:{ 
+        echarts:'../../build/echarts',
+        webkitDep : '../../doc/example/webkit-dep',
+    }
+});
 
 var echarts;
 var webkitDepData;
 require(
     [
         'echarts',
-        '../../doc/example/webkit-dep',
-        'echarts/chart/line',
-        'echarts/chart/bar',
-        'echarts/chart/scatter',
-        'echarts/chart/k',
-        'echarts/chart/pie',
-        'echarts/chart/map',
-        'echarts/chart/force',
+        'webkitDep',
     ],
     function(ec, wd) {
         echarts = ec;
@@ -588,7 +589,7 @@ var optionMap = {
                 large: true,
                 data: (function() {
                     var d = [];
-                    var len = 5000;
+                    var len = 3000;
                     var x = 0;
                     while (len--) {
                         x = (Math.random() * 10).toFixed(3) - 0;
@@ -607,7 +608,7 @@ var optionMap = {
                 large: true,
                 data: (function() {
                     var d = [];
-                    var len = 5000;
+                    var len = 3000;
                     var x = 0;
                     while (len--) {
                         x = (Math.random() * 10).toFixed(3) - 0;

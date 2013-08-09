@@ -1,6 +1,5 @@
 /**
  * echarts默认配置项
- * Copyright 2013 Baidu Inc. All rights reserved.
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
@@ -437,8 +436,9 @@ define(function() {
                 // width    // 自适应
                 // height   // 自适应
             },
-            // mapValueCalculation: 'sum', // 数值合并方式，默认加和，可选为：'sum' | 'mean'
-            // selectedMode: false,     // 选择模式，默认关闭，可选single，multiple
+            // mapValueCalculation: 'sum', // 数值合并方式，默认加和，可选为：
+                                           // 'sum' | 'average' | 'max' | 'min' 
+            // selectedMode: false,        // 选择模式，默认关闭，可选single，multiple
             itemStyle: {
                 normal: {
                     // color: 各异,
@@ -481,6 +481,12 @@ define(function() {
             maxRadius : 20,
             density : 1.0,
             attractiveness : 1.0,
+            // 初始化的随机大小位置
+            initSize : 300,
+            // 向心力因子，越大向心力越大
+            centripetal : 1,
+            // 冷却因子
+            coolDown : 0.99,
             // 分类里如果有样式会覆盖节点默认样式
             categories : [],
             itemStyle: {
