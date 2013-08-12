@@ -43,10 +43,6 @@ define(function (require) {
         // 通用样式
         var _gCssText = 'position:absolute;'
                         + 'display:block;'
-                        + 'transition:left 1s,top 1s;'
-                        + '-moz-transition:left 1s,top 1s;'
-                        + '-webkit-transition:left 1s,top 1s;'
-                        + '-o-transition:left 1s,top 1s;'
                         + 'border-style:solid;'
                         + 'white-space:nowrap;';
         // 默认样式
@@ -54,9 +50,9 @@ define(function (require) {
 
         var _needAxisTrigger;                   // 坐标轴触发
         var _hidingTicket;
-        var _hideDelay = 100;                   // 隐藏延迟
+        var _hideDelay;                         // 隐藏延迟
         var _showingTicket;
-        var _showDelay = 30;                    // 显示延迟
+        var _showDelay;                         // 显示延迟
         var _curTarget;
         var _event;
 
@@ -99,6 +95,22 @@ define(function (require) {
                 return '';
             }
             cssText = [];
+            if (opt.transitionDuration) {
+                var transitionText = 'left ' + opt.transitionDuration + 's,'
+                                    + 'top ' + opt.transitionDuration + 's';
+                cssText.push(
+                    'transition:' + transitionText
+                );
+                cssText.push(
+                    '-moz-transition:' + transitionText
+                );
+                cssText.push(
+                    '-webkit-transition:' + transitionText
+                );
+                cssText.push(
+                    '-o-transition:' + transitionText
+                );
+            }
 
             if (opt.backgroundColor) {
                 // for sb ie~
@@ -886,7 +898,9 @@ define(function (require) {
                     break;
                 }
             }
-
+            
+            _showDelay = option.tooltip.showDelay;
+            _hideDelay = option.tooltip.hideDelay;
             _defaultCssText = _style(option.tooltip);
             _tDom.style.position = 'absolute';  // 不是多余的，别删！
             self.hasAppend = false;
