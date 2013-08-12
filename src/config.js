@@ -159,6 +159,9 @@ define(function() {
             trigger: 'item',           // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
             // formatter: null         // 内容格式器：{string}（Template） ¦ {Function}
             islandFormatter: '{a} <br/>{b} : {c}',  // 数据孤岛内容格式器，非标准参数
+            transitionDuration : 1,    // 动画变换时间，单位s
+            showDelay: 30,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
+            hideDelay: 100,            // 隐藏延迟，单位ms
             backgroundColor: 'rgba(0,0,0,0.7)',     // 提示背景颜色，默认为透明度为0.7的黑色
             borderColor: '#333',       // 提示边框颜色
             borderRadius: 4,           // 提示边框圆角，单位px，默认为4
