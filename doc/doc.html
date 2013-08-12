@@ -385,16 +385,56 @@ require.config({
                     </ol>
 
                     <h3>初始化<a name="初始化"> </a></h3>
-                    <P> 图表库实现为多实例的，实例选项在新建时传入，同时也可在实例新建后通过实例方法setOption（见<a href="#方法" title="">方法</a>）传入，两种初始化方式最终产出效果是等价的，即如下两组代码产出效果相同。</P>
+                    <p>通过require获得echarts接口后可实例化图表，echarts接口仅有一个方法init，执行init时传入一个具备大小的dom节点（width、height可被计算得到即可，不一定可见）后即可实例化出图表对象，图表库实现为多实例的，同一页面可多次init出多个图表。图表实例可用方法见<a href="#方法">方法</a>，</p>
+                    <p>模块化的初始化代码如下：</p>
                     <div class="code">
-                        <pre>//初始化实例时传入选项
-var myChart = new echarts(option);
+                        <pre>
+// 模块化，图表按需加载
+// 作为入口
+require(
+    [
+        'echarts',
+        'echarts/chart/pie'
+    ], 
+    function(ec) {
+        var myChart = ec.init(document.getElementById('main'));
+        myChart.setOption({...});
+    }
+);
 
-//初始化实例选项为空，通过实例方法传入选项
-var myChart = new echarts();
-myChart.setOption(option);
-</pre>
-</div>                        <P> 同时，在实例中任何个性化选项不会影响其他已存在或未来生成的实例。</P>
+// -----------------------------
+
+// 非入口或再次使用，图表已被加载注册
+require('echarts').init(dom).setOption({...});
+                        </pre>
+                    </div>
+                    <p>单文件引入</p>
+                    <div class="code">
+                        <pre>
+// 单文件，全图表被默认加载了
+// 作为入口
+require(
+    ['echarts'],
+    function(ec) {
+        var myChart = ec.init(document.getElementById('main'));
+        myChart.setOption({...});
+    }
+);
+
+// -----------------------------
+
+// 非入口或再次使用
+require('echarts').init(dom).setOption({...});
+
+// 熟悉模块化的你可以跳过了下面代码了
+// 不习惯模块化的你当然可以
+var echarts;
+require(['echarts'], function(ec){
+    echarts = ec;
+});
+// 是的，把echarts加载后保存起来作为命名空间使用
+                        </pre>
+                    </div>
 
                     <h3>方法<a name="方法"> </a></h3>
                     <table cellspacing="0" class="ADoc_table full">
@@ -931,6 +971,21 @@ feature : {
                             <td> {string | Function} islandFormatter </td>
                             <td> '{a} &lt; br/&gt;{b} : {c}' </td>
                             <td> 拖拽重计算独有，数据孤岛内容格式器：{string}（Template） | {Function}，见表格下方</td>
+                        </tr>
+                        <tr>
+                            <td> {number} showDelay </td>
+                            <td> 30 </td>
+                            <td> 显示延迟，添加显示延迟可以避免频繁切换，单位ms </td>
+                        </tr>
+                        <tr>
+                            <td> {number} hideDelay </td>
+                            <td> 100 </td>
+                            <td> 隐藏延迟，单位ms</td>
+                        </tr>
+                        <tr>
+                            <td> {number} transitionDuration </td>
+                            <td> 1 </td>
+                            <td> 动画变换时长，单位s </td>
                         </tr>
                         <tr>
                             <td> {color} backgroundColor </td>
