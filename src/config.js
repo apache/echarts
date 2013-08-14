@@ -255,7 +255,7 @@ define(function() {
             splitLine: {           // 分隔线
                 show: true,        // 默认显示，属性show控制显示与否
                 lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
-                    color: '#ccc',
+                    color: ['#ccc'],
                     width: 1,
                     type: 'solid'
                 }
@@ -309,7 +309,7 @@ define(function() {
             splitLine: {           // 分隔线
                 show: true,        // 默认显示，属性show控制显示与否
                 lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
-                    color: '#ccc',
+                    color: ['#ccc'],
                     width: 1,
                     type: 'solid'
                 }
@@ -391,7 +391,7 @@ define(function() {
         pie: {
             // center: null,                   // 默认全局居中
             // radius: [0, min(width,height) - 50],
-            startAngle: 0,
+            startAngle: 90,
             minAngle: 5,
             selectedOffset: 10,             // 选中是扇区偏移量
             // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
