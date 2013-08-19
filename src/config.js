@@ -432,7 +432,7 @@ define(function() {
         },
         
         map: {
-            mapType: 'china',
+            mapType: 'china',   // 各省的mapType暂时都用中文
             mapLocation: {
                 x : 'center',
                 y : 'center'
@@ -538,6 +538,7 @@ define(function() {
             RESTORE: 'restore',
             CLICK: 'click',
             HOVER: 'hover',
+            MOUSEWHEEL: 'mousewheel',
             // -------
             DATA_CHANGED: 'dataChanged',
             DATA_ZOOM: 'dataZoom',

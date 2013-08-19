@@ -51,7 +51,7 @@ function refresh(isBtnRefresh){
     myChart.setOption(option, true);
     domMessage.innerHTML = '';
 }
-/*
+//*
 require.config({
     packages: [
         {
@@ -61,25 +61,25 @@ require.config({
         },
         {
             name: 'zrender',
-            location: 'http://ecomfe.github.io/zrender/src',
-            //location: '../../../zrender/src',
+            //location: 'http://ecomfe.github.io/zrender/src',
+            location: '../../../zrender/src',
             main: 'zrender'
         }
     ]
 });
-*/
-
+//*/
+/*
 require.config({
     paths:{ 
         echarts:'./www/js/echarts'
     }
 });
-
+*/
 
 var echarts;
 require(
     [
-        'echarts'   /*,
+        'echarts'   ,
         'echarts/chart/line',
         'echarts/chart/bar',
         'echarts/chart/scatter',
@@ -87,7 +87,6 @@ require(
         'echarts/chart/pie',
         'echarts/chart/map',
         'echarts/chart/force'
-        */
     ],
     function(ec) {
         echarts = ec;

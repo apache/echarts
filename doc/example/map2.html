@@ -73,14 +73,15 @@
                     <textarea id="code" name="code">
 option = {
     tooltip : {
-        trigger: 'item'
+        trigger: 'item',
+        formatter: '{b}'
     },
     series : [
         {
             name: '中国',
             type: 'map',
             mapType: 'china',
-            selectedMode : 'single',
+            selectedMode : 'multiple',
             itemStyle:{
                 normal:{label:{show:true}},
                 emphasis:{label:{show:true}}
