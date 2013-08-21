@@ -531,7 +531,10 @@ define(function(require) {
                                     ) || emphasisColor
                                       || normalColor
                                       || defaultColor,
-                                    lineWidth
+                                    lineWidth,
+                                    self.deepQuery(
+                                        [data, serie], 'symbolRotate'
+                                    )
                                 ));
                             }
 
@@ -628,7 +631,7 @@ define(function(require) {
          */
         function _getSymbol(
             seriesIndex, dataIndex, name, x, y,
-            normalColor, emphasisColor, lineWidth
+            normalColor, emphasisColor, lineWidth, rotate
         ) {
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
@@ -657,6 +660,12 @@ define(function(require) {
                 },
                 clickable : true
             };
+            
+            if (typeof rotate != 'undefined') {
+                itemShape.rotation = [
+                    rotate * Math.PI / 180, x, y
+                ];
+            }
             
             if (symbol.match('star')) {
                 itemShape.style.iconType = 'star';

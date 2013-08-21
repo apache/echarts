@@ -1136,7 +1136,7 @@ define(function (require) {
                 }
             }
             
-            var idx = _colorList.length - Math.round(
+            var idx = _colorList.length - Math.ceil(
                 (value - dataRangeOption.min) 
                 / (dataRangeOption.max - dataRangeOption.min)
                 * _colorList.length
