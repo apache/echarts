@@ -32,12 +32,12 @@ define(function(require) {
         var series;                 // 共享数据源，不要修改跟自己无关的项
 
         var _zlevelBase = self.getZlevelBase();
-        var _mapSeries;
-        var _scale;
-        var _position;
-        var _selectedMode;
-        var _valueCalculation;
-        var _selected = {};
+        var _selectedMode;      // 选择模式
+        var _selected = {};     // 地图选择状态
+        var _mapTypeMap = {};   // 图例类型索引
+
+        var _mapParams = require('../util/mapData/params');
+        var _textFixed = require('../util/mapData/textFixed');
 
         function _buildShape() {
             self.selectedMap = {};
@@ -48,64 +48,84 @@ define(function(require) {
             var mapType;
             var data;
             var name;
-            _mapSeries = {};
-            _selectedMode = false;
-            _valueCalculation = null;
+            var mapSeries = {};
+            _selectedMode = {};
+            var valueCalculation = {};
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].type == ecConfig.CHART_TYPE_MAP) {
+                if (series[i].type == ecConfig.CHART_TYPE_MAP) { // map
                     series[i] = self.reformOption(series[i]);
-                    _mapSeries[i] = true;
-                    
-                    _selectedMode = _selectedMode || series[i].selectedMode;
-                    _valueCalculation = _valueCalculation 
-                                        || series[i].mapValueCalculation;
                     mapType = series[i].mapType;
+                    mapSeries[mapType] = mapSeries[mapType] || {};
+                    mapSeries[mapType][i] = true;
+                    
+                    _selectedMode[mapType] = _selectedMode[mapType] 
+                                             || series[i].selectedMode;
+                                             
+                    valueCalculation[mapType] = valueCalculation[mapType] 
+                                               || series[i].mapValueCalculation;
                     
                     seriesName = series[i].name;
                     self.selectedMap[seriesName] = legend
-                            ? legend.isSelected(seriesName)
-                            : true;
+                        ? legend.isSelected(seriesName)
+                        : true;
                     if (self.selectedMap[seriesName]) {
+                        valueData[mapType] = valueData[mapType] || {};
                         data = series[i].data;
                         for (var j = 0, k = data.length; j < k; j++) {
                             name = data[j].name;
-                            valueData[name] = valueData[name] 
-                                || {
-                                    value: 0,
-                                    seriesIndex : []
-                                };
+                            valueData[mapType][name] = valueData[mapType][name] 
+                                                       || {seriesIndex : []};
                             for (var key in data[j]) {
                                 if (key != 'value') {
-                                    valueData[name][key] = data[j][key];
+                                    valueData[mapType][name][key] = 
+                                        data[j][key];
                                 }
                                 else if (!isNaN(data[j].value)) {
-                                    valueData[name].value += data[j].value;
+                                    typeof valueData[mapType][name].value
+                                        == 'undefined'
+                                    && (valueData[mapType][name].value = 0);
+                                    
+                                    valueData[mapType][name].value += 
+                                        data[j].value;
                                 }
                             }
                             //索引有该区域的系列样式
-                            valueData[name].seriesIndex.push(i);
+                            valueData[mapType][name].seriesIndex.push(i);
                         }
                     }
                 }
             }
             
-            if (_valueCalculation && _valueCalculation == 'average') {
-                for (var k in valueData) {
-                    valueData[k].value = valueData[k].value 
-                                         / valueData[k].seriesIndex.length;
-                    if (valueData[k].value > 10) {
-                        valueData[k].value = Math.round(valueData[k].value);
-                    }
-                    else {
-                        valueData[k].value = valueData[k].value.toFixed(2) - 0;
+            for (var mt in valueData) {
+                if (valueCalculation[mt] && valueCalculation[mt] == 'average') {
+                    for (var k in valueData[mt]) {
+                        valueData[mt][k].value = 
+                            valueData[mt][k].value 
+                            / valueData[mt][k].seriesIndex.length;
+                            
+                        if (valueData[mt][k].value > 10) {
+                            valueData[mt][k].value = Math.round(
+                                valueData[mt][k].value
+                            );
+                        }
+                        else {
+                            valueData[mt][k].value = 
+                                valueData[mt][k].value.toFixed(2) - 0;
+                        }
                     }
                 }
-            }
-            
-            switch (mapType) {
-                case 'china':
-                    _buildMap(_getMapDataOfChina(), valueData);
-                    break;
+                if (_mapParams[mt].getData) {
+                    _buildMap(
+                        mt,                             // 类型
+                        _getProjectionData(             // 地图数据
+                            mt,
+                            _mapParams[mt].getData(),
+                            mapSeries[mt]
+                        ),  
+                        valueData[mt],                  // 用户数据
+                        mapSeries[mt]                   // 系列
+                    );
+                }
             }
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
@@ -117,16 +137,45 @@ define(function(require) {
         /**
          * 按需加载相关地图 
          */
-        function _getMapDataOfChina() {
-            var province = require('../util/mapData/china');
-            _getTransform(province.width, province.height);
-            return province.data;
+        function _getProjectionData(mapType, mapData, mapSeries) {
+            var ori = mapData.features;
+            var province = [];
+            var single;
+            var textPosition;
+            var fix;
+            
+            //600, 500, 750, mapSeries
+            var transform = _getTransform(
+                _mapParams[mapType].box[2], _mapParams[mapType].box[3], 3500,
+                mapSeries
+            );
+            var projection = _albers().origin(_mapParams[mapType].loc)
+                                      .scale(transform.scale)
+                                      .translate(transform.translate);
+            var getAreaPath = _path().projection(projection);
+            for (var i = 0, l = ori.length; i < l; i++) {
+                textPosition = projection(ori[i].properties.cp);
+                fix = _textFixed[ori[i].properties.name]; 
+                if (typeof fix != 'undefined') {
+                    textPosition[0] += fix[0] * transform.scale / fix[2];
+                    textPosition[1] += fix[1] * transform.scale / fix[2];
+                }
+                single = {
+                    text : ori[i].properties.name,
+                    path : getAreaPath(ori[i]),
+                    textX : textPosition[0],
+                    textY : textPosition[1]
+                };
+                province.push(single);
+            }
+            //console.log(province)
+            return province;
         }
-        
+
         /**
          * 获取缩放 
          */
-        function _getTransform(mapWidth, mapHeight) {
+        function _getTransform(mapWidth, mapHeight, mapScale, mapSeries) {
             var mapLocation;
             var x;
             var cusX;
@@ -136,7 +185,7 @@ define(function(require) {
             var height;
             var zrWidth = zr.getWidth();
             var zrHeight = zr.getHeight();
-            for (var key in _mapSeries) {
+            for (var key in mapSeries) {
                 mapLocation = series[key].mapLocation;
                 cusX = mapLocation.x || cusX;
                 cusY = mapLocation.y || cusY;
@@ -149,26 +198,26 @@ define(function(require) {
             
             if (typeof width == 'undefined') {
                 width = zrWidth;
-            }
-            if (x + width > zrWidth) {
-                width = zrWidth - x;
+                if (x + width > zrWidth) {
+                    width = zrWidth - x;
+                }
             }
             
             if (typeof height == 'undefined') {
                 height = zrHeight;
+                if (y + height > zrHeight) {
+                    height = zrHeight - y;
+                }
             }
-            if (y + height > zrHeight) {
-                height = zrHeight - y;
-            }
+
             // console.log(width,height,x,y)
             var minScale = Math.min(
                 width / mapWidth,
                 height / mapHeight
             );
-            _scale = [minScale, minScale];
-            
-            width = Math.round(mapWidth * minScale);
-            height = Math.round(mapHeight * minScale);
+
+            width = mapWidth * minScale;
+            height = mapHeight * minScale;
             if (isNaN(cusX)) {
                 switch (cusX + '') {
                     case 'center' :
@@ -197,8 +246,280 @@ define(function(require) {
                         break;
                 }
             }
+            return {
+                scale : minScale * mapScale,
+                translate : [x + width / 2, y + height / 2]
+            };
+        }
+        
+
+        // Derived from Tom Carden's Albers implementation for Protovis.
+        // http://gist.github.com/476238
+        // http://mathworld.wolfram.com/AlbersEqual-AreaConicProjection.html
+        function _albers() {
+            var radians = Math.PI / 180;
+            var origin = [0, 0];            //[-98, 38],
+            var parallels = [29.5, 45.5];
+            var scale = 1000;
+            var translate = [0, 0];         //[480, 250],
+            var lng0;                       // radians * origin[0]
+            var n;
+            var C;
+            var p0;
             
-            _position = [x, y];
+            function albers(coordinates) {
+                var t = n * (radians * coordinates[0] - lng0);
+                var p = Math.sqrt(
+                            C - 2 * n * Math.sin(radians * coordinates[1])
+                        ) / n;
+                return [
+                    scale * p * Math.sin(t) + translate[0],
+                    scale * (p * Math.cos(t) - p0) + translate[1]
+                ];
+            }
+
+            albers.invert = function(coordinates) {
+                var x = (coordinates[0] - translate[0]) / scale;
+                var y = (coordinates[1] - translate[1]) / scale;
+                var p0y = p0 + y;
+                var t = Math.atan2(x, p0y);
+                var p = Math.sqrt(x * x + p0y * p0y);
+                return [
+                    (lng0 + t / n) / radians,
+                    Math.asin((C - p * p * n * n) / (2 * n)) / radians
+                ];
+            };
+
+            function reload() {
+                var phi1 = radians * parallels[0];
+                var phi2 = radians * parallels[1];
+                var lat0 = radians * origin[1];
+                var s = Math.sin(phi1);
+                var c = Math.cos(phi1);
+                lng0 = radians * origin[0];
+                n = 0.5 * (s + Math.sin(phi2));
+                C = c * c + 2 * n * s;
+                p0 = Math.sqrt(C - 2 * n * Math.sin(lat0)) / n;
+                return albers;
+            }
+
+            albers.origin = function(x) {
+                if (!arguments.length) {
+                    return origin;
+                }
+                origin = [+x[0], +x[1]];
+                return reload();
+            };
+
+            albers.parallels = function(x) {
+                if (!arguments.length) {
+                    return parallels;
+                }
+                parallels = [+x[0], +x[1]];
+                return reload();
+            };
+
+            albers.scale = function(x) {
+                if (!arguments.length) {
+                    return scale;
+                }
+                scale = +x;
+                return albers;
+            };
+
+            albers.translate = function(x) {
+                if (!arguments.length) {
+                    return translate;
+                }
+                translate = [+x[0], +x[1]];
+                return albers;
+            };
+
+            return reload();
+        }
+        
+        function _path(){
+            var pointRadius = 4.5;
+            var pointCircle = _pathCircle(pointRadius);
+            var projection;
+
+            function _pathCircle(radius) {
+                return 'm0,' + radius 
+                   + 'a' + radius + ',' + radius + ' 0 1,1 0,' + (-2 * radius) 
+                   + 'a' + radius + ',' + radius + ' 0 1,1 0,' + (+2 * radius) 
+                   + 'z';
+            }
+
+            function _geoType(types, defaultValue) {
+                return function(object) {
+                    return object && object.type in types 
+                           ? types[object.type](object) 
+                           : defaultValue;
+                };
+            }
+
+            function path(d /*, i*/) {
+                if ( typeof pointRadius === 'function') {
+                    pointCircle = _pathCircle(
+                        pointRadius.apply(this, arguments)
+                    );
+                }
+                return pathType(d) || null;
+            }
+            
+            function project(coordinates) {
+                return projection(coordinates).join(',');
+            }
+
+            var pathType = _geoType({
+                FeatureCollection : function(o) {
+                    var path = [];
+                    var features = o.features;
+                    var i = -1; // features.index
+                    var n = features.length;
+                    while (++i < n) {
+                        path.push(pathType(features[i].geometry));
+                    }
+                    return path.join('');
+                },
+
+                Feature : function(o) {
+                    return pathType(o.geometry);
+                },
+
+                Point : function(o) {
+                    return 'M' + project(o.coordinates) + pointCircle;
+                },
+
+                MultiPoint : function(o) {
+                    var path = [];
+                    var coordinates = o.coordinates;
+                    var i = -1; // coordinates.index
+                    var n = coordinates.length;
+                    while (++i < n) {
+                        path.push('M', project(coordinates[i]), pointCircle);
+                    }
+                    return path.join('');
+                },
+
+                LineString : function(o) {
+                    var path = ['M'];
+                    var coordinates = o.coordinates;
+                    var i = -1; // coordinates.index
+                    var n = coordinates.length;
+                    while (++i < n) {
+                        path.push(project(coordinates[i]), 'L');
+                    }
+                    path.pop();
+                    return path.join('');
+                },
+
+                MultiLineString : function(o) {
+                    var path = [];
+                    var coordinates = o.coordinates;
+                    var i = -1; // coordinates.index
+                    var n = coordinates.length;
+                    var subcoordinates; // coordinates[i]
+                    var j; // subcoordinates.index
+                    var m; // subcoordinates.length
+                    while (++i < n) {
+                        subcoordinates = coordinates[i];
+                        j = -1;
+                        m = subcoordinates.length;
+                        path.push('M');
+                        while (++j < m) {
+                            path.push(project(subcoordinates[j]), 'L');
+                        }
+                        path.pop();
+                    }
+                    return path.join('');
+                },
+
+                Polygon : function(o) {
+                    var path = [];
+                    var coordinates = o.coordinates;
+                    var i = -1; // coordinates.index
+                    var n = coordinates.length;
+                    var subcoordinates; // coordinates[i]
+                    var j;  // subcoordinates.index
+                    var m;  // subcoordinates.length
+                    while (++i < n) {
+                        subcoordinates = coordinates[i];
+                        j = -1;
+                        if (( m = subcoordinates.length - 1) > 0) {
+                            path.push('M');
+                            while (++j < m) {
+                                path.push(project(subcoordinates[j]), 'L');
+                            }
+                            path[path.length - 1] = 'Z';
+                        }
+                    }
+                    return path.join('');
+                },
+
+                MultiPolygon : function(o) {
+                    var path = [];
+                    var coordinates = o.coordinates;
+                    var i = -1; // coordinates index
+                    var n = coordinates.length;
+                    var subcoordinates; // coordinates[i]
+                    var j; // subcoordinates index
+                    var m; // subcoordinates.length
+                    var subsubcoordinates; // subcoordinates[j]
+                    var k; // subsubcoordinates index
+                    var p; // subsubcoordinates.length
+                    while (++i < n) {
+                        subcoordinates = coordinates[i];
+                        j = -1;
+                        m = subcoordinates.length;
+                        while (++j < m) {
+                            subsubcoordinates = subcoordinates[j];
+                            k = -1;
+                            if (( p = subsubcoordinates.length - 1) > 0) {
+                                path.push('M');
+                                while (++k < p) {
+                                    path.push(
+                                        project(subsubcoordinates[k]), 'L'
+                                    );
+                                }
+                                path[path.length - 1] = 'Z';
+                            }
+                        }
+                    }
+                    return path.join('');
+                },
+
+                GeometryCollection : function(o) {
+                    var path = [];
+                    var geometries = o.geometries;
+                    var i = -1; // geometries index
+                    var n = geometries.length;
+                    while (++i < n) {
+                        path.push(pathType(geometries[i]));
+                    }
+                    return path.join('');
+                }
+            });
+
+            path.projection = function(x) {
+                projection = x;
+                return path;
+            };
+
+            path.pointRadius = function(x) {
+                if ( typeof x === 'function') {
+                    pointRadius = x;
+                }
+                else {
+                    pointRadius = +x;
+                    pointCircle = _pathCircle(pointRadius);
+                }
+                return path;
+
+            };
+
+            return path;
+
         }
         
         /**
@@ -206,7 +527,7 @@ define(function(require) {
          * @param {Object} mapData 图形数据
          * @param {Object} valueData 用户数据
          */
-        function _buildMap(mapData, valueData) {
+        function _buildMap(mapType, mapData, valueData, mapSeries) {
             var legend = component.legend;
             var dataRange = component.dataRange;
             var seriesName;
@@ -222,6 +543,7 @@ define(function(require) {
             var highlightStyle;
             
             var shape;
+            var tooSmall;
             for (var i = 0, l = mapData.length; i < l; i++) {
                 style = zrUtil.clone(mapData[i]);
                 highlightStyle = zrUtil.clone(style);
@@ -231,7 +553,8 @@ define(function(require) {
                     queryTarget = [data]; // level 3
                     seriesName = '';
                     for (var j = 0, k = data.seriesIndex.length; j < k; j++) {
-                        queryTarget.push(series[data.seriesIndex[j]]);// level 2
+                        // level 2
+                        queryTarget.push(series[data.seriesIndex[j]]);
                         seriesName += series[data.seriesIndex[j]].name + ' ';
                         if (legend 
                             && legend.hasColor(series[data.seriesIndex[j]].name)
@@ -239,8 +562,6 @@ define(function(require) {
                             self.shapeList.push({
                                 shape : 'circle',
                                 zlevel : _zlevelBase + 1,
-                                scale: _scale,
-                                position : _position,
                                 style : {
                                     x : style.textX + 3 + j * 7,
                                     y : style.textY - 10,
@@ -257,25 +578,35 @@ define(function(require) {
                     value = data.value;
                 }
                 else {
+                    data = '-';
                     seriesName = '';
                     queryTarget = [];
-                    for (var key in _mapSeries) {
+                    for (var key in mapSeries) {
                         queryTarget.push(series[key]);
                     }
                     queryTarget.push(defaultOption);
                     value = '-';
                 }
                 
-                style.brushType = 'both';
-                color = dataRange && !isNaN(value)
+                if (style.text == '香港' || style.text == '澳门') {
+                    tooSmall = true;
+                }
+                else {
+                    tooSmall = false;
+                }
+                
+                // 值域控件控制
+                color = (dataRange && !isNaN(value))
                         ? dataRange.getColor(value)
                         : null;
-                style.color = color
-                    ? color
-                    : self.deepQuery(
-                        queryTarget,
-                        'itemStyle.normal.areaStyle.color'
-                    );
+                var textShape; // 文字标签避免覆盖单独一个shape
+                
+                // 常规设置
+                style.brushType = 'both';
+                style.color = color || self.deepQuery(
+                                  queryTarget,
+                                  'itemStyle.normal.areaStyle.color'
+                              );
                 style.strokeColor = self.deepQuery(
                     queryTarget,
                     'itemStyle.normal.lineStyle.color'
@@ -299,11 +630,27 @@ define(function(require) {
                     );
                     style.textFont = self.getFont(font);
                     style.textPosition = 'specific';
+                    
+                    textShape = {
+                        shape : 'text',
+                        zlevel : _zlevelBase + 1,
+                        hoverable: tooSmall,
+                        clickable : tooSmall,
+                        style : {
+                            brushType: 'both',
+                            x : style.textX,
+                            y : style.textY,
+                            text : style.text,
+                            color : style.textColor,
+                            strokeColor : 'rgba(0,0,0,0)',
+                            textFont : style.textFont
+                        }
+                    };
+                    textShape._style = zrUtil.clone(textShape.style);
                 }
-                else {
-                    style.text = null;
-                }
+                style.textColor = 'rgba(0,0,0,0)';  // 把图形的text隐藏
                 
+                // 高亮
                 highlightStyle.brushType = 'both';
                 highlightStyle.color = self.deepQuery(
                     queryTarget,
@@ -317,7 +664,6 @@ define(function(require) {
                     queryTarget,
                     'itemStyle.emphasis.lineStyle.width'
                 ) || style.lineWidth;
-                
                 if (self.deepQuery(
                     queryTarget,
                     'itemStyle.emphasis.label.show'
@@ -333,41 +679,23 @@ define(function(require) {
                     ) || font;
                     highlightStyle.textFont = self.getFont(font);
                     highlightStyle.textPosition = 'specific';
+                    
+                    textShape && (textShape.highlightStyle = {
+                        brushType: 'both',
+                        x : style.textX,
+                        y : style.textY,
+                        text : style.text,
+                        color : highlightStyle.textColor,
+                        strokeColor : 'yellow',
+                        textFont : highlightStyle.textFont
+                    });
                 }
                 else {
-                    highlightStyle.text = null;
+                    highlightStyle.textColor = 'rgba(0,0,0,0)'; // 把图形的text隐藏
                 }
                 
-                if ((style.text || highlightStyle.text) && style.tooSmall) {
-                    var textShape = {
-                        shape : 'text',
-                        zlevel : _zlevelBase,
-                        scale: _scale,
-                        position : _position,
-                        clickable : true,
-                        style : {
-                            x : style.textX,
-                            y : style.textY,
-                            text : style.text || highlightStyle.text,
-                            color : style.text
-                                    ? style.textColor
-                                    : 'rgba(0,0,0,0)',
-                            textFont : style.textFont,
-                            textPosition : style.textPosition
-                        },
-                        highlightStyle : {
-                            brushType: 'both',
-                            x : style.textX,
-                            y : style.textY,
-                            text : highlightStyle.text || style.text,
-                            color : highlightStyle.textColor,
-                            strokeColor: highlightStyle.color,
-                            textFont : highlightStyle.textFont,
-                            textPosition : highlightStyle.textPosition
-                        }
-                    };
-                    textShape._style = textShape.style;
-                    if (_selectedMode &&
+                if (textShape) {
+                    if (_selectedMode[mapType] &&
                         _selected[name]
                         || (data && data.selected && _selected[name] !== false)
                     ) {
@@ -375,10 +703,11 @@ define(function(require) {
                             textShape.highlightStyle
                         );
                     }
-                    if (_selectedMode) {
+                    if (_selectedMode[mapType] && textShape.clickable) {
                         textShape.onclick = self.shapeHandler.onclick;
                     }
-                
+                    textShape._mapType= mapType;
+
                     ecData.pack(
                         textShape,
                         {
@@ -390,31 +719,29 @@ define(function(require) {
                         name
                     );
                     self.shapeList.push(textShape);
-                    style.text = null;
-                    highlightStyle.text = null;
                 }
-                
+
                 shape = {
                     shape : 'path',
                     zlevel : _zlevelBase,
                     clickable : true,
-                    scale: _scale,
-                    position : _position,
                     style : style,
                     highlightStyle : highlightStyle,
-                    _style: style
+                    _style: zrUtil.clone(style),
+                    _mapType: mapType
                 };
-                if (_selectedMode &&
+                if (_selectedMode[mapType] &&
                      _selected[name]
                      || (data && data.selected && _selected[name] !== false) 
                 ) {
                     shape.style = zrUtil.clone(shape.highlightStyle);
                 }
                 
-                if (_selectedMode) {
+                if (_selectedMode[mapType]) {
                     _selected[name] = typeof _selected[name] != 'undefined'
                                       ? _selected[name]
                                       : (data && data.selected);
+                    _mapTypeMap[name] = mapType;
                     shape.onclick = self.shapeHandler.onclick;
                 }
                 // console.log(name,shape);
@@ -446,10 +773,12 @@ define(function(require) {
             var target = param.target;
             var name = target.style.text;
             var len = self.shapeList.length;
-            if (_selectedMode == 'single') {
+            var mapType = target._mapType || '';
+            if (_selectedMode[mapType] == 'single') {
                 for (var p in _selected) {
-                    if (_selected[p]) {
-                        //找到那个shape
+                    // 同一地图类型
+                    if (_selected[p] && _mapTypeMap[p] == mapType) {
+                        // 复位那些生效shape（包括文字）
                         for (var i = 0; i < len; i++) {
                             if (self.shapeList[i].style.text == p) {
                                 self.shapeList[i].style = 
@@ -466,13 +795,21 @@ define(function(require) {
 
             _selected[name] = !_selected[name];
             
-            if (_selected[name]) {
-                target.style = zrUtil.clone(target.highlightStyle);
+            // 更新当前点击shape（包括文字）
+            for (var i = 0; i < len; i++) {
+                if (self.shapeList[i].style.text == name) {
+                   if (_selected[name]) {
+                        self.shapeList[i].style = zrUtil.clone(
+                            self.shapeList[i].highlightStyle
+                        );
+                    }
+                    else {
+                       
+                        self.shapeList[i].style = self.shapeList[i]._style;
+                    }
+                    zr.modShape(self.shapeList[i].id, self.shapeList[i]);
+                }
             }
-            else {
-                target.style = target._style;
-            }
-            zr.modShape(target.id, target);
             
             messageCenter.dispatch(
                 ecConfig.EVENT.MAP_SELECTED,
@@ -497,6 +834,7 @@ define(function(require) {
             series = option.series;
             
             _selected = {};
+            _mapTypeMap = {};
 
             self.clear();
             _buildShape();

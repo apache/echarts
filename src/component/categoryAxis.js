@@ -377,6 +377,9 @@ define(function (require) {
             var axShape;
             var data       = option.data;
             var dataLength = option.data.length;
+            var color = option.splitLine.lineStyle.color;
+            color = color instanceof Array ? color : [color];
+            var colorLength = color.length;
 
             if (option.position == 'bottom' || option.position == 'top') {
                 // 横向
@@ -395,7 +398,7 @@ define(function (require) {
                             yStart : sy,
                             xEnd : x,
                             yEnd : ey,
-                            strokeColor : option.splitLine.lineStyle.color,
+                            strokeColor : color[i % colorLength],
                             lineType : option.splitLine.lineStyle.type,
                             lineWidth : option.splitLine.lineStyle.width
                         }
@@ -421,7 +424,7 @@ define(function (require) {
                             yStart : y,
                             xEnd : ex,
                             yEnd : y,
-                            strokeColor : option.splitLine.lineStyle.color,
+                            strokeColor : color[i % colorLength],
                             linetype : option.splitLine.lineStyle.type,
                             lineWidth : option.splitLine.lineStyle.width
                         }

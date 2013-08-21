@@ -1636,6 +1636,13 @@ feature : {
                             <td> 标志图形大小，可计算特性启用情况建议增大以提高交互体验。实现气泡图时symbolSize需为Function，气泡大小取决于该方法返回值，传入参数为当前数据项（value数组）</td>
                         </tr>
                         <tr>
+                            <td> {number} symbolRotate </td>
+                            <td> null </td>
+                            <td> 折线图 ，散点图 </td>
+                            <td> 标志图形旋转角度[-180,180]</td>
+                        </tr>
+                        
+                        <tr>
                             <td> {Array} center </td>
                             <td> null </td>
                             <td> 饼图 </td>
@@ -1675,7 +1682,11 @@ feature : {
                             <td> {string} mapType </td>
                             <td> 'china' </td>
                             <td> 地图 </td>
-                            <td> 地图类型，目前仅支持中国地图 </td>
+                            <td> 地图类型，支持中国及全国34个省市自治区。省市自治区的mapType直接使用简体中文：
+                                <br/>新疆， 西藏， 内蒙古， 青海， 四川， 黑龙江， 甘肃， 云南， 广西， 湖南， 陕西，
+                                <br/>广东，吉林， 河北， 湖北， 贵州， 山东， 江西， 河南， 辽宁， 山西， 安徽， 福建，
+                                <br/>浙江， 江苏，重庆， 宁夏， 海南， 台湾， 北京， 天津， 上海， 香港， 澳门'
+                            </td>
                         </tr>
                         <tr>
                             <td> {Object} mapLocation </td>

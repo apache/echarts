@@ -162,6 +162,7 @@ define(function(require) {
             var data;
             var seriesPL;
             var singlePoint;
+            var symbolRotate;
             
             for (var seriesIndex in pointList) {
                 serie = series[seriesIndex];
@@ -180,6 +181,10 @@ define(function(require) {
                 );
                 eLineWidth = self.deepQuery(
                     queryTarget, 'itemStyle.emphasis.lineStyle.width'
+                );
+                
+                symbolRotate = self.deepQuery(
+                    queryTarget, 'symbolRotate'
                 );
                 
                 if (serie.large && serie.data.length > serie.largeThreshold) {
@@ -229,6 +234,10 @@ define(function(require) {
                         self.deepQuery(queryTarget, 'symbolSize')
                         || singlePoint[2],
                         
+                        // 方向
+                        self.deepQuery(queryTarget, 'symbolRotate') 
+                        || symbolRotate,
+                        
                         // 类型
                         self.deepQuery(queryTarget, 'symbol')
                         || singlePoint[3],
@@ -261,7 +270,7 @@ define(function(require) {
          */
         function _getSymbol(
             seriesIndex, dataIndex, name, 
-            x, y, symbolSize, symbol,
+            x, y, symbolSize, symbolRotate, symbol,
             nColor, nLineWidth, eColor, eLineWidth
         ) {
             var itemShape = {
@@ -285,6 +294,12 @@ define(function(require) {
                 },
                 clickable : true
             };
+            
+            if (typeof symbolRotate != 'undefined') {
+                itemShape.rotation = [
+                    symbolRotate * Math.PI / 180, x, y
+                ];
+            }
             
             if (symbol.match('star')) {
                 itemShape.style.iconType = 'star';
