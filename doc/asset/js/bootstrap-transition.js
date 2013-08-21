@@ -60,5 +60,5 @@
 }(window.jQuery);
 
 var lrl = document.getElementById('last-release-link');
-lrl.href = 'https://github.com/ecomfe/echarts/archive/1.1.1.zip';
-lrl.innerHTML = 'ZIP (1.1.1)'
+lrl.href = 'https://github.com/ecomfe/echarts/archive/1.1.2.zip';
+lrl.innerHTML = 'ZIP (1.1.2)'

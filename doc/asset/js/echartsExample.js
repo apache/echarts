@@ -51,6 +51,14 @@ function refresh(isBtnRefresh){
     myChart.setOption(option, true);
     domMessage.innerHTML = '';
 }
+
+function needMap() {
+    var href = location.href;
+    return href.indexOf('map') != -1
+           || href.indexOf('mix3') != -1
+           || href.indexOf('mix5') != -1;
+
+}
 //*
 require.config({
     packages: [
@@ -71,7 +79,7 @@ require.config({
 /*
 require.config({
     paths:{ 
-        echarts:'./www/js/echarts'
+        echarts: needMap() ? './www/js/echarts-map' : './www/js/echarts'
     }
 });
 */
