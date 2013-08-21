@@ -171,9 +171,9 @@ define(function(require) {
         function _onclick(param) {
             var len = _chartList.length;
             while (len--) {
-                if (_chartList[len].onclick) {
-                    _chartList[len].onclick(param);
-                }
+                _chartList[len]
+                && _chartList[len].onclick
+                && _chartList[len].onclick(param);
             }
             if (param.target) {
                 var ecData = _eventPackage(param.target);
@@ -226,9 +226,9 @@ define(function(require) {
             };
             var len = _chartList.length;
             while (len--) {
-                if (_chartList[len].ondragstart) {
-                    _chartList[len].ondragstart(param);
-                }
+                _chartList[len]
+                && _chartList[len].ondragstart
+                && _chartList[len].ondragstart(param);
             }
 
         }
@@ -239,9 +239,9 @@ define(function(require) {
         function _ondragenter(param) {
             var len = _chartList.length;
             while (len--) {
-                if (_chartList[len].ondragenter) {
-                    _chartList[len].ondragenter(param);
-                }
+                _chartList[len]
+                && _chartList[len].ondragenter
+                && _chartList[len].ondragenter(param);
             }
         }
 
@@ -251,9 +251,9 @@ define(function(require) {
         function _ondragover(param) {
             var len = _chartList.length;
             while (len--) {
-                if (_chartList[len].ondragover) {
-                    _chartList[len].ondragover(param);
-                }
+                _chartList[len]
+                && _chartList[len].ondragover
+                && _chartList[len].ondragover(param);
             }
         }
         /**
@@ -262,9 +262,9 @@ define(function(require) {
         function _ondragleave(param) {
             var len = _chartList.length;
             while (len--) {
-                if (_chartList[len].ondragleave) {
-                    _chartList[len].ondragleave(param);
-                }
+                _chartList[len]
+                && _chartList[len].ondragleave
+                && _chartList[len].ondragleave(param);
             }
         }
 
@@ -274,9 +274,9 @@ define(function(require) {
         function _ondrop(param) {
             var len = _chartList.length;
             while (len--) {
-                if (_chartList[len].ondrop) {
-                    _chartList[len].ondrop(param, _status);
-                }
+                _chartList[len]
+                && _chartList[len].ondrop
+                && _chartList[len].ondrop(param, _status);
             }
             _island.ondrop(param, _status);
         }
@@ -287,9 +287,9 @@ define(function(require) {
         function _ondragend(param) {
             var len = _chartList.length;
             while (len--) {
-                if (_chartList[len].ondragend) {
-                    _chartList[len].ondragend(param, _status);
-                }
+                _chartList[len]
+                && _chartList[len].ondragend
+                && _chartList[len].ondragend(param, _status);
             }
             _island.ondragend(param, _status);
 
@@ -311,11 +311,13 @@ define(function(require) {
         function _onlegendSelected(param) {
             // 用于图表间通信
             _status.needRefresh = false;
-            for (var l = _chartList.length - 1; l >= 0; l--) {
-                if (_chartList[l].onlegendSelected) {
-                    _chartList[l].onlegendSelected(param, _status);
-                }
+            var len = _chartList.length;
+            while (len--) {
+                _chartList[len]
+                && _chartList[len].onlegendSelected
+                && _chartList[len].onlegendSelected(param, _status);
             }
+            
             _selectedMap = param.selected;
 
             if (_status.needRefresh) {
@@ -329,10 +331,11 @@ define(function(require) {
         function _ondataZoom(param) {
             // 用于图表间通信
             _status.needRefresh = false;
-            for (var l = _chartList.length - 1; l >= 0; l--) {
-                if (_chartList[l].ondataZoom) {
-                    _chartList[l].ondataZoom(param, _status);
-                }
+            var len = _chartList.length;
+            while (len--) {
+                _chartList[len]
+                && _chartList[len].ondataZoom
+                && _chartList[len].ondataZoom(param, _status);
             }
 
             if (_status.needRefresh) {
@@ -346,10 +349,11 @@ define(function(require) {
         function _ondataRange(param) {
             // 用于图表间通信
             _status.needRefresh = false;
-            for (var l = _chartList.length - 1; l >= 0; l--) {
-                if (_chartList[l].ondataRange) {
-                    _chartList[l].ondataRange(param, _status);
-                }
+            var len = _chartList.length;
+            while (len--) {
+                _chartList[len]
+                && _chartList[len].ondataRange
+                && _chartList[len].ondataRange(param, _status);
             }
 
             // 没有相互影响，直接刷新即可
@@ -620,7 +624,9 @@ define(function(require) {
             if (magicOption.animation) {
                 var len = _chartList.length;
                 while (len--) {
-                    _chartList[len].animation && _chartList[len].animation();
+                    _chartList[len]
+                    && _chartList[len].animation
+                    && _chartList[len].animation();
                 }
             }
 
@@ -663,7 +669,9 @@ define(function(require) {
         function _disposeChartList() {
             var len = _chartList.length;
             while (len--) {
-                _chartList[len].dispose && _chartList[len].dispose();
+                _chartList[len]
+                && _chartList[len].dispose 
+                && _chartList[len].dispose();
             }
             _chartList = [];
         }

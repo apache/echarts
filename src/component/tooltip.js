@@ -598,7 +598,8 @@ define(function (require) {
                                 [data], 'tooltip.formatter'
                             ) || formatter;
                 specialCssText += _style(self.deepQuery([data], 'tooltip'));
-            } else {
+            }
+            else {
                 formatter = self.deepQuery(
                     [data, serie, option],
                     'tooltip.islandFormatter'

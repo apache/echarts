@@ -51,6 +51,14 @@ function refresh(isBtnRefresh){
     myChart.setOption(option, true);
     domMessage.innerHTML = '';
 }
+
+function needMap() {
+    var href = location.href;
+    return href.indexOf('map') != -1
+           || href.indexOf('mix3') != -1
+           || href.indexOf('mix5') != -1;
+
+}
 /*
 require.config({
     packages: [
@@ -61,33 +69,32 @@ require.config({
         },
         {
             name: 'zrender',
-            location: 'http://ecomfe.github.io/zrender/src',
-            //location: '../../../zrender/src',
+            //location: 'http://ecomfe.github.io/zrender/src',
+            location: '../../../zrender/src',
             main: 'zrender'
         }
     ]
 });
 */
-
+//*
 require.config({
     paths:{ 
-        echarts:'./www/js/echarts'
+        echarts: needMap() ? './www/js/echarts-map' : './www/js/echarts'
     }
 });
-
+//*/
 
 var echarts;
 require(
     [
-        'echarts'   /*,
+        'echarts'/*   ,
         'echarts/chart/line',
         'echarts/chart/bar',
         'echarts/chart/scatter',
         'echarts/chart/k',
         'echarts/chart/pie',
         'echarts/chart/map',
-        'echarts/chart/force'
-        */
+        'echarts/chart/force'*/
     ],
     function(ec) {
         echarts = ec;

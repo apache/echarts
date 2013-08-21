@@ -75,7 +75,7 @@ define(function(require) {
         var density;
         var coolDown;
         var centripetal;
-        var initializeSize;
+        // var initializeSize; // defined but never used
         var attractiveness;
         //- ----------
 
