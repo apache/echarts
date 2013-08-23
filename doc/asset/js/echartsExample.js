@@ -59,49 +59,59 @@ function needMap() {
            || href.indexOf('mix5') != -1;
 
 }
-/*
-require.config({
-    packages: [
-        {
-            name: 'echarts',
-            location: '../../src',
-            main: 'echarts'
-        },
-        {
-            name: 'zrender',
-            //location: 'http://ecomfe.github.io/zrender/src',
-            location: '../../../zrender/src',
-            main: 'zrender'
-        }
-    ]
-});
-*/
-//*
-require.config({
-    paths:{ 
-        echarts: needMap() ? './www/js/echarts-map' : './www/js/echarts'
-    }
-});
-//*/
 
 var echarts;
-require(
-    [
-        'echarts'/*   ,
-        'echarts/chart/line',
-        'echarts/chart/bar',
-        'echarts/chart/scatter',
-        'echarts/chart/k',
-        'echarts/chart/pie',
-        'echarts/chart/map',
-        'echarts/chart/force'*/
-    ],
-    function(ec) {
-        echarts = ec;
-        if (myChart && myChart.dispose) {
-            myChart.dispose();
+var developMode = false;
+
+if (developMode) {
+    // for develop
+    require.config({
+        packages: [
+            {
+                name: 'echarts',
+                location: '../../src',
+                main: 'echarts'
+            },
+            {
+                name: 'zrender',
+                //location: 'http://ecomfe.github.io/zrender/src',
+                location: '../../../zrender/src',
+                main: 'zrender'
+            }
+        ]
+    });
+    require(
+        [
+            'echarts'   ,
+            'echarts/chart/line',
+            'echarts/chart/bar',
+            'echarts/chart/scatter',
+            'echarts/chart/k',
+            'echarts/chart/pie',
+            'echarts/chart/map',
+            'echarts/chart/force'
+        ],
+        requireCallback
+    );
+}
+else {
+    // for echarts online home page
+    require.config({
+        paths:{ 
+            echarts: needMap() ? './www/js/echarts-map' : './www/js/echarts'
         }
-        myChart = echarts.init(domMain);
-        refresh();
+    });
+    require(
+        ['echarts'],
+        requireCallback
+    );
+}
+
+function requireCallback (ec) {
+    echarts = ec;
+    if (myChart && myChart.dispose) {
+        myChart.dispose();
     }
-)
+    myChart = echarts.init(domMain);
+    refresh();
+}

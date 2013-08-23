@@ -1,23 +1,6 @@
-/*
-require.config({
-    packages: [
-        {
-            name: 'echarts',
-            location: '../../src',
-            main: 'echarts'
-        },
-        {
-            name: 'zrender',
-            location: 'http://ecomfe.github.io/zrender/src',
-            //location: '../../../zrender/src',
-            main: 'zrender'
-        }
-    ]
-});
-*/
 require.config({
     paths:{ 
-        echarts:'../../build/echarts',
+        echarts:'./js/echarts',
         webkitDep : '../../doc/example/webkit-dep',
     }
 });
@@ -344,8 +327,7 @@ var optionMap = {
                     {name: '海南',value: Math.round(Math.random()*1000)},
                     {name: '台湾',value: Math.round(Math.random()*1000)},
                     {name: '香港',value: Math.round(Math.random()*1000)},
-                    {name: '澳门',value: Math.round(Math.random()*1000)},
-                    {name: '南海诸岛',value: Math.round(Math.random()*1000)}
+                    {name: '澳门',value: Math.round(Math.random()*1000)}
                 ]
             }
         ]
@@ -1079,8 +1061,8 @@ var optionMap = {
                 },
                 selectedMode : 'multiple',
                 itemStyle:{
-                    normal:{label:{show:true,textStyle:{fontSize:16}}},
-                    emphasis:{label:{show:true,textStyle:{fontSize:16}}}
+                    normal:{label:{show:true}},
+                    emphasis:{label:{show:true}}
                 },
                 data:[
                     {name: '北京',value: 790,selected:true},
@@ -1116,8 +1098,7 @@ var optionMap = {
                     {name: '海南',value: Math.round(Math.random()*1000)},
                     {name: '台湾',value: Math.round(Math.random()*1000)},
                     {name: '香港',value: Math.round(Math.random()*1000)},
-                    {name: '澳门',value: Math.round(Math.random()*1000)},
-                    {name: '南海诸岛',value: Math.round(Math.random()*1000)}
+                    {name: '澳门',value: Math.round(Math.random()*1000)}
                 ]
             },
             {
