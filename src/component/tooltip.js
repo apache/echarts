@@ -832,6 +832,15 @@ define(function (require) {
         }
 
         /**
+         * zrender事件响应：鼠标离开绘图区域
+         */
+        function _onglobalout(param) {
+            clearTimeout(_hidingTicket);
+            clearTimeout(_showingTicket);
+            _hidingTicket = setTimeout(_hide, _hideDelay);
+        }
+
+        /**
          * 异步回调填充内容
          */
         function _setContent(ticket, content) {
@@ -922,6 +931,7 @@ define(function (require) {
             clearTimeout(_hidingTicket);
             clearTimeout(_showingTicket);
             zr.un(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
+            zr.un(zrConfig.EVENT.GLOBALOUT, _onglobalout);
 
             if (self.hasAppend) {
                 dom.firstChild.removeChild(_tDom);
@@ -934,6 +944,7 @@ define(function (require) {
         }
 
         zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
+        zr.on(zrConfig.EVENT.GLOBALOUT, _onglobalout);
 
         // 重载基类方法
         self.dispose = dispose;

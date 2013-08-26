@@ -45,10 +45,12 @@ define(function(require) {
                 case ecConfig.CHART_TYPE_ISLAND :
                     return 5;
 
-                case ecConfig.COMPONENT_TYPE_TOOLTIP :
                 case ecConfig.COMPONENT_TYPE_TOOLBOX :
                 case ecConfig.COMPONENT_TYPE_TITLE :
                     return 6;
+
+                case ecConfig.COMPONENT_TYPE_TOOLTIP :
+                    return 7;
 
                 default :
                     return 0;
@@ -157,9 +159,7 @@ define(function(require) {
          * 清除图形数据，实例仍可用
          */
         function clear() {
-            for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.zr.delShape(self.shapeList[i].id);
-            }
+            self.zr.delShape(self.shapeList);
             self.shapeList = [];
         }
 
