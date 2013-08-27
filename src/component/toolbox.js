@@ -900,6 +900,20 @@ define(function (require) {
             self.shapeList = null;
             self = null;
         }
+        
+        /**
+         * 刷新
+         */
+        function refresh(newOption) {
+            if (newOption) {
+                newOption.toolbox = self.reformOption(newOption.toolbox);
+                // 补全padding属性
+                newOption.toolbox.padding = self.reformCssArray(
+                    newOption.toolbox.padding
+                );
+                option = newOption;
+            }
+        }
 
         // 重载基类方法
         self.dispose = dispose;
@@ -909,6 +923,7 @@ define(function (require) {
         self.hideDataView = hideDataView;
         self.getMagicOption = getMagicOption;
         self.reset = reset;
+        self.refresh = refresh;
     }
 
     require('../component').define('toolbox', Toolbox);

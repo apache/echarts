@@ -828,22 +828,21 @@ define(function(require) {
          * @param {Object} newComponent
          */
         function init(newOption, newComponent) {
-            option = newOption;
             component = newComponent;
-
-            series = option.series;
-            
             _selected = {};
             _mapTypeMap = {};
 
-            self.clear();
-            _buildShape();
+            refresh(newOption);
         }
 
         /**
          * 刷新
          */
-        function refresh() {
+        function refresh(newOption) {
+            if (newOption) {
+                option = newOption;
+                series = option.series;
+            }
             self.clear();
             _buildShape();
         }

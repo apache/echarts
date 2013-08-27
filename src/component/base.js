@@ -159,7 +159,7 @@ define(function(require) {
          * 清除图形数据，实例仍可用
          */
         function clear() {
-            self.zr.delShape(self.shapeList);
+            self.zr && self.zr.delShape(self.shapeList);
             self.shapeList = [];
         }
 

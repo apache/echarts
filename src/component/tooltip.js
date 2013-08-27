@@ -575,6 +575,8 @@ define(function (require) {
             // 从低优先级往上找到trigger为item的formatter和样式
             var formatter;
             var specialCssText = '';
+            var indicator;
+            var html = '';
             if (_curTarget._type != 'island') {
                 // 全局
                 if (self.deepQuery([option], 'tooltip.trigger') == 'item'
@@ -637,17 +639,25 @@ define(function (require) {
                 _tDom.innerHTML = formatter;
             }
             else {
-                if (serie.type != ecConfig.CHART_TYPE_SCATTER) {
+                if (serie.type == ecConfig.CHART_TYPE_SCATTER) {
                     _tDom.innerHTML = serie.name + '<br/>' +
-                                      name + ' : ' + value +
+                                      (name === '' ? '' : (name + ' : ')) 
+                                      + value +
                                       (typeof speical == 'undefined'
                                       ? ''
                                       : (' (' + speical + ')'));
                 }
+                else if (serie.type == ecConfig.CHART_TYPE_RADAR) {
+                    indicator = self.deepQuery([serie, option], 'indicator');
+                    html += (name === '' ? serie.name : name) + '<br />';
+                    for (var i = 0 ; i < indicator.length; i ++) {
+                        html += indicator[i].name + ' : ' + value[i] + '<br />';
+                    }
+                    _tDom.innerHTML = html;
+                }
                 else {
                     _tDom.innerHTML = serie.name + '<br/>' +
-                                      (name === '' ? '' : (name + ' : ')) 
-                                      + value +
+                                      name + ' : ' + value +
                                       (typeof speical == 'undefined'
                                       ? ''
                                       : (' (' + speical + ')'));
@@ -834,7 +844,7 @@ define(function (require) {
         /**
          * zrender事件响应：鼠标离开绘图区域
          */
-        function _onglobalout(param) {
+        function _onglobalout() {
             clearTimeout(_hidingTicket);
             clearTimeout(_showingTicket);
             _hidingTicket = setTimeout(_hide, _hideDelay);
@@ -915,6 +925,28 @@ define(function (require) {
             _tDom.style.position = 'absolute';  // 不是多余的，别删！
             self.hasAppend = false;
         }
+        
+        /**
+         * 刷新
+         */
+        function refresh(newOption) {
+            if (newOption) {
+                option = newOption;
+                option.tooltip = self.reformOption(option.tooltip);
+                option.tooltip.textStyle = zrUtil.merge(
+                    option.tooltip.textStyle,
+                    ecConfig.textStyle,
+                    {
+                        'overwrite': false,
+                        'recursive': true
+                    }
+                );
+                // 补全padding属性
+                option.tooltip.padding = self.reformCssArray(
+                    option.tooltip.padding
+                );
+            }
+        }
 
         /**
          * zrender事件响应：窗口大小改变
@@ -950,6 +982,7 @@ define(function (require) {
         self.dispose = dispose;
 
         self.init = init;
+        self.refresh = refresh;
         self.resize = resize;
         self.setComponent = setComponent;
         init(option, dom);

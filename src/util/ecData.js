@@ -20,7 +20,7 @@ define(function() {
         var value;
         if (typeof data != 'undefined') {
             if (typeof data.value != 'undefined') {
-                if (data.value instanceof Array) {
+                if (data.value instanceof Array && series.type != 'radar') {
                     value = data.value[2];  // 散点图最后一个为数值
                 }
                 else {
