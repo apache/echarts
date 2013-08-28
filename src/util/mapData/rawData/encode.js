@@ -9,7 +9,7 @@ glob("china/*.js", {}, function(er, files) {
         if (file.indexOf('_unicode') >=0 ) {
             return;
         }
-        var output = file.replace(".js", "_unicode.js");
+        var output = "../" + file;
         requirejs([file], function(json){
             // Meta tag
             json.UTF8Encoding = true;
