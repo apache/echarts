@@ -40,15 +40,6 @@
  *
  */
 define(function(require) {
-    // for build require
-    // require('./chart/line');
-    // require('./chart/bar');
-    // require('./chart/scatter');
-    // require('./chart/k');
-    // require('./chart/pie');
-    // require('./chart/map');
-    // require('./chart/force');
-    
     var self = {};
     /**
      * 入口方法 
@@ -428,8 +419,8 @@ define(function(require) {
         /**
          * 刷新 
          */
-        function _onrefresh() {
-            refresh();
+        function _onrefresh(param) {
+            refresh(param);
         }
 
         /**
@@ -654,11 +645,18 @@ define(function(require) {
         /**
          * 刷新 
          */
-        function refresh() {
+        function refresh(param) {
+            if (param.option) {
+                var zrUtil = require('zrender/tool/util');
+                _optionRestore = zrUtil.clone(param.option);
+                _optionBackup = zrUtil.clone(param.option);
+                _option = zrUtil.clone(param.option);
+            }
+            
             // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
             // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
-                _chartList[i].refresh && _chartList[i].refresh();
+                _chartList[i].refresh && _chartList[i].refresh(param.option);
             }
             _zr.refresh();
         }
@@ -772,6 +770,92 @@ define(function(require) {
 
             return self;
         }
+        
+        /**
+         * 动态数据添加，队尾添加
+         * 形参为单组数据参数，多组时为数据，内容同[seriesIdx, data, isShift, axisData]
+         * @param {number} seriesIdx 系列索引
+         * @param {number | Object} data 增加数据
+         * @param {boolean=} isHead 是否队头加入，默认，不指定或false时为队尾插入
+         * @param {boolean=} dataGrow 是否增长数据队列长度，默认，不指定或false时移出目标数组对位数据
+         * @param {string=} axisData 是否增加类目轴数据，附加操作同isHead和dataGrow
+         */
+        function addData(seriesIdx, data, isHead, dataGrow, axisData) {
+            var params = seriesIdx instanceof Array
+                         ? seriesIdx
+                         : [[seriesIdx, data, isHead, axisData]];
+            var axisIdx;
+            for (var i = 0, l = params.length; i < l; i++) {
+                seriesIdx = params[i][0];
+                data = params[i][1];
+                isHead = params[i][2];
+                dataGrow = params[i][3];
+                axisData = params[i][4];
+                if (_optionRestore.series[seriesIdx]) {
+                    if (isHead) {
+                        _optionRestore.series[seriesIdx].data.unshift(data);
+                        !dataGrow 
+                        && _optionRestore.series[seriesIdx].data.pop();
+                    }
+                    else {
+                        _optionRestore.series[seriesIdx].data.push(data);
+                        !dataGrow 
+                        && _optionRestore.series[seriesIdx].data.shift();
+                    }
+                    
+                    if (typeof axisData != 'undefined') {
+                        // x轴类目
+                        axisIdx = _optionRestore.series[seriesIdx].xAxisIndex
+                                  || 0;
+                        if (typeof _optionRestore.xAxis[axisIdx].type 
+                            == 'undefined'
+                            || _optionRestore.xAxis[axisIdx].type == 'category'
+                        ) {
+                            if (isHead) {
+                                _optionRestore.xAxis[axisIdx].data.unshift(
+                                    axisData
+                                );
+                                !dataGrow 
+                                && _optionRestore.xAxis[axisIdx].data.pop();
+                            }
+                            else {
+                                _optionRestore.xAxis[axisIdx].data.push(
+                                    axisData
+                                );
+                                !dataGrow 
+                                && _optionRestore.xAxis[axisIdx].data.shift();
+                            }
+                        }
+                        
+                        // y轴类目
+                        axisIdx = _optionRestore.series[seriesIdx].yAxisIndex
+                                  || 0;
+                        if (_optionRestore.yAxis[axisIdx].type == 'category') {
+                            if (isHead) {
+                                _optionRestore.yAxis[axisIdx].data.unshift(
+                                    axisData
+                                );
+                                !dataGrow 
+                                && _optionRestore.yAxis[axisIdx].data.pop();
+                            }
+                            else {
+                                _optionRestore.yAxis[axisIdx].data.push(
+                                    axisData
+                                );
+                                !dataGrow 
+                                && _optionRestore.yAxis[axisIdx].data.shift();
+                            }
+                        }
+                    }
+                }
+            }
+            
+            _messageCenter.dispatch(
+                ecConfig.EVENT.REFRESH,
+                '',
+                {option: _optionRestore}
+            );
+        }
 
         /**
          * 获取当前zrender实例，可用于添加额为的shape和深度控制 
@@ -883,6 +967,7 @@ define(function(require) {
         // 接口方法暴漏
         self.setOption = setOption;
         self.setSeries = setSeries;
+        self.addData = addData;
         self.getZrender = getZrender;
         self.on = on;
         self.un = un;

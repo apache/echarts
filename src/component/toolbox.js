@@ -334,6 +334,7 @@ define(function (require) {
                 // 取消
                 _resetZoom();
                 zr.refresh();
+                dom.style.cursor = 'default';
             }
             else {
                 // 启用Zoom
@@ -348,6 +349,8 @@ define(function (require) {
                     && zr.on(zrConfig.EVENT.MOUSEUP, _onmouseup)
                     && zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
                 }, 10);
+                
+                dom.style.cursor = 'crosshair';
             }
             return true; // 阻塞全局事件
         }
@@ -364,6 +367,12 @@ define(function (require) {
                 _zoomShape.style.height = 
                     zrEvent.getY(param.event) - _zoomShape.style.y;
                 zr.addHoverShape(_zoomShape);
+                dom.style.cursor = 'crosshair';
+            }
+            if (_zoomStart
+                && (dom.style.cursor != 'pointer' && dom.style.cursor != 'move')
+            ) {
+                dom.style.cursor = 'crosshair';
             }
         }
 
@@ -891,6 +900,20 @@ define(function (require) {
             self.shapeList = null;
             self = null;
         }
+        
+        /**
+         * 刷新
+         */
+        function refresh(newOption) {
+            if (newOption) {
+                newOption.toolbox = self.reformOption(newOption.toolbox);
+                // 补全padding属性
+                newOption.toolbox.padding = self.reformCssArray(
+                    newOption.toolbox.padding
+                );
+                option = newOption;
+            }
+        }
 
         // 重载基类方法
         self.dispose = dispose;
@@ -900,6 +923,7 @@ define(function (require) {
         self.hideDataView = hideDataView;
         self.getMagicOption = getMagicOption;
         self.reset = reset;
+        self.refresh = refresh;
     }
 
     require('../component').define('toolbox', Toolbox);

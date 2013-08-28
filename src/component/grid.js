@@ -113,11 +113,6 @@ define(function (require) {
             };
         }
 
-        function refresh() {
-            self.clear();
-            init(option);
-        }
-
         self.init = init;
         self.getX = getX;
         self.getY = getY;
@@ -126,7 +121,6 @@ define(function (require) {
         self.getXend = getXend;
         self.getYend = getYend;
         self.getArea = getArea;
-        self.refresh = refresh;
 
         init(option);
     }

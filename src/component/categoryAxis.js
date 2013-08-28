@@ -510,35 +510,35 @@ define(function (require) {
             if (newOption.data.length < 1) {
                 return;
             }
-
-            option = self.reformOption(newOption);
-            // 通用字体设置
-            option.axisLabel.textStyle = zrUtil.merge(
-                option.axisLabel.textStyle || {},
-                ecConfig.textStyle,
-                {
-                    'overwrite' : false,
-                    'recursive' : true
-                }
-            );
-            option.axisLabel.textStyle = zrUtil.merge(
-                option.axisLabel.textStyle || {},
-                ecConfig.textStyle,
-                {
-                    'overwrite' : false,
-                    'recursive' : true
-                }
-            );
             grid = newGrid;
 
-            self.clear();
-            _buildShape();
+            refresh(newOption);
         }
 
         /**
          * 刷新
          */
-        function refresh() {
+        function refresh(newOption) {
+            if (newOption) {
+                option = self.reformOption(newOption);
+                // 通用字体设置
+                option.axisLabel.textStyle = zrUtil.merge(
+                    option.axisLabel.textStyle || {},
+                    ecConfig.textStyle,
+                    {
+                        'overwrite' : false,
+                        'recursive' : true
+                    }
+                );
+                option.axisLabel.textStyle = zrUtil.merge(
+                    option.axisLabel.textStyle || {},
+                    ecConfig.textStyle,
+                    {
+                        'overwrite' : false,
+                        'recursive' : true
+                    }
+                );
+            }
             self.clear();
             _buildShape();
         }

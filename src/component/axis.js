@@ -148,9 +148,25 @@ define(function (require) {
         /**
          * 刷新
          */
-        function refresh() {
+        function refresh(newOption) {
+            var axisOption;
+            var series;
+            if (newOption) {
+                if (axisType == 'xAxis') {
+                    option.xAxis =self.reformOption(newOption.xAxis);
+                    axisOption = option.xAxis;
+                }
+                else {
+                    option.yAxis = reformOption(newOption.yAxis);
+                    axisOption = option.yAxis;
+                }
+                series = newOption.series;
+            }
+            
             for (var i = 0, l = _axisList.length; i < l; i++) {
-                _axisList[i].refresh && _axisList[i].refresh();
+                _axisList[i].refresh && _axisList[i].refresh(
+                    axisOption ? axisOption[i] : false, series
+                );
             }
         }
 

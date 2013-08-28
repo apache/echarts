@@ -772,39 +772,40 @@ define(function (require) {
             if (!newSeries || newSeries.length === 0) {
                 return;
             }
-            option = self.reformOption(newOption);
-            // 通用字体设置
-            option.axisLabel.textStyle = zrUtil.merge(
-                option.axisLabel.textStyle || {},
-                ecConfig.textStyle,
-                {
-                    'overwrite' : false,
-                    'recursive' : true
-                }
-            );
-            option.axisLabel.textStyle = zrUtil.merge(
-                option.axisLabel.textStyle || {},
-                ecConfig.textStyle,
-                {
-                    'overwrite' : false,
-                    'recursive' : true
-                }
-            );
             grid = newGrid;
-            series = newSeries;
-
-            self.clear();
-            if (zr) {   // 数值轴的另外一个功能只是用来计算极值
-                _buildShape();
-            }
+            
+            refresh(newOption, newSeries);
         }
 
         /**
          * 刷新
          */
-        function refresh() {
-            self.clear();
-            _buildShape();
+        function refresh(newOption, newSeries) {
+            if (newOption) {
+                option = self.reformOption(newOption);
+                // 通用字体设置
+                option.axisLabel.textStyle = zrUtil.merge(
+                    option.axisLabel.textStyle || {},
+                    ecConfig.textStyle,
+                    {
+                        'overwrite' : false,
+                        'recursive' : true
+                    }
+                );
+                option.axisLabel.textStyle = zrUtil.merge(
+                    option.axisLabel.textStyle || {},
+                    ecConfig.textStyle,
+                    {
+                        'overwrite' : false,
+                        'recursive' : true
+                    }
+                );
+                series = newSeries;
+            }
+            if (zr) {   // 数值轴的另外一个功能只是用来计算极值
+                self.clear();
+                _buildShape();
+            }
         }
 
         // 根据值换算位置
