@@ -573,7 +573,11 @@ define(function(require) {
             setTimeout(cb, stepTime * 1000);
         }
 
-        function refresh() {
+        function refresh(newOption) {
+            if (newOption) {
+                option = newOption;
+                series = option.series;
+            }
             self.clear();
             _buildShape();
             temperature = 1.0;

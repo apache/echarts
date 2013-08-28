@@ -210,6 +210,8 @@ define(
             var dx = style.width / 16;
             var dy = style.height / 16;
             var r = style.width / 2;
+            
+            ctx.lineWidth = 1.5;
 
             ctx.arc(style.x + r, style.y + r, r - dx, 0, Math.PI * 2 / 3);
             ctx.moveTo(style.x + 3 * dx,        style.y + style.height);
