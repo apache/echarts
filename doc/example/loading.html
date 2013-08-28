@@ -67,7 +67,6 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
-var effect = ['spin' , 'bar' , 'ring' , 'whirling' , 'dynamicLine' , 'bubble'];
 effectIndex = ++effectIndex % effect.length;
 myChart.showLoading({
     text : effect[effectIndex],
@@ -76,10 +75,36 @@ myChart.showLoading({
         fontSize : 20
     }
 });
-clearTimeout(loadingTicket);
-loadingTicket = setTimeout(function(){
-    restoreing = false;
-    myChart.setSeries([
+option = {
+    tooltip : {
+        trigger: 'axis'
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : true,
+            dataView : {readOnly: false},
+            magicType:['line', 'bar'],
+            restore : true,
+            saveAsImage : true
+        }
+    },
+    legend: {
+        data:['蒸发量','降水量']
+    },
+    xAxis : [
+        {
+            type : 'category',
+            data : ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月']
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value',
+            splitArea : {show : true}
+        }
+    ],
+    series : [
         {
             name:'蒸发量',
             type: effectIndex % 2 == 0 ? 'bar' : 'line',
@@ -90,7 +115,11 @@ loadingTicket = setTimeout(function(){
             type: effectIndex % 2 == 0 ? 'bar' : 'line',
             data:[2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3]
         }
-    ]);
+    ]
+};
+clearTimeout(loadingTicket);
+loadingTicket = setTimeout(function(){
+    myChart.setOption(option);
 },2200);
                     </textarea>
               </div><!--/.well -->
@@ -124,128 +153,15 @@ loadingTicket = setTimeout(function(){
     <script src="../asset/js/bootstrap-collapse.js"></script>
     <script src="../asset/js/bootstrap-carousel.js"></script>
     <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
     <script type="text/javascript">
-        var myChart;
-        var domCode = document.getElementById('sidebar-code');
-        var domGraphic = document.getElementById('graphic');
-        var domMain = document.getElementById('main');
-        var domMessage = document.getElementById('wrong-message');
-        var iconResize = document.getElementById('icon-resize');
-        var needRefresh = false;
         var loadingTicket;
-
-        function autoResize() {
-            if (iconResize.className == 'icon-resize-full') {
-                focusCode();
-                iconResize.className = 'icon-resize-small';
-            }
-            else {
-                focusGraphic();
-                iconResize.className = 'icon-resize-full';
-            }
-        }
-
-        function focusCode() {
-            domCode.className = 'span8 ani';
-            domGraphic.className = 'span4 ani';
-        }
-
-        function focusGraphic() {
-            domCode.className = 'span4 ani';
-            domGraphic.className = 'span8 ani';
-            refresh()
-        }
-
-        var editor = CodeMirror.fromTextArea(
-            document.getElementById("code"),
-            { lineNumbers: true }
-        );
-        editor.setOption("theme", 'monokai');
-
-
-        editor.on('change', function(){needRefresh = true;});
-
         var effectIndex = -1;
+        var effect = ['spin' , 'bar' , 'ring' , 'whirling' , 'dynamicLine' , 'bubble'];
         function refresh(isBtnRefresh){
-            if (isBtnRefresh) {
-                needRefresh = true;
-                focusGraphic();
-                return;
-            }
-            needRefresh = false;
-           // try {
-                (new Function(editor.doc.getValue()))();
-                domMessage.innerHTML = '';
-           // }catch (e) {
-            //    domMessage.innerHTML = e;
-           // }
+            (new Function(editor.doc.getValue()))();
+            domMessage.innerHTML = '';
         }
-        /*
-        require.config({
-            packages: [
-                {
-                    name: 'echarts',
-                    location: '../../src',
-                    main: 'echarts'
-                },
-                {
-                    name: 'zrender',
-                    location: 'http://ecomfe.github.io/zrender/src',
-                    //location: '../../../zrender/src',
-                    main: 'zrender'
-                }
-            ]
-        });
-        */
-        require.config({
-            paths:{ 
-                echarts:'./www/js/echarts-map'
-            }
-        });
-
-        require(
-            [
-                'echarts'
-            ],
-            function(echarts) {
-                if (myChart && myChart.dispose) {
-                    myChart.dispose();
-                }
-                myChart = echarts.init(domMain);
-                myChart.setOption({
-                    tooltip : {
-                        trigger: 'axis'
-                    },
-                    toolbox: {
-                        show : true,
-                        feature : {
-                            mark : true,
-                            dataView : {readOnly: false},
-                            magicType:['line', 'bar'],
-                            restore : true,
-                            saveAsImage : true
-                        }
-                    },
-                    legend: {
-                        data:['蒸发量','降水量']
-                    },
-                    xAxis : [
-                        {
-                            type : 'category',
-                            data : ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月']
-                        }
-                    ],
-                    yAxis : [
-                        {
-                            type : 'value',
-                            splitArea : {show : true}
-                        }
-                    ]},
-                    true
-                );
-                refresh();
-            }
-        )
     </script>
 </body>
 </html>
