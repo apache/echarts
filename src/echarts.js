@@ -40,15 +40,6 @@
  *
  */
 define(function(require) {
-    // for build require
-    // require('./chart/line');
-    // require('./chart/bar');
-    // require('./chart/scatter');
-    // require('./chart/k');
-    // require('./chart/pie');
-    // require('./chart/map');
-    // require('./chart/force');
-    
     var self = {};
     /**
      * 入口方法 

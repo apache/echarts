@@ -15,17 +15,23 @@
     
     <script type="text/javascript">
     // Step:3 conifg ECharts's path, link to echarts.js from current page.
-    // Step:3 为模块加载器配置echarts的路径，从当前页面链接到echarts.js
+    // Step:3 为模块加载器配置echarts的路径，从当前页面链接到echarts.js，定义所需图表路径
     require.config({
         paths:{ 
-            echarts:'./js/echarts'
+            echarts:'./js/echarts',
+            'echarts/chart/bar' : './js/echarts',
+            'echarts/chart/line': './js/echarts'
         }
     });
     
     // Step:4 require echarts and use it in the callback.
-    // Step:4 动态加载echarts然后在回调函数中开始使用
+    // Step:4 动态加载echarts然后在回调函数中开始使用，注意保持按需加载结构定义图表路径
     require(
-        ['echarts'],
+        [
+            'echarts',
+            'echarts/chart/bar',
+            'echarts/chart/line'
+        ],
         function(ec) {
             var myChart = ec.init(document.getElementById('main'));
             var option = {

@@ -365,15 +365,43 @@ require.config({
 });
 </pre>
                     </div>
-                    <P>你也可以使用单一文件引入，node环境下安装<a href="http://requirejs.org/docs/optimization.html" target="_blank">require.js</a>，build文件夹内为你准备好配置项，可根据你的项目需求修改并压缩生成单一文件。</P>
-                    <p>如你所发现的，build文件夹下已经生成了两个单一文件（包含全部图表），echarts.js经过压缩，如需调试，可以用echarts-original.js，采用单一文件使用例子见<a href="example/www/index.html" target="_blank">ECharts单一文件引入</a>，存放在example/www下，你需要配置如下</p>
+                    <P>你也可以使用单一文件引入，node环境下安装<a href="http://requirejs.org/docs/optimization.html" target="_blank">require.js</a>，build文件夹内为你准备好配置项，可根据你的项目需求，选择性的开启或关闭include数组中的模块以构建你的最佳配置。</P>
+                    <p>如你所发现的，build文件夹下已经生成了多个单文件见下，根据你的需求使用：</p>
+                    <ul>
+                        <li>echarts.js : 经过压缩，包含除地图外的全部图表</li>
+                        <li>echarts-original.js : 未压缩，可用于调试，包含除地图外的全部图表</li>
+                        <li>echarts-map.js : 经过压缩，全图表，包含全国以及34个省市级地图数据</li>
+                        <li>echarts-original-map.js : 未压缩，可用于调试，全图表，包含全国以及34个省市级地图数据</li>
+                    </ul>
+                    <p>采用单一文件使用例子见<a href="example/www/index.html" target="_blank">ECharts单一文件引入</a>，存放在example/www下，你需要配置如下：</p>
                     <div class="code">
-                        <pre>//初始化实例时传入选项
+                        <pre>//from echarts example
 require.config({
     paths:{ 
-        echarts:'./js/echarts'
+        'echarts:'./js/echarts',
+        'echarts/chart/bar' : './js/echarts',       // 把所需图表指向单文件
+        'echarts/chart/line': './js/echarts'
     }
 });
+</pre>
+                    </div>
+                    <p>require.config配置后后就可以通过动态加载使用echarts</p>
+                    <div class="code">
+                        <pre>//from echarts example
+require(
+    [
+        'echarts',
+        'echarts/chart/line',   // 按需加载所需图表
+        'echarts/chart/bar'
+    ],
+    function (ec) {
+        var myChart = ec.init(domMain);
+        var option = {
+            ...
+        }
+        myChart.setOption(option);
+    }
+);
 </pre>
                     </div>
                     <p>不管如何引入ECharts，你都需要如下4步：</p>
@@ -381,7 +409,7 @@ require.config({
                         <li>引入一个模块加载器，如<a href="https://github.com/ecomfe/esl" target="_blank">esl.js</a>或者<a href="http://requirejs.org" target="_blank">require.js</a></li>
                         <li>为ECharts准备一个具备大小（宽高）的Dom（当然可以是动态生成的）</li>
                         <li>为模块加载器配置echarts的路径，从当前页面链接到echarts.js，见上述说明</li>
-                        <li>动态加载echarts然后在回调函数中开始使用</li>
+                        <li>动态加载echarts然后在回调函数中开始使用（容我罗嗦一句，当你确保同一页面已经加载过echarts，再使用时直接require('echarts').init(dom)就行）</li>
                     </ol>
 
                     <h3>初始化<a name="初始化"> </a></h3>
