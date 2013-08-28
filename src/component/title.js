@@ -239,15 +239,7 @@ define(function (require) {
             _buildShape();
         }
 
-        /**
-         * 刷新
-         */
-        function refresh() {
-            init(option);
-        }
-
         self.init = init;
-        self.refresh = refresh;
 
         init(option);
     }

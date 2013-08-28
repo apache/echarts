@@ -1107,7 +1107,15 @@ define(function (require) {
         /**
          * 刷新
          */
-        function refresh() {
+        function refresh(newOption) {
+            if (newOption) {
+                option = newOption;
+                option.dataRange = self.reformOption(option.dataRange);
+                // 补全padding属性
+                option.dataRange.padding = self.reformCssArray(
+                    option.dataRange.padding
+                );
+            }
             dataRangeOption = option.dataRange;
             _range = {
                 start: 100,

@@ -80,32 +80,43 @@ if (developMode) {
             }
         ]
     });
-    require(
-        [
-            'echarts'   ,
-            'echarts/chart/line',
-            'echarts/chart/bar',
-            'echarts/chart/scatter',
-            'echarts/chart/k',
-            'echarts/chart/pie',
-            'echarts/chart/map',
-            'echarts/chart/force'
-        ],
-        requireCallback
-    );
 }
 else {
     // for echarts online home page
+    var fileLocation = needMap() ? './www/js/echarts-map' : './www/js/echarts';
+    console.log(fileLocation)
     require.config({
         paths:{ 
-            echarts: needMap() ? './www/js/echarts-map' : './www/js/echarts'
+            echarts: fileLocation,
+            'echarts/chart/line': fileLocation,
+            'echarts/chart/bar': fileLocation,
+            'echarts/chart/scatter': fileLocation,
+            'echarts/chart/k': fileLocation,
+            'echarts/chart/pie': fileLocation,
+            // 'echarts/chart/radar': fileLocation,
+            'echarts/chart/map': fileLocation,
+            'echarts/chart/force': fileLocation
         }
     });
-    require(
-        ['echarts'],
-        requireCallback
-    );
+    
 }
+
+// 按需加载
+require(
+    [
+        'echarts',
+        'echarts/chart/line',
+        'echarts/chart/bar',
+        'echarts/chart/scatter',
+        'echarts/chart/k',
+        'echarts/chart/pie',
+        'echarts',
+        //'echarts/chart/radar',
+        'echarts/chart/force',
+        needMap() ? 'echarts/chart/map' : 'echarts'
+    ],
+    requireCallback
+);
 
 function requireCallback (ec) {
     echarts = ec;

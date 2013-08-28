@@ -36,6 +36,7 @@ define(function(require) {
         var _selected = {};     // 地图选择状态
         var _mapTypeMap = {};   // 图例类型索引
 
+        var _mapDataRequireCounter;
         var _mapParams = require('../util/mapData/params');
         var _textFixed = require('../util/mapData/textFixed');
 
@@ -96,6 +97,7 @@ define(function(require) {
                 }
             }
             
+            _mapDataRequireCounter = 0;
             for (var mt in valueData) {
                 if (valueCalculation[mt] && valueCalculation[mt] == 'average') {
                     for (var k in valueData[mt]) {
@@ -115,29 +117,46 @@ define(function(require) {
                     }
                 }
                 if (_mapParams[mt].getData) {
-                    _buildMap(
-                        mt,                             // 类型
-                        _getProjectionData(             // 地图数据
-                            mt,
-                            _mapParams[mt].getData(),
-                            mapSeries[mt]
-                        ),  
-                        valueData[mt],                  // 用户数据
-                        mapSeries[mt]                   // 系列
+                    _mapParams[mt].getData(
+                        _mapDataCallback(mt, valueData[mt], mapSeries[mt])
                     );
                 }
             }
-
-            for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
-                zr.addShape(self.shapeList[i]);
+        }
+        
+        /**
+         * @param {string} mt mapType
+         * @parma {Object} vd valueData
+         * @param {Object} ms mapSeries
+         */
+        function _mapDataCallback(mt, vd, ms) {
+            _mapDataRequireCounter++;
+            return function(md) {
+                _buildMap(
+                    mt,                             // 类型
+                    _getProjectionData(             // 地图数据
+                        _mapParams[mt].box,
+                        _mapParams[mt].loc,
+                        md,
+                        ms
+                    ),  
+                    vd,                  // 用户数据
+                    ms                   // 系列
+                );
+                if (--_mapDataRequireCounter <= 0) {
+                    for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                        self.shapeList[i].id = zr.newShapeId(self.type);
+                        zr.addShape(self.shapeList[i]);
+                    }
+                    zr.refresh();
+                }
             }
         }
         
         /**
          * 按需加载相关地图 
          */
-        function _getProjectionData(mapType, mapData, mapSeries) {
+        function _getProjectionData(mapBox, mapLoc, mapData, mapSeries) {
             var ori = mapData.features;
             var province = [];
             var single;
@@ -146,10 +165,10 @@ define(function(require) {
             
             //600, 500, 750, mapSeries
             var transform = _getTransform(
-                _mapParams[mapType].box[2], _mapParams[mapType].box[3], 3500,
+                mapBox[2], mapBox[3], 3500,
                 mapSeries
             );
-            var projection = _albers().origin(_mapParams[mapType].loc)
+            var projection = _albers().origin(mapLoc)
                                       .scale(transform.scale)
                                       .translate(transform.translate);
             var getAreaPath = _path().projection(projection);
@@ -828,22 +847,21 @@ define(function(require) {
          * @param {Object} newComponent
          */
         function init(newOption, newComponent) {
-            option = newOption;
             component = newComponent;
-
-            series = option.series;
-            
             _selected = {};
             _mapTypeMap = {};
 
-            self.clear();
-            _buildShape();
+            refresh(newOption);
         }
 
         /**
          * 刷新
          */
-        function refresh() {
+        function refresh(newOption) {
+            if (newOption) {
+                option = newOption;
+                series = option.series;
+            }
             self.clear();
             _buildShape();
         }

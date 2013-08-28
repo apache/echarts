@@ -295,7 +295,10 @@ define(function (require) {
                     return series[i];
                 }
 
-                if (series[i].type == ecConfig.CHART_TYPE_PIE) {
+                if (
+                    series[i].type == ecConfig.CHART_TYPE_PIE 
+                    || series[i].type == ecConfig.CHART_TYPE_RADAR
+                ) {
                     // 饼图得查找里面的数据名字
                     hasFind = false;
                     data = series[i].data;
@@ -425,8 +428,17 @@ define(function (require) {
         /**
          * 刷新
          */
-        function refresh() {
+        function refresh(newOption) {
+            if (newOption) {
+                option = newOption;
+                option.legend = self.reformOption(option.legend);
+                // 补全padding属性
+                option.legend.padding = self.reformCssArray(
+                    option.legend.padding
+                );
+            }
             legendOption = option.legend;
+            
             self.clear();
             _buildShape();
         }
