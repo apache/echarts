@@ -137,7 +137,12 @@ option = {
     <script src="../asset/js/bootstrap-typeahead.js"></script>
     <script type="text/javascript">
         var webkitDepData;
-        require(['./webkit-dep'], function(wd) {
+        require.config({
+            paths:{ 
+                webkitDep : './webkit-dep'
+            }
+        });
+        require(['webkit-dep'], function(wd) {
             webkitDepData = wd;
         })
     </script>

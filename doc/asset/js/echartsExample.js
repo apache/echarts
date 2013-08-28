@@ -84,7 +84,6 @@ if (developMode) {
 else {
     // for echarts online home page
     var fileLocation = needMap() ? './www/js/echarts-map' : './www/js/echarts';
-    console.log(fileLocation)
     require.config({
         paths:{ 
             echarts: fileLocation,
@@ -98,7 +97,6 @@ else {
             'echarts/chart/force': fileLocation
         }
     });
-    
 }
 
 // 按需加载
