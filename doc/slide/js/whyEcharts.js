@@ -1,7 +1,15 @@
 require.config({
     paths:{ 
-        echarts:'./js/echarts',
-        webkitDep : '../../doc/example/webkit-dep',
+        echarts: '../../doc/example/www/js/echarts-map',
+        'echarts/chart/line': '../../doc/example/www/js/echarts-map',
+        'echarts/chart/bar': '../../doc/example/www/js/echarts-map',
+        'echarts/chart/scatter': '../../doc/example/www/js/echarts-map',
+        'echarts/chart/k': '../../doc/example/www/js/echarts-map',
+        'echarts/chart/pie': '../../doc/example/www/js/echarts-map',
+        // 'echarts/chart/radar': '../../doc/example/www/js/echarts-map',
+        'echarts/chart/map': '../../doc/example/www/js/echarts-map',
+        'echarts/chart/force': '../../doc/example/www/js/echarts-map',
+        webkitDep : '../../doc/example/webkit-dep'
     }
 });
 
@@ -10,6 +18,15 @@ var webkitDepData;
 require(
     [
         'echarts',
+        'echarts/chart/line',
+        'echarts/chart/bar',
+        'echarts/chart/scatter',
+        'echarts/chart/k',
+        'echarts/chart/pie',
+        'echarts',
+        //'echarts/chart/radar',
+        'echarts/chart/force',
+        'echarts/chart/map',
         'webkitDep',
     ],
     function(ec, wd) {
