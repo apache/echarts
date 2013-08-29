@@ -692,6 +692,8 @@ define(function(require) {
 
             itemShape._x = x;
             itemShape._y = y;
+            itemShape._dataIndex = dataIndex;
+            itemShape._seriesIndex = seriesIndex;
 
             return itemShape;
         }
@@ -719,6 +721,82 @@ define(function(require) {
             _buildShape();
         }
 
+        /**
+         * 动态数据增加动画 
+         */
+        function addDataAnimation(params) {
+            var aniMap = {}; // seriesIndex索引参数
+            for (var i = 0, l = params.length; i < l; i++) {
+                aniMap[params[i][0]] = params[i];
+            }
+            var x;
+            var dx;
+            var y;
+            var dy;
+            var serie;
+            var seriesIndex;
+            for (var i = self.shapeList.length - 1; i >= 0; i--) {
+                seriesIndex = self.shapeList[i]._seriesIndex;
+                if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
+                    // 有数据删除才有移动的动画
+                    if (self.shapeList[i]._main) {
+                        // 主线动画
+                        dx = Math.abs(
+                            self.shapeList[i].style.pointList[0][0]
+                            - self.shapeList[i].style.pointList[1][0]
+                        );
+                        dy = Math.abs(
+                            self.shapeList[i].style.pointList[0][1]
+                            - self.shapeList[i].style.pointList[1][1]
+                        );
+                        if (aniMap[seriesIndex][2]) {
+                            // 队头加入删除末尾
+                            self.shapeList[i].style.pointList.pop();
+                            self.shapeList[i]._orient == 'horizontal'
+                            ? (x = dx, y = 0)
+                            : (x = 0, y = -dy);
+                        }
+                        else {
+                            // 队尾加入删除头部
+                            self.shapeList[i].style.pointList.shift();
+                            self.shapeList[i]._orient == 'horizontal'
+                            ? (x = -dx, y = 0)
+                            : (x = 0, y = dy);
+                        }
+                        zr.modShape(self.shapeList[i].id, {
+                            style : {
+                                pointList : self.shapeList[i].style.pointList
+                            }
+                        });
+                    }
+                    else {
+                        // 拐点动画
+                        if (aniMap[seriesIndex][2] 
+                            && self.shapeList[i]._dataIndex 
+                                == series[seriesIndex].data.length - 1
+                        ) {
+                            // 队头加入删除末尾
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                        else if (!aniMap[seriesIndex][2] 
+                                 && self.shapeList[i]._dataIndex == 0
+                        ) {
+                            // 队尾加入删除头部
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                    }
+                    zr.animate(self.shapeList[i].id, '')
+                        .when(
+                            500,
+                            {position : [x, y]}
+                        )
+                        .start();
+                }
+            }
+        }
+        
         /**
          * 动画设定
          */
@@ -778,6 +856,7 @@ define(function(require) {
 
         self.init = init;
         self.refresh = refresh;
+        self.addDataAnimation = addDataAnimation;
         self.animation = animation;
 
         init(option, component);

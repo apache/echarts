@@ -357,6 +357,40 @@ define(function(require) {
          * 动态类型切换响应 
          */
         function _onmagicTypeChanged() {
+            _render(_getMagicOption());
+        }
+
+        /**
+         * 数据视图修改响应 
+         */
+        function _ondataViewChanged(param) {
+            _syncBackupData(param.option);
+            _messageCenter.dispatch(
+                ecConfig.EVENT.DATA_CHANGED,
+                null,
+                param
+            );
+            _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+        }
+
+        /**
+         * 还原 
+         */
+        function _onrestore() {
+            self.restore();
+        }
+
+        /**
+         * 刷新 
+         */
+        function _onrefresh(param) {
+            self.refresh(param);
+        }
+
+        /**
+         * 当前正在使用的option，还原可能存在的dataZoom
+         */
+        function _getMagicOption() {
             var magicOption = _toolbox.getMagicOption();
             var len;
             // 横轴数据还原
@@ -392,37 +426,10 @@ define(function(require) {
             while (len--) {
                 magicOption.series[len].data = _optionBackup.series[len].data;
             }
-
-            _render(magicOption);
+            
+            return magicOption;
         }
-
-        /**
-         * 数据视图修改响应 
-         */
-        function _ondataViewChanged(param) {
-            _syncBackupData(param.option);
-            _messageCenter.dispatch(
-                ecConfig.EVENT.DATA_CHANGED,
-                null,
-                param
-            );
-            _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
-        }
-
-        /**
-         * 还原 
-         */
-        function _onrestore() {
-            restore();
-        }
-
-        /**
-         * 刷新 
-         */
-        function _onrefresh(param) {
-            refresh(param);
-        }
-
+        
         /**
          * 数据修改后的反向同步备份数据 
          */
@@ -646,13 +653,6 @@ define(function(require) {
          * 刷新 
          */
         function refresh(param) {
-            if (param.option) {
-                var zrUtil = require('zrender/tool/util');
-                _optionRestore = zrUtil.clone(param.option);
-                _optionBackup = zrUtil.clone(param.option);
-                _option = zrUtil.clone(param.option);
-            }
-            
             // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
             // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
@@ -773,37 +773,84 @@ define(function(require) {
         
         /**
          * 动态数据添加，队尾添加
-         * 形参为单组数据参数，多组时为数据，内容同[seriesIdx, data, isShift, axisData]
+         * 形参为单组数据参数，多组时为数据，内容同[seriesIdx, data, isShift, additionData]
          * @param {number} seriesIdx 系列索引
          * @param {number | Object} data 增加数据
          * @param {boolean=} isHead 是否队头加入，默认，不指定或false时为队尾插入
          * @param {boolean=} dataGrow 是否增长数据队列长度，默认，不指定或false时移出目标数组对位数据
-         * @param {string=} axisData 是否增加类目轴数据，附加操作同isHead和dataGrow
+         * @param {string=} additionData 是否增加类目轴(饼图为图例)数据，附加操作同isHead和dataGrow
          */
-        function addData(seriesIdx, data, isHead, dataGrow, axisData) {
+        function addData(seriesIdx, data, isHead, dataGrow, additionData) {
             var params = seriesIdx instanceof Array
                          ? seriesIdx
-                         : [[seriesIdx, data, isHead, axisData]];
+                         : [[seriesIdx, data, isHead, dataGrow, additionData]];
             var axisIdx;
+            var magicOption;
+            if (_optionBackup.toolbox
+                && _optionBackup.toolbox.show
+                && _optionBackup.toolbox.feature.magicType
+                && _optionBackup.toolbox.feature.magicType.length > 0
+            ) {
+                magicOption = _getMagicOption();
+            }
+            else {
+                magicOption = _optionBackup;//_island.getOption();
+                //magicOption.series = _optionBackup
+            }
+            //_optionRestore 和 _optionBackup都要同步
             for (var i = 0, l = params.length; i < l; i++) {
                 seriesIdx = params[i][0];
                 data = params[i][1];
                 isHead = params[i][2];
                 dataGrow = params[i][3];
-                axisData = params[i][4];
+                additionData = params[i][4];
                 if (_optionRestore.series[seriesIdx]) {
                     if (isHead) {
                         _optionRestore.series[seriesIdx].data.unshift(data);
-                        !dataGrow 
-                        && _optionRestore.series[seriesIdx].data.pop();
+                        _optionBackup.series[seriesIdx].data.unshift(data);
+                        if (!dataGrow) {
+                            _optionRestore.series[seriesIdx].data.pop();
+                            _optionBackup.series[seriesIdx].data.pop();
+                        }
                     }
                     else {
                         _optionRestore.series[seriesIdx].data.push(data);
-                        !dataGrow 
-                        && _optionRestore.series[seriesIdx].data.shift();
+                        _optionBackup.series[seriesIdx].data.push(data);
+                        if (!dataGrow) {
+                            _optionRestore.series[seriesIdx].data.shift();
+                            _optionBackup.series[seriesIdx].data.shift();
+                        }
                     }
                     
-                    if (typeof axisData != 'undefined') {
+                    if (typeof additionData != 'undefined'
+                        && _optionRestore.series[seriesIdx].type 
+                           == ecConfig.CHART_TYPE_PIE
+                        && _optionBackup.legend 
+                        && _optionBackup.legend.data
+                    ) {
+                        if (isHead) {
+                            _optionRestore.legend.data.unshift(additionData);
+                            _optionBackup.legend.data.unshift(additionData);
+                            if (!dataGrow) {
+                                _optionRestore.legend.data.pop();
+                                _optionBackup.legend.data.pop();
+                            }
+                        }
+                        else {
+                            _optionRestore.legend.data.push(additionData);
+                            _optionBackup.legend.data.push(additionData);
+                            if (!dataGrow) {
+                                _optionRestore.legend.data.shift();
+                                _optionBackup.legend.data.shift();
+                            }
+                        }
+                        _selectedMap[additionData] = true;
+                        magicOption.legend.selected = _selectedMap;
+                    } 
+                    else  if (typeof additionData != 'undefined'
+                        && typeof _optionRestore.xAxis != 'undefined'
+                        && typeof _optionRestore.yAxis != 'undefined'
+                    ) {
                         // x轴类目
                         axisIdx = _optionRestore.series[seriesIdx].xAxisIndex
                                   || 0;
@@ -813,17 +860,27 @@ define(function(require) {
                         ) {
                             if (isHead) {
                                 _optionRestore.xAxis[axisIdx].data.unshift(
-                                    axisData
+                                    additionData
                                 );
-                                !dataGrow 
-                                && _optionRestore.xAxis[axisIdx].data.pop();
+                                _optionBackup.xAxis[axisIdx].data.unshift(
+                                    additionData
+                                );
+                                if (!dataGrow) {
+                                    _optionRestore.xAxis[axisIdx].data.pop();
+                                    _optionBackup.xAxis[axisIdx].data.pop();
+                                }
                             }
                             else {
                                 _optionRestore.xAxis[axisIdx].data.push(
-                                    axisData
+                                    additionData
                                 );
-                                !dataGrow 
-                                && _optionRestore.xAxis[axisIdx].data.shift();
+                                _optionBackup.xAxis[axisIdx].data.push(
+                                    additionData
+                                );
+                                if (!dataGrow) {
+                                    _optionRestore.xAxis[axisIdx].data.shift();
+                                    _optionBackup.xAxis[axisIdx].data.shift();
+                                }
                             }
                         }
                         
@@ -833,28 +890,54 @@ define(function(require) {
                         if (_optionRestore.yAxis[axisIdx].type == 'category') {
                             if (isHead) {
                                 _optionRestore.yAxis[axisIdx].data.unshift(
-                                    axisData
+                                    additionData
                                 );
-                                !dataGrow 
-                                && _optionRestore.yAxis[axisIdx].data.pop();
+                                _optionBackup.yAxis[axisIdx].data.unshift(
+                                    additionData
+                                );
+                                if (!dataGrow) {
+                                    _optionRestore.yAxis[axisIdx].data.pop();
+                                    _optionBackup.yAxis[axisIdx].data.pop();
+                                }
                             }
                             else {
                                 _optionRestore.yAxis[axisIdx].data.push(
-                                    axisData
+                                    additionData
                                 );
-                                !dataGrow 
-                                && _optionRestore.yAxis[axisIdx].data.shift();
+                                _optionBackup.yAxis[axisIdx].data.push(
+                                    additionData
+                                );
+                                if (!dataGrow) {
+                                    _optionRestore.yAxis[axisIdx].data.shift();
+                                    _optionBackup.yAxis[axisIdx].data.shift();
+                                }
                             }
                         }
                     }
                 }
             }
-            
-            _messageCenter.dispatch(
-                ecConfig.EVENT.REFRESH,
-                '',
-                {option: _optionRestore}
-            );
+            // dataZoom同步一下数据
+            for (var i = 0, l = _chartList.length; i < l; i++) {
+                if (_chartList[i].addDataAnimation) {
+                    _chartList[i].addDataAnimation(params);
+                }
+                if (_chartList[i].type 
+                    == ecConfig.COMPONENT_TYPE_DATAZOOM
+                ) {
+                    _chartList[i].silence(true);
+                    _chartList[i].init(magicOption);
+                    _chartList[i].silence(false);
+                }
+            }
+            _island.refresh(magicOption);
+            _toolbox.refresh(magicOption);
+            setTimeout(function(){
+                _messageCenter.dispatch(
+                    ecConfig.EVENT.REFRESH,
+                    '',
+                    {option: magicOption}
+                );
+            }, 500);
         }
 
         /**

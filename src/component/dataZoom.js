@@ -35,6 +35,7 @@ define(function (require) {
         var _endShape;
 
         var _syncTicket;
+        var _isSilence = false;
 
         var _originalData;
 
@@ -730,7 +731,7 @@ define(function (require) {
                 }
             }
 
-            if (zoomOption.realtime || dispatchNow) {
+            if (!_isSilence && (zoomOption.realtime || dispatchNow)) {
                 messageCenter.dispatch(
                     ecConfig.EVENT.DATA_ZOOM,
                     null,
@@ -802,7 +803,7 @@ define(function (require) {
             // 别status = {}赋值啊！！
             status.dragOut = true;
             status.dragIn = true;
-            if (!zoomOption.realtime) {
+            if (!_isSilence && !zoomOption.realtime) {
                 messageCenter.dispatch(
                     ecConfig.EVENT.DATA_ZOOM,
                     null,
@@ -958,6 +959,9 @@ define(function (require) {
                 }
             }
         }
+        function silence(s) {
+            _isSilence = s;
+        }
 
         function init(newOption) {
             option = newOption;
@@ -991,6 +995,7 @@ define(function (require) {
         self.rectZoom = rectZoom;
         self.ondragend = ondragend;
         self.ondataZoom = ondataZoom;
+        self.silence = silence;
 
         init(option);
     }

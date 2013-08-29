@@ -631,6 +631,71 @@ define(function(require) {
             self.clear();
             _buildShape();
         }
+        
+        /**
+         * 动态数据增加动画 
+         */
+        function addDataAnimation(params) {
+            var aniMap = {}; // seriesIndex索引参数
+            for (var i = 0, l = params.length; i < l; i++) {
+                aniMap[params[i][0]] = params[i];
+            }
+            var x;
+            var dx;
+            var y;
+            var dy;
+            var serie;
+            var seriesIndex;
+            var dataIndex;
+            var categoryAxis;
+            for (var i = self.shapeList.length - 1; i >= 0; i--) {
+                seriesIndex = ecData.get(self.shapeList[i], 'seriesIndex');
+                if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
+                    // 有数据删除才有移动的动画
+                    if (self.shapeList[i].shape == 'rectangle') {
+                        // 主动画
+                        dx = -20;
+                        dy = 0;//20;
+                        dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
+                        serie = series[seriesIndex];
+                        if (aniMap[seriesIndex][2] 
+                            && dataIndex == serie.data.length - 1
+                        ) {
+                            // 队头加入删除末尾
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                        else if (!aniMap[seriesIndex][2] && dataIndex == 0) {
+                            // 队尾加入删除头部
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                        if (self.shapeList[i]._orient == 'horizontal') {
+                            // 条形图
+                            dy = component.yAxis.getAxis(
+                                    serie.yAxisIndex || 0
+                                 ).getGap();
+                            y = aniMap[seriesIndex][2] ? -dy : dy;
+                            x = 0;
+                        }
+                        else {
+                            // 柱形图
+                            dx = component.xAxis.getAxis(
+                                    serie.xAxisIndex || 0
+                                 ).getGap();
+                            x = aniMap[seriesIndex][2] ? dx : -dx;
+                            y = 0;
+                        }
+                        zr.animate(self.shapeList[i].id, '')
+                            .when(
+                                500,
+                                {position : [x, y]}
+                            )
+                            .start();
+                    }
+                }
+            }
+        }
 
         /**
          * 动画设定
@@ -753,6 +818,7 @@ define(function(require) {
 
         self.init = init;
         self.refresh = refresh;
+        self.addDataAnimation = addDataAnimation;
         self.animation = animation;
 
         init(option, component);

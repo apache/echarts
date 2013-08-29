@@ -436,6 +436,11 @@ define(function (require) {
                 option.legend.padding = self.reformCssArray(
                     option.legend.padding
                 );
+                if (option.legend.selected) {
+                    for (var k in option.legend.selected) {
+                        _selectedMap[k] = option.legend.selected[k];
+                    }
+                }
             }
             legendOption = option.legend;
             
