@@ -213,8 +213,10 @@ define(function() {
         grid: {
             x: 80,
             y: 60,
-            // width: {totalWidth} - (2 * x),
-            // height: {totalHeight} - (2 * y)
+            x2: 80,
+            y2: 60,
+            // width: {totalWidth} - x - x2,
+            // height: {totalHeight} - y - y2,
             backgroundColor: '#fff',
             borderWidth: 1,
             borderColor: '#ccc'

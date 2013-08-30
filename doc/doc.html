@@ -1198,22 +1198,32 @@ feature : {
                         <tr>
                             <td> {number} x </td>
                             <td> 80 </td>
-                            <td> 直角坐标系内绘图网格起始横坐标，数值单位px </td>
+                            <td> 直角坐标系内绘图网格左上角横坐标，数值单位px </td>
                         </tr>
                         <tr>
                             <td> {number} y </td>
                             <td> 60 </td>
-                            <td> 直角坐标系内绘图网格起始纵坐标，数值单位px </td>
+                            <td> 直角坐标系内绘图网格左上角纵坐标，数值单位px </td>
+                        </tr>
+                        <tr>
+                            <td> {number} x2 </td>
+                            <td> 80 </td>
+                            <td> 直角坐标系内绘图网格右下角横坐标，数值单位px </td>
+                        </tr>
+                        <tr>
+                            <td> {number} y2 </td>
+                            <td> 60 </td>
+                            <td> 直角坐标系内绘图网格右下角纵坐标，数值单位px </td>
                         </tr>
                         <tr>
                             <td> {number} width </td>
                             <td> 自适应 </td>
-                            <td> 直角坐标系内绘图网格（不含坐标轴）宽度，默认为总宽度 - 2 * x，数值单位px，见下图。 </td>
+                            <td> 直角坐标系内绘图网格（不含坐标轴）宽度，默认为总宽度 - x - x2，数值单位px，指定width后将忽略x2，见下图。 </td>
                         </tr>
                         <tr>
                             <td> {number} height </td>
                             <td> 自适应 </td>
-                            <td> 直角坐标系内绘图网格（不含坐标轴）高度，默认为总宽度 - 2 * y，数值单位px，见下图。 </td>
+                            <td> 直角坐标系内绘图网格（不含坐标轴）高度，默认为总宽度 - y - y2，数值单位px，指定height后将忽略y2，见下图。 </td>
                         </tr>
                         <tr>
                             <td> {color} backgroundColor </td>

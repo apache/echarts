@@ -45,16 +45,18 @@ define(function (require) {
             var gridOption = option.grid;
             _x = gridOption.x;
             _y = gridOption.y;
+            var x2 = gridOption.x2;
+            var y2 = gridOption.y2;
 
             if (typeof gridOption.width == 'undefined') {
-                _width = zr.getWidth() - (_x * 2);
+                _width = zr.getWidth() - _x - x2;
             }
             else {
                 _width = gridOption.width;
             }
 
             if (typeof gridOption.height == 'undefined') {
-                _height = zr.getHeight() - (_y * 2);
+                _height = zr.getHeight() - _y - y2;
             }
             else {
                 _height = gridOption.height;
