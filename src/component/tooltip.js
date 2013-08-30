@@ -648,7 +648,7 @@ define(function (require) {
                                       : (' (' + speical + ')'));
                 }
                 else if (serie.type == ecConfig.CHART_TYPE_RADAR) {
-                    indicator = self.deepQuery([serie, option], 'indicator');
+                    indicator = speical;
                     html += (name === '' ? serie.name : name) + '<br />';
                     for (var i = 0 ; i < indicator.length; i ++) {
                         html += indicator[i].name + ' : ' + value[i] + '<br />';

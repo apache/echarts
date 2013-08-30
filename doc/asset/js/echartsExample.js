@@ -109,7 +109,7 @@ require(
         'echarts/chart/k',
         'echarts/chart/pie',
         'echarts',
-        //'echarts/chart/radar',
+        'echarts/chart/radar',
         'echarts/chart/force',
         needMap() ? 'echarts/chart/map' : 'echarts'
     ],

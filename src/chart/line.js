@@ -735,33 +735,56 @@ define(function(require) {
             var dy;
             var serie;
             var seriesIndex;
+            var pointList;
+            var isHorizontal; // 是否横向布局， isHorizontal;
             for (var i = self.shapeList.length - 1; i >= 0; i--) {
                 seriesIndex = self.shapeList[i]._seriesIndex;
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
                     // 有数据删除才有移动的动画
                     if (self.shapeList[i]._main) {
+                        pointList = self.shapeList[i].style.pointList;
                         // 主线动画
-                        dx = Math.abs(
-                            self.shapeList[i].style.pointList[0][0]
-                            - self.shapeList[i].style.pointList[1][0]
-                        );
-                        dy = Math.abs(
-                            self.shapeList[i].style.pointList[0][1]
-                            - self.shapeList[i].style.pointList[1][1]
-                        );
+                        dx = Math.abs(pointList[0][0] - pointList[1][0]);
+                        dy = Math.abs(pointList[0][1] - pointList[1][1]);
+                        isHorizontal = 
+                            self.shapeList[i]._orient == 'horizontal';
+                            
                         if (aniMap[seriesIndex][2]) {
                             // 队头加入删除末尾
+                            if (self.shapeList[i].shape == 'polygon') {
+                                //区域图
+                                var len = pointList.length;
+                                self.shapeList[i].style.pointList[len - 3]
+                                    = pointList[len - 2];
+                                isHorizontal
+                                ? (self.shapeList[i].style.pointList[len - 3][0]
+                                       = pointList[len - 4][0]
+                                  )
+                                : (self.shapeList[i].style.pointList[len - 3][1]
+                                       = pointList[len - 4][1]
+                                  );
+                                self.shapeList[i].style.pointList[len - 2]
+                                    = pointList[len - 1];
+                            }
                             self.shapeList[i].style.pointList.pop();
-                            self.shapeList[i]._orient == 'horizontal'
-                            ? (x = dx, y = 0)
-                            : (x = 0, y = -dy);
+                            
+                            isHorizontal ? (x = dx, y = 0) : (x = 0, y = -dy);
                         }
                         else {
                             // 队尾加入删除头部
                             self.shapeList[i].style.pointList.shift();
-                            self.shapeList[i]._orient == 'horizontal'
-                            ? (x = -dx, y = 0)
-                            : (x = 0, y = dy);
+                            if (self.shapeList[i].shape == 'polygon') {
+                                //区域图
+                                var targetPoint = 
+                                    self.shapeList[i].style.pointList.pop();
+                                isHorizontal
+                                ? (targetPoint[0] = pointList[0][0])
+                                : (targetPoint[1] = pointList[0][1]);
+                                self.shapeList[i].style.pointList.push(
+                                    targetPoint
+                                );
+                            }
+                            isHorizontal ? (x = -dx, y = 0) : (x = 0, y = dy);
                         }
                         zr.modShape(self.shapeList[i].id, {
                             style : {

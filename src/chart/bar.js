@@ -654,8 +654,6 @@ define(function(require) {
                     // 有数据删除才有移动的动画
                     if (self.shapeList[i].shape == 'rectangle') {
                         // 主动画
-                        dx = -20;
-                        dy = 0;//20;
                         dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
                         serie = series[seriesIndex];
                         if (aniMap[seriesIndex][2] 

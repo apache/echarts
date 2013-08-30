@@ -652,6 +652,143 @@ define(function(require) {
             self.clear();
             _buildShape();
         }
+        
+        /**
+         * 动态数据增加动画 
+         * 心跳效果
+        function addDataAnimation(params) {
+            var aniMap = {}; // seriesIndex索引参数
+            for (var i = 0, l = params.length; i < l; i++) {
+                aniMap[params[i][0]] = params[i];
+            }
+            var x;
+            var y;
+            var r;
+            var seriesIndex;
+            for (var i = self.shapeList.length - 1; i >= 0; i--) {
+                seriesIndex = ecData.get(self.shapeList[i], 'seriesIndex');
+                if (aniMap[seriesIndex]) {
+                    if (self.shapeList[i].shape == 'sector'
+                        || self.shapeList[i].shape == 'circle'
+                        || self.shapeList[i].shape == 'ring'
+                    ) {
+                        r = self.shapeList[i].style.r;
+                        zr.animate(self.shapeList[i].id, 'style')
+                            .when(
+                                300,
+                                {r : r * 0.9}
+                            )
+                            .when(
+                                500,
+                                {r : r}
+                            )
+                            .start();
+                    }
+                }
+            }
+        }
+         */
+        
+        /**
+         * 动态数据增加动画 
+         */
+        function addDataAnimation(params) {
+            var aniMap = {}; // seriesIndex索引参数
+            for (var i = 0, l = params.length; i < l; i++) {
+                aniMap[params[i][0]] = params[i];
+            }
+            var sectorMap = {};
+            var backupShapeList = zrUtil.clone(self.shapeList);
+            self.shapeList = [];
+            
+            var seriesIndex;
+            var isHead;
+            var dataGrow;
+            var deltaIdxMap = {};
+            for (var i = 0, l = params.length; i < l; i++) {
+                seriesIndex = params[i][0];
+                isHead = params[i][2];
+                dataGrow = params[i][3];
+                if (series[seriesIndex]
+                    && series[seriesIndex].type == ecConfig.CHART_TYPE_PIE
+                ) {
+                    if (isHead) {
+                        if (!dataGrow) {
+                            sectorMap[
+                                seriesIndex 
+                                + '_' 
+                                + series[seriesIndex].data.length
+                            ] = 'delete';
+                        }
+                        deltaIdxMap[seriesIndex] = 1;
+                    }
+                    else {
+                        if (!dataGrow) {
+                            sectorMap[seriesIndex + '_-1'] = 'delete';
+                            deltaIdxMap[seriesIndex] = -1;
+                        }
+                        else {
+                            deltaIdxMap[seriesIndex] = 0;
+                        }
+                    }
+                }
+                _buildSinglePie(seriesIndex);
+            }
+            var dataIndex;
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                if (self.shapeList[i].shape == 'sector') {
+                    seriesIndex = ecData.get(self.shapeList[i], 'seriesIndex');
+                    dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
+                    sectorMap[seriesIndex + '_' + dataIndex] =
+                        self.shapeList[i];
+                }
+            }
+            self.shapeList = [];
+            var targeSector;
+            for (var i = 0, l = backupShapeList.length; i < l; i++) {
+                seriesIndex = ecData.get(backupShapeList[i], 'seriesIndex');
+                if (aniMap[seriesIndex]) {
+                    dataIndex = ecData.get(backupShapeList[i], 'dataIndex')
+                                + deltaIdxMap[seriesIndex];
+                    targeSector = sectorMap[seriesIndex + '_' + dataIndex];
+                    if (backupShapeList[i].shape == 'sector' && targeSector) {
+                        if (targeSector != 'delete') {
+                            // 原有扇形
+                            zr.animate(backupShapeList[i].id, 'style')
+                                .when(
+                                    400,
+                                    {
+                                        startAngle : 
+                                            targeSector.style.startAngle,
+                                        endAngle : 
+                                            targeSector.style.endAngle
+                                    }
+                                )
+                                .start();
+                        }
+                        else {
+                            // 删除的扇形
+                            zr.animate(backupShapeList[i].id, 'style')
+                                .when(
+                                    400,
+                                    deltaIdxMap[seriesIndex] < 0
+                                    ? {
+                                        endAngle : 
+                                            backupShapeList[i].style.startAngle
+                                      }
+                                    : {
+                                        startAngle :
+                                            backupShapeList[i].style.endAngle
+                                      }
+                                )
+                                .start();
+                        }
+                        
+                    }
+                }
+            }
+            self.shapeList = backupShapeList;
+        }
 
         /**
          * 动画设定
@@ -923,6 +1060,7 @@ define(function(require) {
         // 接口方法
         self.init = init;
         self.refresh = refresh;
+        self.addDataAnimation = addDataAnimation;
         self.animation = animation;
         self.onclick = onclick;
         self.ondrop = ondrop;

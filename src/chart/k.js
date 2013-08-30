@@ -175,7 +175,7 @@ define(function(require) {
         }
 
         /**
-         * 生成折线和折线上的拐点
+         * 生成K线
          */
         function _buildKLine(pointList) {
             // normal:
@@ -356,7 +356,7 @@ define(function(require) {
                     strokeColor : eLineColor,
                     lineWidth : eLinewidth
                 },
-                _serieIndex: seriesIndex
+                _seriesIndex: seriesIndex
             };
             ecData.pack(
                 itemShape,
@@ -394,6 +394,57 @@ define(function(require) {
         /**
          * 动画设定
          */
+        function addDataAnimation(params) {
+            var aniMap = {}; // seriesIndex索引参数
+            for (var i = 0, l = params.length; i < l; i++) {
+                aniMap[params[i][0]] = params[i];
+            }
+            var x;
+            var dx;
+            var y;
+            var dy;
+            var serie;
+            var seriesIndex;
+            var dataIndex;
+            var categoryAxis;
+             for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                seriesIndex = self.shapeList[i]._seriesIndex;
+                if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
+                    // 有数据删除才有移动的动画
+                    if (self.shapeList[i].shape == 'candle') {
+                        dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
+                        serie = series[seriesIndex];
+                        if (aniMap[seriesIndex][2] 
+                            && dataIndex == serie.data.length - 1
+                        ) {
+                            // 队头加入删除末尾
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                        else if (!aniMap[seriesIndex][2] && dataIndex == 0) {
+                            // 队尾加入删除头部
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                        dx = component.xAxis.getAxis(
+                                serie.xAxisIndex || 0
+                             ).getGap();
+                        x = aniMap[seriesIndex][2] ? dx : -dx;
+                        y = 0;
+                        zr.animate(self.shapeList[i].id, '')
+                            .when(
+                                500,
+                                {position : [x, y]}
+                            )
+                            .start();
+                    }
+                }
+            }
+        }
+        
+        /**
+         * 动画设定
+         */
         function animation() {
             var duration = self.deepQuery([option], 'animationDuration');
             var easing = self.deepQuery([option], 'animationEasing');
@@ -403,7 +454,7 @@ define(function(require) {
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 if (self.shapeList[i].shape == 'candle') {
-                    serie = series[self.shapeList[i]._serieIndex];
+                    serie = series[self.shapeList[i]._seriesIndex];
                     x = self.shapeList[i].style.x;
                     y = self.shapeList[i].style.y[0];
                     zr.modShape(self.shapeList[i].id, {
@@ -426,6 +477,7 @@ define(function(require) {
 
         self.init = init;
         self.refresh = refresh;
+        self.addDataAnimation = addDataAnimation;
         self.animation = animation;
 
         init(option, component);

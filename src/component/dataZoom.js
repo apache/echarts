@@ -937,24 +937,11 @@ define(function (require) {
                     start = 0;
                 }
                 for (var j = 0, k = curData.length; j < k; j++) {
-                    if (typeof optionBackup.series[i].data[j + start].value 
-                        != 'undefined'
-                    ) {
-                        optionBackup.series[i].data[j + start].value 
-                            = curData[j].value;
-                        if (target[i]) {
-                            // 同步内部备份
-                            target[i][j + start].value 
-                                = curData[j].value;
-                        }
-                    }
-                    else {
-                        optionBackup.series[i].data[j + start] = curData[j];
-                        if (target[i]) {
-                            // 同步内部备份
-                            target[i][j + start] 
-                                = curData[j];
-                        }
+                    optionBackup.series[i].data[j + start] = curData[j];
+                    if (target[i]) {
+                        // 同步内部备份
+                        target[i][j + start] 
+                            = curData[j];
                     }
                 }
             }

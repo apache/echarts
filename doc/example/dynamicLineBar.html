@@ -77,29 +77,48 @@ option = {
         trigger: 'axis'
     },
     legend: {
-        data:['最新成交价']
+        data:['最新成交价', '预购队列']
     },
     toolbox: {
         show : true,
         feature : {
             mark : true,
             dataView : {readOnly: false},
-            //magicType:['line', 'bar'],
+            magicType:['line', 'bar'],
             restore : true,
             saveAsImage : true
         }
     },
+    dataZoom : {
+        show : false,
+        realtime: true,
+        start : 50,
+        end : 100
+    },
     xAxis : [
         {
             type : 'category',
-            boundaryGap : false,
+            boundaryGap : true,
             data : (function(){
                 var now = new Date();
                 var res = [];
-                var len = 20;
+                var len = 10;
                 while (len--) {
                     res.unshift(now.toLocaleTimeString().replace(/^\D*/,''));
-                    now = new Date(now - 1000);
+                    now = new Date(now - 2000);
+                }
+                return res;
+            })()
+        },
+        {
+            type : 'category',
+            boundaryGap : true,
+            splitline : {show : false},
+            data : (function(){
+                var res = [];
+                var len = 10;
+                while (len--) {
+                    res.push(len + 1);
                 }
                 return res;
             })()
@@ -111,22 +130,43 @@ option = {
             scale: true,
             precision:1,
             power:1,
+            name : '价格',
             boundaryGap: [0.2, 0.2],
             splitArea : {show : true}
+        },
+        {
+            type : 'value',
+            scale: true,
+            name : '预购量',
+            boundaryGap: [0.2, 0.2]
         }
     ],
-    dataZoom : {
-        show : false,
-        realtime: true,
-        start : 50,
-        end : 100
-    },
     series : [
+        {
+            name:'预购队列',
+            type:'bar',
+            xAxisIndex: 1,
+            yAxisIndex: 1,
+            itemStyle: {
+                normal: {
+                    color : 'rgba(135,206,205,0.4)'
+                }
+            },
+            data:(function(){
+                var res = [];
+                var len = 10;
+                while (len--) {
+                    res.push(Math.round(Math.random() * 1000));
+                }
+                return res;
+            })()
+        },
         {
             name:'最新成交价',
             type:'line',
             itemStyle: {
                 normal: {
+                    // areaStyle: {type: 'default'},
                     lineStyle: {
                         shadowColor : 'rgba(0,0,0,0.4)'
                     }
@@ -134,7 +174,7 @@ option = {
             },
             data:(function(){
                 var res = [];
-                var len = 20;
+                var len = 10;
                 while (len--) {
                     res.push((Math.random()*10 + 5).toFixed(1) - 0);
                 }
@@ -152,13 +192,21 @@ timeTicket = setInterval(function(){
     axisData = (new Date()).toLocaleTimeString().replace(/^\D*/,'');
     
     // 动态数据接口 addData
-    myChart.addData(
-        0,        // 系列数据
-        lastData, // 新增数据
-        false,    // 新增数据是否从队列头部插入
-        false,    // 是否增加队列长度，false则自定删除原有数据，队头插入删队尾，队尾插入删队头
-        axisData  // 坐标轴标签
-    );
+    myChart.addData([
+        [
+            0,        // 系列索引
+            Math.round(Math.random() * 1000), // 新增数据
+            true,     // 新增数据是否从队列头部插入
+            false     // 是否增加队列长度，false则自定删除原有数据，队头插入删队尾，队尾插入删队头
+        ],
+        [
+            1,        // 系列索引
+            lastData, // 新增数据
+            false,    // 新增数据是否从队列头部插入
+            false,    // 是否增加队列长度，false则自定删除原有数据，队头插入删队尾，队尾插入删队头
+            axisData  // 坐标轴标签
+        ]
+    ]);
 }, 2000);
                     </textarea>
               </div><!--/.well -->

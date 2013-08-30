@@ -87,7 +87,7 @@
                             </ul>
                             <li><a href="#引入ECharts">引入ECharts</a></li>
                             <li><a href="#初始化">初始化</a></li>
-                            <li><a href="#方法">方法</a></li>
+                            <li><a href="#实例方法">实例方法</a></li>
                             <li><a href="#选项">选项</a></li>
                             <ul>
                                 <li><a href="#Option">option</a></li>
@@ -414,10 +414,9 @@ require(
 
                     <h3>初始化<a name="初始化"> </a></h3>
                     <p>通过require获得echarts接口后可实例化图表，echarts接口仅有一个方法init，执行init时传入一个具备大小的dom节点（width、height可被计算得到即可，不一定可见）后即可实例化出图表对象，图表库实现为多实例的，同一页面可多次init出多个图表。图表实例可用方法见<a href="#方法">方法</a>，</p>
-                    <p>模块化的初始化代码如下：</p>
+                    <p>引入ECharts后的的初始化代码如下：</p>
                     <div class="code">
                         <pre>
-// 模块化，图表按需加载
 // 作为入口
 require(
     [
@@ -434,37 +433,24 @@ require(
 
 // 非入口或再次使用，图表已被加载注册
 require('echarts').init(dom).setOption({...});
-                        </pre>
+
+// 如果需要再次使用ECharts的图表实例，建议你还是保存init返回的图表实例吧
+var myChart = require('echarts').init(dom);
+myChart.setOption({...}); </pre>
                     </div>
-                    <p>单文件引入</p>
+                    <p>熟悉模块化的你可以跳过了下面代码了</p>
                     <div class="code">
                         <pre>
-// 单文件，全图表被默认加载了
-// 作为入口
-require(
-    ['echarts'],
-    function(ec) {
-        var myChart = ec.init(document.getElementById('main'));
-        myChart.setOption({...});
-    }
-);
-
-// -----------------------------
-
-// 非入口或再次使用
-require('echarts').init(dom).setOption({...});
-
-// 熟悉模块化的你可以跳过了下面代码了
 // 不习惯模块化的你当然可以
-var echarts;
+var ECharts;
 require(['echarts'], function(ec){
-    echarts = ec;
+    ECharts = ec;
 });
-// 是的，把echarts加载后保存起来作为命名空间使用
-                        </pre>
+// 是的，把echarts加载后保存起来作为命名空间使用</pre>
                     </div>
 
-                    <h3>方法<a name="方法"> </a></h3>
+                    <h3>实例方法<a name="实例方法"> </a></h3>
+                    <p>实例指的就是接口init()返回的对象，即上述代码中的“myChart”，非get接口均返回自身self支持链式调用</p>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
                             <th> 名称 </th>
@@ -472,32 +458,53 @@ require(['echarts'], function(ec){
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td>{void} setOption</td>
+                            <td>{self} setOption</td>
                             <td>{Object} option, <br/>{boolean=} notMerge</td>
                             <td>万能接口，配置图表实例任何可配置选项（详见<a href="#Option" title="">option</a>），多次调用时option选项是默认是合并（merge）的，<br/>如果不需求，可以通过notMerger参数为true阻止与上次option的合并。 </td>
                         </tr>
                         <tr>
-                            <td>{void} setSeries</td>
+                            <td>{self} setSeries</td>
                             <td>{Array} series, <br/>{boolean=} notMerge</td>
                             <td>数据接口，驱动图表生成的数据内容（详见<a href="#Series" title="">series</a>），效果等同调用setOption({series:{...}}) </td>
                         </tr>
                         <tr>
-                            <td>{void} on</td>
+                            <td>{self} addData</td>
+                            <td>单组数据：
+                                <br/>{number} seriesIdx
+                                <br/>{number | Object} data
+                                <br/>{boolean=} isHead
+                                <br/>{boolean=} dataGrow
+                                <br/>{string=} additionData
+                                <br/>多组数据添加：
+                                <br/>{Array} params
+                            </td>
+                            <td>动态数据接口，<a href="example/dynamic.html" target="_blank">try this »</a>
+                                <br/>seriesIdx 系列索引
+                                <br/>data 增加数据
+                                <br/>isHead 是否队头加入，默认，不指定或false时为队尾插入
+                                <br/>dataGrow 是否增长数据队列长度，默认，不指定或false时移出目标数组对位数据
+                                <br/>additionData 是否增加类目轴(饼图为图例)数据，附加操作同isHead和dataGrow
+                                <br/>多组数据添加时参数为：
+                                <br/>params == [[seriesIdx, data, isHead, dataGrow, additionData], [...]]
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>{self} on</td>
                             <td>{string} eventName, <br/>{Function} eventListener</td>
                             <td>事件绑定，支持事件有：<br/>REFRESH，RESTORE，CLICK，HOVER，<br/>DATA_CHANGED，MAGIC_TYPE_CHANGED，DATA_VIEW_CHANGED，<br/>DATA_ZOOM，DATA_RANGE，LEGEND_SELECTED，MAP_SELECTED</td>
                         </tr>
                         <tr>
-                            <td>{void} un</td>
+                            <td>{self} un</td>
                             <td>{string} eventName, <br/>{Function} eventListener</td>
                             <td>事件解绑定 </td>
                         </tr>
                         <tr>
-                            <td>{void} showLoading</td>
+                            <td>{self} showLoading</td>
                             <td>{Object} loadingOption</td>
                             <td> 过渡控制（详见<a href="#Loadingoption" title="">loadingOption</a>），显示loading（读取中） </td>
                         </tr>
                         <tr>
-                            <td>{void} hideLoading</td>
+                            <td>{self} hideLoading</td>
                             <td>{void}</td>
                             <td>过渡控制，隐藏loading（读取中） </td>
                         </tr>
@@ -507,22 +514,22 @@ require(['echarts'], function(ec){
                             <td>获取当前图表所用ZRender实例，可用于添加额外图形或进行深度定制，zrender接口详见<a href="http://ecomfe.github.io/zrender/doc/doc.html#zrenderInstance" target="_blank">ZRender</a> </td>
                         </tr>
                         <tr>
-                            <td>{void} resize</td>
+                            <td>{self} resize</td>
                             <td>{void}</td>
                             <td>ECharts没有绑定resize事件，显示区域大小发生改变内部并不知道，<br/>使用方可以根据自己的需求绑定关心的事件，主动调用resize达到区域更新的效果。</td>
                         </tr>
                         <tr>
-                            <td>{void} refresh</td>
+                            <td>{self} refresh</td>
                             <td>{void}</td>
                             <td>刷新图表，图例选择、数据区域缩放，拖拽状态均保持。</td>
                         </tr>
                         <tr>
-                            <td>{void} restore</td>
+                            <td>{self} restore</td>
                             <td>{void}</td>
                             <td>还原图表，各种状态均被清除，还原为最初展现时的状态。</td>
                         </tr>
                         <tr>
-                            <td>{void} clear</td>
+                            <td>{self} clear</td>
                             <td>{void}</td>
                             <td>清空绘画内容，清空后实例可用 </td>
                         </tr>
