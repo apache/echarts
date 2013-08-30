@@ -29,6 +29,7 @@ define(function() {
         COMPONENT_TYPE_TOOLTIP: 'tooltip',
         COMPONENT_TYPE_GRID: 'grid',
         COMPONENT_TYPE_AXIS: 'axis',
+        COMPONENT_TYPE_AXIS: 'polar',
         COMPONENT_TYPE_X_AXIS: 'xAxis',
         COMPONENT_TYPE_Y_AXIS: 'yAxis',
         COMPONENT_TYPE_AXIS_CATEGORY: 'categoryAxis',
@@ -325,6 +326,30 @@ define(function() {
             }
         },
 
+        polar : {
+            startAngle : 180,
+            graduation : 5,
+            splitArea : {
+                show : true,
+                areaStyle : {
+                    color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']
+                }
+            },
+            splitLine : {
+                lineStyle : {
+                    width : 1,
+                    color : '#ccc'
+                }
+            },
+            axisTick : {
+                show : true,
+                lineStyle : {
+                    width : 1,
+                    color : '#999'
+                }
+            }
+        },
+
         // 柱形图默认参数
         bar: {
             // stack: null
@@ -387,6 +412,25 @@ define(function() {
             symbolSize: 4,       // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             large: false,        // 大规模散点图
             largeThreshold: 2000 // 大规模阀值，large为true且数据量大于largeThreshold才启用大规模模式
+        },
+
+        // 雷达图默认参数
+        radar : {
+            lineStyle : {
+                width : 1,
+                color : '#999'
+            },
+
+            textStyle : {
+                textFont : 'normal 30px verdana',
+                color : '#999'
+            },
+
+            color : ['rgba(0,0,0,0)'],
+
+            strokeColor : 'rgba(0,0,0,1)',
+            lineWidth : 1
+            
         },
 
         // 饼图默认参数
@@ -559,6 +603,7 @@ define(function() {
         nameConnector: ' & ',
         valueConnector: ' : ',
         animation: true,
+        addDataAnimation: true,         // 动态数据接口是否开启动画效果
         animationDuration: 2000,
         animationEasing: 'ExponentialOut'    //BounceOut
     };

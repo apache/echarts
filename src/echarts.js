@@ -151,6 +151,7 @@ define(function(require) {
             require('./component/tooltip');
             require('./component/toolbox');
             require('./component/dataView');
+            require('./component/polar');
             // 工具箱
             var Toolbox = componentLibrary.get('toolbox');
             _toolbox = new Toolbox(_messageCenter, _zr, dom);
@@ -390,8 +391,8 @@ define(function(require) {
         /**
          * 当前正在使用的option，还原可能存在的dataZoom
          */
-        function _getMagicOption() {
-            var magicOption = _toolbox.getMagicOption();
+        function _getMagicOption(targetOption) {
+            var magicOption = targetOption || _toolbox.getMagicOption();
             var len;
             // 横轴数据还原
             if (_optionBackup.xAxis) {
@@ -457,15 +458,7 @@ define(function(require) {
             for (var i = 0, l = curSeries.length; i < l; i++) {
                 curData = curSeries[i].data;
                 for (var j = 0, k = curData.length; j < k; j++) {
-                    if (typeof _optionBackup.series[i].data[j].value 
-                        != 'undefined'
-                    ) {
-                        _optionBackup.series[i].data[j].value 
-                            = curData[j].value;
-                    }
-                    else {
-                        _optionBackup.series[i].data[j] = curData[j];
-                    }
+                    _optionBackup.series[i].data[j] = curData[j];
                 }
             }
         }
@@ -583,6 +576,20 @@ define(function(require) {
                     'yAxis' : yAxis
                 });
             }
+            var Polar;
+            var polar = {};
+            if (magicOption.polar) {
+                Polar = componentLibrary.get('polar');
+                polar = new Polar(
+                    _messageCenter,
+                    _zr,
+                    magicOption,
+                    {
+                        'legend' : legend
+                    }
+                );
+                _chartList.push(polar);
+            }
 
             var ChartClass;
             var chartType;
@@ -607,7 +614,8 @@ define(function(require) {
                                 'dataRange' : dataRange,
                                 'grid' : grid,
                                 'xAxis' : xAxis,
-                                'yAxis' : yAxis
+                                'yAxis' : yAxis,
+                                'polar' : polar
                             }
                         );
                         _chartList.push(chart);
@@ -719,6 +727,9 @@ define(function(require) {
             if (typeof _option.animationEasing == 'undefined') {
                 _option.animationEasing = ecConfig.animationEasing;
             }
+            if (typeof _option.addDataAnimation == 'undefined') {
+                _option.addDataAnimation = ecConfig.addDataAnimation;
+            }
 
             var zrColor = require('zrender/tool/color');
             // 数值系列的颜色列表，不传则采用内置颜色，可配数组
@@ -772,7 +783,7 @@ define(function(require) {
         }
         
         /**
-         * 动态数据添加，队尾添加
+         * 动态数据添加
          * 形参为单组数据参数，多组时为数据，内容同[seriesIdx, data, isShift, additionData]
          * @param {number} seriesIdx 系列索引
          * @param {number | Object} data 增加数据
@@ -794,8 +805,7 @@ define(function(require) {
                 magicOption = _getMagicOption();
             }
             else {
-                magicOption = _optionBackup;//_island.getOption();
-                //magicOption.series = _optionBackup
+                magicOption = _getMagicOption(_island.getOption());
             }
             //_optionRestore 和 _optionBackup都要同步
             for (var i = 0, l = params.length; i < l; i++) {
@@ -828,6 +838,7 @@ define(function(require) {
                         && _optionBackup.legend 
                         && _optionBackup.legend.data
                     ) {
+                        magicOption.legend.data = _optionBackup.legend.data;
                         if (isHead) {
                             _optionRestore.legend.data.unshift(additionData);
                             _optionBackup.legend.data.unshift(additionData);
@@ -845,7 +856,6 @@ define(function(require) {
                             }
                         }
                         _selectedMap[additionData] = true;
-                        magicOption.legend.selected = _selectedMap;
                     } 
                     else  if (typeof additionData != 'undefined'
                         && typeof _optionRestore.xAxis != 'undefined'
@@ -916,9 +926,12 @@ define(function(require) {
                     }
                 }
             }
+            magicOption.legend.selected = _selectedMap;
             // dataZoom同步一下数据
             for (var i = 0, l = _chartList.length; i < l; i++) {
-                if (_chartList[i].addDataAnimation) {
+                if (magicOption.addDataAnimation 
+                    && _chartList[i].addDataAnimation
+                ) {
                     _chartList[i].addDataAnimation(params);
                 }
                 if (_chartList[i].type 
@@ -938,6 +951,8 @@ define(function(require) {
                     {option: magicOption}
                 );
             }, 500);
+            
+            return self;
         }
 
         /**
@@ -1024,6 +1039,7 @@ define(function(require) {
             _island.resize();
             _toolbox.resize();
             _zr.refresh();
+            return self;
         }
 
         /**
