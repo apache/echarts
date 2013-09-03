@@ -154,6 +154,10 @@ define(function(require) {
                    + finalTextStyle.fontSize + 'px '
                    + finalTextStyle.fontFamily;
         }
+        
+        function resize() {
+            self.refresh && self.refresh();
+        }
 
         /**
          * 清除图形数据，实例仍可用
@@ -182,6 +186,7 @@ define(function(require) {
         self.getFont = getFont;
         self.clear = clear;
         self.dispose = dispose;
+        self.resize = resize;
     }
 
     return Base;

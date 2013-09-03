@@ -975,8 +975,39 @@ define(function (require) {
                 _buildShape();
             }
         }
+
+        /**
+         * 避免dataZoom带来两次refresh，不设refresh接口，resize重复一下buildshape逻辑 
+         */
+        function resize() {
+            self.clear();
+            
+            // 自己show 或者 toolbox启用且dataZoom有效
+            if (option.dataZoom.show
+                || (
+                    self.deepQuery([option], 'toolbox.show')
+                    && self.deepQuery([option], 'toolbox.feature.dataZoom')
+                )
+            ) {
+                _location = _getLocation();
+                _zoom =  _getZoom();
+            }
+            
+            if (option.dataZoom.show) {
+                _buildBackground();
+                _buildDataBackground();
+                _buildFiller();
+                _bulidHandle();
+    
+                for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                    self.shapeList[i].id = zr.newShapeId(self.type);
+                    zr.addShape(self.shapeList[i]);
+                }
+            }
+        }
         
         self.init = init;
+        self.resize = resize;
         self.syncBackupData = syncBackupData;
         self.absoluteZoom = absoluteZoom;
         self.rectZoom = rectZoom;

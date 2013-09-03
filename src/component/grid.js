@@ -31,6 +31,8 @@ define(function (require) {
         var _y;
         var _width;
         var _height;
+        var _zrWidth;
+        var _zrHeight;
 
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
@@ -47,16 +49,18 @@ define(function (require) {
             _y = gridOption.y;
             var x2 = gridOption.x2;
             var y2 = gridOption.y2;
+            _zrWidth = zr.getWidth();
+            _zrHeight = zr.getHeight();
 
             if (typeof gridOption.width == 'undefined') {
-                _width = zr.getWidth() - _x - x2;
+                _width = _zrWidth - _x - x2;
             }
             else {
                 _width = gridOption.width;
             }
 
             if (typeof gridOption.height == 'undefined') {
-                _height = zr.getHeight() - _y - y2;
+                _height = _zrHeight - _y - y2;
             }
             else {
                 _height = gridOption.height;
@@ -114,6 +118,16 @@ define(function (require) {
                 height : _height
             };
         }
+        
+        function refresh(newOption) {
+            if (_zrWidth != zr.getWidth() 
+                || _zrHeight != zr.getHeight()
+                || newOption
+            ) {
+                self.clear();
+                init(newOption || option);
+            }
+        }
 
         self.init = init;
         self.getX = getX;
@@ -123,6 +137,7 @@ define(function (require) {
         self.getXend = getXend;
         self.getYend = getYend;
         self.getArea = getArea;
+        self.refresh = refresh;
 
         init(option);
     }
