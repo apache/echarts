@@ -792,10 +792,12 @@ define(function(require) {
          * @param {string=} additionData 是否增加类目轴(饼图为图例)数据，附加操作同isHead和dataGrow
          */
         function addData(seriesIdx, data, isHead, dataGrow, additionData) {
+            var zrUtil = require('zrender/tool/util');
             var params = seriesIdx instanceof Array
                          ? seriesIdx
                          : [[seriesIdx, data, isHead, dataGrow, additionData]];
             var axisIdx;
+            var legendDataIdx;
             var magicOption;
             if (_optionBackup.toolbox
                 && _optionBackup.toolbox.show
@@ -820,7 +822,7 @@ define(function(require) {
                         _optionBackup.series[seriesIdx].data.unshift(data);
                         if (!dataGrow) {
                             _optionRestore.series[seriesIdx].data.pop();
-                            _optionBackup.series[seriesIdx].data.pop();
+                            data = _optionBackup.series[seriesIdx].data.pop();
                         }
                     }
                     else {
@@ -828,7 +830,7 @@ define(function(require) {
                         _optionBackup.series[seriesIdx].data.push(data);
                         if (!dataGrow) {
                             _optionRestore.series[seriesIdx].data.shift();
-                            _optionBackup.series[seriesIdx].data.shift();
+                            data = _optionBackup.series[seriesIdx].data.shift();
                         }
                     }
                     
@@ -842,18 +844,25 @@ define(function(require) {
                         if (isHead) {
                             _optionRestore.legend.data.unshift(additionData);
                             _optionBackup.legend.data.unshift(additionData);
-                            if (!dataGrow) {
-                                _optionRestore.legend.data.pop();
-                                _optionBackup.legend.data.pop();
-                            }
                         }
                         else {
                             _optionRestore.legend.data.push(additionData);
                             _optionBackup.legend.data.push(additionData);
-                            if (!dataGrow) {
-                                _optionRestore.legend.data.shift();
-                                _optionBackup.legend.data.shift();
-                            }
+                        }
+                        if (!dataGrow) {
+                            legendDataIdx = zrUtil.indexOf(
+                                _optionBackup.legend.data,
+                                data.name
+                            )
+                            legendDataIdx != -1
+                            && (
+                                _optionRestore.legend.data.splice(
+                                    legendDataIdx, 1
+                                ),
+                                _optionBackup.legend.data.splice(
+                                    legendDataIdx, 1
+                                )
+                            )
                         }
                         _selectedMap[additionData] = true;
                     } 
@@ -926,7 +935,7 @@ define(function(require) {
                     }
                 }
             }
-            magicOption.legend.selected = _selectedMap;
+            magicOption.legend && (magicOption.legend.selected = _selectedMap);
             // dataZoom同步一下数据
             for (var i = 0, l = _chartList.length; i < l; i++) {
                 if (magicOption.addDataAnimation 
@@ -1034,7 +1043,6 @@ define(function(require) {
             // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
                 _chartList[i].resize && _chartList[i].resize();
-                _chartList[i].refresh && _chartList[i].refresh();
             }
             _island.resize();
             _toolbox.resize();

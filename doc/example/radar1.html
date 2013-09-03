@@ -40,7 +40,7 @@
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
                   <ul class="dropdown-menu">
-                    <li><a href="https://github.com/ecomfe/echarts/archive/1.1.0.zip">ZIP (1.1.0)</a></li>
+                    <li><a id="last-release-link" href=""> </a></li>
                     <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
                   </ul>
                 </li>
@@ -52,7 +52,7 @@
                     <li class="divider"></li>
                     <!--li class="nav-header">Library</li-->
                     <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
-                    <li><a href="http://tangram.baidu.com/" target="_blank">Tangram</a></li>
+                    
                   </ul>
                 </li>
               </ul>
@@ -81,46 +81,35 @@ option = {
         feature : {
             mark : true,
             dataView : {readOnly: false},
-            restore : true
+            restore : true,
+            saveAsImage : true
         }
     },
     calculable : true,
-    color : ['rgba(111,111,22, 0.5)', 'rgba(200,0,0,0.5)', 'rgba(20,100,100,0.5)'],
+    color : [
+        'rgba(111,111,22, 0.5)',
+        'rgba(200,0,0,0.5)',
+        'rgba(20,100,100,0.5)'
+    ],
     polar : [
-                
-                {
-                    radius : 100,
-                    center : [200, 200]
-                },
-                {
-                    
-                    radius : 100,
-                    center : [600, 200]
-                }
-            ],
+        {
+            radius : 100,
+            center : [200, 200]
+        },
+        {
+            radius : 100,
+            center : [600, 200]
+        }
+    ],
     indicator : [
-            {
-                name : '进攻',
-                max  : 100
-            },{
-                name : '防守',
-                max  : 100
-            },{
-                name : '体能',
-                max  : 100
-            },{
-                name : '速度',
-                max  : 100
-            },{
-                name : '力量',
-                max  : 100
-            },{
-                name : '技巧',
-                max  : 100
-            }
-        ],
+        {name : '进攻', max  : 100},
+        {name : '防守', max  : 100},
+        {name : '体能', max  : 100},
+        {name : '速度', max  : 100},
+        {name : '力量', max  : 100},
+        {name : '技巧', max  : 100}
+    ],
     series : [
-        
         {
             name: '完全实况球员数据',
             type: 'radar',
@@ -129,7 +118,7 @@ option = {
                     value : [97, 32, 74, 95, 88, 92],
                     name : '罗纳尔多'
                 },
-                 {
+                {
                     value : [97, 42, 88, 94, 90, 86],
                     name : '舍普琴科',
                     polarIndex : 1

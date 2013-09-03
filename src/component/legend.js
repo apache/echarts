@@ -304,12 +304,14 @@ define(function (require) {
                     data = series[i].data;
                     for (var j = 0, k = data.length; j < k; j++) {
                         if (data[j].name == name) {
+                            data = data[j];
+                            data.type = series[i].type;
                             hasFind = true;
                             break;
                         }
                     }
                     if (hasFind) {
-                        return series[i];
+                        return data;
                     }
                 }
                 else if (series[i].type == ecConfig.CHART_TYPE_FORCE) {

@@ -88,13 +88,26 @@ option = {
             saveAsImage : true
         }
     },
-    calculable : true,
+    polar : [
+        {
+            indicator : [
+                { name : '指标一' },
+                { name : '指标二' },
+                { name : '指标三' },
+                { name : '指标四' },
+                { name : '指标五' }
+            ],
+            center : [document.getElementById('main').offsetWidth - 250, 225],
+            radius : 100
+        }
+    ],
+    calculable : false,
     series : [
         {
             name:'pie',
             type:'pie',
             radius : [0, 110],
-            center: [200, 225],
+            center: [250, 225],
             data: (function(){
                 var res = [];
                 var len = 0;
@@ -102,6 +115,35 @@ option = {
                     res.push({
                         name: '随机数据' + len,
                         value: Math.round(Math.random()*10)
+                    });
+                }
+                return res;
+            })()
+        },
+        {
+            name: 'radar',
+            type: 'radar',
+            data: (function(){
+                var res = [];
+                var color = [
+                    'rgba(111,111,22, 0.5)',
+                    'rgba(200,0,0,0.5)',
+                    'rgba(20,100,100,0.5)'
+                ];
+                var len = 0;
+                while (len++ < 3) {
+                    res.push({
+                        name: 'data' + len,
+                        itemStyle : {
+                            normal : { color: color[len - 1]}
+                        },
+                        value: [
+                            Math.round(Math.random()*100),
+                            Math.round(Math.random()*100),
+                            Math.round(Math.random()*100),
+                            Math.round(Math.random()*100),
+                            Math.round(Math.random()*100)
+                        ]
                     });
                 }
                 return res;
@@ -125,6 +167,21 @@ timeTicket = setInterval(function(){
             false,     // 新增数据是否从队列头部插入
             false,     // 是否增加队列长度，false则自定删除原有数据，队头插入删队尾，队尾插入删队头
             '随机数据' + lastIndex
+        ],
+        [
+            1,        // 系列索引
+            {         // 新增数据
+                name: 'data' + lastIndex,
+                value: [
+                    Math.round(Math.random()*100),
+                    Math.round(Math.random()*100),
+                    Math.round(Math.random()*100),
+                    Math.round(Math.random()*100),
+                    Math.round(Math.random()*100)
+                ]
+            }, 
+            false,     // 新增数据是否从队列头部插入
+            false      // 是否增加队列长度，false则自定删除原有数据，队头插入删队尾，队尾插入删队头
         ]
     ]);
 }, 2000);

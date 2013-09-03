@@ -225,7 +225,9 @@ define(function(require) {
                 },
                 highlightStyle : {
                     color : emphasisColor || normalColor || defaultColor
-                }
+                },
+                _seriesIndex : seriesIndex, 
+                _dataIndex : dataIndex
             };
             
             if (isSelected) {
@@ -401,7 +403,9 @@ define(function(require) {
                         },
                         highlightStyle : {
                             brushType : 'fill'
-                        }
+                        },
+                        _seriesIndex : seriesIndex, 
+                        _dataIndex : dataIndex
                     };
                 }
                 else if (labelControl.position == 'center') {
@@ -423,7 +427,9 @@ define(function(require) {
                         },
                         highlightStyle : {
                             brushType : 'fill'
-                        }
+                        },
+                        _seriesIndex : seriesIndex, 
+                        _dataIndex : dataIndex
                     };
                 }
                 else {
@@ -529,7 +535,9 @@ define(function(require) {
                         strokeColor : lineStyle.color || defaultColor,
                         lineType : lineStyle.type,
                         lineWidth : lineStyle.width
-                    }
+                    },
+                    _seriesIndex : seriesIndex, 
+                    _dataIndex : dataIndex
                 };
             }
             else {
@@ -697,14 +705,18 @@ define(function(require) {
             for (var i = 0, l = params.length; i < l; i++) {
                 aniMap[params[i][0]] = params[i];
             }
+            
+            // 构建新的饼图匹配差异做动画
             var sectorMap = {};
+            var textMap = {};
+            var lineMap = {};
             var backupShapeList = zrUtil.clone(self.shapeList);
             self.shapeList = [];
             
             var seriesIndex;
             var isHead;
             var dataGrow;
-            var deltaIdxMap = {};
+            var deltaIdxMap = {};   // 修正新增数据后会对dataIndex产生错位匹配
             for (var i = 0, l = params.length; i < l; i++) {
                 seriesIndex = params[i][0];
                 isHead = params[i][2];
@@ -731,27 +743,41 @@ define(function(require) {
                             deltaIdxMap[seriesIndex] = 0;
                         }
                     }
+                    _buildSinglePie(seriesIndex);
                 }
-                _buildSinglePie(seriesIndex);
             }
             var dataIndex;
+            var key;
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                if (self.shapeList[i].shape == 'sector') {
-                    seriesIndex = ecData.get(self.shapeList[i], 'seriesIndex');
-                    dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
-                    sectorMap[seriesIndex + '_' + dataIndex] =
-                        self.shapeList[i];
+                seriesIndex = self.shapeList[i]._seriesIndex;
+                dataIndex = self.shapeList[i]._dataIndex;
+                key = seriesIndex + '_' + dataIndex;
+                // map映射让n*n变n
+                switch (self.shapeList[i].shape) {
+                    case 'sector' :
+                        sectorMap[key] = self.shapeList[i];
+                        break;
+                    case 'text' :
+                        textMap[key] = self.shapeList[i];
+                        break;
+                    case 'line' :
+                        lineMap[key] = self.shapeList[i];
+                        break;
                 }
             }
             self.shapeList = [];
             var targeSector;
             for (var i = 0, l = backupShapeList.length; i < l; i++) {
-                seriesIndex = ecData.get(backupShapeList[i], 'seriesIndex');
+                seriesIndex = backupShapeList[i]._seriesIndex;
                 if (aniMap[seriesIndex]) {
-                    dataIndex = ecData.get(backupShapeList[i], 'dataIndex')
+                    dataIndex = backupShapeList[i]._dataIndex
                                 + deltaIdxMap[seriesIndex];
-                    targeSector = sectorMap[seriesIndex + '_' + dataIndex];
-                    if (backupShapeList[i].shape == 'sector' && targeSector) {
+                    key = seriesIndex + '_' + dataIndex;
+                    targeSector = sectorMap[key];
+                    if (!targeSector) {
+                        continue;
+                    }
+                    if (backupShapeList[i].shape == 'sector') {
                         if (targeSector != 'delete') {
                             // 原有扇形
                             zr.animate(backupShapeList[i].id, 'style')
@@ -783,7 +809,46 @@ define(function(require) {
                                 )
                                 .start();
                         }
-                        
+                    }
+                    else if (backupShapeList[i].shape == 'text'
+                             || backupShapeList[i].shape == 'line'
+                    ) {
+                        if (targeSector == 'delete') {
+                            // 删除逻辑一样
+                            zr.delShape(backupShapeList[i].id);
+                        }
+                        else {
+                            // 懒得新建变量了，借用一下
+                            switch (backupShapeList[i].shape) {
+                                case 'text':
+                                    targeSector = textMap[key];
+                                    zr.animate(backupShapeList[i].id, 'style')
+                                        .when(
+                                            400,
+                                            {
+                                                x :targeSector.style.x,
+                                                y :targeSector.style.y
+                                            }
+                                        )
+                                        .start();
+                                    break;
+                                case 'line':
+                                    targeSector = lineMap[key];
+                                    zr.animate(backupShapeList[i].id, 'style')
+                                        .when(
+                                            400,
+                                            {
+                                                xStart :targeSector.style.xStart,
+                                                yStart :targeSector.style.yStart,
+                                                xEnd : targeSector.style.xEnd,
+                                                yEnd : targeSector.style.yEnd
+                                            }
+                                        )
+                                        .start();
+                                    break;
+                            }
+                            
+                        }
                     }
                 }
             }

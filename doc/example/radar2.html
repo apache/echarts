@@ -40,7 +40,7 @@
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
                   <ul class="dropdown-menu">
-                    <li><a href="https://github.com/ecomfe/echarts/archive/1.1.0.zip">ZIP (1.1.0)</a></li>
+                    <li><a id="last-release-link" href=""> </a></li>
                     <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
                   </ul>
                 </li>
@@ -52,7 +52,7 @@
                     <li class="divider"></li>
                     <!--li class="nav-header">Library</li-->
                     <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
-                    <li><a href="http://tangram.baidu.com/" target="_blank">Tangram</a></li>
+                    
                   </ul>
                 </li>
               </ul>
@@ -71,41 +71,36 @@ option = {
     tooltip : {
         trigger: 'item'
     },
-
     toolbox: {
         show : true,
         feature : {
             mark : true,
             dataView : {readOnly: false},
-            restore : true
+            restore : true,
+            saveAsImage : true
         }
     },
     calculable : true,
-    
     polar : [
-               { 
-                    indicator : [
-                        {
-                            name : 'sales'
-                        },{
-                            name : 'Administration'
-                        },{
-                            name : 'Information Techology'
-                        },{
-                            name : 'Customer Support'
-                        },{
-                            name : 'Development'
-                        },{
-                            name : 'Marketing'
-                        }
-                    ],
-                }
-            ],
+       {
+           indicator : [
+               { name : 'sales' },
+               { name : 'Administration' },
+               { name : 'Information Techology' },
+               { name : 'Customer Support' },
+               { name : 'Development' },
+               { name : 'Marketing' }
+            ]
+        }
+    ],
     
     series : [
-        
         {
-            color : ['rgba(111,111,22, 0.5)', 'rgba(200,0,0,0.5)', 'rgba(20,100,100,0.5)'],
+            color : [
+                'rgba(111,111,22, 0.5)',
+                'rgba(200,0,0,0.5)',
+                'rgba(20,100,100,0.5)'
+            ],
             name: 'Budget vs spending',
             type: 'radar',
             data : [
