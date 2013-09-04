@@ -8,29 +8,29 @@
  */
 define(
 
-	function(require) {
+    function(require) {
 
-		function Polar(messageCenter, zr, option, component) {
-			var Base = require('./base');
-	        Base.call(this, zr);
+        function Polar(messageCenter, zr, option, component) {
+            var Base = require('./base');
+            Base.call(this, zr);
 
-	        var ecConfig = require('../config');
-	        var ecCoordinates = require('../util/coordinates');
+            var ecConfig = require('../config');
+            var ecCoordinates = require('../util/coordinates');
             var zrUtil = require('zrender/tool/util');
             var ecData = require('../util/ecData');
 
-	        var self = this;
-	        self.type = ecConfig.COMPONENT_TYPE_POLAR;
+            var self = this;
+            self.type = ecConfig.COMPONENT_TYPE_POLAR;
 
-	        var polar; 
+            var polar; 
 
-	        var _width = zr.getWidth();
+            var _width = zr.getWidth();
             var _height = zr.getHeight();
 
             var series;
             var _queryTarget;
 
-	        function init(newOption, newComponent) {
+            function init(newOption, newComponent) {
                 option = newOption;
                 component = newComponent;
 
@@ -70,7 +70,7 @@ define(
              * @param {number} polar的index
              */
             function _createVector(index) {
-            	var item = polar[index];
+                var item = polar[index];
                 var indicator = self.deepQuery(_queryTarget, 'indicator');
                 var length = indicator.length;
                 var startAngle = item.startAngle;
@@ -100,7 +100,7 @@ define(
              * @param {number} polar的index
              */
             function _buildSpiderWeb(index) {
-            	var item = polar[index];
+                var item = polar[index];
                 var _ecIndicator_ = item._ecIndicator_;
                 var splitArea = item.splitArea;
                 var splitLine = item.splitLine;
@@ -612,33 +612,33 @@ define(
             }
 
             function reformOption(opt) {
-            	// 常用方法快捷方式
-	            var _merge = zrUtil.merge;
-	            opt = _merge(
-	                      opt || {},
-	                      ecConfig.polar,
-	                      {
-	                          'overwrite' : false,
-	                          'recursive' : true
-	                      }
-	                  );
+                // 常用方法快捷方式
+                var _merge = zrUtil.merge;
+                opt = _merge(
+                          opt || {},
+                          ecConfig.polar,
+                          {
+                              'overwrite' : false,
+                              'recursive' : true
+                          }
+                      );
 
-	            // 圆心坐标，无则为自适应居中
-	            if (!opt.center 
-	                || (opt.center && !(opt.center instanceof Array))) {
-	                opt.center = [
-	                    Math.round(zr.getWidth() / 2),
-	                    Math.round(zr.getHeight() / 2)
-	                ];
-	            }
-	            else {
-	                if (typeof opt.center[0] == 'undefined') {
-	                    opt.center[0] = Math.round(zr.getWidth() / 2);
-	                }
-	                if (typeof opt.center[1] == 'undefined') {
-	                    opt.center[1] = Math.round(zr.getHeight() / 2);
-	                }
-	            }
+                // 圆心坐标，无则为自适应居中
+                if (!opt.center 
+                    || (opt.center && !(opt.center instanceof Array))) {
+                    opt.center = [
+                        Math.round(zr.getWidth() / 2),
+                        Math.round(zr.getHeight() / 2)
+                    ];
+                }
+                else {
+                    if (typeof opt.center[0] == 'undefined') {
+                        opt.center[0] = Math.round(zr.getWidth() / 2);
+                    }
+                    if (typeof opt.center[1] == 'undefined') {
+                        opt.center[1] = Math.round(zr.getHeight() / 2);
+                    }
+                }
 
                 if (!opt.radius) {
                     radius = Math.floor(
@@ -646,7 +646,7 @@ define(
                     );
                 }
 
-	            return opt;
+                return opt;
             }
 
             /**
@@ -706,11 +706,11 @@ define(
             self.getCenter = getCenter;
             self.getIndicator = getIndicator;
 
-            init(option, component);	
-		}
+            init(option, component);
+        }
 
         require('../component').define('polar', Polar);
      
         return Polar;
-	}
+    }
 )
