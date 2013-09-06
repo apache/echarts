@@ -583,6 +583,25 @@ define(function (require) {
         },
         force : function(ctx, style) {
             require('zrender/shape').get('icon').get('circle')(ctx, style);
+        },
+        radar: function(ctx, style) {
+            var n = 6;
+            var x = style.x + style.width / 2;
+            var y = style.y + style.height / 2;
+            var r = style.height / 2;
+
+            var dStep = 2 * Math.PI / n;
+            var deg = -Math.PI / 2;
+            var xStart = x + r * Math.cos(deg);
+            var yStart = y + r * Math.sin(deg);
+            
+            ctx.moveTo(xStart, yStart);
+            deg += dStep;
+            for (var i = 0, end = n - 1; i < end; i ++) {
+                ctx.lineTo(x + r * Math.cos(deg), y + r * Math.sin(deg));
+                deg += dStep;
+            }
+            ctx.lineTo(xStart, yStart);
         }
     };
     
