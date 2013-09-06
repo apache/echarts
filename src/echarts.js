@@ -79,6 +79,8 @@ define(function(require) {
         var _selectedMap;
         var _island;
         var _toolbox;
+        
+        var _refreshInside;     // 内部刷新标志位
 
         // 初始化::构造函数
         _init();
@@ -385,7 +387,9 @@ define(function(require) {
          * 刷新 
          */
         function _onrefresh(param) {
+            _refreshInside = true;
             self.refresh(param);
+            _refreshInside = false;
         }
 
         /**
@@ -496,7 +500,7 @@ define(function(require) {
                 );
                 _chartList.push(title);
             }
-            
+
             // 提示
             var tooltip;
             if (magicOption.tooltip) {
@@ -514,8 +518,8 @@ define(function(require) {
                 );
                 _chartList.push(legend);
             }
-            
-            // 色尺
+
+            // 值域控件
             var dataRange;
             if (magicOption.dataRange) {
                 var DataRange = new componentLibrary.get('dataRange');
@@ -525,6 +529,7 @@ define(function(require) {
                 _chartList.push(dataRange);
             }
 
+            // 直角坐标系
             var grid;
             var dataZoom;
             var xAxis;
@@ -570,16 +575,12 @@ define(function(require) {
                     'yAxis'
                 );
                 _chartList.push(yAxis);
-                tooltip && tooltip.setComponent({
-                    'grid' : grid,
-                    'xAxis' : xAxis,
-                    'yAxis' : yAxis
-                });
             }
-            var Polar;
-            var polar = {};
+
+            // 极坐标系
+            var polar;
             if (magicOption.polar) {
-                Polar = componentLibrary.get('polar');
+                var Polar = componentLibrary.get('polar');
                 polar = new Polar(
                     _messageCenter,
                     _zr,
@@ -590,6 +591,13 @@ define(function(require) {
                 );
                 _chartList.push(polar);
             }
+            
+            tooltip && tooltip.setComponent({
+                'grid' : grid,
+                'xAxis' : xAxis,
+                'yAxis' : yAxis,
+                'polar' : polar
+            });
 
             var ChartClass;
             var chartType;
@@ -659,12 +667,47 @@ define(function(require) {
 
         /**
          * 刷新 
+         * @param {Object=} param，可选参数，用于附带option，内部同步用，外部不建议带入数据修改，无法同步 
          */
         function refresh(param) {
-            // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
-            // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
+            param = param || {};
+            var magicOption = param.option;
+            
+            // 外部调用的refresh且有option带入
+            if (!_refreshInside && param.option) {
+                // 做简单的差异合并去同步内部持有的数据克隆，不建议带入数据
+                // 开启数据区域缩放、拖拽重计算、数据视图可编辑模式情况下，当用户产生了数据变化后无法同步
+                // 如有带入option存在数据变化，请重新setOption
+                var zrUtil = require('zrender/tool/util');
+                if (_optionBackup.toolbox
+                    && _optionBackup.toolbox.show
+                    && _optionBackup.toolbox.feature.magicType
+                    && _optionBackup.toolbox.feature.magicType.length > 0
+                ) {
+                    magicOption = _getMagicOption();
+                }
+                else {
+                    magicOption = _getMagicOption(_island.getOption());
+                }
+                zrUtil.merge(
+                    magicOption, param.option,
+                    { 'overwrite': true, 'recursive': true }
+                );
+                zrUtil.merge(
+                    _optionBackup, param.option,
+                    { 'overwrite': true, 'recursive': true }
+                );
+                zrUtil.merge(
+                    _optionRestore, param.option,
+                    { 'overwrite': true, 'recursive': true }
+                );
+                _island.refresh(magicOption);
+                _toolbox.refresh(magicOption);
+            }
+            
+            // 先来后到，安顺序刷新各种图表，图表内部refresh优化检查magicOption，无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
-                _chartList[i].refresh && _chartList[i].refresh(param.option);
+                _chartList[i].refresh && _chartList[i].refresh(magicOption);
             }
             _zr.refresh();
         }
