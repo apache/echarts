@@ -67,14 +67,20 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
+
 option = {
+    title : {
+        text: '预算 vs 开销（Budget vs spending）',
+        subtext: '纯属虚构'
+    },
     tooltip : {
         trigger: 'item'
     },
     legend: {
         orient : 'vertical',
-        x : 'left',
-        data:['罗纳尔多','舍普琴科']
+        x : 'right',
+        y : 'bottom',
+        data:['预算分配（Allocated Budget）','实际开销（Actual Spending）']
     },
     toolbox: {
         show : true,
@@ -85,43 +91,35 @@ option = {
             saveAsImage : true
         }
     },
-    calculable : true,
-    color : [
-        'rgba(111,111,22, 0.5)',
-        'rgba(200,0,0,0.5)',
-        'rgba(20,100,100,0.5)'
-    ],
     polar : [
-        {
-            radius : 100,
-            center : [200, 200]
-        },
-        {
-            radius : 100,
-            center : [600, 200]
+       {
+           indicator : [
+               { name: '销售（sales）', max: 6000},
+               { name: '管理（Administration', max: 16000},
+               { name: '信息技术（Information Techology）', max: 30000},
+               { name: '客服（Customer Support）', max: 38000},
+               { name: '研发（Development）', max: 52000},
+               { name: '市场（Marketing）', max: 25000}
+            ]
         }
     ],
-    indicator : [
-        {name : '进攻', max  : 100},
-        {name : '防守', max  : 100},
-        {name : '体能', max  : 100},
-        {name : '速度', max  : 100},
-        {name : '力量', max  : 100},
-        {name : '技巧', max  : 100}
+    color : [
+        'rgba(111,111,22, 0.5)',
+        'rgba(200,0,0,0.5)'
     ],
+    calculable : true,
     series : [
         {
-            name: '完全实况球员数据',
+            name: '预算 vs 开销（Budget vs spending）',
             type: 'radar',
             data : [
                 {
-                    value : [97, 32, 74, 95, 88, 92],
-                    name : '罗纳尔多'
+                    value : [4300, 10000, 28000, 35000, 50000, 19000],
+                    name : '预算分配（Allocated Budget）'
                 },
-                {
-                    value : [97, 42, 88, 94, 90, 86],
-                    name : '舍普琴科',
-                    polarIndex : 1
+                 {
+                    value : [5000, 14000, 28000, 31000, 42000, 21000],
+                    name : '实际开销（Actual Spending）'
                 }
             ]
         }
