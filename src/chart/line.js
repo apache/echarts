@@ -506,15 +506,18 @@ define(function(require) {
                         singlePL = seriesPL[i];
                         for (var j = 0, k = singlePL.length; j < k; j++) {
                             data = serie.data[singlePL[j][2]];
-                            if ((categoryAxis.isMainAxis(singlePL[j][2]) // 主轴
-                                 && self.deepQuery(                      // 非空
-                                        [data, serie], 'symbol'
-                                    ) != 'none'
-                                )
-                                || self.deepQuery(                      // 可计算
+                            if (self.deepQuery(
+                                    [data, serie], 'showAllSymbol'
+                                ) // 全显示
+                                || (categoryAxis.isMainAxis(singlePL[j][2])
+                                    && self.deepQuery(
+                                           [data, serie], 'symbol'
+                                       ) != 'none'
+                                   ) // 主轴非空
+                                || self.deepQuery(
                                         [data, serie, option],
                                         'calculable'
-                                   )
+                                   ) // 可计算
                             ) {
                                 self.shapeList.push(_getSymbol(
                                     seriesIndex,
