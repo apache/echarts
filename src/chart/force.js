@@ -1,7 +1,7 @@
 /**
  * echarts图表类：力导向图
  *
- * @author pissang (shenyi01@baidu.com)
+ * @author pissang (https://github.com/pissang/)
  *
  */
 
@@ -30,6 +30,8 @@ define(function(require) {
         // var zrColor = require('zrender/tool/color');
         var zrUtil = require('zrender/tool/util');
         var vec2 = require('zrender/tool/vector');
+
+        var NDArray = require("../util/ndarray");
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_FORCE;
@@ -211,8 +213,14 @@ define(function(require) {
                 var node = nodes[i];
                 radius.push(node.value);
             }
-            _map(radius, radius, minRadius, maxRadius);
-            _normalize(nodeWeights, radius);
+
+            var narr = new NDArray(radius);
+            radius = narr.map(minRadius, maxRadius)
+                        .toArray();
+            var max = narr.max();
+            if (max !== 0) {
+                nodeWeights = narr.mul(1/max).toArray();
+            }
 
             for (var i = 0; i < l; i++) {
                 var node = nodes[i];
@@ -396,7 +404,12 @@ define(function(require) {
 
                 zr.addShape(shape);
             }
-            _normalize(linkWeights, linkWeights);
+
+            var narr = new NDArray(linkWeights);
+            var max = narr.max();
+            if (max !== 0) {
+                linkWeights = narr.mul(1/max).toArray();
+            }
         }
 
         function _updateLinkShapes(){
@@ -651,46 +664,6 @@ define(function(require) {
         self.dispose = dispose;
 
         init(option, component);
-    }
-
-
-    function _map(output, input, mappedMin, mappedMax) {
-        var min = input[0];
-        var max = input[0];
-        var l = input.length;
-        for (var i = 1; i < l; i++) {
-            var val = input[i];
-            if (val < min) {
-                min = val;
-            }
-            if (val > max) {
-                max = val;
-            }
-        }
-        var range = max - min;
-        var mappedRange = mappedMax - mappedMin;
-        for (var i = 0; i < l; i++) {
-            if (range === 0) {
-                output[i] = mappedMin;
-            } else {
-                var val = input[i];
-                var percent = (val - min) / range;
-                output[i] = mappedRange * percent + mappedMin;
-            }
-        }
-    }
-
-    function _normalize(output, input) {
-        var l = input.length;
-        var max = input[0];
-        for (var i = 1; i < l; i++) {
-            if (input[i] > max) {
-                max = input[i];
-            }
-        }
-        for (var i = 0; i < l; i++) {
-            output[i] = input[i] / max;
-        }
     }
     
     /*
