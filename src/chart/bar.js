@@ -611,7 +611,6 @@ define(function(require) {
 
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
          * @param {Object} newSeries
          * @param {Object} newComponent
          */
@@ -647,7 +646,6 @@ define(function(require) {
             var serie;
             var seriesIndex;
             var dataIndex;
-            var categoryAxis;
             for (var i = self.shapeList.length - 1; i >= 0; i--) {
                 seriesIndex = ecData.get(self.shapeList[i], 'seriesIndex');
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
@@ -663,7 +661,7 @@ define(function(require) {
                             zr.delShape(self.shapeList[i].id);
                             continue;
                         }
-                        else if (!aniMap[seriesIndex][2] && dataIndex == 0) {
+                        else if (!aniMap[seriesIndex][2] && dataIndex === 0) {
                             // 队尾加入删除头部
                             zr.delShape(self.shapeList[i].id);
                             continue;

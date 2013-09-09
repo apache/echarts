@@ -896,7 +896,7 @@ define(function(require) {
                             legendDataIdx = zrUtil.indexOf(
                                 _optionBackup.legend.data,
                                 data.name
-                            )
+                            );
                             legendDataIdx != -1
                             && (
                                 _optionRestore.legend.data.splice(
@@ -905,7 +905,7 @@ define(function(require) {
                                 _optionBackup.legend.data.splice(
                                     legendDataIdx, 1
                                 )
-                            )
+                            );
                         }
                         _selectedMap[additionData] = true;
                     } 

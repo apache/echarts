@@ -640,7 +640,6 @@ define(function(require) {
 
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
          * @param {Object} newSeries
          * @param {Object} newComponent
          */
@@ -838,8 +837,8 @@ define(function(require) {
                                         .when(
                                             400,
                                             {
-                                                xStart :targeSector.style.xStart,
-                                                yStart :targeSector.style.yStart,
+                                                xStart:targeSector.style.xStart,
+                                                yStart:targeSector.style.yStart,
                                                 xEnd : targeSector.style.xEnd,
                                                 yEnd : targeSector.style.yEnd
                                             }

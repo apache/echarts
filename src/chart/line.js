@@ -703,7 +703,6 @@ define(function(require) {
 
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
          * @param {Object} newSeries
          * @param {Object} newComponent
          */
@@ -736,7 +735,6 @@ define(function(require) {
             var dx;
             var y;
             var dy;
-            var serie;
             var seriesIndex;
             var pointList;
             var isHorizontal; // 是否横向布局， isHorizontal;
@@ -806,7 +804,7 @@ define(function(require) {
                             continue;
                         }
                         else if (!aniMap[seriesIndex][2] 
-                                 && self.shapeList[i]._dataIndex == 0
+                                 && self.shapeList[i]._dataIndex === 0
                         ) {
                             // 队尾加入删除头部
                             zr.delShape(self.shapeList[i].id);
