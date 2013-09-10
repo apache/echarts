@@ -29,7 +29,7 @@ define(function() {
         COMPONENT_TYPE_TOOLTIP: 'tooltip',
         COMPONENT_TYPE_GRID: 'grid',
         COMPONENT_TYPE_AXIS: 'axis',
-        COMPONENT_TYPE_AXIS: 'polar',
+        COMPONENT_TYPE_POLAR: 'polar',
         COMPONENT_TYPE_X_AXIS: 'xAxis',
         COMPONENT_TYPE_Y_AXIS: 'yAxis',
         COMPONENT_TYPE_AXIS_CATEGORY: 'categoryAxis',
@@ -327,8 +327,30 @@ define(function() {
         },
 
         polar : {
-            startAngle : 180,
+            startAngle : 180,      // 弄错了吧，0度角在正右方向，这样算startAngle应该是90
             graduation : 5,
+            axisLine: {            // 坐标轴线
+                show: true,        // 默认显示，属性show控制显示与否
+                lineStyle: {       // 属性lineStyle控制线条样式
+                    color: '#48b',
+                    width: 2,
+                    type: 'solid'
+                }
+            },
+            axisTick : {            // 坐标轴小标记
+                show : true,
+                lineStyle : {
+                    width : 1,
+                    color : '#999'
+                }
+            },
+            axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
+                show: true,
+                // formatter: null,
+                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: '#333'
+                }
+            },
             splitArea : {
                 show : true,
                 areaStyle : {
@@ -339,13 +361,6 @@ define(function() {
                 lineStyle : {
                     width : 1,
                     color : '#ccc'
-                }
-            },
-            axisTick : {
-                show : true,
-                lineStyle : {
-                    width : 1,
-                    color : '#999'
                 }
             }
         },
@@ -380,8 +395,9 @@ define(function() {
                     // color: 各异,
                 }
             },
-            //symbol: null,     // 拐点图形类型，非标准参数
-            symbolSize: 4           // 可计算特性参数，空数据拖拽提示图形大小
+            //symbol: null,         // 拐点图形类型，非标准参数
+            symbolSize: 4,          // 可计算特性参数，空数据拖拽提示图形大小
+            showAllSymbol: false    // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
         },
         
         // K线图默认参数
@@ -416,21 +432,21 @@ define(function() {
 
         // 雷达图默认参数
         radar : {
-            lineStyle : {
-                width : 1,
-                color : '#999'
+            polarIndex: 0,
+            itemStyle: {
+                normal: {
+                    // color: 各异,
+                    lineStyle: {
+                        width: 2,
+                        type: 'solid'
+                    }
+                },
+                emphasis: {
+                    // color: 各异,
+                }
             },
-
-            textStyle : {
-                textFont : 'normal 30px verdana',
-                color : '#999'
-            },
-
-            color : ['rgba(0,0,0,0)'],
-
-            strokeColor : 'rgba(0,0,0,1)',
-            lineWidth : 1
-            
+            //symbol: null,         // 拐点图形类型，非标准参数
+            symbolSize: 2           // 可计算特性参数，空数据拖拽提示图形大小
         },
 
         // 饼图默认参数

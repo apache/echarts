@@ -651,21 +651,22 @@ define(
 
             /**
              * 获取每个指标上某个value对应的坐标
-             * @param {number} value
              * @param {number} polarIndex
-             * @param {number} 指标index
+             * @param {number} indicatorIndex 
+             * @param {number} value
              * @return {Array<number>} 对应坐标
              */
-            function getVector(value, index, indicatorIndex) {
-                var index = index || 0;
-                var _ecIndicator_ = polar[index]._ecIndicator_;
+            function getVector(polarIndex, indicatorIndex, value) {
+                polarIndex = polarIndex || 0;
+                indicatorIndex = indicatorIndex || 0;
+                var _ecIndicator_ = polar[polarIndex]._ecIndicator_;
 
                 if (indicatorIndex >= _ecIndicator_.length) {
                     return ;
                 }
 
-                var indicator = polar[index]._ecIndicator_[indicatorIndex];
-                var center = polar[index].center;
+                var indicator = polar[polarIndex]._ecIndicator_[indicatorIndex];
+                var center = polar[polarIndex].center;
                 var vector = indicator.vector;
                 var max = indicator.value.max;
                 var min = indicator.value.min;

@@ -85,11 +85,6 @@ option = {
         }
     },
     calculable : true,
-    color : [
-        'rgba(111,111,22, 0.5)',
-        'rgba(200,0,0,0.5)',
-        'rgba(20,100,100,0.5)'
-    ],
     polar : [
         {
             indicator : [
@@ -99,8 +94,8 @@ option = {
                 { name : '指标四' },
                 { name : '指标五' }
             ],
-            center : [200,200],
-            radius : 100
+            center : [250,210],
+            radius : 150
         },
         {
             indicator : [
@@ -111,20 +106,46 @@ option = {
                 { name : '化学', max  : 108 },
                 { name : '生物', max  : 72 }
             ],
-            center : [600, 200],
-            radius : 100
+            center : [document.getElementById('main').offsetWidth - 250, 210],
+            radius : 150
         }
     ],
     series : [
         {
             name: '雷达图',
             type: 'radar',
-            radius : 100,
-            polarIndex : 0,
+            itemStyle: {
+                normal: {
+                    // color: 各异,
+                    lineStyle: {
+                        width: 2
+                    }
+                },
+                emphasis: {
+                    // color: 各异,
+                    lineStyle: {
+                        width: 4
+                    }
+                }
+            },
             data : [
                 {
                     value : [100, 8, 0.40, -80, 2000],
-                    name : '图一'
+                    name : '图一',
+                    symbol: 'star5',
+                    symbolSize: 4,           // 可计算特性参数，空数据拖拽提示图形大小
+                    itemStyle: {
+                        normal: {
+                            lineStyle: {
+                                type: 'dashed'
+                            }
+                        },
+                        emphasis: {
+                            lineStyle: {
+                                type: 'solid'
+                            }
+                        }
+                    }
                 },
                 {
                     value : [10, 3, 0.20, -100, 1000],
@@ -132,16 +153,22 @@ option = {
                 },
                 {
                     value : [20, 3, 0.3, -13.5, 3000],
-                    name : '图三' 
+                    name : '图三',
+                    symbol: 'none'         // 拐点图形类型，非标准参数
                 }
             ]
         },
         {
             name: '成绩单',
             type: 'radar',
-            center : [600, 200],
-            radius : 100,
             polarIndex : 1,
+            itemStyle: {
+                normal: {
+                    areaStyle: {
+                        type: 'default'
+                    }
+                }
+            },
             data : [
                 {
                     value : [120, 118, 130, 100, 99, 70],

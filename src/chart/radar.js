@@ -39,6 +39,12 @@
         var _queryTarget;
 
         var _dropBoxList;
+
+        var _symbol = [
+              'circle', 'rectangle', 'triangle', 'diamond',
+              'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
+            ];
+        var _radarDataCounter;
         
         /**
          * 绘制图形
@@ -46,6 +52,7 @@
         function _buildShape() {  
             self.selectedMap = {};
             _dropBoxList = [];
+            _radarDataCounter = 0;
             for (var i = 0, l = series.length; i < l ; i ++) {
                 if (series[i].type == ecConfig.CHART_TYPE_RADAR) {
                     serie = self.reformOption(series[i]);
@@ -55,8 +62,7 @@
                     if (self.deepQuery(_queryTarget, 'calculable')) {
                         _addDropBox(i);
                     }
-
-                    _buildDataShape(i);
+                    _buildSingleRadar(i);
                 }
             }
 
@@ -71,153 +77,47 @@
          * 构建数据图形
          * @param {number} 序列的index
          */
-        function _buildDataShape(index) {
-            var polarIndex;
+        function _buildSingleRadar(index) {
+            var legend = component.legend;
             var data = serie.data;
-            var pointList;
-            var color = self.deepQuery(_queryTarget, 'color');
-            
-            var strokeColor = self.deepQuery(_queryTarget, 'strokeColor');
-            var lineWidth = self.deepQuery(_queryTarget, 'lineWidth');
-            var name = self.deepQuery(_queryTarget, 'name');
+            var defaultColor;
+            var name;
             var shape;
+            var pointList;
             var calculable = self.deepQuery(_queryTarget, 'calculable');
-            
            
             for (var i = 0; i < data.length; i ++) {
-                name = self.deepQuery([data[i]], 'name');
-                color = self.deepQuery(
-                    [data[i], serie, option], 'color'
-                );
-                color = _getDataShapeColor(name);
-
-                if (!color) {
+                name = data[i].name || '';
+                
+                // 图例开关
+                self.selectedMap[name] = legend 
+                                         ? legend.isSelected(name) 
+                                         : true;
+                if (!self.selectedMap[name]) {
                     continue;
                 }
-                polarIndex = self.deepQuery([data[i], serie], 'polarIndex');
-                strokeColor = self.deepQuery(
-                    [data[i], serie, option], 'strokeColor'
-                );
-                lineWidth = self.deepQuery(
-                    [data[i], serie, option], 'lineWidth'
-                );
-
-                pointList =
-                    _getDataShapePoints(
-                        polarIndex, data[i]
-                    );
-                shape = _getDataShape(
-                    pointList, color, strokeColor, lineWidth, i,
-                    calculable
-                );
-                _addDataShape(
-                    shape, index, data[i], i, calculable
-                );
-            }
-            
-        }
-
-        /**
-         * 获取图形的颜色
-         * @param {string} itemName 图形名称
-         * @param {Object} color 获取到的color  没有legend时使用
-         * @return {Object} color | false 返回颜色时显示图形
-         */
-        function _getDataShapeColor(itemName, color) {
-            var legend = component.legend;
-            var legendColor;
-            var color = self.deepQuery(_queryTarget, 'color');
-
-            if (legend){
-                self.selectedMap[itemName] = legend.isSelected(itemName);
-
-                if (!legend.isSelected(itemName)) {
-                    return false;
+                
+                 // 默认颜色策略
+                if (legend) {
+                    // 有图例则从图例中获取颜色定义
+                    defaultColor = legend.getColor(name);
+                }
+                else {
+                    // 全局颜色定义
+                    defaultColor = zr.getColor(i);
                 }
 
-                legendColor = legend.getColor(itemName);
-                
-                return legendColor;
-            } else {
-                self.selectedMap[itemName] = true;
-                return color;
+                pointList = _getPointList(serie.polarIndex, data[i]);
+                // 添加拐点形状
+                _addSymbol(pointList, defaultColor, data[i], index);
+                // 添加数据形状
+                _addDataShape(
+                    pointList, defaultColor, data[i],
+                    index, i, calculable
+                );
+                _radarDataCounter++;
             }
-        }
-
-        /**
-         * 获取绘制的图形
-         * @param {Array<Array<number>>} 绘制的点集
-         * @param {string} 绘制方式 stroke | fill | both 描边 | 填充 | 描边 + 填充
-         * @param {string} 颜色
-         * @param {string} 描边颜色
-         * @param {number} 线条宽度
-         * @param {boolean=} hoverable
-         * @param {boolean=} draggable
-         * @return {Object} 绘制的图形对象
-         */ 
-        function _getShape(
-            pointList, brushType, color, strokeColor, lineWidth, 
-            hoverable, draggable
-        ) {
-            return {
-                shape : 'polygon',
-                style : {
-                    pointList   : pointList,
-                    brushType   : brushType,
-                    color       : color,
-                    strokeColor : strokeColor,
-                    lineWidth   : lineWidth
-                },
-                hoverable : hoverable || false,
-                draggable : draggable || false
-            };
-        }
-
-        /**
-         * 添加数据图形
-         * @param {Array<Array<number>>} pointList 点集
-         * @param {string | Array<string>} color 填充颜色
-         * @param {string | Array<string>} strokeColor 描边颜色
-         * @param {number} 线条宽度
-         * @param {number=} data数组序列号
-         * @return {Object} shape
-         */ 
-        function _getDataShape(
-            pointList, color, strokeColor, lineWidth, index, draggable
-        ) {
-            var index = index || 0;
-            var color = _getValueInArray(color, index);
-            var strokeColor = _getValueInArray(strokeColor, index);
             
-            return _getShape(
-                pointList, 'both', color, strokeColor, lineWidth, 
-                true, draggable
-            );
-        }
-
-        /**
-         * 添加数据图形
-         * @param {Object} shape
-         * @param {Object} serie
-         * @param {Object} data
-         * @param {number} dataIndex
-         * @param {boolean} calcalable
-         */
-        function _addDataShape(
-            shape, seriesIndex, data, dataIndex, calculable
-        ) {
-            var queryTarget = [data, series[seriesIndex], option];
-            var name = self.deepQuery(queryTarget, 'name');
-            var polarIndex = self.deepQuery(queryTarget, 'polarIndex');
-            var indicator = component.polar.getIndicator(polarIndex);
-            ecData.pack(
-                shape, series[seriesIndex], seriesIndex, 
-                data, dataIndex, name, indicator
-            );
-            if (calculable) {
-                self.setCalculable(shape);
-            }
-            self.shapeList.push(shape);
         }
 
         /**
@@ -226,53 +126,176 @@
          * @param {Array<Object>} 处理的数据
          * @return {Array<Array<number>>} 点集
          */
-        function _getDataShapePoints(polarIndex, dataArr) {
+        function _getPointList(polarIndex, dataArr) {
             var pointList = [];
             var vector;
             var polar = component.polar;
-            var value;
 
-            for (var i = 0; i < dataArr.value.length; i ++) {
-                
-                value = dataArr.value[i];
-                
-                vector = polar.getVector(value, polarIndex, i);
+            for (var i = 0, l = dataArr.value.length; i < l; i++) {
+                vector = polar.getVector(polarIndex, i, dataArr.value[i]);
                 if (vector) {
                     pointList.push(vector);
                 } 
             }
             return pointList;
         }
-
+        
         /**
-         * 转换坐标
-         *
-         * @param {Array<number>} 原始坐标
-         * @param {Array<number>} 中点坐标
-         * @param {number} 缩小的倍数
-         *
-         * @return {Array<number>} 转换后的坐标
-        function _mapVector(vector, center, scale) {
-            return [
-                vector[0] * scale + center[0],
-                vector[1] * scale + center[1]
-            ];
-        }
-        */
-       
-        /**
-         * 从数组中获取值 不是数组是返回自己
-         * @param {*} array 
-         * @param {number} index array为数组时的序列号,如果大于数组长度求余
-         * @return {Object}
+         * 生成折线图上的拐点图形
          */
-        function _getValueInArray(array, index) {
-            if (!(array instanceof Array)) {
-                return array;
+        function _getSymbol(
+            x, y, symbol, symbolSize, normalColor, emphasisColor, lineWidth
+        ) {
+            var itemShape = {
+                shape : 'icon',
+                zlevel : _zlevelBase + 1,
+                style : {
+                    iconType : symbol.replace('empty', '').toLowerCase(),
+                    x : x - symbolSize,
+                    y : y - symbolSize,
+                    width : symbolSize * 2,
+                    height : symbolSize * 2,
+                    brushType : 'both',
+                    color : symbol.match('empty') ? '#fff' : normalColor,
+                    strokeColor : normalColor,
+                    lineWidth: lineWidth * 2
+                },
+                hoverable: false
+            };
+            
+            if (symbol.match('star')) {
+                itemShape.style.iconType = 'star';
+                itemShape.style.n = 
+                    (symbol.replace('empty', '').replace('star','') - 0) || 5;
             }
-            else {
-                return array[index % array.length];
+            
+            itemShape._x = x;
+            itemShape._y = y;
+
+            return itemShape;
+        }
+        
+        /**
+         * 添加拐点
+         * @param {Array<Array<number>>} pointList 点集
+         * @param {string} defaultColor 默认填充颜色
+         * @param {object} data 数据
+         * @param {number} serieIndex
+         */
+        function _addSymbol(pointList, defaultColor, data, seriesIndex) {
+            // 多级控制
+            var queryTarget = [data, serie];
+            var symbol = self.deepQuery(queryTarget,'symbol')
+                         || _symbol[_radarDataCounter % _symbol.length]
+                         || 'cricle';
+            
+            if (symbol != 'none') {
+                var symbolSize = self.deepQuery(queryTarget,'symbolSize');
+                var nColor = self.deepQuery(
+                    queryTarget, 'itemStyle.normal.color'
+                );
+                var eColor = self.deepQuery(
+                    queryTarget, 'itemStyle.emphasis.color'
+                );
+                var lineWidth = self.deepQuery(
+                    queryTarget, 'itemStyle.normal.lineStyle.width'
+                );
+                
+                for (var i = 0, l = pointList.length; i < l; i++) {
+                    self.shapeList.push(_getSymbol(
+                        pointList[i][0],    // x
+                        pointList[i][1],    // y
+                        symbol,
+                        symbolSize,
+                        nColor || defaultColor,
+                        eColor || nColor || defaultColor,
+                        lineWidth
+                    ));
+                }
             }
+        }
+        
+        /**
+         * 添加数据图形
+         * @param {Array<Array<number>>} pointList 点集
+         * @param {string} defaultColor 默认填充颜色
+         * @param {object} data 数据
+         * @param {number} serieIndex
+         * @param {number} dataIndex
+         * @param {boolean} calcalable
+         */ 
+        function _addDataShape(
+            pointList, defaultColor, data,
+            seriesIndex, dataIndex, calculable
+        ) {
+            // 多级控制
+            var queryTarget = [data, serie];
+            var nColor = self.deepQuery(
+                queryTarget, 'itemStyle.normal.color'
+            );
+            var nLineWidth = self.deepQuery(
+                queryTarget, 'itemStyle.normal.lineStyle.width'
+            );
+            var nLineType = self.deepQuery(
+                queryTarget, 'itemStyle.normal.lineStyle.type'
+            );
+            var nAreaColor = self.deepQuery(
+                queryTarget, 'itemStyle.normal.areaStyle.color'
+            );
+            var nIsAreaFill = self.deepQuery(
+                queryTarget, 'itemStyle.normal.areaStyle'
+            );
+            var shape = {
+                shape : 'polygon',
+                zlevel : _zlevelBase,
+                style : {
+                    pointList   : pointList,
+                    brushType   : nIsAreaFill ? 'both' : 'stroke',
+                    color       : nAreaColor || nColor || defaultColor,
+                    strokeColor : nColor || defaultColor,
+                    lineWidth   : nLineWidth,
+                    lineType    : nIsAreaFill ? 'solid' : nLineType
+                },
+                highlightStyle : {
+                    brushType   : self.deepQuery(
+                                      queryTarget,
+                                      'itemStyle.emphasis.areaStyle'
+                                  ) || nIsAreaFill 
+                                  ? 'both' : 'stroke',
+                    color       : self.deepQuery(
+                                      queryTarget,
+                                      'itemStyle.emphasis.areaStyle.color'
+                                  ) || nAreaColor || nColor || defaultColor,
+                    strokeColor : self.deepQuery(
+                                      queryTarget, 'itemStyle.emphasis.color'
+                                  ) || nColor || defaultColor,
+                    lineWidth   : self.deepQuery(
+                                      queryTarget,
+                                      'itemStyle.emphasis.lineStyle.width'
+                                  ) || nLineWidth,
+                    lineType    : nIsAreaFill 
+                                  ? 'solid' 
+                                  : self.deepQuery(
+                                        queryTarget,
+                                        'itemStyle.emphasis.lineStyle.type'
+                                    ) || nLineType
+                }
+            };
+            ecData.pack(
+                shape,
+                series[seriesIndex],    // 系列
+                seriesIndex,            // 系列索引
+                data,                   // 数据
+                dataIndex,              // 数据索引
+                data.name,              // 数据名称
+                // 附加指标信息 
+                component.polar.getIndicator(series[seriesIndex].polarIndex)
+            );
+            if (calculable) {
+                shape.draggable = true;
+                self.setCalculable(shape);
+            }
+            self.shapeList.push(shape);
         }
 
         /**
@@ -285,6 +308,7 @@
             );
             if (!_dropBoxList[polarIndex]) {
                 var shape = component.polar.getDropBox(polarIndex);
+                shape.zlevel = _zlevelBase;
                 self.setCalculable(shape);
                 ecData.pack(shape, series, index, undefined, -1);
                 self.shapeList.push(shape);
@@ -416,6 +440,8 @@
             var polar = component.polar;
             var center;
             var item;
+            var x;
+            var y;
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 if (self.shapeList[i].shape == 'polygon') {
@@ -429,8 +455,10 @@
                     polarIndex = self.deepQuery(
                         [data, serie, option], 'polarIndex');
                     center = polar.getCenter(polarIndex);
+                    x = center[0];
+                    y = center[1];
                     zr.modShape(self.shapeList[i].id, {
-                        scale : [0.1, 0.1, center[0], center[1]]
+                        scale : [0.1, 0.1, x, y]
                     });
                     
                     zr.animate(item.id, '')
@@ -439,10 +467,24 @@
                             || duration)
                             + dataIndex * 100,
 
-                            {scale : [1, 1, center[0], center[1]]},
+                            {scale : [1, 1, x, y]},
 
                             (self.deepQuery([serie], 'animationEasing')
                             || easing)
+                        )
+                        .start();
+                }
+                else {
+                    x = self.shapeList[i]._x || 0;
+                    y = self.shapeList[i]._y || 0;
+                    zr.modShape(self.shapeList[i].id, {
+                        scale : [0, 0, x, y]
+                    });
+                    zr.animate(self.shapeList[i].id, '')
+                        .when(
+                            duration,
+                            {scale : [1, 1, x, y]},
+                            'QuinticOut'
                         )
                         .start();
                 }
