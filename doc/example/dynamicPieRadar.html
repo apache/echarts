@@ -123,20 +123,13 @@ option = {
         {
             name: 'radar',
             type: 'radar',
+            itemStyle: {normal: {areaStyle: {type: 'default'}}},
             data: (function(){
                 var res = [];
-                var color = [
-                    'rgba(111,111,22, 0.5)',
-                    'rgba(200,0,0,0.5)',
-                    'rgba(20,100,100,0.5)'
-                ];
                 var len = 0;
                 while (len++ < 3) {
                     res.push({
                         name: 'data' + len,
-                        itemStyle : {
-                            normal : { color: color[len - 1]}
-                        },
                         value: [
                             Math.round(Math.random()*100),
                             Math.round(Math.random()*100),

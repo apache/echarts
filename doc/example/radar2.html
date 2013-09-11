@@ -67,25 +67,16 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
-indicator = [
-    {name : '进攻', max  : 100},
-    {name : '防守', max  : 100},
-    {name : '体能', max  : 100},
-    {name : '速度', max  : 100},
-    {name : '力量', max  : 100},
-    {name : '技巧', max  : 100}
-];
 option = {
     title : {
         text: '罗纳尔多 vs 舍普琴科',
         subtext: '完全实况球员数据'
     },
     tooltip : {
-        trigger: 'item'
+        trigger: 'axis'
     },
     legend: {
-        x : '320',
-        y : '50',
+        x : 'center',
         data:['罗纳尔多','舍普琴科']
     },
     toolbox: {
@@ -97,37 +88,39 @@ option = {
             saveAsImage : true
         }
     },
-    color : [
-        'rgba(111,111,22, 0.5)',
-        'rgba(200,0,0,0.5)',
-        'rgba(20,100,100,0.5)'
-    ],
     calculable : true,
     polar : [
         {
-            radius : 100,
-            center : [200, 200],
-            indicator : indicator
-        },
-        {
-            radius : 100,
-            center : [600, 200],
-            indicator : indicator
+            indicator : [
+                {name : '进攻', max  : 100},
+                {name : '防守', max  : 100},
+                {name : '体能', max  : 100},
+                {name : '速度', max  : 100},
+                {name : '力量', max  : 100},
+                {name : '技巧', max  : 100}
+            ],
+            radius : 130
         }
     ],
     series : [
         {
             name: '完全实况球员数据',
             type: 'radar',
+            itemStyle: {
+                normal: {
+                    areaStyle: {
+                        type: 'default'
+                    }
+                }
+            },
             data : [
+                {
+                    value : [97, 42, 88, 94, 90, 86],
+                    name : '舍普琴科'
+                },
                 {
                     value : [97, 32, 74, 95, 88, 92],
                     name : '罗纳尔多'
-                },
-                {
-                    value : [97, 42, 88, 94, 90, 86],
-                    name : '舍普琴科',
-                    polarIndex : 1
                 }
             ]
         }

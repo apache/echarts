@@ -69,7 +69,7 @@
                     <textarea id="code" name="code">
 option = {
     tooltip : {
-        trigger: 'item'
+        trigger: 'axis'
     },
     legend: {
         x : 'left',
@@ -115,12 +115,6 @@ option = {
             name: '雷达图',
             type: 'radar',
             itemStyle: {
-                normal: {
-                    // color: 各异,
-                    lineStyle: {
-                        width: 2
-                    }
-                },
                 emphasis: {
                     // color: 各异,
                     lineStyle: {
@@ -139,22 +133,31 @@ option = {
                             lineStyle: {
                                 type: 'dashed'
                             }
-                        },
-                        emphasis: {
-                            lineStyle: {
-                                type: 'solid'
-                            }
                         }
                     }
                 },
                 {
                     value : [10, 3, 0.20, -100, 1000],
-                    name : '图二'
+                    name : '图二',
+                    itemStyle: {
+                        normal: {
+                            areaStyle: {
+                                type: 'default'
+                            }
+                        }
+                    }
                 },
                 {
                     value : [20, 3, 0.3, -13.5, 3000],
                     name : '图三',
-                    symbol: 'none'         // 拐点图形类型，非标准参数
+                    symbol: 'none',         // 拐点图形类型，非标准参数
+                    itemStyle: {
+                        normal: {
+                            lineStyle: {
+                                type: 'dotted'
+                            }
+                        }
+                    }
                 }
             ]
         },
@@ -172,11 +175,32 @@ option = {
             data : [
                 {
                     value : [120, 118, 130, 100, 99, 70],
-                    name : '张三'
+                    name : '张三',
+                    itemStyle: {
+                        normal: {
+                            areaStyle: {
+                                color: (function(){
+                                    var zrColor = require('zrender/tool/color');
+                                    var x = document.getElementById('main').offsetWidth - 250;
+                                    return zrColor.getRadialGradient(
+                                        x, 210, 0, x, 200, 150,
+                                        [[0, 'rgba(255,255,0,0.3)'],[1, 'rgba(255,0,0,0.5)']]
+                                    )
+                                })()
+                            }
+                        }
+                    }
                 },
                 {
                     value : [90, 113, 140, 30, 70, 60],
-                    name : '李四'
+                    name : '李四',
+                    itemStyle: {
+                        normal: {
+                            lineStyle: {
+                                type: 'dashed'
+                            }
+                        }
+                    }
                 }
             ]
         }
