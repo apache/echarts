@@ -463,8 +463,9 @@ define(
                         polarIndex = self.deepQuery(
                             [serieData[j], serie, option], 'polarIndex'
                         ) || 0;
-                        if (!legend || legend.isSelected(serieData[j].name)
-                            && polarIndex == index ) {
+                        if (polarIndex == index
+                            && (!legend || legend.isSelected(serieData[j].name))
+                        ) {
                             data.push(serieData[j])
                         }
                     }
