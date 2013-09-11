@@ -70,7 +70,6 @@
                 self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
-            
         }
 
         /**
@@ -79,6 +78,7 @@
          */
         function _buildSingleRadar(index) {
             var legend = component.legend;
+            var iconShape;
             var data = serie.data;
             var defaultColor;
             var name;
@@ -101,6 +101,14 @@
                 if (legend) {
                     // 有图例则从图例中获取颜色定义
                     defaultColor = legend.getColor(name);
+                    iconShape = legend.getItemShape(name);
+                    if (iconShape) {
+                        // 回调legend，换一个更形象的icon
+                        iconShape.style.brushType = self.deepQuery(
+                            [data[i], serie], 'itemStyle.normal.areaStyle'
+                        ) ? 'both' : 'stroke';
+                        legend.setItemShape(name, iconShape);
+                    }
                 }
                 else {
                     // 全局颜色定义
@@ -251,10 +259,12 @@
                 style : {
                     pointList   : pointList,
                     brushType   : nIsAreaFill ? 'both' : 'stroke',
-                    color       : nAreaColor || nColor || defaultColor,
+                    color       : nAreaColor 
+                                  || nColor 
+                                  || zrColor.alpha(defaultColor,0.5),
                     strokeColor : nColor || defaultColor,
                     lineWidth   : nLineWidth,
-                    lineType    : nIsAreaFill ? 'solid' : nLineType
+                    lineType    : nLineType
                 },
                 highlightStyle : {
                     brushType   : self.deepQuery(
@@ -265,7 +275,10 @@
                     color       : self.deepQuery(
                                       queryTarget,
                                       'itemStyle.emphasis.areaStyle.color'
-                                  ) || nAreaColor || nColor || defaultColor,
+                                  ) 
+                                  || nAreaColor 
+                                  || nColor 
+                                  || zrColor.alpha(defaultColor,0.5),
                     strokeColor : self.deepQuery(
                                       queryTarget, 'itemStyle.emphasis.color'
                                   ) || nColor || defaultColor,
@@ -273,12 +286,10 @@
                                       queryTarget,
                                       'itemStyle.emphasis.lineStyle.width'
                                   ) || nLineWidth,
-                    lineType    : nIsAreaFill 
-                                  ? 'solid' 
-                                  : self.deepQuery(
-                                        queryTarget,
-                                        'itemStyle.emphasis.lineStyle.type'
-                                    ) || nLineType
+                    lineType    : self.deepQuery(
+                                      queryTarget,
+                                      'itemStyle.emphasis.lineStyle.type'
+                                  ) || nLineType
                 }
             };
             ecData.pack(
