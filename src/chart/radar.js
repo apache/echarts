@@ -82,7 +82,6 @@
             var data = serie.data;
             var defaultColor;
             var name;
-            var shape;
             var pointList;
             var calculable = self.deepQuery(_queryTarget, 'calculable');
            
@@ -190,7 +189,7 @@
          * @param {object} data 数据
          * @param {number} serieIndex
          */
-        function _addSymbol(pointList, defaultColor, data, seriesIndex) {
+        function _addSymbol(pointList, defaultColor, data) {
             // 多级控制
             var queryTarget = [data, serie];
             var symbol = self.deepQuery(queryTarget,'symbol')

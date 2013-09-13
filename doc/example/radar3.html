@@ -92,21 +92,21 @@ option = {
     polar : [
         {
             indicator : [
-                {name : '品牌', max  : 100},
-                {name : '内容', max  : 100},
-                {name : '可用性', max  : 100},
-                {name : '功能', max  : 100}
+                {text : '品牌', max  : 100},
+                {text : '内容', max  : 100},
+                {text : '可用性', max  : 100},
+                {text : '功能', max  : 100}
             ],
             center : [150,200],
             radius : 80
         },
         {
             indicator : [
-                {name : '外观', max  : 100},
-                {name : '拍照', max  : 100},
-                {name : '系统', max  : 100},
-                {name : '性能', max  : 100},
-                {name : '屏幕', max  : 100}
+                {text : '外观', max  : 100},
+                {text : '拍照', max  : 100},
+                {text : '系统', max  : 100},
+                {text : '性能', max  : 100},
+                {text : '屏幕', max  : 100}
             ],
             radius : 80
         },
@@ -114,7 +114,7 @@ option = {
             indicator : (function(){
                 var res = [];
                 for (var i = 1; i <= 12; i++) {
-                    res.push({name:i+'月',max:100});
+                    res.push({text:i+'月',max:100});
                 }
                 return res;
             })(),
@@ -125,6 +125,9 @@ option = {
     series : [
         {
             type: 'radar',
+             tooltip : {
+                trigger: 'item'
+            },
             itemStyle: {normal: {areaStyle: {type: 'default'}}},
             data : [
                 {

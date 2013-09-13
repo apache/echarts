@@ -327,25 +327,25 @@ define(function() {
         },
 
         polar : {
-            startAngle : 180,      // 弄错了吧，0度角在正右方向，这样算startAngle应该是90
-            graduation : 5,
+            startAngle : 90,      
+            splitNumber : 5,
+            name : {
+                show: true,
+                // formatter: null,
+                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: '#333'
+                }
+            },
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
                 lineStyle: {       // 属性lineStyle控制线条样式
-                    color: '#48b',
-                    width: 2,
+                    color: '#ccc',
+                    width: 1,
                     type: 'solid'
                 }
             },
-            axisTick : {            // 坐标轴小标记
-                show : true,
-                lineStyle : {
-                    width : 1,
-                    color : '#999'
-                }
-            },
             axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
-                show: true,
+                show: false,
                 // formatter: null,
                 textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
                     color: '#333'
@@ -358,6 +358,7 @@ define(function() {
                 }
             },
             splitLine : {
+                show : true,
                 lineStyle : {
                     width : 1,
                     color : '#ccc'

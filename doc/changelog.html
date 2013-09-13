@@ -14,10 +14,23 @@
 
     <!-- Fav and touch icons -->
     <link rel="shortcut icon" href="asset/ico/favicon.png">
+    <style type="text/css">
+        .ddhide {
+            height:0;
+            overflow:hidden;
+        }
+        .ddshow {
+            height:400px;
+            overflow:hidden;
+            transition:height 2s;
+            -moz-transition:height 2s;
+            -webkit-transition:height 2s;
+            -o-transition:height 2s;
+        }
+    </style>
   </head>
 
   <body>
-
     <!-- NAVBAR
     ================================================== -->
     <div class="navbar navbar-inverse navbar-fixed-top">
@@ -60,14 +73,29 @@
     </div><!-- /.navbar-wrapper -->
 
     <div class="container">
+        <div id="main-wrap" class="ddhide">
+            <div id="main" style="height:400px;"></div>
+        </div>
+        <audio id="audioV3"></audio>
         <h2>修改记录</h2>
         <span>[+]新增 [-]删除 [^]升级 [#]修复 【】重要</span>
         <div class="row-fluid">
             <div>
-                <h3>undergoing<small>（2013-08-00）</small></h3>
+                <h3>1.2.0<small>（2013-09-13）</small></h3>
                 <ul>
-                    <li>[^] 批量删除shape优化</li>
+                    <li>【+】 [radar] 雷达图</li>
+                    <li>【+】 动态数据添加接口及动画支持 support <a href="https://github.com/ecomfe/echarts/issues/45" target="_blank">this 》</a></li>
+                    <li>【+】 [map] 数据压缩算法（1.65M > 350K）、动态加载</li>
+                    <li>[+] [polar] 极坐标</li>
+                    <li>[^] [grid] 直角坐标系网格自适应配置优化, support <a href="http://www.oschina.net/question/1255841_123578" target="_blank">this 》</a></li>
+                    <li>[^] [dataZoom] zoomLock下手柄拖拽转移以提高用户体验</li>
                     <li>[^] [tooltip] 全局mouseout、层级优化</li>
+                    <li>[+] [line] showAllSymbol控制显示所有拐点标识</li>
+                    <li>[^] refresh接口优化</li>
+                    <li>[#] 修复组件resize响应 fix <a href="https://github.com/ecomfe/echarts/issues/68" target="_blank">this 》</a></li>
+                    <li>[#] [legend] 饼图个性化颜色取值错误，fix <a href="http://www.oschina.net/question/209138_125256" target="_blank">this 》</a></li>
+                    <li>[#] [tooltip] 数组类型数值类型打包错误，fix <a href="https://github.com/ecomfe/echarts/issues/82" target="_blank">this 》</a></li>
+                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.3+</li>
                 </ul>
             </div>
             <div>
@@ -170,6 +198,8 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
+    <script src="asset/js/esl/esl.js"></script>
+    <script src="asset/js/dataDancing.js"></script>
     <script src="asset/js/jquery.js"></script>
     <script src="asset/js/bootstrap-transition.js"></script>
     <script src="asset/js/bootstrap-alert.js"></script>
@@ -183,6 +213,5 @@
     <script src="asset/js/bootstrap-collapse.js"></script>
     <script src="asset/js/bootstrap-carousel.js"></script>
     <script src="asset/js/bootstrap-typeahead.js"></script>
-
   </body>
 </html>
