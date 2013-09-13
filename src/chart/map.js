@@ -150,7 +150,7 @@ define(function(require) {
                     }
                     zr.refresh();
                 }
-            }
+            };
         }
         
         /**
@@ -842,7 +842,6 @@ define(function(require) {
         
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
          * @param {Object} newSeries
          * @param {Object} newComponent
          */

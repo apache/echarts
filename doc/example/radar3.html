@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+
+    <script src="../asset/js/esl/esl.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+</head>
+
+<body>
+    <!-- NAVBAR
+    ================================================== -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="../../index.html">ECharts</a>
+          <div class="nav-collapse collapse">
+              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
+              <ul class="nav">
+                <li><a href="../../index.html"><i class="icon-home icon-white"></i> Home</a></li>
+                <li class="active"><a href="../example.html" class="active">Example</a></li>
+                <li><a href="../doc.html" >API &amp; Doc</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a id="last-release-link" href=""> </a></li>
+                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
+                  </ul>
+                </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
+                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
+                    <li class="divider"></li>
+                    <!--li class="nav-header">Library</li-->
+                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
+                    
+                  </ul>
+                </li>
+              </ul>
+           </div><!--/.nav-collapse -->
+        </div><!-- /.container -->
+      </div><!-- /.navbar-inner -->
+    </div><!-- /.navbar-wrapper -->
+
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div id="sidebar-code" class="span4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+option = {
+    title : {
+        text: '多雷达图',
+        subtext: '纯属虚构'
+    },
+    tooltip : {
+        trigger: 'axis'
+    },
+    legend: {
+        x : 'center',
+        data:['某软件','某主食手机','某水果手机','降水量','蒸发量']
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : true,
+            dataView : {readOnly: false},
+            restore : true,
+            saveAsImage : true
+        }
+    },
+    calculable : true,
+    polar : [
+        {
+            indicator : [
+                {text : '品牌', max  : 100},
+                {text : '内容', max  : 100},
+                {text : '可用性', max  : 100},
+                {text : '功能', max  : 100}
+            ],
+            center : [150,200],
+            radius : 80
+        },
+        {
+            indicator : [
+                {text : '外观', max  : 100},
+                {text : '拍照', max  : 100},
+                {text : '系统', max  : 100},
+                {text : '性能', max  : 100},
+                {text : '屏幕', max  : 100}
+            ],
+            radius : 80
+        },
+        {
+            indicator : (function(){
+                var res = [];
+                for (var i = 1; i <= 12; i++) {
+                    res.push({text:i+'月',max:100});
+                }
+                return res;
+            })(),
+            center : [document.getElementById('main').offsetWidth - 150,200],
+            radius : 80
+        }
+    ],
+    series : [
+        {
+            type: 'radar',
+             tooltip : {
+                trigger: 'item'
+            },
+            itemStyle: {normal: {areaStyle: {type: 'default'}}},
+            data : [
+                {
+                    value : [60,73,85,40],
+                    name : '某软件'
+                }
+            ]
+        },
+        {
+            type: 'radar',
+            polarIndex : 1,
+            data : [
+                {
+                    value : [85, 90, 90, 95, 95],
+                    name : '某主食手机'
+                },
+                {
+                    value : [95, 80, 95, 90, 93],
+                    name : '某水果手机'
+                }
+            ]
+        },
+        {
+            type: 'radar',
+            polarIndex : 2,
+            itemStyle: {normal: {areaStyle: {type: 'default'}}},
+            data : [
+                {
+                    name : '降水量',
+                    value : [2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 75.6, 82.2, 48.7, 18.8, 6.0, 2.3],
+                },
+                {
+                    name:'蒸发量',
+                    value:[2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 35.6, 62.2, 32.6, 20.0, 6.4, 3.3]
+                }
+            ]
+        }
+    ]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="span8">
+                <div id="main" class="main"></div>
+                <div>
+                    <button onclick="refresh(true)">Refresh ~</button>
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        <hr>
+        <!-- FOOTER -->
+        <footer>
+          <p class="pull-right"><a href="#">Back to top</a></p>
+          <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="../changelog.html" target="_blank">Changelog</a></p>
+        </footer>
+    </div><!--/.fluid-container-->
+
+    <script src="../asset/js/jquery.js"></script>
+    <script src="../asset/js/bootstrap-transition.js"></script>
+    <script src="../asset/js/bootstrap-alert.js"></script>
+    <script src="../asset/js/bootstrap-modal.js"></script>
+    <script src="../asset/js/bootstrap-dropdown.js"></script>
+    <script src="../asset/js/bootstrap-scrollspy.js"></script>
+    <script src="../asset/js/bootstrap-tab.js"></script>
+    <script src="../asset/js/bootstrap-tooltip.js"></script>
+    <script src="../asset/js/bootstrap-popover.js"></script>
+    <script src="../asset/js/bootstrap-button.js"></script>
+    <script src="../asset/js/bootstrap-collapse.js"></script>
+    <script src="../asset/js/bootstrap-carousel.js"></script>
+    <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>

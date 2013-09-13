@@ -209,37 +209,47 @@ define(function (require) {
         }
 
         function init(newOption) {
-            option = newOption;
+            refresh(newOption);
+        }
+        
+        /**
+         * 刷新
+         */
+        function refresh(newOption) {
+            if (newOption) {
+                option = newOption;
 
-            option.title = self.reformOption(option.title);
-            // 补全padding属性
-            option.title.padding = self.reformCssArray(
-                option.title.padding
-            );
-
-            titleOption = option.title;
-            titleOption.textStyle = zrUtil.merge(
-                titleOption.textStyle,
-                ecConfig.textStyle,
-                {
-                    'overwrite': false,
-                    'recursive': false
-                }
-            );
-            titleOption.subtextStyle = zrUtil.merge(
-                titleOption.subtextStyle,
-                ecConfig.textStyle,
-                {
-                    'overwrite': false,
-                    'recursive': false
-                }
-            );
-
-            self.clear();
-            _buildShape();
+                option.title = self.reformOption(option.title);
+                // 补全padding属性
+                option.title.padding = self.reformCssArray(
+                    option.title.padding
+                );
+    
+                titleOption = option.title;
+                titleOption.textStyle = zrUtil.merge(
+                    titleOption.textStyle,
+                    ecConfig.textStyle,
+                    {
+                        'overwrite': false,
+                        'recursive': false
+                    }
+                );
+                titleOption.subtextStyle = zrUtil.merge(
+                    titleOption.subtextStyle,
+                    ecConfig.textStyle,
+                    {
+                        'overwrite': false,
+                        'recursive': false
+                    }
+                );
+    
+                self.clear();
+                _buildShape();
+            }
         }
 
         self.init = init;
+        self.refresh = refresh;
 
         init(option);
     }

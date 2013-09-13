@@ -29,6 +29,7 @@ define(function() {
         COMPONENT_TYPE_TOOLTIP: 'tooltip',
         COMPONENT_TYPE_GRID: 'grid',
         COMPONENT_TYPE_AXIS: 'axis',
+        COMPONENT_TYPE_POLAR: 'polar',
         COMPONENT_TYPE_X_AXIS: 'xAxis',
         COMPONENT_TYPE_Y_AXIS: 'yAxis',
         COMPONENT_TYPE_AXIS_CATEGORY: 'categoryAxis',
@@ -213,8 +214,10 @@ define(function() {
         grid: {
             x: 80,
             y: 60,
-            // width: {totalWidth} - (2 * x),
-            // height: {totalHeight} - (2 * y)
+            x2: 80,
+            y2: 60,
+            // width: {totalWidth} - x - x2,
+            // height: {totalHeight} - y - y2,
             backgroundColor: '#fff',
             borderWidth: 1,
             borderColor: '#ccc'
@@ -323,6 +326,46 @@ define(function() {
             }
         },
 
+        polar : {
+            startAngle : 90,      
+            splitNumber : 5,
+            name : {
+                show: true,
+                // formatter: null,
+                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: '#333'
+                }
+            },
+            axisLine: {            // 坐标轴线
+                show: true,        // 默认显示，属性show控制显示与否
+                lineStyle: {       // 属性lineStyle控制线条样式
+                    color: '#ccc',
+                    width: 1,
+                    type: 'solid'
+                }
+            },
+            axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
+                show: false,
+                // formatter: null,
+                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: '#333'
+                }
+            },
+            splitArea : {
+                show : true,
+                areaStyle : {
+                    color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']
+                }
+            },
+            splitLine : {
+                show : true,
+                lineStyle : {
+                    width : 1,
+                    color : '#ccc'
+                }
+            }
+        },
+
         // 柱形图默认参数
         bar: {
             // stack: null
@@ -353,8 +396,9 @@ define(function() {
                     // color: 各异,
                 }
             },
-            //symbol: null,     // 拐点图形类型，非标准参数
-            symbolSize: 4           // 可计算特性参数，空数据拖拽提示图形大小
+            //symbol: null,         // 拐点图形类型，非标准参数
+            symbolSize: 4,          // 可计算特性参数，空数据拖拽提示图形大小
+            showAllSymbol: false    // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
         },
         
         // K线图默认参数
@@ -385,6 +429,25 @@ define(function() {
             symbolSize: 4,       // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             large: false,        // 大规模散点图
             largeThreshold: 2000 // 大规模阀值，large为true且数据量大于largeThreshold才启用大规模模式
+        },
+
+        // 雷达图默认参数
+        radar : {
+            polarIndex: 0,
+            itemStyle: {
+                normal: {
+                    // color: 各异,
+                    lineStyle: {
+                        width: 2,
+                        type: 'solid'
+                    }
+                },
+                emphasis: {
+                    // color: 各异,
+                }
+            },
+            //symbol: null,         // 拐点图形类型，非标准参数
+            symbolSize: 2           // 可计算特性参数，空数据拖拽提示图形大小
         },
 
         // 饼图默认参数
@@ -557,6 +620,7 @@ define(function() {
         nameConnector: ' & ',
         valueConnector: ' : ',
         animation: true,
+        addDataAnimation: true,         // 动态数据接口是否开启动画效果
         animationDuration: 2000,
         animationEasing: 'ExponentialOut'    //BounceOut
     };

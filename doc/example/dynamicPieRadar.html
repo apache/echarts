@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+
+    <script src="../asset/js/esl/esl.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+</head>
+
+<body>
+    <!-- NAVBAR
+    ================================================== -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="../../index.html">ECharts</a>
+          <div class="nav-collapse collapse">
+              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
+              <ul class="nav">
+                <li><a href="../../index.html"><i class="icon-home icon-white"></i> Home</a></li>
+                <li class="active"><a href="../example.html" class="active">Example</a></li>
+                <li><a href="../doc.html" >API &amp; Doc</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a id="last-release-link" href="https://github.com/ecomfe/echarts/archive/1.1.0.zip">ZIP (1.1.0)</a></li>
+                    <li><a id="last-release-link" href=""> </a></li>
+                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
+                  </ul>
+                </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
+                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
+                    <li class="divider"></li>
+                    <!--li class="nav-header">Library</li-->
+                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
+                    
+                  </ul>
+                </li>
+              </ul>
+           </div><!--/.nav-collapse -->
+        </div><!-- /.container -->
+      </div><!-- /.navbar-inner -->
+    </div><!-- /.navbar-wrapper -->
+
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div id="sidebar-code" class="span4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+option = {
+    title : {
+        text: '动态数据',
+        subtext: '纯属虚构'
+    },
+    tooltip : {
+        trigger: 'item'
+    },
+    legend: {
+        data:['随机数据1','随机数据2','随机数据3','随机数据4','随机数据5']
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : true,
+            dataView : {readOnly: false},
+            restore : true,
+            saveAsImage : true
+        }
+    },
+    polar : [
+        {
+            indicator : [
+                { text : '指标一' },
+                { text : '指标二' },
+                { text : '指标三' },
+                { text : '指标四' },
+                { text : '指标五' }
+            ],
+            center : [document.getElementById('main').offsetWidth - 250, 225],
+            radius : 100
+        }
+    ],
+    calculable : false,
+    series : [
+        {
+            name:'pie',
+            type:'pie',
+            radius : [0, 110],
+            center: [250, 225],
+            data: (function(){
+                var res = [];
+                var len = 0;
+                while (len++ < 5) {
+                    res.push({
+                        name: '随机数据' + len,
+                        value: Math.round(Math.random()*10)
+                    });
+                }
+                return res;
+            })()
+        },
+        {
+            name: 'radar',
+            type: 'radar',
+            itemStyle: {normal: {areaStyle: {type: 'default'}}},
+            data: (function(){
+                var res = [];
+                var len = 0;
+                while (len++ < 3) {
+                    res.push({
+                        name: 'data' + len,
+                        value: [
+                            Math.round(Math.random()*100),
+                            Math.round(Math.random()*100),
+                            Math.round(Math.random()*100),
+                            Math.round(Math.random()*100),
+                            Math.round(Math.random()*100)
+                        ]
+                    });
+                }
+                return res;
+            })()
+        }
+    ]
+};
+var lastIndex = 5;
+var axisData;
+clearInterval(timeTicket);
+timeTicket = setInterval(function(){
+    lastIndex += 1;
+    // 动态数据接口 addData
+    myChart.addData([
+        [
+            0,        // 系列索引
+            {         // 新增数据
+                name: '随机数据' + lastIndex,
+                value: Math.round(Math.random()*10)
+            }, 
+            false,     // 新增数据是否从队列头部插入
+            false,     // 是否增加队列长度，false则自定删除原有数据，队头插入删队尾，队尾插入删队头
+            '随机数据' + lastIndex
+        ],
+        [
+            1,        // 系列索引
+            {         // 新增数据
+                name: 'data' + lastIndex,
+                value: [
+                    Math.round(Math.random()*100),
+                    Math.round(Math.random()*100),
+                    Math.round(Math.random()*100),
+                    Math.round(Math.random()*100),
+                    Math.round(Math.random()*100)
+                ]
+            }, 
+            false,     // 新增数据是否从队列头部插入
+            false      // 是否增加队列长度，false则自定删除原有数据，队头插入删队尾，队尾插入删队头
+        ]
+    ]);
+}, 2000);
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="span8">
+                <div id="main" class="main"></div>
+                <div>
+                    <button onclick="refresh(true)">Refresh ~</button>
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        <hr>
+        <!-- FOOTER -->
+        <footer>
+          <p class="pull-right"><a href="#">Back to top</a></p>
+          <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="../changelog.html" target="_blank">Changelog</a></p>
+        </footer>
+    </div><!--/.fluid-container-->
+
+    <script src="../asset/js/jquery.js"></script>
+    <script src="../asset/js/bootstrap-transition.js"></script>
+    <script src="../asset/js/bootstrap-alert.js"></script>
+    <script src="../asset/js/bootstrap-modal.js"></script>
+    <script src="../asset/js/bootstrap-dropdown.js"></script>
+    <script src="../asset/js/bootstrap-scrollspy.js"></script>
+    <script src="../asset/js/bootstrap-tab.js"></script>
+    <script src="../asset/js/bootstrap-tooltip.js"></script>
+    <script src="../asset/js/bootstrap-popover.js"></script>
+    <script src="../asset/js/bootstrap-button.js"></script>
+    <script src="../asset/js/bootstrap-collapse.js"></script>
+    <script src="../asset/js/bootstrap-carousel.js"></script>
+    <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script type="text/javascript">var timeTicket;</script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>

@@ -60,12 +60,21 @@ define(function (require) {
             );
         }
 
+        /**
+         * 刷新
+         */
+        function refresh(newOption) {
+            if (newOption) {
+                newOption.island = self.reformOption(newOption.island);
+                option = newOption;
+    
+                _nameConnector = option.nameConnector;
+                _valueConnector = option.valueConnector;
+            }
+        }
+        
         function render(newOption) {
-            newOption.island = self.reformOption(newOption.island);
-            option = newOption;
-
-            _nameConnector = option.nameConnector;
-            _valueConnector = option.valueConnector;
+            refresh(newOption);
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 zr.addShape(self.shapeList[i]);
@@ -231,6 +240,7 @@ define(function (require) {
             zrEvent.stop(event);
         };
 
+        self.refresh = refresh;
         self.render = render;
         self.resize = resize;
         self.getOption = getOption;

@@ -225,7 +225,9 @@ define(function(require) {
                 },
                 highlightStyle : {
                     color : emphasisColor || normalColor || defaultColor
-                }
+                },
+                _seriesIndex : seriesIndex, 
+                _dataIndex : dataIndex
             };
             
             if (isSelected) {
@@ -401,7 +403,9 @@ define(function(require) {
                         },
                         highlightStyle : {
                             brushType : 'fill'
-                        }
+                        },
+                        _seriesIndex : seriesIndex, 
+                        _dataIndex : dataIndex
                     };
                 }
                 else if (labelControl.position == 'center') {
@@ -423,7 +427,9 @@ define(function(require) {
                         },
                         highlightStyle : {
                             brushType : 'fill'
-                        }
+                        },
+                        _seriesIndex : seriesIndex, 
+                        _dataIndex : dataIndex
                     };
                 }
                 else {
@@ -529,7 +535,9 @@ define(function(require) {
                         strokeColor : lineStyle.color || defaultColor,
                         lineType : lineStyle.type,
                         lineWidth : lineStyle.width
-                    }
+                    },
+                    _seriesIndex : seriesIndex, 
+                    _dataIndex : dataIndex
                 };
             }
             else {
@@ -632,7 +640,6 @@ define(function(require) {
 
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
          * @param {Object} newSeries
          * @param {Object} newComponent
          */
@@ -651,6 +658,200 @@ define(function(require) {
             }
             self.clear();
             _buildShape();
+        }
+        
+        /**
+         * 动态数据增加动画 
+         * 心跳效果
+        function addDataAnimation(params) {
+            var aniMap = {}; // seriesIndex索引参数
+            for (var i = 0, l = params.length; i < l; i++) {
+                aniMap[params[i][0]] = params[i];
+            }
+            var x;
+            var y;
+            var r;
+            var seriesIndex;
+            for (var i = self.shapeList.length - 1; i >= 0; i--) {
+                seriesIndex = ecData.get(self.shapeList[i], 'seriesIndex');
+                if (aniMap[seriesIndex]) {
+                    if (self.shapeList[i].shape == 'sector'
+                        || self.shapeList[i].shape == 'circle'
+                        || self.shapeList[i].shape == 'ring'
+                    ) {
+                        r = self.shapeList[i].style.r;
+                        zr.animate(self.shapeList[i].id, 'style')
+                            .when(
+                                300,
+                                {r : r * 0.9}
+                            )
+                            .when(
+                                500,
+                                {r : r}
+                            )
+                            .start();
+                    }
+                }
+            }
+        }
+         */
+        
+        /**
+         * 动态数据增加动画 
+         */
+        function addDataAnimation(params) {
+            var aniMap = {}; // seriesIndex索引参数
+            for (var i = 0, l = params.length; i < l; i++) {
+                aniMap[params[i][0]] = params[i];
+            }
+            
+            // 构建新的饼图匹配差异做动画
+            var sectorMap = {};
+            var textMap = {};
+            var lineMap = {};
+            var backupShapeList = zrUtil.clone(self.shapeList);
+            self.shapeList = [];
+            
+            var seriesIndex;
+            var isHead;
+            var dataGrow;
+            var deltaIdxMap = {};   // 修正新增数据后会对dataIndex产生错位匹配
+            for (var i = 0, l = params.length; i < l; i++) {
+                seriesIndex = params[i][0];
+                isHead = params[i][2];
+                dataGrow = params[i][3];
+                if (series[seriesIndex]
+                    && series[seriesIndex].type == ecConfig.CHART_TYPE_PIE
+                ) {
+                    if (isHead) {
+                        if (!dataGrow) {
+                            sectorMap[
+                                seriesIndex 
+                                + '_' 
+                                + series[seriesIndex].data.length
+                            ] = 'delete';
+                        }
+                        deltaIdxMap[seriesIndex] = 1;
+                    }
+                    else {
+                        if (!dataGrow) {
+                            sectorMap[seriesIndex + '_-1'] = 'delete';
+                            deltaIdxMap[seriesIndex] = -1;
+                        }
+                        else {
+                            deltaIdxMap[seriesIndex] = 0;
+                        }
+                    }
+                    _buildSinglePie(seriesIndex);
+                }
+            }
+            var dataIndex;
+            var key;
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                seriesIndex = self.shapeList[i]._seriesIndex;
+                dataIndex = self.shapeList[i]._dataIndex;
+                key = seriesIndex + '_' + dataIndex;
+                // map映射让n*n变n
+                switch (self.shapeList[i].shape) {
+                    case 'sector' :
+                        sectorMap[key] = self.shapeList[i];
+                        break;
+                    case 'text' :
+                        textMap[key] = self.shapeList[i];
+                        break;
+                    case 'line' :
+                        lineMap[key] = self.shapeList[i];
+                        break;
+                }
+            }
+            self.shapeList = [];
+            var targeSector;
+            for (var i = 0, l = backupShapeList.length; i < l; i++) {
+                seriesIndex = backupShapeList[i]._seriesIndex;
+                if (aniMap[seriesIndex]) {
+                    dataIndex = backupShapeList[i]._dataIndex
+                                + deltaIdxMap[seriesIndex];
+                    key = seriesIndex + '_' + dataIndex;
+                    targeSector = sectorMap[key];
+                    if (!targeSector) {
+                        continue;
+                    }
+                    if (backupShapeList[i].shape == 'sector') {
+                        if (targeSector != 'delete') {
+                            // 原有扇形
+                            zr.animate(backupShapeList[i].id, 'style')
+                                .when(
+                                    400,
+                                    {
+                                        startAngle : 
+                                            targeSector.style.startAngle,
+                                        endAngle : 
+                                            targeSector.style.endAngle
+                                    }
+                                )
+                                .start();
+                        }
+                        else {
+                            // 删除的扇形
+                            zr.animate(backupShapeList[i].id, 'style')
+                                .when(
+                                    400,
+                                    deltaIdxMap[seriesIndex] < 0
+                                    ? {
+                                        endAngle : 
+                                            backupShapeList[i].style.startAngle
+                                      }
+                                    : {
+                                        startAngle :
+                                            backupShapeList[i].style.endAngle
+                                      }
+                                )
+                                .start();
+                        }
+                    }
+                    else if (backupShapeList[i].shape == 'text'
+                             || backupShapeList[i].shape == 'line'
+                    ) {
+                        if (targeSector == 'delete') {
+                            // 删除逻辑一样
+                            zr.delShape(backupShapeList[i].id);
+                        }
+                        else {
+                            // 懒得新建变量了，借用一下
+                            switch (backupShapeList[i].shape) {
+                                case 'text':
+                                    targeSector = textMap[key];
+                                    zr.animate(backupShapeList[i].id, 'style')
+                                        .when(
+                                            400,
+                                            {
+                                                x :targeSector.style.x,
+                                                y :targeSector.style.y
+                                            }
+                                        )
+                                        .start();
+                                    break;
+                                case 'line':
+                                    targeSector = lineMap[key];
+                                    zr.animate(backupShapeList[i].id, 'style')
+                                        .when(
+                                            400,
+                                            {
+                                                xStart:targeSector.style.xStart,
+                                                yStart:targeSector.style.yStart,
+                                                xEnd : targeSector.style.xEnd,
+                                                yEnd : targeSector.style.yEnd
+                                            }
+                                        )
+                                        .start();
+                                    break;
+                            }
+                            
+                        }
+                    }
+                }
+            }
+            self.shapeList = backupShapeList;
         }
 
         /**
@@ -923,6 +1124,7 @@ define(function(require) {
         // 接口方法
         self.init = init;
         self.refresh = refresh;
+        self.addDataAnimation = addDataAnimation;
         self.animation = animation;
         self.onclick = onclick;
         self.ondrop = ondrop;

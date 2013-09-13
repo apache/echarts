@@ -35,6 +35,7 @@ define(function (require) {
         var _endShape;
 
         var _syncTicket;
+        var _isSilence = false;
 
         var _originalData;
 
@@ -492,14 +493,12 @@ define(function (require) {
                 zlevel : _zlevelBase
             };
 
-            if (!zoomOption.zoomLock) {
-                _startShape.draggable = true;
-                _startShape.ondrift = _ondrift;
-                _startShape.ondragend = _ondragend;
-                _endShape.draggable = true;
-                _endShape.ondrift = _ondrift;
-                _endShape.ondragend = _ondragend;
-            }
+            _startShape.draggable = true;
+            _startShape.ondrift = _ondrift;
+            _startShape.ondragend = _ondragend;
+            _endShape.draggable = true;
+            _endShape.ondrift = _ondrift;
+            _endShape.ondragend = _ondragend;
 
             if (zoomOption.orient == 'horizontal') {
                 // 头
@@ -554,6 +553,11 @@ define(function (require) {
          * 拖拽范围控制
          */
         function _ondrift(e, dx, dy) {
+            if (zoomOption.zoomLock) {
+                // zoomLock时把handle转成filler的拖拽
+                e = _fillerShae;
+            }
+            
             var detailSize = e._type == 'filler' ? _handleSize : 0;
             if (zoomOption.orient == 'horizontal') {
                 if (e.style.x + dx - detailSize <= _location.x) {
@@ -730,7 +734,7 @@ define(function (require) {
                 }
             }
 
-            if (zoomOption.realtime || dispatchNow) {
+            if (!_isSilence && (zoomOption.realtime || dispatchNow)) {
                 messageCenter.dispatch(
                     ecConfig.EVENT.DATA_ZOOM,
                     null,
@@ -802,7 +806,7 @@ define(function (require) {
             // 别status = {}赋值啊！！
             status.dragOut = true;
             status.dragIn = true;
-            if (!zoomOption.realtime) {
+            if (!_isSilence && !zoomOption.realtime) {
                 messageCenter.dispatch(
                     ecConfig.EVENT.DATA_ZOOM,
                     null,
@@ -936,27 +940,17 @@ define(function (require) {
                     start = 0;
                 }
                 for (var j = 0, k = curData.length; j < k; j++) {
-                    if (typeof optionBackup.series[i].data[j + start].value 
-                        != 'undefined'
-                    ) {
-                        optionBackup.series[i].data[j + start].value 
-                            = curData[j].value;
-                        if (target[i]) {
-                            // 同步内部备份
-                            target[i][j + start].value 
-                                = curData[j].value;
-                        }
-                    }
-                    else {
-                        optionBackup.series[i].data[j + start] = curData[j];
-                        if (target[i]) {
-                            // 同步内部备份
-                            target[i][j + start] 
-                                = curData[j];
-                        }
+                    optionBackup.series[i].data[j + start] = curData[j];
+                    if (target[i]) {
+                        // 同步内部备份
+                        target[i][j + start] 
+                            = curData[j];
                     }
                 }
             }
+        }
+        function silence(s) {
+            _isSilence = s;
         }
 
         function init(newOption) {
@@ -984,13 +978,45 @@ define(function (require) {
                 _buildShape();
             }
         }
+
+        /**
+         * 避免dataZoom带来两次refresh，不设refresh接口，resize重复一下buildshape逻辑 
+         */
+        function resize() {
+            self.clear();
+            
+            // 自己show 或者 toolbox启用且dataZoom有效
+            if (option.dataZoom.show
+                || (
+                    self.deepQuery([option], 'toolbox.show')
+                    && self.deepQuery([option], 'toolbox.feature.dataZoom')
+                )
+            ) {
+                _location = _getLocation();
+                _zoom =  _getZoom();
+            }
+            
+            if (option.dataZoom.show) {
+                _buildBackground();
+                _buildDataBackground();
+                _buildFiller();
+                _bulidHandle();
+    
+                for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                    self.shapeList[i].id = zr.newShapeId(self.type);
+                    zr.addShape(self.shapeList[i]);
+                }
+            }
+        }
         
         self.init = init;
+        self.resize = resize;
         self.syncBackupData = syncBackupData;
         self.absoluteZoom = absoluteZoom;
         self.rectZoom = rectZoom;
         self.ondragend = ondragend;
         self.ondataZoom = ondataZoom;
+        self.silence = silence;
 
         init(option);
     }
