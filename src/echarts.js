@@ -79,6 +79,8 @@ define(function(require) {
         var _selectedMap;
         var _island;
         var _toolbox;
+        
+        var _refreshInside;     // 内部刷新标志位
 
         // 初始化::构造函数
         _init();
@@ -151,6 +153,7 @@ define(function(require) {
             require('./component/tooltip');
             require('./component/toolbox');
             require('./component/dataView');
+            require('./component/polar');
             // 工具箱
             var Toolbox = componentLibrary.get('toolbox');
             _toolbox = new Toolbox(_messageCenter, _zr, dom);
@@ -357,7 +360,43 @@ define(function(require) {
          * 动态类型切换响应 
          */
         function _onmagicTypeChanged() {
-            var magicOption = _toolbox.getMagicOption();
+            _render(_getMagicOption());
+        }
+
+        /**
+         * 数据视图修改响应 
+         */
+        function _ondataViewChanged(param) {
+            _syncBackupData(param.option);
+            _messageCenter.dispatch(
+                ecConfig.EVENT.DATA_CHANGED,
+                null,
+                param
+            );
+            _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+        }
+
+        /**
+         * 还原 
+         */
+        function _onrestore() {
+            self.restore();
+        }
+
+        /**
+         * 刷新 
+         */
+        function _onrefresh(param) {
+            _refreshInside = true;
+            self.refresh(param);
+            _refreshInside = false;
+        }
+
+        /**
+         * 当前正在使用的option，还原可能存在的dataZoom
+         */
+        function _getMagicOption(targetOption) {
+            var magicOption = targetOption || _toolbox.getMagicOption();
             var len;
             // 横轴数据还原
             if (_optionBackup.xAxis) {
@@ -392,37 +431,10 @@ define(function(require) {
             while (len--) {
                 magicOption.series[len].data = _optionBackup.series[len].data;
             }
-
-            _render(magicOption);
+            
+            return magicOption;
         }
-
-        /**
-         * 数据视图修改响应 
-         */
-        function _ondataViewChanged(param) {
-            _syncBackupData(param.option);
-            _messageCenter.dispatch(
-                ecConfig.EVENT.DATA_CHANGED,
-                null,
-                param
-            );
-            _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
-        }
-
-        /**
-         * 还原 
-         */
-        function _onrestore() {
-            restore();
-        }
-
-        /**
-         * 刷新 
-         */
-        function _onrefresh(param) {
-            refresh(param);
-        }
-
+        
         /**
          * 数据修改后的反向同步备份数据 
          */
@@ -450,15 +462,7 @@ define(function(require) {
             for (var i = 0, l = curSeries.length; i < l; i++) {
                 curData = curSeries[i].data;
                 for (var j = 0, k = curData.length; j < k; j++) {
-                    if (typeof _optionBackup.series[i].data[j].value 
-                        != 'undefined'
-                    ) {
-                        _optionBackup.series[i].data[j].value 
-                            = curData[j].value;
-                    }
-                    else {
-                        _optionBackup.series[i].data[j] = curData[j];
-                    }
+                    _optionBackup.series[i].data[j] = curData[j];
                 }
             }
         }
@@ -496,7 +500,7 @@ define(function(require) {
                 );
                 _chartList.push(title);
             }
-            
+
             // 提示
             var tooltip;
             if (magicOption.tooltip) {
@@ -514,8 +518,8 @@ define(function(require) {
                 );
                 _chartList.push(legend);
             }
-            
-            // 色尺
+
+            // 值域控件
             var dataRange;
             if (magicOption.dataRange) {
                 var DataRange = new componentLibrary.get('dataRange');
@@ -525,6 +529,7 @@ define(function(require) {
                 _chartList.push(dataRange);
             }
 
+            // 直角坐标系
             var grid;
             var dataZoom;
             var xAxis;
@@ -570,12 +575,29 @@ define(function(require) {
                     'yAxis'
                 );
                 _chartList.push(yAxis);
-                tooltip && tooltip.setComponent({
-                    'grid' : grid,
-                    'xAxis' : xAxis,
-                    'yAxis' : yAxis
-                });
             }
+
+            // 极坐标系
+            var polar;
+            if (magicOption.polar) {
+                var Polar = componentLibrary.get('polar');
+                polar = new Polar(
+                    _messageCenter,
+                    _zr,
+                    magicOption,
+                    {
+                        'legend' : legend
+                    }
+                );
+                _chartList.push(polar);
+            }
+            
+            tooltip && tooltip.setComponent({
+                'grid' : grid,
+                'xAxis' : xAxis,
+                'yAxis' : yAxis,
+                'polar' : polar
+            });
 
             var ChartClass;
             var chartType;
@@ -600,7 +622,8 @@ define(function(require) {
                                 'dataRange' : dataRange,
                                 'grid' : grid,
                                 'xAxis' : xAxis,
-                                'yAxis' : yAxis
+                                'yAxis' : yAxis,
+                                'polar' : polar
                             }
                         );
                         _chartList.push(chart);
@@ -644,19 +667,47 @@ define(function(require) {
 
         /**
          * 刷新 
+         * @param {Object=} param，可选参数，用于附带option，内部同步用，外部不建议带入数据修改，无法同步 
          */
         function refresh(param) {
-            if (param.option) {
+            param = param || {};
+            var magicOption = param.option;
+            
+            // 外部调用的refresh且有option带入
+            if (!_refreshInside && param.option) {
+                // 做简单的差异合并去同步内部持有的数据克隆，不建议带入数据
+                // 开启数据区域缩放、拖拽重计算、数据视图可编辑模式情况下，当用户产生了数据变化后无法同步
+                // 如有带入option存在数据变化，请重新setOption
                 var zrUtil = require('zrender/tool/util');
-                _optionRestore = zrUtil.clone(param.option);
-                _optionBackup = zrUtil.clone(param.option);
-                _option = zrUtil.clone(param.option);
+                if (_optionBackup.toolbox
+                    && _optionBackup.toolbox.show
+                    && _optionBackup.toolbox.feature.magicType
+                    && _optionBackup.toolbox.feature.magicType.length > 0
+                ) {
+                    magicOption = _getMagicOption();
+                }
+                else {
+                    magicOption = _getMagicOption(_island.getOption());
+                }
+                zrUtil.merge(
+                    magicOption, param.option,
+                    { 'overwrite': true, 'recursive': true }
+                );
+                zrUtil.merge(
+                    _optionBackup, param.option,
+                    { 'overwrite': true, 'recursive': true }
+                );
+                zrUtil.merge(
+                    _optionRestore, param.option,
+                    { 'overwrite': true, 'recursive': true }
+                );
+                _island.refresh(magicOption);
+                _toolbox.refresh(magicOption);
             }
             
-            // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
-            // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
+            // 先来后到，安顺序刷新各种图表，图表内部refresh优化检查magicOption，无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
-                _chartList[i].refresh && _chartList[i].refresh(param.option);
+                _chartList[i].refresh && _chartList[i].refresh(magicOption);
             }
             _zr.refresh();
         }
@@ -719,6 +770,9 @@ define(function(require) {
             if (typeof _option.animationEasing == 'undefined') {
                 _option.animationEasing = ecConfig.animationEasing;
             }
+            if (typeof _option.addDataAnimation == 'undefined') {
+                _option.addDataAnimation = ecConfig.addDataAnimation;
+            }
 
             var zrColor = require('zrender/tool/color');
             // 数值系列的颜色列表，不传则采用内置颜色，可配数组
@@ -772,38 +826,93 @@ define(function(require) {
         }
         
         /**
-         * 动态数据添加，队尾添加
-         * 形参为单组数据参数，多组时为数据，内容同[seriesIdx, data, isShift, axisData]
+         * 动态数据添加
+         * 形参为单组数据参数，多组时为数据，内容同[seriesIdx, data, isShift, additionData]
          * @param {number} seriesIdx 系列索引
          * @param {number | Object} data 增加数据
          * @param {boolean=} isHead 是否队头加入，默认，不指定或false时为队尾插入
          * @param {boolean=} dataGrow 是否增长数据队列长度，默认，不指定或false时移出目标数组对位数据
-         * @param {string=} axisData 是否增加类目轴数据，附加操作同isHead和dataGrow
+         * @param {string=} additionData 是否增加类目轴(饼图为图例)数据，附加操作同isHead和dataGrow
          */
-        function addData(seriesIdx, data, isHead, dataGrow, axisData) {
+        function addData(seriesIdx, data, isHead, dataGrow, additionData) {
+            var zrUtil = require('zrender/tool/util');
             var params = seriesIdx instanceof Array
                          ? seriesIdx
-                         : [[seriesIdx, data, isHead, axisData]];
+                         : [[seriesIdx, data, isHead, dataGrow, additionData]];
             var axisIdx;
+            var legendDataIdx;
+            var magicOption;
+            if (_optionBackup.toolbox
+                && _optionBackup.toolbox.show
+                && _optionBackup.toolbox.feature.magicType
+                && _optionBackup.toolbox.feature.magicType.length > 0
+            ) {
+                magicOption = _getMagicOption();
+            }
+            else {
+                magicOption = _getMagicOption(_island.getOption());
+            }
+            //_optionRestore 和 _optionBackup都要同步
             for (var i = 0, l = params.length; i < l; i++) {
                 seriesIdx = params[i][0];
                 data = params[i][1];
                 isHead = params[i][2];
                 dataGrow = params[i][3];
-                axisData = params[i][4];
+                additionData = params[i][4];
                 if (_optionRestore.series[seriesIdx]) {
                     if (isHead) {
                         _optionRestore.series[seriesIdx].data.unshift(data);
-                        !dataGrow 
-                        && _optionRestore.series[seriesIdx].data.pop();
+                        _optionBackup.series[seriesIdx].data.unshift(data);
+                        if (!dataGrow) {
+                            _optionRestore.series[seriesIdx].data.pop();
+                            data = _optionBackup.series[seriesIdx].data.pop();
+                        }
                     }
                     else {
                         _optionRestore.series[seriesIdx].data.push(data);
-                        !dataGrow 
-                        && _optionRestore.series[seriesIdx].data.shift();
+                        _optionBackup.series[seriesIdx].data.push(data);
+                        if (!dataGrow) {
+                            _optionRestore.series[seriesIdx].data.shift();
+                            data = _optionBackup.series[seriesIdx].data.shift();
+                        }
                     }
                     
-                    if (typeof axisData != 'undefined') {
+                    if (typeof additionData != 'undefined'
+                        && _optionRestore.series[seriesIdx].type 
+                           == ecConfig.CHART_TYPE_PIE
+                        && _optionBackup.legend 
+                        && _optionBackup.legend.data
+                    ) {
+                        magicOption.legend.data = _optionBackup.legend.data;
+                        if (isHead) {
+                            _optionRestore.legend.data.unshift(additionData);
+                            _optionBackup.legend.data.unshift(additionData);
+                        }
+                        else {
+                            _optionRestore.legend.data.push(additionData);
+                            _optionBackup.legend.data.push(additionData);
+                        }
+                        if (!dataGrow) {
+                            legendDataIdx = zrUtil.indexOf(
+                                _optionBackup.legend.data,
+                                data.name
+                            );
+                            legendDataIdx != -1
+                            && (
+                                _optionRestore.legend.data.splice(
+                                    legendDataIdx, 1
+                                ),
+                                _optionBackup.legend.data.splice(
+                                    legendDataIdx, 1
+                                )
+                            );
+                        }
+                        _selectedMap[additionData] = true;
+                    } 
+                    else  if (typeof additionData != 'undefined'
+                        && typeof _optionRestore.xAxis != 'undefined'
+                        && typeof _optionRestore.yAxis != 'undefined'
+                    ) {
                         // x轴类目
                         axisIdx = _optionRestore.series[seriesIdx].xAxisIndex
                                   || 0;
@@ -813,17 +922,27 @@ define(function(require) {
                         ) {
                             if (isHead) {
                                 _optionRestore.xAxis[axisIdx].data.unshift(
-                                    axisData
+                                    additionData
                                 );
-                                !dataGrow 
-                                && _optionRestore.xAxis[axisIdx].data.pop();
+                                _optionBackup.xAxis[axisIdx].data.unshift(
+                                    additionData
+                                );
+                                if (!dataGrow) {
+                                    _optionRestore.xAxis[axisIdx].data.pop();
+                                    _optionBackup.xAxis[axisIdx].data.pop();
+                                }
                             }
                             else {
                                 _optionRestore.xAxis[axisIdx].data.push(
-                                    axisData
+                                    additionData
                                 );
-                                !dataGrow 
-                                && _optionRestore.xAxis[axisIdx].data.shift();
+                                _optionBackup.xAxis[axisIdx].data.push(
+                                    additionData
+                                );
+                                if (!dataGrow) {
+                                    _optionRestore.xAxis[axisIdx].data.shift();
+                                    _optionBackup.xAxis[axisIdx].data.shift();
+                                }
                             }
                         }
                         
@@ -833,28 +952,58 @@ define(function(require) {
                         if (_optionRestore.yAxis[axisIdx].type == 'category') {
                             if (isHead) {
                                 _optionRestore.yAxis[axisIdx].data.unshift(
-                                    axisData
+                                    additionData
                                 );
-                                !dataGrow 
-                                && _optionRestore.yAxis[axisIdx].data.pop();
+                                _optionBackup.yAxis[axisIdx].data.unshift(
+                                    additionData
+                                );
+                                if (!dataGrow) {
+                                    _optionRestore.yAxis[axisIdx].data.pop();
+                                    _optionBackup.yAxis[axisIdx].data.pop();
+                                }
                             }
                             else {
                                 _optionRestore.yAxis[axisIdx].data.push(
-                                    axisData
+                                    additionData
                                 );
-                                !dataGrow 
-                                && _optionRestore.yAxis[axisIdx].data.shift();
+                                _optionBackup.yAxis[axisIdx].data.push(
+                                    additionData
+                                );
+                                if (!dataGrow) {
+                                    _optionRestore.yAxis[axisIdx].data.shift();
+                                    _optionBackup.yAxis[axisIdx].data.shift();
+                                }
                             }
                         }
                     }
                 }
             }
-            
-            _messageCenter.dispatch(
-                ecConfig.EVENT.REFRESH,
-                '',
-                {option: _optionRestore}
-            );
+            magicOption.legend && (magicOption.legend.selected = _selectedMap);
+            // dataZoom同步一下数据
+            for (var i = 0, l = _chartList.length; i < l; i++) {
+                if (magicOption.addDataAnimation 
+                    && _chartList[i].addDataAnimation
+                ) {
+                    _chartList[i].addDataAnimation(params);
+                }
+                if (_chartList[i].type 
+                    == ecConfig.COMPONENT_TYPE_DATAZOOM
+                ) {
+                    _chartList[i].silence(true);
+                    _chartList[i].init(magicOption);
+                    _chartList[i].silence(false);
+                }
+            }
+            _island.refresh(magicOption);
+            _toolbox.refresh(magicOption);
+            setTimeout(function(){
+                _messageCenter.dispatch(
+                    ecConfig.EVENT.REFRESH,
+                    '',
+                    {option: magicOption}
+                );
+            }, magicOption.addDataAnimation ? 500 : 0);
+            return self;
         }
 
         /**
@@ -936,11 +1085,11 @@ define(function(require) {
             // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
                 _chartList[i].resize && _chartList[i].resize();
-                _chartList[i].refresh && _chartList[i].refresh();
             }
             _island.resize();
             _toolbox.resize();
             _zr.refresh();
+            return self;
         }
 
         /**

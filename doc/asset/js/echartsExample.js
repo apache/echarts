@@ -92,7 +92,7 @@ else {
             'echarts/chart/scatter': fileLocation,
             'echarts/chart/k': fileLocation,
             'echarts/chart/pie': fileLocation,
-            // 'echarts/chart/radar': fileLocation,
+            'echarts/chart/radar': fileLocation,
             'echarts/chart/map': fileLocation,
             'echarts/chart/force': fileLocation
         }
@@ -108,8 +108,7 @@ require(
         'echarts/chart/scatter',
         'echarts/chart/k',
         'echarts/chart/pie',
-        'echarts',
-        //'echarts/chart/radar',
+        'echarts/chart/radar',
         'echarts/chart/force',
         needMap() ? 'echarts/chart/map' : 'echarts'
     ],

@@ -82,4 +82,6 @@ img.flex-active {border-bottom:10px solid #c3e7fd}
     font-weight: bolder;
     text-align:center;
     background-color:#c3e7fd;
+    height:30px;
+    line-height:30px;
 }

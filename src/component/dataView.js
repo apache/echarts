@@ -35,7 +35,7 @@ define(function (require) {
         var _gCssText = 'position:absolute;'
                         + 'display:block;'
                         + 'overflow:hidden;'
-                        + 'transition:height 0.8s,background-color 1s;;'
+                        + 'transition:height 0.8s,background-color 1s;'
                         + '-moz-transition:height 0.8s,background-color 1s;'
                         + '-webkit-transition:height 0.8s,background-color 1s;'
                         + '-o-transition:height 0.8s,background-color 1s;'

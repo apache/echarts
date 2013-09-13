@@ -506,15 +506,18 @@ define(function(require) {
                         singlePL = seriesPL[i];
                         for (var j = 0, k = singlePL.length; j < k; j++) {
                             data = serie.data[singlePL[j][2]];
-                            if ((categoryAxis.isMainAxis(singlePL[j][2]) // 主轴
-                                 && self.deepQuery(                      // 非空
-                                        [data, serie], 'symbol'
-                                    ) != 'none'
-                                )
-                                || self.deepQuery(                      // 可计算
+                            if (self.deepQuery(
+                                    [data, serie], 'showAllSymbol'
+                                ) // 全显示
+                                || (categoryAxis.isMainAxis(singlePL[j][2])
+                                    && self.deepQuery(
+                                           [data, serie], 'symbol'
+                                       ) != 'none'
+                                   ) // 主轴非空
+                                || self.deepQuery(
                                         [data, serie, option],
                                         'calculable'
-                                   )
+                                   ) // 可计算
                             ) {
                                 self.shapeList.push(_getSymbol(
                                     seriesIndex,
@@ -692,13 +695,14 @@ define(function(require) {
 
             itemShape._x = x;
             itemShape._y = y;
+            itemShape._dataIndex = dataIndex;
+            itemShape._seriesIndex = seriesIndex;
 
             return itemShape;
         }
 
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
          * @param {Object} newSeries
          * @param {Object} newComponent
          */
@@ -719,6 +723,104 @@ define(function(require) {
             _buildShape();
         }
 
+        /**
+         * 动态数据增加动画 
+         */
+        function addDataAnimation(params) {
+            var aniMap = {}; // seriesIndex索引参数
+            for (var i = 0, l = params.length; i < l; i++) {
+                aniMap[params[i][0]] = params[i];
+            }
+            var x;
+            var dx;
+            var y;
+            var dy;
+            var seriesIndex;
+            var pointList;
+            var isHorizontal; // 是否横向布局， isHorizontal;
+            for (var i = self.shapeList.length - 1; i >= 0; i--) {
+                seriesIndex = self.shapeList[i]._seriesIndex;
+                if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
+                    // 有数据删除才有移动的动画
+                    if (self.shapeList[i]._main) {
+                        pointList = self.shapeList[i].style.pointList;
+                        // 主线动画
+                        dx = Math.abs(pointList[0][0] - pointList[1][0]);
+                        dy = Math.abs(pointList[0][1] - pointList[1][1]);
+                        isHorizontal = 
+                            self.shapeList[i]._orient == 'horizontal';
+                            
+                        if (aniMap[seriesIndex][2]) {
+                            // 队头加入删除末尾
+                            if (self.shapeList[i].shape == 'polygon') {
+                                //区域图
+                                var len = pointList.length;
+                                self.shapeList[i].style.pointList[len - 3]
+                                    = pointList[len - 2];
+                                isHorizontal
+                                ? (self.shapeList[i].style.pointList[len - 3][0]
+                                       = pointList[len - 4][0]
+                                  )
+                                : (self.shapeList[i].style.pointList[len - 3][1]
+                                       = pointList[len - 4][1]
+                                  );
+                                self.shapeList[i].style.pointList[len - 2]
+                                    = pointList[len - 1];
+                            }
+                            self.shapeList[i].style.pointList.pop();
+                            
+                            isHorizontal ? (x = dx, y = 0) : (x = 0, y = -dy);
+                        }
+                        else {
+                            // 队尾加入删除头部
+                            self.shapeList[i].style.pointList.shift();
+                            if (self.shapeList[i].shape == 'polygon') {
+                                //区域图
+                                var targetPoint = 
+                                    self.shapeList[i].style.pointList.pop();
+                                isHorizontal
+                                ? (targetPoint[0] = pointList[0][0])
+                                : (targetPoint[1] = pointList[0][1]);
+                                self.shapeList[i].style.pointList.push(
+                                    targetPoint
+                                );
+                            }
+                            isHorizontal ? (x = -dx, y = 0) : (x = 0, y = dy);
+                        }
+                        zr.modShape(self.shapeList[i].id, {
+                            style : {
+                                pointList : self.shapeList[i].style.pointList
+                            }
+                        });
+                    }
+                    else {
+                        // 拐点动画
+                        if (aniMap[seriesIndex][2] 
+                            && self.shapeList[i]._dataIndex 
+                                == series[seriesIndex].data.length - 1
+                        ) {
+                            // 队头加入删除末尾
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                        else if (!aniMap[seriesIndex][2] 
+                                 && self.shapeList[i]._dataIndex === 0
+                        ) {
+                            // 队尾加入删除头部
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                    }
+                    zr.animate(self.shapeList[i].id, '')
+                        .when(
+                            500,
+                            {position : [x, y]}
+                        )
+                        .start();
+                }
+            }
+        }
+        
         /**
          * 动画设定
          */
@@ -778,6 +880,7 @@ define(function(require) {
 
         self.init = init;
         self.refresh = refresh;
+        self.addDataAnimation = addDataAnimation;
         self.animation = animation;
 
         init(option, component);
