@@ -1,15 +1,15 @@
-// https://docs.google.com/presentation/d/1XgKaFEgPIzF2psVgY62-KnylV81gsjCWu999h4QtaOE/
-var fs = require("fs");
-var requirejs = require("requirejs");
-var glob = require("glob");
+//docs.google.com/presentation/d/1XgKaFEgPIzF2psVgY62-KnylV81gsjCWu999h4QtaOE/
+var fs = require('fs');
+var requirejs = require('requirejs');
+var glob = require('glob');
 
-glob("china/*.js", {}, function(er, files) {
+glob('china/*.js', {}, function(er, files) {
 
     files.forEach(function(file) {
         if (file.indexOf('_unicode') >=0 ) {
             return;
         }
-        var output = "../" + file;
+        var output = '../' + file;
         requirejs([file], function(json){
             // Meta tag
             json.UTF8Encoding = true;
@@ -17,27 +17,33 @@ glob("china/*.js", {}, function(er, files) {
             features.forEach(function(feature){
                 var encodeOffsets = feature.geometry.encodeOffsets = [];
                 var coordinates = feature.geometry.coordinates;
-                if (feature.geometry.type === "Polygon") {
+                if (feature.geometry.type === 'Polygon') {
                     coordinates.forEach(function(coordinate, idx){
-                        coordinates[idx] = encodePolygon(coordinate, encodeOffsets[idx] = []);
+                        coordinates[idx] = encodePolygon(
+                            coordinate, encodeOffsets[idx] = []
+                        );
                     });
-                } else if(feature.geometry.type === "MultiPolygon") {
+                } else if(feature.geometry.type === 'MultiPolygon') {
                     coordinates.forEach(function(polygon, idx1){
                         encodeOffsets[idx1] = [];
                         polygon.forEach(function(coordinate, idx2) {
-                            coordinates[idx1][idx2] = encodePolygon(coordinate, encodeOffsets[idx1][idx2] = []);
-                        })
+                            coordinates[idx1][idx2] = encodePolygon(
+                                coordinate, encodeOffsets[idx1][idx2] = []
+                            );
+                        });
                     });
                 }
             });
 
-            fs.writeFileSync(output, addAMDWrapper(JSON.stringify(json)), "utf8");
+            fs.writeFileSync(
+                output, addAMDWrapper(JSON.stringify(json)), 'utf8'
+            );
         });
     });
 });
 
 function encodePolygon(coordinate, encodeOffsets) {
-    var result = "";
+    var result = '';
 
     var prevX = quantize(coordinate[0][0]);
     var prevY = quantize(coordinate[0][1]);
@@ -58,15 +64,15 @@ function encodePolygon(coordinate, encodeOffsets) {
 }
 
 function addAMDWrapper(jsonStr) {
-    return ["define(function() {",
-                "    return " + jsonStr + ";",
-            "});"].join("\n");
+    return ['define(function() {',
+                '    return ' + jsonStr + ';',
+            '});'].join('\n');
 }
 
 function encode(val, prev){
     // Quantization
     val = quantize(val);
-    var tmp = val;
+    // var tmp = val;
     // Delta
     val = val - prev;
     // ZigZag

@@ -30,6 +30,7 @@ define('echarts/config',[],function() {
         COMPONENT_TYPE_TOOLTIP: 'tooltip',
         COMPONENT_TYPE_GRID: 'grid',
         COMPONENT_TYPE_AXIS: 'axis',
+        COMPONENT_TYPE_POLAR: 'polar',
         COMPONENT_TYPE_X_AXIS: 'xAxis',
         COMPONENT_TYPE_Y_AXIS: 'yAxis',
         COMPONENT_TYPE_AXIS_CATEGORY: 'categoryAxis',
@@ -214,8 +215,10 @@ define('echarts/config',[],function() {
         grid: {
             x: 80,
             y: 60,
-            // width: {totalWidth} - (2 * x),
-            // height: {totalHeight} - (2 * y)
+            x2: 80,
+            y2: 60,
+            // width: {totalWidth} - x - x2,
+            // height: {totalHeight} - y - y2,
             backgroundColor: '#fff',
             borderWidth: 1,
             borderColor: '#ccc'
@@ -324,6 +327,46 @@ define('echarts/config',[],function() {
             }
         },
 
+        polar : {
+            startAngle : 90,      
+            splitNumber : 5,
+            name : {
+                show: true,
+                // formatter: null,
+                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: '#333'
+                }
+            },
+            axisLine: {            // 坐标轴线
+                show: true,        // 默认显示，属性show控制显示与否
+                lineStyle: {       // 属性lineStyle控制线条样式
+                    color: '#ccc',
+                    width: 1,
+                    type: 'solid'
+                }
+            },
+            axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
+                show: false,
+                // formatter: null,
+                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: '#333'
+                }
+            },
+            splitArea : {
+                show : true,
+                areaStyle : {
+                    color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']
+                }
+            },
+            splitLine : {
+                show : true,
+                lineStyle : {
+                    width : 1,
+                    color : '#ccc'
+                }
+            }
+        },
+
         // 柱形图默认参数
         bar: {
             // stack: null
@@ -354,8 +397,9 @@ define('echarts/config',[],function() {
                     // color: 各异,
                 }
             },
-            //symbol: null,     // 拐点图形类型，非标准参数
-            symbolSize: 4           // 可计算特性参数，空数据拖拽提示图形大小
+            //symbol: null,         // 拐点图形类型，非标准参数
+            symbolSize: 4,          // 可计算特性参数，空数据拖拽提示图形大小
+            showAllSymbol: false    // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
         },
         
         // K线图默认参数
@@ -389,38 +433,22 @@ define('echarts/config',[],function() {
         },
 
         // 雷达图默认参数
-        radar: {
-            startAngle : 180,
-            graduation : 5,
-
-            splitArea : {
-                show : true,
-                areaStyle : {
-                    color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']
+        radar : {
+            polarIndex: 0,
+            itemStyle: {
+                normal: {
+                    // color: 各异,
+                    lineStyle: {
+                        width: 2,
+                        type: 'solid'
+                    }
+                },
+                emphasis: {
+                    // color: 各异,
                 }
             },
-            splitLine : {
-                lineStyle : {
-                    width : 1,
-                    color : '#ccc'
-                }
-            },
-
-            lineStyle : {
-                width : 1,
-                color : '#999'
-            },
-
-            textStyle : {
-                textFont : 'normal 30px verdana',
-                color : '#999'
-            },
-
-            color : 'rgba(100,100,100,0)',
-
-            strokeColor : 'rgba(0,0,0,1)',
-            lineWidth : 1
-            
+            //symbol: null,         // 拐点图形类型，非标准参数
+            symbolSize: 2           // 可计算特性参数，空数据拖拽提示图形大小
         },
 
         // 饼图默认参数
@@ -593,6 +621,7 @@ define('echarts/config',[],function() {
         nameConnector: ' & ',
         valueConnector: ' : ',
         animation: true,
+        addDataAnimation: true,         // 动态数据接口是否开启动画效果
         animationDuration: 2000,
         animationEasing: 'ExponentialOut'    //BounceOut
     };
@@ -4302,6 +4331,7 @@ define(
             var methods = [             // 派生实现的基类方法
                     'brush',
                     'setContext',
+                    'dashedLineTo',
                     'drawText',
                     'getHighlightStyle',
                     'getHighlightZoom',
@@ -4439,7 +4469,26 @@ define(
                 ctx.shadowOffsetY = style.shadowOffsetY;
             }
         }
-
+        
+        /**
+         * 虚线lineTo 
+         */
+        function dashedLineTo(ctx, x1, y1, x2, y2, dashLength) {
+            dashLength = typeof dashLength == 'undefined'
+                         ? 5 : dashLength;
+            var deltaX = x2 - x1;
+            var deltaY = y2 - y1;
+            var numDashes = Math.floor(
+                Math.sqrt(deltaX * deltaX + deltaY * deltaY) / dashLength
+            );
+            for (var i = 0; i < numDashes; ++i) {
+                ctx[i % 2 === 0 ? 'moveTo' : 'lineTo'](
+                    x1 + (deltaX / numDashes) * i,
+                    y1 + (deltaY / numDashes) * i
+                );
+            }
+        }
+        
         /**
          * 附加文本
          * @param {Context2D} ctx Canvas 2D上下文
@@ -4767,6 +4816,7 @@ define(
             derive : derive,
             brush : brush,
             setContext : setContext,
+            dashedLineTo : dashedLineTo,
             drawText : drawText,
             getHighlightStyle : getHighlightStyle,
             getHighlightZoom : getHighlightZoom,
@@ -5128,44 +5178,14 @@ define(
                 else if (style.lineType == 'dashed'
                         || style.lineType == 'dotted'
                 ) {
-                    //画虚线的方法  by loutongbing@baidu.com
-                    var lineWidth = style.lineWidth || 1;
-                    var dashPattern = [
-                        lineWidth * (style.lineType == 'dashed' ? 6 : 1),
-                        lineWidth * 4
-                    ];
-                    var fromX = style.xStart;
-                    var toX = style.xEnd;
-                    var fromY = style.yStart;
-                    var toY = style.yEnd;
-                    var dx = toX - fromX;
-                    var dy = toY - fromY;
-                    var angle = Math.atan2(dy, dx);
-                    var x = fromX;
-                    var y = fromY;
-                    var idx = 0;
-                    var draw = true;
-                    var dashLength;
-                    var nx;
-                    var ny;
-
-                    ctx.moveTo(fromX, fromY);
-                    while (!((dx < 0 ? x <= toX : x >= toX)
-                              && (dy < 0 ? y <= toY : y >= toY))
-                    ) {
-                        dashLength = dashPattern[idx++ % dashPattern.length];
-                        nx = x + (Math.cos(angle) * dashLength);
-                        x = dx < 0 ? Math.max(toX, nx) : Math.min(toX, nx);
-                        ny = y + (Math.sin(angle) * dashLength);
-                        y = dy < 0 ? Math.max(toY, ny) : Math.min(toY, ny);
-                        if (draw) {
-                            ctx.lineTo(x, y);
-                        }
-                        else {
-                            ctx.moveTo(x, y);
-                        }
-                        draw = !draw;
-                    }
+                    var dashLength =(style.lineWidth || 1)  
+                                     * (style.lineType == 'dashed' ? 5 : 1);
+                    this.dashedLineTo(
+                        ctx,
+                        style.xStart, style.yStart,
+                        style.xEnd, style.yEnd,
+                        dashLength
+                    );
                 }
             },
 
@@ -5272,17 +5292,115 @@ define(
 
         Polygon.prototype = {
             /**
+             * 画刷
+             * @param ctx       画布句柄
+             * @param e         形状实体
+             * @param isHighlight   是否为高亮状态
+             * @param updateCallback 需要异步加载资源的shape可以通过这个callback(e)
+             *                       让painter更新视图，base.brush没用，需要的话重载brush
+             */
+            brush : function (ctx, e, isHighlight) {
+                var style = e.style || {};
+                if (isHighlight) {
+                    // 根据style扩展默认高亮样式
+                    style = this.getHighlightStyle(
+                        style,
+                        e.highlightStyle || {}
+                    );
+                }
+
+                ctx.save();
+                this.setContext(ctx, style);
+    
+                // 设置transform
+                if (e.__needTransform) {
+                    ctx.transform.apply(ctx,this.updateTransform(e));
+                }
+                ctx.beginPath();
+                this.buildPath(ctx, style);
+                ctx.closePath();
+
+                if (style.brushType == 'stroke' || style.brushType == 'both') {
+                    ctx.stroke();
+                }
+                
+                if (style.brushType == 'fill' 
+                    || style.brushType == 'both'
+                    || typeof style.brushType == 'undefined' // 默认为fill
+                ) {
+                    if (style.lineType == 'dashed' 
+                        || style.lineType == 'dotted'
+                    ) {
+                        // 特殊处理，虚线围不成path，实线再build一次
+                        ctx.beginPath();
+                        this.buildPath(
+                            ctx, 
+                            {
+                                lineType: 'solid',
+                                lineWidth: style.lineWidth,
+                                pointList: style.pointList
+                            }
+                        );
+                        ctx.closePath();
+                    }
+                    ctx.fill();
+                }
+    
+                if (style.text) {
+                    this.drawText(ctx, style, e.style);
+                }
+    
+                ctx.restore();
+    
+                return;
+            },
+        
+            /**
              * 创建多边形路径
              * @param {Context2D} ctx Canvas 2D上下文
              * @param {Object} style 样式
              */
             buildPath : function(ctx, style) {
+                // 虽然能重用brokenLine，但底层图形基于性能考虑，重复代码减少调用吧
                 var pointList = style.pointList;
-                ctx.moveTo(pointList[0][0],pointList[0][1]);
-                for (var i = 1, l = pointList.length; i < l; i++) {
-                    ctx.lineTo(pointList[i][0],pointList[i][1]);
+                if (pointList.length < 2) {
+                    // 少于2个点就不画了~
+                    return;
                 }
-                ctx.lineTo(pointList[0][0],pointList[0][1]);
+                if (!style.lineType || style.lineType == 'solid') {
+                    //默认为实线
+                    ctx.moveTo(pointList[0][0],pointList[0][1]);
+                    for (var i = 1, l = pointList.length; i < l; i++) {
+                        ctx.lineTo(pointList[i][0],pointList[i][1]);
+                    }
+                    ctx.lineTo(pointList[0][0], pointList[0][1]);
+                }
+                else if (style.lineType == 'dashed'
+                        || style.lineType == 'dotted'
+                ) {
+                    var dashLength = style._dashLength
+                                     || (style.lineWidth || 1) 
+                                        * (style.lineType == 'dashed' ? 5 : 1);
+                    style._dashLength = dashLength;
+                    ctx.moveTo(pointList[0][0],pointList[0][1]);
+                    for (var i = 1, l = pointList.length; i < l; i++) {
+                        this.dashedLineTo(
+                            ctx,
+                            pointList[i - 1][0], pointList[i - 1][1],
+                            pointList[i][0], pointList[i][1],
+                            dashLength
+                        );
+                    }
+                    this.dashedLineTo(
+                        ctx,
+                        pointList[pointList.length - 1][0], 
+                        pointList[pointList.length - 1][1],
+                        pointList[0][0],
+                        pointList[0][1],
+                        dashLength
+                    );
+                }
+
                 return;
             },
 
@@ -5438,47 +5556,16 @@ define(
                 else if (style.lineType == 'dashed'
                         || style.lineType == 'dotted'
                 ) {
-                    //画虚线的方法  by loutongbing@baidu.com
-                    var lineWidth = style.lineWidth || 1;
-                    var dashPattern = [
-                        lineWidth * (style.lineType == 'dashed' ? 6 : 1),
-                        lineWidth * 4
-                    ];
+                    var dashLength = (style.lineWidth || 1) 
+                                     * (style.lineType == 'dashed' ? 5 : 1);
                     ctx.moveTo(pointList[0][0],pointList[0][1]);
                     for (var i = 1, l = pointList.length; i < l; i++) {
-                        var fromX = pointList[i - 1][0];
-                        var toX = pointList[i][0];
-                        var fromY = pointList[i - 1][1];
-                        var toY = pointList[i][1];
-                        var dx = toX - fromX;
-                        var dy = toY - fromY;
-                        var angle = Math.atan2(dy, dx);
-                        var x = fromX;
-                        var y = fromY;
-                        var idx = 0;
-                        var draw = true;
-                        var dashLength;
-                        var nx;
-                        var ny;
-
-                        while (!((dx < 0 ? x <= toX : x >= toX)
-                                && (dy < 0 ? y <= toY : y >= toY))
-                        ) {
-                            dashLength = dashPattern[
-                                idx++ % dashPattern.length
-                            ];
-                            nx = x + (Math.cos(angle) * dashLength);
-                            x = dx < 0 ? Math.max(toX, nx) : Math.min(toX, nx);
-                            ny = y + (Math.sin(angle) * dashLength);
-                            y = dy < 0 ? Math.max(toY, ny) : Math.min(toY, ny);
-                            if (draw) {
-                                ctx.lineTo(x, y);
-                            }
-                            else {
-                                ctx.moveTo(x, y);
-                            }
-                            draw = !draw;
-                        }
+                        this.dashedLineTo(
+                            ctx,
+                            pointList[i - 1][0], pointList[i - 1][1],
+                            pointList[i][0], pointList[i][1],
+                            dashLength
+                        );
                     }
                 }
 
@@ -10104,6 +10191,9 @@ define(
              */
             function drift(shapeId, dx, dy) {
                 var e = _elements[shapeId];
+                if (!e) {
+                    return;
+                }
                 e.__needTransform = true;
                 if (!e.ondrift //ondrift
                     //有onbrush并且调用执行返回false或undefined则继续
@@ -12145,6 +12235,10 @@ define('echarts/component/base',['require','../config','zrender/tool/util'],func
                    + finalTextStyle.fontSize + 'px '
                    + finalTextStyle.fontFamily;
         }
+        
+        function resize() {
+            self.refresh && self.refresh();
+        }
 
         /**
          * 清除图形数据，实例仍可用
@@ -12173,6 +12267,7 @@ define('echarts/component/base',['require','../config','zrender/tool/util'],func
         self.getFont = getFont;
         self.clear = clear;
         self.dispose = dispose;
+        self.resize = resize;
     }
 
     return Base;
@@ -12200,12 +12295,7 @@ define('echarts/util/ecData',[],function() {
         var value;
         if (typeof data != 'undefined') {
             if (typeof data.value != 'undefined') {
-                if (data.value instanceof Array && series.type != 'radar') {
-                    value = data.value[2];  // 散点图最后一个为数值
-                }
-                else {
-                    value = data.value;
-                }
+                value = data.value;
             }
             else {
                 value = data;
@@ -12507,12 +12597,21 @@ define('echarts/chart/island',['require','../component/base','./calculableBase',
             );
         }
 
+        /**
+         * 刷新
+         */
+        function refresh(newOption) {
+            if (newOption) {
+                newOption.island = self.reformOption(newOption.island);
+                option = newOption;
+    
+                _nameConnector = option.nameConnector;
+                _valueConnector = option.valueConnector;
+            }
+        }
+        
         function render(newOption) {
-            newOption.island = self.reformOption(newOption.island);
-            option = newOption;
-
-            _nameConnector = option.nameConnector;
-            _valueConnector = option.valueConnector;
+            refresh(newOption);
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 zr.addShape(self.shapeList[i]);
@@ -12678,6 +12777,7 @@ define('echarts/chart/island',['require','../component/base','./calculableBase',
             zrEvent.stop(event);
         };
 
+        self.refresh = refresh;
         self.render = render;
         self.resize = resize;
         self.getOption = getOption;
@@ -12935,37 +13035,47 @@ define('echarts/component/title',['require','./base','../config','zrender/tool/a
         }
 
         function init(newOption) {
-            option = newOption;
+            refresh(newOption);
+        }
+        
+        /**
+         * 刷新
+         */
+        function refresh(newOption) {
+            if (newOption) {
+                option = newOption;
 
-            option.title = self.reformOption(option.title);
-            // 补全padding属性
-            option.title.padding = self.reformCssArray(
-                option.title.padding
-            );
-
-            titleOption = option.title;
-            titleOption.textStyle = zrUtil.merge(
-                titleOption.textStyle,
-                ecConfig.textStyle,
-                {
-                    'overwrite': false,
-                    'recursive': false
-                }
-            );
-            titleOption.subtextStyle = zrUtil.merge(
-                titleOption.subtextStyle,
-                ecConfig.textStyle,
-                {
-                    'overwrite': false,
-                    'recursive': false
-                }
-            );
-
-            self.clear();
-            _buildShape();
+                option.title = self.reformOption(option.title);
+                // 补全padding属性
+                option.title.padding = self.reformCssArray(
+                    option.title.padding
+                );
+    
+                titleOption = option.title;
+                titleOption.textStyle = zrUtil.merge(
+                    titleOption.textStyle,
+                    ecConfig.textStyle,
+                    {
+                        'overwrite': false,
+                        'recursive': false
+                    }
+                );
+                titleOption.subtextStyle = zrUtil.merge(
+                    titleOption.subtextStyle,
+                    ecConfig.textStyle,
+                    {
+                        'overwrite': false,
+                        'recursive': false
+                    }
+                );
+    
+                self.clear();
+                _buildShape();
+            }
         }
 
         self.init = init;
+        self.refresh = refresh;
 
         init(option);
     }
@@ -14718,6 +14828,8 @@ define('echarts/component/grid',['require','./base','../config','../component'],
         var _y;
         var _width;
         var _height;
+        var _zrWidth;
+        var _zrHeight;
 
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
@@ -14732,16 +14844,20 @@ define('echarts/component/grid',['require','./base','../config','../component'],
             var gridOption = option.grid;
             _x = gridOption.x;
             _y = gridOption.y;
+            var x2 = gridOption.x2;
+            var y2 = gridOption.y2;
+            _zrWidth = zr.getWidth();
+            _zrHeight = zr.getHeight();
 
             if (typeof gridOption.width == 'undefined') {
-                _width = zr.getWidth() - (_x * 2);
+                _width = _zrWidth - _x - x2;
             }
             else {
                 _width = gridOption.width;
             }
 
             if (typeof gridOption.height == 'undefined') {
-                _height = zr.getHeight() - (_y * 2);
+                _height = _zrHeight - _y - y2;
             }
             else {
                 _height = gridOption.height;
@@ -14799,6 +14915,16 @@ define('echarts/component/grid',['require','./base','../config','../component'],
                 height : _height
             };
         }
+        
+        function refresh(newOption) {
+            if (_zrWidth != zr.getWidth() 
+                || _zrHeight != zr.getHeight()
+                || newOption
+            ) {
+                self.clear();
+                init(newOption || option);
+            }
+        }
 
         self.init = init;
         self.getX = getX;
@@ -14808,6 +14934,7 @@ define('echarts/component/grid',['require','./base','../config','../component'],
         self.getXend = getXend;
         self.getYend = getYend;
         self.getArea = getArea;
+        self.refresh = refresh;
 
         init(option);
     }
@@ -14853,6 +14980,7 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
         var _endShape;
 
         var _syncTicket;
+        var _isSilence = false;
 
         var _originalData;
 
@@ -15310,14 +15438,12 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
                 zlevel : _zlevelBase
             };
 
-            if (!zoomOption.zoomLock) {
-                _startShape.draggable = true;
-                _startShape.ondrift = _ondrift;
-                _startShape.ondragend = _ondragend;
-                _endShape.draggable = true;
-                _endShape.ondrift = _ondrift;
-                _endShape.ondragend = _ondragend;
-            }
+            _startShape.draggable = true;
+            _startShape.ondrift = _ondrift;
+            _startShape.ondragend = _ondragend;
+            _endShape.draggable = true;
+            _endShape.ondrift = _ondrift;
+            _endShape.ondragend = _ondragend;
 
             if (zoomOption.orient == 'horizontal') {
                 // 头
@@ -15372,6 +15498,11 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
          * 拖拽范围控制
          */
         function _ondrift(e, dx, dy) {
+            if (zoomOption.zoomLock) {
+                // zoomLock时把handle转成filler的拖拽
+                e = _fillerShae;
+            }
+            
             var detailSize = e._type == 'filler' ? _handleSize : 0;
             if (zoomOption.orient == 'horizontal') {
                 if (e.style.x + dx - detailSize <= _location.x) {
@@ -15548,7 +15679,7 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
                 }
             }
 
-            if (zoomOption.realtime || dispatchNow) {
+            if (!_isSilence && (zoomOption.realtime || dispatchNow)) {
                 messageCenter.dispatch(
                     ecConfig.EVENT.DATA_ZOOM,
                     null,
@@ -15620,7 +15751,7 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
             // 别status = {}赋值啊！！
             status.dragOut = true;
             status.dragIn = true;
-            if (!zoomOption.realtime) {
+            if (!_isSilence && !zoomOption.realtime) {
                 messageCenter.dispatch(
                     ecConfig.EVENT.DATA_ZOOM,
                     null,
@@ -15754,27 +15885,17 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
                     start = 0;
                 }
                 for (var j = 0, k = curData.length; j < k; j++) {
-                    if (typeof optionBackup.series[i].data[j + start].value 
-                        != 'undefined'
-                    ) {
-                        optionBackup.series[i].data[j + start].value 
-                            = curData[j].value;
-                        if (target[i]) {
-                            // 同步内部备份
-                            target[i][j + start].value 
-                                = curData[j].value;
-                        }
-                    }
-                    else {
-                        optionBackup.series[i].data[j + start] = curData[j];
-                        if (target[i]) {
-                            // 同步内部备份
-                            target[i][j + start] 
-                                = curData[j];
-                        }
+                    optionBackup.series[i].data[j + start] = curData[j];
+                    if (target[i]) {
+                        // 同步内部备份
+                        target[i][j + start] 
+                            = curData[j];
                     }
                 }
             }
+        }
+        function silence(s) {
+            _isSilence = s;
         }
 
         function init(newOption) {
@@ -15802,13 +15923,45 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
                 _buildShape();
             }
         }
+
+        /**
+         * 避免dataZoom带来两次refresh，不设refresh接口，resize重复一下buildshape逻辑 
+         */
+        function resize() {
+            self.clear();
+            
+            // 自己show 或者 toolbox启用且dataZoom有效
+            if (option.dataZoom.show
+                || (
+                    self.deepQuery([option], 'toolbox.show')
+                    && self.deepQuery([option], 'toolbox.feature.dataZoom')
+                )
+            ) {
+                _location = _getLocation();
+                _zoom =  _getZoom();
+            }
+            
+            if (option.dataZoom.show) {
+                _buildBackground();
+                _buildDataBackground();
+                _buildFiller();
+                _bulidHandle();
+    
+                for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                    self.shapeList[i].id = zr.newShapeId(self.type);
+                    zr.addShape(self.shapeList[i]);
+                }
+            }
+        }
         
         self.init = init;
+        self.resize = resize;
         self.syncBackupData = syncBackupData;
         self.absoluteZoom = absoluteZoom;
         self.rectZoom = rectZoom;
         self.ondragend = ondragend;
         self.ondataZoom = ondataZoom;
+        self.silence = silence;
 
         init(option);
     }
@@ -16123,12 +16276,14 @@ define('echarts/component/legend',['require','./base','../config','zrender/tool/
                     data = series[i].data;
                     for (var j = 0, k = data.length; j < k; j++) {
                         if (data[j].name == name) {
+                            data = data[j];
+                            data.type = series[i].type;
                             hasFind = true;
                             break;
                         }
                     }
                     if (hasFind) {
-                        return series[i];
+                        return data;
                     }
                 }
                 else if (series[i].type == ecConfig.CHART_TYPE_FORCE) {
@@ -16255,6 +16410,11 @@ define('echarts/component/legend',['require','./base','../config','zrender/tool/
                 option.legend.padding = self.reformCssArray(
                     option.legend.padding
                 );
+                if (option.legend.selected) {
+                    for (var k in option.legend.selected) {
+                        _selectedMap[k] = option.legend.selected[k];
+                    }
+                }
             }
             legendOption = option.legend;
             
@@ -16395,6 +16555,25 @@ define('echarts/component/legend',['require','./base','../config','zrender/tool/
         },
         force : function(ctx, style) {
             require('zrender/shape').get('icon').get('circle')(ctx, style);
+        },
+        radar: function(ctx, style) {
+            var n = 6;
+            var x = style.x + style.width / 2;
+            var y = style.y + style.height / 2;
+            var r = style.height / 2;
+
+            var dStep = 2 * Math.PI / n;
+            var deg = -Math.PI / 2;
+            var xStart = x + r * Math.cos(deg);
+            var yStart = y + r * Math.sin(deg);
+            
+            ctx.moveTo(xStart, yStart);
+            deg += dStep;
+            for (var i = 0, end = n - 1; i < end; i ++) {
+                ctx.lineTo(x + r * Math.cos(deg), y + r * Math.sin(deg));
+                deg += dStep;
+            }
+            ctx.lineTo(xStart, yStart);
         }
     };
     
@@ -17622,6 +17801,7 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
         var grid;
         var xAxis;
         var yAxis;
+        var polar;
 
         // tooltip dom & css
         var _tDom = document.createElement('div');
@@ -17836,7 +18016,7 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             var trigger;
             if (!_curTarget) {
                 // 坐标轴事件
-                _findAxisTrigger();
+                _findPolarTrigger() || _findAxisTrigger();
             }
             else {
                 // 数据项事件
@@ -17876,14 +18056,17 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             }
         }
 
+        /**
+         * 直角系 
+         */
         function _findAxisTrigger() {
-            var series = option.series;
-            var xAxisIndex;
-            var yAxisIndex;
             if (!xAxis || !yAxis) {
                 _hidingTicket = setTimeout(_hide, _hideDelay);
                 return;
             }
+            var series = option.series;
+            var xAxisIndex;
+            var yAxisIndex;
             for (var i = 0, l = series.length; i < l; i++) {
                 // 找到第一个axis触发tooltip的系列
                 if (self.deepQuery(
@@ -17914,6 +18097,33 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                 }
             }
         }
+        
+        /**
+         * 极坐标 
+         */
+        function _findPolarTrigger() {
+            if (!polar) {
+                return false;
+            }
+            var x = zrEvent.getX(_event);
+            var y = zrEvent.getY(_event);
+            var polarIndex = polar.getNearestIndex([x, y]);
+            var valueIndex;
+            if (polarIndex) {
+                valueIndex = polarIndex.valueIndex;
+                polarIndex = polarIndex.polarIndex;
+            }
+            else {
+                polarIndex = -1;
+            }
+            
+            if (polarIndex != -1) {
+                return _showPolarTrigger(polarIndex, valueIndex);
+            }
+            
+            return false;
+        }
+        
         /**
          * 根据坐标轴事件带的属性获取最近的axisDataIndex
          */
@@ -17983,6 +18193,9 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             return -1;
         }
 
+        /**
+         * 直角系 
+         */
         function _showAxisTrigger(xAxisIndex, yAxisIndex, dataIndex) {
             if (typeof xAxis == 'undefined'
                 || typeof yAxis == 'undefined'
@@ -18150,13 +18363,132 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             }
         }
         
+        /**
+         * 极坐标 
+         */
+        function _showPolarTrigger(polarIndex, dataIndex) {
+            if (typeof polar == 'undefined'
+                || typeof polarIndex == 'undefined'
+                || typeof dataIndex == 'undefined'
+                || dataIndex < 0
+            ) {
+                return false;
+            }
+            var series = option.series;
+            var seriesArray = [];
+
+            var formatter;
+            var specialCssText = '';
+            if (self.deepQuery([option], 'tooltip.trigger') == 'axis') {
+                if (self.deepQuery([option], 'tooltip.show') === false) {
+                    return false;
+                }
+                formatter = self.deepQuery([option],'tooltip.formatter');
+            }
+
+            // 找到所有用这个极坐标并且axis触发的系列数据
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (series[i].polarIndex == polarIndex
+                    && self.deepQuery(
+                           [series[i], option], 'tooltip.trigger'
+                       ) == 'axis'
+                ) {
+                    formatter = self.deepQuery(
+                        [series[i]],
+                        'tooltip.formatter'
+                    ) || formatter;
+                    specialCssText += _style(self.deepQuery(
+                                          [series[i]], 'tooltip'
+                                      ));
+                    seriesArray.push(series[i]);
+                }
+            }
+            if (seriesArray.length > 0) {
+                var polarData;
+                var data;
+                var params = [];
+                var indicatorName = 
+                    option.polar[polarIndex].indicator[dataIndex].text;
+
+                for (var i = 0, l = seriesArray.length; i < l; i++) {
+                    polarData = seriesArray[i].data;
+                    for (var j = 0, k = polarData.length; j < k; j++) {
+                        data = polarData[j];
+                        data = typeof data != 'undefined'
+                               ? data
+                               : {name:'', value: {dataIndex:'-'}};
+                               
+                        params.push([
+                            typeof seriesArray[i].name != 'undefin'
+                            ? seriesArray[i].name : '',
+                            data.name,
+                            data.value[dataIndex],
+                            indicatorName
+                        ]);
+                    }
+                }
+                if (typeof formatter == 'function') {
+                    _curTicket = 'axis:' + dataIndex;
+                    _tDom.innerHTML = formatter(
+                        params, _curTicket, _setContent
+                    );
+                }
+                else if (typeof formatter == 'string') {
+                    formatter = formatter.replace('{a}','{a0}')
+                                         .replace('{b}','{b0}')
+                                         .replace('{c}','{c0}')
+                                         .replace('{d}','{d0}');
+                    for (var i = 0, l = params.length; i < l; i++) {
+                        formatter = formatter.replace(
+                            '{a' + i + '}',
+                            params[i][0]
+                        );
+                        formatter = formatter.replace(
+                            '{b' + i + '}',
+                            params[i][1]
+                        );
+                        formatter = formatter.replace(
+                            '{c' + i + '}',
+                            params[i][2]
+                        );
+                        formatter = formatter.replace(
+                            '{d' + i + '}',
+                            params[i][3]
+                        );
+                    }
+                    _tDom.innerHTML = formatter;
+                }
+                else {
+                    formatter = params[0][1] + '<br/>' 
+                                + params[0][3] + ' : ' + params[0][2];
+                    for (var i = 1, l = params.length; i < l; i++) {
+                        formatter += '<br/>' + params[i][1] + '<br/>';
+                        formatter += params[i][3] + ' : ' + params[i][2];
+                    }
+                    _tDom.innerHTML = formatter;
+                }
+
+                if (!self.hasAppend) {
+                    _tDom.style.left = _zrWidth / 2 + 'px';
+                    _tDom.style.top = _zrHeight / 2 + 'px';
+                    dom.firstChild.appendChild(_tDom);
+                    self.hasAppend = true;
+                }
+                _show(
+                    zrEvent.getX(_event), 
+                    zrEvent.getY(_event), 
+                    specialCssText
+                );
+                return true;
+            }
+        }
+        
         function _showItemTrigger() {
             var serie = ecData.get(_curTarget, 'series');
             var data = ecData.get(_curTarget, 'data');
             var name = ecData.get(_curTarget, 'name');
             var value = ecData.get(_curTarget, 'value');
             var speical = ecData.get(_curTarget, 'special');
-
             // 从低优先级往上找到trigger为item的formatter和样式
             var formatter;
             var specialCssText = '';
@@ -18233,10 +18565,10 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                                       : (' (' + speical + ')'));
                 }
                 else if (serie.type == ecConfig.CHART_TYPE_RADAR) {
-                    indicator = self.deepQuery([serie, option], 'indicator');
+                    indicator = speical;
                     html += (name === '' ? serie.name : name) + '<br />';
                     for (var i = 0 ; i < indicator.length; i ++) {
-                        html += indicator[i].name + ' : ' + value[i] + '<br />';
+                        html += indicator[i].text + ' : ' + value[i] + '<br />';
                     }
                     _tDom.innerHTML = html;
                 }
@@ -18395,21 +18727,30 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             clearTimeout(_hidingTicket);
             clearTimeout(_showingTicket);
             var target = param.target;
-            if (!target && grid) {
+            var mx = zrEvent.getX(param.event);
+            var my = zrEvent.getY(param.event);
+            if (!target) {
                 // 判断是否落到直角系里，axis触发的tooltip
-                if (_needAxisTrigger
+                _curTarget = false;
+                _event = param.event;
+                _event._target = _event.target || _event.toElement;
+                _event.zrenderX = mx;
+                _event.zrenderY = my;
+                if (_needAxisTrigger 
+                    && grid 
                     && zrArea.isInside(
-                           rectangle,
-                           grid.getArea(),
-                           zrEvent.getX(param.event),
-                           zrEvent.getY(param.event)
-                       )
+                        rectangle,
+                        grid.getArea(),
+                        mx,
+                        my
+                    )
                 ) {
-                    _curTarget = false;
-                    _event = param.event;
-                    _event._target = _event.target || _event.toElement;
-                    _event.zrenderX = zrEvent.getX(_event);
-                    _event.zrenderY = zrEvent.getY(_event);
+                    _showingTicket = setTimeout(_tryShow, _showDelay);
+                }
+                else if (_needAxisTrigger 
+                        && polar 
+                        && polar.isInside([mx, my]) != -1
+                ) {
                     _showingTicket = setTimeout(_tryShow, _showDelay);
                 }
                 else {
@@ -18420,8 +18761,27 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                 _curTarget = target;
                 _event = param.event;
                 _event._target = _event.target || _event.toElement;
-                _event.zrenderX = zrEvent.getX(_event);
-                _event.zrenderY = zrEvent.getY(_event);
+                _event.zrenderX = mx;
+                _event.zrenderY = my;
+                var polarIndex;
+                if (_needAxisTrigger 
+                    && polar 
+                    && (polarIndex = polar.isInside([mx, my])) != -1
+                ) {
+                    // 看用这个polar的系列数据是否是axis触发，如果是设置_curTarget为nul
+                    var series = option.series;
+                    for (var i = 0, l = series.length; i < l; i++) {
+                        if (series[i].polarIndex == polarIndex
+                            && self.deepQuery(
+                                   [series[i], option], 'tooltip.trigger'
+                               ) == 'axis'
+                        ) {
+                            _curTarget = null;
+                            break;
+                        }
+                    }
+                   
+                }
                 _showingTicket = setTimeout(_tryShow, _showDelay);
             }
         }
@@ -18469,6 +18829,7 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             grid = component.grid;
             xAxis = component.xAxis;
             yAxis = component.yAxis;
+            polar = component.polar;
         }
 
         function init(newOption, newDom) {
@@ -19547,7 +19908,7 @@ define('echarts/component/dataView',['require','./base','../config','../componen
         var _gCssText = 'position:absolute;'
                         + 'display:block;'
                         + 'overflow:hidden;'
-                        + 'transition:height 0.8s,background-color 1s;;'
+                        + 'transition:height 0.8s,background-color 1s;'
                         + '-moz-transition:height 0.8s,background-color 1s;'
                         + '-webkit-transition:height 0.8s,background-color 1s;'
                         + '-o-transition:height 0.8s,background-color 1s;'
@@ -19975,6 +20336,997 @@ define('echarts/component/dataView',['require','./base','../config','../componen
     
     return DataView;
 });
+/**
+ * echarts坐标处理方法
+ * Copyright 2013 Baidu Inc. All rights reserved.
+ *
+ * @author Neil (杨骥, linzhifeng@baidu.com)
+ */
+
+define(
+    'echarts/util/coordinates',['require','zrender/tool/math'],function(require) {
+
+        var zrMath = require('zrender/tool/math');
+
+        /**
+         * 极坐标转直角坐标
+         *
+         * @param {number} 半径
+         * @param {number} 角度
+         *
+         * @return {Array.<number>} 直角坐标[x,y]
+         */
+        function polar2cartesian(r, theta) {
+            return [r * zrMath.sin(theta), r*zrMath.cos(theta)];
+        }
+
+        /**
+         * 直角坐标转极坐标
+         *
+         * @param {number} 横坐标
+         * @param {number} 纵坐标
+         *
+         * @return {Array.<number>} 极坐标[r,theta]
+         */
+        function cartesian2polar(x, y) {
+            return [Math.sqrt(x * x + y * y), Math.atan(y / x)];
+        }
+
+        return {
+            polar2cartesian : polar2cartesian,
+            cartesian2polar : cartesian2polar
+        };
+    }
+);
+/**
+ * echarts组件类：极坐标
+ * Copyright 2013 Baidu Inc. All rights reserved.
+ *
+ * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
+ * @author Neil (杨骥, yangji01@baidu.com)
+ *
+ */
+define(
+
+    'echarts/component/polar',['require','./base','../config','../util/coordinates','zrender/tool/util','../component'],function(require) {
+
+        function Polar(messageCenter, zr, option, component) {
+            var Base = require('./base');
+            Base.call(this, zr);
+
+            var ecConfig = require('../config');
+            var ecCoordinates = require('../util/coordinates');
+            var zrUtil = require('zrender/tool/util');
+
+            var self = this;
+            self.type = ecConfig.COMPONENT_TYPE_POLAR;
+
+            var polar; 
+
+            var _width = zr.getWidth();
+            var _height = zr.getHeight();
+
+            var series;
+            var _queryTarget;
+
+            function init(newOption, newComponent) {
+                option = newOption;
+                component = newComponent;
+
+                self.clear();
+
+                polar = option.polar;
+                series = option.series;
+
+                _buildShape();
+            }
+
+            /**
+             * 绘制图形
+             */
+            function _buildShape() {
+                for (var i = 0; i < polar.length; i ++) {
+
+                    self.reformOption(polar[i]);
+
+                    _queryTarget = [polar[i], option];
+                    _createVector(i);
+                    _buildSpiderWeb(i);
+
+                    _buildText(i);
+
+                    _adjustIndicatorValue(i);
+                    _addAxisLabel(i);
+                }
+
+                for (var i = 0; i < self.shapeList.length; i ++) {
+                    self.shapeList[i].id = zr.newShapeId(self.type);
+                    zr.addShape(self.shapeList[i]);
+                }
+            }
+
+            /**
+             * 生成蜘蛛网顶点坐标
+             * @param {number} polar的index
+             */
+            function _createVector(index) {
+                var item = polar[index];
+                var indicator = self.deepQuery(_queryTarget, 'indicator');
+                var length = indicator.length;
+                var startAngle = item.startAngle ;
+                var dStep = 2 * Math.PI / length;
+                var radius = item.radius;
+                var __ecIndicator = item.__ecIndicator = [];
+                var vector;
+
+                if (typeof radius != 'number') {
+                    radius = Math.floor(
+                        Math.min(_width, _height) / 2 - 50
+                    );
+                }               
+
+                for (var i = 0 ;i < length ; i ++) {
+                    vector = ecCoordinates.polar2cartesian(
+                        radius, startAngle * Math.PI / 180 + dStep * i
+                    );
+                    __ecIndicator.push({
+                        // 将图形翻转
+                        vector : [vector[1], -vector[0]]
+                    });
+                }
+            }
+
+            /**
+             * 构建蜘蛛网
+             * @param {number} polar的index
+             */
+            function _buildSpiderWeb(index) {
+                var item = polar[index];
+                var __ecIndicator = item.__ecIndicator;
+                var splitArea = item.splitArea;
+                var splitLine = item.splitLine;
+
+                var center = item.center;
+                var splitNumber = item.splitNumber;
+
+                var strokeColor = splitLine.lineStyle.color;
+                var lineWidth = splitLine.lineStyle.width;
+                var show = splitLine.show;
+
+                var axisLine = self.deepQuery(_queryTarget, 'axisLine');
+
+                _addArea(
+                    __ecIndicator, splitNumber, center, 
+                    splitArea, strokeColor, lineWidth, show
+                );
+                
+                _addLine(
+                    __ecIndicator, center, axisLine
+                );
+            }
+
+            /**
+             * 绘制axisLabel
+             */
+            function _addAxisLabel(index) {
+                var item = polar[index];
+                var indicator = self.deepQuery(_queryTarget, 'indicator');
+                var __ecIndicator = item.__ecIndicator;
+                var axisLabel;
+                var vector;
+                var style;
+                var newStyle;
+                var splitNumber = self.deepQuery(_queryTarget, 'splitNumber');
+                var center = item.center;
+                var vector;
+                var value;
+                var text;
+                var theta;
+                // var startAngle = self.deepQuery(_queryTarget, 'startAngle');
+                var offset;
+                var precision = self.deepQuery(_queryTarget, 'precision');
+
+                for (var i = 0; i < indicator.length; i ++) {
+                    axisLabel = self.deepQuery([indicator[i], item, option],
+                        'axisLabel');
+
+                    if (axisLabel.show) {
+                        style = {};
+                        style.styleFont = self.getFont();
+                        style = zrUtil.merge(style, axisLabel);
+                        style.lineWidth = style.width;
+
+                        vector = __ecIndicator[i].vector;
+                        value = __ecIndicator[i].value;
+                        theta = i / indicator.length * 2 * Math.PI;
+                        offset = axisLabel.offset || 10;
+
+                        for (var j = 1 ; j <= splitNumber; j ++) {
+                            newStyle = zrUtil.merge({}, style);
+                            text = 
+                                j * (value.max - value.min) / splitNumber
+                                    + value.min;
+                            if (precision) {
+                                text  = text.toFixed(precision);
+                            }
+                            newStyle.text = text;
+                            newStyle.x = j * vector[0] / splitNumber 
+                                         + Math.cos(theta) * offset + center[0];
+                            newStyle.y = j * vector[1] / splitNumber
+                                         + Math.sin(theta) * offset + center[1];
+
+                            self.shapeList.push({
+                                shape : 'text',
+                                style : newStyle,
+                                draggable : false,
+                                hoverable : false
+                            });
+                        }
+                    }
+                }
+            }
+
+            /**
+             * 绘制坐标头的文字
+             * @param {number} polar的index
+             */
+            function _buildText (index) {
+                var item = polar[index];
+                var __ecIndicator = item.__ecIndicator;
+                var vector;
+                var indicator = self.deepQuery(_queryTarget, 'indicator');
+                var center = item.center;
+                var style;
+                var textAlign;
+                var name;
+                var rotation;
+                var x = 0;
+                var y = 0;
+                var margin;
+                var textStyle;
+
+                for (var i = 0; i < indicator.length; i ++) {
+                    name = self.deepQuery(
+                        [indicator[i], item, option], 'name'
+                    );
+
+                    if (!name.show) {
+                        continue;
+                    } 
+                    textStyle = self.deepQuery([name, item, option], 
+                        'textStyle');
+
+                    style = {};
+
+                    style.styleFont = self.getFont(textStyle);
+                    
+                    if (typeof name.formatter != 'function') {
+                        style.text = indicator[i].text;
+                    }
+                    else {
+                        style.text = name.formatter(i, indicator[i].text);
+                    }
+                    
+                    vector = __ecIndicator[i].vector;
+
+                    if (Math.round(vector[0]) > 0) {
+                        textAlign = 'left';
+                    }
+                    else if (Math.round(vector[0]) < 0) {
+                        textAlign = 'right';
+                    }
+                    else {
+                        textAlign = 'center';
+                    }
+
+                    if (!name.margin) {
+                        vector = _mapVector(vector, center, 1.2);
+                    }
+                    else {
+                        margin = name.margin;
+                        x = vector[0] > 0 ? margin : - margin;
+                        y = vector[1] > 0 ? margin : - margin;
+
+                        x = vector[0] === 0 ? 0 : x;
+                        y = vector[1] === 0 ? 0 : y;
+                        vector = _mapVector(vector, center, 1); 
+                    }
+                    
+                    
+                    style.textAlign = textAlign;
+                    style.x = vector[0] + x;
+                    style.y = vector[1] + y;
+
+                    if (name.rotate) {
+                        rotation = [
+                            name.rotate / 180 * Math.PI, 
+                            vector[0], vector[1]
+                        ];
+                    }
+                    
+                    self.shapeList.push({
+                        shape : 'text',
+                        style : style,
+                        draggable : false,
+                        hoverable : false,
+                        rotation : rotation
+                    });
+                }
+            }
+
+            /**
+             * 添加一个隐形的盒子 当做drop的容器 暴露给外部的图形类使用
+             * @param {number} polar的index
+             * @return {Object} 添加的盒子图形 
+             */
+            function _addDropBox(index) {
+                var index = index || 0;
+                var item = polar[index];
+                var center = item.center;
+                var __ecIndicator = item.__ecIndicator;
+                var len = __ecIndicator.length;
+                var pointList = [];
+                var vector;
+                var shape;
+
+                for (var i = 0; i < len; i ++) {
+                    vector = __ecIndicator[i].vector;
+                    pointList.push(_mapVector(vector, center, 1.2));
+                }
+                
+                shape = _getShape(
+                    pointList, 'fill', 'rgba(0,0,0,0)', '', 1
+                );
+                return shape;
+            }
+
+            /**
+             * 绘制蜘蛛网的正n变形
+             *
+             * @param {Array<Object>} 指标数组
+             * @param {number} 分割线数量
+             * @param {Array<number>} 中点坐标
+             * @param {Object} 分割区域对象
+             * @param {string} 线条颜色
+             * @param {number} 线条宽度
+             */ 
+            function _addArea(
+                __ecIndicator, splitNumber, center,
+                splitArea, strokeColor, lineWidth, show
+            ) {
+                var shape;
+                var scale;
+                var scale1;
+                var pointList;
+
+                for (var i = 0; i < splitNumber ; i ++ ) {
+                    scale = (splitNumber - i) / splitNumber;
+                    pointList = _getPointList(__ecIndicator, scale, center);
+                    
+                    if (show) {
+                        shape = _getShape(
+                            pointList, 'stroke', '', strokeColor, lineWidth
+                        );
+                        self.shapeList.push(shape);
+                    }
+
+                    if (splitArea.show) {
+                        scale1 = (splitNumber - i - 1) / splitNumber;
+                        _addSplitArea(
+                            __ecIndicator, splitArea, scale, scale1, center, i
+                        ); 
+                    }  
+                }
+            }
+
+            /**
+             * 获取需要绘制的多边形的点集
+             * @param {Object} serie的指标参数
+             * @param {number} 缩小的系数
+             * @param {Array<number>} 中点坐标
+             *
+             * @return {Array<Array<number>>} 返回绘制的点集
+             */
+            function _getPointList(__ecIndicator, scale, center) {
+                var pointList = [];
+                var len = __ecIndicator.length;
+                var vector;
+
+                for (var i = 0 ; i < len ; i ++ ) {
+                    vector = __ecIndicator[i].vector;
+                    
+                    pointList.push(_mapVector(vector, center, scale));
+                }
+                return pointList;
+            }
+
+            /**
+             * 获取绘制的图形
+             * @param {Array<Array<number>>} 绘制的点集
+             * @param {string} 绘制方式 stroke | fill | both 描边 | 填充 | 描边 + 填充
+             * @param {string} 颜色
+             * @param {string} 描边颜色
+             * @param {number} 线条宽度
+             * @param {boolean=} hoverable
+             * @param {boolean=} draggable
+             * @return {Object} 绘制的图形对象
+             */ 
+            function _getShape(
+                pointList, brushType, color, strokeColor, lineWidth, 
+                hoverable, draggable
+            ) {
+                return {
+                    shape : 'polygon',
+                    style : {
+                        pointList   : pointList,
+                        brushType   : brushType,
+                        color       : color,
+                        strokeColor : strokeColor,
+                        lineWidth   : lineWidth
+                    },
+                    hoverable : hoverable || false,
+                    draggable : draggable || false
+                };
+            }
+
+            /**
+             * 绘制填充区域
+             */
+            function _addSplitArea(
+                __ecIndicator, splitArea, scale, scale1, center, colorInd
+            ) {
+                var indLen = __ecIndicator.length;
+                var color;
+                var colorArr = splitArea.areaStyle.color;
+                var colorLen;
+
+                var vector;
+                var vector1;
+                var pointList = [];
+                var indLen = __ecIndicator.length;
+                var shape;
+                
+                if (typeof colorArr == 'string') {
+                    colorArr = [colorArr];
+                }
+                colorLen = colorArr.length;
+                color = colorArr[ colorInd % colorLen];
+
+                for (var i = 0; i < indLen ; i ++) {
+                    pointList = [];
+                    vector = __ecIndicator[i].vector;
+                    vector1 = __ecIndicator[(i + 1) % indLen].vector;
+
+                    pointList.push(_mapVector(vector, center, scale));
+                    pointList.push(_mapVector(vector, center, scale1));
+                    pointList.push(_mapVector(vector1, center, scale1));
+                    pointList.push(_mapVector(vector1, center, scale));
+
+                    shape = _getShape(
+                        pointList, 'fill', color, '', 1
+                    );
+                    self.shapeList.push(shape);
+                }
+                
+            }
+
+            /**
+             * 转换坐标
+             *
+             * @param {Array<number>} 原始坐标
+             * @param {Array<number>} 中点坐标
+             * @param {number} 缩小的倍数
+             *
+             * @return {Array<number>} 转换后的坐标
+             */
+            function _mapVector(vector, center, scale) {
+                return [
+                    vector[0] * scale + center[0],
+                    vector[1] * scale + center[1]
+                ];
+            }
+
+            /**
+             * 获取中心点位置 暴露给外部图形类使用
+             * @param {number} polar的index
+             */
+            function getCenter(index) {
+                var index = index || 0;
+                return polar[index].center;
+            }
+
+            /**
+             * 绘制从中点出发的线
+             * 
+             * @param {Array<Object>} 指标对象
+             * @param {Array<number>} 中点坐标
+             * @param {string} 线条颜色
+             * @param {number} 线条宽度
+             * @param {string} 线条绘制类型 
+             *              solid | dotted | dashed 实线 | 点线 | 虚线
+             */
+            function _addLine(
+                __ecIndicator, center, axisLine
+            ) {
+                var indLen = __ecIndicator.length;
+                var line;
+                var vector;
+                var lineStyle = axisLine.lineStyle;
+                var strokeColor = lineStyle.color;
+                var lineWidth = lineStyle.width;
+                var lineType = lineStyle.type;
+
+                for (var i = 0; i < indLen ; i ++ ) {
+                    vector = __ecIndicator[i].vector;
+                    line = _getLine(
+                        center[0], center[1],
+                        vector[0] + center[0], 
+                        vector[1] + center[1],
+                        strokeColor, lineWidth, lineType
+                    );
+                    self.shapeList.push(line);
+                }
+            }
+
+            /** 
+             * 获取线条对象
+             * @param {number} 出发点横坐标
+             * @param {number} 出发点纵坐标
+             * @param {number} 终点横坐标
+             * @param {number} 终点纵坐标
+             * @param {string} 线条颜色
+             * @param {number} 线条宽度
+             * @param {string} 线条类型
+             *
+             * @return {Object} 线条对象
+             */
+            function _getLine(
+                xStart, yStart, xEnd, yEnd, strokeColor, lineWidth, lineType
+            ) {
+                return {
+                    shape : 'line',
+                    style : {
+                        xStart : xStart,
+                        yStart : yStart,
+                        xEnd   : xEnd,
+                        yEnd   : yEnd,
+                        strokeColor : strokeColor,
+                        lineWidth   : lineWidth,
+                        lineType    : lineType
+                    },
+                    hoverable : false
+                };
+            }
+
+            /**
+             * 调整指标的值，当indicator中存在max时设置为固定值
+             * @param {number} polar的index
+             */
+            function _adjustIndicatorValue(index) {
+                var item = polar[index];
+                var indicator = self.deepQuery(_queryTarget, 'indicator');
+                var len = indicator.length;
+                var __ecIndicator = item.__ecIndicator;
+                var value;
+                var max;
+                var min;
+                var data = _getSeriesData(index);
+                var splitNumber = item.splitNumber;
+
+                var boundaryGap = self.deepQuery(_queryTarget, 'boundaryGap');
+                var precision = self.deepQuery(_queryTarget, 'precision');
+                var power = self.deepQuery(_queryTarget, 'power');
+                var scale = self.deepQuery(_queryTarget, 'scale');
+
+                for (var i = 0; i < len ; i ++ ) {
+                    if (typeof indicator[i].max == 'number') {
+                        max = indicator[i].max;
+                        min = indicator[i].min || 0;
+                        value = {
+                            max : max,
+                            min : min
+                        };
+                    }
+                    else {
+                        value = _findValue(
+                            data, i, splitNumber,
+                            boundaryGap, precision, power, scale
+                        );
+                    }
+
+                    __ecIndicator[i].value = value;
+                }
+            }
+
+            /**
+             * 将series中的数据拿出来，如果没有polarIndex属性，默认为零
+             * @param {number} polar 的index
+             * @param {Array<Object>} 需要处理的数据
+             */
+            function _getSeriesData(index) {
+                var data = [];
+                var serie;
+                var serieData;
+                var legend = component.legend;
+
+                for (var i = 0; i < series.length; i ++) {
+                    serie = series[i];
+                    serieData = serie.data || [];
+                    for (var j = 0; j < serieData.length; j ++) {
+                        polarIndex = self.deepQuery(
+                            [serieData[j], serie, option], 'polarIndex'
+                        ) || 0;
+                        if (polarIndex == index
+                            && (!legend || legend.isSelected(serieData[j].name))
+                        ) {
+                            data.push(serieData[j]);
+                        }
+                    }
+                }
+                return data;
+            }
+
+            /**
+             * 查找指标合适的值
+             *
+             * 如果只有一组数据以数据中的最大值作为最大值 0为最小值
+             * 如果是多组，使用同一维度的进行比较 选出最大值最小值 
+             * 对它们进行处理  
+             * @param {Object} serie 的 data
+             * @param {number} 指标的序号
+             * @param {boolean} boundaryGap 两端留白
+             * @param {number} precision 小数精度
+             * @param {number} power 整数精度
+             * @return {Object} 指标的最大值最小值
+             */ 
+            function _findValue(
+                data, index, splitNumber, boundaryGap, precision, power, scale
+            ) {
+                var max;
+                var min;
+                var value;
+                var delta;
+                var str;
+                var len = 0;
+                var max0;
+                var min0;
+                var one;
+
+                if (!data || data.length === 0) {
+                    return;
+                }
+
+                function _compare(item) {         
+                    (item > max || max === undefined) && (max = item);
+                    (item < min || min === undefined) && (min = item);
+                }
+
+                if (data.length == 1) {
+                    min = 0;
+                }
+                if (data.length != 1) {
+                    for (var i = 0; i < data.length; i ++) {
+                        value = data[i].value[index];
+                        _compare(value);
+                    }
+                }
+                else {
+                    one = data[0];
+                    for (var i = 0; i < one.value.length; i ++) {
+                        _compare(one.value[i]);
+                    }
+                }
+
+                if (data.length != 1) {
+                    if (scale) {
+                        delta = _getDelta(
+                            max, min, splitNumber, precision, power
+                        );
+
+                        if (delta >= 1) {
+                            min = Math.floor(min / delta) * delta - delta;
+                        }
+                        else if (delta === 0) {
+                            if (max > 0) {
+                                min0 = 0;
+                                max0 = 2 * max;
+                            }
+                            else if (max === 0) {
+                                min0 = 0;
+                                max0 = 100;
+                            }
+                            else {
+                                max0 = 0;
+                                min0 = 2 * min;
+                            }
+
+                            return {
+                                max : max0,
+                                min : min0
+                            };
+                        }
+                        else {
+                            str = (delta + '').split('.')[1];
+                            len = str.length;
+                            min = Math.floor(
+                                    min * Math.pow(10, len)) / Math.pow(10, len
+                                  ) - delta;
+                        }
+
+                        if (Math.abs(min) <= delta) {
+                            min = 0;
+                        }
+                        
+                        max = min + Math.floor(delta * Math.pow(10, len) 
+                            * (splitNumber + 1)) / Math.pow(10, len) ;
+                    }
+                    else {
+                        min = min > 0 ? 0 : min;
+                    }
+                }
+
+                if (boundaryGap) {
+                    max = max > 0 ? max * 1.2 : max * 0.8;
+                    min = min > 0 ? min * 0.8 : min * 1.2;
+                }
+
+                return {
+                    max : max,
+                    min : min
+                };
+            }
+
+            /**
+             * 获取最大值与最小值中间比较合适的差值
+             * @param {number} max;
+             * @param {number} min
+             * @param {number} precision 小数精度
+             * @param {number} power 整数精度
+             * @return {number} delta
+             */
+            function _getDelta(max , min, splitNumber, precision, power) {
+                var delta = (max - min) / splitNumber;
+                var str;
+                var n;
+
+                if (delta > 1) {
+                    if (!power) {
+                        str = (delta + '').split('.')[0];
+                        n = str.length;
+                        if (str[0] >= 5) {
+                            return Math.pow(10, n);
+                        }
+                        else {
+                            return (str[0] - 0 + 1 ) * Math.pow(10, n - 1);
+                        }
+                    }
+                    else {
+                        delta = Math.ceil(delta);
+                        if (delta % power > 0) {
+                            return (Math.ceil(delta / power) + 1) * power;
+                        }
+                        else {
+                            return delta;
+                        }
+                    }
+                }
+                else if (delta == 1) {
+                    return 1;
+                }
+                else if (delta === 0) {
+                    return 0;
+                } 
+                else {
+                    if (!precision) {
+                        str = (delta + '').split('.')[1];
+                        n = 0;
+                        while (str[n] == '0') {
+                            n ++ ;
+                        }
+
+                        if (str[n] >= 5) {
+                            return '0.' + str.substring(0, n + 1) - 0 
+                                + 1 / Math.pow(10, n);
+                        }
+                        else {
+                            return '0.' + str.substring(0, n + 1) - 0 
+                                + 1 / Math.pow(10, n + 1);
+                        }
+                    } 
+                    else {
+                        return Math.ceil(delta * Math.pow(10, precision)) 
+                            / Math.pow(10, precision);
+                    }
+                }
+            }
+
+            function reformOption(opt) {
+                // 常用方法快捷方式
+                var _merge = zrUtil.merge;
+                opt = _merge(
+                          opt || {},
+                          ecConfig.polar,
+                          {
+                              'overwrite' : false,
+                              'recursive' : true
+                          }
+                      );
+
+                // 圆心坐标，无则为自适应居中
+                if (!opt.center 
+                    || (opt.center && !(opt.center instanceof Array))) {
+                    opt.center = [
+                        Math.round(zr.getWidth() / 2),
+                        Math.round(zr.getHeight() / 2)
+                    ];
+                }
+                else {
+                    if (typeof opt.center[0] == 'undefined') {
+                        opt.center[0] = Math.round(zr.getWidth() / 2);
+                    }
+                    if (typeof opt.center[1] == 'undefined') {
+                        opt.center[1] = Math.round(zr.getHeight() / 2);
+                    }
+                }
+
+                if (!opt.radius) {
+                    opt.radius = Math.floor(
+                        Math.min(_width, _height) / 2 - 50
+                    );
+                }
+
+                return opt;
+            }
+
+            /**
+             * 获取每个指标上某个value对应的坐标
+             * @param {number} polarIndex
+             * @param {number} indicatorIndex 
+             * @param {number} value
+             * @return {Array<number>} 对应坐标
+             */
+            function getVector(polarIndex, indicatorIndex, value) {
+                polarIndex = polarIndex || 0;
+                indicatorIndex = indicatorIndex || 0;
+                var __ecIndicator = polar[polarIndex].__ecIndicator;
+
+                if (indicatorIndex >= __ecIndicator.length) {
+                    return ;
+                }
+
+                var indicator = polar[polarIndex].__ecIndicator[indicatorIndex];
+                var center = polar[polarIndex].center;
+                var vector = indicator.vector;
+                var max = indicator.value.max;
+                var min = indicator.value.min;
+                var alpha;
+
+                if (typeof value != 'number') {
+                    return center;
+                }
+                else {
+                    if ( max != min) {
+                        alpha = (value - min) / (max - min);
+                    }
+                    else {
+                        alpha = 0.5;
+                    }
+                    
+                    return _mapVector(vector, center, alpha);
+                }
+            }
+
+            /**
+             * 判断一个点是否在网内
+             * @param {Array<number>} 坐标
+             * @return {number} 返回polarindex  返回-1表示不在任何polar
+             */ 
+            function isInside(vector) {
+                var polar = getNearestIndex(vector);
+
+                if (polar) {
+                    return polar.polarIndex;
+                }
+                return -1;
+            }
+
+            /**
+             * 如果一个点在网内，返回离它最近的数据轴的index
+             * @param {Array<number>} 坐标
+             * @return {Object} | false
+             *      polarIndex 
+             *      valueIndex
+             */
+            function getNearestIndex(vector) {
+                var item;
+                var center;
+                var radius;
+                var polarVector;
+                var startAngle;
+                var indicator;
+                var len;
+                var angle;
+                var finalAngle;
+                for (var i = 0 ; i < polar.length; i ++) {
+                    item = polar[i];
+                    center = getCenter(i);
+                    if (vector[0] == center[0] && vector[1] == center[1]) {
+                        return {
+                            polarIndex : i,
+                            valueIndex : 0
+                        };
+                    }
+                    radius = self.deepQuery([item, option], 'radius');
+                    startAngle = item.startAngle;
+                    indicator = item.indicator;
+                    len = indicator.length;
+                    angle = 2 * Math.PI / len; 
+                    // 注意y轴的翻转
+                    polarVector = ecCoordinates.cartesian2polar(
+                        vector[0] - center[0], center[1] - vector[1]  
+                    );
+                    if (vector[0] - center[0] < 0) {
+                        polarVector[1] += Math.PI;
+                    }
+                    if (polarVector[1] < 0) {
+                        polarVector[1] += 2 * Math.PI;
+                    }
+
+
+                    // 减去startAngle的偏移量 再加2PI变成正数
+                    finalAngle = polarVector[1] - 
+                        startAngle / 180 * Math.PI + Math.PI * 2;
+
+                    if (Math.abs(Math.cos(finalAngle % (angle / 2))) * radius
+                        > polarVector[0]) 
+                    {
+                        return {
+                            polarIndex : i,
+                            valueIndex : Math.floor(
+                                (finalAngle + angle / 2 ) / angle
+                                ) % len
+                        };
+                    }
+                }
+            }
+
+            /**
+             * 获取指标信息 
+             * @param {number} polarIndex
+             * @return {Array<Object>} indicator
+             */
+            function getIndicator(index) {
+                var index = index || 0;
+                return polar[index].indicator;
+            } 
+
+            /**
+             * 刷新
+             */
+            function refresh() {
+                self.clear();
+                _buildShape();
+            }
+
+            self.refresh = refresh;
+            self.reformOption = reformOption;
+            self.getVector = getVector;
+
+            self.getDropBox = _addDropBox;
+            self.getCenter = getCenter;
+            self.getIndicator = getIndicator;
+
+            self.isInside = isInside;
+            self.getNearestIndex = getNearestIndex;
+
+            init(option, component);
+        }
+
+        require('../component').define('polar', Polar);
+     
+        return Polar;
+    }
+);
 /*!
  * ECharts, a javascript interactive chart library.
  *  
@@ -20016,7 +21368,7 @@ define('echarts/component/dataView',['require','./base','../config','../componen
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zrender/tool/event','zrender/config','./util/shape/icon','./chart','./chart/island','./component','./component/title','./component/axis','./component/categoryAxis','./component/valueAxis','./component/grid','./component/dataZoom','./component/legend','./component/dataRange','./component/tooltip','./component/toolbox','./component/dataView','./util/ecData','./chart','./component','zrender/tool/util','zrender/tool/util','zrender/tool/util','zrender/tool/color','zrender/tool/util'],function(require) {
+define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zrender/tool/event','zrender/config','./util/shape/icon','./chart','./chart/island','./component','./component/title','./component/axis','./component/categoryAxis','./component/valueAxis','./component/grid','./component/dataZoom','./component/legend','./component/dataRange','./component/tooltip','./component/toolbox','./component/dataView','./component/polar','./util/ecData','./chart','./component','zrender/tool/util','zrender/tool/util','zrender/tool/util','zrender/tool/color','zrender/tool/util','zrender/tool/util'],function(require) {
     var self = {};
     /**
      * 入口方法 
@@ -20056,6 +21408,8 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
         var _selectedMap;
         var _island;
         var _toolbox;
+        
+        var _refreshInside;     // 内部刷新标志位
 
         // 初始化::构造函数
         _init();
@@ -20128,6 +21482,7 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
             require('./component/tooltip');
             require('./component/toolbox');
             require('./component/dataView');
+            require('./component/polar');
             // 工具箱
             var Toolbox = componentLibrary.get('toolbox');
             _toolbox = new Toolbox(_messageCenter, _zr, dom);
@@ -20334,7 +21689,43 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
          * 动态类型切换响应 
          */
         function _onmagicTypeChanged() {
-            var magicOption = _toolbox.getMagicOption();
+            _render(_getMagicOption());
+        }
+
+        /**
+         * 数据视图修改响应 
+         */
+        function _ondataViewChanged(param) {
+            _syncBackupData(param.option);
+            _messageCenter.dispatch(
+                ecConfig.EVENT.DATA_CHANGED,
+                null,
+                param
+            );
+            _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+        }
+
+        /**
+         * 还原 
+         */
+        function _onrestore() {
+            self.restore();
+        }
+
+        /**
+         * 刷新 
+         */
+        function _onrefresh(param) {
+            _refreshInside = true;
+            self.refresh(param);
+            _refreshInside = false;
+        }
+
+        /**
+         * 当前正在使用的option，还原可能存在的dataZoom
+         */
+        function _getMagicOption(targetOption) {
+            var magicOption = targetOption || _toolbox.getMagicOption();
             var len;
             // 横轴数据还原
             if (_optionBackup.xAxis) {
@@ -20369,37 +21760,10 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
             while (len--) {
                 magicOption.series[len].data = _optionBackup.series[len].data;
             }
-
-            _render(magicOption);
+            
+            return magicOption;
         }
-
-        /**
-         * 数据视图修改响应 
-         */
-        function _ondataViewChanged(param) {
-            _syncBackupData(param.option);
-            _messageCenter.dispatch(
-                ecConfig.EVENT.DATA_CHANGED,
-                null,
-                param
-            );
-            _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
-        }
-
-        /**
-         * 还原 
-         */
-        function _onrestore() {
-            restore();
-        }
-
-        /**
-         * 刷新 
-         */
-        function _onrefresh(param) {
-            refresh(param);
-        }
-
+        
         /**
          * 数据修改后的反向同步备份数据 
          */
@@ -20427,15 +21791,7 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
             for (var i = 0, l = curSeries.length; i < l; i++) {
                 curData = curSeries[i].data;
                 for (var j = 0, k = curData.length; j < k; j++) {
-                    if (typeof _optionBackup.series[i].data[j].value 
-                        != 'undefined'
-                    ) {
-                        _optionBackup.series[i].data[j].value 
-                            = curData[j].value;
-                    }
-                    else {
-                        _optionBackup.series[i].data[j] = curData[j];
-                    }
+                    _optionBackup.series[i].data[j] = curData[j];
                 }
             }
         }
@@ -20473,7 +21829,7 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
                 );
                 _chartList.push(title);
             }
-            
+
             // 提示
             var tooltip;
             if (magicOption.tooltip) {
@@ -20491,8 +21847,8 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
                 );
                 _chartList.push(legend);
             }
-            
-            // 色尺
+
+            // 值域控件
             var dataRange;
             if (magicOption.dataRange) {
                 var DataRange = new componentLibrary.get('dataRange');
@@ -20502,6 +21858,7 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
                 _chartList.push(dataRange);
             }
 
+            // 直角坐标系
             var grid;
             var dataZoom;
             var xAxis;
@@ -20547,12 +21904,29 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
                     'yAxis'
                 );
                 _chartList.push(yAxis);
-                tooltip && tooltip.setComponent({
-                    'grid' : grid,
-                    'xAxis' : xAxis,
-                    'yAxis' : yAxis
-                });
             }
+
+            // 极坐标系
+            var polar;
+            if (magicOption.polar) {
+                var Polar = componentLibrary.get('polar');
+                polar = new Polar(
+                    _messageCenter,
+                    _zr,
+                    magicOption,
+                    {
+                        'legend' : legend
+                    }
+                );
+                _chartList.push(polar);
+            }
+            
+            tooltip && tooltip.setComponent({
+                'grid' : grid,
+                'xAxis' : xAxis,
+                'yAxis' : yAxis,
+                'polar' : polar
+            });
 
             var ChartClass;
             var chartType;
@@ -20577,7 +21951,8 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
                                 'dataRange' : dataRange,
                                 'grid' : grid,
                                 'xAxis' : xAxis,
-                                'yAxis' : yAxis
+                                'yAxis' : yAxis,
+                                'polar' : polar
                             }
                         );
                         _chartList.push(chart);
@@ -20621,19 +21996,47 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
 
         /**
          * 刷新 
+         * @param {Object=} param，可选参数，用于附带option，内部同步用，外部不建议带入数据修改，无法同步 
          */
         function refresh(param) {
-            if (param.option) {
+            param = param || {};
+            var magicOption = param.option;
+            
+            // 外部调用的refresh且有option带入
+            if (!_refreshInside && param.option) {
+                // 做简单的差异合并去同步内部持有的数据克隆，不建议带入数据
+                // 开启数据区域缩放、拖拽重计算、数据视图可编辑模式情况下，当用户产生了数据变化后无法同步
+                // 如有带入option存在数据变化，请重新setOption
                 var zrUtil = require('zrender/tool/util');
-                _optionRestore = zrUtil.clone(param.option);
-                _optionBackup = zrUtil.clone(param.option);
-                _option = zrUtil.clone(param.option);
+                if (_optionBackup.toolbox
+                    && _optionBackup.toolbox.show
+                    && _optionBackup.toolbox.feature.magicType
+                    && _optionBackup.toolbox.feature.magicType.length > 0
+                ) {
+                    magicOption = _getMagicOption();
+                }
+                else {
+                    magicOption = _getMagicOption(_island.getOption());
+                }
+                zrUtil.merge(
+                    magicOption, param.option,
+                    { 'overwrite': true, 'recursive': true }
+                );
+                zrUtil.merge(
+                    _optionBackup, param.option,
+                    { 'overwrite': true, 'recursive': true }
+                );
+                zrUtil.merge(
+                    _optionRestore, param.option,
+                    { 'overwrite': true, 'recursive': true }
+                );
+                _island.refresh(magicOption);
+                _toolbox.refresh(magicOption);
             }
             
-            // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
-            // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
+            // 先来后到，安顺序刷新各种图表，图表内部refresh优化检查magicOption，无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
-                _chartList[i].refresh && _chartList[i].refresh(param.option);
+                _chartList[i].refresh && _chartList[i].refresh(magicOption);
             }
             _zr.refresh();
         }
@@ -20696,6 +22099,9 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
             if (typeof _option.animationEasing == 'undefined') {
                 _option.animationEasing = ecConfig.animationEasing;
             }
+            if (typeof _option.addDataAnimation == 'undefined') {
+                _option.addDataAnimation = ecConfig.addDataAnimation;
+            }
 
             var zrColor = require('zrender/tool/color');
             // 数值系列的颜色列表，不传则采用内置颜色，可配数组
@@ -20749,38 +22155,93 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
         }
         
         /**
-         * 动态数据添加，队尾添加
-         * 形参为单组数据参数，多组时为数据，内容同[seriesIdx, data, isShift, axisData]
+         * 动态数据添加
+         * 形参为单组数据参数，多组时为数据，内容同[seriesIdx, data, isShift, additionData]
          * @param {number} seriesIdx 系列索引
          * @param {number | Object} data 增加数据
          * @param {boolean=} isHead 是否队头加入，默认，不指定或false时为队尾插入
          * @param {boolean=} dataGrow 是否增长数据队列长度，默认，不指定或false时移出目标数组对位数据
-         * @param {string=} axisData 是否增加类目轴数据，附加操作同isHead和dataGrow
+         * @param {string=} additionData 是否增加类目轴(饼图为图例)数据，附加操作同isHead和dataGrow
          */
-        function addData(seriesIdx, data, isHead, dataGrow, axisData) {
+        function addData(seriesIdx, data, isHead, dataGrow, additionData) {
+            var zrUtil = require('zrender/tool/util');
             var params = seriesIdx instanceof Array
                          ? seriesIdx
-                         : [[seriesIdx, data, isHead, axisData]];
+                         : [[seriesIdx, data, isHead, dataGrow, additionData]];
             var axisIdx;
+            var legendDataIdx;
+            var magicOption;
+            if (_optionBackup.toolbox
+                && _optionBackup.toolbox.show
+                && _optionBackup.toolbox.feature.magicType
+                && _optionBackup.toolbox.feature.magicType.length > 0
+            ) {
+                magicOption = _getMagicOption();
+            }
+            else {
+                magicOption = _getMagicOption(_island.getOption());
+            }
+            //_optionRestore 和 _optionBackup都要同步
             for (var i = 0, l = params.length; i < l; i++) {
                 seriesIdx = params[i][0];
                 data = params[i][1];
                 isHead = params[i][2];
                 dataGrow = params[i][3];
-                axisData = params[i][4];
+                additionData = params[i][4];
                 if (_optionRestore.series[seriesIdx]) {
                     if (isHead) {
                         _optionRestore.series[seriesIdx].data.unshift(data);
-                        !dataGrow 
-                        && _optionRestore.series[seriesIdx].data.pop();
+                        _optionBackup.series[seriesIdx].data.unshift(data);
+                        if (!dataGrow) {
+                            _optionRestore.series[seriesIdx].data.pop();
+                            data = _optionBackup.series[seriesIdx].data.pop();
+                        }
                     }
                     else {
                         _optionRestore.series[seriesIdx].data.push(data);
-                        !dataGrow 
-                        && _optionRestore.series[seriesIdx].data.shift();
+                        _optionBackup.series[seriesIdx].data.push(data);
+                        if (!dataGrow) {
+                            _optionRestore.series[seriesIdx].data.shift();
+                            data = _optionBackup.series[seriesIdx].data.shift();
+                        }
                     }
                     
-                    if (typeof axisData != 'undefined') {
+                    if (typeof additionData != 'undefined'
+                        && _optionRestore.series[seriesIdx].type 
+                           == ecConfig.CHART_TYPE_PIE
+                        && _optionBackup.legend 
+                        && _optionBackup.legend.data
+                    ) {
+                        magicOption.legend.data = _optionBackup.legend.data;
+                        if (isHead) {
+                            _optionRestore.legend.data.unshift(additionData);
+                            _optionBackup.legend.data.unshift(additionData);
+                        }
+                        else {
+                            _optionRestore.legend.data.push(additionData);
+                            _optionBackup.legend.data.push(additionData);
+                        }
+                        if (!dataGrow) {
+                            legendDataIdx = zrUtil.indexOf(
+                                _optionBackup.legend.data,
+                                data.name
+                            );
+                            legendDataIdx != -1
+                            && (
+                                _optionRestore.legend.data.splice(
+                                    legendDataIdx, 1
+                                ),
+                                _optionBackup.legend.data.splice(
+                                    legendDataIdx, 1
+                                )
+                            );
+                        }
+                        _selectedMap[additionData] = true;
+                    } 
+                    else  if (typeof additionData != 'undefined'
+                        && typeof _optionRestore.xAxis != 'undefined'
+                        && typeof _optionRestore.yAxis != 'undefined'
+                    ) {
                         // x轴类目
                         axisIdx = _optionRestore.series[seriesIdx].xAxisIndex
                                   || 0;
@@ -20790,17 +22251,27 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
                         ) {
                             if (isHead) {
                                 _optionRestore.xAxis[axisIdx].data.unshift(
-                                    axisData
+                                    additionData
                                 );
-                                !dataGrow 
-                                && _optionRestore.xAxis[axisIdx].data.pop();
+                                _optionBackup.xAxis[axisIdx].data.unshift(
+                                    additionData
+                                );
+                                if (!dataGrow) {
+                                    _optionRestore.xAxis[axisIdx].data.pop();
+                                    _optionBackup.xAxis[axisIdx].data.pop();
+                                }
                             }
                             else {
                                 _optionRestore.xAxis[axisIdx].data.push(
-                                    axisData
+                                    additionData
                                 );
-                                !dataGrow 
-                                && _optionRestore.xAxis[axisIdx].data.shift();
+                                _optionBackup.xAxis[axisIdx].data.push(
+                                    additionData
+                                );
+                                if (!dataGrow) {
+                                    _optionRestore.xAxis[axisIdx].data.shift();
+                                    _optionBackup.xAxis[axisIdx].data.shift();
+                                }
                             }
                         }
                         
@@ -20810,28 +22281,58 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
                         if (_optionRestore.yAxis[axisIdx].type == 'category') {
                             if (isHead) {
                                 _optionRestore.yAxis[axisIdx].data.unshift(
-                                    axisData
+                                    additionData
                                 );
-                                !dataGrow 
-                                && _optionRestore.yAxis[axisIdx].data.pop();
+                                _optionBackup.yAxis[axisIdx].data.unshift(
+                                    additionData
+                                );
+                                if (!dataGrow) {
+                                    _optionRestore.yAxis[axisIdx].data.pop();
+                                    _optionBackup.yAxis[axisIdx].data.pop();
+                                }
                             }
                             else {
                                 _optionRestore.yAxis[axisIdx].data.push(
-                                    axisData
+                                    additionData
                                 );
-                                !dataGrow 
-                                && _optionRestore.yAxis[axisIdx].data.shift();
+                                _optionBackup.yAxis[axisIdx].data.push(
+                                    additionData
+                                );
+                                if (!dataGrow) {
+                                    _optionRestore.yAxis[axisIdx].data.shift();
+                                    _optionBackup.yAxis[axisIdx].data.shift();
+                                }
                             }
                         }
                     }
                 }
             }
-            
-            _messageCenter.dispatch(
-                ecConfig.EVENT.REFRESH,
-                '',
-                {option: _optionRestore}
-            );
+            magicOption.legend && (magicOption.legend.selected = _selectedMap);
+            // dataZoom同步一下数据
+            for (var i = 0, l = _chartList.length; i < l; i++) {
+                if (magicOption.addDataAnimation 
+                    && _chartList[i].addDataAnimation
+                ) {
+                    _chartList[i].addDataAnimation(params);
+                }
+                if (_chartList[i].type 
+                    == ecConfig.COMPONENT_TYPE_DATAZOOM
+                ) {
+                    _chartList[i].silence(true);
+                    _chartList[i].init(magicOption);
+                    _chartList[i].silence(false);
+                }
+            }
+            _island.refresh(magicOption);
+            _toolbox.refresh(magicOption);
+            setTimeout(function(){
+                _messageCenter.dispatch(
+                    ecConfig.EVENT.REFRESH,
+                    '',
+                    {option: magicOption}
+                );
+            }, magicOption.addDataAnimation ? 500 : 0);
+            return self;
         }
 
         /**
@@ -20913,11 +22414,11 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
             // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
                 _chartList[i].resize && _chartList[i].resize();
-                _chartList[i].refresh && _chartList[i].refresh();
             }
             _island.resize();
             _toolbox.resize();
             _zr.refresh();
+            return self;
         }
 
         /**
@@ -21978,7 +23479,7 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
         }
 
         /**
-         * 生成折线和折线上的拐点
+         * 生成K线
          */
         function _buildKLine(pointList) {
             // normal:
@@ -22159,7 +23660,7 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
                     strokeColor : eLineColor,
                     lineWidth : eLinewidth
                 },
-                _serieIndex: seriesIndex
+                _seriesIndex: seriesIndex
             };
             ecData.pack(
                 itemShape,
@@ -22169,6 +23670,544 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
             );
 
             return itemShape;
+        }
+
+        /**
+         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
+         * @param {Object} newSeries
+         * @param {Object} newComponent
+         */
+        function init(newOption, newComponent) {
+            component = newComponent;
+            refresh(newOption);
+        }
+
+        /**
+         * 刷新
+         */
+        function refresh(newOption) {
+            if (newOption) {
+                option = newOption;
+                series = option.series;
+            }
+            self.clear();
+            _buildShape();
+        }
+
+        /**
+         * 动画设定
+         */
+        function addDataAnimation(params) {
+            var aniMap = {}; // seriesIndex索引参数
+            for (var i = 0, l = params.length; i < l; i++) {
+                aniMap[params[i][0]] = params[i];
+            }
+            var x;
+            var dx;
+            var y;
+            var serie;
+            var seriesIndex;
+            var dataIndex;
+             for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                seriesIndex = self.shapeList[i]._seriesIndex;
+                if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
+                    // 有数据删除才有移动的动画
+                    if (self.shapeList[i].shape == 'candle') {
+                        dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
+                        serie = series[seriesIndex];
+                        if (aniMap[seriesIndex][2] 
+                            && dataIndex == serie.data.length - 1
+                        ) {
+                            // 队头加入删除末尾
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                        else if (!aniMap[seriesIndex][2] && dataIndex === 0) {
+                            // 队尾加入删除头部
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                        dx = component.xAxis.getAxis(
+                                serie.xAxisIndex || 0
+                             ).getGap();
+                        x = aniMap[seriesIndex][2] ? dx : -dx;
+                        y = 0;
+                        zr.animate(self.shapeList[i].id, '')
+                            .when(
+                                500,
+                                {position : [x, y]}
+                            )
+                            .start();
+                    }
+                }
+            }
+        }
+        
+        /**
+         * 动画设定
+         */
+        function animation() {
+            var duration = self.deepQuery([option], 'animationDuration');
+            var easing = self.deepQuery([option], 'animationEasing');
+            var x;
+            var y;
+            var serie;
+
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                if (self.shapeList[i].shape == 'candle') {
+                    serie = series[self.shapeList[i]._seriesIndex];
+                    x = self.shapeList[i].style.x;
+                    y = self.shapeList[i].style.y[0];
+                    zr.modShape(self.shapeList[i].id, {
+                        scale : [1, 0, x, y]
+                    });
+                    zr.animate(self.shapeList[i].id, '')
+                        .when(
+                            (self.deepQuery([serie],'animationDuration')
+                            || duration),
+
+                            {scale : [1, 1, x, y]},
+
+                            (self.deepQuery([serie], 'animationEasing')
+                            || easing)
+                        )
+                        .start();
+                }
+            }
+        }
+
+        self.init = init;
+        self.refresh = refresh;
+        self.addDataAnimation = addDataAnimation;
+        self.animation = animation;
+
+        init(option, component);
+    }
+    
+    // 动态扩展zrender shape：candle
+    require('../util/shape/candle');
+
+    // 图表注册
+    require('../chart').define('k', K);
+    
+    return K;
+});
+/**
+ * echarts图表类：雷达图
+ * Copyright 2013 Baidu Inc. All rights reserved.
+ *
+ * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
+ * @author Neil (杨骥, yangji01@baidu.com)
+ *
+ */
+
+ define('echarts/chart/radar',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/color','../chart'],function(require) {
+    /**
+     * 构造函数
+     * @param {Object} messageCenter echart消息中心
+     * @param {ZRender} zr zrender实例
+     * @param {Object} series 数据
+     * @param {Object} component 组件
+     */
+    function Radar(messageCenter, zr, option, component) {
+        // 基类装饰
+        var ComponentBase = require('../component/base');
+        ComponentBase.call(this, zr);
+        // 可计算特性装饰
+        var CalculableBase = require('./calculableBase');
+        CalculableBase.call(this, zr, option);
+
+        var ecConfig = require('../config');
+        var ecData = require('../util/ecData');
+
+        var zrColor = require('zrender/tool/color');
+
+        var self = this;
+        self.type = ecConfig.CHART_TYPE_RADAR;
+
+        var series;                 // 共享数据源，不要修改跟自己无关的项
+        var serie;
+
+        var _zlevelBase = self.getZlevelBase();
+
+        var _queryTarget;
+
+        var _dropBoxList;
+
+        var _symbol = [
+              'circle', 'rectangle', 'triangle', 'diamond',
+              'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
+            ];
+        var _radarDataCounter;
+        
+        /**
+         * 绘制图形
+         */
+        function _buildShape() {  
+            self.selectedMap = {};
+            _dropBoxList = [];
+            _radarDataCounter = 0;
+            for (var i = 0, l = series.length; i < l ; i ++) {
+                if (series[i].type == ecConfig.CHART_TYPE_RADAR) {
+                    serie = self.reformOption(series[i]);
+                    _queryTarget = [serie, option];
+
+                    // 添加可拖拽提示框，多系列共用一个极坐标，第一个优先
+                    if (self.deepQuery(_queryTarget, 'calculable')) {
+                        _addDropBox(i);
+                    }
+                    _buildSingleRadar(i);
+                }
+            }
+
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                self.shapeList[i].id = zr.newShapeId(self.type);
+                zr.addShape(self.shapeList[i]);
+            }
+        }
+
+        /**
+         * 构建数据图形
+         * @param {number} 序列的index
+         */
+        function _buildSingleRadar(index) {
+            var legend = component.legend;
+            var iconShape;
+            var data = serie.data;
+            var defaultColor;
+            var name;
+            var pointList;
+            var calculable = self.deepQuery(_queryTarget, 'calculable');
+           
+            for (var i = 0; i < data.length; i ++) {
+                name = data[i].name || '';
+                
+                // 图例开关
+                self.selectedMap[name] = legend 
+                                         ? legend.isSelected(name) 
+                                         : true;
+                if (!self.selectedMap[name]) {
+                    continue;
+                }
+                
+                 // 默认颜色策略
+                if (legend) {
+                    // 有图例则从图例中获取颜色定义
+                    defaultColor = legend.getColor(name);
+                    iconShape = legend.getItemShape(name);
+                    if (iconShape) {
+                        // 回调legend，换一个更形象的icon
+                        iconShape.style.brushType = self.deepQuery(
+                            [data[i], serie], 'itemStyle.normal.areaStyle'
+                        ) ? 'both' : 'stroke';
+                        legend.setItemShape(name, iconShape);
+                    }
+                }
+                else {
+                    // 全局颜色定义
+                    defaultColor = zr.getColor(i);
+                }
+
+                pointList = _getPointList(serie.polarIndex, data[i]);
+                // 添加拐点形状
+                _addSymbol(pointList, defaultColor, data[i], index);
+                // 添加数据形状
+                _addDataShape(
+                    pointList, defaultColor, data[i],
+                    index, i, calculable
+                );
+                _radarDataCounter++;
+            }
+            
+        }
+
+        /**
+         * 获取数据的点集
+         * @param {number} polarIndex
+         * @param {Array<Object>} 处理的数据
+         * @return {Array<Array<number>>} 点集
+         */
+        function _getPointList(polarIndex, dataArr) {
+            var pointList = [];
+            var vector;
+            var polar = component.polar;
+
+            for (var i = 0, l = dataArr.value.length; i < l; i++) {
+                vector = polar.getVector(polarIndex, i, dataArr.value[i]);
+                if (vector) {
+                    pointList.push(vector);
+                } 
+            }
+            return pointList;
+        }
+        
+        /**
+         * 生成折线图上的拐点图形
+         */
+        function _getSymbol(
+            x, y, symbol, symbolSize, normalColor, emphasisColor, lineWidth
+        ) {
+            var itemShape = {
+                shape : 'icon',
+                zlevel : _zlevelBase + 1,
+                style : {
+                    iconType : symbol.replace('empty', '').toLowerCase(),
+                    x : x - symbolSize,
+                    y : y - symbolSize,
+                    width : symbolSize * 2,
+                    height : symbolSize * 2,
+                    brushType : 'both',
+                    color : symbol.match('empty') ? '#fff' : normalColor,
+                    strokeColor : normalColor,
+                    lineWidth: lineWidth * 2
+                },
+                hoverable: false
+            };
+            
+            if (symbol.match('star')) {
+                itemShape.style.iconType = 'star';
+                itemShape.style.n = 
+                    (symbol.replace('empty', '').replace('star','') - 0) || 5;
+            }
+            
+            itemShape._x = x;
+            itemShape._y = y;
+
+            return itemShape;
+        }
+        
+        /**
+         * 添加拐点
+         * @param {Array<Array<number>>} pointList 点集
+         * @param {string} defaultColor 默认填充颜色
+         * @param {object} data 数据
+         * @param {number} serieIndex
+         */
+        function _addSymbol(pointList, defaultColor, data) {
+            // 多级控制
+            var queryTarget = [data, serie];
+            var symbol = self.deepQuery(queryTarget,'symbol')
+                         || _symbol[_radarDataCounter % _symbol.length]
+                         || 'cricle';
+            
+            if (symbol != 'none') {
+                var symbolSize = self.deepQuery(queryTarget,'symbolSize');
+                var nColor = self.deepQuery(
+                    queryTarget, 'itemStyle.normal.color'
+                );
+                var eColor = self.deepQuery(
+                    queryTarget, 'itemStyle.emphasis.color'
+                );
+                var lineWidth = self.deepQuery(
+                    queryTarget, 'itemStyle.normal.lineStyle.width'
+                );
+                
+                for (var i = 0, l = pointList.length; i < l; i++) {
+                    self.shapeList.push(_getSymbol(
+                        pointList[i][0],    // x
+                        pointList[i][1],    // y
+                        symbol,
+                        symbolSize,
+                        nColor || defaultColor,
+                        eColor || nColor || defaultColor,
+                        lineWidth
+                    ));
+                }
+            }
+        }
+        
+        /**
+         * 添加数据图形
+         * @param {Array<Array<number>>} pointList 点集
+         * @param {string} defaultColor 默认填充颜色
+         * @param {object} data 数据
+         * @param {number} serieIndex
+         * @param {number} dataIndex
+         * @param {boolean} calcalable
+         */ 
+        function _addDataShape(
+            pointList, defaultColor, data,
+            seriesIndex, dataIndex, calculable
+        ) {
+            // 多级控制
+            var queryTarget = [data, serie];
+            var nColor = self.deepQuery(
+                queryTarget, 'itemStyle.normal.color'
+            );
+            var nLineWidth = self.deepQuery(
+                queryTarget, 'itemStyle.normal.lineStyle.width'
+            );
+            var nLineType = self.deepQuery(
+                queryTarget, 'itemStyle.normal.lineStyle.type'
+            );
+            var nAreaColor = self.deepQuery(
+                queryTarget, 'itemStyle.normal.areaStyle.color'
+            );
+            var nIsAreaFill = self.deepQuery(
+                queryTarget, 'itemStyle.normal.areaStyle'
+            );
+            var shape = {
+                shape : 'polygon',
+                zlevel : _zlevelBase,
+                style : {
+                    pointList   : pointList,
+                    brushType   : nIsAreaFill ? 'both' : 'stroke',
+                    color       : nAreaColor 
+                                  || nColor 
+                                  || zrColor.alpha(defaultColor,0.5),
+                    strokeColor : nColor || defaultColor,
+                    lineWidth   : nLineWidth,
+                    lineType    : nLineType
+                },
+                highlightStyle : {
+                    brushType   : self.deepQuery(
+                                      queryTarget,
+                                      'itemStyle.emphasis.areaStyle'
+                                  ) || nIsAreaFill 
+                                  ? 'both' : 'stroke',
+                    color       : self.deepQuery(
+                                      queryTarget,
+                                      'itemStyle.emphasis.areaStyle.color'
+                                  ) 
+                                  || nAreaColor 
+                                  || nColor 
+                                  || zrColor.alpha(defaultColor,0.5),
+                    strokeColor : self.deepQuery(
+                                      queryTarget, 'itemStyle.emphasis.color'
+                                  ) || nColor || defaultColor,
+                    lineWidth   : self.deepQuery(
+                                      queryTarget,
+                                      'itemStyle.emphasis.lineStyle.width'
+                                  ) || nLineWidth,
+                    lineType    : self.deepQuery(
+                                      queryTarget,
+                                      'itemStyle.emphasis.lineStyle.type'
+                                  ) || nLineType
+                }
+            };
+            ecData.pack(
+                shape,
+                series[seriesIndex],    // 系列
+                seriesIndex,            // 系列索引
+                data,                   // 数据
+                dataIndex,              // 数据索引
+                data.name,              // 数据名称
+                // 附加指标信息 
+                component.polar.getIndicator(series[seriesIndex].polarIndex)
+            );
+            if (calculable) {
+                shape.draggable = true;
+                self.setCalculable(shape);
+            }
+            self.shapeList.push(shape);
+        }
+
+        /**
+         * 增加外围接受框
+         * @param {number} serie的序列
+         */
+        function _addDropBox(index) {
+            var polarIndex = self.deepQuery(
+                _queryTarget, 'polarIndex'
+            );
+            if (!_dropBoxList[polarIndex]) {
+                var shape = component.polar.getDropBox(polarIndex);
+                shape.zlevel = _zlevelBase;
+                self.setCalculable(shape);
+                ecData.pack(shape, series, index, undefined, -1);
+                self.shapeList.push(shape);
+                _dropBoxList[polarIndex] = true;
+            }
+        }
+
+
+        /**
+         * 数据项被拖拽出去，重载基类方法
+         */
+        function ondragend(param, status) {
+            if (!self.isDragend || !param.target) {
+                // 没有在当前实例上发生拖拽行为则直接返回
+                return;
+            }
+
+            var target = param.target;      // 被拖拽图形元素
+
+            var seriesIndex = ecData.get(target, 'seriesIndex');
+            var dataIndex = ecData.get(target, 'dataIndex');
+
+            // 被拖拽的图形是饼图sector，删除被拖拽走的数据
+            component.legend && component.legend.del(
+                series[seriesIndex].data[dataIndex].name
+            );
+
+            series[seriesIndex].data.splice(dataIndex, 1);
+
+            // 别status = {}赋值啊！！
+            status.dragOut = true;
+            status.needRefresh = true;
+
+            // 处理完拖拽事件后复位
+            self.isDragend = false;
+
+            return;
+        }
+
+         /**
+         * 数据项被拖拽进来， 重载基类方法
+         */
+        function ondrop(param, status) {
+            if (!self.isDrop || !param.target) {
+                // 没有在当前实例上发生拖拽行为则直接返回
+                return;
+            }
+
+            var target = param.target;      // 拖拽安放目标
+            var dragged = param.dragged;    // 当前被拖拽的图形对象
+
+            var seriesIndex = ecData.get(target, 'seriesIndex');
+            var dataIndex = ecData.get(target, 'dataIndex');
+
+            var data;
+            var legend = component.legend;
+            var value;
+
+            if (dataIndex == -1) {
+                
+                data = {
+                    value : ecData.get(dragged, 'value'),
+                    name : ecData.get(dragged, 'name')
+                };
+
+                series[seriesIndex].data.push(data);
+
+                legend && legend.add(
+                    data.name,
+                    dragged.style.color || dragged.style.strokeColor
+                );
+            }
+            else {
+                data = series[seriesIndex].data[dataIndex];
+                legend && legend.del(data.name);
+                data.name += option.nameConnector
+                             + ecData.get(dragged, 'name');
+                value = ecData.get(dragged, 'value');
+                for (var i = 0 ; i < value.length; i ++) {
+                    data.value[i] += value[i];
+                }
+                
+                legend && legend.add(
+                    data.name,
+                    dragged.style.color || dragged.style.strokeColor
+                );
+            }
+
+            // 别status = {}赋值啊！！
+            status.dragIn = status.dragIn || true;
+
+            // 处理完拖拽事件后复位
+            self.isDrop = false;
+
+            return;
         }
 
         /**
@@ -22194,28 +24233,43 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
             _buildShape();
         }
 
-        /**
-         * 动画设定
-         */
         function animation() {
             var duration = self.deepQuery([option], 'animationDuration');
             var easing = self.deepQuery([option], 'animationEasing');
+            var dataIndex;
+            var seriesIndex;
+            var data;
+            var serie;
+            var polarIndex;
+            var polar = component.polar;
+            var center;
+            var item;
             var x;
             var y;
-            var serie;
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                if (self.shapeList[i].shape == 'candle') {
-                    serie = series[self.shapeList[i]._serieIndex];
-                    x = self.shapeList[i].style.x;
-                    y = self.shapeList[i].style.y[0];
+                if (self.shapeList[i].shape == 'polygon') {
+                    item = self.shapeList[i];
+                    seriesIndex = ecData.get(item, 'seriesIndex');
+                    dataIndex = ecData.get(item, 'dataIndex');
+
+                    serie = series[seriesIndex];
+                    data = serie.data[dataIndex];
+
+                    polarIndex = self.deepQuery(
+                        [data, serie, option], 'polarIndex');
+                    center = polar.getCenter(polarIndex);
+                    x = center[0];
+                    y = center[1];
                     zr.modShape(self.shapeList[i].id, {
-                        scale : [1, 0, x, y]
+                        scale : [0.1, 0.1, x, y]
                     });
-                    zr.animate(self.shapeList[i].id, '')
+                    
+                    zr.animate(item.id, '')
                         .when(
                             (self.deepQuery([serie],'animationDuration')
-                            || duration),
+                            || duration)
+                            + dataIndex * 100,
 
                             {scale : [1, 1, x, y]},
 
@@ -22224,23 +24278,37 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
                         )
                         .start();
                 }
+                else {
+                    x = self.shapeList[i]._x || 0;
+                    y = self.shapeList[i]._y || 0;
+                    zr.modShape(self.shapeList[i].id, {
+                        scale : [0, 0, x, y]
+                    });
+                    zr.animate(self.shapeList[i].id, '')
+                        .when(
+                            duration,
+                            {scale : [1, 1, x, y]},
+                            'QuinticOut'
+                        )
+                        .start();
+                }
             }
+
         }
 
         self.init = init;
         self.refresh = refresh;
         self.animation = animation;
+        self.ondrop = ondrop;
+        self.ondragend = ondragend;
 
         init(option, component);
     }
-    
-    // 动态扩展zrender shape：candle
-    require('../util/shape/candle');
 
     // 图表注册
-    require('../chart').define('k', K);
+    require('../chart').define('radar', Radar);
     
-    return K;
+    return Radar;
 });
 /**
  * echarts图表类：力导向图
@@ -22994,17 +25062,17 @@ define('echarts/util/mapData/params',['require'],function(require) {
             for (var c = 0; c < coordinates.length; c++) {
                 var coordinate = coordinates[c];
                 
-                if (feature.geometry.type === "Polygon") {
+                if (feature.geometry.type === 'Polygon') {
                     coordinates[c] = decodePolygon(
                         coordinate,
-                        feature.geometry.encodeOffsets[c]
+                        encodeOffsets[c]
                     );
-                } else if (feature.geometry.type === "MultiPolygon") {
+                } else if (feature.geometry.type === 'MultiPolygon') {
                     for (var c2 = 0; c2 < coordinate.length; c2++) {
                         var polygon = coordinate[c2];
                         coordinate[c2] = decodePolygon(
                             polygon,
-                            feature.geometry.encodeOffsets[c][c2]
+                            encodeOffsets[c][c2]
                         );
                     }
                 }
@@ -23021,7 +25089,7 @@ define('echarts/util/mapData/params',['require'],function(require) {
         var prevY = encodeOffsets[1];
 
         for (var i = 0; i < coordinate.length; i+=2) {
-            var x = coordinate.charCodeAt(i) - 64
+            var x = coordinate.charCodeAt(i) - 64;
             var y = coordinate.charCodeAt(i+1) - 64;
             // ZigZag decoding
             x = (x >> 1) ^ (-(x & 1));
@@ -23658,7 +25726,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                     }
                     zr.refresh();
                 }
-            }
+            };
         }
         
         /**
@@ -24350,7 +26418,6 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
         
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
          * @param {Object} newSeries
          * @param {Object} newComponent
          */
@@ -25013,15 +27080,18 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                         singlePL = seriesPL[i];
                         for (var j = 0, k = singlePL.length; j < k; j++) {
                             data = serie.data[singlePL[j][2]];
-                            if ((categoryAxis.isMainAxis(singlePL[j][2]) // 主轴
-                                 && self.deepQuery(                      // 非空
-                                        [data, serie], 'symbol'
-                                    ) != 'none'
-                                )
-                                || self.deepQuery(                      // 可计算
+                            if (self.deepQuery(
+                                    [data, serie], 'showAllSymbol'
+                                ) // 全显示
+                                || (categoryAxis.isMainAxis(singlePL[j][2])
+                                    && self.deepQuery(
+                                           [data, serie], 'symbol'
+                                       ) != 'none'
+                                   ) // 主轴非空
+                                || self.deepQuery(
                                         [data, serie, option],
                                         'calculable'
-                                   )
+                                   ) // 可计算
                             ) {
                                 self.shapeList.push(_getSymbol(
                                     seriesIndex,
@@ -25199,13 +27269,14 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
 
             itemShape._x = x;
             itemShape._y = y;
+            itemShape._dataIndex = dataIndex;
+            itemShape._seriesIndex = seriesIndex;
 
             return itemShape;
         }
 
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
          * @param {Object} newSeries
          * @param {Object} newComponent
          */
@@ -25226,6 +27297,104 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
             _buildShape();
         }
 
+        /**
+         * 动态数据增加动画 
+         */
+        function addDataAnimation(params) {
+            var aniMap = {}; // seriesIndex索引参数
+            for (var i = 0, l = params.length; i < l; i++) {
+                aniMap[params[i][0]] = params[i];
+            }
+            var x;
+            var dx;
+            var y;
+            var dy;
+            var seriesIndex;
+            var pointList;
+            var isHorizontal; // 是否横向布局， isHorizontal;
+            for (var i = self.shapeList.length - 1; i >= 0; i--) {
+                seriesIndex = self.shapeList[i]._seriesIndex;
+                if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
+                    // 有数据删除才有移动的动画
+                    if (self.shapeList[i]._main) {
+                        pointList = self.shapeList[i].style.pointList;
+                        // 主线动画
+                        dx = Math.abs(pointList[0][0] - pointList[1][0]);
+                        dy = Math.abs(pointList[0][1] - pointList[1][1]);
+                        isHorizontal = 
+                            self.shapeList[i]._orient == 'horizontal';
+                            
+                        if (aniMap[seriesIndex][2]) {
+                            // 队头加入删除末尾
+                            if (self.shapeList[i].shape == 'polygon') {
+                                //区域图
+                                var len = pointList.length;
+                                self.shapeList[i].style.pointList[len - 3]
+                                    = pointList[len - 2];
+                                isHorizontal
+                                ? (self.shapeList[i].style.pointList[len - 3][0]
+                                       = pointList[len - 4][0]
+                                  )
+                                : (self.shapeList[i].style.pointList[len - 3][1]
+                                       = pointList[len - 4][1]
+                                  );
+                                self.shapeList[i].style.pointList[len - 2]
+                                    = pointList[len - 1];
+                            }
+                            self.shapeList[i].style.pointList.pop();
+                            
+                            isHorizontal ? (x = dx, y = 0) : (x = 0, y = -dy);
+                        }
+                        else {
+                            // 队尾加入删除头部
+                            self.shapeList[i].style.pointList.shift();
+                            if (self.shapeList[i].shape == 'polygon') {
+                                //区域图
+                                var targetPoint = 
+                                    self.shapeList[i].style.pointList.pop();
+                                isHorizontal
+                                ? (targetPoint[0] = pointList[0][0])
+                                : (targetPoint[1] = pointList[0][1]);
+                                self.shapeList[i].style.pointList.push(
+                                    targetPoint
+                                );
+                            }
+                            isHorizontal ? (x = -dx, y = 0) : (x = 0, y = dy);
+                        }
+                        zr.modShape(self.shapeList[i].id, {
+                            style : {
+                                pointList : self.shapeList[i].style.pointList
+                            }
+                        });
+                    }
+                    else {
+                        // 拐点动画
+                        if (aniMap[seriesIndex][2] 
+                            && self.shapeList[i]._dataIndex 
+                                == series[seriesIndex].data.length - 1
+                        ) {
+                            // 队头加入删除末尾
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                        else if (!aniMap[seriesIndex][2] 
+                                 && self.shapeList[i]._dataIndex === 0
+                        ) {
+                            // 队尾加入删除头部
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                    }
+                    zr.animate(self.shapeList[i].id, '')
+                        .when(
+                            500,
+                            {position : [x, y]}
+                        )
+                        .start();
+                }
+            }
+        }
+        
         /**
          * 动画设定
          */
@@ -25285,6 +27454,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
 
         self.init = init;
         self.refresh = refresh;
+        self.addDataAnimation = addDataAnimation;
         self.animation = animation;
 
         init(option, component);
@@ -25946,7 +28116,6 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
 
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
          * @param {Object} newSeries
          * @param {Object} newComponent
          */
@@ -25965,6 +28134,68 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
             }
             self.clear();
             _buildShape();
+        }
+        
+        /**
+         * 动态数据增加动画 
+         */
+        function addDataAnimation(params) {
+            var aniMap = {}; // seriesIndex索引参数
+            for (var i = 0, l = params.length; i < l; i++) {
+                aniMap[params[i][0]] = params[i];
+            }
+            var x;
+            var dx;
+            var y;
+            var dy;
+            var serie;
+            var seriesIndex;
+            var dataIndex;
+            for (var i = self.shapeList.length - 1; i >= 0; i--) {
+                seriesIndex = ecData.get(self.shapeList[i], 'seriesIndex');
+                if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
+                    // 有数据删除才有移动的动画
+                    if (self.shapeList[i].shape == 'rectangle') {
+                        // 主动画
+                        dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
+                        serie = series[seriesIndex];
+                        if (aniMap[seriesIndex][2] 
+                            && dataIndex == serie.data.length - 1
+                        ) {
+                            // 队头加入删除末尾
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                        else if (!aniMap[seriesIndex][2] && dataIndex === 0) {
+                            // 队尾加入删除头部
+                            zr.delShape(self.shapeList[i].id);
+                            continue;
+                        }
+                        if (self.shapeList[i]._orient == 'horizontal') {
+                            // 条形图
+                            dy = component.yAxis.getAxis(
+                                    serie.yAxisIndex || 0
+                                 ).getGap();
+                            y = aniMap[seriesIndex][2] ? -dy : dy;
+                            x = 0;
+                        }
+                        else {
+                            // 柱形图
+                            dx = component.xAxis.getAxis(
+                                    serie.xAxisIndex || 0
+                                 ).getGap();
+                            x = aniMap[seriesIndex][2] ? dx : -dx;
+                            y = 0;
+                        }
+                        zr.animate(self.shapeList[i].id, '')
+                            .when(
+                                500,
+                                {position : [x, y]}
+                            )
+                            .start();
+                    }
+                }
+            }
         }
 
         /**
@@ -26088,6 +28319,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
 
         self.init = init;
         self.refresh = refresh;
+        self.addDataAnimation = addDataAnimation;
         self.animation = animation;
 
         init(option, component);
@@ -26325,7 +28557,9 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                 },
                 highlightStyle : {
                     color : emphasisColor || normalColor || defaultColor
-                }
+                },
+                _seriesIndex : seriesIndex, 
+                _dataIndex : dataIndex
             };
             
             if (isSelected) {
@@ -26501,7 +28735,9 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                         },
                         highlightStyle : {
                             brushType : 'fill'
-                        }
+                        },
+                        _seriesIndex : seriesIndex, 
+                        _dataIndex : dataIndex
                     };
                 }
                 else if (labelControl.position == 'center') {
@@ -26523,7 +28759,9 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                         },
                         highlightStyle : {
                             brushType : 'fill'
-                        }
+                        },
+                        _seriesIndex : seriesIndex, 
+                        _dataIndex : dataIndex
                     };
                 }
                 else {
@@ -26629,7 +28867,9 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                         strokeColor : lineStyle.color || defaultColor,
                         lineType : lineStyle.type,
                         lineWidth : lineStyle.width
-                    }
+                    },
+                    _seriesIndex : seriesIndex, 
+                    _dataIndex : dataIndex
                 };
             }
             else {
@@ -26732,7 +28972,6 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
 
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
          * @param {Object} newSeries
          * @param {Object} newComponent
          */
@@ -26751,6 +28990,200 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
             }
             self.clear();
             _buildShape();
+        }
+        
+        /**
+         * 动态数据增加动画 
+         * 心跳效果
+        function addDataAnimation(params) {
+            var aniMap = {}; // seriesIndex索引参数
+            for (var i = 0, l = params.length; i < l; i++) {
+                aniMap[params[i][0]] = params[i];
+            }
+            var x;
+            var y;
+            var r;
+            var seriesIndex;
+            for (var i = self.shapeList.length - 1; i >= 0; i--) {
+                seriesIndex = ecData.get(self.shapeList[i], 'seriesIndex');
+                if (aniMap[seriesIndex]) {
+                    if (self.shapeList[i].shape == 'sector'
+                        || self.shapeList[i].shape == 'circle'
+                        || self.shapeList[i].shape == 'ring'
+                    ) {
+                        r = self.shapeList[i].style.r;
+                        zr.animate(self.shapeList[i].id, 'style')
+                            .when(
+                                300,
+                                {r : r * 0.9}
+                            )
+                            .when(
+                                500,
+                                {r : r}
+                            )
+                            .start();
+                    }
+                }
+            }
+        }
+         */
+        
+        /**
+         * 动态数据增加动画 
+         */
+        function addDataAnimation(params) {
+            var aniMap = {}; // seriesIndex索引参数
+            for (var i = 0, l = params.length; i < l; i++) {
+                aniMap[params[i][0]] = params[i];
+            }
+            
+            // 构建新的饼图匹配差异做动画
+            var sectorMap = {};
+            var textMap = {};
+            var lineMap = {};
+            var backupShapeList = zrUtil.clone(self.shapeList);
+            self.shapeList = [];
+            
+            var seriesIndex;
+            var isHead;
+            var dataGrow;
+            var deltaIdxMap = {};   // 修正新增数据后会对dataIndex产生错位匹配
+            for (var i = 0, l = params.length; i < l; i++) {
+                seriesIndex = params[i][0];
+                isHead = params[i][2];
+                dataGrow = params[i][3];
+                if (series[seriesIndex]
+                    && series[seriesIndex].type == ecConfig.CHART_TYPE_PIE
+                ) {
+                    if (isHead) {
+                        if (!dataGrow) {
+                            sectorMap[
+                                seriesIndex 
+                                + '_' 
+                                + series[seriesIndex].data.length
+                            ] = 'delete';
+                        }
+                        deltaIdxMap[seriesIndex] = 1;
+                    }
+                    else {
+                        if (!dataGrow) {
+                            sectorMap[seriesIndex + '_-1'] = 'delete';
+                            deltaIdxMap[seriesIndex] = -1;
+                        }
+                        else {
+                            deltaIdxMap[seriesIndex] = 0;
+                        }
+                    }
+                    _buildSinglePie(seriesIndex);
+                }
+            }
+            var dataIndex;
+            var key;
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                seriesIndex = self.shapeList[i]._seriesIndex;
+                dataIndex = self.shapeList[i]._dataIndex;
+                key = seriesIndex + '_' + dataIndex;
+                // map映射让n*n变n
+                switch (self.shapeList[i].shape) {
+                    case 'sector' :
+                        sectorMap[key] = self.shapeList[i];
+                        break;
+                    case 'text' :
+                        textMap[key] = self.shapeList[i];
+                        break;
+                    case 'line' :
+                        lineMap[key] = self.shapeList[i];
+                        break;
+                }
+            }
+            self.shapeList = [];
+            var targeSector;
+            for (var i = 0, l = backupShapeList.length; i < l; i++) {
+                seriesIndex = backupShapeList[i]._seriesIndex;
+                if (aniMap[seriesIndex]) {
+                    dataIndex = backupShapeList[i]._dataIndex
+                                + deltaIdxMap[seriesIndex];
+                    key = seriesIndex + '_' + dataIndex;
+                    targeSector = sectorMap[key];
+                    if (!targeSector) {
+                        continue;
+                    }
+                    if (backupShapeList[i].shape == 'sector') {
+                        if (targeSector != 'delete') {
+                            // 原有扇形
+                            zr.animate(backupShapeList[i].id, 'style')
+                                .when(
+                                    400,
+                                    {
+                                        startAngle : 
+                                            targeSector.style.startAngle,
+                                        endAngle : 
+                                            targeSector.style.endAngle
+                                    }
+                                )
+                                .start();
+                        }
+                        else {
+                            // 删除的扇形
+                            zr.animate(backupShapeList[i].id, 'style')
+                                .when(
+                                    400,
+                                    deltaIdxMap[seriesIndex] < 0
+                                    ? {
+                                        endAngle : 
+                                            backupShapeList[i].style.startAngle
+                                      }
+                                    : {
+                                        startAngle :
+                                            backupShapeList[i].style.endAngle
+                                      }
+                                )
+                                .start();
+                        }
+                    }
+                    else if (backupShapeList[i].shape == 'text'
+                             || backupShapeList[i].shape == 'line'
+                    ) {
+                        if (targeSector == 'delete') {
+                            // 删除逻辑一样
+                            zr.delShape(backupShapeList[i].id);
+                        }
+                        else {
+                            // 懒得新建变量了，借用一下
+                            switch (backupShapeList[i].shape) {
+                                case 'text':
+                                    targeSector = textMap[key];
+                                    zr.animate(backupShapeList[i].id, 'style')
+                                        .when(
+                                            400,
+                                            {
+                                                x :targeSector.style.x,
+                                                y :targeSector.style.y
+                                            }
+                                        )
+                                        .start();
+                                    break;
+                                case 'line':
+                                    targeSector = lineMap[key];
+                                    zr.animate(backupShapeList[i].id, 'style')
+                                        .when(
+                                            400,
+                                            {
+                                                xStart:targeSector.style.xStart,
+                                                yStart:targeSector.style.yStart,
+                                                xEnd : targeSector.style.xEnd,
+                                                yEnd : targeSector.style.yEnd
+                                            }
+                                        )
+                                        .start();
+                                    break;
+                            }
+                            
+                        }
+                    }
+                }
+            }
+            self.shapeList = backupShapeList;
         }
 
         /**
@@ -27023,6 +29456,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
         // 接口方法
         self.init = init;
         self.refresh = refresh;
+        self.addDataAnimation = addDataAnimation;
         self.animation = animation;
         self.onclick = onclick;
         self.ondrop = ondrop;

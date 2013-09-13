@@ -21,17 +21,17 @@ define(function(require) {
             for (var c = 0; c < coordinates.length; c++) {
                 var coordinate = coordinates[c];
                 
-                if (feature.geometry.type === "Polygon") {
+                if (feature.geometry.type === 'Polygon') {
                     coordinates[c] = decodePolygon(
                         coordinate,
-                        feature.geometry.encodeOffsets[c]
+                        encodeOffsets[c]
                     );
-                } else if (feature.geometry.type === "MultiPolygon") {
+                } else if (feature.geometry.type === 'MultiPolygon') {
                     for (var c2 = 0; c2 < coordinate.length; c2++) {
                         var polygon = coordinate[c2];
                         coordinate[c2] = decodePolygon(
                             polygon,
-                            feature.geometry.encodeOffsets[c][c2]
+                            encodeOffsets[c][c2]
                         );
                     }
                 }
@@ -48,7 +48,7 @@ define(function(require) {
         var prevY = encodeOffsets[1];
 
         for (var i = 0; i < coordinate.length; i+=2) {
-            var x = coordinate.charCodeAt(i) - 64
+            var x = coordinate.charCodeAt(i) - 64;
             var y = coordinate.charCodeAt(i+1) - 64;
             // ZigZag decoding
             x = (x >> 1) ^ (-(x & 1));

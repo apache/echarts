@@ -21,7 +21,7 @@
     include:[
         'echarts/chart/scatter',
         'echarts/chart/k',
-        //'echarts/chart/radar',
+        'echarts/chart/radar',
         'echarts/chart/force',
         /*
         'echarts/chart/map',
