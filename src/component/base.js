@@ -35,6 +35,7 @@ define(function(require) {
                 case ecConfig.CHART_TYPE_RADAR :
                 case ecConfig.CHART_TYPE_MAP :
                 case ecConfig.CHART_TYPE_K :
+                case ecConfig.CHART_TYPE_CHORD:
                     return 2;
 
                 case ecConfig.COMPONENT_TYPE_LEGEND :
@@ -155,6 +156,40 @@ define(function(require) {
                    + finalTextStyle.fontFamily;
         }
         
+        /**
+         * 百分比计算
+         */
+        function calAbsolute(pos) {
+            var x = pos[0];
+            var y = pos[1];
+            var ret = [];
+            if (typeof(x) == 'string') {
+                if (trim(x).substr(-1) == '%') {
+                    ret[0] = parseFloat(x) / 100 * this.zr.getWidth();
+                } else {
+                    ret[0] = parseFloat(x);
+                }
+            } else {
+                ret[0] = x
+            }
+
+            if (typeof(y) == 'string') {
+                if (trim(y).substr(-1) == '%') {
+                    ret[1] = parseFloat(y) / 100 * this.zr.getHeight();
+                } else {
+                    ret[1] = parseFloat(y);
+                }
+            } else {
+                ret[1] = y;
+            }
+
+            return ret;
+        }
+
+        function trim(str) {
+            return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+        }
+
         function resize() {
             self.refresh && self.refresh();
         }
@@ -184,6 +219,7 @@ define(function(require) {
         self.reformCssArray = reformCssArray;
         self.deepQuery = deepQuery;
         self.getFont = getFont;
+        self.calAbsolute = calAbsolute;
         self.clear = clear;
         self.dispose = dispose;
         self.resize = resize;

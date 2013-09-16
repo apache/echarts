@@ -6,7 +6,7 @@
  */
 
 define(function(require) {
-    
+    'use strict';
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -219,7 +219,7 @@ define(function(require) {
                         .toArray();
             var max = narr.max();
             if (max !== 0) {
-                nodeWeights = narr.mul(1/max).toArray();
+                nodeWeights = narr.mul(1/max, narr).toArray();
             }
 
             for (var i = 0; i < l; i++) {
@@ -408,7 +408,7 @@ define(function(require) {
             var narr = new NDArray(linkWeights);
             var max = narr.max();
             if (max !== 0) {
-                linkWeights = narr.mul(1/max).toArray();
+                linkWeights = narr.mul(1/max, narr).toArray();
             }
         }
 
