@@ -854,7 +854,7 @@ define(function(require) {
                             || duration)
                             + dataIndex * 100,
 
-                            // {scale : [1, 1, x, y]},
+                            {scale : [1, 1, x, y]},
 
                             (self.deepQuery([serie], 'animationEasing')
                             || easing)
