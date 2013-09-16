@@ -18,6 +18,7 @@ define(function() {
         CHART_TYPE_K: 'k',
         CHART_TYPE_ISLAND: 'island',
         CHART_TYPE_FORCE : 'force',
+        CHART_TYPE_CHORD : 'chord',
 
         // 组件类型
         COMPONENT_TYPE_TITLE: 'title',
@@ -581,6 +582,17 @@ define(function() {
                     linkStyle : {}
                 }
             }
+        },
+
+        chord : {
+            innerRadius : 160,
+            outerRadius : 180,
+            // Source data matrix
+            center : ['50%', '50%'],
+            padding : 2,
+            sortGroups : 'none', // can be 'none', 'ascending', 'descending'
+            sortSubGroups : 'none', // can be 'none', 'ascending', 'descending'
+            matrix : []
         },
 
         island: {
