@@ -69,7 +69,7 @@
                     <textarea id="code" name="code">
 option = {
     tooltip : {
-        trigger: 'item'
+        trigger: 'axis'
     },
     legend: {
         x : 'left',
@@ -84,72 +84,122 @@ option = {
             saveAsImage : true
         }
     },
-    calculable : true,
-    color : [
-        'rgba(111,111,22, 0.5)',
-        'rgba(200,0,0,0.5)',
-        'rgba(20,100,100,0.5)'
-    ],
     polar : [
         {
             indicator : [
-                { name : '指标一' },
-                { name : '指标二' },
-                { name : '指标三' },
-                { name : '指标四' },
-                { name : '指标五' }
+                { text : '指标一' },
+                { text : '指标二' },
+                { text : '指标三' },
+                { text : '指标四' },
+                { text : '指标五' }
             ],
-            center : [200,200],
-            radius : 100
+            center : [250,210],
+            radius : 150
         },
         {
             indicator : [
-                { name : '语文', max  : 150 },
-                { name : '数学', max  : 150 },
-                { name : '英语', max  : 150 },
-                { name : '物理', max  : 120 },
-                { name : '化学', max  : 108 },
-                { name : '生物', max  : 72 }
+                { text : '语文', max  : 150 },
+                { text : '数学', max  : 150 },
+                { text : '英语', max  : 150 },
+                { text : '物理', max  : 120 },
+                { text : '化学', max  : 108 },
+                { text : '生物', max  : 72 }
             ],
-            center : [600, 200],
-            radius : 100
+            center : [document.getElementById('main').offsetWidth - 250, 210],
+            radius : 150
         }
     ],
     series : [
         {
             name: '雷达图',
             type: 'radar',
-            radius : 100,
-            polarIndex : 0,
+            itemStyle: {
+                emphasis: {
+                    // color: 各异,
+                    lineStyle: {
+                        width: 4
+                    }
+                }
+            },
             data : [
                 {
                     value : [100, 8, 0.40, -80, 2000],
-                    name : '图一'
+                    name : '图一',
+                    symbol: 'star5',
+                    symbolSize: 4,           // 可计算特性参数，空数据拖拽提示图形大小
+                    itemStyle: {
+                        normal: {
+                            lineStyle: {
+                                type: 'dashed'
+                            }
+                        }
+                    }
                 },
                 {
                     value : [10, 3, 0.20, -100, 1000],
-                    name : '图二'
+                    name : '图二',
+                    itemStyle: {
+                        normal: {
+                            areaStyle: {
+                                type: 'default'
+                            }
+                        }
+                    }
                 },
                 {
                     value : [20, 3, 0.3, -13.5, 3000],
-                    name : '图三' 
+                    name : '图三',
+                    symbol: 'none',         // 拐点图形类型，非标准参数
+                    itemStyle: {
+                        normal: {
+                            lineStyle: {
+                                type: 'dotted'
+                            }
+                        }
+                    }
                 }
             ]
         },
         {
             name: '成绩单',
             type: 'radar',
-            center : [600, 200],
-            radius : 100,
             polarIndex : 1,
+            itemStyle: {
+                normal: {
+                    areaStyle: {
+                        type: 'default'
+                    }
+                }
+            },
             data : [
                 {
                     value : [120, 118, 130, 100, 99, 70],
-                    name : '张三'
+                    name : '张三',
+                    itemStyle: {
+                        normal: {
+                            areaStyle: {
+                                color: (function(){
+                                    var zrColor = require('zrender/tool/color');
+                                    var x = document.getElementById('main').offsetWidth - 250;
+                                    return zrColor.getRadialGradient(
+                                        x, 210, 0, x, 200, 150,
+                                        [[0, 'rgba(255,255,0,0.3)'],[1, 'rgba(255,0,0,0.5)']]
+                                    )
+                                })()
+                            }
+                        }
+                    }
                 },
                 {
                     value : [90, 113, 140, 30, 70, 60],
-                    name : '李四'
+                    name : '李四',
+                    itemStyle: {
+                        normal: {
+                            lineStyle: {
+                                type: 'dashed'
+                            }
+                        }
+                    }
                 }
             ]
         }

@@ -493,14 +493,12 @@ define(function (require) {
                 zlevel : _zlevelBase
             };
 
-            if (!zoomOption.zoomLock) {
-                _startShape.draggable = true;
-                _startShape.ondrift = _ondrift;
-                _startShape.ondragend = _ondragend;
-                _endShape.draggable = true;
-                _endShape.ondrift = _ondrift;
-                _endShape.ondragend = _ondragend;
-            }
+            _startShape.draggable = true;
+            _startShape.ondrift = _ondrift;
+            _startShape.ondragend = _ondragend;
+            _endShape.draggable = true;
+            _endShape.ondrift = _ondrift;
+            _endShape.ondragend = _ondragend;
 
             if (zoomOption.orient == 'horizontal') {
                 // 头
@@ -555,6 +553,11 @@ define(function (require) {
          * 拖拽范围控制
          */
         function _ondrift(e, dx, dy) {
+            if (zoomOption.zoomLock) {
+                // zoomLock时把handle转成filler的拖拽
+                e = _fillerShae;
+            }
+            
             var detailSize = e._type == 'filler' ? _handleSize : 0;
             if (zoomOption.orient == 'horizontal') {
                 if (e.style.x + dx - detailSize <= _location.x) {

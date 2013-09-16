@@ -1002,8 +1002,7 @@ define(function(require) {
                     '',
                     {option: magicOption}
                 );
-            }, 500);
-            
+            }, magicOption.addDataAnimation ? 500 : 0);
             return self;
         }
 

@@ -109,6 +109,7 @@
                                     <li><a href="#AxisSplitarea">splitArea</a></li>
                                     <li><a href="#AxisData">data</a></li>
                                 </ul>
+                                <li><a href="#Polar">polar</a></li>
                                 <li><a href="#Series">series</a></li>
                                 <ul>
                                     <li><a href="#SeriesData">data</a></li>
@@ -321,8 +322,8 @@
                             <th> 填充雷达图 </th>
                         </tr>
                         <tr>
-                            <td><img src="./asset/img/example/radar1.jpg" title="" alt="雷达图"/></td>
-                            <td><img src="./asset/img/example/radar2.jpg" title="" alt="填充雷达图"/></td>
+                            <td><img src="./asset/img/example/radar1.png" title="" alt="雷达图"/></td>
+                            <td><img src="./asset/img/example/radar2.png" title="" alt="填充雷达图"/></td>
                         </tr>
                     </table>
                     
@@ -1601,6 +1602,103 @@ feature : {
 </pre>
 </div>
 
+                    <h4>polar<a name="Polar"> </a></h4>
+                    <P> 极坐标：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {number} startAngle </td>
+                            <td> 90 </td>
+                            <td> 开始角度, 有效输入范围：[-180,180]</td>
+                        </tr>
+                        <tr>
+                            <td> {number} splitNumber </td>
+                            <td> 5 </td>
+                            <td> 分割段数，默认为5 </td>
+                        </tr>
+                        <tr>
+                            <td> {Array} center </td>
+                            <td> null </td>
+                            <td> 圆心坐标，默认为[width / 2, height / 2]自适应居中 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} radius </td>
+                            <td> 自适应 </td>
+                            <td> 半径，默认为Min(width, height) / 2 - 50 </td>
+                        </tr>
+                        <tr>
+                            <td> {object} name </td>
+                            <td> {<br/> show:true, <br/> textStyle:{color:#333}<br/>} 
+                            </td>
+                            <td> 坐标轴名称</td>
+                        </tr>
+                        <tr>
+                            <td> {Array} boundaryGap </td>
+                            <td> [0, 0] </td>
+                            <td> 数值轴两端空白策略，数组内数值代表百分比，[原始数据最小值与最终最小值之间的差额，原始数据最大值与最终最大值之间的差额] </td>
+                        </tr>
+                        <tr>
+                            <td> {boolean} scale </td>
+                            <td> false </td>
+                            <td> 脱离0值比例，放大聚焦到最终_min，_max区间 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} precision </td>
+                            <td> 0 </td>
+                            <td> 小数精度，默认为0，无小数点 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} power </td>
+                            <td> 100 </td>
+                            <td> 整数精度，默认为100，个位和百位为0 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} splitNumber </td>
+                            <td> 5 </td>
+                            <td> 分割段数，默认为5 </td>
+                        </tr>
+                        <tr>
+                            <td> {Object} axisLine </td>
+                            <td> {show : true} </td>
+                            <td> 坐标轴线，默认显示，属性show控制显示与否，属性lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式 </td>
+                        </tr>
+                        <tr>
+                            <td> {Object} axisLabel </td>
+                            <td> {show : false} </td>
+                            <td> 坐标轴文本标签，详见<a href="#AxisAxislabel" title="">axis.axisLabel</a></td>
+                        </tr>
+                        <tr>
+                            <td> {Object} splitLine </td>
+                            <td> {show : true} </td>
+                            <td> 分隔线，默认显示，属性show控制显示与否，属性lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式 </td>
+                        </tr>
+                        <tr>
+                            <td> {Object} splitArea </td>
+                            <td> {show : false} </td>
+                            <td> 分隔区域，默认不显示，属性show控制显示与否，属性areaStyle（详见<a href="#AreaStyle" title="">areaStyle</a>）控制区域样式 </td>
+                        </tr>
+                        <tr>
+                            <td> {Array} indicator </td>
+                            <td> [] </td>
+                            <td> 雷达指标列表，同时也是label内容，例子见下</td>
+                        </tr>
+                    </table>
+                    <div class="code">
+                        <pre>
+indicator : [
+    {name : '外观'},
+    {name : '拍照', min : 0},
+    {name : '系统', min : 0, max : 100},
+    {name : '性能', axisLabel: {...}},
+    {name : '屏幕'}
+]
+</pre>
+</div>
+
                     <h4>series<a name="Series"> </a></h4>
                     <P> 驱动图表生成的数据内容数组，数组中每一项为一个系列的选项及数据，其中个别选项仅在部分图表类型中有效，请注意适用类型：</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -1706,7 +1804,7 @@ feature : {
                         </tr>
                         <tr>
                             <td> {number} startAngle </td>
-                            <td> 0 </td>
+                            <td> 90 </td>
                             <td> 饼图 </td>
                             <td> 开始角度, 有效输入范围：[-180,180]</td>
                         </tr>

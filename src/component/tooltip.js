@@ -37,6 +37,7 @@ define(function (require) {
         var grid;
         var xAxis;
         var yAxis;
+        var polar;
 
         // tooltip dom & css
         var _tDom = document.createElement('div');
@@ -251,7 +252,7 @@ define(function (require) {
             var trigger;
             if (!_curTarget) {
                 // 坐标轴事件
-                _findAxisTrigger();
+                _findPolarTrigger() || _findAxisTrigger();
             }
             else {
                 // 数据项事件
@@ -291,14 +292,17 @@ define(function (require) {
             }
         }
 
+        /**
+         * 直角系 
+         */
         function _findAxisTrigger() {
-            var series = option.series;
-            var xAxisIndex;
-            var yAxisIndex;
             if (!xAxis || !yAxis) {
                 _hidingTicket = setTimeout(_hide, _hideDelay);
                 return;
             }
+            var series = option.series;
+            var xAxisIndex;
+            var yAxisIndex;
             for (var i = 0, l = series.length; i < l; i++) {
                 // 找到第一个axis触发tooltip的系列
                 if (self.deepQuery(
@@ -329,6 +333,33 @@ define(function (require) {
                 }
             }
         }
+        
+        /**
+         * 极坐标 
+         */
+        function _findPolarTrigger() {
+            if (!polar) {
+                return false;
+            }
+            var x = zrEvent.getX(_event);
+            var y = zrEvent.getY(_event);
+            var polarIndex = polar.getNearestIndex([x, y]);
+            var valueIndex;
+            if (polarIndex) {
+                valueIndex = polarIndex.valueIndex;
+                polarIndex = polarIndex.polarIndex;
+            }
+            else {
+                polarIndex = -1;
+            }
+            
+            if (polarIndex != -1) {
+                return _showPolarTrigger(polarIndex, valueIndex);
+            }
+            
+            return false;
+        }
+        
         /**
          * 根据坐标轴事件带的属性获取最近的axisDataIndex
          */
@@ -398,6 +429,9 @@ define(function (require) {
             return -1;
         }
 
+        /**
+         * 直角系 
+         */
         function _showAxisTrigger(xAxisIndex, yAxisIndex, dataIndex) {
             if (typeof xAxis == 'undefined'
                 || typeof yAxis == 'undefined'
@@ -565,13 +599,132 @@ define(function (require) {
             }
         }
         
+        /**
+         * 极坐标 
+         */
+        function _showPolarTrigger(polarIndex, dataIndex) {
+            if (typeof polar == 'undefined'
+                || typeof polarIndex == 'undefined'
+                || typeof dataIndex == 'undefined'
+                || dataIndex < 0
+            ) {
+                return false;
+            }
+            var series = option.series;
+            var seriesArray = [];
+
+            var formatter;
+            var specialCssText = '';
+            if (self.deepQuery([option], 'tooltip.trigger') == 'axis') {
+                if (self.deepQuery([option], 'tooltip.show') === false) {
+                    return false;
+                }
+                formatter = self.deepQuery([option],'tooltip.formatter');
+            }
+
+            // 找到所有用这个极坐标并且axis触发的系列数据
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (series[i].polarIndex == polarIndex
+                    && self.deepQuery(
+                           [series[i], option], 'tooltip.trigger'
+                       ) == 'axis'
+                ) {
+                    formatter = self.deepQuery(
+                        [series[i]],
+                        'tooltip.formatter'
+                    ) || formatter;
+                    specialCssText += _style(self.deepQuery(
+                                          [series[i]], 'tooltip'
+                                      ));
+                    seriesArray.push(series[i]);
+                }
+            }
+            if (seriesArray.length > 0) {
+                var polarData;
+                var data;
+                var params = [];
+                var indicatorName = 
+                    option.polar[polarIndex].indicator[dataIndex].text;
+
+                for (var i = 0, l = seriesArray.length; i < l; i++) {
+                    polarData = seriesArray[i].data;
+                    for (var j = 0, k = polarData.length; j < k; j++) {
+                        data = polarData[j];
+                        data = typeof data != 'undefined'
+                               ? data
+                               : {name:'', value: {dataIndex:'-'}};
+                               
+                        params.push([
+                            typeof seriesArray[i].name != 'undefin'
+                            ? seriesArray[i].name : '',
+                            data.name,
+                            data.value[dataIndex],
+                            indicatorName
+                        ]);
+                    }
+                }
+                if (typeof formatter == 'function') {
+                    _curTicket = 'axis:' + dataIndex;
+                    _tDom.innerHTML = formatter(
+                        params, _curTicket, _setContent
+                    );
+                }
+                else if (typeof formatter == 'string') {
+                    formatter = formatter.replace('{a}','{a0}')
+                                         .replace('{b}','{b0}')
+                                         .replace('{c}','{c0}')
+                                         .replace('{d}','{d0}');
+                    for (var i = 0, l = params.length; i < l; i++) {
+                        formatter = formatter.replace(
+                            '{a' + i + '}',
+                            params[i][0]
+                        );
+                        formatter = formatter.replace(
+                            '{b' + i + '}',
+                            params[i][1]
+                        );
+                        formatter = formatter.replace(
+                            '{c' + i + '}',
+                            params[i][2]
+                        );
+                        formatter = formatter.replace(
+                            '{d' + i + '}',
+                            params[i][3]
+                        );
+                    }
+                    _tDom.innerHTML = formatter;
+                }
+                else {
+                    formatter = params[0][1] + '<br/>' 
+                                + params[0][3] + ' : ' + params[0][2];
+                    for (var i = 1, l = params.length; i < l; i++) {
+                        formatter += '<br/>' + params[i][1] + '<br/>';
+                        formatter += params[i][3] + ' : ' + params[i][2];
+                    }
+                    _tDom.innerHTML = formatter;
+                }
+
+                if (!self.hasAppend) {
+                    _tDom.style.left = _zrWidth / 2 + 'px';
+                    _tDom.style.top = _zrHeight / 2 + 'px';
+                    dom.firstChild.appendChild(_tDom);
+                    self.hasAppend = true;
+                }
+                _show(
+                    zrEvent.getX(_event), 
+                    zrEvent.getY(_event), 
+                    specialCssText
+                );
+                return true;
+            }
+        }
+        
         function _showItemTrigger() {
             var serie = ecData.get(_curTarget, 'series');
             var data = ecData.get(_curTarget, 'data');
             var name = ecData.get(_curTarget, 'name');
             var value = ecData.get(_curTarget, 'value');
             var speical = ecData.get(_curTarget, 'special');
-
             // 从低优先级往上找到trigger为item的formatter和样式
             var formatter;
             var specialCssText = '';
@@ -651,7 +804,7 @@ define(function (require) {
                     indicator = speical;
                     html += (name === '' ? serie.name : name) + '<br />';
                     for (var i = 0 ; i < indicator.length; i ++) {
-                        html += indicator[i].name + ' : ' + value[i] + '<br />';
+                        html += indicator[i].text + ' : ' + value[i] + '<br />';
                     }
                     _tDom.innerHTML = html;
                 }
@@ -810,21 +963,30 @@ define(function (require) {
             clearTimeout(_hidingTicket);
             clearTimeout(_showingTicket);
             var target = param.target;
-            if (!target && grid) {
+            var mx = zrEvent.getX(param.event);
+            var my = zrEvent.getY(param.event);
+            if (!target) {
                 // 判断是否落到直角系里，axis触发的tooltip
-                if (_needAxisTrigger
+                _curTarget = false;
+                _event = param.event;
+                _event._target = _event.target || _event.toElement;
+                _event.zrenderX = mx;
+                _event.zrenderY = my;
+                if (_needAxisTrigger 
+                    && grid 
                     && zrArea.isInside(
-                           rectangle,
-                           grid.getArea(),
-                           zrEvent.getX(param.event),
-                           zrEvent.getY(param.event)
-                       )
+                        rectangle,
+                        grid.getArea(),
+                        mx,
+                        my
+                    )
                 ) {
-                    _curTarget = false;
-                    _event = param.event;
-                    _event._target = _event.target || _event.toElement;
-                    _event.zrenderX = zrEvent.getX(_event);
-                    _event.zrenderY = zrEvent.getY(_event);
+                    _showingTicket = setTimeout(_tryShow, _showDelay);
+                }
+                else if (_needAxisTrigger 
+                        && polar 
+                        && polar.isInside([mx, my]) != -1
+                ) {
                     _showingTicket = setTimeout(_tryShow, _showDelay);
                 }
                 else {
@@ -835,8 +997,27 @@ define(function (require) {
                 _curTarget = target;
                 _event = param.event;
                 _event._target = _event.target || _event.toElement;
-                _event.zrenderX = zrEvent.getX(_event);
-                _event.zrenderY = zrEvent.getY(_event);
+                _event.zrenderX = mx;
+                _event.zrenderY = my;
+                var polarIndex;
+                if (_needAxisTrigger 
+                    && polar 
+                    && (polarIndex = polar.isInside([mx, my])) != -1
+                ) {
+                    // 看用这个polar的系列数据是否是axis触发，如果是设置_curTarget为nul
+                    var series = option.series;
+                    for (var i = 0, l = series.length; i < l; i++) {
+                        if (series[i].polarIndex == polarIndex
+                            && self.deepQuery(
+                                   [series[i], option], 'tooltip.trigger'
+                               ) == 'axis'
+                        ) {
+                            _curTarget = null;
+                            break;
+                        }
+                    }
+                   
+                }
                 _showingTicket = setTimeout(_tryShow, _showDelay);
             }
         }
@@ -884,6 +1065,7 @@ define(function (require) {
             grid = component.grid;
             xAxis = component.xAxis;
             yAxis = component.yAxis;
+            polar = component.polar;
         }
 
         function init(newOption, newDom) {

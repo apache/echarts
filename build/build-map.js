@@ -23,7 +23,6 @@
         'echarts/chart/k',
         'echarts/chart/radar',
         'echarts/chart/force',
-        /*
         'echarts/chart/map',
         'echarts/util/mapData/china/0',     // 全国
         'echarts/util/mapData/china/65',    // 新疆
@@ -60,10 +59,9 @@
         'echarts/util/mapData/china/31',    // 上海
         'echarts/util/mapData/china/81',    // 香港
         'echarts/util/mapData/china/82',    // 澳门
-        */
         'echarts/chart/line',
         'echarts/chart/bar',
         'echarts/chart/pie'
     ],
-    out: 'echarts.js'
+    out: 'echarts-map.js'
 }

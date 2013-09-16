@@ -4,7 +4,7 @@
 {
     // appDir: './',
     baseUrl: '../src',
-    //optimize: 'none', // 是否压缩
+    optimize: 'none', // 是否压缩
     name: 'echarts',
     packages: [
         {
@@ -65,5 +65,5 @@
         'echarts/chart/bar',
         'echarts/chart/pie'
     ],
-    out: 'echarts.js'
+    out: 'echarts-original.js'
 }
