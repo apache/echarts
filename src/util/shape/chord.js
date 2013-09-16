@@ -116,8 +116,14 @@ define(function(require) {
                 (cy - sy0) * 0.70 + sy0,
                 sx0, sy0);
         },
+        
         getRect : function(){
-            return [0, 0, 0, 0];
+            return {
+                x : 0,
+                y : 0,
+                width : 0,
+                height : 0
+            };
         }
     }
 

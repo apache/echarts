@@ -109,15 +109,18 @@ define(function(require) {
                     var groupAnglesArr = groupAngles.toArray();
                     var subGroupIndicesArr = subGroupIndices.toArray();
                     var subGroupAnglesArr = subGroupAngles.toArray();
+                    var sumOutArray = sumOut.toArray();
 
                     var sectorAngles = [];
                     var groupsTmp = [];
                     var chordAngles = new NDArray(len, len).toArray();
+                    var values = [];
                     var start = 0;
                     var end = 0;
                     for (var i = 0; i < len; i++) {
                         var sortedIdx = groupIndicesArr[i];
                         groupsTmp[sortedIdx] = groups[i];
+                        values[sortedIdx] = sumOutArray[i];
 
                         end = start + groupAnglesArr[i];
                         sectorAngles[sortedIdx] = [start, end - padding];
@@ -155,11 +158,14 @@ define(function(require) {
                         innerRadius
                     );
 
+                    var res = normalizeValue(values);
                     _buildScales(
-                        sumOut.toArray(),
+                        res[0],
+                        res[1],
                         sectorAngles,
                         center,
-                        outerRadius
+                        outerRadius,
+                        new NDArray(res[0]).sum() / (360 - padding * len)
                     );
                 }
 
@@ -175,8 +181,9 @@ define(function(require) {
             padding
         ) {
             var startAngle = 90;
+            var len = groups.length;
 
-            for (var i = 0; i < angles.length; i++) {
+            for (var i = 0; i < len; i++) {
                 
                 var group = groups[i];
                 var angle = angles[i];
@@ -185,6 +192,7 @@ define(function(require) {
                     id : zr.newShapeId(self.type),
                     shape : 'sector',
                     zlevel : _zlevelBase,
+                    hoverable : false,
                     style : {
                         x : center[0],
                         y : center[1],
@@ -197,6 +205,42 @@ define(function(require) {
                     }
                 }
 
+                sector.onmouseover = (function(idx) {
+                    return function() {
+                        for (var i = 0; i < len; i++) {
+                            if (i !== idx) {
+                                sectorShapes[i].style.opacity = 0.1;
+                                zr.modShape(sectorShapes[i].id, sectorShapes[i]);
+
+                                for (var j = 0; j < len; j++) {
+                                    var chordShape = chordShapes[i][j];
+                                    chordShape.style.opacity = 0.03;
+                                    zr.modShape(chordShape.id, chordShape);
+                                }
+                            }
+                        }
+                        zr.refresh();
+                    }
+                })(i);
+
+                sector.onmouseout = (function(idx) {
+                    return function() {
+                        for (var i = 0; i < len; i++) {
+                            sectorShapes[i].style.opacity = 1.0;
+                            zr.modShape(sectorShapes[i].id, sectorShapes[i]);
+
+                            for (var j = 0; j < len; j++) {
+                                var chordShape = chordShapes[i][j];
+                                chordShape.style.opacity = 0.5;
+                                zr.modShape(chordShape.id, chordShape);
+                            }
+                        }
+                        zr.refresh();
+                    }
+                })(i);
+
+                self.shapeList.push(sector);
+                sectorShapes.push(sector);
                 zr.addShape(sector);
             }
         }
@@ -216,7 +260,7 @@ define(function(require) {
                 for (var j = 0; j < len; j++) {
 
                     if (chordShapes[j][i]) {
-                        continue;
+                        chordShapes[i][j] = chordShapes[j][i];
                     }
 
                     var angleIJ = angles[i][j][0];
@@ -248,6 +292,7 @@ define(function(require) {
                     }
 
                     chordShapes[i][j] = chord;
+                    self.shapeList.push(chord);
                     zr.addShape(chord);
                 }
             }
@@ -255,15 +300,12 @@ define(function(require) {
 
         function _buildScales(
             values,
+            unitPostfix,
             angles,
             center,
-            radius
+            radius,
+            unitValue
         ) {
-            var res = normalizeValue(values);
-            var values = res[0];
-            var unitPostfix = res[1];
-            var unitValue = new NDArray(values).sum() / (360 / scaleUnitAngle);
-
             for (var i = 0; i < angles.length; i++) {
                 var startAngle = angles[i][0];
                 var endAngle = angles[i][1];
@@ -282,6 +324,7 @@ define(function(require) {
                         shape : 'line',
                         id : zr.newShapeId(self.type),
                         zlevel : _zlevelBase - 1,
+                        hoverable : false,
                         style : {
                             xStart : start[0],
                             yStart : start[1],
@@ -293,13 +336,15 @@ define(function(require) {
                         }   
                     }
 
+                    self.shapeList.push(scaleShape);
                     zr.addShape(scaleShape);
 
                     scaleAngle += scaleUnitAngle;
                 }
 
                 var scaleTextAngle = startAngle;
-                var scaleValues = NDArray.range(0, values[i], unitValue).toArray();
+                var step = unitValue * 5 * scaleUnitAngle;
+                var scaleValues = NDArray.range(0, values[i], step).toArray();
                 while (scaleTextAngle < endAngle) {
                     var scaleTextAngleFixed = scaleTextAngle - 90;
                     var isRightSide = scaleTextAngleFixed <= 90 && scaleTextAngleFixed >= -90;
@@ -307,18 +352,21 @@ define(function(require) {
                         shape : 'text',
                         id : zr.newShapeId(self.type),
                         zlevel : _zlevelBase - 1,
+                        hoverable : false,
                         style : {
                             x : isRightSide 
                                     ? radius + scaleLineLength + 2 
-                                    : -radius - scaleLineLength - 20,
+                                    : -radius - scaleLineLength - 34,
                             y : 0,
-                            text : Math.round(scaleValues.shift()) + unitPostfix
+                            text : Math.round(scaleValues.shift()*10)/10 + unitPostfix
                         },
                         position : center.slice(),
                         rotation : isRightSide
                                     ? [-scaleTextAngleFixed / 180 * Math.PI, 0, 0]
                                     : [-(scaleTextAngleFixed + 180) / 180 * Math.PI, 0, 0] 
                     }
+
+                    self.shapeList.push(textShape);
                     zr.addShape(textShape);
                     scaleTextAngle += scaleUnitAngle * 5;
                 }
@@ -343,7 +391,7 @@ define(function(require) {
             }
 
             for (var i = 0; i < values.length; i++) {
-                result[i] = Math.round(values[i] * unitScale);
+                result[i] = values[i] * unitScale;
             }
             return [result, unitPostfix];
         }
