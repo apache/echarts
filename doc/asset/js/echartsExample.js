@@ -110,6 +110,7 @@ require(
         'echarts/chart/pie',
         'echarts/chart/radar',
         'echarts/chart/force',
+        'echarts/chart/chord',
         needMap() ? 'echarts/chart/map' : 'echarts'
     ],
     requireCallback
