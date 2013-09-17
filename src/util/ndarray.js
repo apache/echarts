@@ -11,33 +11,39 @@ define(function(require) {
 if (typeof(require) !== 'undefined') {
     var kwargs = require('./kwargs');
 }
+if (typeof(global) !== 'undefined') {
+    var __g = global;
+} else {
+    var __g = window;
+}
 
 var ArraySlice = Array.prototype.slice;
 
+var hasPolyfill = typeof(Float32Array) === 'undefined';
 // Polyfill of Typed Array
-var Int32Array = Int32Array || Array;
-var Int16Array = Int16Array || Array;
-var Int8Array = Int8Array || Array;
-var Uint32Array = Uint32Array || Array;
-var Uint16Array = Uint16Array || Array;
-var Uint8Array = Uint8Array || Array;
-var Float32Array = Float32Array || Array;
-var Float64Array = Float64Array || Array;
+__g.Int32Array = __g.Int32Array || Array;
+__g.Int16Array = __g.Int16Array || Array;
+__g.Int8Array = __g.Int8Array || Array;
+__g.Uint32Array = __g.Uint32Array || Array;
+__g.Uint16Array = __g.Uint16Array || Array;
+__g.Uint8Array = __g.Uint8Array || Array;
+__g.Float32Array = __g.Float32Array || Array;
+__g.Float64Array = __g.Float64Array || Array;
 
 // Map of numpy dtype and typed array
 // http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html#arrays-dtypes
 // http://www.khronos.org/registry/typedarray/specs/latest/
 var ArrayConstructor = {
-    'int32' : Int32Array,
-    'int16' : Int16Array,
-    'int8' : Int8Array,
-    'uint32' : Uint32Array,
-    'uint16' : Uint16Array,
-    'uint8' : Uint8Array,
+    'int32' : __g.Int32Array,
+    'int16' : __g.Int16Array,
+    'int8' : __g.Int8Array,
+    'uint32' : __g.Uint32Array,
+    'uint16' : __g.Uint16Array,
+    'uint8' : __g.Uint8Array,
     // 'uint8c' is not existed in numpy
-    'uint8c' : Uint8ClampedArray,
-    'float32' : Float32Array,
-    'float64' : Float64Array,
+    'uint8c' : __g.Uint8ClampedArray,
+    'float32' : __g.Float32Array,
+    'float64' : __g.Float64Array,
     'number' : Array
 }
 
@@ -59,7 +65,7 @@ function guessDataType(arr) {
     if (typeof(arr) === 'undefined') {
         return 'number';
     }
-    switch(toString.call(arr)) {
+    switch(Object.prototype.toString.call(arr)) {
         case '[object Int32Array]':
             return 'int32';
         case '[object Int16Array]':
@@ -112,6 +118,7 @@ var NDArray = function(array) {
         // shape, a tuple array describe the dimension and size of each dimension
         // [10, 10] means a 10x10 array
         this._shape = [0];
+        this._size = 0;
     }
 }
 
@@ -135,6 +142,7 @@ NDArray.prototype = {
 
         flatten(0, this._array, input);
         this._shape = getShape(input);
+        this._size = getSize(shape);
 
         return this;
     },
@@ -155,6 +163,7 @@ NDArray.prototype = {
             }
         }
         this._shape = shape;
+        this._size = getSize(shape);
 
         return this;
     },
@@ -169,6 +178,10 @@ NDArray.prototype = {
     shape : function() {
         // Create a copy
         return this._shape.slice();
+    },
+
+    size : function() {
+        return this._size;
     },
 
     dtype : function() {
@@ -201,7 +214,7 @@ NDArray.prototype = {
     },
 
     isShapeValid : function(shape) {
-        return getSize(shape) === this._array.length;
+        return getSize(shape) === this._size;
     },
     /**
      * Not like reshape, resize will change the size of stored data
@@ -212,15 +225,30 @@ NDArray.prototype = {
         }
 
         var len = getSize(shape);
-        if (len < this._array.length) {
-            this._array.length = len;
+        if (len < this._size) {
+            if (this._dtype === 'number') {
+                this._array.length = len;
+            }
         } else {
-            for (var i = this._array.length; i < len; i++) {
-                // Fill the rest with zero
-                this._array[i] = 0;
+            if (this._dtype === 'number') {
+                for (var i = this._array.length; i < len; i++) {
+                    // Fill the rest with zero
+                    this._array[i] = 0;
+                }
+            } else {
+                // Reallocate new buffer
+                var newArr = new ArrayConstructor[this._dtype](len);
+                var originArr = this._array;
+
+                // Copy data
+                for (var i = 0; i < originArr.length; i++) {
+                    newArr[i] = originArr[i];
+                }
+                this._array = newArr;
             }
         }
         this._shape = shape;
+        this._size = len;
 
         return this;
 
@@ -303,12 +331,13 @@ NDArray.prototype = {
 
         if (!out) {
             out = new NDArray();
+            out._shape = this._shape.slice();
+            out._dtype = this._dtype;
+            out._size = this._size;
         }
-        var transposedData = new ArrayConstructor[this._dtype](source.length);
-
-        out._shape = this._shape.slice();
+        // FIXME in-place transpose?
+        var transposedData = new ArrayConstructor[this._dtype](this._size);
         out._array = transposedData;
-        out._dtype = this._dtype;
         // @param Item offset in current axis offset of the original array
         // @param Item offset in current axis offset of the transposed array
         function transpose(axis, offset, transposedOffset) {
@@ -332,10 +361,7 @@ NDArray.prototype = {
         }
 
         transpose(0, 0, 0);
-        // Copy back;
-        for (var i = 0; i < source.length; i++) {
-            source[i] = transposedData[i];
-        }
+
         return out;
     },
 
@@ -347,7 +373,7 @@ NDArray.prototype = {
     repeat : function(repeats, axis, out) {
         if (typeof axis === 'undefined') {
             //Use the flattened input array
-            var size = this._array.length * repeats;
+            var size = this._size * repeats;
             if (!out) {
                 out = new NDArray(this._dtype);
                 out.initFromShape([size]);
@@ -358,7 +384,7 @@ NDArray.prototype = {
             }
             var data = out._array;
             var source = this._array;
-            for (var i = 0; i < this._array.length; i++) {
+            for (var i = 0; i < this._size; i++) {
                 for (j = 0; j < repeats; j++) {
                     data[i * repeats + j] = source[i];
                 }
@@ -378,15 +404,13 @@ NDArray.prototype = {
             }
             var data = out._array;
 
-            var size = this._array.length * repeats;
             var stride = calculateDimStride(this._shape, axis);
             var axisSize = this._shape[axis];
             var source = this._array;
 
             var offsetStride = stride * axisSize;
-            var size = this._array.length;
 
-            for (var offset = 0; offset < size; offset+=offsetStride) {
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
                 for (var k = 0; k < stride; k++) {
                     var idx = offset + k;
                     var idxRepeated = offset * repeats + k;
@@ -430,12 +454,10 @@ NDArray.prototype = {
         var axisSize = this._shape[axis];
 
         var offsetStride = stride * axisSize;
-        var offsetRepeats = this._array.length / offsetStride;
 
         var tmp = new Array(axisSize);
 
-        for (var c = 0; c < offsetRepeats; c++) {
-            var offset = c * offsetStride;
+        for (var offset = 0; offset < this._size; offset+=offsetStride) {
 
             for (var i = 0; i < stride; i++) {
                 var idx = offset + i;
@@ -492,9 +514,7 @@ NDArray.prototype = {
             }
         }
 
-        var size = this._array.length;
-
-        for (var offset = 0; offset < size; offset+=offsetStride) {
+        for (var offset = 0; offset < this._size; offset+=offsetStride) {
             for (var i = 0; i < stride; i++) {
                 var idx = offset + i;
                 for (var j = 0; j < axisSize; j++) {
@@ -534,7 +554,7 @@ NDArray.prototype = {
      */
     max : function(axis, out) {
         var source = this._array;
-        if (!source.length) {
+        if (!this._size) {
             return;
         }
 
@@ -558,9 +578,8 @@ NDArray.prototype = {
             var stride = calculateDimStride(this._shape, axis);
             var axisSize = this._shape[axis];
             var offsetStride = stride * axisSize;
-            var size = this._array.length;
 
-            for (var offset = 0; offset < size; offset+=offsetStride) {
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
                 for (var i = 0; i < stride; i++) {
                     var idx =  i + offset;
                     var max = source[idx];
@@ -578,7 +597,7 @@ NDArray.prototype = {
             return out;
         } else {
             var max = source[0];
-            for (var i = 1; i < source.length; i++) {
+            for (var i = 1; i < this._size; i++) {
                 if (source[i] > max) {
                     max = source[i];
                 }
@@ -589,7 +608,7 @@ NDArray.prototype = {
 
     min : function(axis, out) {
         var source = this._array;
-        if (!source.length) {
+        if (!this._size) {
             return;
         }
 
@@ -613,9 +632,8 @@ NDArray.prototype = {
             var stride = calculateDimStride(this._shape, axis);
             var axisSize = this._shape[axis];
             var offsetStride = stride * axisSize;
-            var size = this._array.length;
 
-            for (var offset = 0; offset < size; offset+=offsetStride) {
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
                 for (var i = 0; i < stride; i++) {
                     var idx =  i + offset;
                     var min = source[idx];
@@ -633,7 +651,7 @@ NDArray.prototype = {
             return out;
         } else {
             var min = source[0];
-            for (var i = 1; i < source.length; i++) {
+            for (var i = 1; i < this._size; i++) {
                 if (source[i] < min) {
                     min = source[i];
                 }
@@ -644,7 +662,7 @@ NDArray.prototype = {
 
     argmax : function(axis, out) {
         var source = this._array;
-        if (!source.length) {
+        if (!this._size) {
             return;
         }
 
@@ -668,9 +686,8 @@ NDArray.prototype = {
             var stride = calculateDimStride(this._shape, axis);
             var axisSize = this._shape[axis];
             var offsetStride = stride * axisSize;
-            var size = this._array.length;
 
-            for (var offset = 0; offset < size; offset+=offsetStride) {
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
                 for (var i = 0; i < stride; i++) {
                     var dataIdx = 0;
                     var idx =  i + offset;
@@ -691,7 +708,7 @@ NDArray.prototype = {
         } else {
             var max = source[0];
             var idx = 0;
-            for (var i = 1; i < source.length; i++) {
+            for (var i = 1; i < this._size; i++) {
                 if (source[i] > max) {
                     idx = i;
                     max = source[i];
@@ -703,7 +720,7 @@ NDArray.prototype = {
 
     argmin : function(axis, out) {
         var source = this._array;
-        if (!source.length) {
+        if (!this._size) {
             return;
         }
 
@@ -727,9 +744,8 @@ NDArray.prototype = {
             var stride = calculateDimStride(this._shape, axis);
             var axisSize = this._shape[axis];
             var offsetStride = stride * axisSize;
-            var size = this._array.length;
 
-            for (var offset = 0; offset < size; offset+=offsetStride) {
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
                 for (var i = 0; i < stride; i++) {
                     var dataIdx = 0;
                     var idx =  i + offset;
@@ -750,7 +766,7 @@ NDArray.prototype = {
         } else {
             var min = source[0];
             var idx = 0;
-            for (var i = 1; i < source.length; i++) {
+            for (var i = 1; i < this._size; i++) {
                 if (source[i] < min) {
                     idx = i;
                     min = source[i];
@@ -762,7 +778,7 @@ NDArray.prototype = {
 
     sum : function(axis, out) {
         var source = this._array;
-        if (!source.length) {
+        if (!this._size) {
             return;
         }
 
@@ -786,9 +802,8 @@ NDArray.prototype = {
             var stride = calculateDimStride(this._shape, axis);
             var axisSize = this._shape[axis];
             var offsetStride = stride * axisSize;
-            var size = this._array.length;
 
-            for (var offset = 0; offset < size; offset+=offsetStride) {
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
                 for (var i = 0; i < stride; i++) {
                     var sum = 0;
                     var idx =  i + offset;
@@ -804,7 +819,7 @@ NDArray.prototype = {
             return out;
         } else {
             var sum = 0;
-            for (var i = 0; i < source.length; i++) {
+            for (var i = 1; i < this._size; i++) {
                 sum += source[i];
             }
             return sum;
@@ -813,7 +828,7 @@ NDArray.prototype = {
 
     ptp : function(axis, out) {
         var source = this._array;
-        if (!source.length) {
+        if (!this._size) {
             return;
         }
 
@@ -837,9 +852,8 @@ NDArray.prototype = {
             var stride = calculateDimStride(this._shape, axis);
             var axisSize = this._shape[axis];
             var offsetStride = stride * axisSize;
-            var size = this._array.length;
 
-            for (var offset = 0; offset < size; offset+=offsetStride) {
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
                 for (var i = 0; i < stride; i++) {
                     var idx = offset + i;
                     var min = source[idx];
@@ -862,7 +876,7 @@ NDArray.prototype = {
         } else {
             var min = source[0];
             var max = source[0];
-            for (var i = 1; i < source.length; i++) {
+            for (var i = 1; i < this._size; i++) {
                 if (source[i] < min) {
                     min = source[i];
                 }
@@ -881,13 +895,13 @@ NDArray.prototype = {
             sum.mul(1 / this._shape[axis], out);
             return sum;
         } else {
-            return sum / this._array.length;
+            return sum / this._size;
         }
     }.kwargs(),
 
     cumsum : function(axis, out) {
         var source = this._array;
-        if (!source.length) {
+        if (!this._size) {
             return;
         }
         if (out && !arrayEqual(this._shape, out._shape)) {
@@ -907,9 +921,8 @@ NDArray.prototype = {
             var stride = calculateDimStride(this._shape, axis);
             var axisSize = this._shape[axis];
             var offsetStride = stride * axisSize;
-            var size = this._array.length;
 
-            for (var offset = 0; offset < size; offset+=offsetStride) {
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
                 for (var i = 0; i < stride; i++) {
                     var idx = offset + i;
                     var prevIdx = idx;
@@ -926,10 +939,10 @@ NDArray.prototype = {
             return out;
         } else {
             data[0] = source[0];
-            for (var i = 1; i < source.length; i++) {
+            for (var i = 1; i < this._size; i++) {
                 data[i] = data[i-1] + source[i];
             }
-            out._shape = [source.length];
+            out._shape = [this._size];
 
             return out;
         }
@@ -937,7 +950,7 @@ NDArray.prototype = {
 
     cumprod : function(axis, out) {
         var source = this._array;
-        if (!source.length) {
+        if (!this._size) {
             return;
         }
         if (out && !arrayEqual(this._shape, out._shape)) {
@@ -957,9 +970,8 @@ NDArray.prototype = {
             var stride = calculateDimStride(this._shape, axis);
             var axisSize = this._shape[axis];
             var offsetStride = stride * axisSize;
-            var size = this._array.length;
 
-            for (var offset = 0; offset < size; offset+=offsetStride) {
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
                 for (var i = 0; i < stride; i++) {
                     var idx = offset + i;
                     var prevIdx = idx;
@@ -975,10 +987,10 @@ NDArray.prototype = {
             return out;
         } else {
             data[0] = source[0];
-            for (var i = 1; i < source.length; i++) {
+            for (var i = 1; i < this._size; i++) {
                 data[i] = data[i-1] * source[i];
             }
-            out._shape = [source.length];
+            out._shape = [this._size];
 
             return out;
         }
@@ -995,7 +1007,7 @@ NDArray.prototype = {
 
         var min = input[0];
         var max = input[0];
-        var l = input.length;
+        var l = this._size;
         for (var i = 1; i < l; i++) {
             var val = input[i];
             if (val < min) {
@@ -1159,7 +1171,7 @@ NDArray.prototype = {
         var roData = isRoScalar ? ro : ro._array;
         var _a, _b, result;
 
-        for (var offset = 0; offset < outData.length; offset+=offsetStride) {
+        for (var offset = 0; offset < out._size; offset+=offsetStride) {
             var idx = offset;
             for (var i = 0; i < offsetStride; i++) {
                 if (isLoLarger) {
@@ -1211,7 +1223,7 @@ NDArray.prototype = {
      */
     neg : function() {
         var data = this._array;
-        for (var i = 0; i < data.length; i++) {
+        for (var i = 0; i < this._size; i++) {
             data[i] = -data[i];
         }
         return this;
@@ -1239,7 +1251,7 @@ NDArray.prototype = {
 
     pow : function(exp) {
         var data = this._array;
-        for (var i = 0; i < data.length; i++) {
+        for (var i = 0; i < this._size; i++) {
             data[i] = Math.pow(data[i], exp);
         }
         return this;
@@ -1247,7 +1259,7 @@ NDArray.prototype = {
 
     _mathAdapter : function(mathFunc) {
         var data = this._array;
-        for (var i = 0; i < data.length; i++) {
+        for (var i = 0; i < this._size; i++) {
             data[i] = mathFunc(data[i]);
         }
         return this;
@@ -1258,11 +1270,11 @@ NDArray.prototype = {
         var offset = Math.pow(10, decimals);
         var data = this._array;
         if (decimals == 0) {
-            for (var i = 0; i < data.length; i++) {
+            for (var i = 0; i < this._size; i++) {
                 data[i] = Math.round(data[i]);
             }
         } else {
-            for (var i = 0; i < data.length; i++) {
+            for (var i = 0; i < this._size; i++) {
                 data[i] = Math.round(data[i] * offset) / offset;
             }
         }
@@ -1273,7 +1285,7 @@ NDArray.prototype = {
      */
     clip : function(min, max) {
         var data = this._array;
-        for (var i = 0; i < data.length; i++) {
+        for (var i = 0; i < this._size; i++) {
             data[i] = Math.max(Math.min(data[i], max), min);
         }
         return this;
@@ -1304,10 +1316,8 @@ NDArray.prototype = {
         // Get data
         var len = ranges.length;
         if (shape.length) {
-            if (!out) {
-                out = new NDArray(this._dtype);
-                out.initFromShape(shape);   
-            }
+            var out = new NDArray(this._dtype);
+            out.initFromShape(shape);
             var data = out._array;
         } else {
             var data = [];
@@ -1354,7 +1364,7 @@ NDArray.prototype = {
             return data[0];
         }
             
-    }.kwargs(),
+    },
 
     /**
      * @param {string} index
@@ -1434,29 +1444,49 @@ NDArray.prototype = {
         return this;
     },
 
+    insert : function(obj, values, axis) {
+        console.warn("TODO");
+    }.kwargs(),
+
+    append : function(values, axis) {
+        console.warn("TODO");
+    }.kwargs(),
+
+    'delete' : function(obj, axis) {
+
+    }.kwargs(),
+
     _parseRanges : function(index) {
         var rangesStr = index.split(/\s*,\s*/);
         var axis = 0;
         
         // Parse range of each axis
         var ranges = [];
-        for (var i = 0; i < rangesStr.length; i++) {
-            ranges[i] = parseRange(rangesStr[i], this._shape[i]);
-        }
-
-        // Calculate shape size
         var shape = [];
-        for (var i = 0; i < ranges.length; i++) {
-            if(rangesStr[i].indexOf(':') >= 0) {
-                var size = Math.floor((ranges[i][1] - ranges[i][0]) / ranges[i][2]);
-                size = size < 0 ? 0 : size;
-                // Get a range not a item
-                shape.push(size);
+        var j = 0;
+        for (var i = 0; i < rangesStr.length; i++) {
+            if (rangesStr[i] === '...') {
+                var end = this._shape.length - (rangesStr.length - i);
+                while (j <= end) {
+                    ranges.push([0, this._shape[j], 1]);
+                    shape.push(this._shape[j]);
+                    j++;
+                }
+            } else {
+                var range = parseRange(rangesStr[i], this._shape[j]);
+                ranges.push(range);
+                if(rangesStr[i].indexOf(':') >= 0) {
+                    var size = Math.floor((range[1] - range[0]) / range[2]);
+                    size = size < 0 ? 0 : size;
+                    // Get a range not a item
+                    shape.push(size);
+                }
+                j++;
             }
         }
         // Copy the lower dimension size
-        for (; i < this._shape.length; i++) {
-            shape.push(this._shape[i]);
+        for (; j < this._shape.length; j++) {
+            shape.push(this._shape[j]);
         }
 
         return [ranges, shape];
@@ -1533,6 +1563,7 @@ NDArray.range = function(min, max, step, dtype) {
     ndarray._array = array;
     ndarray._shape = [array.length];
     ndarray._dtype = dtype;
+    ndarray._size = array.length;
 
     return ndarray;
 
