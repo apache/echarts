@@ -5,7 +5,7 @@
  * @author pissang (https://github.com/pissang/)
  */
 define(function(require) {
-
+    
 'use strict';
 
 if (typeof(require) !== 'undefined') {
@@ -141,8 +141,8 @@ NDArray.prototype = {
         this._array = new ArrayConstructor[this._dtype](size);
 
         flatten(0, this._array, input);
-        this._shape = getShape(input);
-        this._size = getSize(shape);
+        this._shape = shape;
+        this._size = size;
 
         return this;
     },
@@ -819,7 +819,7 @@ NDArray.prototype = {
             return out;
         } else {
             var sum = 0;
-            for (var i = 1; i < this._size; i++) {
+            for (var i = 0; i < this._size; i++) {
                 sum += source[i];
             }
             return sum;
@@ -1715,4 +1715,5 @@ function broadcastErrorMsg(shape1, shape2) {
 }
 
 return NDArray;
+
 });
