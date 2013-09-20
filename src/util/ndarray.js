@@ -5,7 +5,7 @@
  * @author pissang (https://github.com/pissang/)
  */
 define(function(require) {
-    
+
 'use strict';
 
 if (typeof(require) !== 'undefined') {
@@ -208,7 +208,7 @@ NDArray.prototype = {
         if (this.isShapeValid(shape)) {
             this._shape = shape;
         } else {
-            throw new Error('Shape ' + shape.toString() + ' is not valid');
+            throw new Error('Total size of new array must be unchanged');
         }
         return this;
     },
@@ -265,7 +265,7 @@ NDArray.prototype = {
         // Check if any axis is out of bounds
         for (var i = 0; i < axes.length; i++) {
             if (axes[i] >= this._shape.length) {
-                throw new Error('Axis ' + axes[i] + ' out of bounds');
+                throw new Error(axisOutofBoundsErrorMsg(axes[i]));
             }
         }
         // Has no effect on 1-D transpose
@@ -292,7 +292,7 @@ NDArray.prototype = {
 
     rollaxis : function(axis, start, out) {
         if (axis >= this._shape.length) {
-            throw new Error('Axis ' + axis + ' out of bounds');
+            throw new Error(axisOutofBoundsErrorMsg(axis));
         }
 
         var axes = [];
@@ -371,61 +371,47 @@ NDArray.prototype = {
      * @param {int} axis(optional) The axis along which to repeat values. By default, use the flattened input array, and return a flat output array. 
      */
     repeat : function(repeats, axis, out) {
-        if (typeof axis === 'undefined') {
-            //Use the flattened input array
-            var size = this._size * repeats;
-            if (!out) {
-                out = new NDArray(this._dtype);
-                out.initFromShape([size]);
-            } else {
-                if (!arrayEqual([size], out._shape)) {
-                    throw new Error(broadcastErrorMsg(shape, out._shape));
-                }
-            }
-            var data = out._array;
-            var source = this._array;
-            for (var i = 0; i < this._size; i++) {
-                for (j = 0; j < repeats; j++) {
-                    data[i * repeats + j] = source[i];
-                }
-            }
-
-            return out;
+        // flattened input array
+        if (typeof(axis) === 'undefined') {
+            var shape = [this._size];
+            axis = 0;
         } else {
             var shape = this._shape.slice();
-            shape[axis] *= repeats;
-            if (!out) {
-                out = new NDArray(this._dtype);
-                out.initFromShape(shape);
-            } else {
-                if (!arrayEqual(shape, out._shape)) {
-                    throw new Error(broadcastErrorMsg(shape, out._shape));
-                }
-            }
-            var data = out._array;
-
-            var stride = calculateDimStride(this._shape, axis);
-            var axisSize = this._shape[axis];
-            var source = this._array;
-
-            var offsetStride = stride * axisSize;
-
-            for (var offset = 0; offset < this._size; offset+=offsetStride) {
-                for (var k = 0; k < stride; k++) {
-                    var idx = offset + k;
-                    var idxRepeated = offset * repeats + k;
-                    for (var i = 0; i < axisSize; i++) {
-                        for (var j = 0; j < repeats; j++) {
-                            data[idxRepeated] = source[idx];
-                            idxRepeated += stride;
-                        }
-                        idx += stride;
-                    }
-                }
-            }
-
-            return out;
         }
+        var originShape = shape.slice();
+
+        shape[axis] *= repeats;
+        if (!out) {
+            out = new NDArray(this._dtype);
+            out.initFromShape(shape);
+        } else {
+            if (!arrayEqual(shape, out._shape)) {
+                throw new Error(broadcastErrorMsg(shape, out._shape));
+            }
+        }
+        var data = out._array;
+
+        var stride = calculateDimStride(originShape, axis);
+        var axisSize = originShape[axis];
+        var source = this._array;
+
+        var offsetStride = stride * axisSize;
+
+        for (var offset = 0; offset < this._size; offset+=offsetStride) {
+            for (var k = 0; k < stride; k++) {
+                var idx = offset + k;
+                var idxRepeated = offset * repeats + k;
+                for (var i = 0; i < axisSize; i++) {
+                    for (var j = 0; j < repeats; j++) {
+                        data[idxRepeated] = source[idx];
+                        idxRepeated += stride;
+                    }
+                    idx += stride;
+                }
+            }
+        }
+
+        return out;
     }.kwargs(),
 
     tile : function() {
@@ -562,7 +548,7 @@ NDArray.prototype = {
             var shape = this._shape.slice();
             shape.splice(axis, 1);
             if (axis >= this._shape.length) {
-                throw new Error('Axis ' + axis + ' out of bounds');
+                throw new Error(axisOutofBoundsErrorMsg(axis));
             }
             if (out && !arrayEqual(shape, out._shape)) {
                 throw new Error(broadcastErrorMsg(shape, out._shape));
@@ -616,7 +602,7 @@ NDArray.prototype = {
             var shape = this._shape.slice();
             shape.splice(axis, 1);
             if (axis >= this._shape.length) {
-                throw new Error('Axis ' + axis + ' out of bounds');
+                throw new Error(axisOutofBoundsErrorMsg(axis));
             }            
             if (out && !arrayEqual(shape, out._shape)) {
                 throw new Error(broadcastErrorMsg(shape, out._shape));
@@ -670,7 +656,7 @@ NDArray.prototype = {
             var shape = this._shape.slice();
             shape.splice(axis, 1);
             if (axis >= this._shape.length) {
-                throw new Error('Axis ' + axis + ' out of bounds');
+                throw new Error(axisOutofBoundsErrorMsg(axis));
             }
             if (out && !arrayEqual(shape, out._shape)) {
                 throw new Error(broadcastErrorMsg(shape, out._shape));
@@ -728,7 +714,7 @@ NDArray.prototype = {
             var shape = this._shape.slice();
             shape.splice(axis, 1);
             if (axis >= this._shape.length) {
-                throw new Error('Axis ' + axis + ' out of bounds');
+                throw new Error(axisOutofBoundsErrorMsg(axis));
             }
             if (out && !arrayEqual(shape, out._shape)) {
                 throw new Error(broadcastErrorMsg(shape, out._shape));
@@ -786,7 +772,7 @@ NDArray.prototype = {
             var shape = this._shape.slice();
             shape.splice(axis, 1);
             if (axis >= this._shape.length) {
-                throw new Error('Axis ' + axis + ' out of bounds');
+                throw new Error(axisOutofBoundsErrorMsg(axis));
             }
             if (out && !arrayEqual(shape, out._shape)) {
                 throw new Error(broadcastErrorMsg(shape, out._shape));
@@ -836,7 +822,7 @@ NDArray.prototype = {
             var shape = this._shape.slice();
             shape.splice(axis, 1);
             if (axis >= this._shape.length) {
-                throw new Error('Axis ' + axis + ' out of bounds');
+                throw new Error((axisOutofBoundsErrorMsg(axis)));
             }
             if (out && !arrayEqual(shape, out._shape)) {
                 throw new Error(broadcastErrorMsg(shape, out._shape));
@@ -915,7 +901,7 @@ NDArray.prototype = {
 
         if (typeof(axis)!=='undefined') {
             if (axis >= this._shape.length) {
-                throw new Error('Axis ' + axis + ' out of bounds');
+                throw new Error(axisOutofBoundsErrorMsg(axis));
             }
 
             var stride = calculateDimStride(this._shape, axis);
@@ -964,7 +950,7 @@ NDArray.prototype = {
 
         if (typeof(axis)!=='undefined') {
             if (axis >= this._shape.length) {
-                throw new Error('Axis ' + axis + ' out of bounds');
+                throw new Error(axisOutofBoundsErrorMsg(axis));
             }
 
             var stride = calculateDimStride(this._shape, axis);
@@ -1036,7 +1022,7 @@ NDArray.prototype = {
      * Add
      */
     add : function(rightOperand, out) {
-        return this._binaryOperation(
+        return this.binaryOperation(
             this, rightOperand, 0, out 
         );
     },
@@ -1045,7 +1031,7 @@ NDArray.prototype = {
      * Substract
      */
     sub : function(rightOperand, out) {
-        return this._binaryOperation(
+        return this.binaryOperation(
             this, rightOperand, 1, out
         );
     },
@@ -1054,7 +1040,7 @@ NDArray.prototype = {
      * Multiply
      */
     mul : function(rightOperand, out) {
-        return this._binaryOperation(
+        return this.binaryOperation(
             this, rightOperand, 2, out
         );
     },
@@ -1063,7 +1049,7 @@ NDArray.prototype = {
      * Divide
      */
     div : function(rightOperand, out) {
-        return this._binaryOperation(
+        return this.binaryOperation(
             this, rightOperand, 3, out
         );
     },
@@ -1071,7 +1057,7 @@ NDArray.prototype = {
      * mod
      */
     mod : function(rightOperand, out) {
-        return this._binaryOperation(
+        return this.binaryOperation(
             this, rightOperand, 4, out
         );
     },
@@ -1079,7 +1065,7 @@ NDArray.prototype = {
      * and
      */
     and : function(rightOperand, out) {
-        return this._binaryOperation(
+        return this.binaryOperation(
             this, rightOperand, 5, out
         );
     },
@@ -1087,7 +1073,7 @@ NDArray.prototype = {
      * or
      */
     or : function(rightOperand, out) {
-        return this._binaryOperation(
+        return this.binaryOperation(
             this, rightOperand, 6, out
         );
     },
@@ -1095,12 +1081,12 @@ NDArray.prototype = {
      * xor
      */
     xor : function(rightOperand, out) {
-        return this._binaryOperation(
+        return this.binaryOperation(
             this, rightOperand, 7, out
         );
     },
 
-    _binaryOperation : function(lo, ro, op, out) {
+    binaryOperation : function(lo, ro, op, out) {
         // Broadcasting
         // http://docs.scipy.org/doc/numpy/user/basics.broadcasting.html
         var shape = [];
@@ -1119,11 +1105,9 @@ NDArray.prototype = {
             while (cl >= 0 && cr >= 0) {
                 if (lo._shape[cl] == 1) {
                     shape.unshift(ro._shape[cr]);
-                    // FIXME Extra cost
                     loBroadCasted = lo.repeat(ro._shape[cr], cl);
                 } else if(ro._shape[cr] == 1) {
                     shape.unshift(lo._shape[cl]);
-                    // FIXME Extra cost
                     roBroadCasted = ro.repeat(lo._shape[cl], cr);
                 } else if(ro._shape[cr] == lo._shape[cl]) {
                     shape.unshift(lo._shape[cl]);
@@ -1155,66 +1139,108 @@ NDArray.prototype = {
         if (isLoScalar) {
             var diffAxis = ro._shape.length-1;
             var isLoLarger = false;
+            var loData = lo;
+            var roData = ro._array;
         } else if(isRoScalar) {
             var diffAxis = lo._shape.length-1;
             var isLoLarger = true;
+            var roData = ro;
+            var loData = lo._array;
         } else {
             var diffAxis = Math.abs(lo._shape.length - ro._shape.length);
             var isLoLarger = lo._shape.length >= ro._shape.length;
+            var loData = lo._array;
+            var roData = ro._array;
         }
         var stride = calculateDimStride(shape, diffAxis);
         var axisSize = shape[diffAxis];
 
         var offsetStride = stride * axisSize;
+        var offsetRepeats = out._size / offsetStride;
 
-        var loData = isLoScalar ? lo : lo._array;
-        var roData = isRoScalar ? ro : ro._array;
-        var _a, _b, result;
-
-        for (var offset = 0; offset < out._size; offset+=offsetStride) {
-            var idx = offset;
-            for (var i = 0; i < offsetStride; i++) {
-                if (isLoLarger) {
-                    _a = isLoScalar ? loData : loData[idx];
-                    _b = isRoScalar ? roData : roData[i];
-                } else {
-                    _a = isLoScalar ? loData : loData[i];
-                    _b = isRoScalar ? roData : roData[idx];
+        var _a, _b, res;
+        var idx = 0;
+        if (isLoLarger) {
+            if(isRoScalar) {
+                for (var c = 0; c < offsetRepeats; c++) {
+                    for (var i = 0; i < offsetStride; i++) {
+                        _a = loData[idx]; _b = roData;
+                        switch (op) {
+                            case 0: res = _a + _b; break;
+                            case 1: res = _a - _b; break;
+                            case 2: res = _a * _b; break;
+                            case 3: res = _a / _b; break;
+                            case 4: res = _a % _b; break;
+                            case 5: res = _a & _b; break;
+                            case 6: res = _a | _b; break;
+                            case 7: res = _a ^ _b; break;
+                            default: throw new Error("Unkown operation " + op);
+                        }
+                        outData[idx] = res;
+                        idx ++;
+                    }
                 }
-                switch (op) {
-                    case 0:
-                        result = _a + _b;
-                        break;
-                    case 1:
-                        result = _a - _b;
-                        break;
-                    case 2:
-                        result = _a * _b;
-                        break;
-                    case 3:
-                        result = _a / _b;
-                        break;
-                    case 4:
-                        result = _a % _b;
-                        break;
-                    case 5:
-                        result = _a & _b;
-                        break;
-                    case 6:
-                        result = _a | _b;
-                        break;
-                    case 7:
-                        result = _a ^ _b;
-                        break;
-                    default:
-                        throw new Error("Unkown operation " + op);
+            } else {
+                for (var c = 0; c < offsetRepeats; c++) {
+                    for (var i = 0; i < offsetStride; i++) {
+                        _a = loData[idx]; _b = roData[i];
+                        switch (op) {
+                            case 0: res = _a + _b; break;
+                            case 1: res = _a - _b; break;
+                            case 2: res = _a * _b; break;
+                            case 3: res = _a / _b; break;
+                            case 4: res = _a % _b; break;
+                            case 5: res = _a & _b; break;
+                            case 6: res = _a | _b; break;
+                            case 7: res = _a ^ _b; break;
+                            default: throw new Error("Unkown operation " + op);
+                        }
+                        outData[idx] = res;
+                        idx ++;
+                    }
                 }
-                outData[idx] = result;
-
-                idx ++;
+            }
+        } else {
+            if (isLoScalar) {
+                for (var c = 0; c < offsetRepeats; c++) {
+                    for (var i = 0; i < offsetStride; i++) {
+                        _a = loData; _b = roData[idx];
+                        switch (op) {
+                            case 0: res = _a + _b; break;
+                            case 1: res = _a - _b; break;
+                            case 2: res = _a * _b; break;
+                            case 3: res = _a / _b; break;
+                            case 4: res = _a % _b; break;
+                            case 5: res = _a & _b; break;
+                            case 6: res = _a | _b; break;
+                            case 7: res = _a ^ _b; break;
+                            default: throw new Error("Unkown operation " + op);
+                        }
+                        outData[idx] = res;
+                        idx ++;
+                    }
+                }
+            } else {
+                for (var c = 0; c < offsetRepeats; c++) {
+                    for (var i = 0; i < offsetStride; i++) {
+                        _a = loData[idx]; _b = roData[i];
+                        switch (op) {
+                            case 0: res = _a + _b; break;
+                            case 1: res = _a - _b; break;
+                            case 2: res = _a * _b; break;
+                            case 3: res = _a / _b; break;
+                            case 4: res = _a % _b; break;
+                            case 5: res = _a & _b; break;
+                            case 6: res = _a | _b; break;
+                            case 7: res = _a ^ _b; break;
+                            default: throw new Error("Unkown operation " + op);
+                        }
+                        outData[idx] = res;
+                        idx ++;
+                    }
+                }
             }
         }
-
         return out;
     },
 
@@ -1445,15 +1471,175 @@ NDArray.prototype = {
     },
 
     insert : function(obj, values, axis) {
-        console.warn("TODO");
+        var data = this._array;
+        if (typeof(obj) === 'number') {
+            obj = [obj];
+            var isObjScalar = true;
+        } else {
+            var isObjScalar = false;
+        }
+        if (typeof(values) === 'number') {
+            values = new NDArray([values]);
+        } else if (values instanceof Array) {
+            values = new NDArray(values);
+        }
+
+        if (typeof(axis) === 'undefined') {
+            this._shape = [this._size];
+            axis = 0;
+        }
+        // Checking if indices is valid
+        var prev = obj[0];
+        var axisSize = this._shape[axis];
+        for (var i = 0; i < obj.length; i++) {
+            if (obj[i] < 0) {
+                obj[i] = axisSize + obj[i];
+            }
+            if (obj[i] > axisSize) {
+                throw new Error(indexOutofBoundsErrorMsg(obj[i]));   
+            }
+            if (obj[i] < prev) {
+                throw new Error('Index must be in ascending order');
+            }
+            prev = obj[i];
+        }
+        // Broadcasting
+        var targetShape = this._shape.slice();
+        if (isObjScalar) {
+            targetShape.splice(axis, 1);
+        } else {
+            targetShape[axis] = obj.length;
+        }
+
+        var sourceShape = values._shape;
+        var cs = sourceShape.length - 1;
+        var ct = targetShape.length - 1;
+
+        var valueBroadcasted = values;
+        while (cs >= 0 && ct >= 0) {
+            if (sourceShape[cs] === 1) {
+                valueBroadcasted = values.repeat(targetShape[ct], cs);
+            } else if(sourceShape[cs] !== targetShape[ct]) {
+                throw new Error(broadcastErrorMsg(sourceShape, targetShape));
+            }
+            cs --;
+            ct --;
+        }
+        values = valueBroadcasted;
+
+        // Calculate indices to insert
+        var stride = calculateDimStride(this._shape, axis);
+        var axisSize = this._shape[axis];
+        var offsetStride = axisSize * stride;
+        var offsetRepeats = this._size / offsetStride;
+
+        var objLen = obj.length;
+        var indices = new Uint32Array(offsetRepeats * objLen);
+
+        var cursor = 0;
+        for (var offset = 0; offset < this._size; offset += offsetStride) {
+            for (var i = 0; i < objLen; i++) {
+                var objIdx = obj[i];
+                indices[cursor++] = offset + objIdx * stride;
+            }
+        }
+
+        var resShape = this._shape.slice();
+        resShape[axis] += obj.length;
+        var resSize = getSize(resShape);
+        if (this._array.length < resSize) {
+            var data = new ArrayConstructor[this._dtype](resSize);
+        } else {
+            var data = this._array;
+        }
+        var source = this._array;
+        var valuesArr = values._array;
+
+        var idxCursor = indices.length - 1;
+        var end = this._size;
+        var start = indices[idxCursor];
+        var dataCursor = resSize - 1;
+        var valueCursor = values._size - 1;
+        while (idxCursor >= 0) {
+            // Copy source data;
+            for (var i = end - 1; i >= start; i--) {
+                data[dataCursor--] = source[i];
+            }
+            end = start;
+            start = indices[--idxCursor];
+            // Copy inserted data;
+            for (var i = 0; i < stride; i++) {
+                if (valueCursor < 0) {
+                    valueCursor = values._size - 1;
+                }
+                data[dataCursor--] = valuesArr[valueCursor--];
+            }
+        }
+        // Copy the rest
+        for (var i = end - 1; i >= 0; i--) {
+            data[dataCursor--] = source[i];
+        }
+
+        this._array = data;
+        this._shape = resShape;
+        this._size = resSize;
+        return this;
     }.kwargs(),
 
     append : function(values, axis) {
-        console.warn("TODO");
+        console.warn('TODO');
     }.kwargs(),
 
     'delete' : function(obj, axis) {
+        var data = this._array;
+        if (typeof(obj) === 'number') {
+            obj = [obj];
+        }
+        var size = this._size;
 
+        if (typeof(axis) === 'undefined') {
+            this._shape = [size];
+            axis = 0;
+        }
+
+        var stride = calculateDimStride(this._shape, axis);
+        var axisSize = this._shape[axis];
+
+        var offsetStride = stride * axisSize;
+        var cursor = 0;
+        for (var offset = 0; offset < size; offset += offsetStride) {
+            var start = 0;
+            var end = obj[0];
+            var objCursor = 0;
+            while(objCursor < obj.length) {
+                if (end < 0) {
+                    end = end + axisSize;
+                }
+                if (end > axisSize) {
+                    throw new Error(indexOutofBoundsErrorMsg(end));
+                }
+                if (end < start) {
+                    throw new Error('Index must be in ascending order');
+                }
+                for (var i = start; i < end; i++) {
+                    for (var j = 0; j < stride; j++) {
+                        data[cursor++] = data[i * stride + j + offset];
+                    }
+                }
+                start = end + 1;
+                end = obj[++objCursor];
+            }
+            // Copy the rest
+            for (var i = start; i < axisSize; i++) {
+                for (var j = 0; j < stride; j++) {
+                    data[cursor++] = data[i * stride + j + offset];
+                }
+            }
+        }
+        this._shape[axis] -= obj.length;
+        this._size -= stride * obj.length;
+
+        return this;
     }.kwargs(),
 
     _parseRanges : function(index) {
@@ -1521,6 +1707,7 @@ NDArray.prototype = {
         numArr._array = ArraySlice.call(this._array);
         numArr._shape = this._shape.slice();
         numArr._dtype = this._dtype;
+        numArr._size = this._size;
 
         return numArr;
     },
@@ -1567,6 +1754,12 @@ NDArray.range = function(min, max, step, dtype) {
 
     return ndarray;
 
+}.kwargs();
+
+NDArray.zeros = function(shape, dtype) {
+    var ret = new NDArray(dtype);
+    ret.initFromShape(shape);
+    return ret;
 }.kwargs();
 
 /**
@@ -1627,7 +1820,7 @@ function parseRange(index, dimSize) {
             start = dimSize + start;
         }
         if (start < 0 || start > dimSize) {
-            throw new Error('Index ' + index + ' out of bounds');
+            throw new Error(indexOutofBoundsErrorMsg(index));
         }
         // Clamp to [0-dimSize)
         start = Math.max(Math.min(dimSize-1, start), 0);
@@ -1712,6 +1905,14 @@ function broadcastErrorMsg(shape1, shape2) {
     return 'Shape (' 
             + shape1.toString() + ') (' + shape2.toString()
             +') could not be broadcast together';
+}
+
+function axisOutofBoundsErrorMsg(axis) {
+    return 'Axis ' + axis + ' out of bounds';
+}
+
+function indexOutofBoundsErrorMsg(idx) {
+    return 'Index ' + idx + ' out of bounds';
 }
 
 return NDArray;

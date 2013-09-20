@@ -39,7 +39,6 @@ define(function(require) {
         var series;
 
         var forceSerie;
-        // var forceSerieIndex;
 
         var nodeShapes = [];
         var linkShapes = [];
@@ -75,6 +74,7 @@ define(function(require) {
         
         //- ----------外部参数
         var density;
+        var initSize;
         var coolDown;
         var centripetal;
         // var initializeSize; // defined but never used
