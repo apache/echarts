@@ -328,7 +328,9 @@ define(function() {
         },
 
         polar : {
-            startAngle : 90,      
+            // center: null,                   // 默认全局居中
+            // radius: [0, min(width,height) - 50],
+            startAngle : 90,
             splitNumber : 5,
             name : {
                 show: true,

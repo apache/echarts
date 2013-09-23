@@ -30,17 +30,10 @@ define(
             var _queryTarget;
 
             function init(newOption, newComponent) {
-                option = newOption;
                 component = newComponent;
-
-                self.clear();
-
-                polar = option.polar;
-                series = option.series;
-
-                _buildShape();
+                refresh(newOption);
             }
-
+            
             /**
              * 绘制图形
              */
@@ -920,15 +913,28 @@ define(
                 return polar[index].indicator;
             } 
 
-            /**
+             /**
              * 刷新
              */
-            function refresh() {
+            function refresh(newOption) {
+                if (newOption) {
+                    option = newOption;
+                    polar = option.polar;
+                    series = option.series;
+                    self.backupAdaptiveParams(polar,['center', 'radius'],true);
+                }
                 self.clear();
                 _buildShape();
             }
+            
+            function resize() {
+                // 复位录原始定义
+                self.restoreAdaptiveParams(polar, ['center', 'radius'], true);
+                refresh();
+            }
 
             self.refresh = refresh;
+            self.resize = resize;
             self.reformOption = reformOption;
             self.getVector = getVector;
 

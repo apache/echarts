@@ -164,7 +164,7 @@ define(function(require) {
             var y = pos[1];
             var ret = [];
             if (typeof(x) == 'string') {
-                if (trim(x).substr(-1) == '%') {
+                if (_trim(x).substr(-1) == '%') {
                     ret[0] = parseFloat(x) / 100 * this.zr.getWidth();
                 } else {
                     ret[0] = parseFloat(x);
@@ -174,7 +174,7 @@ define(function(require) {
             }
 
             if (typeof(y) == 'string') {
-                if (trim(y).substr(-1) == '%') {
+                if (_trim(y).substr(-1) == '%') {
                     ret[1] = parseFloat(y) / 100 * this.zr.getHeight();
                 } else {
                     ret[1] = parseFloat(y);
@@ -186,10 +186,36 @@ define(function(require) {
             return ret;
         }
 
-        function trim(str) {
+        function _trim(str) {
             return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
         }
 
+        // 记录自适应原始定义，resize用
+        function backupAdaptiveParams(series, attrs, isAll) {
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (isAll || series[i].type == self.type) {
+                    for (var j = 0, k = attrs.length; j < k; j++) {
+                        series[i]['__' + attrs[i]] = zrUtil.clone(
+                            series[i][attrs[i]]
+                        );
+                    }
+                }
+            }
+        }
+        
+        // 还原自适应原始定义，resize用
+        function restoreAdaptiveParams(series, attrs, isAll) {
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (isAll || series[i].type == self.type) {
+                    for (var j = 0, k = attrs.length; j < k; j++) {
+                        series[i][attrs[i]] = zrUtil.clone(
+                            series[i]['__' + attrs[i]]
+                        );
+                    }
+                }
+            }
+        }
+        
         function resize() {
             self.refresh && self.refresh();
         }
@@ -226,6 +252,8 @@ define(function(require) {
         self.calAbsolute = calAbsolute;
         self.clear = clear;
         self.dispose = dispose;
+        self.backupAdaptiveParams = backupAdaptiveParams;
+        self.restoreAdaptiveParams =  restoreAdaptiveParams;
         self.resize = resize;
     }
 

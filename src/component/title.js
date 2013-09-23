@@ -247,9 +247,15 @@ define(function (require) {
                 _buildShape();
             }
         }
+        
+        function resize() {
+             self.clear();
+            _buildShape();
+        }
 
         self.init = init;
         self.refresh = refresh;
+        self.resize = resize;
 
         init(option);
     }

@@ -589,7 +589,6 @@ define(function(require) {
                           'recursive' : true
                       }
                   );
-
             // 圆心坐标，无则为自适应居中
             if (!opt.center 
                 || (opt.center && !(opt.center instanceof Array))) {
@@ -606,7 +605,7 @@ define(function(require) {
                     opt.center[1] = Math.round(zr.getHeight() / 2);
                 }
             }
-
+            
             // 传数组实现环形图，[内半径，外半径]，传单个则默认为外半径为
             if (typeof opt.radius == 'undefined') {
                 opt.radius = [
@@ -655,9 +654,16 @@ define(function(require) {
             if (newOption) {
                 option = newOption;
                 series = option.series;
+                self.backupAdaptiveParams(series, ['center', 'radius']);
             }
             self.clear();
             _buildShape();
+        }
+        
+        function resize() {
+            // 复位录原始定义
+            self.restoreAdaptiveParams(series, ['center', 'radius']);
+            refresh();
         }
         
         /**
@@ -1124,6 +1130,7 @@ define(function(require) {
         // 接口方法
         self.init = init;
         self.refresh = refresh;
+        self.resize = resize;
         self.addDataAnimation = addDataAnimation;
         self.animation = animation;
         self.onclick = onclick;
