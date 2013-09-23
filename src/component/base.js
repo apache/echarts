@@ -198,12 +198,12 @@ define(function(require) {
          * 清除图形数据，实例仍可用
          */
         function clear() {
-            self.shapeList = [];
             if (self.zr) {
                 self.zr.delShape(self.shapeList);
                 self.zr.clearAnimation 
                     && self.zr.clearAnimation();
             }
+            self.shapeList = [];
         }
 
         /**
