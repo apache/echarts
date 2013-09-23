@@ -48,6 +48,7 @@ define(function(require) {
             var serie;                              // 临时映射变量
             var serieName;                          // 临时映射变量
             var iconShape;
+            var iconType;
             for (var i = 0, l = series.length; i < l; i++) {
                 serie = series[i];
                 serieName = serie.name;
@@ -66,7 +67,16 @@ define(function(require) {
                         if (iconShape) {
                             // 回调legend，换一个更形象的icon
                             iconShape.shape = 'icon';
-                            iconShape.style.iconType = _sIndex2ShapeMap[i];
+                            var iconType = _sIndex2ShapeMap[i];
+                            iconShape.style.brushType = iconType.match('empty') 
+                                                        ? 'stroke' : 'both';
+                            iconType = iconType.replace('empty', '').toLowerCase();
+                            if (iconType.match('star')) {
+                                iconShape.style.n = 
+                                    (iconType.replace('star','') - 0) || 5;
+                                iconType = 'star';
+                            } 
+                            iconShape.style.iconType = iconType;
                             legend.setItemShape(serieName, iconShape);
                         }
                     } else {
