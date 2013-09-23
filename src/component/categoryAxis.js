@@ -398,7 +398,7 @@ define(function (require) {
                             yStart : sy,
                             xEnd : x,
                             yEnd : ey,
-                            strokeColor : color[i % colorLength],
+                            strokeColor : color[(i / _interval) % colorLength],
                             lineType : option.splitLine.lineStyle.type,
                             lineWidth : option.splitLine.lineStyle.width
                         }
@@ -424,7 +424,7 @@ define(function (require) {
                             yStart : y,
                             xEnd : ex,
                             yEnd : y,
-                            strokeColor : color[i % colorLength],
+                            strokeColor : color[(i / _interval) % colorLength],
                             linetype : option.splitLine.lineStyle.type,
                             lineWidth : option.splitLine.lineStyle.width
                         }
@@ -449,7 +449,7 @@ define(function (require) {
                 var lastX = grid.getX();
                 var curX;
 
-                for (var i = 0; i <= dataLength; i++) {
+                for (var i = 0; i <= dataLength; i += _interval) {
                     curX = i < dataLength
                            ? getCoord(data[i].value || data[i])
                            : grid.getXend();
@@ -462,7 +462,7 @@ define(function (require) {
                             y : y,
                             width : curX - lastX,
                             height : height,
-                            color : color[i % colorLength]
+                            color : color[(i / _interval) % colorLength]
                             // type : option.splitArea.areaStyle.type,
                         }
                     };
@@ -477,7 +477,7 @@ define(function (require) {
                 var lastYend = grid.getYend();
                 var curY;
 
-                for (var i = 0; i <= dataLength; i++) {
+                for (var i = 0; i <= dataLength; i += _interval) {
                     curY = i < dataLength
                            ? getCoord(data[i].value || data[i])
                            : grid.getY();
@@ -490,7 +490,7 @@ define(function (require) {
                             y : curY,
                             width : width,
                             height : lastYend - curY,
-                            color : color[i % colorLength]
+                            color : color[(i / _interval) % colorLength]
                             // type : option.splitArea.areaStyle.type
                         }
                     };

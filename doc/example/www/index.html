@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -11,10 +11,8 @@
 <body>
     <!--Step:2 Prepare a dom for ECharts which (must) has size (width & hight)-->
     <!--Step:2 为ECharts准备一个具备大小（宽高）的Dom-->
-    <p>啦啦啦</p>
     <div id="main" style="height:500px;border:1px solid #ccc;padding:10px;"></div>
-    <p>哦哦哦</p>
-    <div id="main2" style="height:500px;border:1px solid #ccc;padding:10px;"></div>
+    
     <script type="text/javascript">
     // Step:3 conifg ECharts's path, link to echarts.js from current page.
     // Step:3 为模块加载器配置echarts的路径，从当前页面链接到echarts.js，定义所需图表路径
@@ -36,7 +34,6 @@
         ],
         function(ec) {
             var myChart = ec.init(document.getElementById('main'));
-            var myChart2 = ec.init(document.getElementById('main2'));
             var option = {
                 tooltip : {
                     trigger: 'axis'
@@ -82,8 +79,6 @@
             };
             
             myChart.setOption(option);
-            option.series[0].type = option.series[1].type = 'line';
-            myChart2.setOption(option);
         }
     );
     </script>

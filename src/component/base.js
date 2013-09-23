@@ -35,6 +35,7 @@ define(function(require) {
                 case ecConfig.CHART_TYPE_RADAR :
                 case ecConfig.CHART_TYPE_MAP :
                 case ecConfig.CHART_TYPE_K :
+                case ecConfig.CHART_TYPE_CHORD:
                     return 2;
 
                 case ecConfig.COMPONENT_TYPE_LEGEND :
@@ -155,6 +156,66 @@ define(function(require) {
                    + finalTextStyle.fontFamily;
         }
         
+        /**
+         * 百分比计算
+         */
+        function calAbsolute(pos) {
+            var x = pos[0];
+            var y = pos[1];
+            var ret = [];
+            if (typeof(x) == 'string') {
+                if (_trim(x).substr(-1) == '%') {
+                    ret[0] = parseFloat(x) / 100 * this.zr.getWidth();
+                } else {
+                    ret[0] = parseFloat(x);
+                }
+            } else {
+                ret[0] = x
+            }
+
+            if (typeof(y) == 'string') {
+                if (_trim(y).substr(-1) == '%') {
+                    ret[1] = parseFloat(y) / 100 * this.zr.getHeight();
+                } else {
+                    ret[1] = parseFloat(y);
+                }
+            } else {
+                ret[1] = y;
+            }
+
+            return ret;
+        }
+
+        function _trim(str) {
+            return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+        }
+
+        // 记录自适应原始定义，resize用
+        function backupAdaptiveParams(series, attrs, isAll) {
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (isAll || series[i].type == self.type) {
+                    for (var j = 0, k = attrs.length; j < k; j++) {
+                        series[i]['__' + attrs[i]] = zrUtil.clone(
+                            series[i][attrs[i]]
+                        );
+                    }
+                }
+            }
+        }
+        
+        // 还原自适应原始定义，resize用
+        function restoreAdaptiveParams(series, attrs, isAll) {
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (isAll || series[i].type == self.type) {
+                    for (var j = 0, k = attrs.length; j < k; j++) {
+                        series[i][attrs[i]] = zrUtil.clone(
+                            series[i]['__' + attrs[i]]
+                        );
+                    }
+                }
+            }
+        }
+        
         function resize() {
             self.refresh && self.refresh();
         }
@@ -163,7 +224,11 @@ define(function(require) {
          * 清除图形数据，实例仍可用
          */
         function clear() {
-            self.zr && self.zr.delShape(self.shapeList);
+            if (self.zr) {
+                self.zr.delShape(self.shapeList);
+                self.zr.clearAnimation 
+                    && self.zr.clearAnimation();
+            }
             self.shapeList = [];
         }
 
@@ -184,8 +249,11 @@ define(function(require) {
         self.reformCssArray = reformCssArray;
         self.deepQuery = deepQuery;
         self.getFont = getFont;
+        self.calAbsolute = calAbsolute;
         self.clear = clear;
         self.dispose = dispose;
+        self.backupAdaptiveParams = backupAdaptiveParams;
+        self.restoreAdaptiveParams =  restoreAdaptiveParams;
         self.resize = resize;
     }
 
