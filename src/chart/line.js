@@ -553,6 +553,9 @@ define(function(require) {
                                               || defaultColor,
                                 lineWidth : lineWidth,
                                 lineType : lineType,
+                                smooth : serie.smooth,
+                                //smoothX : orient == 'vertical' ? 0 : serie.smooth,
+                                //smoothY : orient == 'vertical' ? serie.smooth : 0,
                                 shadowColor : self.deepQuery(
                                   [serie],
                                   'itemStyle.normal.lineStyle.shadowColor'

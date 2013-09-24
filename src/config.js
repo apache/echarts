@@ -387,7 +387,7 @@ define(function() {
                 normal: {
                     // color: 各异,
                     lineStyle: {
-                        width: 1,
+                        width: 2,
                         type: 'solid',
                         shadowColor : 'rgba(0,0,0,0)', //默认透明
                         shadowBlur: 5,
@@ -399,6 +399,7 @@ define(function() {
                     // color: 各异,
                 }
             },
+            smooth : 0,
             //symbol: null,         // 拐点图形类型，非标准参数
             symbolSize: 4,          // 可计算特性参数，空数据拖拽提示图形大小
             showAllSymbol: false    // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
