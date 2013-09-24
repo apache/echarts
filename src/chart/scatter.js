@@ -70,7 +70,8 @@ define(function(require) {
                             var iconType = _sIndex2ShapeMap[i];
                             iconShape.style.brushType = iconType.match('empty') 
                                                         ? 'stroke' : 'both';
-                            iconType = iconType.replace('empty', '').toLowerCase();
+                            iconType = iconType.replace('empty', '')
+                                               .toLowerCase();
                             if (iconType.match('star')) {
                                 iconShape.style.n = 
                                     (iconType.replace('star','') - 0) || 5;

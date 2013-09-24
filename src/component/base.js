@@ -170,7 +170,7 @@ define(function(require) {
                     ret[0] = parseFloat(x);
                 }
             } else {
-                ret[0] = x
+                ret[0] = x;
             }
 
             if (typeof(y) == 'string') {

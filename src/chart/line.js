@@ -554,8 +554,6 @@ define(function(require) {
                                 lineWidth : lineWidth,
                                 lineType : lineType,
                                 smooth : _getSmooth(serie.smooth),
-                                //smoothX : orient == 'vertical' ? 0 : serie.smooth,
-                                //smoothY : orient == 'vertical' ? serie.smooth : 0,
                                 shadowColor : self.deepQuery(
                                   [serie],
                                   'itemStyle.normal.lineStyle.shadowColor'
@@ -622,7 +620,7 @@ define(function(require) {
                     delta = Math.abs(pointList[0][1] - pointList[1][1]);
                 }
                 */
-                return 0.3
+                return 0.3;
             }
             else {
                 return 0;
