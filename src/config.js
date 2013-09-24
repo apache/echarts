@@ -399,9 +399,9 @@ define(function() {
                     // color: 各异,
                 }
             },
-            smooth : 0,
+            //smooth : false,
             //symbol: null,         // 拐点图形类型，非标准参数
-            symbolSize: 4,          // 可计算特性参数，空数据拖拽提示图形大小
+            symbolSize: 2,          // 可计算特性参数，空数据拖拽提示图形大小
             showAllSymbol: false    // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
         },
         
@@ -409,14 +409,16 @@ define(function() {
         k: {
             xAxisIndex: 0,
             yAxisIndex: 0,
+            // barWidth : null          // 默认自适应
+            // barMaxWidth : null       // 默认自适应 
             itemStyle: {
                 normal: {
-                    color: '#fff',       // 阳线填充颜色
-                    color0: '#00aa11',    // 阴线填充颜色
+                    color: '#fff',          // 阳线填充颜色
+                    color0: '#00aa11',      // 阴线填充颜色
                     lineStyle: {
                         width: 1,
                         color: '#ff3200',   // 阳线边框颜色
-                        color0: '#00aa11' // 阴线边框颜色
+                        color0: '#00aa11'   // 阴线边框颜色
                     }
                 },
                 emphasis: {

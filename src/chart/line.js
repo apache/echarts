@@ -553,7 +553,7 @@ define(function(require) {
                                               || defaultColor,
                                 lineWidth : lineWidth,
                                 lineType : lineType,
-                                smooth : serie.smooth,
+                                smooth : _getSmooth(serie.smooth),
                                 //smoothX : orient == 'vertical' ? 0 : serie.smooth,
                                 //smoothY : orient == 'vertical' ? serie.smooth : 0,
                                 shadowColor : self.deepQuery(
@@ -581,7 +581,7 @@ define(function(require) {
                         
                         if (isFill) {
                             self.shapeList.push({
-                                shape : 'polygon',
+                                shape : 'halfSmoothPolygon',
                                 zlevel : _zlevelBase,
                                 style : {
                                     pointList : singlePL.concat([
@@ -595,6 +595,7 @@ define(function(require) {
                                         ]
                                     ]),
                                     brushType : 'fill',
+                                    smooth : _getSmooth(serie.smooth),
                                     color : fillNormalColor
                                             ? fillNormalColor
                                             : zrColor.alpha(defaultColor,0.5)
@@ -607,6 +608,24 @@ define(function(require) {
                         }
                     }
             }
+            }
+        }
+        
+        function _getSmooth(isSmooth/*, pointList, orient*/) {
+            if (isSmooth) {
+                /* 不科学啊，发现0.3通用了
+                var delta;
+                if (orient == 'horizontal') {
+                    delta = Math.abs(pointList[0][0] - pointList[1][0]);
+                }
+                else {
+                    delta = Math.abs(pointList[0][1] - pointList[1][1]);
+                }
+                */
+                return 0.3
+            }
+            else {
+                return 0;
             }
         }
 
@@ -926,7 +945,10 @@ define(function(require) {
             });
         }
     }
-        
+    
+    // 动态扩展zrender shape：halfSmoothPolygon
+    require('../util/shape/halfSmoothPolygon');
+    
     // 图表注册
     require('../chart').define('line', Line);
     
