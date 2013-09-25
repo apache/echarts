@@ -23,6 +23,8 @@ define(function(require) {
 
         var ecConfig = require('../config');
         var ecData = require('../util/ecData');
+        
+        var zrUtil = require('zrender/tool/util');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_BAR;
@@ -270,9 +272,9 @@ define(function(require) {
                             categoryAxis.getNameByIndex(i),
                             x, y,
                             barWidthMap[seriesIndex] || barWidth,
-                            barHeight
+                            barHeight,
+                            'vertical'
                         );
-                        barShape._orient = 'vertical';
 
                         self.shapeList.push(barShape);
                     }
@@ -304,7 +306,8 @@ define(function(require) {
                                 categoryAxis.getNameByIndex(i),
                                 x + 1, y,
                                 (barWidthMap[seriesIndex] || barWidth) - 2,
-                                barMinHeightMap[seriesIndex]
+                                barMinHeightMap[seriesIndex],
+                                'vertical'
                             );
                             barShape.hoverable = false;
                             barShape.draggable = false;
@@ -417,9 +420,9 @@ define(function(require) {
                             categoryAxis.getNameByIndex(i),
                             x, y - (barWidthMap[seriesIndex] || barWidth),
                             barHeight,
-                            barWidthMap[seriesIndex] || barWidth
+                            barWidthMap[seriesIndex] || barWidth,
+                            'horizontal'
                         );
-                        barShape._orient = 'horizontal';
 
                         self.shapeList.push(barShape);
                     }
@@ -453,7 +456,8 @@ define(function(require) {
                                 x,
                                 y + 1 - (barWidthMap[seriesIndex] || barWidth),
                                 barMinHeightMap[seriesIndex],
-                                (barWidthMap[seriesIndex] || barWidth) - 2
+                                (barWidthMap[seriesIndex] || barWidth) - 2,
+                                'horizontal'
                             );
                             barShape.hoverable = false;
                             barShape.draggable = false;
@@ -556,7 +560,7 @@ define(function(require) {
          * 生成最终图形数据
          */
         function _getBarItem(
-            seriesIndex, dataIndex, name, x, y, width, height
+            seriesIndex, dataIndex, name, x, y, width, height, orient
         ) {
             var barShape;
             var serie = series[seriesIndex];
@@ -571,7 +575,7 @@ define(function(require) {
                 [data, serie],
                 'itemStyle.emphasis.color'
             );
-
+            
             barShape = {
                 shape : 'rectangle',
                 zlevel : _zlevelBase,
@@ -587,8 +591,11 @@ define(function(require) {
                 },
                 highlightStyle : {
                     color : emphasisColor || normalColor || defaultColor
-                }
+                },
+                _orient : orient
             };
+            
+            barShape = _addLabel(barShape, serie, data, name, orient);
 
             if (self.deepQuery(
                     [data, serie, option],
@@ -607,6 +614,95 @@ define(function(require) {
             );
 
             return barShape;
+        }
+        
+        /**
+         * 添加文本 
+         */
+        function _addLabel(barShape, serie, data, name, orient) {
+            // 多级控制
+            var nLabel = zrUtil.merge(
+                    zrUtil.clone(
+                        self.deepQuery([serie], 'itemStyle.normal.label')
+                    ), 
+                    self.deepQuery([data], 'itemStyle.normal.label'),
+                    { 'overwrite': true, 'recursive': true }
+                );
+            var eLabel = zrUtil.merge(
+                    zrUtil.clone(
+                        self.deepQuery([serie], 'itemStyle.emphasis.label')
+                    ), 
+                    self.deepQuery([data], 'itemStyle.emphasis.label'),
+                    { 'overwrite': true, 'recursive': true }
+                );
+
+            var nTextStyle = nLabel.textStyle || {};
+            var eTextStyle = eLabel.textStyle || {};
+            
+            if (nLabel.show) {
+                barShape.style.text = _getLabelText(
+                    serie, data, name, 'normal'
+                );
+                barShape.style.textPosition = 
+                    typeof nLabel.position == 'undefined'
+                        ? (orient == 'horizontal' ? 'right' : 'top')
+                        : nLabel.position;
+                barShape.style.textColor = nTextStyle.color;
+                barShape.style.textFont = self.getFont(nTextStyle);
+            }
+            
+            if (eLabel.show) {
+                barShape.highlightStyle.text = _getLabelText(
+                    serie, data, name, 'emphasis'
+                );
+                barShape.highlightStyle.textPosition = 
+                    typeof eLabel.position == 'undefined'
+                        ? (orient == 'horizontal' ? 'right' : 'top')
+                        : eLabel.position;
+                barShape.highlightStyle.textColor = eTextStyle.color;
+                barShape.highlightStyle.textFont = self.getFont(eTextStyle);
+            }
+            
+            return barShape;
+        }
+        
+        /**
+         * 根据lable.format计算label text
+         */
+        function _getLabelText(serie, data, name, status) {
+            var formatter = self.deepQuery(
+                [data, serie],
+                'itemStyle.' + status + '.label.formatter'
+            );
+            
+            var value = typeof data != 'undefined'
+                        ? (typeof data.value != 'undefined'
+                          ? data.value
+                          : data)
+                        : '-';
+            
+            if (formatter) {
+                if (typeof formatter == 'function') {
+                    return formatter(
+                        serie.name,
+                        name,
+                        value
+                    );
+                }
+                else if (typeof formatter == 'string') {
+                    formatter = formatter.replace('{a}','{a0}')
+                                         .replace('{b}','{b0}')
+                                         .replace('{c}','{c0}');
+                    formatter = formatter.replace('{a0}', serie.name)
+                                         .replace('{b0}', name)
+                                         .replace('{c0}', value);
+    
+                    return formatter;
+                }
+            }
+            else {
+                return value;
+            }
         }
 
         /**

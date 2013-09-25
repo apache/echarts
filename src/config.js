@@ -374,8 +374,26 @@ define(function() {
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
-            barMinHeight: 20
-            // barWidth: null        // 默认自适应
+            barMinHeight: 20,
+            // barWidth: null,        // 默认自适应
+            itemStyle: {
+                normal: {
+                    label: {
+                        show: false
+                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        //           'inside'|'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                },
+                emphasis: {
+                    label: {
+                        show: false,
+                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        //           'inside'|'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                }
+            }
         },
 
         // 折线图默认参数
