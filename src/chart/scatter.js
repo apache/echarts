@@ -329,6 +329,14 @@ define(function(require) {
                 itemShape.draggable = true;
             }
             */
+           
+           itemShape = self.addLabel(
+                itemShape, 
+                series[seriesIndex], 
+                series[seriesIndex].data[dataIndex], 
+                name, 
+                'vertical'
+            );
 
             ecData.pack(
                 itemShape,

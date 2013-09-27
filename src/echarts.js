@@ -91,11 +91,11 @@ define(function(require) {
         _init();
         function _init() {
             var zrender = require('zrender');
-            if (((zrender.version || '1.0.0').replace('.', '') - 0)
+            if (((zrender.version || '1.0.3').replace('.', '') - 0)
                 < (echarts.dependencies.zrender.replace('.', '') - 0)
             ) {
                 console.error(
-                    'ZRender ' + (zrender.version || '1.0.0') 
+                    'ZRender ' + (zrender.version || '1.0.3-') 
                     + ' is too old for ECharts ' + echarts.version 
                     + '. Current version need ZRender ' 
                     + echarts.dependencies.zrender + '+'

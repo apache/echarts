@@ -595,7 +595,7 @@ define(function(require) {
                 _orient : orient
             };
             
-            barShape = _addLabel(barShape, serie, data, name, orient);
+            barShape = self.addLabel(barShape, serie, data, name, orient);
 
             if (self.deepQuery(
                     [data, serie, option],
@@ -614,95 +614,6 @@ define(function(require) {
             );
 
             return barShape;
-        }
-        
-        /**
-         * 添加文本 
-         */
-        function _addLabel(barShape, serie, data, name, orient) {
-            // 多级控制
-            var nLabel = zrUtil.merge(
-                    zrUtil.clone(
-                        self.deepQuery([serie], 'itemStyle.normal.label')
-                    ), 
-                    self.deepQuery([data], 'itemStyle.normal.label'),
-                    { 'overwrite': true, 'recursive': true }
-                );
-            var eLabel = zrUtil.merge(
-                    zrUtil.clone(
-                        self.deepQuery([serie], 'itemStyle.emphasis.label')
-                    ), 
-                    self.deepQuery([data], 'itemStyle.emphasis.label'),
-                    { 'overwrite': true, 'recursive': true }
-                );
-
-            var nTextStyle = nLabel.textStyle || {};
-            var eTextStyle = eLabel.textStyle || {};
-            
-            if (nLabel.show) {
-                barShape.style.text = _getLabelText(
-                    serie, data, name, 'normal'
-                );
-                barShape.style.textPosition = 
-                    typeof nLabel.position == 'undefined'
-                        ? (orient == 'horizontal' ? 'right' : 'top')
-                        : nLabel.position;
-                barShape.style.textColor = nTextStyle.color;
-                barShape.style.textFont = self.getFont(nTextStyle);
-            }
-            
-            if (eLabel.show) {
-                barShape.highlightStyle.text = _getLabelText(
-                    serie, data, name, 'emphasis'
-                );
-                barShape.highlightStyle.textPosition = 
-                    typeof eLabel.position == 'undefined'
-                        ? (orient == 'horizontal' ? 'right' : 'top')
-                        : eLabel.position;
-                barShape.highlightStyle.textColor = eTextStyle.color;
-                barShape.highlightStyle.textFont = self.getFont(eTextStyle);
-            }
-            
-            return barShape;
-        }
-        
-        /**
-         * 根据lable.format计算label text
-         */
-        function _getLabelText(serie, data, name, status) {
-            var formatter = self.deepQuery(
-                [data, serie],
-                'itemStyle.' + status + '.label.formatter'
-            );
-            
-            var value = typeof data != 'undefined'
-                        ? (typeof data.value != 'undefined'
-                          ? data.value
-                          : data)
-                        : '-';
-            
-            if (formatter) {
-                if (typeof formatter == 'function') {
-                    return formatter(
-                        serie.name,
-                        name,
-                        value
-                    );
-                }
-                else if (typeof formatter == 'string') {
-                    formatter = formatter.replace('{a}','{a0}')
-                                         .replace('{b}','{b0}')
-                                         .replace('{c}','{c0}');
-                    formatter = formatter.replace('{a0}', serie.name)
-                                         .replace('{b0}', name)
-                                         .replace('{c0}', value);
-    
-                    return formatter;
-                }
-            }
-            else {
-                return value;
-            }
         }
 
         /**

@@ -157,6 +157,94 @@ define(function(require) {
         }
         
         /**
+         * 添加文本 
+         */
+        function addLabel(tarShape, serie, data, name, orient) {
+            // 多级控制
+            var nLabel = zrUtil.merge(
+                    zrUtil.clone(
+                        self.deepQuery([serie], 'itemStyle.normal.label')
+                    ), 
+                    self.deepQuery([data], 'itemStyle.normal.label'),
+                    { 'overwrite': true, 'recursive': true }
+                );
+            var eLabel = zrUtil.merge(
+                    zrUtil.clone(
+                        self.deepQuery([serie], 'itemStyle.emphasis.label')
+                    ), 
+                    self.deepQuery([data], 'itemStyle.emphasis.label'),
+                    { 'overwrite': true, 'recursive': true }
+                );
+
+            var nTextStyle = nLabel.textStyle || {};
+            var eTextStyle = eLabel.textStyle || {};
+            
+            if (nLabel.show) {
+                tarShape.style.text = _getLabelText(
+                    serie, data, name, 'normal'
+                );
+                tarShape.style.textPosition = 
+                    typeof nLabel.position == 'undefined'
+                        ? (orient == 'horizontal' ? 'right' : 'top')
+                        : nLabel.position;
+                tarShape.style.textColor = nTextStyle.color;
+                tarShape.style.textFont = self.getFont(nTextStyle);
+            }
+            if (eLabel.show) {
+                tarShape.highlightStyle.text = _getLabelText(
+                    serie, data, name, 'emphasis'
+                );
+                tarShape.highlightStyle.textPosition = 
+                    typeof eLabel.position == 'undefined'
+                        ? (orient == 'horizontal' ? 'right' : 'top')
+                        : eLabel.position;
+                tarShape.highlightStyle.textColor = eTextStyle.color;
+                tarShape.highlightStyle.textFont = self.getFont(eTextStyle);
+            }
+            
+            return tarShape;
+        }
+        
+        /**
+         * 根据lable.format计算label text
+         */
+        function _getLabelText(serie, data, name, status) {
+            var formatter = self.deepQuery(
+                [data, serie],
+                'itemStyle.' + status + '.label.formatter'
+            );
+            
+            var value = typeof data != 'undefined'
+                        ? (typeof data.value != 'undefined'
+                          ? data.value
+                          : data)
+                        : '-';
+            
+            if (formatter) {
+                if (typeof formatter == 'function') {
+                    return formatter(
+                        serie.name,
+                        name,
+                        value
+                    );
+                }
+                else if (typeof formatter == 'string') {
+                    formatter = formatter.replace('{a}','{a0}')
+                                         .replace('{b}','{b0}')
+                                         .replace('{c}','{c0}');
+                    formatter = formatter.replace('{a0}', serie.name)
+                                         .replace('{b0}', name)
+                                         .replace('{c0}', value);
+    
+                    return formatter;
+                }
+            }
+            else {
+                return value;
+            }
+        }
+        
+        /**
          * 百分比计算
          */
         function calAbsolute(pos) {
@@ -249,6 +337,7 @@ define(function(require) {
         self.reformCssArray = reformCssArray;
         self.deepQuery = deepQuery;
         self.getFont = getFont;
+        self.addLabel = addLabel;
         self.calAbsolute = calAbsolute;
         self.clear = clear;
         self.dispose = dispose;

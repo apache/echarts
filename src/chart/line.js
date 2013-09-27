@@ -305,7 +305,7 @@ define(function(require) {
                             y = lastYP;
                             self.shapeList.push(_getCalculableItem(
                                 seriesIndex, i, categoryAxis.getNameByIndex(i),
-                                x, y
+                                x, y, 'horizontal'
                             ));
                         }
                     }
@@ -425,7 +425,7 @@ define(function(require) {
                             x = lastXP;
                             self.shapeList.push(_getCalculableItem(
                                 seriesIndex, i, categoryAxis.getNameByIndex(i),
-                                x, y
+                                x, y, 'vertical'
                             ));
                         }
                     }
@@ -537,7 +537,8 @@ define(function(require) {
                                     lineWidth,
                                     self.deepQuery(
                                         [data, serie], 'symbolRotate'
-                                    )
+                                    ),
+                                    orient
                                 ));
                             }
 
@@ -630,7 +631,7 @@ define(function(require) {
         /**
          * 生成空数据所需的可计算提示图形
          */
-        function _getCalculableItem(seriesIndex, dataIndex, name, x, y) {
+        function _getCalculableItem(seriesIndex, dataIndex, name, x, y, orient) {
             var color = series[seriesIndex].calculableHolderColor
                         || ecConfig.calculableHolderColor;
 
@@ -639,12 +640,15 @@ define(function(require) {
                 x, y,
                 color,
                 _sIndex2ColorMap[seriesIndex],
-                2
+                2,
+                0,
+                orient
             );
 
             itemShape.hoverable = false;
             itemShape.draggable = false;
-            itemShape.highlightStyle.lineWidth = 20;
+            itemShape.style.text = undefined;
+            //itemShape.highlightStyle.lineWidth = 20;
 
             return itemShape;
         }
@@ -654,7 +658,7 @@ define(function(require) {
          */
         function _getSymbol(
             seriesIndex, dataIndex, name, x, y,
-            normalColor, emphasisColor, lineWidth, rotate
+            normalColor, emphasisColor, lineWidth, rotate, orient
         ) {
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
@@ -678,7 +682,7 @@ define(function(require) {
                     lineWidth: lineWidth * 2
                 },
                 highlightStyle : {
-                    color : emphasisColor,
+                    color : symbol.match('empty') ? '#fff' : emphasisColor,
                     strokeColor : emphasisColor
                 },
                 clickable : true
@@ -706,6 +710,23 @@ define(function(require) {
                 itemShape.draggable = true;
             }
 
+            itemShape = self.addLabel(
+                itemShape, 
+                series[seriesIndex], 
+                series[seriesIndex].data[dataIndex], 
+                name, 
+                orient == 'vertical' ? 'horizontal' : 'vertical'
+            );
+            if (symbol.match('empty')) {
+                if (typeof itemShape.style.textColor == 'undefined') {
+                    itemShape.style.textColor = itemShape.style.strokeColor
+                }
+                if (typeof itemShape.highlightStyle.textColor == 'undefined') {
+                    itemShape.highlightStyle.textColor = 
+                        itemShape.highlightStyle.strokeColor
+                }
+            }
+            
             ecData.pack(
                 itemShape,
                 series[seriesIndex], seriesIndex,

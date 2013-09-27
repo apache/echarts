@@ -380,6 +380,7 @@ define(function() {
                 normal: {
                     label: {
                         show: false
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
                         // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -388,6 +389,7 @@ define(function() {
                 emphasis: {
                     label: {
                         show: false,
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
                         // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -404,6 +406,13 @@ define(function() {
             itemStyle: {
                 normal: {
                     // color: 各异,
+                    label: {
+                        show: false
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        //           'inside'|'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
                     lineStyle: {
                         width: 2,
                         type: 'solid',
@@ -414,6 +423,13 @@ define(function() {
                     }
                 },
                 emphasis: {
+                    label: {
+                        show: false
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        //           'inside'|'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
                     // color: 各异,
                 }
             },
@@ -452,7 +468,43 @@ define(function() {
             //symbol: null,      // 图形类型，非标准参数
             symbolSize: 4,       // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             large: false,        // 大规模散点图
-            largeThreshold: 2000 // 大规模阀值，large为true且数据量大于largeThreshold才启用大规模模式
+            largeThreshold: 2000,// 大规模阀值，large为true且数据量>largeThreshold才启用大规模模式
+            itemStyle: {
+                normal: {
+                    label: {
+                        show: false,
+                        formatter : function(a, b, c) {
+                            if (typeof c[2] != 'undefined') {
+                                return c[2];
+                            }
+                            else {
+                                return c[0] + ' , ' + c[1];
+                            }
+                        }
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        //           'inside'|'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                },
+                emphasis: {
+                    label: {
+                        show: false,
+                        formatter : function(a, b, c) {
+                            if (typeof c[2] != 'undefined') {
+                                return c[2];
+                            }
+                            else {
+                                return c[0] + ' , ' + c[1];
+                            }
+                        }
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        //           'inside'|'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                }
+            }
         },
 
         // 雷达图默认参数
@@ -487,6 +539,7 @@ define(function() {
                     label: {
                         show: true,
                         position: 'outer'
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     labelLine: {
@@ -503,6 +556,7 @@ define(function() {
                     label: {
                         show: false,
                         position: 'outer'
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     labelLine: {
