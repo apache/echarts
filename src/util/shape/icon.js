@@ -441,24 +441,21 @@ define(
                 }
 
                 // 快速预判并保留判断矩形
+                
                 var rect;
                 if (e.style.__rect) {
                     rect = e.style.__rect;
                 }
                 else {
                     rect = this.getRect(e.style);
-                    rect = [
-                        rect.x,
-                        rect.x + rect.width,
-                        rect.y,
-                        rect.y + rect.height
-                    ];
                     e.style.__rect = rect;
                 }
-                if (x >= rect[0]
-                    && x <= rect[1]
-                    && y >= rect[2]
-                    && y <= rect[3]
+                // 提高交互体验，包围盒四向扩大5px
+                var delta = 5;
+                if (x >= rect.x - delta
+                    && x <= (rect.x + rect.width + 2 * delta)
+                    && y >= rect.y - delta
+                    && y <= (rect.y + rect.height + 2 * delta)
                 ) {
                     // 矩形内
                     return true;
