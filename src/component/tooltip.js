@@ -256,9 +256,7 @@ define(function (require) {
             }
             else {
                 // 数据项事件
-                if (_curTarget._type == 'island'
-                    && self.deepQuery([option], 'tooltip.show')
-                ) {
+                if (_curTarget._type == 'island' && option.tooltip.show) {
                     _showItemTrigger();
                     return;
                 }
@@ -320,9 +318,10 @@ define(function (require) {
                             _getNearestDataIndex('x', xAxis.getAxis(xAxisIndex))
                         );
                         return;
-                    } else if (yAxis.getAxis(yAxisIndex)
-                               && yAxis.getAxis(yAxisIndex).type
-                                  == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                    } 
+                    else if (yAxis.getAxis(yAxisIndex)
+                             && yAxis.getAxis(yAxisIndex).type
+                                == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         // 纵轴为类目轴
                         _showAxisTrigger(xAxisIndex, yAxisIndex,
@@ -452,12 +451,13 @@ define(function (require) {
             var y;
 
             var formatter;
+            var showContent;
             var specialCssText = '';
-            if (self.deepQuery([option], 'tooltip.trigger') == 'axis') {
-                if (self.deepQuery([option], 'tooltip.show') === false) {
+            if (option.tooltip.trigger == 'axis') {
+                if (option.tooltip.show === false) {
                     return;
                 }
-                formatter = self.deepQuery([option],'tooltip.formatter');
+                formatter = option.tooltip.formatter;
             }
 
             if (xAxisIndex != -1
@@ -472,6 +472,10 @@ define(function (require) {
                                [series[i], option], 'tooltip.trigger'
                            ) == 'axis'
                     ) {
+                        showContent = self.deepQuery(
+                            [series[i]],
+                            'tooltip.showContent'
+                        ) || showContent;
                         formatter = self.deepQuery(
                             [series[i]],
                             'tooltip.formatter'
@@ -504,6 +508,10 @@ define(function (require) {
                                [series[i], option], 'tooltip.trigger'
                            ) == 'axis'
                     ) {
+                        showContent = self.deepQuery(
+                            [series[i]],
+                            'tooltip.showContent'
+                        ) || showContent;
                         formatter = self.deepQuery(
                             [series[i]],
                             'tooltip.formatter'
@@ -549,6 +557,7 @@ define(function (require) {
                     );
                 }
                 else if (typeof formatter == 'string') {
+                    _curTicket = NaN;
                     formatter = formatter.replace('{a}','{a0}')
                                          .replace('{b}','{b0}')
                                          .replace('{c}','{c0}');
@@ -575,6 +584,7 @@ define(function (require) {
                     _tDom.innerHTML = formatter;
                 }
                 else {
+                    _curTicket = NaN;
                     formatter = categoryAxis.getNameByIndex(dataIndex);
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
                         formatter += '<br/>' + seriesArray[i].name + ' : ';
@@ -589,6 +599,11 @@ define(function (require) {
                     _tDom.innerHTML = formatter;
                 }
 
+                if (showContent === false || !option.tooltip.showContent) {
+                    // 只用tooltip的行为，不显示主体
+                    return;
+                }
+                
                 if (!self.hasAppend) {
                     _tDom.style.left = _zrWidth / 2 + 'px';
                     _tDom.style.top = _zrHeight / 2 + 'px';
@@ -614,12 +629,13 @@ define(function (require) {
             var seriesArray = [];
 
             var formatter;
+            var showContent;
             var specialCssText = '';
-            if (self.deepQuery([option], 'tooltip.trigger') == 'axis') {
-                if (self.deepQuery([option], 'tooltip.show') === false) {
+            if (option.tooltip.trigger == 'axis') {
+                if (option.tooltip.show === false) {
                     return false;
                 }
-                formatter = self.deepQuery([option],'tooltip.formatter');
+                formatter = option.tooltip.formatter;
             }
 
             // 找到所有用这个极坐标并且axis触发的系列数据
@@ -629,6 +645,10 @@ define(function (require) {
                            [series[i], option], 'tooltip.trigger'
                        ) == 'axis'
                 ) {
+                    showContent = self.deepQuery(
+                        [series[i]],
+                        'tooltip.showContent'
+                    ) || showContent;
                     formatter = self.deepQuery(
                         [series[i]],
                         'tooltip.formatter'
@@ -704,6 +724,11 @@ define(function (require) {
                     _tDom.innerHTML = formatter;
                 }
 
+                if (showContent === false || !option.tooltip.showContent) {
+                    // 只用tooltip的行为，不显示主体
+                    return;
+                }
+                
                 if (!self.hasAppend) {
                     _tDom.style.left = _zrWidth / 2 + 'px';
                     _tDom.style.top = _zrHeight / 2 + 'px';
@@ -727,20 +752,20 @@ define(function (require) {
             var speical = ecData.get(_curTarget, 'special');
             // 从低优先级往上找到trigger为item的formatter和样式
             var formatter;
+            var showContent;
             var specialCssText = '';
             var indicator;
             var html = '';
             if (_curTarget._type != 'island') {
                 // 全局
-                if (self.deepQuery([option], 'tooltip.trigger') == 'item'
-                ) {
-                    formatter = self.deepQuery(
-                                    [option], 'tooltip.formatter'
-                                ) || formatter;
+                if (option.tooltip.trigger == 'item') {
+                    formatter = option.tooltip.formatter;
                 }
                 // 系列
-                if (self.deepQuery([serie],  'tooltip.trigger') == 'item'
-                ) {
+                if (self.deepQuery([serie], 'tooltip.trigger') == 'item') {
+                    showContent = self.deepQuery(
+                                      [serie], 'tooltip.showContent'
+                                  ) || showContent;
                     formatter = self.deepQuery(
                                     [serie], 'tooltip.formatter'
                                 ) || formatter;
@@ -749,12 +774,19 @@ define(function (require) {
                                       ));
                 }
                 // 数据项
+                showContent = self.deepQuery(
+                                  [data], 'tooltip.showContent'
+                              ) || showContent;
                 formatter = self.deepQuery(
                                 [data], 'tooltip.formatter'
                             ) || formatter;
                 specialCssText += _style(self.deepQuery([data], 'tooltip'));
             }
             else {
+                showContent = self.deepQuery(
+                    [data, serie, option],
+                    'tooltip.showContent'
+                );
                 formatter = self.deepQuery(
                     [data, serie, option],
                     'tooltip.islandFormatter'
@@ -777,6 +809,7 @@ define(function (require) {
                 );
             }
             else if (typeof formatter == 'string') {
+                _curTicket = NaN;
                 formatter = formatter.replace('{a}','{a0}')
                                      .replace('{b}','{b0}')
                                      .replace('{c}','{c0}')
@@ -792,6 +825,7 @@ define(function (require) {
                 _tDom.innerHTML = formatter;
             }
             else {
+                _curTicket = NaN;
                 if (serie.type == ecConfig.CHART_TYPE_SCATTER) {
                     _tDom.innerHTML = serie.name + '<br/>' +
                                       (name === '' ? '' : (name + ' : ')) 
@@ -817,6 +851,17 @@ define(function (require) {
                 }
             }
 
+            if (!_axisLineShape.invisible) {
+                _axisLineShape.invisible = true;
+                zr.modShape(_axisLineShape.id, _axisLineShape);
+                zr.refresh();
+            }
+            
+            if (showContent === false || !option.tooltip.showContent) {
+                // 只用tooltip的行为，不显示主体
+                return;
+            }
+            
             if (!self.hasAppend) {
                 _tDom.style.left = _zrWidth / 2 + 'px';
                 _tDom.style.top = _zrHeight / 2 + 'px';
@@ -829,12 +874,6 @@ define(function (require) {
                 zrEvent.getY(_event) - 20,
                 specialCssText
             );
-
-            if (!_axisLineShape.invisible) {
-                _axisLineShape.invisible = true;
-                zr.modShape(_axisLineShape.id, _axisLineShape);
-                zr.refresh();
-            }
         }
 
         /**

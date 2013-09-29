@@ -413,7 +413,7 @@ define(function (require) {
                     color = self.deepQuery(
                         [serie], 'itemStyle.normal.color'
                     );
-                    if (color) {
+                    if (color && serie.type != ecConfig.CHART_TYPE_K) {
                         setColor(itemName, color);
                     }
                     _selectedMap[itemName] = true;

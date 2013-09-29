@@ -68,56 +68,38 @@
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
 option = {
-    legend: {
-        data:['高度(km)与气温(°C)变化关系']
+    title : {
+        text: '人物关系：乔布斯',
+        subtext: '数据来自人立方',
+        x:'right',
+        y:'bottom'
     },
-    toolbox: {
-        show : true,
-        feature : {
-            mark : true,
-            dataView : {readOnly: false},
-            magicType:['line', 'bar'],
-            restore : true,
-            saveAsImage : true
-        }
-    },
-    calculable : true,
     tooltip : {
-        trigger: 'axis',
-        formatter: "Temperature : <br/>{b}km : {c}°C"
+        trigger: 'item',
+        formatter: '{a} : {b}'
     },
-    xAxis : [
-        {
-            type : 'value',
-            axisLabel : {
-                formatter: '{value} °C'
-            },
-            splitArea : {show : true}
-        }
-    ],
-    yAxis : [
-        {
-            type : 'category',
-            axisLabel : {
-                formatter: '{value} km'
-            },
-            boundaryGap : false,
-            data : ['0', '10', '20', '30', '40', '50', '60', '70', '80']
-        }
-    ],
+    legend: {
+        x: 'left',
+        data:['家人','朋友']
+    },
     series : [
         {
-            name:'高度(km)与气温(°C)变化关系',
-            type:'line',
-            smooth:true,
-            itemStyle: {
-                normal: {
-                    lineStyle: {
-                        shadowColor : 'rgba(0,0,0,0.4)'
-                    }
-                }
-            },
-            data:[15, -50, -56.5, -46.5, -22.1, -2.5, -27.7, -55.7, -76.5]
+            type:'chord',
+            sortGroups : 'ascending',
+            sortSubGroups : 'descending',
+            groups : [{
+                name : 'g1'
+            }, {
+                name : 'g2'
+            }, {
+                name : 'g3'
+            }, {
+                name : 'g4'
+            }],
+            matrix : [[11975,  5871, 8916, 2868],
+                      [ 1951, 10048, 2060, 6171],
+                      [ 8010, 16145, 8090, 8045],
+                      [ 1013,   990,  940, 6907]]
         }
     ]
 };

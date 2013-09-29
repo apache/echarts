@@ -1001,6 +1001,11 @@ feature : {
                             <td> 显示策略，可选为：true（显示） | false（隐藏） </td>
                         </tr>
                         <tr>
+                            <td> {boolean} showContent </td>
+                            <td> true </td>
+                            <td> tooltip主体内容显示策略，只需tooltip触发事件或显示axisPointer而不需要显示内容时可配置该项为falase，<br/>可选为：true（显示） | false（隐藏） </td>
+                        </tr>
+                        <tr>
                             <td> {string | Function} formatter </td>
                             <td> null </td>
                             <td> 内容格式器：{string}（Template） | {Function}，支持异步回调见表格下方</td>
@@ -1432,7 +1437,7 @@ feature : {
                         </tr>
                         <tr>
                             <td> {Object} lineStyle </td>
-                            <td> {color: '#48b', width: 2, style: 'solid'} </td>
+                            <td> {color: '#48b', width: 2, type: 'solid'} </td>
                             <td> 通用 </td>
                             <td> 属性lineStyle控制线条样式，（详见<a href="#LineStyle" title="">lineStyle</a>） </td>
                         </tr>
@@ -1461,7 +1466,7 @@ feature : {
                         </tr>
                         <tr>
                             <td> {Object} lineStyle </td>
-                            <td> {color: '#ccc', width: 1, style: 'solid'} </td>
+                            <td> {color: '#ccc', width: 1, type: 'solid'} </td>
                             <td> 通用 </td>
                             <td> 属性lineStyle控制线条样式，（详见<a href="#LineStyle" title="">lineStyle</a>） </td>
                         </tr>
@@ -1553,7 +1558,7 @@ feature : {
                         </tr>
                         <tr>
                             <td> {Object} lineStyle </td>
-                            <td> {color: '#ccc', width: 1, style: 'solid'} </td>
+                            <td> {color: '#ccc', width: 1, type: 'solid'} </td>
                             <td> 通用 </td>
                             <td> 属性lineStyle控制线条样式，（详见<a href="#LineStyle" title="">lineStyle</a>） </td>
                         </tr>
@@ -1761,8 +1766,14 @@ indicator : [
                         <tr>
                             <td> {number} barWidth </td>
                             <td> 自适应 </td>
-                            <td> 柱状图 </td>
-                            <td> 柱条宽度，不设时自适应 </td>
+                            <td> 柱状图 ，K线图</td>
+                            <td> 柱条（K线蜡烛）宽度，不设时自适应 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} barMaxWidth </td>
+                            <td> 自适应 </td>
+                            <td> K线图</td>
+                            <td> K线蜡烛最大宽度，不设时自适应 </td>
                         </tr>
                         <tr>
                             <td> {string} symbol </td>

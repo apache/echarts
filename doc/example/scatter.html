@@ -116,7 +116,8 @@ option = {
                     color: 'lightblue',
                     lineStyle: {
                         width: 8
-                    }
+                    },
+                    label : {show: true}
                 },
                 emphasis: {
                     color: 'lightgreen',
@@ -141,6 +142,11 @@ option = {
             symbol: 'diamond',
             symbolSize: function(value){
                 return Math.round(value[2] * 3);
+            },
+            itemStyle: {
+                emphasis : {
+                    label : {show: true}
+                }
             },
             data: (function() {
                 var d = [];
