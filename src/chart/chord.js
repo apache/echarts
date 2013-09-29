@@ -28,7 +28,7 @@ define(function(require) {
 
         var zrUtil = require('zrender/tool/util');
         var vec2 = require('zrender/tool/vector');
-        var NDArray = require("../util/ndarray");
+        var NDArray = require('../util/ndarray');
 
         var legend = component.legend;
         var series;
@@ -67,8 +67,7 @@ define(function(require) {
                     var shape = dataMat.shape();
                     // Check if data is valid
                     if (shape[0] !== shape[1] || shape[0] !== groups.length) {
-                        throw new Error("Data not valid");
-                        continue;
+                        throw new Error('Data not valid');
                     }
 
                     // Processing data
@@ -130,6 +129,7 @@ define(function(require) {
                         var subEnd = start;
                         for (var j = 0; j < len; j++) {
                             subEnd = subStart + subGroupAnglesArr[sortedIdx][j];
+                            /*jshint maxlen : 200*/
                             chordAngles[sortedIdx][subGroupIndicesArr[sortedIdx][j]]
                                 = [subStart, subEnd];
                             subStart = subEnd;
@@ -177,11 +177,47 @@ define(function(require) {
             angles,
             center,
             innerRadius,
-            outerRadius,
-            padding
+            outerRadius
         ) {
             var startAngle = 90;
             var len = groups.length;
+
+            function createMouseOver(idx) {
+                return function() {
+                    for (var i = 0; i < len; i++) {
+                        if (i !== idx) {
+                            sectorShapes[i].style.opacity = 0.1;
+                            zr.modShape(
+                                sectorShapes[i].id,
+                                sectorShapes[i]
+                            );
+
+                            for (var j = 0; j < len; j++) {
+                                var chordShape = chordShapes[i][j];
+                                chordShape.style.opacity = 0.03;
+                                zr.modShape(chordShape.id, chordShape);
+                            }
+                        }
+                    }
+                    zr.refresh();
+                };
+            }
+
+            function createMouseOut() {
+                return function() {
+                    for (var i = 0; i < len; i++) {
+                        sectorShapes[i].style.opacity = 1.0;
+                        zr.modShape(sectorShapes[i].id, sectorShapes[i]);
+
+                        for (var j = 0; j < len; j++) {
+                            var chordShape = chordShapes[i][j];
+                            chordShape.style.opacity = 0.5;
+                            zr.modShape(chordShape.id, chordShape);
+                        }
+                    }
+                    zr.refresh();
+                };
+            }
 
             for (var i = 0; i < len; i++) {
                 
@@ -203,41 +239,11 @@ define(function(require) {
                         brushType : 'fill',
                         color : legend.getColor(group.name)
                     }
-                }
+                };
 
-                sector.onmouseover = (function(idx) {
-                    return function() {
-                        for (var i = 0; i < len; i++) {
-                            if (i !== idx) {
-                                sectorShapes[i].style.opacity = 0.1;
-                                zr.modShape(sectorShapes[i].id, sectorShapes[i]);
+                sector.onmouseover = createMouseOver(i);
 
-                                for (var j = 0; j < len; j++) {
-                                    var chordShape = chordShapes[i][j];
-                                    chordShape.style.opacity = 0.03;
-                                    zr.modShape(chordShape.id, chordShape);
-                                }
-                            }
-                        }
-                        zr.refresh();
-                    }
-                })(i);
-
-                sector.onmouseout = (function(idx) {
-                    return function() {
-                        for (var i = 0; i < len; i++) {
-                            sectorShapes[i].style.opacity = 1.0;
-                            zr.modShape(sectorShapes[i].id, sectorShapes[i]);
-
-                            for (var j = 0; j < len; j++) {
-                                var chordShape = chordShapes[i][j];
-                                chordShape.style.opacity = 0.5;
-                                zr.modShape(chordShape.id, chordShape);
-                            }
-                        }
-                        zr.refresh();
-                    }
-                })(i);
+                sector.onmouseout = createMouseOut();
 
                 self.shapeList.push(sector);
                 sectorShapes.push(sector);
@@ -289,7 +295,7 @@ define(function(require) {
                             opacity : 0.5,
                             color : color
                         }
-                    }
+                    };
 
                     chordShapes[i][j] = chord;
                     self.shapeList.push(chord);
@@ -313,8 +319,8 @@ define(function(require) {
                 var scaleAngle = startAngle;
                 while (scaleAngle < endAngle) {
                     var v = [
-                            Math.cos((scaleAngle - 90) / 180 * Math.PI)
-                            , Math.sin((scaleAngle - 90) / 180 * Math.PI)
+                            Math.cos((scaleAngle - 90) / 180 * Math.PI),
+                            Math.sin((scaleAngle - 90) / 180 * Math.PI)
                             ];
                     var start = vec2.scale([], v, radius + 1);
                     vec2.add(start, start, center);
@@ -334,7 +340,7 @@ define(function(require) {
                             brushType : 'stroke',
                             strokeColor : '#666'
                         }   
-                    }
+                    };
 
                     self.shapeList.push(scaleShape);
                     zr.addShape(scaleShape);
@@ -347,7 +353,8 @@ define(function(require) {
                 var scaleValues = NDArray.range(0, values[i], step).toArray();
                 while (scaleTextAngle < endAngle) {
                     var scaleTextAngleFixed = scaleTextAngle - 90;
-                    var isRightSide = scaleTextAngleFixed <= 90 && scaleTextAngleFixed >= -90;
+                    var isRightSide = scaleTextAngleFixed <= 90
+                                     && scaleTextAngleFixed >= -90;
                     var textShape = {
                         shape : 'text',
                         id : zr.newShapeId(self.type),
@@ -358,13 +365,17 @@ define(function(require) {
                                     ? radius + scaleLineLength + 2 
                                     : -radius - scaleLineLength - 34,
                             y : 0,
-                            text : Math.round(scaleValues.shift()*10)/10 + unitPostfix
+                            text : Math.round(scaleValues.shift()*10)/10 
+                                    + unitPostfix
                         },
                         position : center.slice(),
                         rotation : isRightSide
-                                    ? [-scaleTextAngleFixed / 180 * Math.PI, 0, 0]
-                                    : [-(scaleTextAngleFixed + 180) / 180 * Math.PI, 0, 0] 
-                    }
+                            ? [-scaleTextAngleFixed / 180 * Math.PI, 0, 0]
+                            : [
+                                -(scaleTextAngleFixed + 180) / 180 * Math.PI,
+                                0, 0
+                              ] 
+                    };
 
                     self.shapeList.push(textShape);
                     zr.addShape(textShape);
@@ -376,18 +387,19 @@ define(function(require) {
         function normalizeValue(values) {
             var result = [];
             var max = new NDArray(values).max();
+            var unitPostfix, unitScale;
             if (max > 10000) {
-                var unitPostfix = 'k';
-                var unitScale = 1 / 1000;
+                unitPostfix = 'k';
+                unitScale = 1 / 1000;
             } else if (max > 10000000) {
-                var unitPostfix = 'm';
-                var unitScale = 1 / 1000000;
+                unitPostfix = 'm';
+                unitScale = 1 / 1000000;
             } else if (max > 10000000000) {
-                var unitPostfix  = 'b';
-                var unitScale = 1 / 1000000000;
+                unitPostfix  = 'b';
+                unitScale = 1 / 1000000000;
             } else {
-                var unitPostfix = '';
-                var unitScale = 1;
+                unitPostfix = '';
+                unitScale = 1;
             }
 
             for (var i = 0; i < values.length; i++) {

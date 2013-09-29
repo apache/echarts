@@ -1,6 +1,7 @@
-define(function(require){
+define(function(){
     function kwargs(defaults) {
         var func = this;
+        /*jshint maxlen : 200*/
         var removeComments = new RegExp('(\\/\\*[\\w\\\'\\,\\(\\)\\s\\r\\n\\*]*\\*\\/)|(\\/\\/[\\w\\s\\\'][^\\n\\r]*$)|(<![\\-\\-\\s\\w\\>\\/]*>)', 'gim');
         var removeWhitespc = new RegExp('\\s+', 'gim');
         var matchSignature = new RegExp('function.*?\\((.*?)\\)', 'i');
@@ -29,7 +30,7 @@ define(function(require){
 
             // Fill the arguments and apply them
             for (var i = 0; i < names.length; i++) {
-                name = names[i];
+                var name = names[i];
                 if (name in kwargs) {
                     args[i] = kwargs[name];
                 }else if(name in defaults && args[i] === undefined){
