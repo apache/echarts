@@ -158,6 +158,7 @@ define(function() {
         // 提示框
         tooltip: {
             show: true,
+            showContent: true,         // tooltip主体内容
             trigger: 'item',           // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
             // formatter: null         // 内容格式器：{string}（Template） ¦ {Function}
             islandFormatter: '{a} <br/>{b} : {c}',  // 数据孤岛内容格式器，非标准参数
