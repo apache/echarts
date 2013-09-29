@@ -543,7 +543,9 @@ define(function (require) {
             _max = isNaN(option.max)
                    ? (_max + Math.abs(_max * option.boundaryGap[1]))
                    : option.max;    // 指定max忽略boundaryGay[1]
-            //console.log(_min,_max,'vvvvv')
+            if (_min == _max) {
+                _max += 1;
+            }
             _reformValue(option.scale);
         }
 

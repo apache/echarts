@@ -19,6 +19,7 @@ define('echarts/config',[],function() {
         CHART_TYPE_K: 'k',
         CHART_TYPE_ISLAND: 'island',
         CHART_TYPE_FORCE : 'force',
+        CHART_TYPE_CHORD : 'chord',
 
         // 组件类型
         COMPONENT_TYPE_TITLE: 'title',
@@ -158,6 +159,7 @@ define('echarts/config',[],function() {
         // 提示框
         tooltip: {
             show: true,
+            showContent: true,         // tooltip主体内容
             trigger: 'item',           // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
             // formatter: null         // 内容格式器：{string}（Template） ¦ {Function}
             islandFormatter: '{a} <br/>{b} : {c}',  // 数据孤岛内容格式器，非标准参数
@@ -328,7 +330,9 @@ define('echarts/config',[],function() {
         },
 
         polar : {
-            startAngle : 90,      
+            // center: null,                   // 默认全局居中
+            // radius: [0, min(width,height) - 50],
+            startAngle : 90,
             splitNumber : 5,
             name : {
                 show: true,
@@ -372,8 +376,28 @@ define('echarts/config',[],function() {
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
-            barMinHeight: 20
-            // barWidth: null        // 默认自适应
+            barMinHeight: 20,
+            // barWidth: null,        // 默认自适应
+            itemStyle: {
+                normal: {
+                    label: {
+                        show: false
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        //           'inside'|'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                },
+                emphasis: {
+                    label: {
+                        show: false,
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        //           'inside'|'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                }
+            }
         },
 
         // 折线图默认参数
@@ -384,8 +408,15 @@ define('echarts/config',[],function() {
             itemStyle: {
                 normal: {
                     // color: 各异,
+                    label: {
+                        show: false
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        //           'inside'|'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
                     lineStyle: {
-                        width: 1,
+                        width: 2,
                         type: 'solid',
                         shadowColor : 'rgba(0,0,0,0)', //默认透明
                         shadowBlur: 5,
@@ -394,11 +425,19 @@ define('echarts/config',[],function() {
                     }
                 },
                 emphasis: {
+                    label: {
+                        show: false
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        //           'inside'|'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
                     // color: 各异,
                 }
             },
+            //smooth : false,
             //symbol: null,         // 拐点图形类型，非标准参数
-            symbolSize: 4,          // 可计算特性参数，空数据拖拽提示图形大小
+            symbolSize: 2,          // 可计算特性参数，空数据拖拽提示图形大小
             showAllSymbol: false    // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
         },
         
@@ -406,14 +445,16 @@ define('echarts/config',[],function() {
         k: {
             xAxisIndex: 0,
             yAxisIndex: 0,
+            // barWidth : null          // 默认自适应
+            // barMaxWidth : null       // 默认自适应 
             itemStyle: {
                 normal: {
-                    color: '#fff',       // 阳线填充颜色
-                    color0: '#00aa11',    // 阴线填充颜色
+                    color: '#fff',          // 阳线填充颜色
+                    color0: '#00aa11',      // 阴线填充颜色
                     lineStyle: {
                         width: 1,
                         color: '#ff3200',   // 阳线边框颜色
-                        color0: '#00aa11' // 阴线边框颜色
+                        color0: '#00aa11'   // 阴线边框颜色
                     }
                 },
                 emphasis: {
@@ -429,7 +470,43 @@ define('echarts/config',[],function() {
             //symbol: null,      // 图形类型，非标准参数
             symbolSize: 4,       // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             large: false,        // 大规模散点图
-            largeThreshold: 2000 // 大规模阀值，large为true且数据量大于largeThreshold才启用大规模模式
+            largeThreshold: 2000,// 大规模阀值，large为true且数据量>largeThreshold才启用大规模模式
+            itemStyle: {
+                normal: {
+                    label: {
+                        show: false,
+                        formatter : function(a, b, c) {
+                            if (typeof c[2] != 'undefined') {
+                                return c[2];
+                            }
+                            else {
+                                return c[0] + ' , ' + c[1];
+                            }
+                        }
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        //           'inside'|'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                },
+                emphasis: {
+                    label: {
+                        show: false,
+                        formatter : function(a, b, c) {
+                            if (typeof c[2] != 'undefined') {
+                                return c[2];
+                            }
+                            else {
+                                return c[0] + ' , ' + c[1];
+                            }
+                        }
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        //           'inside'|'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                }
+            }
         },
 
         // 雷达图默认参数
@@ -464,6 +541,7 @@ define('echarts/config',[],function() {
                     label: {
                         show: true,
                         position: 'outer'
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     labelLine: {
@@ -480,6 +558,7 @@ define('echarts/config',[],function() {
                     label: {
                         show: false,
                         position: 'outer'
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     labelLine: {
@@ -582,6 +661,17 @@ define('echarts/config',[],function() {
                     linkStyle : {}
                 }
             }
+        },
+
+        chord : {
+            innerRadius : 160,
+            outerRadius : 180,
+            // Source data matrix
+            center : ['50%', '50%'],
+            padding : 2,
+            sortGroups : 'none', // can be 'none', 'ascending', 'descending'
+            sortSubGroups : 'none', // can be 'none', 'ascending', 'descending'
+            matrix : []
         },
 
         island: {
@@ -2135,9 +2225,15 @@ define(
                 }
                 return out;
             },
-            distance : function( v1, v2 ) {
-                var out = [];
-                return vector.length( vector.sub(out, v1, v2) );
+            distance : function(v1, v2) {
+                return Math.sqrt(
+                    (v1[0] - v2[0]) * (v1[0] - v2[0]) +
+                    (v1[1] - v2[1]) * (v1[1] - v2[1])
+                );
+            },
+            negate : function(out, v) {
+                out[0] = -v[0];
+                out[1] = -v[1];
             },
             middle : function(out, v1, v2) {
                 out[0] = (v1[0]+v2[0])/2;
@@ -4317,11 +4413,12 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
    }
  */
 define(
-    'zrender/shape/base',['require','../tool/area','../tool/matrix','../tool/color'],function(require) {
+    'zrender/shape/base',['require','../tool/area','../tool/matrix','../tool/vector','../tool/color'],function(require) {
 
         var self;
         var area = require('../tool/area');
         var matrix = require('../tool/matrix');
+        var vec2 = require('../tool/vector');
 
         /**
          * 派生实现通用功能
@@ -4332,6 +4429,8 @@ define(
                     'brush',
                     'setContext',
                     'dashedLineTo',
+                    'smoothBezier',
+                    'smoothSpline',
                     'drawText',
                     'getHighlightStyle',
                     'getHighlightZoom',
@@ -4409,7 +4508,7 @@ define(
                     ctx.fill();
             }
 
-            if (style.text) {
+            if (typeof style.text != 'undefined') {
                 this.drawText(ctx, style, e.style);
             }
 
@@ -4487,6 +4586,115 @@ define(
                     y1 + (deltaY / numDashes) * i
                 );
             }
+        }
+        
+        /**
+         * 贝塞尔平滑曲线 
+         */
+        function smoothBezier(points, smooth, loop) {
+            var len = points.length;
+            var cps = [];
+
+            var v = [];
+            var v1 = [];
+            var v2 = [];
+            var prevPoint;
+            var nextPoint;
+            for(var i = 0; i < len; i++){
+                var point = points[i];
+                var prevPoint;
+                var nextPoint;
+                if (loop) {
+                    prevPoint = points[i === 0 ? len-1 : i-1];
+                    nextPoint = points[(i + 1) % len];
+                } else {
+                    if (i === 0 || i === len-1) {
+                        cps.push(points[i]);
+                        continue;
+                    } else {
+                        prevPoint = points[i-1];
+                        nextPoint = points[i+1];
+                    }
+                }
+
+                vec2.sub(v, nextPoint, prevPoint);
+
+                //use degree to scale the handle length
+                vec2.scale(v, v, smooth);
+
+                var d0 = vec2.distance(point, prevPoint);
+                var d1 = vec2.distance(point, nextPoint);
+                var sum = d0 + d1;
+                d0 /= sum;
+                d1 /= sum;
+
+                vec2.scale(v1, v, -d0);
+                vec2.scale(v2, v, d1);
+
+                cps.push(vec2.add([], point, v1));
+                cps.push(vec2.add([], point, v2));
+            }
+            if (loop) {
+                cps.push(cps.shift());
+            }
+            return cps;
+        }
+
+        /**
+         * 多线段平滑曲线 Catmull-Rom spline
+         */
+        function smoothSpline(points, loop) {
+            var len = points.length;
+            var ret = [];
+
+            var distance = 0;
+            for (var i = 1; i < len; i++) {
+                distance += vec2.distance(points[i-1], points[i]);
+            }
+            var segs = distance / 5;
+
+            for (var i = 0; i < segs; i++) {
+                var pos;
+                if (loop) {
+                    pos = i / (segs-1) * len;
+                } else {
+                    pos = i / (segs-1) * (len - 1);
+                }
+                var idx = Math.floor(pos);
+
+                var w = pos - idx;
+
+                var p0;
+                var p1 = points[idx % len];
+                var p2;
+                var p3;
+                if (!loop) {
+                    p0 = points[idx === 0 ? idx : idx - 1];
+                    p2 = points[idx > len - 2 ? len - 1 : idx + 1];
+                    p3 = points[idx > len - 3 ? len - 1 : idx + 2];
+                } else {
+                    p0 = points[(idx -1 + len) % len];
+                    p2 = points[(idx + 1) % len];
+                    p3 = points[(idx + 2) % len];
+                }
+
+                var w2 = w * w;
+                var w3 = w * w2;
+
+                ret.push([
+                    _interpolate(p0[0], p1[0], p2[0], p3[0], w, w2, w3),
+                    _interpolate(p0[1], p1[1], p2[1], p3[1], w, w2, w3)
+                ]);
+            }
+            return ret;
+        }
+
+        function _interpolate(p0, p1, p2, p3, t, t2, t3) {
+            var v0 = (p2 - p0) * 0.5;
+            var v1 = (p3 - p1) * 0.5;
+            return (2 * (p1 - p2) + v0 + v1) * t3 
+                    + (- 3 * (p1 - p2) - 2 * v0 - v1) * t2
+                    + v0 * t + p1;
         }
         
         /**
@@ -4817,6 +5025,8 @@ define(
             brush : brush,
             setContext : setContext,
             dashedLineTo : dashedLineTo,
+            smoothBezier : smoothBezier,
+            smoothSpline : smoothSpline,
             drawText : drawText,
             getHighlightStyle : getHighlightStyle,
             getHighlightZoom : getHighlightZoom,
@@ -5038,15 +5248,19 @@ define(
              * @param {Object} style 样式
              */
             buildPath : function(ctx, style) {
-                var r = (style.a > style.b) ? style.a : style.b;
-                var ratioX = style.a / r; //横轴缩放比率
-                var ratioY = style.b / r;
-                ctx.scale(ratioX, ratioY);
-                ctx.arc(
-                    style.x / ratioX, style.y / ratioY, r, 0, Math.PI * 2, true
-                );
-                ctx.scale(1/ratioX, 1/ratioY);
-                // excanvas bug~~
+                var k = 0.5522848;
+                var x = style.x;
+                var y = style.y;
+                var a =style.a;
+                var b = style.b;
+                var ox = a * k; // 水平控制点偏移量
+                var oy = b * k; // 垂直控制点偏移量
+                //从椭圆的左端点开始顺时针绘制四条三次贝塞尔曲线
+                ctx.moveTo(x - a, y);
+                ctx.bezierCurveTo(x - a, y - oy, x - ox, y - b, x, y - b);
+                ctx.bezierCurveTo(x + ox, y - b, x + a, y - oy, x + a, y);
+                ctx.bezierCurveTo(x + a, y + oy, x + ox, y + b, x, y + b);
+                ctx.bezierCurveTo(x - ox, y + b, x - a, y + oy, x - a, y);
                 return;
             },
 
@@ -5076,7 +5290,6 @@ define(
         
         var shape = require('../shape');
         shape.define('ellipse', new Ellipse());
-
         return Ellipse;
     }
 );
@@ -5363,44 +5576,78 @@ define(
             buildPath : function(ctx, style) {
                 // 虽然能重用brokenLine，但底层图形基于性能考虑，重复代码减少调用吧
                 var pointList = style.pointList;
+                // 开始点和结束点重复
+                var start = pointList[0];
+                var end = pointList[pointList.length-1];
+                if (start && end) {
+                    if (start[0] == end[0] &&
+                        start[1] == end[1]) {
+                        // 移除最后一个点
+                        pointList.pop();
+                    }
+                }
                 if (pointList.length < 2) {
                     // 少于2个点就不画了~
                     return;
                 }
-                if (!style.lineType || style.lineType == 'solid') {
-                    //默认为实线
-                    ctx.moveTo(pointList[0][0],pointList[0][1]);
-                    for (var i = 1, l = pointList.length; i < l; i++) {
-                        ctx.lineTo(pointList[i][0],pointList[i][1]);
+                if (style.smooth && style.smooth !== 'spline') {
+                    var controlPoints = this.smoothBezier(
+                        pointList, style.smooth, true
+                    );
+
+                    ctx.moveTo(pointList[0][0], pointList[0][1]);
+                    var cp1;
+                    var cp2;
+                    var p;
+                    var len = pointList.length;
+                    for (var i = 0; i < len; i++) {
+                        cp1 = controlPoints[i * 2];
+                        cp2 = controlPoints[i * 2 + 1];
+                        p = pointList[(i + 1) % len];
+                        ctx.bezierCurveTo(
+                            cp1[0], cp1[1], cp2[0], cp2[1], p[0], p[1]
+                        );
                     }
-                    ctx.lineTo(pointList[0][0], pointList[0][1]);
-                }
-                else if (style.lineType == 'dashed'
-                        || style.lineType == 'dotted'
-                ) {
-                    var dashLength = style._dashLength
-                                     || (style.lineWidth || 1) 
-                                        * (style.lineType == 'dashed' ? 5 : 1);
-                    style._dashLength = dashLength;
-                    ctx.moveTo(pointList[0][0],pointList[0][1]);
-                    for (var i = 1, l = pointList.length; i < l; i++) {
+                } 
+                else {
+                    if (style.smooth === 'spline') {
+                        pointList = this.smoothSpline(pointList, true);
+                    }
+                    if (!style.lineType || style.lineType == 'solid') {
+                        //默认为实线
+                        ctx.moveTo(pointList[0][0],pointList[0][1]);
+                        for (var i = 1, l = pointList.length; i < l; i++) {
+                            ctx.lineTo(pointList[i][0],pointList[i][1]);
+                        }
+                        ctx.lineTo(pointList[0][0], pointList[0][1]);
+                    }
+                    else if (style.lineType == 'dashed'
+                            || style.lineType == 'dotted'
+                    ) {
+                        var dashLength = 
+                            style._dashLength
+                            || (style.lineWidth || 1) 
+                               * (style.lineType == 'dashed' ? 5 : 1);
+                        style._dashLength = dashLength;
+                        ctx.moveTo(pointList[0][0],pointList[0][1]);
+                        for (var i = 1, l = pointList.length; i < l; i++) {
+                            this.dashedLineTo(
+                                ctx,
+                                pointList[i - 1][0], pointList[i - 1][1],
+                                pointList[i][0], pointList[i][1],
+                                dashLength
+                            );
+                        }
                         this.dashedLineTo(
                             ctx,
-                            pointList[i - 1][0], pointList[i - 1][1],
-                            pointList[i][0], pointList[i][1],
+                            pointList[pointList.length - 1][0], 
+                            pointList[pointList.length - 1][1],
+                            pointList[0][0],
+                            pointList[0][1],
                             dashLength
                         );
                     }
-                    this.dashedLineTo(
-                        ctx,
-                        pointList[pointList.length - 1][0], 
-                        pointList[pointList.length - 1][1],
-                        pointList[0][0],
-                        pointList[0][1],
-                        dashLength
-                    );
                 }
-
                 return;
             },
 
@@ -5472,6 +5719,7 @@ define(
        // 样式属性，默认状态样式样式属性
        style  : {
            pointList     : {Array},   // 必须，各个顶角坐标
+           smooth        : {Number},  // 默认为0
            strokeColor   : {color},   // 默认为'#000'，线条颜色（轮廓），支持rgba
            lineType      : {string},  // 默认为solid，线条类型，solid | dashed | dotted
            lineWidth     : {number},  // 默认为1，线条宽度
@@ -5546,29 +5794,51 @@ define(
                     // 少于2个点就不画了~
                     return;
                 }
-                if (!style.lineType || style.lineType == 'solid') {
-                    //默认为实线
-                    ctx.moveTo(pointList[0][0],pointList[0][1]);
-                    for (var i = 1, l = pointList.length; i < l; i++) {
-                        ctx.lineTo(pointList[i][0],pointList[i][1]);
-                    }
-                }
-                else if (style.lineType == 'dashed'
-                        || style.lineType == 'dotted'
-                ) {
-                    var dashLength = (style.lineWidth || 1) 
-                                     * (style.lineType == 'dashed' ? 5 : 1);
-                    ctx.moveTo(pointList[0][0],pointList[0][1]);
-                    for (var i = 1, l = pointList.length; i < l; i++) {
-                        this.dashedLineTo(
-                            ctx,
-                            pointList[i - 1][0], pointList[i - 1][1],
-                            pointList[i][0], pointList[i][1],
-                            dashLength
+                if (style.smooth && style.smooth !== 'spline') {
+                    var controlPoints = this.smoothBezier(
+                        pointList, style.smooth, false
+                    );
+
+                    ctx.moveTo(pointList[0][0], pointList[0][1]);
+                    var cp1;
+                    var cp2;
+                    var p;
+                    for (var i = 0, l = pointList.length; i < l - 1; i++) {
+                        cp1 = controlPoints[i * 2];
+                        cp2 = controlPoints[i * 2 + 1];
+                        p = pointList[i + 1];
+                        ctx.bezierCurveTo(
+                            cp1[0], cp1[1], cp2[0], cp2[1], p[0], p[1]
                         );
                     }
+                } 
+                else {
+                    if (style.smooth === 'spline') {
+                        pointList = this.smoothSpline(pointList, false);
+                    }
+                    if (!style.lineType || style.lineType == 'solid') {
+                        //默认为实线
+                        ctx.moveTo(pointList[0][0],pointList[0][1]);
+                        for (var i = 1, l = pointList.length; i < l; i++) {
+                            ctx.lineTo(pointList[i][0],pointList[i][1]);
+                        }
+                    }
+                    else if (style.lineType == 'dashed'
+                            || style.lineType == 'dotted'
+                    ) {
+                        var dashLength = (style.lineWidth || 1) 
+                                         * (style.lineType == 'dashed' ? 5 : 1);
+                        ctx.moveTo(pointList[0][0],pointList[0][1]);
+                        for (var i = 1, l = pointList.length; i < l; i++) {
+                            this.dashedLineTo(
+                                ctx,
+                                pointList[i - 1][0], pointList[i - 1][1],
+                                pointList[i][0], pointList[i][1],
+                                dashLength
+                            );
+                        }
+                    }
                 }
-
                 return;
             },
 
@@ -8225,11 +8495,10 @@ define(
 /**
  * 动画主类, 调度和管理所有动画控制器
  *
- * @author lang(shenyi01@baidu.com)
+ * @author pissang(https://github.com/pissang)
  *
  * @class : Animation
  * @config : stage(optional) 绘制类, 需要提供update接口
- * @config : fps(optional) 帧率, 是自动更新动画的时候需要提供
  * @config : onframe(optional)
  * @method : add
  * @method : remove
@@ -9579,6 +9848,8 @@ define(
         var _idx = 0;           //ZRender instance's id
         var _instances = {};    //ZRender实例map索引
 
+        self.version = '1.0.4';
+
         /**
          * zrender初始化
          * 不让外部直接new ZRender实例，为啥？
@@ -9878,6 +10149,13 @@ define(
                 else {
                     zrender.log('Shape "'+ shapeId + '" not existed');
                 }
+            };
+
+            /**
+             * 停止所有动画
+             */
+            self.clearAnimation = function() {
+                animation.clear();
             };
 
             /**
@@ -12006,24 +12284,21 @@ define(
                 }
 
                 // 快速预判并保留判断矩形
+                
                 var rect;
                 if (e.style.__rect) {
                     rect = e.style.__rect;
                 }
                 else {
                     rect = this.getRect(e.style);
-                    rect = [
-                        rect.x,
-                        rect.x + rect.width,
-                        rect.y,
-                        rect.y + rect.height
-                    ];
                     e.style.__rect = rect;
                 }
-                if (x >= rect[0]
-                    && x <= rect[1]
-                    && y >= rect[2]
-                    && y <= rect[3]
+                // 提高交互体验，包围盒四向扩大5px
+                var delta = 5;
+                if (x >= rect.x - delta
+                    && x <= (rect.x + rect.width + 2 * delta)
+                    && y >= rect.y - delta
+                    && y <= (rect.y + rect.height + 2 * delta)
                 ) {
                     // 矩形内
                     return true;
@@ -12116,6 +12391,7 @@ define('echarts/component/base',['require','../config','zrender/tool/util'],func
                 case ecConfig.CHART_TYPE_RADAR :
                 case ecConfig.CHART_TYPE_MAP :
                 case ecConfig.CHART_TYPE_K :
+                case ecConfig.CHART_TYPE_CHORD:
                     return 2;
 
                 case ecConfig.COMPONENT_TYPE_LEGEND :
@@ -12236,6 +12512,154 @@ define('echarts/component/base',['require','../config','zrender/tool/util'],func
                    + finalTextStyle.fontFamily;
         }
         
+        /**
+         * 添加文本 
+         */
+        function addLabel(tarShape, serie, data, name, orient) {
+            // 多级控制
+            var nLabel = zrUtil.merge(
+                    zrUtil.clone(
+                        self.deepQuery([serie], 'itemStyle.normal.label')
+                    ), 
+                    self.deepQuery([data], 'itemStyle.normal.label'),
+                    { 'overwrite': true, 'recursive': true }
+                );
+            var eLabel = zrUtil.merge(
+                    zrUtil.clone(
+                        self.deepQuery([serie], 'itemStyle.emphasis.label')
+                    ), 
+                    self.deepQuery([data], 'itemStyle.emphasis.label'),
+                    { 'overwrite': true, 'recursive': true }
+                );
+
+            var nTextStyle = nLabel.textStyle || {};
+            var eTextStyle = eLabel.textStyle || {};
+            
+            if (nLabel.show) {
+                tarShape.style.text = _getLabelText(
+                    serie, data, name, 'normal'
+                );
+                tarShape.style.textPosition = 
+                    typeof nLabel.position == 'undefined'
+                        ? (orient == 'horizontal' ? 'right' : 'top')
+                        : nLabel.position;
+                tarShape.style.textColor = nTextStyle.color;
+                tarShape.style.textFont = self.getFont(nTextStyle);
+            }
+            if (eLabel.show) {
+                tarShape.highlightStyle.text = _getLabelText(
+                    serie, data, name, 'emphasis'
+                );
+                tarShape.highlightStyle.textPosition = 
+                    typeof eLabel.position == 'undefined'
+                        ? (orient == 'horizontal' ? 'right' : 'top')
+                        : eLabel.position;
+                tarShape.highlightStyle.textColor = eTextStyle.color;
+                tarShape.highlightStyle.textFont = self.getFont(eTextStyle);
+            }
+            
+            return tarShape;
+        }
+        
+        /**
+         * 根据lable.format计算label text
+         */
+        function _getLabelText(serie, data, name, status) {
+            var formatter = self.deepQuery(
+                [data, serie],
+                'itemStyle.' + status + '.label.formatter'
+            );
+            
+            var value = typeof data != 'undefined'
+                        ? (typeof data.value != 'undefined'
+                          ? data.value
+                          : data)
+                        : '-';
+            
+            if (formatter) {
+                if (typeof formatter == 'function') {
+                    return formatter(
+                        serie.name,
+                        name,
+                        value
+                    );
+                }
+                else if (typeof formatter == 'string') {
+                    formatter = formatter.replace('{a}','{a0}')
+                                         .replace('{b}','{b0}')
+                                         .replace('{c}','{c0}');
+                    formatter = formatter.replace('{a0}', serie.name)
+                                         .replace('{b0}', name)
+                                         .replace('{c0}', value);
+    
+                    return formatter;
+                }
+            }
+            else {
+                return value;
+            }
+        }
+        
+        /**
+         * 百分比计算
+         */
+        function calAbsolute(pos) {
+            var x = pos[0];
+            var y = pos[1];
+            var ret = [];
+            if (typeof(x) == 'string') {
+                if (_trim(x).substr(-1) == '%') {
+                    ret[0] = parseFloat(x) / 100 * this.zr.getWidth();
+                } else {
+                    ret[0] = parseFloat(x);
+                }
+            } else {
+                ret[0] = x;
+            }
+
+            if (typeof(y) == 'string') {
+                if (_trim(y).substr(-1) == '%') {
+                    ret[1] = parseFloat(y) / 100 * this.zr.getHeight();
+                } else {
+                    ret[1] = parseFloat(y);
+                }
+            } else {
+                ret[1] = y;
+            }
+
+            return ret;
+        }
+
+        function _trim(str) {
+            return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+        }
+
+        // 记录自适应原始定义，resize用
+        function backupAdaptiveParams(series, attrs, isAll) {
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (isAll || series[i].type == self.type) {
+                    for (var j = 0, k = attrs.length; j < k; j++) {
+                        series[i]['__' + attrs[i]] = zrUtil.clone(
+                            series[i][attrs[i]]
+                        );
+                    }
+                }
+            }
+        }
+        
+        // 还原自适应原始定义，resize用
+        function restoreAdaptiveParams(series, attrs, isAll) {
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (isAll || series[i].type == self.type) {
+                    for (var j = 0, k = attrs.length; j < k; j++) {
+                        series[i][attrs[i]] = zrUtil.clone(
+                            series[i]['__' + attrs[i]]
+                        );
+                    }
+                }
+            }
+        }
+        
         function resize() {
             self.refresh && self.refresh();
         }
@@ -12244,7 +12668,11 @@ define('echarts/component/base',['require','../config','zrender/tool/util'],func
          * 清除图形数据，实例仍可用
          */
         function clear() {
-            self.zr && self.zr.delShape(self.shapeList);
+            if (self.zr) {
+                self.zr.delShape(self.shapeList);
+                self.zr.clearAnimation 
+                    && self.zr.clearAnimation();
+            }
             self.shapeList = [];
         }
 
@@ -12265,8 +12693,12 @@ define('echarts/component/base',['require','../config','zrender/tool/util'],func
         self.reformCssArray = reformCssArray;
         self.deepQuery = deepQuery;
         self.getFont = getFont;
+        self.addLabel = addLabel;
+        self.calAbsolute = calAbsolute;
         self.clear = clear;
         self.dispose = dispose;
+        self.backupAdaptiveParams = backupAdaptiveParams;
+        self.restoreAdaptiveParams =  restoreAdaptiveParams;
         self.resize = resize;
     }
 
@@ -13073,9 +13505,15 @@ define('echarts/component/title',['require','./base','../config','zrender/tool/a
                 _buildShape();
             }
         }
+        
+        function resize() {
+             self.clear();
+            _buildShape();
+        }
 
         self.init = init;
         self.refresh = refresh;
+        self.resize = resize;
 
         init(option);
     }
@@ -13487,7 +13925,7 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                             yStart : sy,
                             xEnd : x,
                             yEnd : ey,
-                            strokeColor : color[i % colorLength],
+                            strokeColor : color[(i / _interval) % colorLength],
                             lineType : option.splitLine.lineStyle.type,
                             lineWidth : option.splitLine.lineStyle.width
                         }
@@ -13513,7 +13951,7 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                             yStart : y,
                             xEnd : ex,
                             yEnd : y,
-                            strokeColor : color[i % colorLength],
+                            strokeColor : color[(i / _interval) % colorLength],
                             linetype : option.splitLine.lineStyle.type,
                             lineWidth : option.splitLine.lineStyle.width
                         }
@@ -13538,7 +13976,7 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                 var lastX = grid.getX();
                 var curX;
 
-                for (var i = 0; i <= dataLength; i++) {
+                for (var i = 0; i <= dataLength; i += _interval) {
                     curX = i < dataLength
                            ? getCoord(data[i].value || data[i])
                            : grid.getXend();
@@ -13551,7 +13989,7 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                             y : y,
                             width : curX - lastX,
                             height : height,
-                            color : color[i % colorLength]
+                            color : color[(i / _interval) % colorLength]
                             // type : option.splitArea.areaStyle.type,
                         }
                     };
@@ -13566,7 +14004,7 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                 var lastYend = grid.getYend();
                 var curY;
 
-                for (var i = 0; i <= dataLength; i++) {
+                for (var i = 0; i <= dataLength; i += _interval) {
                     curY = i < dataLength
                            ? getCoord(data[i].value || data[i])
                            : grid.getY();
@@ -13579,7 +14017,7 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                             y : curY,
                             width : width,
                             height : lastYend - curY,
-                            color : color[i % colorLength]
+                            color : color[(i / _interval) % colorLength]
                             // type : option.splitArea.areaStyle.type
                         }
                     };
@@ -13659,7 +14097,8 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
             // Math.floor可能引起一些偏差，但性能会更好
             for (var i = 0; i < dataLength; i++) {
                 if (data[i] == value
-                    || (data[i].value && data[i].value == value)
+                    || (typeof data[i].value != 'undefined' 
+                        && data[i].value == value)
                 ) {
                     if (option.position == 'bottom'
                         || option.position == 'top'
@@ -13698,7 +14137,27 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                 }
             }
             else {
-                return getCoord(option.data[dataIndex]);
+                var gap = getGap();
+                var position = option.boundaryGap ? gap : 0;
+    
+                position += dataIndex * gap;
+                
+                if (option.position == 'bottom'
+                    || option.position == 'top'
+                ) {
+                    // 横向
+                    position = grid.getX() + position;
+                }
+                else {
+                    // 纵向
+                    position = grid.getYend() - position;
+                }
+                
+                return (dataIndex === 0 || dataIndex == option.data.length - 1)
+                       ? position
+                       : Math.floor(position);
+                
+               // return getCoord(option.data[dataIndex]);
             }
         }
 
@@ -14281,7 +14740,9 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
             _max = isNaN(option.max)
                    ? (_max + Math.abs(_max * option.boundaryGap[1]))
                    : option.max;    // 指定max忽略boundaryGay[1]
-            //console.log(_min,_max,'vvvvv')
+            if (_min == _max) {
+                _max += 1;
+            }
             _reformValue(option.scale);
         }
 
@@ -16385,7 +16846,7 @@ define('echarts/component/legend',['require','./base','../config','zrender/tool/
                     color = self.deepQuery(
                         [serie], 'itemStyle.normal.color'
                     );
-                    if (color) {
+                    if (color && serie.type != ecConfig.CHART_TYPE_K) {
                         setColor(itemName, color);
                     }
                     _selectedMap[itemName] = true;
@@ -18020,9 +18481,7 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             }
             else {
                 // 数据项事件
-                if (_curTarget._type == 'island'
-                    && self.deepQuery([option], 'tooltip.show')
-                ) {
+                if (_curTarget._type == 'island' && option.tooltip.show) {
                     _showItemTrigger();
                     return;
                 }
@@ -18084,9 +18543,10 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                             _getNearestDataIndex('x', xAxis.getAxis(xAxisIndex))
                         );
                         return;
-                    } else if (yAxis.getAxis(yAxisIndex)
-                               && yAxis.getAxis(yAxisIndex).type
-                                  == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                    } 
+                    else if (yAxis.getAxis(yAxisIndex)
+                             && yAxis.getAxis(yAxisIndex).type
+                                == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         // 纵轴为类目轴
                         _showAxisTrigger(xAxisIndex, yAxisIndex,
@@ -18105,7 +18565,6 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             if (!polar) {
                 return false;
             }
-            var series = option.series;
             var x = zrEvent.getX(_event);
             var y = zrEvent.getY(_event);
             var polarIndex = polar.getNearestIndex([x, y]);
@@ -18217,12 +18676,13 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             var y;
 
             var formatter;
+            var showContent;
             var specialCssText = '';
-            if (self.deepQuery([option], 'tooltip.trigger') == 'axis') {
-                if (self.deepQuery([option], 'tooltip.show') === false) {
+            if (option.tooltip.trigger == 'axis') {
+                if (option.tooltip.show === false) {
                     return;
                 }
-                formatter = self.deepQuery([option],'tooltip.formatter');
+                formatter = option.tooltip.formatter;
             }
 
             if (xAxisIndex != -1
@@ -18237,6 +18697,10 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                                [series[i], option], 'tooltip.trigger'
                            ) == 'axis'
                     ) {
+                        showContent = self.deepQuery(
+                            [series[i]],
+                            'tooltip.showContent'
+                        ) || showContent;
                         formatter = self.deepQuery(
                             [series[i]],
                             'tooltip.formatter'
@@ -18269,6 +18733,10 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                                [series[i], option], 'tooltip.trigger'
                            ) == 'axis'
                     ) {
+                        showContent = self.deepQuery(
+                            [series[i]],
+                            'tooltip.showContent'
+                        ) || showContent;
                         formatter = self.deepQuery(
                             [series[i]],
                             'tooltip.formatter'
@@ -18314,6 +18782,7 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                     );
                 }
                 else if (typeof formatter == 'string') {
+                    _curTicket = NaN;
                     formatter = formatter.replace('{a}','{a0}')
                                          .replace('{b}','{b0}')
                                          .replace('{c}','{c0}');
@@ -18340,6 +18809,7 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                     _tDom.innerHTML = formatter;
                 }
                 else {
+                    _curTicket = NaN;
                     formatter = categoryAxis.getNameByIndex(dataIndex);
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
                         formatter += '<br/>' + seriesArray[i].name + ' : ';
@@ -18354,6 +18824,11 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                     _tDom.innerHTML = formatter;
                 }
 
+                if (showContent === false || !option.tooltip.showContent) {
+                    // 只用tooltip的行为，不显示主体
+                    return;
+                }
+                
                 if (!self.hasAppend) {
                     _tDom.style.left = _zrWidth / 2 + 'px';
                     _tDom.style.top = _zrHeight / 2 + 'px';
@@ -18379,12 +18854,13 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             var seriesArray = [];
 
             var formatter;
+            var showContent;
             var specialCssText = '';
-            if (self.deepQuery([option], 'tooltip.trigger') == 'axis') {
-                if (self.deepQuery([option], 'tooltip.show') === false) {
+            if (option.tooltip.trigger == 'axis') {
+                if (option.tooltip.show === false) {
                     return false;
                 }
-                formatter = self.deepQuery([option],'tooltip.formatter');
+                formatter = option.tooltip.formatter;
             }
 
             // 找到所有用这个极坐标并且axis触发的系列数据
@@ -18394,6 +18870,10 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                            [series[i], option], 'tooltip.trigger'
                        ) == 'axis'
                 ) {
+                    showContent = self.deepQuery(
+                        [series[i]],
+                        'tooltip.showContent'
+                    ) || showContent;
                     formatter = self.deepQuery(
                         [series[i]],
                         'tooltip.formatter'
@@ -18469,6 +18949,11 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                     _tDom.innerHTML = formatter;
                 }
 
+                if (showContent === false || !option.tooltip.showContent) {
+                    // 只用tooltip的行为，不显示主体
+                    return;
+                }
+                
                 if (!self.hasAppend) {
                     _tDom.style.left = _zrWidth / 2 + 'px';
                     _tDom.style.top = _zrHeight / 2 + 'px';
@@ -18492,20 +18977,20 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             var speical = ecData.get(_curTarget, 'special');
             // 从低优先级往上找到trigger为item的formatter和样式
             var formatter;
+            var showContent;
             var specialCssText = '';
             var indicator;
             var html = '';
             if (_curTarget._type != 'island') {
                 // 全局
-                if (self.deepQuery([option], 'tooltip.trigger') == 'item'
-                ) {
-                    formatter = self.deepQuery(
-                                    [option], 'tooltip.formatter'
-                                ) || formatter;
+                if (option.tooltip.trigger == 'item') {
+                    formatter = option.tooltip.formatter;
                 }
                 // 系列
-                if (self.deepQuery([serie],  'tooltip.trigger') == 'item'
-                ) {
+                if (self.deepQuery([serie], 'tooltip.trigger') == 'item') {
+                    showContent = self.deepQuery(
+                                      [serie], 'tooltip.showContent'
+                                  ) || showContent;
                     formatter = self.deepQuery(
                                     [serie], 'tooltip.formatter'
                                 ) || formatter;
@@ -18514,12 +18999,19 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                                       ));
                 }
                 // 数据项
+                showContent = self.deepQuery(
+                                  [data], 'tooltip.showContent'
+                              ) || showContent;
                 formatter = self.deepQuery(
                                 [data], 'tooltip.formatter'
                             ) || formatter;
                 specialCssText += _style(self.deepQuery([data], 'tooltip'));
             }
             else {
+                showContent = self.deepQuery(
+                    [data, serie, option],
+                    'tooltip.showContent'
+                );
                 formatter = self.deepQuery(
                     [data, serie, option],
                     'tooltip.islandFormatter'
@@ -18542,6 +19034,7 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                 );
             }
             else if (typeof formatter == 'string') {
+                _curTicket = NaN;
                 formatter = formatter.replace('{a}','{a0}')
                                      .replace('{b}','{b0}')
                                      .replace('{c}','{c0}')
@@ -18557,6 +19050,7 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                 _tDom.innerHTML = formatter;
             }
             else {
+                _curTicket = NaN;
                 if (serie.type == ecConfig.CHART_TYPE_SCATTER) {
                     _tDom.innerHTML = serie.name + '<br/>' +
                                       (name === '' ? '' : (name + ' : ')) 
@@ -18582,6 +19076,17 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                 }
             }
 
+            if (!_axisLineShape.invisible) {
+                _axisLineShape.invisible = true;
+                zr.modShape(_axisLineShape.id, _axisLineShape);
+                zr.refresh();
+            }
+            
+            if (showContent === false || !option.tooltip.showContent) {
+                // 只用tooltip的行为，不显示主体
+                return;
+            }
+            
             if (!self.hasAppend) {
                 _tDom.style.left = _zrWidth / 2 + 'px';
                 _tDom.style.top = _zrHeight / 2 + 'px';
@@ -18594,12 +19099,6 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                 zrEvent.getY(_event) - 20,
                 specialCssText
             );
-
-            if (!_axisLineShape.invisible) {
-                _axisLineShape.invisible = true;
-                zr.modShape(_axisLineShape.id, _axisLineShape);
-                zr.refresh();
-            }
         }
 
         /**
@@ -20389,7 +20888,7 @@ define(
  */
 define(
 
-    'echarts/component/polar',['require','./base','../config','../util/coordinates','zrender/tool/util','../util/ecData','../component'],function(require) {
+    'echarts/component/polar',['require','./base','../config','../util/coordinates','zrender/tool/util','../component'],function(require) {
 
         function Polar(messageCenter, zr, option, component) {
             var Base = require('./base');
@@ -20398,7 +20897,6 @@ define(
             var ecConfig = require('../config');
             var ecCoordinates = require('../util/coordinates');
             var zrUtil = require('zrender/tool/util');
-            var ecData = require('../util/ecData');
 
             var self = this;
             self.type = ecConfig.COMPONENT_TYPE_POLAR;
@@ -20412,17 +20910,10 @@ define(
             var _queryTarget;
 
             function init(newOption, newComponent) {
-                option = newOption;
                 component = newComponent;
-
-                self.clear();
-
-                polar = option.polar;
-                series = option.series;
-
-                _buildShape();
+                refresh(newOption);
             }
-
+            
             /**
              * 绘制图形
              */
@@ -20458,7 +20949,7 @@ define(
                 var startAngle = item.startAngle ;
                 var dStep = 2 * Math.PI / length;
                 var radius = item.radius;
-                var _ecIndicator_ = item._ecIndicator_ = [];
+                var __ecIndicator = item.__ecIndicator = [];
                 var vector;
 
                 if (typeof radius != 'number') {
@@ -20471,7 +20962,7 @@ define(
                     vector = ecCoordinates.polar2cartesian(
                         radius, startAngle * Math.PI / 180 + dStep * i
                     );
-                    _ecIndicator_.push({
+                    __ecIndicator.push({
                         // 将图形翻转
                         vector : [vector[1], -vector[0]]
                     });
@@ -20484,28 +20975,26 @@ define(
              */
             function _buildSpiderWeb(index) {
                 var item = polar[index];
-                var _ecIndicator_ = item._ecIndicator_;
+                var __ecIndicator = item.__ecIndicator;
                 var splitArea = item.splitArea;
                 var splitLine = item.splitLine;
 
                 var center = item.center;
                 var splitNumber = item.splitNumber;
-                var calculable = option.calculable;
 
                 var strokeColor = splitLine.lineStyle.color;
                 var lineWidth = splitLine.lineStyle.width;
-                var lineType = splitLine.lineStyle.type;
                 var show = splitLine.show;
 
                 var axisLine = self.deepQuery(_queryTarget, 'axisLine');
 
                 _addArea(
-                    _ecIndicator_, splitNumber, center, 
+                    __ecIndicator, splitNumber, center, 
                     splitArea, strokeColor, lineWidth, show
                 );
                 
                 _addLine(
-                    _ecIndicator_, center, axisLine
+                    __ecIndicator, center, axisLine
                 );
             }
 
@@ -20515,7 +21004,7 @@ define(
             function _addAxisLabel(index) {
                 var item = polar[index];
                 var indicator = self.deepQuery(_queryTarget, 'indicator');
-                var _ecIndicator_ = item._ecIndicator_;
+                var __ecIndicator = item.__ecIndicator;
                 var axisLabel;
                 var vector;
                 var style;
@@ -20523,11 +21012,10 @@ define(
                 var splitNumber = self.deepQuery(_queryTarget, 'splitNumber');
                 var center = item.center;
                 var vector;
-                var vector1;
                 var value;
                 var text;
                 var theta;
-                var startAngle = self.deepQuery(_queryTarget, 'startAngle');
+                // var startAngle = self.deepQuery(_queryTarget, 'startAngle');
                 var offset;
                 var precision = self.deepQuery(_queryTarget, 'precision');
 
@@ -20541,8 +21029,8 @@ define(
                         style = zrUtil.merge(style, axisLabel);
                         style.lineWidth = style.width;
 
-                        vector = _ecIndicator_[i].vector;
-                        value = _ecIndicator_[i].value;
+                        vector = __ecIndicator[i].vector;
+                        value = __ecIndicator[i].value;
                         theta = i / indicator.length * 2 * Math.PI;
                         offset = axisLabel.offset || 10;
 
@@ -20555,15 +21043,17 @@ define(
                                 text  = text.toFixed(precision);
                             }
                             newStyle.text = text;
-                            newStyle.x = j * vector[0] / splitNumber + Math.cos(theta) * offset + center[0];
-                            newStyle.y = j * vector[1] / splitNumber+ Math.sin(theta) * offset + center[1];
+                            newStyle.x = j * vector[0] / splitNumber 
+                                         + Math.cos(theta) * offset + center[0];
+                            newStyle.y = j * vector[1] / splitNumber
+                                         + Math.sin(theta) * offset + center[1];
 
                             self.shapeList.push({
                                 shape : 'text',
                                 style : newStyle,
                                 draggable : false,
                                 hoverable : false
-                            })
+                            });
                         }
                     }
                 }
@@ -20575,7 +21065,7 @@ define(
              */
             function _buildText (index) {
                 var item = polar[index];
-                var _ecIndicator_ = item._ecIndicator_;
+                var __ecIndicator = item.__ecIndicator;
                 var vector;
                 var indicator = self.deepQuery(_queryTarget, 'indicator');
                 var center = item.center;
@@ -20610,7 +21100,7 @@ define(
                         style.text = name.formatter(i, indicator[i].text);
                     }
                     
-                    vector = _ecIndicator_[i].vector;
+                    vector = __ecIndicator[i].vector;
 
                     if (Math.round(vector[0]) > 0) {
                         textAlign = 'left';
@@ -20619,7 +21109,7 @@ define(
                         textAlign = 'right';
                     }
                     else {
-                        textAlign = 'center'
+                        textAlign = 'center';
                     }
 
                     if (!name.margin) {
@@ -20630,8 +21120,8 @@ define(
                         x = vector[0] > 0 ? margin : - margin;
                         y = vector[1] > 0 ? margin : - margin;
 
-                        x = vector[0] == 0 ? 0 : x;
-                        y = vector[1] == 0 ? 0 : y;
+                        x = vector[0] === 0 ? 0 : x;
+                        y = vector[1] === 0 ? 0 : y;
                         vector = _mapVector(vector, center, 1); 
                     }
                     
@@ -20653,7 +21143,7 @@ define(
                         draggable : false,
                         hoverable : false,
                         rotation : rotation
-                    })
+                    });
                 }
             }
 
@@ -20666,14 +21156,14 @@ define(
                 var index = index || 0;
                 var item = polar[index];
                 var center = item.center;
-                var _ecIndicator_ = item._ecIndicator_;
-                var len = _ecIndicator_.length;
+                var __ecIndicator = item.__ecIndicator;
+                var len = __ecIndicator.length;
                 var pointList = [];
                 var vector;
                 var shape;
 
                 for (var i = 0; i < len; i ++) {
-                    vector = _ecIndicator_[i].vector;
+                    vector = __ecIndicator[i].vector;
                     pointList.push(_mapVector(vector, center, 1.2));
                 }
                 
@@ -20694,7 +21184,7 @@ define(
              * @param {number} 线条宽度
              */ 
             function _addArea(
-                _ecIndicator_, splitNumber, center,
+                __ecIndicator, splitNumber, center,
                 splitArea, strokeColor, lineWidth, show
             ) {
                 var shape;
@@ -20704,7 +21194,7 @@ define(
 
                 for (var i = 0; i < splitNumber ; i ++ ) {
                     scale = (splitNumber - i) / splitNumber;
-                    pointList = _getPointList(_ecIndicator_, scale, center);
+                    pointList = _getPointList(__ecIndicator, scale, center);
                     
                     if (show) {
                         shape = _getShape(
@@ -20716,7 +21206,7 @@ define(
                     if (splitArea.show) {
                         scale1 = (splitNumber - i - 1) / splitNumber;
                         _addSplitArea(
-                            _ecIndicator_, splitArea, scale, scale1, center, i
+                            __ecIndicator, splitArea, scale, scale1, center, i
                         ); 
                     }  
                 }
@@ -20730,13 +21220,13 @@ define(
              *
              * @return {Array<Array<number>>} 返回绘制的点集
              */
-            function _getPointList(_ecIndicator_, scale, center) {
+            function _getPointList(__ecIndicator, scale, center) {
                 var pointList = [];
-                var len = _ecIndicator_.length;
+                var len = __ecIndicator.length;
                 var vector;
 
                 for (var i = 0 ; i < len ; i ++ ) {
-                    vector = _ecIndicator_[i].vector;
+                    vector = __ecIndicator[i].vector;
                     
                     pointList.push(_mapVector(vector, center, scale));
                 }
@@ -20776,9 +21266,9 @@ define(
              * 绘制填充区域
              */
             function _addSplitArea(
-                _ecIndicator_, splitArea, scale, scale1, center, colorInd
+                __ecIndicator, splitArea, scale, scale1, center, colorInd
             ) {
-                var indLen = _ecIndicator_.length;
+                var indLen = __ecIndicator.length;
                 var color;
                 var colorArr = splitArea.areaStyle.color;
                 var colorLen;
@@ -20786,7 +21276,7 @@ define(
                 var vector;
                 var vector1;
                 var pointList = [];
-                var indLen = _ecIndicator_.length;
+                var indLen = __ecIndicator.length;
                 var shape;
                 
                 if (typeof colorArr == 'string') {
@@ -20797,8 +21287,8 @@ define(
 
                 for (var i = 0; i < indLen ; i ++) {
                     pointList = [];
-                    vector = _ecIndicator_[i].vector;
-                    vector1 = _ecIndicator_[(i + 1) % indLen].vector;
+                    vector = __ecIndicator[i].vector;
+                    vector1 = __ecIndicator[(i + 1) % indLen].vector;
 
                     pointList.push(_mapVector(vector, center, scale));
                     pointList.push(_mapVector(vector, center, scale1));
@@ -20826,7 +21316,7 @@ define(
                 return [
                     vector[0] * scale + center[0],
                     vector[1] * scale + center[1]
-                ]
+                ];
             }
 
             /**
@@ -20849,9 +21339,9 @@ define(
              *              solid | dotted | dashed 实线 | 点线 | 虚线
              */
             function _addLine(
-                _ecIndicator_, center, axisLine
+                __ecIndicator, center, axisLine
             ) {
-                var indLen = _ecIndicator_.length;
+                var indLen = __ecIndicator.length;
                 var line;
                 var vector;
                 var lineStyle = axisLine.lineStyle;
@@ -20860,7 +21350,7 @@ define(
                 var lineType = lineStyle.type;
 
                 for (var i = 0; i < indLen ; i ++ ) {
-                    vector = _ecIndicator_[i].vector;
+                    vector = __ecIndicator[i].vector;
                     line = _getLine(
                         center[0], center[1],
                         vector[0] + center[0], 
@@ -20898,7 +21388,7 @@ define(
                         lineType    : lineType
                     },
                     hoverable : false
-                }
+                };
             }
 
             /**
@@ -20906,10 +21396,10 @@ define(
              * @param {number} polar的index
              */
             function _adjustIndicatorValue(index) {
-                var item = polar[index]
+                var item = polar[index];
                 var indicator = self.deepQuery(_queryTarget, 'indicator');
                 var len = indicator.length;
-                var _ecIndicator_ = item._ecIndicator_;
+                var __ecIndicator = item.__ecIndicator;
                 var value;
                 var max;
                 var min;
@@ -20928,7 +21418,7 @@ define(
                         value = {
                             max : max,
                             min : min
-                        }
+                        };
                     }
                     else {
                         value = _findValue(
@@ -20937,7 +21427,7 @@ define(
                         );
                     }
 
-                    _ecIndicator_[i].value = value;
+                    __ecIndicator[i].value = value;
                 }
             }
 
@@ -20962,7 +21452,7 @@ define(
                         if (polarIndex == index
                             && (!legend || legend.isSelected(serieData[j].name))
                         ) {
-                            data.push(serieData[j])
+                            data.push(serieData[j]);
                         }
                     }
                 }
@@ -20995,7 +21485,7 @@ define(
                 var min0;
                 var one;
 
-                if (!data || data.length == 0) {
+                if (!data || data.length === 0) {
                     return;
                 }
 
@@ -21029,12 +21519,12 @@ define(
                         if (delta >= 1) {
                             min = Math.floor(min / delta) * delta - delta;
                         }
-                        else if (delta == 0) {
+                        else if (delta === 0) {
                             if (max > 0) {
                                 min0 = 0;
                                 max0 = 2 * max;
                             }
-                            else if (max == 0) {
+                            else if (max === 0) {
                                 min0 = 0;
                                 max0 = 100;
                             }
@@ -21046,14 +21536,14 @@ define(
                             return {
                                 max : max0,
                                 min : min0
-                            }
+                            };
                         }
                         else {
                             str = (delta + '').split('.')[1];
                             len = str.length;
                             min = Math.floor(
                                     min * Math.pow(10, len)) / Math.pow(10, len
-                                ) - delta;
+                                  ) - delta;
                         }
 
                         if (Math.abs(min) <= delta) {
@@ -21076,7 +21566,7 @@ define(
                 return {
                     max : max,
                     min : min
-                }
+                };
             }
 
             /**
@@ -21116,7 +21606,7 @@ define(
                 else if (delta == 1) {
                     return 1;
                 }
-                else if (delta == 0) {
+                else if (delta === 0) {
                     return 0;
                 } 
                 else {
@@ -21191,13 +21681,13 @@ define(
             function getVector(polarIndex, indicatorIndex, value) {
                 polarIndex = polarIndex || 0;
                 indicatorIndex = indicatorIndex || 0;
-                var _ecIndicator_ = polar[polarIndex]._ecIndicator_;
+                var __ecIndicator = polar[polarIndex].__ecIndicator;
 
-                if (indicatorIndex >= _ecIndicator_.length) {
+                if (indicatorIndex >= __ecIndicator.length) {
                     return ;
                 }
 
-                var indicator = polar[polarIndex]._ecIndicator_[indicatorIndex];
+                var indicator = polar[polarIndex].__ecIndicator[indicatorIndex];
                 var center = polar[polarIndex].center;
                 var vector = indicator.vector;
                 var max = indicator.value.max;
@@ -21257,7 +21747,7 @@ define(
                         return {
                             polarIndex : i,
                             valueIndex : 0
-                        }
+                        };
                     }
                     radius = self.deepQuery([item, option], 'radius');
                     startAngle = item.startAngle;
@@ -21303,15 +21793,28 @@ define(
                 return polar[index].indicator;
             } 
 
-            /**
+             /**
              * 刷新
              */
-            function refresh() {
+            function refresh(newOption) {
+                if (newOption) {
+                    option = newOption;
+                    polar = option.polar;
+                    series = option.series;
+                    self.backupAdaptiveParams(polar,['center', 'radius'],true);
+                }
                 self.clear();
                 _buildShape();
             }
+            
+            function resize() {
+                // 复位录原始定义
+                self.restoreAdaptiveParams(polar, ['center', 'radius'], true);
+                refresh();
+            }
 
             self.refresh = refresh;
+            self.resize = resize;
             self.reformOption = reformOption;
             self.getVector = getVector;
 
@@ -21373,6 +21876,11 @@ define(
  */
 define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zrender/tool/event','zrender/config','./util/shape/icon','./chart','./chart/island','./component','./component/title','./component/axis','./component/categoryAxis','./component/valueAxis','./component/grid','./component/dataZoom','./component/legend','./component/dataRange','./component/tooltip','./component/toolbox','./component/dataView','./component/polar','./util/ecData','./chart','./component','zrender/tool/util','zrender/tool/util','zrender/tool/util','zrender/tool/color','zrender/tool/util','zrender/tool/util'],function(require) {
     var self = {};
+    var echarts = self;     // 提供内部反向使用静态方法；
+    self.version = '1.2.1';
+    self.dependencies = {
+        zrender : '1.0.4'
+    };
     /**
      * 入口方法 
      */
@@ -21418,6 +21926,16 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
         _init();
         function _init() {
             var zrender = require('zrender');
+            if (((zrender.version || '1.0.3').replace('.', '') - 0)
+                < (echarts.dependencies.zrender.replace('.', '') - 0)
+            ) {
+                console.error(
+                    'ZRender ' + (zrender.version || '1.0.3-') 
+                    + ' is too old for ECharts ' + echarts.version 
+                    + '. Current version need ZRender ' 
+                    + echarts.dependencies.zrender + '+'
+                );
+            }
             _zr = zrender.init(dom);
 
             var zrUtil = require('zrender/tool/util');
@@ -22731,6 +23249,7 @@ define('echarts/chart/scatter',['require','../component/base','./calculableBase'
             var serie;                              // 临时映射变量
             var serieName;                          // 临时映射变量
             var iconShape;
+            var iconType;
             for (var i = 0, l = series.length; i < l; i++) {
                 serie = series[i];
                 serieName = serie.name;
@@ -22749,7 +23268,17 @@ define('echarts/chart/scatter',['require','../component/base','./calculableBase'
                         if (iconShape) {
                             // 回调legend，换一个更形象的icon
                             iconShape.shape = 'icon';
-                            iconShape.style.iconType = _sIndex2ShapeMap[i];
+                            var iconType = _sIndex2ShapeMap[i];
+                            iconShape.style.brushType = iconType.match('empty') 
+                                                        ? 'stroke' : 'both';
+                            iconType = iconType.replace('empty', '')
+                                               .toLowerCase();
+                            if (iconType.match('star')) {
+                                iconShape.style.n = 
+                                    (iconType.replace('star','') - 0) || 5;
+                                iconType = 'star';
+                            } 
+                            iconShape.style.iconType = iconType;
                             legend.setItemShape(serieName, iconShape);
                         }
                     } else {
@@ -23001,6 +23530,14 @@ define('echarts/chart/scatter',['require','../component/base','./calculableBase'
                 itemShape.draggable = true;
             }
             */
+           
+           itemShape = self.addLabel(
+                itemShape, 
+                series[seriesIndex], 
+                series[seriesIndex].data[dataIndex], 
+                name, 
+                'vertical'
+            );
 
             ecData.pack(
                 itemShape,
@@ -23436,13 +23973,19 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
             var candleWidth;
             var data;
             var value;
+            var barMaxWidth;
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 seriesIndex = locationMap[j];
                 serie = series[seriesIndex];
                 
                 xAxisIndex = serie.xAxisIndex || 0;
                 categoryAxis = component.xAxis.getAxis(xAxisIndex);
-                candleWidth = Math.floor(categoryAxis.getGap() / 2);
+                candleWidth = serie.barWidth 
+                              || Math.floor(categoryAxis.getGap() / 2);
+                barMaxWidth = serie.barMaxWidth;
+                if (barMaxWidth && barMaxWidth < candleWidth) {
+                    candleWidth = barMaxWidth;
+                }
                 yAxisIndex = serie.yAxisIndex || 0;
                 valueAxis = component.yAxis.getAxis(yAxisIndex);
                 
@@ -23879,7 +24422,6 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
             var data = serie.data;
             var defaultColor;
             var name;
-            var shape;
             var pointList;
             var calculable = self.deepQuery(_queryTarget, 'calculable');
            
@@ -23987,7 +24529,7 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
          * @param {object} data 数据
          * @param {number} serieIndex
          */
-        function _addSymbol(pointList, defaultColor, data, seriesIndex) {
+        function _addSymbol(pointList, defaultColor, data) {
             // 多级控制
             var queryTarget = [data, serie];
             var symbol = self.deepQuery(queryTarget,'symbol')
@@ -24314,14 +24856,2368 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
     
     return Radar;
 });
+define('echarts/util/kwargs',[],function(){
+    function kwargs(defaults) {
+        var func = this;
+        /*jshint maxlen : 200*/
+        var removeComments = new RegExp('(\\/\\*[\\w\\\'\\,\\(\\)\\s\\r\\n\\*]*\\*\\/)|(\\/\\/[\\w\\s\\\'][^\\n\\r]*$)|(<![\\-\\-\\s\\w\\>\\/]*>)', 'gim');
+        var removeWhitespc = new RegExp('\\s+', 'gim');
+        var matchSignature = new RegExp('function.*?\\((.*?)\\)', 'i');
+        // get the argument names from function source
+        var names = func.toString()
+                        .replace(removeComments, '')
+                        .replace(removeWhitespc, '')
+                        .match(matchSignature)[1]
+                        .split(',');
+
+        // Check the existance of default, if not create an object
+        if(defaults !== Object(defaults)){
+            defaults = {};
+        }
+
+        return function() {
+            var args = Array.prototype.slice.call(arguments);
+            var kwargs = args[args.length - 1];
+
+            // Check the existance of the kwargs
+            if (kwargs && kwargs.constructor === Object) {
+                args.pop();
+            }else{
+                kwargs = {};
+            }
+
+            // Fill the arguments and apply them
+            for (var i = 0; i < names.length; i++) {
+                var name = names[i];
+                if (name in kwargs) {
+                    args[i] = kwargs[name];
+                }else if(name in defaults && args[i] === undefined){
+                    args[i] = defaults[name];
+                }
+            }
+
+            return func.apply(this, args);
+        };
+    }
+    // As function prototype
+    Function.prototype.kwargs = kwargs;
+});
+/**
+ * Numpy like n-dimensional array proccessing class
+ * http://docs.scipy.org/doc/numpy/reference/arrays.ndarray.html
+ * 
+ * @author pissang (https://github.com/pissang/)
+ */
+define('echarts/util/ndarray',['require','./kwargs'],function(require) {
+
+
+
+require('./kwargs');
+
+var ArraySlice = Array.prototype.slice;
+var global = window;
+
+// Polyfill of Typed Array
+global.Int32Array = global.Int32Array || Array;
+global.Int16Array = global.Int16Array || Array;
+global.Int8Array = global.Int8Array || Array;
+global.Uint32Array = global.Uint32Array || Array;
+global.Uint16Array = global.Uint16Array || Array;
+global.Uint8Array = global.Uint8Array || Array;
+global.Float32Array = global.Float32Array || Array;
+global.Float64Array = global.Float64Array || Array;
+
+// Map of numpy dtype and typed array
+// http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html#arrays-dtypes
+// http://www.khronos.org/registry/typedarray/specs/latest/
+var ArrayConstructor = {
+    'int32' : global.Int32Array,
+    'int16' : global.Int16Array,
+    'int8' : global.Int8Array,
+    'uint32' : global.Uint32Array,
+    'uint16' : global.Uint16Array,
+    'uint8' : global.Uint8Array,
+    // 'uint8c' is not existed in numpy
+    'uint8c' : global.Uint8ClampedArray,
+    'float32' : global.Float32Array,
+    'float64' : global.Float64Array,
+    'number' : Array
+};
+
+var dTypeStrideMap = {
+    'int32' : 4,
+    'int16' : 2,
+    'int8' : 1,
+    'uint32' : 4,
+    'uint16' : 2,
+    'uint8' : 1,
+    'uint8c' : 1,
+    'float32' : 4,
+    'float64' : 8,
+    // Consider array stride is 1
+    'number' : 1
+};
+
+var E_ADD = 0;
+var E_SUB = 1;
+var E_MUL = 2;
+var E_DIV = 3;
+var E_MOD = 4;
+var E_AND = 5;
+var E_OR = 6;
+var E_XOR = 7;
+var E_EQL = 8;
+
+function guessDataType(arr) {
+    if (typeof(arr) === 'undefined') {
+        return 'number';
+    }
+    switch(Object.prototype.toString.call(arr)) {
+        case '[object Int32Array]':
+            return 'int32';
+        case '[object Int16Array]':
+            return 'int16';
+        case '[object Int8Array]':
+            return 'int8';
+        case '[object Uint32Array]':
+            return 'uint32';
+        case '[object Uint16Array]':
+            return 'uint16';
+        case '[object Uint8Array]':
+            return 'uint8';
+        case '[object Uint8ClampedArray]':
+            return 'uint8c';
+        case '[object Float32Array]':
+            return 'float32';
+        case '[object Float64Array]':
+            return 'float64';
+        default:
+            return 'number';
+    }
+}
+
+/**
+ * NDArray
+ * @param {Array|NDArray}  array
+ * @param {String} dtype
+ */
+var NDArray = function(array) {
+    // Last argument describe the data type of ndarray
+    var dtype = arguments[arguments.length-1];
+    if (typeof(dtype) == 'string') {
+        this._dtype = dtype;
+    } else {
+        // Normal array
+        this._dtype = guessDataType(array);
+    }
+
+    if (array && typeof(array) !== 'string') {
+        if (array instanceof NDArray) {
+            array._dtype = this._dtype;
+            return array;
+        } else if (array.length) {
+            // Init from array
+            this.initFromArray(array);
+        } else if(typeof(array) === 'number') {
+            // Init from shape
+            this.initFromShape.apply(this, arguments);
+        }
+    } else {
+        /**
+         * _array
+         * Initialized with an empty array
+         * Data is continuous one-dimensional array, row-major
+         * A [2, 2] dim empty array is stored like
+         * [0,0,  0,0]
+         * TODO : Consider column majors ?
+         * @type {ArrayConstructor}
+         */
+        this._array = new ArrayConstructor[this._dtype]();
+        /**
+         * _shape
+         * a tuple array describe the dimension and size of each dimension
+         * [10, 10] means a 10x10 array
+         * @type {Array}
+         */
+        this._shape = [0];
+        /**
+         * _size
+         * size of the storage array length
+         * @type {Number}
+         */
+        this._size = 0;
+    }
+};
+
+NDArray.prototype = {
+    /**
+     * Initialize from a normal js array.
+     * 
+     * @param  {Array} input
+     * @return {NDArray} this
+     */
+    initFromArray : function(input) {
+        var dim = getDimension(input);
+        var cursor = 0;
+        function flatten(axis, _out, _in) {
+            var len = _in.length;
+            for (var i = 0; i < len; i++) {
+                if (axis < dim-1) {
+                    flatten(axis+1, _out, _in[i]);
+                } else {
+                    _out[cursor++] = _in[i];
+                }
+            }
+        }
+        var shape = getShape(input);
+        var size = getSize(shape);
+        this._array = new ArrayConstructor[this._dtype](size);
+
+        flatten(0, this._array, input);
+        this._shape = shape;
+        this._size = size;
+
+        return this;
+    },
+
+    /**
+     * Initialize from the given shape description.
+     * @param  {Array} shape 
+     * @return {NDArray} this
+     */
+    initFromShape : function(shape) {
+        if (typeof(shape) == 'number') {
+            shape = Array.prototype.slice.call(arguments);
+        }
+        if(shape) {
+            var size = getSize(shape);
+            if (this._dtype === 'number') {
+                this._array = [];
+                var data = this._array;
+                for (var i = 0; i < size; i++) {
+                    data[i] = 0;
+                }   
+            } else {
+                this._array = new ArrayConstructor[this._dtype](size);
+            }
+        }
+        this._shape = shape;
+        this._size = getSize(shape);
+
+        return this;
+    },
+    /**
+     * Fill the array with the given value.
+     * @param  {Number} value
+     * @return {NDArray} this
+     */
+    fill : function(value) {
+        var data = this._array;
+        for (var i = 0; i < data.length; i++) {
+            data[i] = value;
+        }
+        return this;
+    },
+
+    /**
+     * Get ndarray shape copy.
+     * @return {Array}
+     */
+    shape : function() {
+        // Create a copy
+        return this._shape.slice();
+    },
+
+    /**
+     * Get array size
+     * @return {Number}
+     */
+    size : function() {
+        return this._size;
+    },
+
+    /**
+     * Get array data type.
+     * 'int32'
+     * 'int16'
+     * 'int8'
+     * 'uint32'
+     * 'uint16'
+     * 'uint8'
+     * 'float32'
+     * 'float64'
+     * @return {String}
+     */
+    dtype : function() {
+        return this._dtype;
+    },
+
+    /**
+     * Get array dimension.
+     * @return {[type]} [description]
+     */
+    dimension : function() {
+        return this._shape.length;
+    },
+
+    /**
+     * Tuple of bytes to step in each dimension when traversing an array.
+     * @return {Array}
+     */
+    strides : function() {
+        var strides = calculateDimStrides(this._shape);
+        var dTypeStride = dTypeStrideMap[this._dtype];
+        for (var i = 0; i < strides.length; i++) {
+            strides[i] *= dTypeStride;
+        }
+        return strides;
+    },
+    /**
+     * Gives a new shape to an array without changing its data.
+     * @param  {Array} shape
+     * @return {NDArray}
+     */
+    reshape : function(shape) {
+        if (typeof(shape) == 'number') {
+            shape = Array.prototype.slice.call(arguments);
+        }
+        if (this._isShapeValid(shape)) {
+            this._shape = shape;
+        } else {
+            throw new Error('Total size of new array must be unchanged');
+        }
+        return this;
+    },
+
+    _isShapeValid : function(shape) {
+        return getSize(shape) === this._size;
+    },
+
+    /**
+     * Change shape and size of array in-place.
+     * @param  {Array} shape
+     * @return {NDArray}
+     */
+    resize : function(shape) {
+        if (typeof(shape) == 'number') {
+            shape = Array.prototype.slice.call(arguments);
+        }
+
+        var len = getSize(shape);
+        if (len < this._size) {
+            if (this._dtype === 'number') {
+                this._array.length = len;
+            }
+        } else {
+            if (this._dtype === 'number') {
+                for (var i = this._array.length; i < len; i++) {
+                    // Fill the rest with zero
+                    this._array[i] = 0;
+                }
+            } else {
+                // Reallocate new buffer
+                var newArr = new ArrayConstructor[this._dtype](len);
+                var originArr = this._array;
+
+                // Copy data
+                for (var i = 0; i < originArr.length; i++) {
+                    newArr[i] = originArr[i];
+                }
+                this._array = newArr;
+            }
+        }
+        this._shape = shape;
+        this._size = len;
+
+        return this;
+
+    },
+
+    /**
+     * Returns a new array with axes transposed.    
+     * @param  {Array} [axes]
+     * @param  {NDArray} [out]
+     * @return {NDArray}
+     */
+    transpose : function(axes, out) {
+        var originAxes = [];
+        for (var i = 0; i < this._shape.length; i++) {
+            originAxes.push(i);
+        }
+        if (typeof(axes) === 'undefined') {
+            axes = originAxes.slice();
+        }
+        // Check if any axis is out of bounds
+        for (var i = 0; i < axes.length; i++) {
+            if (axes[i] >= this._shape.length) {
+                throw new Error(axisOutofBoundsErrorMsg(axes[i]));
+            }
+        }
+        // Has no effect on 1-D transpose
+        if (axes.length <= 1) {
+            return this;
+        }
+
+        var targetAxes = originAxes.slice();
+        for (var i = 0; i < Math.floor(axes.length / 2); i++) {
+            for (var j = axes.length-1; j >= Math.ceil(axes.length / 2) ; j--) {
+                // Swap axes
+                targetAxes[axes[i]] = axes[j];
+                targetAxes[axes[j]] = axes[i];
+            }
+        }
+
+        return this._transposelike(targetAxes, out);
+
+    }.kwargs(),
+
+    /**
+     * Return a new array with axis1 and axis2 interchanged.
+     * @param  {Number} axis1
+     * @param  {Number} axis2
+     * @param  {NDArray} out
+     * @return {NDArray}
+     */
+    swapaxes : function(axis1, axis2, out) {
+        return this.transpose([axis1, axis2], out);
+    }.kwargs(),
+
+    /**
+     * Roll the specified axis backwards, until it lies in a given position.
+     * @param  {Number} axis
+     * @param  {Number} [start=0]
+     * @param  {NDArray} out
+     * @return {NDArray}
+     */
+    rollaxis : function(axis, start, out) {
+        if (axis >= this._shape.length) {
+            throw new Error(axisOutofBoundsErrorMsg(axis));
+        }
+
+        var axes = [];
+        for (var i = 0; i < this._shape.length; i++) {
+            axes.push(i);
+        }
+        axes.splice(axis, 1);
+        axes.splice(start, 0, axis);
+
+        return this._transposelike(axes, out);
+
+    }.kwargs({ start : 0}),
+
+    // Base function for transpose-like operations
+    _transposelike : function(axes, out) {
+        var source = this._array;
+        var shape = this._shape.slice();
+        var strides = calculateDimStrides(this._shape);
+        var dim = shape.length;
+
+        // Swap
+        var tmpStrides = [];
+        var tmpShape = [];
+        for (var i = 0; i < axes.length; i++) {
+            var axis = axes[i];
+            // swap to target axis
+            tmpShape[i] = shape[axis];
+            tmpStrides[i] = strides[axis];
+        }
+        strides = tmpStrides;
+        shape = tmpShape;
+
+        this._shape = shape;
+        var transposedStrides = calculateDimStrides(this._shape);
+
+        if (!out) {
+            out = new NDArray();
+            out._shape = this._shape.slice();
+            out._dtype = this._dtype;
+            out._size = this._size;
+        }
+        // FIXME in-place transpose?
+        var transposedData = new ArrayConstructor[this._dtype](this._size);
+        out._array = transposedData;
+        // @param Item offset in current axis offset of the original array
+        // @param Item offset in current axis offset of the transposed array
+        function transpose(axis, offset, transposedOffset) {
+            var size = shape[axis];
+            // strides in orginal array
+            var stride = strides[axis];
+            // strides in transposed array 
+            var transposedStride = transposedStrides[axis];
+
+            if (axis < dim-1) {
+                for (var i = 0; i < size; i++) {
+                    transpose(
+                        axis+1, 
+                        offset + stride * i, 
+                        transposedOffset + transposedStride * i
+                    );
+                }
+            } else {
+                for (var i = 0; i < size; i++) {
+                    // offset + stride * i is the index of the original array
+                    // transposedOffset + i is the index of the transposed array
+                    transposedData[transposedOffset + i]
+                        = source[offset + stride * i];
+                }
+            }
+        }
+
+        transpose(0, 0, 0);
+
+        return out;
+    },
+
+    /**
+     * Repeat elements of an array along axis
+     * @param {Number} repeats
+     *        The number of repetitions for each element.
+     *        repeats is broadcasted to fit the shape of the given axis.
+     * @param {Number} [axis]
+     *        The axis along which to repeat values.
+     *        By default, use the flattened input array,
+     *        and return a flat output array. 
+     * @param {NDArray} [out]
+     * @return {NDArray}
+     */
+    repeat : function(repeats, axis, out) {
+        var shape;
+        // flattened input array
+        if (typeof(axis) === 'undefined') {
+            shape = [this._size];
+            axis = 0;
+        } else {
+            shape = this._shape.slice();
+        }
+        var originShape = shape.slice();
+
+        shape[axis] *= repeats;
+        if (!out) {
+            out = new NDArray(this._dtype);
+            out.initFromShape(shape);
+        } else {
+            if (!arrayEqual(shape, out._shape)) {
+                throw new Error(broadcastErrorMsg(shape, out._shape));
+            }
+        }
+        var data = out._array;
+
+        var stride = calculateDimStride(originShape, axis);
+        var axisSize = originShape[axis];
+        var source = this._array;
+
+        var offsetStride = stride * axisSize;
+
+        for (var offset = 0; offset < this._size; offset+=offsetStride) {
+            for (var k = 0; k < stride; k++) {
+                var idx = offset + k;
+                var idxRepeated = offset * repeats + k;
+                for (var i = 0; i < axisSize; i++) {
+                    for (var j = 0; j < repeats; j++) {
+                        data[idxRepeated] = source[idx];
+                        idxRepeated += stride;
+                    }
+                    idx += stride;
+                }
+            }
+        }
+
+        return out;
+    }.kwargs(),
+
+    choose : function() {
+        console.warn('TODO');
+    },
+
+    take : function() {
+        console.warn('TODO');
+    },
+
+    tile : function() {
+        console.warn('TODO');
+    },
+
+    /**
+     * Preprocess for array calculation 
+     * max, min, argmax, argmin, sum, ptp, val, mean
+     * Which will reduce one axis if the axis is given
+     * 
+     * @param  {Number} axis
+     * @param  {NDArray} out
+     * @param  {Function} funcWithAxis
+     * @param  {Function} funcFlatten
+     * @return {Number|NDArray}
+     */
+    _withPreprocess1 : function(axis, out, funcWithAxis, funcFlatten) {
+        var source = this._array;
+        if (!this._size) {
+            return;
+        }
+
+        if (typeof(axis)!=='undefined') {
+            if (axis < 0) {
+                axis = this._shape.length + axis;
+            }
+            if (axis >= this._shape.length || axis < 0) {
+                throw new Error(axisOutofBoundsErrorMsg(axis));
+            }
+
+            var shape = this._shape.slice();
+            shape.splice(axis, 1);
+            if (out && !arrayEqual(shape, out._shape)) {
+                throw new Error(broadcastErrorMsg(shape, out._shape));
+            }
+
+            if (!out) {
+                out = new NDArray(this._dtype);
+                out.initFromShape(shape);   
+            }
+            var data = out._array;
+
+            var stride = calculateDimStride(this._shape, axis);
+            var axisSize = this._shape[axis];
+            var offsetStride = stride * axisSize;
+
+            funcWithAxis.call(
+                this, data, source, offsetStride, axisSize, stride
+            );
+
+            return out;
+        } else {
+            return funcFlatten.call(this, source);
+        }
+    },
+
+    /**
+     * Preprocess for array calculation cumsum, cumprod
+     * Which will keep the shape if axis is given
+     * and flatten if axis is undefined
+     * @param  {Number} axis
+     * @param  {NDArray} out
+     * @param  {Function} funcWithAxis
+     * @param  {Function} funcFlatten
+     * @return {NDArray}
+     */
+    _withPreprocess2 : function(axis, out, funcWithAxis, funcFlatten) {
+        var source = this._array;
+        if (!this._size) {
+            return;
+        }
+        if (out && !arrayEqual(this._shape, out._shape)) {
+            throw new Error(broadcastErrorMsg(this._shape, out._shape));
+        }
+        if (!out) {
+            out = new NDArray(this._dtype);
+            out.initFromShape(this._shape);
+        }
+
+        var data = out._array;
+
+        if (typeof(axis)!=='undefined') {
+            if (axis < 0) {
+                axis = this._shape.length + axis;
+            }
+            if (axis >= this._shape.length || axis < 0) {
+                throw new Error(axisOutofBoundsErrorMsg(axis));
+            }
+
+            if (axis >= this._shape.length) {
+                throw new Error(axisOutofBoundsErrorMsg(axis));
+            }
+
+            var stride = calculateDimStride(this._shape, axis);
+            var axisSize = this._shape[axis];
+            var offsetStride = stride * axisSize;
+
+            funcWithAxis.call(
+                this, data, source, offsetStride, axisSize, stride
+            );
+        } else {
+            out.reshape([this._size]);
+            funcFlatten.call(this, data, source);
+        }
+
+        return out;
+    },
+
+    /**
+     * Get the max value of ndarray
+     * If the axis is given, the max is only calculate in this dimension
+     * Example, for the given ndarray
+     *     [[3, 9],
+     *      [4, 8]]
+     * >>> max(0)
+     *     [4, 9]
+     * >>> max(1)
+     *     [9, 8]
+     *     
+     * @param  {Number} [axis] 
+     * @param  {NDArray} out  
+     * @return {NDArray}
+     */
+    max : (function() {
+        function withAxis(data, source, offsetStride, axisSize, stride) {
+            var cursor = 0;
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
+                for (var i = 0; i < stride; i++) {
+                    var idx =  i + offset;
+                    var max = source[idx];
+                    for (var j = 0; j < axisSize; j++) {
+                        var d = source[idx];
+                        if (d > max) {
+                            max = d;
+                        }
+                        idx += stride;
+                    }
+                    data[cursor++] = max;
+                }
+            }
+        }
+        function withFlatten(source) {
+            var max = source[0];
+            for (var i = 1; i < this._size; i++) {
+                if (source[i] > max) {
+                    max = source[i];
+                }
+            }
+            return max;
+        }
+        return function(axis, out) {
+            return this._withPreprocess1(
+                axis, out,
+                withAxis, withFlatten
+            );
+        };
+    })().kwargs(),
+    
+
+    /**
+     * Return the minimum of an array or minimum along an axis.
+     * @param  {Number} [axis] 
+     * @param  {NDArray} out  
+     * @return {NDArray}
+     */
+    min : (function() {
+        function withAxis(data, source, offsetStride, axisSize, stride) {
+            var cursor = 0;
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
+                for (var i = 0; i < stride; i++) {
+                    var idx =  i + offset;
+                    var min = source[idx];
+                    for (var j = 0; j < axisSize; j++) {
+                        var d = source[idx];
+                        if (d < min) {
+                            min = d;
+                        }
+                        idx += stride;
+                    }
+                    data[cursor++] = min;
+                }
+            }
+        }
+        function withFlatten(source) {
+            var min = source[0];
+            for (var i = 1; i < this._size; i++) {
+                if (source[i] < min) {
+                    min = source[i];
+                }
+            }
+            return min;
+        }
+        return function(axis, out) {
+            return this._withPreprocess1(
+                axis, out,
+                withAxis, withFlatten
+            );
+        };
+    })().kwargs(),
+
+    /**
+     * Return indices of the maximum values along an axis.
+     * @param  {Number} [axis] 
+     * @param  {NDArray} out  
+     * @return {NDArray}
+     */
+    argmax : (function() {
+        function withAxis(data, source, offsetStride, axisSize, stride) {
+            var cursor = 0;
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
+                for (var i = 0; i < stride; i++) {
+                    var dataIdx = 0;
+                    var idx =  i + offset;
+                    var max = source[idx];
+                    for (var j = 0; j < axisSize; j++) {
+                        var d = source[idx];
+                        if (d > max) {
+                            max = d;
+                            dataIdx = j;
+                        }
+                        idx += stride;
+                    }
+                    data[cursor++] = dataIdx;
+                }
+            }
+        }
+        function withFlatten(source) {
+            var max = source[0];
+            var idx = 0;
+            for (var i = 1; i < this._size; i++) {
+                if (source[i] > max) {
+                    idx = i;
+                    max = source[i];
+                }
+            }
+            return idx;
+        }
+        return function(axis, out) {
+            return this._withPreprocess1(
+                axis, out,
+                withAxis, withFlatten
+            );
+        };
+    })().kwargs(),
+
+    /**
+     * Indices of the minimum values along an axis.
+     * @param  {Number} [axis] 
+     * @param  {NDArray} out  
+     * @return {NDArray}
+     */
+    argmin : (function() {
+        function withAxis(data, source, offsetStride, axisSize, stride) {
+            var cursor = 0;
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
+                for (var i = 0; i < stride; i++) {
+                    var dataIdx = 0;
+                    var idx =  i + offset;
+                    var min = source[idx];
+                    for (var j = 0; j < axisSize; j++) {
+                        var d = source[idx];
+                        if (d < min) {
+                            min = d;
+                            dataIdx = j;
+                        }
+                        idx += stride;
+                    }
+                    data[cursor++] = dataIdx;
+                }
+            }
+        }
+        function withFlatten(source) {
+            var min = source[0];
+            var idx = 0;
+            for (var i = 1; i < this._size; i++) {
+                if (source[i] < min) {
+                    idx = i;
+                    min = source[i];
+                }
+            }
+            return idx;
+        }
+        return function(axis, out) {
+            return this._withPreprocess1(
+                axis, out,
+                withAxis, withFlatten
+            );
+        };
+    })().kwargs(),
+
+    /**
+     * Return the sum of the array elements over the given axis.
+     * @param  {Number} [axis] 
+     * @param  {NDArray} out  
+     * @return {NDArray}
+     */
+    sum : (function() {
+        function withAxis(data, source, offsetStride, axisSize, stride) {
+            var cursor = 0;
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
+                for (var i = 0; i < stride; i++) {
+                    var sum = 0;
+                    var idx =  i + offset;
+                    for (var j = 0; j < axisSize; j++) {
+                        sum += source[idx];
+                        idx += stride;
+                    }
+                    data[cursor++] = sum;
+                }
+            }
+        }
+        function withFlatten(source) {
+            var sum = 0;
+            for (var i = 0; i < this._size; i++) {
+                sum += source[i];
+            }
+            return sum;
+        }
+        return function(axis, out) {
+            return this._withPreprocess1(
+                axis, out,
+                withAxis, withFlatten
+            );
+        };
+    })().kwargs(),
+
+    /**
+     * Return the product of the array elements over the given axis.
+     * @param  {Number} [axis] 
+     * @param  {NDArray} out  
+     * @return {NDArray}
+     */
+    prod : (function() {
+        function withAxis(data, source, offsetStride, axisSize, stride) {
+            var cursor = 0;
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
+                for (var i = 0; i < stride; i++) {
+                    var prod = 1;
+                    var idx =  i + offset;
+                    for (var j = 0; j < axisSize; j++) {
+                        prod *= source[idx];
+                        idx += stride;
+                    }
+                    data[cursor++] = prod;
+                }
+            }
+        }
+        function withFlatten(source) {
+            var prod = 1;
+            for (var i = 0; i < this._size; i++) {
+                prod *= source[i];
+            }
+            return prod;
+        }
+        return function(axis, out) {
+            return this._withPreprocess1(
+                axis, out,
+                withAxis, withFlatten
+            );
+        };
+    })().kwargs(),
+
+    /**
+     * Returns the average of the array elements along given axis.
+     * @param  {Number} [axis] 
+     * @param  {NDArray} out  
+     * @return {NDArray}
+     */
+    mean : (function() {
+        function withAxis(data, source, offsetStride, axisSize, stride) {
+            var cursor = 0;
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
+                for (var i = 0; i < stride; i++) {
+                    var sum = 0;
+                    var idx =  i + offset;
+                    for (var j = 0; j < axisSize; j++) {
+                        sum += source[idx];
+                        idx += stride;
+                    }
+                    var mean = sum / axisSize;
+                    data[cursor++] = mean;
+                }
+            }
+        }
+        function withFlatten(source) {
+            var sum = 0;
+            var len = source.length;
+            for (var i = 0; i < len; i++) {
+                sum += source[i];
+            }
+            var mean = sum / len;
+            return mean;
+        }
+        return function(axis, out) {
+            return this._withPreprocess1(
+                axis, out,
+                withAxis, withFlatten
+            );
+        };
+    })().kwargs(),
+
+    /**
+     * Return the variance of the array elements over the given axis.
+     * @param  {Number} [axis] 
+     * @param  {NDArray} out  
+     * @return {NDArray}
+     */
+    'var' : (function() {
+        function withAxis(data, source, offsetStride, axisSize, stride) {
+            var cursor = 0;
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
+                for (var i = 0; i < stride; i++) {
+                    var sum = 0;
+                    var idx =  i + offset;
+                    for (var j = 0; j < axisSize; j++) {
+                        sum += source[idx];
+                        idx += stride;
+                    }
+                    var mean = sum / axisSize;
+                    var moments = 0;
+                    idx =  i + offset;
+                    for (var j = 0; j < axisSize; j++) {
+                        var diff = source[idx] - mean;
+                        moments += diff * diff;
+                        idx += stride;
+                    }
+                    data[cursor++] = moments / axisSize;
+                }
+            }
+        }
+        function withFlatten(source) {
+            var sum = 0;
+            var len = source.length;
+            for (var i = 0; i < len; i++) {
+                sum += source[i];
+            }
+            var mean = sum / len;
+            var moments = 0;
+            for (var i = 0; i < len; i++) {
+                var diff = source[i] - mean;
+                moments += diff * diff;
+            }
+            return moments / len;
+        }
+        return function(axis, out) {
+            return this._withPreprocess1(
+                axis, out,
+                withAxis, withFlatten
+            );
+        };
+    })().kwargs(),
+    
+    /**
+     * Return the standard derivatione of the array elements
+     * over the given axis.
+     * @param  {Number} [axis] 
+     * @param  {NDArray} out  
+     * @return {NDArray}
+     */
+    std : (function() {
+        function withAxis(data, source, offsetStride, axisSize, stride) {
+            var cursor = 0;
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
+                for (var i = 0; i < stride; i++) {
+                    var sum = 0;
+                    var idx =  i + offset;
+                    for (var j = 0; j < axisSize; j++) {
+                        sum += source[idx];
+                        idx += stride;
+                    }
+                    var mean = sum / axisSize;
+                    var moments = 0;
+                    idx =  i + offset;
+                    for (var j = 0; j < axisSize; j++) {
+                        var diff = source[idx] - mean;
+                        moments += diff * diff;
+                        idx += stride;
+                    }
+                    data[cursor++] = Math.sqrt(moments / axisSize);
+                }
+            }
+        }
+        function withFlatten(source) {
+            var sum = 0;
+            var len = source.length;
+            for (var i = 0; i < len; i++) {
+                sum += source[i];
+            }
+            var mean = sum / len;
+            var moments = 0;
+            for (var i = 0; i < len; i++) {
+                var diff = source[i] - mean;
+                moments += diff * diff;
+            }
+            return Math.sqrt(moments / len);
+        }
+        return function(axis, out) {
+            return this._withPreprocess1(
+                axis, out,
+                withAxis, withFlatten
+            );
+        };
+    })().kwargs(),
+    
+    /**
+     * Peak to peak (maximum - minimum) value along a given axis.
+     * @param  {Number} [axis] 
+     * @param  {NDArray} out  
+     * @return {NDArray}
+     */
+    ptp : (function() {
+        function withAxis(data, source, offsetStride, axisSize, stride) {
+            var cursor = 0;
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
+                for (var i = 0; i < stride; i++) {
+                    var idx = offset + i;
+                    var min = source[idx];
+                    var max = source[idx];
+                    for (var j = 0; j < axisSize; j++) {
+                        var d = source[idx];
+                        if (d < min) {
+                            min = d;
+                        }
+                        if (d > max) {
+                            max = d;
+                        }
+                        idx += stride;
+                    }
+                    data[cursor++] = max - min;
+                }
+            }
+        }
+        function withFlatten(source) {
+            var min = source[0];
+            var max = source[0];
+            for (var i = 1; i < this._size; i++) {
+                if (source[i] < min) {
+                    min = source[i];
+                }
+                if (source[i] > max) {
+                    max = source[i];
+                }
+            }
+            return max - min;
+        }
+        return function(axis, out) {
+            return this._withPreprocess1(
+                axis, out,
+                withAxis, withFlatten
+            );
+        };
+    })().kwargs(),
+
+    /**
+     * 
+     * @param {Number} [axis]
+     * @param {string} [order='ascending']
+     *        'ascending' | 'descending'
+     * @return {NDArray}
+     */
+    // FIXME : V8 is quick sort, firefox and safari is merge sort
+    // order : ascending or desc
+    sort : function(axis, order) {
+        if (axis < 0) {
+            axis = this._shape.length + axis;
+        }
+        var compareFunc;
+        if (order === 'ascending') {
+            compareFunc = function(a, b) {
+                return a - b;
+            };
+        } else if( order === 'descending') {
+            compareFunc = function(a, b) {
+                return b - a;
+            };
+        }
+
+        var source = this._array;
+        var stride = calculateDimStride(this._shape, axis);
+        var axisSize = this._shape[axis];
+
+        var offsetStride = stride * axisSize;
+
+        var tmp = new Array(axisSize);
+
+        for (var offset = 0; offset < this._size; offset+=offsetStride) {
+
+            for (var i = 0; i < stride; i++) {
+                var idx = offset + i;
+                for (var j = 0; j < axisSize; j++) {
+                    tmp[j] = source[idx];
+                    idx += stride;
+                }
+                tmp.sort(compareFunc);
+                var idx = offset + i;
+                // Copy back
+                for (var j = 0; j < axisSize; j++) {
+                    source[idx] = tmp[j];
+                    idx += stride;
+                }
+            }
+        }
+
+        return this;
+
+    }.kwargs({axis : -1, order : 'ascending'}),
+
+    /**
+     * 
+     * @param {Number} [axis]
+     * @param {string} [order='ascending']
+     *        'ascending' | 'descending'
+     * @param {NDArray} [out]
+     * @return {NDArray}
+     */
+    argsort : function(axis, order, out) {
+        if (axis < 0) {
+            axis = this._shape.length + axis;
+        }
+        if (!this._size) {
+            return;
+        }
+        if (out && !arrayEqual(this._shape, out._shape)) {
+            throw new Error(broadcastErrorMsg(this._shape, out._shape));
+        }
+        if (!out) {
+            out = new NDArray(this._dtype);
+            out.initFromShape(this._shape);
+        }
+        var data = out._array;
+
+        var compareFunc;
+        if (order === 'ascending') {
+            compareFunc = function(a, b) {
+                return tmp[a] - tmp[b];
+            };
+        } else if( order === 'descending') {
+            compareFunc = function(a, b) {
+                return tmp[b] - tmp[a];
+            };
+        }
+
+        var source = this._array;
+        var stride = calculateDimStride(this._shape, axis);
+        var axisSize = this._shape[axis];
+        var offsetStride = stride * axisSize;
+
+        var tmp = new Array(axisSize);
+        var indexList = new Array(axisSize);
+
+        for (var offset = 0; offset < this._size; offset+=offsetStride) {
+            for (var i = 0; i < stride; i++) {
+                var idx = offset + i;
+                for (var j = 0; j < axisSize; j++) {
+                    tmp[j] = source[idx];
+                    indexList[j] = j;
+                    idx += stride;
+                }
+                indexList.sort(compareFunc);
+                // Copy back
+                var idx = offset + i;
+                for (var j = 0; j < axisSize; j++) {
+                    data[idx] = indexList[j];
+                    idx += stride;
+                }
+            }
+        }
+
+        return out;
+
+    }.kwargs({axis : -1, order : 'ascending'}),
+
+    /**
+     * Return the cumulative sum of the elements along the given axis.
+     * @param  {Number} [axis] 
+     * @param  {NDArray} out  
+     * @return {NDArray}
+     */
+    cumsum : (function() {
+        function withAxis(data, source, offsetStride, axisSize, stride) {
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
+                for (var i = 0; i < stride; i++) {
+                    var idx = offset + i;
+                    var prevIdx = idx;
+                    data[idx] = source[idx];
+                    for (var j = 1; j < axisSize; j++) {
+                        prevIdx = idx;
+                        idx += stride;
+                        data[idx] = data[prevIdx] + source[idx];
+                    }
+
+                }
+            }
+        }
+        function withFlatten(data, source) {
+            data[0] = source[0];
+            for (var i = 1; i < data.length; i++) {
+                data[i] = data[i-1] + source[i];
+            }
+        }
+        return function(axis, out) {
+            return this._withPreprocess2(
+                axis, out,
+                withAxis, withFlatten
+            );
+        };
+    })().kwargs(),
+
+    /**
+     * Return the cumulative product of the elements along the given axis.
+     * @param  {Number} [axis]
+     * @param  {NDArray} out  
+     * @return {NDArray}
+     */
+    cumprod : (function() {
+        function withAxis(data, source, offsetStride, axisSize, stride) {
+            for (var offset = 0; offset < this._size; offset+=offsetStride) {
+                for (var i = 0; i < stride; i++) {
+                    var idx = offset + i;
+                    var prevIdx = idx;
+                    data[idx] = source[idx];
+                    for (var j = 1; j < axisSize; j++) {
+                        prevIdx = idx;
+                        idx += stride;
+                        data[idx] = data[prevIdx] * source[idx];
+                    }
+
+                }
+            }
+        }
+        function withFlatten(data, source) {
+            data[0] = source[0];
+            for (var i = 1; i < data.length; i++) {
+                data[i] = data[i-1] * source[i];
+            }
+        }
+        return function(axis, out) {
+            return this._withPreprocess2(
+                axis, out,
+                withAxis, withFlatten
+            );
+        };
+    })().kwargs(),
+
+    /**
+     * Dot product of two arrays.
+     * 
+     * @param  {NDArray|Number} b
+     * @param  {NDArray}        [out]
+     * @return {NDArray|Number}
+     */
+    dot : function() {
+        console.warn('TODO');
+    },
+
+    /**
+     * Mapped to region [min, max]
+     * @param {Number} mappedMin
+     * @param {Number} mappedMax
+     */
+    map : function(mappedMin, mappedMax) {
+        var input = this._array;
+        var output = this._array;
+
+        var min = input[0];
+        var max = input[0];
+        var l = this._size;
+        for (var i = 1; i < l; i++) {
+            var val = input[i];
+            if (val < min) {
+                min = val;
+            }
+            if (val > max) {
+                max = val;
+            }
+        }
+        var range = max - min;
+        var mappedRange = mappedMax - mappedMin;
+        for (var i = 0; i < l; i++) {
+            if (range === 0) {
+                output[i] = mappedMin;
+            } else {
+                var val = input[i];
+                var percent = (val - min) / range;
+                output[i] = mappedRange * percent + mappedMin;
+            }
+        }
+        return this;
+    },
+
+    /**
+     * Add
+     */
+    add : function(rightOperand, out) {
+        return this.binaryOperation(
+            this, rightOperand, E_ADD, out 
+        );
+    },
+
+    /**
+     * Substract
+     */
+    sub : function(rightOperand, out) {
+        return this.binaryOperation(
+            this, rightOperand, E_SUB, out
+        );
+    },
+
+    /**
+     * Multiply
+     */
+    mul : function(rightOperand, out) {
+        return this.binaryOperation(
+            this, rightOperand, E_MUL, out
+        );
+    },
+
+    /**
+     * Divide
+     */
+    div : function(rightOperand, out) {
+        return this.binaryOperation(
+            this, rightOperand, E_DIV, out
+        );
+    },
+    /**
+     * mod
+     */
+    mod : function(rightOperand, out) {
+        return this.binaryOperation(
+            this, rightOperand, E_MOD, out
+        );
+    },
+    /**
+     * and
+     */
+    and : function(rightOperand, out) {
+        return this.binaryOperation(
+            this, rightOperand, E_AND, out
+        );
+    },
+    /**
+     * or
+     */
+    or : function(rightOperand, out) {
+        return this.binaryOperation(
+            this, rightOperand, E_OR, out
+        );
+    },
+    /**
+     * xor
+     */
+    xor : function(rightOperand, out) {
+        return this.binaryOperation(
+            this, rightOperand, E_XOR, out
+        );
+    },
+    /**
+     * equal
+     */
+    equal : function(rightOperand) {
+        return this.binaryOperation(
+            this, rightOperand, E_EQL, out
+        );
+    },
+
+    binaryOperation : function(lo, ro, op, out) {
+        // Broadcasting
+        // http://docs.scipy.org/doc/numpy/user/basics.broadcasting.html
+        var shape = [];
+        var isLoScalar = typeof(lo) === 'number';
+        var isRoScalar = typeof(ro) === 'number';
+        if (isLoScalar) {
+            shape = ro._shape.slice();
+        } else if (isRoScalar) {
+            shape = lo._shape.slice();
+        } else {
+            // Starts with the trailing dimensions
+            var cl = lo._shape.length-1;
+            var cr = ro._shape.length-1;
+            var loBroadCasted = lo;
+            var roBroadCasted = ro;
+            while (cl >= 0 && cr >= 0) {
+                if (lo._shape[cl] == 1) {
+                    shape.unshift(ro._shape[cr]);
+                    loBroadCasted = lo.repeat(ro._shape[cr], cl);
+                } else if(ro._shape[cr] == 1) {
+                    shape.unshift(lo._shape[cl]);
+                    roBroadCasted = ro.repeat(lo._shape[cl], cr);
+                } else if(ro._shape[cr] == lo._shape[cl]) {
+                    shape.unshift(lo._shape[cl]);
+                } else {
+                    throw new Error(broadcastErrorMsg(lo._shape, ro._shape));
+                }
+                cl --;
+                cr --;
+            }
+            for (var i = cl; i >= 0; i--) {
+                shape.unshift(lo._shape[i]);
+            }
+            for (var i = cr; i >= 0; i--) {
+                shape.unshift(ro._shape[i]);
+            }
+            lo = loBroadCasted;
+            ro = roBroadCasted;
+        }
+        if (!out) {
+            out = new NDArray(this._dtype);
+            out.initFromShape(shape);
+        } else {
+            if (! arrayEqual(shape, out._shape)) {
+                throw new Error(broadcastErrorMsg(shape, out._shape));
+            }
+        }
+        var outData = out._array;
+        
+        var diffAxis;
+        var isLoLarger;
+        var loData;
+        var roData;
+        if (isLoScalar) {
+            diffAxis = ro._shape.length-1;
+            isLoLarger = false;
+            loData = lo;
+            roData = ro._array;
+        } else if(isRoScalar) {
+            diffAxis = lo._shape.length-1;
+            isLoLarger = true;
+            roData = ro;
+            loData = lo._array;
+        } else {
+            diffAxis = Math.abs(lo._shape.length - ro._shape.length);
+            isLoLarger = lo._shape.length >= ro._shape.length;
+            loData = lo._array;
+            roData = ro._array;
+        }
+        var stride = calculateDimStride(shape, diffAxis);
+        var axisSize = shape[diffAxis];
+
+        var offsetStride = stride * axisSize;
+        var offsetRepeats = out._size / offsetStride;
+
+        var _a, _b, res;
+        var idx = 0;
+        if (isLoLarger) {
+            if(isRoScalar) {
+                for (var c = 0; c < offsetRepeats; c++) {
+                    for (var i = 0; i < offsetStride; i++) {
+                        _a = loData[idx]; _b = roData;
+                        switch (op) {
+                            case E_ADD: res = _a + _b; break;
+                            case E_SUB: res = _a - _b; break;
+                            case E_MUL: res = _a * _b; break;
+                            case E_DIV: res = _a / _b; break;
+                            case E_MOD: res = _a % _b; break;
+                            case E_AND: res = _a & _b; break;
+                            case E_OR: res = _a | _b; break;
+                            case E_XOR: res = _a ^ _b; break;
+                            case E_EQL: res = _a == _b; break;
+                            default: throw new Error('Unkown operation ' + op);
+                        }
+                        outData[idx] = res;
+                        idx ++;
+                    }
+                }
+            } else {
+                for (var c = 0; c < offsetRepeats; c++) {
+                    for (var i = 0; i < offsetStride; i++) {
+                        _a = loData[idx]; _b = roData[i];
+                        switch (op) {
+                            case E_ADD: res = _a + _b; break;
+                            case E_SUB: res = _a - _b; break;
+                            case E_MUL: res = _a * _b; break;
+                            case E_DIV: res = _a / _b; break;
+                            case E_MOD: res = _a % _b; break;
+                            case E_AND: res = _a & _b; break;
+                            case E_OR: res = _a | _b; break;
+                            case E_XOR: res = _a ^ _b; break;
+                            case E_EQL: res = _a == _b; break;
+                            default: throw new Error('Unkown operation ' + op);
+                        }
+                        outData[idx] = res;
+                        idx ++;
+                    }
+                }
+            }
+        } else {
+            if (isLoScalar) {
+                for (var c = 0; c < offsetRepeats; c++) {
+                    for (var i = 0; i < offsetStride; i++) {
+                        _a = loData; _b = roData[idx];
+                        switch (op) {
+                            case E_ADD: res = _a + _b; break;
+                            case E_SUB: res = _a - _b; break;
+                            case E_MUL: res = _a * _b; break;
+                            case E_DIV: res = _a / _b; break;
+                            case E_MOD: res = _a % _b; break;
+                            case E_AND: res = _a & _b; break;
+                            case E_OR: res = _a | _b; break;
+                            case E_XOR: res = _a ^ _b; break;
+                            case E_EQL: res = _a == _b; break;
+                            default: throw new Error('Unkown operation ' + op);
+                        }
+                        outData[idx] = res;
+                        idx ++;
+                    }
+                }
+            } else {
+                for (var c = 0; c < offsetRepeats; c++) {
+                    for (var i = 0; i < offsetStride; i++) {
+                        _a = loData[idx]; _b = roData[i];
+                        switch (op) {
+                            case E_ADD: res = _a + _b; break;
+                            case E_SUB: res = _a - _b; break;
+                            case E_MUL: res = _a * _b; break;
+                            case E_DIV: res = _a / _b; break;
+                            case E_MOD: res = _a % _b; break;
+                            case E_AND: res = _a & _b; break;
+                            case E_OR: res = _a | _b; break;
+                            case E_XOR: res = _a ^ _b; break;
+                            case E_EQL: res = _a == _b; break;
+                            default: throw new Error('Unkown operation ' + op);
+                        }
+                        outData[idx] = res;
+                        idx ++;
+                    }
+                }
+            }
+        }
+        return out;
+    },
+
+    /**
+     * negtive
+     */
+    neg : function() {
+        var data = this._array;
+        for (var i = 0; i < this._size; i++) {
+            data[i] = -data[i];
+        }
+        return this;
+    },
+
+    /**
+     * @return {NDArray} this
+     */
+    sin : function() {
+        return this._mathAdapter(Math.sin);
+    },
+
+    /**
+     * @return {NDArray} this
+     */
+    cos : function() {
+        return this._mathAdapter(Math.cos);
+    },
+
+    /**
+     * @return {NDArray} this
+     */
+    tan : function() {
+        return this._mathAdapter(Math.tan);
+    },
+
+    /**
+     * @return {NDArray} this
+     */
+    abs : function() {
+        return this._mathAdapter(Math.abs);
+    },
+
+    /**
+     * @return {NDArray} this
+     */
+    log : function() {
+        return this._mathAdapter(Math.log);
+    },
+
+    /**
+     * @return {NDArray} this
+     */
+    sqrt : function() {
+        return this._mathAdapter(Math.sqrt);
+    },
+
+    /**
+     * @return {NDArray} this
+     */
+    ceil : function() {
+        return this._mathAdapter(Math.ceil);
+    },
+
+    /**
+     * @return {NDArray} this
+     */
+    floor : function() {
+        return this._mathAdapter(Math.floor);
+    },
+    
+    /**
+     * @return {NDArray} this
+     */
+    pow : function(exp) {
+        var data = this._array;
+        for (var i = 0; i < this._size; i++) {
+            data[i] = Math.pow(data[i], exp);
+        }
+        return this;
+    },
+
+    _mathAdapter : function(mathFunc) {
+        var data = this._array;
+        for (var i = 0; i < this._size; i++) {
+            data[i] = mathFunc(data[i]);
+        }
+        return this;
+    },
+
+    /**
+     * @param   {Number} decimals
+     * @return  {NDArray} this
+     */
+    round : function(decimals) {
+        decimals = Math.floor(decimals || 0);
+        var offset = Math.pow(10, decimals);
+        var data = this._array;
+        if (decimals === 0) {
+            for (var i = 0; i < this._size; i++) {
+                data[i] = Math.round(data[i]);
+            }
+        } else {
+            for (var i = 0; i < this._size; i++) {
+                data[i] = Math.round(data[i] * offset) / offset;
+            }
+        }
+        return this;
+    },
+    /**
+     * @param {Number} min
+     * @param {Number} max
+     * Clip to [min, max]
+     */
+    clip : function(min, max) {
+        // TODO : Support array_like param
+        var data = this._array;
+        for (var i = 0; i < this._size; i++) {
+            data[i] = Math.max(Math.min(data[i], max), min);
+        }
+        return this;
+    },
+
+    /**
+     * Indexing array, support range indexing
+     * @param {string} index
+     *        Index syntax can be an integer 1, 2, 3
+     *        Or more complex range indexing
+     *        '1:2'
+     *        '1:2, 1:2'
+     *        '1:2, :'
+     *        More about the indexing syntax can check the doc of numpy ndarray
+     * @param {NDArray} [out]
+     * @return {NDArray} New created sub array, or out if given
+     */
+    get : function(index, out) {
+        if (typeof(index) == 'number') {
+            index = index.toString();
+        }
+        var strides = calculateDimStrides(this._shape);
+        var res = this._parseRanges(index);
+        var ranges = res[0];
+        var shape = res[1];
+
+        if (ranges.length > this._shape.length) {
+            throw new Error('Too many indices');
+        }
+        // Get data
+        var len = ranges.length;
+        var data;
+        if (shape.length) {
+            out = new NDArray(this._dtype);
+            out.initFromShape(shape);
+            data = out._array;
+        } else {
+            data = [];
+        }
+
+        var source = this._array;
+        var cursor = 0;
+        function getPiece(axis, offset) {
+            var range = ranges[axis];
+            var stride = strides[axis];
+            if (axis < len-1) {
+                if (range[2] > 0) {
+                    for (var i = range[0]; i < range[1]; i += range[2]) {
+                        getPiece(axis+1,  offset + stride * i);
+                    }
+                } else {
+                    for (var i = range[0]; i > range[1]; i += range[2]) {
+                        getPiece(axis+1,  offset + stride * i);
+                    }
+                }
+            } else {
+                if (range[2] > 0) {
+                    for (var i = range[0]; i < range[1]; i += range[2]) {
+                        for (var j = 0; j < stride; j++) {
+                            data[cursor++] = source[i*stride + j + offset];
+                        }
+                    }
+                } else {
+                    for (var i = range[0]; i > range[1]; i += range[2]) {
+                        for (var j = 0; j < stride; j++) {
+                            data[cursor++] = source[i*stride + j + offset];
+                        }
+                    }
+                }
+            }
+        }
+
+        getPiece(0, 0);
+
+        if (shape.length) {
+            // Return scalar
+            return out;
+        } else {
+            return data[0];
+        }
+            
+    },
+
+    /**
+     * 
+     * @param {string} index
+     *        index syntax can be an integer 1, 2, 3
+     *        Or more complex range indexing
+     *        '1:2'
+     *        '1:2, 1:2'
+     *        '1:2, :'
+     *        More about the indexing syntax can check the doc of numpy ndarray
+     * @param {NDArray} ndarray Ndarray data source
+     * @return {NDArray} this
+     */
+    set : function(index, narray) {
+        if (typeof(index) == 'number') {
+            index = index.toString();
+        }
+        var strides = calculateDimStrides(this._shape);
+        var res = this._parseRanges(index);
+        var ranges = res[0];
+        var shape = res[1];
+
+        if (ranges.length > this._shape.length) {
+            throw new Error('Too many indices');
+        }
+        var isScalar = typeof(narray) == 'number';
+        var len = ranges.length;
+        var data = this._array;
+        if (isScalar) {
+            // Set with a single scalar
+            var source = narray;
+        } else {
+            if (!arrayEqual(shape, narray.shape())) {
+                throw new Error(broadcastErrorMsg(shape, narray.shape()));
+            }
+            var source = narray._array;
+        }
+        var cursor = 0;
+        var setPiece = function(axis, offset) {
+            var range = ranges[axis];
+            var stride = strides[axis];
+            if (axis < len-1) {
+                if (range[2] > 0) {
+                    for (var i = range[0]; i < range[1]; i += range[2]) {
+                        setPiece(axis+1,  offset + stride * i);
+                    }
+                } else {
+                    for (var i = range[0]; i > range[1]; i += range[2]) {
+                        setPiece(axis+1,  offset + stride * i);
+                    }
+                }
+            } else {
+                if (range[2] > 0) {
+                    for (var i = range[0]; i < range[1]; i += range[2]) {
+                        for (var j = 0; j < stride; j++) {
+                            if (isScalar) {
+                                data[i*stride + j + offset] = source;
+                            } else {
+                                data[i*stride + j + offset] = source[cursor++];
+                            }
+                        }
+                    }
+                } else {
+                    for (var i = range[0]; i > range[1]; i += range[2]) {
+                        for (var j = 0; j < stride; j++) {
+                            if (isScalar) {
+                                data[i*stride + j + offset] = source;
+                            } else {
+                                data[i*stride + j + offset] = source[cursor++];
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        setPiece(0, 0);
+
+        return this;
+    },
+
+    /**
+     * Insert values along the given axis before the given indices.
+     * @param  {Number|Array} obj
+     *         Object that defines the index or indices before 
+     *         which values is inserted.
+     * @param  {Number|Array|NDArray} values
+     *         Values to insert
+     * @param  {Number} [axis]
+     * @return {NDArray} this
+     */
+    insert : function(obj, values, axis) {
+        var data = this._array;
+        var isObjScalar = false;
+        if (typeof(obj) === 'number') {
+            obj = [obj];
+            isObjScalar = true;
+        }
+        if (typeof(values) === 'number') {
+            values = new NDArray([values]);
+        } else if (values instanceof Array) {
+            values = new NDArray(values);
+        }
+
+        if (typeof(axis) === 'undefined') {
+            this._shape = [this._size];
+            axis = 0;
+        }
+        // Checking if indices is valid
+        var prev = obj[0];
+        var axisSize = this._shape[axis];
+        for (var i = 0; i < obj.length; i++) {
+            if (obj[i] < 0) {
+                obj[i] = axisSize + obj[i];
+            }
+            if (obj[i] > axisSize) {
+                throw new Error(indexOutofBoundsErrorMsg(obj[i]));   
+            }
+            if (obj[i] < prev) {
+                throw new Error('Index must be in ascending order');
+            }
+            prev = obj[i];
+        }
+        // Broadcasting
+        var targetShape = this._shape.slice();
+        if (isObjScalar) {
+            targetShape.splice(axis, 1);
+        } else {
+            targetShape[axis] = obj.length;
+        }
+
+        var sourceShape = values._shape;
+        var cs = sourceShape.length - 1;
+        var ct = targetShape.length - 1;
+
+        var valueBroadcasted = values;
+        while (cs >= 0 && ct >= 0) {
+            if (sourceShape[cs] === 1) {
+                valueBroadcasted = values.repeat(targetShape[ct], cs);
+            } else if(sourceShape[cs] !== targetShape[ct]) {
+                throw new Error(broadcastErrorMsg(sourceShape, targetShape));
+            }
+            cs --;
+            ct --;
+        }
+        values = valueBroadcasted;
+
+        // Calculate indices to insert
+        var stride = calculateDimStride(this._shape, axis);
+        var axisSize = this._shape[axis];
+        var offsetStride = axisSize * stride;
+        var offsetRepeats = this._size / offsetStride;
+
+        var objLen = obj.length;
+        var indices = new Uint32Array(offsetRepeats * objLen);
+
+        var cursor = 0;
+        for (var offset = 0; offset < this._size; offset += offsetStride) {
+            for (var i = 0; i < objLen; i++) {
+                var objIdx = obj[i];
+                indices[cursor++] = offset + objIdx * stride;
+            }
+        }
+
+        var resShape = this._shape.slice();
+        resShape[axis] += obj.length;
+        var resSize = getSize(resShape);
+        if (this._array.length < resSize) {
+            var data = new ArrayConstructor[this._dtype](resSize);
+        } else {
+            var data = this._array;
+        }
+        var source = this._array;
+        var valuesArr = values._array;
+
+        var idxCursor = indices.length - 1;
+        var end = this._size;
+        var start = indices[idxCursor];
+        var dataCursor = resSize - 1;
+        var valueCursor = values._size - 1;
+        while (idxCursor >= 0) {
+            // Copy source data;
+            for (var i = end - 1; i >= start; i--) {
+                data[dataCursor--] = source[i];
+            }
+            end = start;
+            start = indices[--idxCursor];
+            // Copy inserted data;
+            for (var i = 0; i < stride; i++) {
+                if (valueCursor < 0) {
+                    valueCursor = values._size - 1;
+                }
+                data[dataCursor--] = valuesArr[valueCursor--];
+            }
+        }
+        // Copy the rest
+        for (var i = end - 1; i >= 0; i--) {
+            data[dataCursor--] = source[i];
+        }
+
+        this._array = data;
+        this._shape = resShape;
+        this._size = resSize;
+
+        return this;
+    }.kwargs(),
+
+    append : function() {
+        console.warn('TODO');
+    }.kwargs(),
+
+    /**
+     * Delete values along the axis
+     * @param  {Array|Number} obj
+     * @param  {Number} [axis]
+     * @return {NDArray} this
+     */
+    'delete' : function(obj, axis) {
+        var data = this._array;
+        if (typeof(obj) === 'number') {
+            obj = [obj];
+        }
+        var size = this._size;
+
+        if (typeof(axis) === 'undefined') {
+            this._shape = [size];
+            axis = 0;
+        }
+
+        var stride = calculateDimStride(this._shape, axis);
+        var axisSize = this._shape[axis];
+
+        var offsetStride = stride * axisSize;
+        var cursor = 0;
+        for (var offset = 0; offset < size; offset += offsetStride) {
+            var start = 0;
+            var end = obj[0];
+            var objCursor = 0;
+            while(objCursor < obj.length) {
+                if (end < 0) {
+                    end = end + axisSize;
+                }
+                if (end > axisSize) {
+                    throw new Error(indexOutofBoundsErrorMsg(end));
+                }
+                if (end < start) {
+                    throw new Error('Index must be in ascending order');
+                }
+                for (var i = start; i < end; i++) {
+                    for (var j = 0; j < stride; j++) {
+                        data[cursor++] = data[i * stride + j + offset];
+                    }
+                }
+                start = end + 1;
+                end = obj[++objCursor];
+            }
+            // Copy the rest
+            for (var i = start; i < axisSize; i++) {
+                for (var j = 0; j < stride; j++) {
+                    data[cursor++] = data[i * stride + j + offset];
+                }
+            }
+        }
+        this._shape[axis] -= obj.length;
+        this._size -= stride * obj.length;
+
+        return this;
+    }.kwargs(),
+
+    _parseRanges : function(index) {
+        var rangesStr = index.split(/\s*,\s*/);
+        
+        // Parse range of each axis
+        var ranges = [];
+        var shape = [];
+        var j = 0;
+        for (var i = 0; i < rangesStr.length; i++) {
+            if (rangesStr[i] === '...') {
+                var end = this._shape.length - (rangesStr.length - i);
+                while (j <= end) {
+                    ranges.push([0, this._shape[j], 1]);
+                    shape.push(this._shape[j]);
+                    j++;
+                }
+            } else {
+                var range = parseRange(rangesStr[i], this._shape[j]);
+                ranges.push(range);
+                if(rangesStr[i].indexOf(':') >= 0) {
+                    var size = Math.floor((range[1] - range[0]) / range[2]);
+                    size = size < 0 ? 0 : size;
+                    // Get a range not a item
+                    shape.push(size);
+                }
+                j++;
+            }
+        }
+        // Copy the lower dimension size
+        for (; j < this._shape.length; j++) {
+            shape.push(this._shape[j]);
+        }
+
+        return [ranges, shape];
+    },
+
+    /**
+     * Export normal js array
+     * @return {Array}
+     */
+    toArray : function() {
+        var data = this._array;
+        var cursor = 0;
+
+        var shape = this._shape;
+        var dim = shape.length;
+
+        function create(axis, out) {
+            var len = shape[axis];
+            for (var i = 0; i < len; i++) {
+                if (axis < dim-1) {
+                    create(axis+1, out[i] = []);
+                } else {
+                    out[i] = data[cursor++];
+                }
+            }
+        }
+
+        var output = [];
+        create(0, output);
+
+        return output;
+    },
+
+    /**
+     * Create a copy of self
+     * @return {NDArray}
+     */
+    copy : function() {
+        var numArr = new NDArray();
+        numArr._array = ArraySlice.call(this._array);
+        numArr._shape = this._shape.slice();
+        numArr._dtype = this._dtype;
+        numArr._size = this._size;
+
+        return numArr;
+    },
+
+    constructor : NDArray
+};
+
+/**
+ * 
+ * @param  {Number} [min=0]
+ * @param  {Number} max
+ * @param  {Number} [step=1]
+ * @param  {string} [dtype]
+ * @return {NDArray}
+ */
+NDArray.range = function(min, max, step, dtype) {
+    var args = ArraySlice.call(arguments);
+    // Last argument describe the data type of ndarray
+    var lastArg = args[args.length-1];
+    if (typeof(lastArg) == 'string') {
+        var dtype = lastArg;
+        args.pop();
+    }
+    if (args.length === 1) {
+        max = args[0];
+        step = 1;
+        min = 0;
+    } else if(args.length == 2) {
+        step = 1;
+    }
+    dtype = dtype || 'number';
+
+    var array = new ArrayConstructor[dtype](Math.ceil((max - min)/step));
+    var cursor = 0;
+    for (var i = min; i < max; i+=step) {
+        array[cursor++] = i;
+    }
+    var ndarray = new NDArray();
+    ndarray._array = array;
+    ndarray._shape = [array.length];
+    ndarray._dtype = dtype;
+    ndarray._size = array.length;
+
+    return ndarray;
+
+}.kwargs();
+
+/**
+ * 
+ * @param  {Array}  shape 
+ * @param  {String} [dtype] 
+ * @return {NDArray}       
+ */
+NDArray.zeros = function(shape, dtype) {
+    var ret = new NDArray(dtype);
+    ret.initFromShape(shape);
+    return ret;
+}.kwargs();
+
+/**
+ * Python like array indexing
+ * http://www.python.org/dev/peps/pep-0204/
+ * 
+ * @param   {string} index
+ *          index can be a simple integer 1,2,3,
+ *          or a range 2:10, 2:10:1
+ *          example :
+ *              2:10    =>  [2, 10, 1],
+ *              10:2:-2 =>  [10, 2, -2],
+ *              :       =>  [0, dimSize, 1],
+ *              ::-1    =>  [dimSize-1, -1, -1],
+ * @param   {number} dimSize
+ * @return  {Array} a tuple array [startOffset, endOffset, sliceStep]
+ */
+function parseRange(index, dimSize) {
+    if (index.indexOf(':') >= 0) {
+        // Range indexing;
+        var res = index.split(/\s*:\s*/);
+
+        var step = parseInt(res[2] || 1, 10);
+        var start, end;
+        if (step === 0) {
+            throw new Error('Slice step cannot be zero');
+        }
+        else if (step > 0) {
+            start = parseInt(res[0] || 0, 10);
+            end = parseInt(res[1] || dimSize, 10);
+        }
+        else {
+            start = parseInt(res[0] || dimSize - 1, 10);
+            end = parseInt(res[1] || -1, 10);
+        }
+        // Negtive offset
+        if (start < 0) {
+            start = dimSize + start;
+        }
+        // Negtive offset
+        if (end < 0 && res[1]) {
+            end = dimSize + end;
+        }
+        if (step > 0) {
+            // Clamp to [0-dimSize]
+            start = Math.max(Math.min(dimSize, start), 0);
+            // Clamp to [0-dimSize]
+            end = Math.max(Math.min(dimSize, end), 0);
+        } else {
+            // Clamp to [0-dimSize)
+            start = Math.max(Math.min(dimSize-1, start), -1);
+            // Clamp to [0-dimSize)
+            end = Math.max(Math.min(dimSize-1, end), -1);
+        }
+        return [start, end, step];
+    } else {
+        var start = parseInt(index, 10);
+        // Negtive offset
+        if (start < 0) {
+            start = dimSize + start;
+        }
+        if (start < 0 || start > dimSize) {
+            throw new Error(indexOutofBoundsErrorMsg(index));
+        }
+        // Clamp to [0-dimSize)
+        start = Math.max(Math.min(dimSize-1, start), 0);
+        return [start, start+1, 1];
+    }
+}
+
+function getSize(shape) {
+    var size = shape[0];
+    for (var i = 1; i < shape.length; i++) {
+        size *= shape[i];
+    }
+    return size;
+}
+
+function getDimension(array) {
+    var dim = 1;
+    var el = array[0];
+    while (el instanceof Array) {
+        el = el[0];
+        dim ++;
+    }
+    return dim;
+}
+
+function getShape(array) {
+    var shape = [array.length];
+    var el = array[0];
+    while (el instanceof Array) {
+        shape.push(el.length);
+        el = el[0];
+    }
+    return shape;
+}
+
+function calculateDimStride(shape, axis) {
+    if (axis == shape.length-1) {
+        return 1;
+    }
+    var stride = shape[axis+1];
+    for (var i = axis+2; i < shape.length; i++) {
+        stride *= shape[i];
+    }
+    return stride;
+}
+
+function calculateDimStrides(shape) {
+    // Calculate stride of each axis
+    var strides = [];
+    var tmp = 1;
+    var len = getSize(shape);
+    for (var i = 0; i < shape.length; i++) {
+        tmp *= shape[i];
+        strides.push(len / tmp);
+    }
+
+    return strides;
+}
+
+function arrayEqual(arr1, arr2) {
+    if (arr1.length !== arr2.length) {
+        return false;
+    }
+    for (var i = 0; i <arr1.length; i++) {
+        if (arr1[i] !==  arr2[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function broadcastErrorMsg(shape1, shape2) {
+    return 'Shape (' 
+            + shape1.toString() + ') (' + shape2.toString()
+            +') could not be broadcast together';
+}
+
+function axisOutofBoundsErrorMsg(axis) {
+    return 'Axis ' + axis + ' out of bounds';
+}
+
+function indexOutofBoundsErrorMsg(idx) {
+    return 'Index ' + idx + ' out of bounds';
+}
+
+return NDArray;
+
+});
 /**
  * echarts图表类：力导向图
  *
- * @author pissang (shenyi01@baidu.com)
+ * @author pissang (https://github.com/pissang/)
  *
  */
 
-define('echarts/chart/force',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/config','zrender/tool/event','zrender/tool/util','zrender/tool/vector','../chart'],function(require) {
+define('echarts/chart/force',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/config','zrender/tool/event','zrender/tool/util','zrender/tool/vector','../util/ndarray','../chart'],function(require) {
     
     /**
      * 构造函数
@@ -24347,13 +27243,14 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
         var zrUtil = require('zrender/tool/util');
         var vec2 = require('zrender/tool/vector');
 
+        var NDArray = require('../util/ndarray');
+
         var self = this;
         self.type = ecConfig.CHART_TYPE_FORCE;
 
         var series;
 
         var forceSerie;
-        // var forceSerieIndex;
 
         var nodeShapes = [];
         var linkShapes = [];
@@ -24389,6 +27286,7 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
         
         //- ----------外部参数
         var density;
+        var initSize;
         var coolDown;
         var centripetal;
         // var initializeSize; // defined but never used
@@ -24527,8 +27425,14 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                 var node = nodes[i];
                 radius.push(node.value);
             }
-            _map(radius, radius, minRadius, maxRadius);
-            _normalize(nodeWeights, radius);
+
+            var narr = new NDArray(radius);
+            radius = narr.map(minRadius, maxRadius)
+                        .toArray();
+            var max = narr.max();
+            if (max !== 0) {
+                nodeWeights = narr.mul(1/max, narr).toArray();
+            }
 
             for (var i = 0; i < l; i++) {
                 var node = nodes[i];
@@ -24712,7 +27616,12 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
 
                 zr.addShape(shape);
             }
-            _normalize(linkWeights, linkWeights);
+
+            var narr = new NDArray(linkWeights);
+            var max = narr.max();
+            if (max !== 0) {
+                linkWeights = narr.mul(1/max, narr).toArray();
+            }
         }
 
         function _updateLinkShapes(){
@@ -24968,46 +27877,6 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
 
         init(option, component);
     }
-
-
-    function _map(output, input, mappedMin, mappedMax) {
-        var min = input[0];
-        var max = input[0];
-        var l = input.length;
-        for (var i = 1; i < l; i++) {
-            var val = input[i];
-            if (val < min) {
-                min = val;
-            }
-            if (val > max) {
-                max = val;
-            }
-        }
-        var range = max - min;
-        var mappedRange = mappedMax - mappedMin;
-        for (var i = 0; i < l; i++) {
-            if (range === 0) {
-                output[i] = mappedMin;
-            } else {
-                var val = input[i];
-                var percent = (val - min) / range;
-                output[i] = mappedRange * percent + mappedMin;
-            }
-        }
-    }
-
-    function _normalize(output, input) {
-        var l = input.length;
-        var max = input[0];
-        for (var i = 1; i < l; i++) {
-            if (input[i] > max) {
-                max = input[i];
-            }
-        }
-        for (var i = 0; i < l; i++) {
-            output[i] = input[i] / max;
-        }
-    }
     
     /*
     function _randomInCircle(x, y, radius) {
@@ -25044,13 +27913,139 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
     return Force;
 });
 /**
+ * zrender
+ *
+ * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ *
+ * shape类：支持半平滑的polygon，折线面积图使用
+ * 可配图形属性：
+   {
+       // 基础属性
+       shape  : 'halfSmoothPolygon',      // 必须，shape类标识，需要显式指定
+       id     : {string},       // 必须，图形唯一标识，可通过zrender实例方法newShapeId生成
+       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
+       invisible : {boolean},   // 默认为false，是否可见
+
+       // 样式属性，默认状态样式样式属性
+       style  : {
+           pointList     : {Array},   // 必须，多边形各个顶角坐标
+           brushType     : {string},  // 默认为fill，绘画方式
+                                      // fill(填充) | stroke(描边) | both(填充+描边)
+           color         : {color},   // 默认为'#000'，填充颜色，支持rgba
+           strokeColor   : {color},   // 默认为'#000'，描边颜色（轮廓），支持rgba
+           lineWidth     : {number},  // 默认为1，线条宽度，描边下有效
+
+           opacity       : {number},  // 默认为1，透明度设置，如果color为rgba，则最终透明度效果叠加
+           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
+           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
+           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
+           shadowOffsetY : {number},  // 默认为0，阴影纵向偏移，正值往下，负值往上
+
+           text          : {string},  // 默认为null，附加文本
+           textFont      : {string},  // 默认为null，附加文本样式，eg:'bold 18px verdana'
+           textPosition  : {string},  // 默认为top，附加文本位置。
+                                      // inside | left | right | top | bottom
+           textAlign     : {string},  // 默认根据textPosition自动设置，附加文本水平对齐。
+                                      // start | end | left | right | center
+           textBaseline  : {string},  // 默认根据textPosition自动设置，附加文本垂直对齐。
+                                      // top | bottom | middle |
+                                      // alphabetic | hanging | ideographic
+           textColor     : {color},   // 默认根据textPosition自动设置，默认策略如下，附加文本颜色
+                                      // 'inside' ? '#fff' : color
+       },
+
+       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
+       highlightStyle : {
+           // 同style
+       }
+
+       // 交互属性，详见shape.Base
+
+       // 事件属性，详见shape.Base
+   }
+         例子：
+   {
+       shape  : 'halfSmoothPolygon',
+       id     : '123456',
+       zlevel : 1,
+       style  : {
+           pointList : [[10, 10], [300, 20], [298, 400], [50, 450]]
+           color : '#eee',
+           text : 'Baidu'
+       },
+       myName : 'kener',  // 可自带任何有效自定义属性
+
+       clickable : true,
+       onClick : function(eventPacket) {
+           alert(eventPacket.target.myName);
+       }
+   }
+ */
+define(
+    'echarts/util/shape/halfSmoothPolygon',['require','zrender/shape','zrender/shape/base','zrender/shape'],function(require) {
+        function HalfSmoothPolygon() {
+            this.type = 'halfSmoothPolygon';
+        }
+
+        HalfSmoothPolygon.prototype = {
+            /**
+             * 创建多边形路径
+             * @param {Context2D} ctx Canvas 2D上下文
+             * @param {Object} style 样式
+             */
+            buildPath : function(ctx, style) {
+                var pointList = style.pointList;
+                if (pointList.length < 2) {
+                    // 少于2个点就不画了~
+                    return;
+                }
+                if (style.smooth) {
+                    var controlPoints = this.smoothBezier(
+                        pointList.slice(0, -2), style.smooth
+                    );
+
+                    ctx.moveTo(pointList[0][0], pointList[0][1]);
+                    var cp1;
+                    var cp2;
+                    var p;
+                    var l = pointList.length;
+                    for (var i = 0; i < l - 3; i++) {
+                        cp1 = controlPoints[i * 2];
+                        cp2 = controlPoints[i * 2 + 1];
+                        p = pointList[i + 1];
+                        ctx.bezierCurveTo(
+                            cp1[0], cp1[1], cp2[0], cp2[1], p[0], p[1]
+                        );
+                    }
+                    ctx.lineTo(pointList[l - 2][0], pointList[l - 2][1]);
+                    ctx.lineTo(pointList[l - 1][0], pointList[l - 1][1]);
+                    ctx.lineTo(pointList[0][0], pointList[0][1]);
+                } 
+                else {
+                    require('zrender/shape').get('polygon').buildPath(
+                        ctx, style
+                    );
+                }
+                return;
+            }
+        };
+
+        require('zrender/shape/base').derive(HalfSmoothPolygon);
+        require('zrender/shape').define(
+            'halfSmoothPolygon', new HalfSmoothPolygon()
+        );
+
+        return HalfSmoothPolygon;
+    }
+);
+/**
  * echarts图表类：折线图
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/line',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/color','zrender/shape','zrender/shape','../chart'],function(require) {
+define('echarts/chart/line',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/color','zrender/shape','zrender/shape','../util/shape/halfSmoothPolygon','../chart'],function(require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -25350,7 +28345,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                             y = lastYP;
                             self.shapeList.push(_getCalculableItem(
                                 seriesIndex, i, categoryAxis.getNameByIndex(i),
-                                x, y
+                                x, y, 'horizontal'
                             ));
                         }
                     }
@@ -25470,7 +28465,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                             x = lastXP;
                             self.shapeList.push(_getCalculableItem(
                                 seriesIndex, i, categoryAxis.getNameByIndex(i),
-                                x, y
+                                x, y, 'vertical'
                             ));
                         }
                     }
@@ -25582,7 +28577,8 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                                     lineWidth,
                                     self.deepQuery(
                                         [data, serie], 'symbolRotate'
-                                    )
+                                    ),
+                                    orient
                                 ));
                             }
 
@@ -25598,6 +28594,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                                               || defaultColor,
                                 lineWidth : lineWidth,
                                 lineType : lineType,
+                                smooth : _getSmooth(serie.smooth),
                                 shadowColor : self.deepQuery(
                                   [serie],
                                   'itemStyle.normal.lineStyle.shadowColor'
@@ -25623,7 +28620,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                         
                         if (isFill) {
                             self.shapeList.push({
-                                shape : 'polygon',
+                                shape : 'halfSmoothPolygon',
                                 zlevel : _zlevelBase,
                                 style : {
                                     pointList : singlePL.concat([
@@ -25637,6 +28634,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                                         ]
                                     ]),
                                     brushType : 'fill',
+                                    smooth : _getSmooth(serie.smooth),
                                     color : fillNormalColor
                                             ? fillNormalColor
                                             : zrColor.alpha(defaultColor,0.5)
@@ -25651,11 +28649,29 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
             }
             }
         }
+        
+        function _getSmooth(isSmooth/*, pointList, orient*/) {
+            if (isSmooth) {
+                /* 不科学啊，发现0.3通用了
+                var delta;
+                if (orient == 'horizontal') {
+                    delta = Math.abs(pointList[0][0] - pointList[1][0]);
+                }
+                else {
+                    delta = Math.abs(pointList[0][1] - pointList[1][1]);
+                }
+                */
+                return 0.3;
+            }
+            else {
+                return 0;
+            }
+        }
 
         /**
          * 生成空数据所需的可计算提示图形
          */
-        function _getCalculableItem(seriesIndex, dataIndex, name, x, y) {
+        function _getCalculableItem(seriesIndex, dataIndex, name, x, y, orient) {
             var color = series[seriesIndex].calculableHolderColor
                         || ecConfig.calculableHolderColor;
 
@@ -25664,12 +28680,15 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                 x, y,
                 color,
                 _sIndex2ColorMap[seriesIndex],
-                2
+                2,
+                0,
+                orient
             );
 
             itemShape.hoverable = false;
             itemShape.draggable = false;
-            itemShape.highlightStyle.lineWidth = 20;
+            itemShape.style.text = undefined;
+            //itemShape.highlightStyle.lineWidth = 20;
 
             return itemShape;
         }
@@ -25679,7 +28698,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
          */
         function _getSymbol(
             seriesIndex, dataIndex, name, x, y,
-            normalColor, emphasisColor, lineWidth, rotate
+            normalColor, emphasisColor, lineWidth, rotate, orient
         ) {
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
@@ -25703,7 +28722,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                     lineWidth: lineWidth * 2
                 },
                 highlightStyle : {
-                    color : emphasisColor,
+                    color : symbol.match('empty') ? '#fff' : emphasisColor,
                     strokeColor : emphasisColor
                 },
                 clickable : true
@@ -25731,6 +28750,23 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                 itemShape.draggable = true;
             }
 
+            itemShape = self.addLabel(
+                itemShape, 
+                series[seriesIndex], 
+                series[seriesIndex].data[dataIndex], 
+                name, 
+                orient == 'vertical' ? 'horizontal' : 'vertical'
+            );
+            if (symbol.match('empty')) {
+                if (typeof itemShape.style.textColor == 'undefined') {
+                    itemShape.style.textColor = itemShape.style.strokeColor
+                }
+                if (typeof itemShape.highlightStyle.textColor == 'undefined') {
+                    itemShape.highlightStyle.textColor = 
+                        itemShape.highlightStyle.strokeColor
+                }
+            }
+            
             ecData.pack(
                 itemShape,
                 series[seriesIndex], seriesIndex,
@@ -25968,7 +29004,10 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
             });
         }
     }
-        
+    
+    // 动态扩展zrender shape：halfSmoothPolygon
+    require('../util/shape/halfSmoothPolygon');
+    
     // 图表注册
     require('../chart').define('line', Line);
     
@@ -25981,7 +29020,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/bar',['require','../component/base','./calculableBase','../config','../util/ecData','../chart'],function(require) {
+define('echarts/chart/bar',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/util','../chart'],function(require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -25999,6 +29038,8 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
 
         var ecConfig = require('../config');
         var ecData = require('../util/ecData');
+        
+        var zrUtil = require('zrender/tool/util');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_BAR;
@@ -26246,9 +29287,9 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             categoryAxis.getNameByIndex(i),
                             x, y,
                             barWidthMap[seriesIndex] || barWidth,
-                            barHeight
+                            barHeight,
+                            'vertical'
                         );
-                        barShape._orient = 'vertical';
 
                         self.shapeList.push(barShape);
                     }
@@ -26280,7 +29321,8 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                 categoryAxis.getNameByIndex(i),
                                 x + 1, y,
                                 (barWidthMap[seriesIndex] || barWidth) - 2,
-                                barMinHeightMap[seriesIndex]
+                                barMinHeightMap[seriesIndex],
+                                'vertical'
                             );
                             barShape.hoverable = false;
                             barShape.draggable = false;
@@ -26393,9 +29435,9 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             categoryAxis.getNameByIndex(i),
                             x, y - (barWidthMap[seriesIndex] || barWidth),
                             barHeight,
-                            barWidthMap[seriesIndex] || barWidth
+                            barWidthMap[seriesIndex] || barWidth,
+                            'horizontal'
                         );
-                        barShape._orient = 'horizontal';
 
                         self.shapeList.push(barShape);
                     }
@@ -26429,7 +29471,8 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                 x,
                                 y + 1 - (barWidthMap[seriesIndex] || barWidth),
                                 barMinHeightMap[seriesIndex],
-                                (barWidthMap[seriesIndex] || barWidth) - 2
+                                (barWidthMap[seriesIndex] || barWidth) - 2,
+                                'horizontal'
                             );
                             barShape.hoverable = false;
                             barShape.draggable = false;
@@ -26532,7 +29575,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
          * 生成最终图形数据
          */
         function _getBarItem(
-            seriesIndex, dataIndex, name, x, y, width, height
+            seriesIndex, dataIndex, name, x, y, width, height, orient
         ) {
             var barShape;
             var serie = series[seriesIndex];
@@ -26547,7 +29590,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                 [data, serie],
                 'itemStyle.emphasis.color'
             );
-
+            
             barShape = {
                 shape : 'rectangle',
                 zlevel : _zlevelBase,
@@ -26563,8 +29606,11 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                 },
                 highlightStyle : {
                     color : emphasisColor || normalColor || defaultColor
-                }
+                },
+                _orient : orient
             };
+            
+            barShape = self.addLabel(barShape, serie, data, name, orient);
 
             if (self.deepQuery(
                     [data, serie, option],
@@ -27392,7 +30438,6 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                           'recursive' : true
                       }
                   );
-
             // 圆心坐标，无则为自适应居中
             if (!opt.center 
                 || (opt.center && !(opt.center instanceof Array))) {
@@ -27409,7 +30454,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                     opt.center[1] = Math.round(zr.getHeight() / 2);
                 }
             }
-
+            
             // 传数组实现环形图，[内半径，外半径]，传单个则默认为外半径为
             if (typeof opt.radius == 'undefined') {
                 opt.radius = [
@@ -27458,9 +30503,16 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
             if (newOption) {
                 option = newOption;
                 series = option.series;
+                self.backupAdaptiveParams(series, ['center', 'radius']);
             }
             self.clear();
             _buildShape();
+        }
+        
+        function resize() {
+            // 复位录原始定义
+            self.restoreAdaptiveParams(series, ['center', 'radius']);
+            refresh();
         }
         
         /**
@@ -27927,6 +30979,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
         // 接口方法
         self.init = init;
         self.refresh = refresh;
+        self.resize = resize;
         self.addDataAnimation = addDataAnimation;
         self.animation = animation;
         self.onclick = onclick;

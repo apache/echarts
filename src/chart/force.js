@@ -31,7 +31,7 @@ define(function(require) {
         var zrUtil = require('zrender/tool/util');
         var vec2 = require('zrender/tool/vector');
 
-        var NDArray = require("../util/ndarray");
+        var NDArray = require('../util/ndarray');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_FORCE;

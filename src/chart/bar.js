@@ -23,6 +23,8 @@ define(function(require) {
 
         var ecConfig = require('../config');
         var ecData = require('../util/ecData');
+        
+        var zrUtil = require('zrender/tool/util');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_BAR;
@@ -270,9 +272,9 @@ define(function(require) {
                             categoryAxis.getNameByIndex(i),
                             x, y,
                             barWidthMap[seriesIndex] || barWidth,
-                            barHeight
+                            barHeight,
+                            'vertical'
                         );
-                        barShape._orient = 'vertical';
 
                         self.shapeList.push(barShape);
                     }
@@ -304,7 +306,8 @@ define(function(require) {
                                 categoryAxis.getNameByIndex(i),
                                 x + 1, y,
                                 (barWidthMap[seriesIndex] || barWidth) - 2,
-                                barMinHeightMap[seriesIndex]
+                                barMinHeightMap[seriesIndex],
+                                'vertical'
                             );
                             barShape.hoverable = false;
                             barShape.draggable = false;
@@ -417,9 +420,9 @@ define(function(require) {
                             categoryAxis.getNameByIndex(i),
                             x, y - (barWidthMap[seriesIndex] || barWidth),
                             barHeight,
-                            barWidthMap[seriesIndex] || barWidth
+                            barWidthMap[seriesIndex] || barWidth,
+                            'horizontal'
                         );
-                        barShape._orient = 'horizontal';
 
                         self.shapeList.push(barShape);
                     }
@@ -453,7 +456,8 @@ define(function(require) {
                                 x,
                                 y + 1 - (barWidthMap[seriesIndex] || barWidth),
                                 barMinHeightMap[seriesIndex],
-                                (barWidthMap[seriesIndex] || barWidth) - 2
+                                (barWidthMap[seriesIndex] || barWidth) - 2,
+                                'horizontal'
                             );
                             barShape.hoverable = false;
                             barShape.draggable = false;
@@ -556,7 +560,7 @@ define(function(require) {
          * 生成最终图形数据
          */
         function _getBarItem(
-            seriesIndex, dataIndex, name, x, y, width, height
+            seriesIndex, dataIndex, name, x, y, width, height, orient
         ) {
             var barShape;
             var serie = series[seriesIndex];
@@ -571,7 +575,7 @@ define(function(require) {
                 [data, serie],
                 'itemStyle.emphasis.color'
             );
-
+            
             barShape = {
                 shape : 'rectangle',
                 zlevel : _zlevelBase,
@@ -587,8 +591,11 @@ define(function(require) {
                 },
                 highlightStyle : {
                     color : emphasisColor || normalColor || defaultColor
-                }
+                },
+                _orient : orient
             };
+            
+            barShape = self.addLabel(barShape, serie, data, name, orient);
 
             if (self.deepQuery(
                     [data, serie, option],

@@ -129,13 +129,19 @@ define(function(require) {
             var candleWidth;
             var data;
             var value;
+            var barMaxWidth;
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 seriesIndex = locationMap[j];
                 serie = series[seriesIndex];
                 
                 xAxisIndex = serie.xAxisIndex || 0;
                 categoryAxis = component.xAxis.getAxis(xAxisIndex);
-                candleWidth = Math.floor(categoryAxis.getGap() / 2);
+                candleWidth = serie.barWidth 
+                              || Math.floor(categoryAxis.getGap() / 2);
+                barMaxWidth = serie.barMaxWidth;
+                if (barMaxWidth && barMaxWidth < candleWidth) {
+                    candleWidth = barMaxWidth;
+                }
                 yAxisIndex = serie.yAxisIndex || 0;
                 valueAxis = component.yAxis.getAxis(yAxisIndex);
                 
