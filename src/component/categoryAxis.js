@@ -613,7 +613,9 @@ define(function (require) {
                 var gap = getGap();
                 var position = option.boundaryGap ? gap : 0;
     
-                 if (option.position == 'bottom'
+                position += dataIndex * gap;
+                
+                if (option.position == 'bottom'
                     || option.position == 'top'
                 ) {
                     // 横向
@@ -623,7 +625,7 @@ define(function (require) {
                     // 纵向
                     position = grid.getYend() - position;
                 }
-                position += dataIndex * gap;
+                
                 return (dataIndex === 0 || dataIndex == option.data.length - 1)
                        ? position
                        : Math.floor(position);
