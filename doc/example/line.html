@@ -124,6 +124,7 @@ option = {
             name:'联盟广告',
             type:'line',
             stack: '总量',
+            smooth: true,
             symbol: 'emptyCircle',     // 系列级个性化拐点图形
             symbolSize: 8,
             data:[
@@ -131,7 +132,15 @@ option = {
                 {
                     value:201,
                     symbol: 'star',  // 数据级个性化拐点图形
-                    symbolSize : 15
+                    symbolSize : 15,
+                    itemStyle : { normal: {label : {
+                        show: true,
+                        textStyle : {
+                            fontSize : '20',
+                            fontFamily : '微软雅黑',
+                            fontWeight : 'bold'
+                        }
+                    }}}
                 },
                 {
                     value:134,
@@ -163,12 +172,20 @@ option = {
                     value: 390,
                     symbol: 'star6',
                     symbolSize : 15,
+                    symbolRotate : 0,
                     itemStyle: {        // 数据级个性化折线样式
                         normal: {
                             color: 'yellowgreen'
                         },
                         emphasis: {
-                            color: 'orange'
+                            color: 'orange',
+                            label : {
+                                show: true,
+                                position: 'inside',
+                                textStyle : {
+                                    fontSize : '20'
+                                }
+                            }
                         }
                     }
                 },
@@ -178,6 +195,7 @@ option = {
         {
             name:'搜索引擎',
             type:'line',
+            symbol:'emptyCircle',
             itemStyle: {
                 normal: {
                     lineStyle: {            // 系列级个性化折线样式，横向渐变描边
@@ -194,9 +212,12 @@ option = {
                         shadowOffsetX: 8,
                         shadowOffsetY: 8
                     }
+                },
+                emphasis : {
+                    label : {show: true}
                 }
             },
-            data:[620, 732, 701, 734, 890, 930, 820]
+            data:[620, 732, 791, 734, 890, 930, 820]
         }
     ]
 };

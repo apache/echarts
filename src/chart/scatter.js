@@ -70,7 +70,8 @@ define(function(require) {
                             var iconType = _sIndex2ShapeMap[i];
                             iconShape.style.brushType = iconType.match('empty') 
                                                         ? 'stroke' : 'both';
-                            iconType = iconType.replace('empty', '').toLowerCase();
+                            iconType = iconType.replace('empty', '')
+                                               .toLowerCase();
                             if (iconType.match('star')) {
                                 iconShape.style.n = 
                                     (iconType.replace('star','') - 0) || 5;
@@ -328,6 +329,14 @@ define(function(require) {
                 itemShape.draggable = true;
             }
             */
+           
+           itemShape = self.addLabel(
+                itemShape, 
+                series[seriesIndex], 
+                series[seriesIndex].data[dataIndex], 
+                name, 
+                'vertical'
+            );
 
             ecData.pack(
                 itemShape,
