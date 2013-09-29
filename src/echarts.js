@@ -42,9 +42,9 @@
 define(function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
-    self.version = '1.2.0';
+    self.version = '1.2.1';
     self.dependencies = {
-        zrender : '1.0.3'
+        zrender : '1.0.4'
     };
     /**
      * 入口方法 
