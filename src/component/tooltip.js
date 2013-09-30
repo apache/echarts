@@ -675,13 +675,16 @@ define(function (require) {
                                : {name:'', value: {dataIndex:'-'}};
                                
                         params.push([
-                            typeof seriesArray[i].name != 'undefin'
-                            ? seriesArray[i].name : '',
+                            typeof seriesArray[i].name != 'undefined'
+                                ? seriesArray[i].name : '',
                             data.name,
                             data.value[dataIndex],
                             indicatorName
                         ]);
                     }
+                }
+                if (params.length <= 0) {
+                    return;
                 }
                 if (typeof formatter == 'function') {
                     _curTicket = 'axis:' + dataIndex;
