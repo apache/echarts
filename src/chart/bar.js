@@ -745,10 +745,9 @@ define(function(require) {
                                     {
                                         x : x,
                                         width : width
-                                    },
-                                    easing
+                                    }
                                 )
-                                .start();
+                                .start(easing);
                         }
                         else {
                             zr.modShape(
@@ -764,10 +763,9 @@ define(function(require) {
                                     duration + dataIndex * 100,
                                     {
                                         width : width
-                                    },
-                                    easing
+                                    }
                                 )
-                                .start();
+                                .start(easing);
                         }
                     }
                     else {
@@ -788,10 +786,9 @@ define(function(require) {
                                     duration + dataIndex * 100,
                                     {
                                         height : height
-                                    },
-                                    easing
+                                    }
                                 )
-                                .start();
+                                .start(easing);
                         }
                         else {
                             zr.modShape(
@@ -809,10 +806,9 @@ define(function(require) {
                                     {
                                         y : y,
                                         height : height
-                                    },
-                                    easing
+                                    }
                                 )
-                                .start();
+                                .start(easing);
                         }
                     }
                 }

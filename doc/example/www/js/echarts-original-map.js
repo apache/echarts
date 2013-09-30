@@ -8399,11 +8399,11 @@ define(
  * @config onrestart(optional)
  */
 define(
-    'zrender/animation/controller',['require','./easing'],function(require) {
+    'zrender/animation/clip',['require','./easing'],function(require) {
 
         var Easing = require('./easing');
 
-        var Controller = function(options) {
+        var Clip = function(options) {
 
             this._targetPool = options.target || {};
             if (this._targetPool.constructor != Array) {
@@ -8435,7 +8435,7 @@ define(
             this.onrestart = options.onrestart || null;
         };
 
-        Controller.prototype = {
+        Clip.prototype = {
             step : function(time) {
                 var percent = (time - this._startTime) / this._life;
 
@@ -8487,9 +8487,9 @@ define(
                 }
             }
         };
-        Controller.prototype.constructor = Controller;
+        Clip.prototype.constructor = Clip;
 
-        return Controller;
+        return Clip;
     }
 );
 /**
@@ -8507,317 +8507,424 @@ define(
  * @method : stop
  */
 define(
-    'zrender/animation/animation',['require','./controller','../tool/util'],function(require) {
-        var Controller = require('./controller');
-        var util = require('../tool/util');
+'zrender/animation/animation',['require','./clip'],function(require) {
+    
 
-        // Polyfill of requestAnimationFrame
-        var requrestAnimationFrame = window.requrestAnimationFrame
-                                     || window.mozRequestAnimationFrame
-                                     || window.webkitRequestAnimationFrame
-                                     || function(callback) {
-                                            window.setTimeout(
-                                                callback, 1000 / 60
-                                           );
-                                        };
 
-        var Animation = function(options) {
+var Clip = require('./clip');
 
-            options = options || {};
+var requrestAnimationFrame = window.requrestAnimationFrame
+                            || window.msRequestAnimationFrame
+                            || window.mozRequestAnimationFrame
+                            || window.webkitRequestAnimationFrame
+                            || function(func){setTimeout(func, 16);};
 
-            this.stage = options.stage || {};
+var arraySlice = Array.prototype.slice;
 
-            this.onframe = options.onframe || function() {};
+var Animation = function(options) {
 
-            // private properties
-            this._controllerPool = [];
+    options = options || {};
 
-            this._running = false;
-        };
+    this.stage = options.stage || {};
 
-        Animation.prototype = {
-            add : function(controller) {
-                this._controllerPool.push(controller);
-            },
-            remove : function(controller) {
-                var idx = util.indexOf(this._controllerPool, controller);
-                if (idx >= 0) {
-                    this._controllerPool.splice(idx, 1);
-                }
-            },
-            update : function() {
-                var time = new Date().getTime();
-                var cp = this._controllerPool;
-                var len = cp.length;
+    this.onframe = options.onframe || function() {};
 
-                var deferredEvents = [];
-                var deferredCtls = [];
-                for (var i = 0; i < len; i++) {
-                    var controller = cp[i];
-                    var e = controller.step(time);
-                    // 需要在stage.update之后调用的事件，例如destroy
-                    if (e) {
-                        deferredEvents.push(e);
-                        deferredCtls.push(controller);
-                    }
-                }
-                if (this.stage
-                    && this.stage.update
-                    && this._controllerPool.length
-               ) {
-                    this.stage.update();
-                }
+    // private properties
+    this._clips = [];
 
-                // 删除动画完成的控制器
-                var newArray = [];
-                for (var i = 0; i < len; i++) {
-                    if (!cp[i]._needsRemove) {
-                        newArray.push(cp[i]);
-                        cp[i]._needsRemove = false;
-                    }
-                }
-                this._controllerPool = newArray;
+    this._running = false;
+};
 
-                len = deferredEvents.length;
-                for (var i = 0; i < len; i++) {
-                    deferredCtls[i].fire(deferredEvents[i]);
-                }
+Animation.prototype = {
+    add : function(clip) {
+        this._clips.push(clip);
+    },
+    remove : function(clip) {
+        var idx = this._clips.indexOf(clip);
+        if (idx >= 0) {
+            this._clips.splice(idx, 1);
+        }
+    },
+    update : function() {
+        var time = new Date().getTime();
+        var clips = this._clips;
+        var len = clips.length;
 
-                this.onframe();
+        var deferredEvents = [];
+        var deferredClips = [];
+        for (var i = 0; i < len; i++) {
+            var clip = clips[i];
+            var e = clip.step(time);
+            // Throw out the events need to be called after
+            // stage.update, like destroy
+            if (e) {
+                deferredEvents.push(e);
+                deferredClips.push(clip);
+            }
+        }
+        if (this.stage
+            && this.stage.update
+            && this._clips.length
+        ) {
+            this.stage.update();
+        }
 
-            },
-            // 启用start函数之后每个1000/fps事件就会刷新
-            // 也可以不使用animation的start函数
-            // 手动每一帧去调用update函数更新状态
-            start : function() {
-                var self = this;
+        // Remove the finished clip
+        var newArray = [];
+        for (var i = 0; i < len; i++) {
+            if (!clips[i]._needsRemove) {
+                newArray.push(clips[i]);
+                clips[i]._needsRemove = false;
+            }
+        }
+        this._clips = newArray;
 
-                this._running = true;
+        len = deferredEvents.length;
+        for (var i = 0; i < len; i++) {
+            deferredClips[i].fire(deferredEvents[i]);
+        }
 
-                function step() {
-                    if (self._running) {
-                        self.update();
-                        requrestAnimationFrame(step);
-                    }
-                }
+        this.onframe();
 
+    },
+    start : function() {
+        var self = this;
+
+        this._running = true;
+
+        function step() {
+            if (self._running) {
+                self.update();
                 requrestAnimationFrame(step);
-            },
-            stop : function() {
-                this._running = false;
-            },
-            clear : function() {
-                this._controllerPool = [];
-            },
-            animate : function(target, loop, getter, setter) {
-                var deferred = new Deferred(target, loop, getter, setter);
-                deferred.animation = this;
-                return deferred;
+            }
+        }
+
+        requrestAnimationFrame(step);
+    },
+    stop : function() {
+        this._running = false;
+    },
+    clear : function() {
+        this._clips = [];
+    },
+    animate : function(target, options) {
+        options = options || {};
+        var deferred = new Deferred(
+            target,
+            options.loop,
+            options.getter, 
+            options.setter
+        );
+        deferred.animation = this;
+        return deferred;
+    }
+};
+Animation.prototype.constructor = Animation;
+
+function _defaultGetter(target, key) {
+    return target[key];
+}
+function _defaultSetter(target, key, value) {
+    target[key] = value;
+}
+
+function _interpolateNumber(p0, p1, percent) {
+    return (p1 - p0) * percent + p0;
+}
+
+function _interpolateArray(p0, p1, percent, out, arrDim) {
+    var len = p0.length;
+    if (arrDim == 1) {
+        for (var i = 0; i < len; i++) {
+            out[i] = _interpolateNumber(p0[i], p1[i], percent); 
+        }
+    } else {
+        var len2 = p0[0].length;
+        for (var i = 0; i < len; i++) {
+            for (var j = 0; j < len2; j++) {
+                out[i][j] = _interpolateNumber(
+                    p0[i][j], p1[i][j], percent
+                );
+            }
+        }
+    }
+}
+
+function _isArrayLike(data) {
+    if (data === undefined) {
+        return false;
+    } else if (typeof(data) == 'string') {
+        return false;
+    } else {
+        return data.length !== undefined;
+    }
+}
+
+function _catmullRomInterpolateArray(
+    p0, p1, p2, p3, t, t2, t3, out, arrDim
+) {
+    var len = p0.length;
+    if (arrDim == 1) {
+        for (var i = 0; i < len; i++) {
+            out[i] = _catmullRomInterpolate(
+                p0[i], p1[i], p2[i], p3[i], t, t2, t3
+            );
+        }
+    } else {
+        var len2 = p0[0].length;
+        for (var i = 0; i < len; i++) {
+            for (var j = 0; j < len2; j++) {
+                out[i][j] = _catmullRomInterpolate(
+                    p0[i][j], p1[i][j], p2[i][j], p3[i][j],
+                    t, t2, t3
+                );
+            }
+        }
+    }
+}
+
+function _catmullRomInterpolate(p0, p1, p2, p3, t, t2, t3) {
+    var v0 = (p2 - p0) * 0.5;
+    var v1 = (p3 - p1) * 0.5;
+    return (2 * (p1 - p2) + v0 + v1) * t3 
+            + (- 3 * (p1 - p2) - 2 * v0 - v1) * t2
+            + v0 * t + p1;
+}
+
+function Deferred(target, loop, getter, setter) {
+    this._tracks = {};
+    this._target = target;
+
+    this._loop = loop || false;
+
+    this._getter = getter || _defaultGetter;
+    this._setter = setter || _defaultSetter;
+
+    this._clipCount = 0;
+
+    this._delay = 0;
+
+    this._doneList = [];
+
+    this._onframeList = [];
+
+    this._clipList = [];
+}
+
+Deferred.prototype = {
+    when : function(time /* ms */, props) {
+        for (var propName in props) {
+            if (! this._tracks[propName]) {
+                this._tracks[propName] = [];
+                // Initialize value
+                this._tracks[propName].push({
+                    time : 0,
+                    value : this._getter(this._target, propName)
+                });
+            }
+            this._tracks[propName].push({
+                time : parseInt(time, 10),
+                value : props[propName]
+            });
+        }
+        return this;
+    },
+    during : function(callback) {
+        this._onframeList.push(callback);
+        return this;
+    },
+    start : function(easing) {
+
+        var self = this;
+        var setter = this._setter;
+        var getter = this._getter;
+        var onFrameListLen = self._onframeList.length;
+        var useSpline = easing === 'spline';
+
+        var ondestroy = function() {
+            self._clipCount--;
+            if (self._clipCount === 0) {
+                // Clear all tracks
+                self._tracks = {};
+
+                var len = self._doneList.length;
+                for (var i = 0; i < len; i++) {
+                    self._doneList[i].call(self);
+                }
             }
         };
-        Animation.prototype.constructor = Animation;
 
-        function _defaultGetter(target, key) {
-            return target[key];
-        }
-        function _defaultSetter(target, key, value) {
-            target[key] = value;
-        }
-        // 递归做插值
-        // TODO 对象的插值
-        function _interpolate(
-            prevValue,
-            nextValue,
-            percent,
-            target,
-            propName,
-            getter,
-            setter
-       ) {
-             // 遍历数组做插值
-            if (prevValue instanceof Array
-                && nextValue instanceof Array
-           ) {
-                var minLen = Math.min(prevValue.length, nextValue.length);
-                var largerArray;
-                var maxLen;
-                var result = [];
-                if (minLen === prevValue.length) {
-                    maxLen = nextValue.length;
-                    largerArray = nextValue;
-                }else{
-                    maxLen = prevValue.length;
-                    largerArray = prevValue.length;
-                }
-                for (var i = 0; i < minLen; i++) {
-                    // target[propName] 作为新的target,
-                    // i 作为新的propName递归进行插值
-                    result.push(_interpolate(
-                            prevValue[i],
-                            nextValue[i],
-                            percent,
-                            getter(target, propName),
-                            i,
-                            getter,
-                            setter
-                   ));
-                }
-                // 赋值剩下不需要插值的数组项
-                for (var i = minLen; i < maxLen; i++) {
-                    result.push(largerArray[i]);
-                }
-
-                setter(target, propName, result);
+        var createTrackClip = function(keyframes, propName) {
+            var trackLen = keyframes.length;
+            if (!trackLen) {
+                return;
             }
-            else{
-                prevValue = parseFloat(prevValue);
-                nextValue = parseFloat(nextValue);
-                if (!isNaN(prevValue) && !isNaN(nextValue)) {
-                    var value = (nextValue-prevValue) * percent+prevValue;
-                    setter(target, propName, value);
-                    return value;
-                }
+            // Guess data type
+            var firstVal = keyframes[0].value;
+            var isValueArray = _isArrayLike(firstVal);
+
+            // For vertices morphing
+            var arrDim = (
+                    isValueArray 
+                    && _isArrayLike(firstVal[0])
+                )
+                ? 2 : 1;
+            // Sort keyframe as ascending
+            keyframes.sort(function(a, b) {
+                return a.time - b.time;
+            });
+            var trackMaxTime;
+            if (trackLen) {
+                trackMaxTime = keyframes[trackLen-1].time;
+            }else{
+                return;
             }
-        }
-        function Deferred(target, loop, getter, setter) {
-            this._tracks = {};
-            this._target = target;
-
-            this._loop = loop || false;
-
-            this._getter = getter || _defaultGetter;
-            this._setter = setter || _defaultSetter;
-
-            this._controllerCount = 0;
-
-            this._delay = 0;
-
-            this._doneList = [];
-
-            this._onframeList = [];
-
-            this._controllerList = [];
-        }
-
-        Deferred.prototype = {
-            when : function(time /* ms */, props, easing) {
-                for (var propName in props) {
-                    if (! this._tracks[propName]) {
-                        this._tracks[propName] = [];
-                        // 初始状态
-                        this._tracks[propName].push({
-                            time : 0,
-                            value : this._getter(this._target, propName)
-                        });
+            // Percents of each keyframe
+            var kfPercents = [];
+            // Value of each keyframe
+            var kfValues = [];
+            for (var i = 0; i < trackLen; i++) {
+                kfPercents.push(keyframes[i].time / trackMaxTime);
+                if (isValueArray) {
+                    if (arrDim == 2) {
+                        kfValues[i] = [];
+                        for (var j = 0; j < firstVal.length; j++) {
+                            kfValues[i].push(
+                                arraySlice.call(keyframes[i].value[j])
+                            );
+                        }
+                    } else {
+                        kfValues.push(arraySlice.call(keyframes[i].value));
                     }
-                    this._tracks[propName].push({
-                        time : time,
-                        value : props[propName],
-                        easing : easing
-                    });
+                } else {
+                    kfValues.push(keyframes[i].value);
                 }
-                return this;
-            },
-            during : function(callback) {
-                this._onframeList.push(callback);
-                return this;
-            },
-            start : function() {
-                var self = this;
-                var delay;
-                var track;
-                var trackMaxTime;
+            }
 
-                function createOnframe(now, next, propName) {
-                    // 复制出新的数组，不然动画的时候改变数组的值也会影响到插值
-                    var prevValue = clone(now.value);
-                    var nextValue = clone(next.value);
-                    return function(target, schedule) {
-                        _interpolate(
-                            prevValue,
-                            nextValue,
-                            schedule,
+            // Cache the key of last frame to speed up when 
+            // animation playback is sequency
+            var cacheKey = 0;
+            var cachePercent = 0;
+            var start;
+            var i, w;
+            var p0, p1, p2, p3;
+
+            var onframe = function(target, percent) {
+                // Find the range keyframes
+                // kf1-----kf2---------current--------kf3
+                // find kf2 and kf3 and do interpolation
+                if (percent < cachePercent) {
+                    // Start from next key
+                    start = Math.min(cacheKey + 1, trackLen - 1);
+                    for (i = start; i >= 0; i--) {
+                        if (kfPercents[i] <= percent) {
+                            break;
+                        }
+                    }
+                    i = Math.min(i, trackLen-2);
+                } else {
+                    for (i = cacheKey; i < trackLen; i++) {
+                        if (kfPercents[i] > percent) {
+                            break;
+                        }
+                    }
+                    i = Math.min(i-1, trackLen-2);
+                }
+                cacheKey = i;
+                cachePercent = percent;
+
+                var range = (kfPercents[i+1] - kfPercents[i]);
+                if (range === 0) {
+                    return;
+                } else {
+                    w = (percent - kfPercents[i]) / range;
+                }
+                if (w < 0) {
+                    console.log(w);
+                }
+                if (useSpline) {
+                    p1 = kfValues[i];
+                    p0 = kfValues[i === 0 ? i : i - 1];
+                    p2 = kfValues[i > trackLen - 2 ? trackLen - 1 : i + 1];
+                    p3 = kfValues[i > trackLen - 3 ? trackLen - 1 : i + 2];
+                    if (isValueArray) {
+                        _catmullRomInterpolateArray(
+                            p0, p1, p2, p3, w, w*w, w*w*w,
+                            getter(target, propName),
+                            arrDim
+                        );
+                    } else {
+                        setter(
                             target,
                             propName,
-                            self._getter,
-                            self._setter
-                       );
-                        for (var i = 0; i < self._onframeList.length; i++) {
-                            self._onframeList[i](target, schedule);
-                        }
-                    };
-                }
-
-                function ondestroy() {
-                    self._controllerCount--;
-                    if (self._controllerCount === 0) {
-                        var len = self._doneList.length;
-                        // 所有动画完成
-                        for (var i = 0; i < len; i++) {
-                            self._doneList[i].call(self);
-                        }
+                            _catmullRomInterpolate(
+                                p0, p1, p2, p3, w, w*w, w*w*w
+                            )
+                        );
+                    }
+                } else {
+                    if (isValueArray) {
+                        _interpolateArray(
+                            kfValues[i], kfValues[i+1], w,
+                            getter(target, propName),
+                            arrDim
+                        );
+                    } else {
+                        setter(
+                            target,
+                            propName,
+                            _interpolateNumber(kfValues[i], kfValues[i+1], w)
+                        );
                     }
                 }
 
-                for (var propName in this._tracks) {
-                    delay = this._delay;
-                    track = this._tracks[propName];
-                    if (track.length) {
-                        trackMaxTime = track[track.length-1].time;
-                    }else{
-                        continue;
-                    }
-                    for (var i = 0; i < track.length-1; i++) {
-                        var now = track[i],
-                            next = track[i+1];
-
-                        var controller = new Controller({
-                            target : self._target,
-                            life : next.time - now.time,
-                            delay : delay,
-                            loop : self._loop,
-                            gap : trackMaxTime - (next.time - now.time),
-                            easing : next.easing,
-                            onframe : createOnframe(now, next, propName),
-                            ondestroy : ondestroy
-                        });
-                        this._controllerList.push(controller);
-
-                        this._controllerCount++;
-                        delay = next.time + this._delay;
-
-                        self.animation.add(controller);
-                    }
+                for (i = 0; i < onFrameListLen; i++) {
+                    self._onframeList[i](target, percent);
                 }
-                return this;
-            },
-            stop : function() {
-                for (var i = 0; i < this._controllerList.length; i++) {
-                    var controller = this._controllerList[i];
-                    this.animation.remove(controller);
-                }
-            },
-            delay : function(time) {
-                this._delay = time;
-                return this;
-            },
-            done : function(func) {
-                this._doneList.push(func);
-                return this;
+            };
+
+            var clip = new Clip({
+                target : self._target,
+                life : trackMaxTime,
+                loop : self._loop,
+                delay : self._delay,
+                onframe : onframe,
+                ondestroy : ondestroy
+            });
+
+            if (easing && easing !== 'spline') {
+                clip.easing = easing;
             }
+            self._clipList.push(clip);
+            self._clipCount++;
+            self.animation.add(clip);
         };
 
-        function clone(value) {
-            if (value && value instanceof Array) {
-                return Array.prototype.slice.call(value);
-            }
-            else {
-                return value;
-            }
-        }
 
-        return Animation;
+        for (var propName in this._tracks) {
+            createTrackClip(this._tracks[propName], propName);
+        }
+        return this;
+    },
+    stop : function() {
+        for (var i = 0; i < this._clipList.length; i++) {
+            var clip = this._clipList[i];
+            this.animation.remove(clip);
+        }
+        this._clipList = [];
+    },
+    delay : function(time){
+        this._delay = time;
+        return this;
+    },
+    done : function(func) {
+        this._doneList.push(func);
+        return this;
     }
+};
+
+return Animation;
+}
 );
 
 /**
@@ -10136,7 +10243,7 @@ define(
                     }
                     shape.__aniCount ++;
 
-                    return animation.animate(target, loop)
+                    return animation.animate(target, {loop : loop})
                         .done(function() {
                             shape.__aniCount --;
                             if( shape.__aniCount === 0){
@@ -18900,13 +19007,16 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                                : {name:'', value: {dataIndex:'-'}};
                                
                         params.push([
-                            typeof seriesArray[i].name != 'undefin'
-                            ? seriesArray[i].name : '',
+                            typeof seriesArray[i].name != 'undefined'
+                                ? seriesArray[i].name : '',
                             data.name,
                             data.value[dataIndex],
                             indicatorName
                         ]);
                     }
+                }
+                if (params.length <= 0) {
+                    return;
                 }
                 if (typeof formatter == 'function') {
                     _curTicket = 'axis:' + dataIndex;
@@ -23626,13 +23736,11 @@ define('echarts/chart/scatter',['require','../component/base','./calculableBase'
                     .when(
                         (self.deepQuery([serie],'animationDuration')
                         || duration),
-                        
-                        {scale : [1, 1, x, y]},
-                        
-                        (self.deepQuery([serie], 'animationEasing')
-                        || easing)
+                        {scale : [1, 1, x, y]}
                     )
-                    .start();
+                    .start(
+                        self.deepQuery([serie], 'animationEasing') || easing
+                    );
             }
         }
 
@@ -24311,13 +24419,11 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
                         .when(
                             (self.deepQuery([serie],'animationDuration')
                             || duration),
-
-                            {scale : [1, 1, x, y]},
-
-                            (self.deepQuery([serie], 'animationEasing')
-                            || easing)
+                            {scale : [1, 1, x, y]}
                         )
-                        .start();
+                        .start(
+                            self.deepQuery([serie], 'animationEasing') || easing
+                        );
                 }
             }
         }
@@ -24816,13 +24922,11 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
                             (self.deepQuery([serie],'animationDuration')
                             || duration)
                             + dataIndex * 100,
-
-                            {scale : [1, 1, x, y]},
-
-                            (self.deepQuery([serie], 'animationEasing')
-                            || easing)
+                            {scale : [1, 1, x, y]}
                         )
-                        .start();
+                        .start(
+                            self.deepQuery([serie], 'animationEasing') || easing
+                        );
                 }
                 else {
                     x = self.shapeList[i]._x || 0;
@@ -24833,10 +24937,9 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             duration,
-                            {scale : [1, 1, x, y]},
-                            'QuinticOut'
+                            {scale : [1, 1, x, y]}
                         )
-                        .start();
+                        .start('QuinticOut');
                 }
             }
 
@@ -30467,13 +30570,11 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                             (self.deepQuery([serie],'animationDuration')
                             || duration)
                             + dataIndex * 100,
-
-                            {scale : [1, 1, x, y]},
-
-                            (self.deepQuery([serie], 'animationEasing')
-                            || easing)
+                            {scale : [1, 1, x, y]}
                         )
-                        .start();
+                        .start(
+                            self.deepQuery([serie], 'animationEasing') || easing
+                        );
                 }
                 else {
                     x = self.shapeList[i]._x || 0;
@@ -30484,10 +30585,9 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             duration,
-                            {scale : [1, 1, x, y]},
-                            'QuinticOut'
+                            {scale : [1, 1, x, y]}
                         )
-                        .start();
+                        .start('QuinticOut');
                 }
             }
         }
@@ -31293,10 +31393,9 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                     {
                                         x : x,
                                         width : width
-                                    },
-                                    easing
+                                    }
                                 )
-                                .start();
+                                .start(easing);
                         }
                         else {
                             zr.modShape(
@@ -31312,10 +31411,9 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                     duration + dataIndex * 100,
                                     {
                                         width : width
-                                    },
-                                    easing
+                                    }
                                 )
-                                .start();
+                                .start(easing);
                         }
                     }
                     else {
@@ -31336,10 +31434,9 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                     duration + dataIndex * 100,
                                     {
                                         height : height
-                                    },
-                                    easing
+                                    }
                                 )
-                                .start();
+                                .start(easing);
                         }
                         else {
                             zr.modShape(
@@ -31357,10 +31454,9 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                     {
                                         y : y,
                                         height : height
-                                    },
-                                    easing
+                                    }
                                 )
-                                .start();
+                                .start(easing);
                         }
                     }
                 }
@@ -32280,27 +32376,22 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                             (self.deepQuery([serie],'animationDuration')
                             || duration)
                             + dataIndex * 10,
-
                             {
                                 r0 : r0,
                                 r : r
-                            },
-
-                            'QuinticOut'
+                            }
                         )
-                        .start();
+                        .start('QuinticOut');
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             (self.deepQuery([serie],'animationDuration')
                             || duration)
                             + dataIndex * 100,
-
-                            {rotation : [0, x, y]},
-
-                            (self.deepQuery([serie], 'animationEasing')
-                            || easing)
+                            {rotation : [0, x, y]}
                         )
-                        .start();
+                        .start(
+                            self.deepQuery([serie], 'animationEasing') || easing
+                        );
                 }
                 else {
                     dataIndex = self.shapeList[i]._dataIndex;
@@ -32310,10 +32401,9 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             duration + dataIndex * 100,
-                            {scale : [1, 1, x, y]},
-                            'QuinticOut'
+                            {scale : [1, 1, x, y]}
                         )
-                        .start();
+                        .start('QuinticOut');
                 }
             }
         }
