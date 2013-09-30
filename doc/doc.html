@@ -1804,6 +1804,12 @@ indicator : [
                             <td> 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略），如需全部显示可把showAllSymbol设为true</td>
                         </tr>
                         <tr>
+                            <td> {boolean} smooth </td>
+                            <td> false </td>
+                            <td> 折线图  </td>
+                            <td> 平滑曲线显示</td>
+                        </tr>
+                        <tr>
                             <td> {Array} center </td>
                             <td> null </td>
                             <td> 饼图 </td>
@@ -2023,8 +2029,10 @@ indicator : [
                         <tr>
                             <td> {Object} label </td>
                             <td> {show: true,  position:'outer'} </td>
-                            <td> 饼图 ，地图，力导向</td>
-                            <td> 标签，饼图默认显示在外部，离饼图距离由labelLine.length决定，地图标签不可指定位置 </td>
+                            <td> 折线图，柱形图，K线图，散点图，饼图 ，地图，力导向</td>
+                            <td> 标签，饼图默认显示在外部，离饼图距离由labelLine.length决定，地图标签不可指定位置
+                                 <br/> 折线图，柱形图，K线图，散点图可指定position见下
+                            </td>
                         </tr>
                         <tr>
                             <td> {Object} labelLine </td>
@@ -2047,8 +2055,11 @@ indicator : [
                         </tr>
                         <tr>
                             <td> {string} position </td>
-                            <td> 'outer' </td>
-                            <td> 标签显示位置，可选为：'outer'（外部） | 'inner'（内部），地图标签不可指定位置</td>
+                            <td> 'outer' | null</td>
+                            <td> 标签显示位置，地图标签不可指定位置
+                                 <br/>饼图可选为：'outer'（外部） | 'inner'（内部），
+                                 <br/>折线图，柱形图，K线图，散点图默认根据布局自适应为'top'或者'right'，可选的还有：'inside'|'left'|'bottom'
+                            </td>
                         </tr>
                         <tr>
                             <td> {string | Function} formatter </td>
