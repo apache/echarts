@@ -163,8 +163,8 @@ define('echarts/config',[],function() {
             trigger: 'item',           // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
             // formatter: null         // 内容格式器：{string}（Template） ¦ {Function}
             islandFormatter: '{a} <br/>{b} : {c}',  // 数据孤岛内容格式器，非标准参数
-            transitionDuration : 1,    // 动画变换时间，单位s
-            showDelay: 30,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
+            transitionDuration : 0.4,  // 动画变换时间，单位s
+            showDelay: 20,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
             hideDelay: 100,            // 隐藏延迟，单位ms
             backgroundColor: 'rgba(0,0,0,0.7)',     // 提示背景颜色，默认为透明度为0.7的黑色
             borderColor: '#333',       // 提示边框颜色
@@ -688,12 +688,13 @@ define('echarts/config',[],function() {
         },
 
         EVENT: {
+            // -------全局通用
             REFRESH: 'refresh',
             RESTORE: 'restore',
             CLICK: 'click',
             HOVER: 'hover',
             MOUSEWHEEL: 'mousewheel',
-            // -------
+            // -------业务交互逻辑
             DATA_CHANGED: 'dataChanged',
             DATA_ZOOM: 'dataZoom',
             DATA_RANGE: 'dataRange',
@@ -701,7 +702,9 @@ define('echarts/config',[],function() {
             MAP_SELECTED: 'mapSelected',
             PIE_SELECTED: 'pieSelected',
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',
-            DATA_VIEW_CHANGED: 'dataViewChanged'
+            DATA_VIEW_CHANGED: 'dataViewChanged',
+            // -------内部通信
+            TOOLTIP_HOVER: 'tooltipHover'
         },
 
         // 可计算特性配置，孤岛，提示颜色
@@ -9761,6 +9764,7 @@ define(
             }
             else {
                 e.returnValue = false;
+                e.cancelBubble = true;
             }
         }
 
@@ -10173,6 +10177,15 @@ define(
              */
             self.refresh = function(callback) {
                 painter.refresh(callback);
+                return self;
+            };
+            
+            /**
+             * 高亮层更新
+             * @param {Function} callback  视图更新后回调函数
+             */
+            self.refreshHover = function(callback) {
+                painter.refreshHover(callback);
                 return self;
             };
 
@@ -13710,7 +13723,7 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                 if (option.position == 'bottom' || option.position == 'top') {
                     // 横向
                     if (dataLength > 3) {
-                        var gap = getCoord(data[1]) -  getCoord(data[0]);
+                        var gap = getGap();
                         var isEnough = false;
                         var labelSpace;
                         var labelSize;
@@ -13762,7 +13775,7 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                 else {
                     // 纵向
                     if (dataLength > 3) {
-                        var gap = getCoord(data[0]) - getCoord(data[1]);
+                        var gap = getGap();
                         interval = 1;
                         // 标签上下至少间隔为3px
                         while ((gap * interval - 6) < fontSize
@@ -18337,7 +18350,7 @@ define('echarts/component/dataRange',['require','./base','../config','zrender/to
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/tooltip',['require','./base','../config','../util/ecData','zrender/config','zrender/shape','zrender/tool/event','zrender/tool/area','zrender/tool/color','zrender/tool/util','../component'],function (require) {
+define('echarts/component/tooltip',['require','./base','../config','../util/ecData','zrender/config','zrender/shape','zrender/tool/event','zrender/tool/area','zrender/tool/color','zrender/tool/util','zrender/shape/base','../component'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -18358,6 +18371,7 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
         var zrArea = require('zrender/tool/area');
         var zrColor = require('zrender/tool/color');
         var zrUtil = require('zrender/tool/util');
+        var zrShapeBase = require('zrender/shape/base');
 
         var rectangle = zrShape.get('rectangle');
         var self = this;
@@ -18395,6 +18409,7 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
         var _zrHeight = zr.getHeight();
         var _zrWidth = zr.getWidth();
 
+        var _lastTipShape = false;
         var _axisLineShape = {
             shape : 'line',
             id : zr.newShapeId('tooltip'),
@@ -18536,6 +18551,10 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                 _axisShadowShape.invisible = true;
                 zr.modShape(_axisShadowShape.id, _axisShadowShape);
                 needRefresh = true;
+            }
+            if (_lastTipShape && _lastTipShape.tipShape.length > 0) {
+                zr.delShape(_lastTipShape.tipShape);
+                _lastTipShape = false;
             }
             needRefresh && zr.refresh(); 
         }
@@ -18778,6 +18797,7 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             }
             var series = option.series;
             var seriesArray = [];
+            var seriesIndex = [];
             var categoryAxis;
             var x;
             var y;
@@ -18816,8 +18836,18 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                                               [series[i]], 'tooltip'
                                           ));
                         seriesArray.push(series[i]);
+                        seriesIndex.push(i);
                     }
                 }
+                // 寻找高亮元素
+                messageCenter.dispatch(
+                    ecConfig.EVENT.TOOLTIP_HOVER,
+                    _event,
+                    {
+                        seriesIndex : seriesIndex,
+                        dataIndex : dataIndex
+                    }
+                );
                 y = zrEvent.getY(_event) + 10;
                 x = categoryAxis.getCoordByIndex(dataIndex);
                 _styleAxisPointer(
@@ -18852,8 +18882,18 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                                               [series[i]], 'tooltip'
                                           ));
                         seriesArray.push(series[i]);
+                        seriesIndex.push(i);
                     }
                 }
+                // 寻找高亮元素
+                messageCenter.dispatch(
+                    ecConfig.EVENT.TOOLTIP_HOVER,
+                    _event,
+                    {
+                        seriesIndex : seriesIndex,
+                        dataIndex : dataIndex
+                    }
+                );
                 x = zrEvent.getX(_event) + 10;
                 y = categoryAxis.getCoordByIndex(dataIndex);
                 _styleAxisPointer(
@@ -18896,11 +18936,11 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
                         formatter = formatter.replace(
                             '{a' + i + '}',
-                            seriesArray[i].name
+                            _encodeHTML(seriesArray[i].name)
                         );
                         formatter = formatter.replace(
                             '{b' + i + '}',
-                            categoryAxis.getNameByIndex(dataIndex)
+                            _encodeHTML(categoryAxis.getNameByIndex(dataIndex))
                         );
                         data = seriesArray[i].data[dataIndex];
                         data = typeof data != 'undefined'
@@ -18917,11 +18957,15 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                 }
                 else {
                     _curTicket = NaN;
-                    formatter = categoryAxis.getNameByIndex(dataIndex);
+                    formatter = _encodeHTML(
+                        categoryAxis.getNameByIndex(dataIndex)
+                    );
+
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
-                        formatter += '<br/>' + seriesArray[i].name + ' : ';
+                        formatter += '<br/>' + _encodeHTML(seriesArray[i].name)
+                                     + ' : ';
                         data = seriesArray[i].data[dataIndex];
-                        data = data = typeof data != 'undefined'
+                        data = typeof data != 'undefined'
                                ? (typeof data.value != 'undefined'
                                    ? data.value
                                    : data)
@@ -19032,11 +19076,11 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                     for (var i = 0, l = params.length; i < l; i++) {
                         formatter = formatter.replace(
                             '{a' + i + '}',
-                            params[i][0]
+                            _encodeHTML(params[i][0])
                         );
                         formatter = formatter.replace(
                             '{b' + i + '}',
-                            params[i][1]
+                            _encodeHTML(params[i][1])
                         );
                         formatter = formatter.replace(
                             '{c' + i + '}',
@@ -19044,17 +19088,20 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                         );
                         formatter = formatter.replace(
                             '{d' + i + '}',
-                            params[i][3]
+                            _encodeHTML(params[i][3])
                         );
                     }
                     _tDom.innerHTML = formatter;
                 }
                 else {
-                    formatter = params[0][1] + '<br/>' 
-                                + params[0][3] + ' : ' + params[0][2];
+                    formatter = _encodeHTML(params[0][1]) + '<br/>' 
+                                + _encodeHTML(params[0][3]) + ' : ' 
+                                + params[0][2];
                     for (var i = 1, l = params.length; i < l; i++) {
-                        formatter += '<br/>' + params[i][1] + '<br/>';
-                        formatter += params[i][3] + ' : ' + params[i][2];
+                        formatter += '<br/>' + _encodeHTML(params[i][1]) 
+                                     + '<br/>';
+                        formatter += _encodeHTML(params[i][3]) + ' : ' 
+                                     + params[i][2];
                     }
                     _tDom.innerHTML = formatter;
                 }
@@ -19149,8 +19196,8 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
                                      .replace('{b}','{b0}')
                                      .replace('{c}','{c0}')
                                      .replace('{d}','{d0}');
-                formatter = formatter.replace('{a0}', serie.name)
-                                     .replace('{b0}', name)
+                formatter = formatter.replace('{a0}', _encodeHTML(serie.name))
+                                     .replace('{b0}', _encodeHTML(name))
                                      .replace('{c0}', value);
 
                 if (typeof speical != 'undefined') {
@@ -19162,24 +19209,27 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             else {
                 _curTicket = NaN;
                 if (serie.type == ecConfig.CHART_TYPE_SCATTER) {
-                    _tDom.innerHTML = serie.name + '<br/>' +
-                                      (name === '' ? '' : (name + ' : ')) 
-                                      + value +
-                                      (typeof speical == 'undefined'
-                                      ? ''
-                                      : (' (' + speical + ')'));
+                    _tDom.innerHTML = _encodeHTML(serie.name) + '<br/>' +
+                                      (name === '' 
+                                           ? '' : (_encodeHTML(name) + ' : ')
+                                      ) 
+                                      + value 
+                                      + (typeof speical == 'undefined'
+                                          ? ''
+                                          : (' (' + speical + ')'));
                 }
                 else if (serie.type == ecConfig.CHART_TYPE_RADAR) {
                     indicator = speical;
-                    html += (name === '' ? serie.name : name) + '<br />';
+                    html += _encodeHTML(name === '' ? serie.name : name) + '<br />';
                     for (var i = 0 ; i < indicator.length; i ++) {
-                        html += indicator[i].text + ' : ' + value[i] + '<br />';
+                        html += _encodeHTML(indicator[i].text) + ' : ' 
+                                + value[i] + '<br />';
                     }
                     _tDom.innerHTML = html;
                 }
                 else {
-                    _tDom.innerHTML = serie.name + '<br/>' +
-                                      name + ' : ' + value +
+                    _tDom.innerHTML = _encodeHTML(serie.name) + '<br/>' +
+                                      _encodeHTML(name) + ' : ' + value +
                                       (typeof speical == 'undefined'
                                       ? ''
                                       : (' (' + speical + ')'));
@@ -19441,6 +19491,39 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             yAxis = component.yAxis;
             polar = component.polar;
         }
+        
+        function ontooltipHover(param, tipShape) {
+            if (!_lastTipShape // 不存在或者存在但dataIndex发生变化才需要重绘
+                || (_lastTipShape && _lastTipShape.dataIndex != param.dataIndex)
+            ) {
+                if (_lastTipShape && _lastTipShape.tipShape.length > 0) {
+                    zr.delShape(_lastTipShape.tipShape);
+                }
+                for (var i = 0, l = tipShape.length; i < l; i++) {
+                    tipShape[i].id = zr.newShapeId('tooltip');
+                    tipShape[i].zlevel = _zlevelBase;
+                    tipShape[i].style = zrShapeBase.getHighlightStyle(
+                        tipShape[i].style,
+                        tipShape[i].highlightStyle
+                    );
+                    tipShape[i].draggable = false;
+                    tipShape[i].hoverable = false;
+                    tipShape[i].clickable = false;
+                    tipShape[i].ondragend = null;
+                    tipShape[i].ondragover = null;
+                    tipShape[i].ondrop = null;
+                    zr.addShape(tipShape[i])
+                }
+                _lastTipShape = {
+                    dataIndex : param.dataIndex,
+                    tipShape : tipShape
+                };
+            }
+        }
+        
+        function ondragend() {
+            _hide();
+        }
 
         function init(newOption, newDom) {
             option = newOption;
@@ -19530,7 +19613,19 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             self.shapeList = null;
             self = null;
         }
-
+        
+        /**
+         * html转码的方法
+         */
+        _encodeHTML = function (source) {
+            return String(source)
+                        .replace(/&/g,'&amp;')
+                        .replace(/</g,'&lt;')
+                        .replace(/>/g,'&gt;')
+                        .replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#39;");
+        };
+        
         zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
         zr.on(zrConfig.EVENT.GLOBALOUT, _onglobalout);
 
@@ -19541,6 +19636,8 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
         self.refresh = refresh;
         self.resize = resize;
         self.setComponent = setComponent;
+        self.ontooltipHover = ontooltipHover;
+        self.ondragend = ondragend;
         init(option, dom);
     }
 
@@ -22073,6 +22170,9 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
                 ecConfig.EVENT.DATA_VIEW_CHANGED, _ondataViewChanged
             );
             _messageCenter.bind(
+                ecConfig.EVENT.TOOLTIP_HOVER, _tooltipHover
+            );
+            _messageCenter.bind(
                 ecConfig.EVENT.RESTORE, _onrestore
             );
             _messageCenter.bind(
@@ -22334,6 +22434,20 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
                 param
             );
             _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+        }
+        
+        /**
+         * tooltip与图表间通信 
+         */
+        function _tooltipHover(param) {
+            var len = _chartList.length;
+            var tipShape = [];
+            while (len--) {
+                _chartList[len]
+                && _chartList[len].ontooltipHover
+                && _chartList[len].ontooltipHover(param, tipShape);
+            }
+            //_zr.refreshHover();
         }
 
         /**
@@ -29709,6 +29823,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
 
         var _zlevelBase = self.getZlevelBase();
 
+        var finalPLMap = {}; // 完成的point list(PL)
         var _sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
         var _symbol = [
               'circle', 'rectangle', 'triangle', 'diamond',
@@ -29721,6 +29836,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
         );
         
         function _buildShape() {
+            finalPLMap = {};
             self.selectedMap = {};
 
             // 水平垂直双向series索引 ，position索引到seriesIndex
@@ -29735,7 +29851,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
             var xAxis;
             var yAxis;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].type == ecConfig.CHART_TYPE_LINE) {
+                if (series[i].type == self.type) {
                     series[i] = self.reformOption(series[i]);
                     xAxisIndex = series[i].xAxisIndex;
                     yAxisIndex = series[i].yAxisIndex;
@@ -29897,7 +30013,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
             var baseYP;
             var lastYN; // 负向堆叠处理
             var baseYN;
-            var finalPLMap = {}; // 完成的point list(PL)
+            //var finalPLMap = {}; // 完成的point list(PL)
             var curPLMap = {};   // 正在记录的point list(PL)
             var data;
             var value;
@@ -30017,7 +30133,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
             var baseXP;
             var lastXN; // 负向堆叠处理
             var baseXN;
-            var finalPLMap = {}; // 完成的point list(PL)
+            //var finalPLMap = {}; // 完成的point list(PL)
             var curPLMap = {};   // 正在记录的point list(PL)
             var data;
             var value;
@@ -30116,7 +30232,6 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                     curPLMap[sId] = [];
                 }
             }
-            //console.log(finalPLMap);
             _buildBorkenLine(finalPLMap, categoryAxis, 'vertical');
         }
 
@@ -30149,9 +30264,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
             ) {
                 serie = series[seriesIndex];
                 seriesPL = pointList[seriesIndex];
-                if (serie.type == ecConfig.CHART_TYPE_LINE
-                    && typeof seriesPL != 'undefined'
-                ) {
+                if (serie.type == self.type && typeof seriesPL != 'undefined') {
                     defaultColor = _sIndex2ColorMap[seriesIndex];
                     // 多级控制
                     lineWidth = self.deepQuery(
@@ -30282,7 +30395,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                             });
                         }
                     }
-            }
+                }
             }
         }
         
@@ -30359,7 +30472,8 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                 },
                 highlightStyle : {
                     color : symbol.match('empty') ? '#fff' : emphasisColor,
-                    strokeColor : emphasisColor
+                    strokeColor : emphasisColor,
+                    lineWidth: lineWidth * 2 + 2
                 },
                 clickable : true
             };
@@ -30438,6 +30552,72 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
             }
             self.clear();
             _buildShape();
+        }
+        
+        function ontooltipHover(param, tipShape) {
+            var seriesIndex = param.seriesIndex;
+            var dataIndex = param.dataIndex;
+            var seriesPL;
+            var serie;
+            var queryTarget;
+            var len = seriesIndex.length;
+            while (len--) {
+                seriesPL = finalPLMap[seriesIndex[len]];
+                if (seriesPL) {
+                    serie = series[seriesIndex[len]];
+                    queryTarget = [serie];
+                    defaultColor = _sIndex2ColorMap[seriesIndex[len]];
+                    // 多级控制
+                    lineWidth = self.deepQuery(
+                        [serie], 'itemStyle.normal.lineStyle.width'
+                    );
+                    lineType = self.deepQuery(
+                        [serie], 'itemStyle.normal.lineStyle.type'
+                    );
+                    lineColor = self.deepQuery(
+                        [serie], 'itemStyle.normal.lineStyle.color'
+                    );
+                    normalColor = self.deepQuery(
+                        [serie], 'itemStyle.normal.color'
+                    );
+                    emphasisColor = self.deepQuery(
+                        [serie], 'itemStyle.emphasis.color'
+                    );
+                    var shape;
+                    for (var i = 0, l = seriesPL.length; i < l; i++) {
+                        singlePL = seriesPL[i];
+                        for (var j = 0, k = singlePL.length; j < k; j++) {
+                            if (dataIndex == singlePL[j][2]) {
+                                data = serie.data[singlePL[j][2]];
+                                shape = _getSymbol(
+                                    seriesIndex[len],
+                                    singlePL[j][2], // dataIndex
+                                    singlePL[j][3], // name
+                                    singlePL[j][0], // x
+                                    singlePL[j][1], // y
+                                    self.deepQuery(
+                                        [data], 'itemStyle.normal.color'
+                                    ) || normalColor
+                                      || defaultColor,
+                                    self.deepQuery(
+                                        [data], 'itemStyle.emphasis.color'
+                                    ) || emphasisColor
+                                      || normalColor
+                                      || defaultColor,
+                                    lineWidth,
+                                    self.deepQuery(
+                                        [data, serie], 'symbolRotate'
+                                    ),
+                                    'horizontal'
+                                );
+                                //console.log(shape)
+                                //zr.addHoverShape(shape);
+                                tipShape.push(shape);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         /**
@@ -30594,6 +30774,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
 
         self.init = init;
         self.refresh = refresh;
+        self.ontooltipHover = ontooltipHover;
         self.addDataAnimation = addDataAnimation;
         self.animation = animation;
 
@@ -30653,7 +30834,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/bar',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/util','../chart'],function(require) {
+define('echarts/chart/bar',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/util','zrender/tool/color','../chart'],function(require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -30673,6 +30854,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
         var ecData = require('../util/ecData');
         
         var zrUtil = require('zrender/tool/util');
+        var zrColor = require('zrender/tool/color');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_BAR;
@@ -31218,12 +31400,11 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
             var normalColor = self.deepQuery(
                 [data, serie],
                 'itemStyle.normal.color'
-            );
+            ) || defaultColor;
             var emphasisColor = self.deepQuery(
                 [data, serie],
                 'itemStyle.emphasis.color'
             );
-            
             barShape = {
                 shape : 'rectangle',
                 zlevel : _zlevelBase,
@@ -31234,14 +31415,20 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                     width : width,
                     height : height,
                     brushType : 'both',
-                    color : normalColor || defaultColor,
+                    color : normalColor,
                     strokeColor : '#fff'
                 },
                 highlightStyle : {
-                    color : emphasisColor || normalColor || defaultColor
+                    color : emphasisColor 
+                            || (typeof normalColor == 'string'
+                                ? zrColor.lift(normalColor, -0.2)
+                                : normalColor
+                               ),
+                    strokeColor : 'rgba(0,0,0,0)'
                 },
                 _orient : orient
             };
+            barShape.highlightStyle.textColor = barShape.highlightStyle.color;
             
             barShape = self.addLabel(barShape, serie, data, name, orient);
 

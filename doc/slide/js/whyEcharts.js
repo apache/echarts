@@ -6,7 +6,7 @@ require.config({
         'echarts/chart/scatter': '../../doc/example/www/js/echarts-map',
         'echarts/chart/k': '../../doc/example/www/js/echarts-map',
         'echarts/chart/pie': '../../doc/example/www/js/echarts-map',
-        // 'echarts/chart/radar': '../../doc/example/www/js/echarts-map',
+        'echarts/chart/radar': '../../doc/example/www/js/echarts-map',
         'echarts/chart/map': '../../doc/example/www/js/echarts-map',
         'echarts/chart/force': '../../doc/example/www/js/echarts-map',
         webkitDep : '../../doc/example/webkit-dep'
@@ -24,8 +24,7 @@ require(
         'echarts/chart/scatter',
         'echarts/chart/k',
         'echarts/chart/pie',
-        'echarts',
-        //'echarts/chart/radar',
+        'echarts/chart/radar',
         'echarts/chart/force',
         'echarts/chart/map'
     ],
@@ -58,7 +57,9 @@ Reveal.addEventListener( 'ready', function(event){
 Reveal.addEventListener( 'slidechanged', showChart);
 
 var myChart;
+var timeTicket;
 function showChart(event) {
+	clearInterval(timeTicket);
     if (myChart && myChart.dispose) {
         myChart.dispose();
         myChart = null;
@@ -746,6 +747,150 @@ var optionMap = {
             }
             return {};
     })(),
+    
+    dynamic : (function(){
+    	functionMap.dynamic = function() {
+    		var lastData = 11;
+			var axisData;			
+			timeTicket = setInterval(function(){
+			    lastData += Math.random() * ((Math.round(Math.random() * 10) % 2) == 0 ? 1 : -1);
+			    lastData = lastData.toFixed(1) - 0;
+			    axisData = (new Date()).toLocaleTimeString().replace(/^\D*/,'');
+			    
+			    // 动态数据接口 addData
+			    myChart.addData([
+			        [
+			            0,        // 系列索引
+			            Math.round(Math.random() * 1000), // 新增数据
+			            true,     // 新增数据是否从队列头部插入
+			            false     // 是否增加队列长度，false则自定删除原有数据，队头插入删队尾，队尾插入删队头
+			        ],
+			        [
+			            1,        // 系列索引
+			            lastData, // 新增数据
+			            false,    // 新增数据是否从队列头部插入
+			            false,    // 是否增加队列长度，false则自定删除原有数据，队头插入删队尾，队尾插入删队头
+			            axisData  // 坐标轴标签
+			        ]
+			    ]);
+			}, 1500);
+    	};
+    	return {
+	        title : {
+	            text: '动态数据',
+	            subtext: '纯属虚构'
+	        },
+	        tooltip : {
+	            trigger: 'axis'
+	        },
+	        legend: {
+	            data:['最新成交价', '预购队列']
+	        },
+	        toolbox: {
+	            show : true,
+	            feature : {
+	                mark : true,
+	                dataView : {readOnly: false},
+	                magicType:['line', 'bar'],
+	                restore : true,
+	                saveAsImage : true
+	            }
+	        },
+	        dataZoom : {
+	            show : false,
+	            realtime: true,
+	            start : 50,
+	            end : 100
+	        },
+	        xAxis : [
+	            {
+	                type : 'category',
+	                boundaryGap : true,
+	                data : (function(){
+	                    var now = new Date();
+	                    var res = [];
+	                    var len = 10;
+	                    while (len--) {
+	                        res.unshift(now.toLocaleTimeString().replace(/^\D*/,''));
+	                        now = new Date(now - 2000);
+	                    }
+	                    return res;
+	                })()
+	            },
+	            {
+	                type : 'category',
+	                boundaryGap : true,
+	                splitline : {show : false},
+	                data : (function(){
+	                    var res = [];
+	                    var len = 10;
+	                    while (len--) {
+	                        res.push(len + 1);
+	                    }
+	                    return res;
+	                })()
+	            }
+	        ],
+	        yAxis : [
+	            {
+	                type : 'value',
+	                scale: true,
+	                precision:1,
+	                power:1,
+	                name : '价格',
+	                boundaryGap: [0.2, 0.2],
+	                splitArea : {show : true}
+	            },
+	            {
+	                type : 'value',
+	                scale: true,
+	                name : '预购量',
+	                boundaryGap: [0.2, 0.2]
+	            }
+	        ],
+	        series : [
+	            {
+	                name:'预购队列',
+	                type:'bar',
+	                xAxisIndex: 1,
+	                yAxisIndex: 1,
+	                itemStyle: {
+	                    normal: {
+	                        color : 'rgba(135,206,205,0.4)'
+	                    }
+	                },
+	                data:(function(){
+	                    var res = [];
+	                    var len = 10;
+	                    while (len--) {
+	                        res.push(Math.round(Math.random() * 1000));
+	                    }
+	                    return res;
+	                })()
+	            },
+	            {
+	                name:'最新成交价',
+	                type:'line',
+	                itemStyle: {
+	                    normal: {
+	                        // areaStyle: {type: 'default'},
+	                        lineStyle: {
+	                            shadowColor : 'rgba(0,0,0,0.4)'
+	                        }
+	                    }
+	                },
+	                data:(function(){
+	                    var res = [];
+	                    var len = 10;
+	                    while (len--) {
+	                        res.push((Math.random()*10 + 5).toFixed(1) - 0);
+	                    }
+	                    return res;
+	                })()
+	            }
+	        ]
+	    }
+    })(),
     legendSelected : {
         tooltip : {
             trigger: 'axis'
@@ -1166,82 +1311,175 @@ var optionMap = {
             return false;
         })()
     },
-    mix4 : {
-        tooltip : {
-            trigger: 'item',
-            formatter: "{a} <br/>{b} : {c} ({d}%)"
-        },
-        legend: {
-            orient : 'vertical',
-            x : 'left',
-            data:['Chrome','Firefox','Safari','IE9+','IE8-']
-        },
-        toolbox: {
-            show : true,
-            feature : {
-                mark : true,
-                dataView : {readOnly: false},
-                restore : true,
-                saveAsImage : true
-            }
-        },
-        series : (function(){
-            var series = [];
-            for (var i = 0; i < 30; i++) {
-                series.push({
-                    name:'浏览器（数据纯属虚构）',
-                    type:'pie',
-                    itemStyle : {normal : {
-                        label : {show : i > 28},
-                        labelLine : {show : i > 28, length:20}
-                    }},
-                    radius : [i * 4 + 40, i * 4 + 43],
-                    data:[
-                        {value: i * 128 + 80,  name:'Chrome'},
-                        {value: i * 64  + 160,  name:'Firefox'},
-                        {value: i * 32  + 320,  name:'Safari'},
-                        {value: i * 16  + 640,  name:'IE9+'},
-                        {value: i * 8  + 1280, name:'IE8-'}
-                    ]
-                })
-            }
-            return series;
-        })(),
-        calculable : (function(){
-            functionMap.mix4 = function() {
-                setTimeout(function(){
-                    if (!myChart) {
-                        return;
-                    }
-                    var _ZR = myChart.getZrender();
-                    // 补充千层饼
-                    _ZR.addShape({
-                        shape : 'text',
-                        style : {
-                            x : _ZR.getWidth() / 2,
-                            y : _ZR.getHeight() / 2,
-                            color: '#bbb',
-                            text : '恶梦的过去',
-                            textAlign : 'center'
-                        }
-                    });
-                    _ZR.addShape({
-                        shape : 'text',
-                        style : {
-                            x : _ZR.getWidth() / 2 + 200,
-                            y : _ZR.getHeight() / 2,
-                            brushType:'both',
-                            color: 'orange',
-                            strokeColor: 'yellow',
-                            text : '美好的未来',
-                            textAlign : 'left',
-                            textFont:'normal 20px 微软雅黑'
-                        }
-                    });
-                    _ZR.refresh();
-                }, 2000);
-            }
-            return false;
-        })()
-    }
+    lasagna : (function() {
+    	 functionMap.lasagna = function() {
+            myChart.setOption({
+		        tooltip : {
+		            trigger: 'item',
+		            formatter: "{a} <br/>{b} : {c} ({d}%)"
+		        },
+		        legend: {
+		            orient : 'vertical',
+		            x : 'left',
+		            data:['Chrome','Firefox','Safari','IE9+','IE8-']
+		        },
+		        toolbox: {
+		            show : true,
+		            feature : {
+		                mark : true,
+		                dataView : {readOnly: false},
+		                restore : true,
+		                saveAsImage : true
+		            }
+		        },
+		        series : (function(){
+		            var series = [];
+		            for (var i = 0; i < 30; i++) {
+		                series.push({
+		                    name:'浏览器（数据纯属虚构）',
+		                    type:'pie',
+		                    itemStyle : {normal : {
+		                        label : {show : i > 28},
+		                        labelLine : {show : i > 28, length:20}
+		                    }},
+		                    radius : [i * 4 + 40, i * 4 + 43],
+		                    data:[
+		                        {value: i * 128 + 80,  name:'Chrome'},
+		                        {value: i * 64  + 160,  name:'Firefox'},
+		                        {value: i * 32  + 320,  name:'Safari'},
+		                        {value: i * 16  + 640,  name:'IE9+'},
+		                        {value: i * 8  + 1280, name:'IE8-'}
+		                    ]
+		                })
+		            }
+		            return series;
+		        })(),
+		        calculable : (function(){
+		            functionMap.mix4 = function() {
+		                setTimeout(function(){
+		                    if (!myChart) {
+		                        return;
+		                    }
+		                    var _ZR = myChart.getZrender();
+		                    // 补充千层饼
+		                    _ZR.addShape({
+		                        shape : 'text',
+		                        style : {
+		                            x : _ZR.getWidth() / 2,
+		                            y : _ZR.getHeight() / 2,
+		                            color: '#bbb',
+		                            text : '恶梦的过去',
+		                            textAlign : 'center'
+		                        }
+		                    });
+		                    _ZR.addShape({
+		                        shape : 'text',
+		                        style : {
+		                            x : _ZR.getWidth() / 2 + 200,
+		                            y : _ZR.getHeight() / 2,
+		                            brushType:'both',
+		                            color: 'orange',
+		                            strokeColor: 'yellow',
+		                            text : '美好的未来',
+		                            textAlign : 'left',
+		                            textFont:'normal 20px 微软雅黑'
+		                        }
+		                    });
+		                    _ZR.refresh();
+		                }, 2000);
+		            }
+		            return false;
+		        })()
+		    }, true);
+        }
+        functionMap.wormhole = function() {
+        	myChart.setOption({
+			    color : (function(){
+			        var zrColor = require('zrender/tool/color');
+			        return zrColor.getStepColors('yellow', 'red', 28);
+			    })(),
+			    title : {
+			        text: '浏览器占比变化',
+			        subtext: '纯属虚构',
+			        x:'right',
+			        y:'bottom'
+			    },
+			    tooltip : {
+			        trigger: 'item',
+        			backgroundColor : 'rgba(0,0,250,0.2)'
+			    },
+			    legend: {
+			       // orient : 'vertical',
+			        //x : 'center',
+			        data: function(){
+			                var list = [];
+			                for (var i = 1; i <=28; i++) {
+			                    list.push(i + 2000);
+			                }
+			                return list;
+			            }()
+			    },
+			    toolbox: {
+			        show : true,
+			        orient : 'vertical',
+			        y:'center',
+			        feature : {
+			            mark : true,
+			            dataView : {readOnly: false},
+			            restore : true,
+			            saveAsImage : true
+			        }
+			    },
+			   polar : [
+			       {
+			           indicator : [
+			               { text: 'IE8-', max: 400},
+			               { text: 'IE9+', max: 400},
+			               { text: 'Safari', max: 400},
+			               { text: 'Firefox', max: 400},
+			               { text: 'Chrome', max: 400}
+			            ],
+			            center : [,240],
+			            radius : 150
+			        }
+			    ],
+			    calculable : false,
+			    series : (function(){
+			        var series = [];
+			        for (var i = 1; i <= 28; i++) {
+			            series.push({
+			                name:'浏览器（数据纯属虚构）',
+			                type:'radar',
+			                symbol:'none',
+			                itemStyle: {
+			                    normal: {
+			                        lineStyle: {
+			                          width:1
+			                        }
+			                    },
+			                    emphasis : {
+			                        areaStyle: {color:'rgba(0,250,0,0.3)'}
+			                    }
+
+			                },
+			                data:[
+			                  {
+			                    value:[
+			                        (40 - i) * 10,
+			                        (38 - i) * 4 + 60,
+			                        i * 5 + 10,
+			                        i * 9,
+			                        i * i /2
+			                    ],
+			                    name:i + 2000
+			                  }
+			                ]
+			            })
+			        }
+			        return series;
+			    })()
+			}, true);
+        }
+    	return {};
+    })()
 }
