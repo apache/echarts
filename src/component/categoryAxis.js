@@ -76,7 +76,7 @@ define(function (require) {
                 if (option.position == 'bottom' || option.position == 'top') {
                     // 横向
                     if (dataLength > 3) {
-                        var gap = getCoord(data[1]) -  getCoord(data[0]);
+                        var gap = getGap();
                         var isEnough = false;
                         var labelSpace;
                         var labelSize;
@@ -128,7 +128,7 @@ define(function (require) {
                 else {
                     // 纵向
                     if (dataLength > 3) {
-                        var gap = getCoord(data[0]) - getCoord(data[1]);
+                        var gap = getGap();
                         interval = 1;
                         // 标签上下至少间隔为3px
                         while ((gap * interval - 6) < fontSize
