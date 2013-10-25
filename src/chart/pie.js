@@ -898,27 +898,22 @@ define(function(require) {
                             (self.deepQuery([serie],'animationDuration')
                             || duration)
                             + dataIndex * 10,
-
                             {
                                 r0 : r0,
                                 r : r
-                            },
-
-                            'QuinticOut'
+                            }
                         )
-                        .start();
+                        .start('QuinticOut');
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             (self.deepQuery([serie],'animationDuration')
                             || duration)
                             + dataIndex * 100,
-
-                            {rotation : [0, x, y]},
-
-                            (self.deepQuery([serie], 'animationEasing')
-                            || easing)
+                            {rotation : [0, x, y]}
                         )
-                        .start();
+                        .start(
+                            self.deepQuery([serie], 'animationEasing') || easing
+                        );
                 }
                 else {
                     dataIndex = self.shapeList[i]._dataIndex;
@@ -928,10 +923,9 @@ define(function(require) {
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             duration + dataIndex * 100,
-                            {scale : [1, 1, x, y]},
-                            'QuinticOut'
+                            {scale : [1, 1, x, y]}
                         )
-                        .start();
+                        .start('QuinticOut');
                 }
             }
         }

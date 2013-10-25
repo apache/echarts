@@ -128,6 +128,9 @@ define(function(require) {
                 ecConfig.EVENT.DATA_VIEW_CHANGED, _ondataViewChanged
             );
             _messageCenter.bind(
+                ecConfig.EVENT.TOOLTIP_HOVER, _tooltipHover
+            );
+            _messageCenter.bind(
                 ecConfig.EVENT.RESTORE, _onrestore
             );
             _messageCenter.bind(
@@ -389,6 +392,20 @@ define(function(require) {
                 param
             );
             _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+        }
+        
+        /**
+         * tooltip与图表间通信 
+         */
+        function _tooltipHover(param) {
+            var len = _chartList.length;
+            var tipShape = [];
+            while (len--) {
+                _chartList[len]
+                && _chartList[len].ontooltipHover
+                && _chartList[len].ontooltipHover(param, tipShape);
+            }
+            //_zr.refreshHover();
         }
 
         /**

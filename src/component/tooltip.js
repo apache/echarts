@@ -26,6 +26,7 @@ define(function (require) {
         var zrArea = require('zrender/tool/area');
         var zrColor = require('zrender/tool/color');
         var zrUtil = require('zrender/tool/util');
+        var zrShapeBase = require('zrender/shape/base');
 
         var rectangle = zrShape.get('rectangle');
         var self = this;
@@ -63,6 +64,7 @@ define(function (require) {
         var _zrHeight = zr.getHeight();
         var _zrWidth = zr.getWidth();
 
+        var _lastTipShape = false;
         var _axisLineShape = {
             shape : 'line',
             id : zr.newShapeId('tooltip'),
@@ -204,6 +206,10 @@ define(function (require) {
                 _axisShadowShape.invisible = true;
                 zr.modShape(_axisShadowShape.id, _axisShadowShape);
                 needRefresh = true;
+            }
+            if (_lastTipShape && _lastTipShape.tipShape.length > 0) {
+                zr.delShape(_lastTipShape.tipShape);
+                _lastTipShape = false;
             }
             needRefresh && zr.refresh(); 
         }
@@ -446,6 +452,7 @@ define(function (require) {
             }
             var series = option.series;
             var seriesArray = [];
+            var seriesIndex = [];
             var categoryAxis;
             var x;
             var y;
@@ -484,8 +491,18 @@ define(function (require) {
                                               [series[i]], 'tooltip'
                                           ));
                         seriesArray.push(series[i]);
+                        seriesIndex.push(i);
                     }
                 }
+                // 寻找高亮元素
+                messageCenter.dispatch(
+                    ecConfig.EVENT.TOOLTIP_HOVER,
+                    _event,
+                    {
+                        seriesIndex : seriesIndex,
+                        dataIndex : dataIndex
+                    }
+                );
                 y = zrEvent.getY(_event) + 10;
                 x = categoryAxis.getCoordByIndex(dataIndex);
                 _styleAxisPointer(
@@ -520,8 +537,18 @@ define(function (require) {
                                               [series[i]], 'tooltip'
                                           ));
                         seriesArray.push(series[i]);
+                        seriesIndex.push(i);
                     }
                 }
+                // 寻找高亮元素
+                messageCenter.dispatch(
+                    ecConfig.EVENT.TOOLTIP_HOVER,
+                    _event,
+                    {
+                        seriesIndex : seriesIndex,
+                        dataIndex : dataIndex
+                    }
+                );
                 x = zrEvent.getX(_event) + 10;
                 y = categoryAxis.getCoordByIndex(dataIndex);
                 _styleAxisPointer(
@@ -564,11 +591,11 @@ define(function (require) {
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
                         formatter = formatter.replace(
                             '{a' + i + '}',
-                            seriesArray[i].name
+                            _encodeHTML(seriesArray[i].name)
                         );
                         formatter = formatter.replace(
                             '{b' + i + '}',
-                            categoryAxis.getNameByIndex(dataIndex)
+                            _encodeHTML(categoryAxis.getNameByIndex(dataIndex))
                         );
                         data = seriesArray[i].data[dataIndex];
                         data = typeof data != 'undefined'
@@ -585,11 +612,15 @@ define(function (require) {
                 }
                 else {
                     _curTicket = NaN;
-                    formatter = categoryAxis.getNameByIndex(dataIndex);
+                    formatter = _encodeHTML(
+                        categoryAxis.getNameByIndex(dataIndex)
+                    );
+
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
-                        formatter += '<br/>' + seriesArray[i].name + ' : ';
+                        formatter += '<br/>' + _encodeHTML(seriesArray[i].name)
+                                     + ' : ';
                         data = seriesArray[i].data[dataIndex];
-                        data = data = typeof data != 'undefined'
+                        data = typeof data != 'undefined'
                                ? (typeof data.value != 'undefined'
                                    ? data.value
                                    : data)
@@ -675,13 +706,16 @@ define(function (require) {
                                : {name:'', value: {dataIndex:'-'}};
                                
                         params.push([
-                            typeof seriesArray[i].name != 'undefin'
-                            ? seriesArray[i].name : '',
+                            typeof seriesArray[i].name != 'undefined'
+                                ? seriesArray[i].name : '',
                             data.name,
                             data.value[dataIndex],
                             indicatorName
                         ]);
                     }
+                }
+                if (params.length <= 0) {
+                    return;
                 }
                 if (typeof formatter == 'function') {
                     _curTicket = 'axis:' + dataIndex;
@@ -697,11 +731,11 @@ define(function (require) {
                     for (var i = 0, l = params.length; i < l; i++) {
                         formatter = formatter.replace(
                             '{a' + i + '}',
-                            params[i][0]
+                            _encodeHTML(params[i][0])
                         );
                         formatter = formatter.replace(
                             '{b' + i + '}',
-                            params[i][1]
+                            _encodeHTML(params[i][1])
                         );
                         formatter = formatter.replace(
                             '{c' + i + '}',
@@ -709,17 +743,20 @@ define(function (require) {
                         );
                         formatter = formatter.replace(
                             '{d' + i + '}',
-                            params[i][3]
+                            _encodeHTML(params[i][3])
                         );
                     }
                     _tDom.innerHTML = formatter;
                 }
                 else {
-                    formatter = params[0][1] + '<br/>' 
-                                + params[0][3] + ' : ' + params[0][2];
+                    formatter = _encodeHTML(params[0][1]) + '<br/>' 
+                                + _encodeHTML(params[0][3]) + ' : ' 
+                                + params[0][2];
                     for (var i = 1, l = params.length; i < l; i++) {
-                        formatter += '<br/>' + params[i][1] + '<br/>';
-                        formatter += params[i][3] + ' : ' + params[i][2];
+                        formatter += '<br/>' + _encodeHTML(params[i][1]) 
+                                     + '<br/>';
+                        formatter += _encodeHTML(params[i][3]) + ' : ' 
+                                     + params[i][2];
                     }
                     _tDom.innerHTML = formatter;
                 }
@@ -814,8 +851,8 @@ define(function (require) {
                                      .replace('{b}','{b0}')
                                      .replace('{c}','{c0}')
                                      .replace('{d}','{d0}');
-                formatter = formatter.replace('{a0}', serie.name)
-                                     .replace('{b0}', name)
+                formatter = formatter.replace('{a0}', _encodeHTML(serie.name))
+                                     .replace('{b0}', _encodeHTML(name))
                                      .replace('{c0}', value);
 
                 if (typeof speical != 'undefined') {
@@ -827,24 +864,27 @@ define(function (require) {
             else {
                 _curTicket = NaN;
                 if (serie.type == ecConfig.CHART_TYPE_SCATTER) {
-                    _tDom.innerHTML = serie.name + '<br/>' +
-                                      (name === '' ? '' : (name + ' : ')) 
-                                      + value +
-                                      (typeof speical == 'undefined'
-                                      ? ''
-                                      : (' (' + speical + ')'));
+                    _tDom.innerHTML = _encodeHTML(serie.name) + '<br/>' +
+                                      (name === '' 
+                                           ? '' : (_encodeHTML(name) + ' : ')
+                                      ) 
+                                      + value 
+                                      + (typeof speical == 'undefined'
+                                          ? ''
+                                          : (' (' + speical + ')'));
                 }
                 else if (serie.type == ecConfig.CHART_TYPE_RADAR) {
                     indicator = speical;
-                    html += (name === '' ? serie.name : name) + '<br />';
+                    html += _encodeHTML(name === '' ? serie.name : name) + '<br />';
                     for (var i = 0 ; i < indicator.length; i ++) {
-                        html += indicator[i].text + ' : ' + value[i] + '<br />';
+                        html += _encodeHTML(indicator[i].text) + ' : ' 
+                                + value[i] + '<br />';
                     }
                     _tDom.innerHTML = html;
                 }
                 else {
-                    _tDom.innerHTML = serie.name + '<br/>' +
-                                      name + ' : ' + value +
+                    _tDom.innerHTML = _encodeHTML(serie.name) + '<br/>' +
+                                      _encodeHTML(name) + ' : ' + value +
                                       (typeof speical == 'undefined'
                                       ? ''
                                       : (' (' + speical + ')'));
@@ -1106,6 +1146,39 @@ define(function (require) {
             yAxis = component.yAxis;
             polar = component.polar;
         }
+        
+        function ontooltipHover(param, tipShape) {
+            if (!_lastTipShape // 不存在或者存在但dataIndex发生变化才需要重绘
+                || (_lastTipShape && _lastTipShape.dataIndex != param.dataIndex)
+            ) {
+                if (_lastTipShape && _lastTipShape.tipShape.length > 0) {
+                    zr.delShape(_lastTipShape.tipShape);
+                }
+                for (var i = 0, l = tipShape.length; i < l; i++) {
+                    tipShape[i].id = zr.newShapeId('tooltip');
+                    tipShape[i].zlevel = _zlevelBase;
+                    tipShape[i].style = zrShapeBase.getHighlightStyle(
+                        tipShape[i].style,
+                        tipShape[i].highlightStyle
+                    );
+                    tipShape[i].draggable = false;
+                    tipShape[i].hoverable = false;
+                    tipShape[i].clickable = false;
+                    tipShape[i].ondragend = null;
+                    tipShape[i].ondragover = null;
+                    tipShape[i].ondrop = null;
+                    zr.addShape(tipShape[i])
+                }
+                _lastTipShape = {
+                    dataIndex : param.dataIndex,
+                    tipShape : tipShape
+                };
+            }
+        }
+        
+        function ondragend() {
+            _hide();
+        }
 
         function init(newOption, newDom) {
             option = newOption;
@@ -1195,7 +1268,19 @@ define(function (require) {
             self.shapeList = null;
             self = null;
         }
-
+        
+        /**
+         * html转码的方法
+         */
+        _encodeHTML = function (source) {
+            return String(source)
+                        .replace(/&/g,'&amp;')
+                        .replace(/</g,'&lt;')
+                        .replace(/>/g,'&gt;')
+                        .replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#39;");
+        };
+        
         zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
         zr.on(zrConfig.EVENT.GLOBALOUT, _onglobalout);
 
@@ -1206,6 +1291,8 @@ define(function (require) {
         self.refresh = refresh;
         self.resize = resize;
         self.setComponent = setComponent;
+        self.ontooltipHover = ontooltipHover;
+        self.ondragend = ondragend;
         init(option, dom);
     }
 
