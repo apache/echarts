@@ -25,6 +25,7 @@ define(function(require) {
         var ecData = require('../util/ecData');
         
         var zrUtil = require('zrender/tool/util');
+        var zrColor = require('zrender/tool/color');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_BAR;
@@ -570,12 +571,11 @@ define(function(require) {
             var normalColor = self.deepQuery(
                 [data, serie],
                 'itemStyle.normal.color'
-            );
+            ) || defaultColor;
             var emphasisColor = self.deepQuery(
                 [data, serie],
                 'itemStyle.emphasis.color'
             );
-            
             barShape = {
                 shape : 'rectangle',
                 zlevel : _zlevelBase,
@@ -586,14 +586,20 @@ define(function(require) {
                     width : width,
                     height : height,
                     brushType : 'both',
-                    color : normalColor || defaultColor,
+                    color : normalColor,
                     strokeColor : '#fff'
                 },
                 highlightStyle : {
-                    color : emphasisColor || normalColor || defaultColor
+                    color : emphasisColor 
+                            || (typeof normalColor == 'string'
+                                ? zrColor.lift(normalColor, -0.2)
+                                : normalColor
+                               ),
+                    strokeColor : 'rgba(0,0,0,0)'
                 },
                 _orient : orient
             };
+            barShape.highlightStyle.textColor = barShape.highlightStyle.color;
             
             barShape = self.addLabel(barShape, serie, data, name, orient);
 

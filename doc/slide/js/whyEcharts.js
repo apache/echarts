@@ -18,6 +18,7 @@ var webkitDepData;
 require(
     [
         'echarts',
+        'webkitDep',
         'echarts/chart/line',
         'echarts/chart/bar',
         'echarts/chart/scatter',
@@ -26,8 +27,7 @@ require(
         'echarts',
         //'echarts/chart/radar',
         'echarts/chart/force',
-        'echarts/chart/map',
-        'webkitDep',
+        'echarts/chart/map'
     ],
     function(ec, wd) {
         echarts = ec;
@@ -267,18 +267,21 @@ var optionMap = {
             {
                 name:'成交',
                 type:'bar',
+                smooth:true,
                 itemStyle: {normal: {areaStyle: {type: 'default'}}},
                 data:[10, 12, 21, 54, 260, 830, 710]
             },
             {
                 name:'预购',
                 type:'bar',
+                smooth:true,
                 itemStyle: {normal: {areaStyle: {type: 'default'}}},
                 data:[30, 182, 434, 791, 390, 30, 10]
             },
             {
                 name:'意向',
                 type:'bar',
+                smooth:true,
                 itemStyle: {normal: {areaStyle: {type: 'default'}}},
                 data:[1320, 1132, 601, 234, 120, 90, 20]
             }
@@ -588,7 +591,7 @@ var optionMap = {
                 large: true,
                 data: (function() {
                     var d = [];
-                    var len = 3000;
+                    var len = 10000;
                     var x = 0;
                     while (len--) {
                         x = (Math.random() * 10).toFixed(3) - 0;
@@ -607,7 +610,7 @@ var optionMap = {
                 large: true,
                 data: (function() {
                     var d = [];
-                    var len = 3000;
+                    var len = 10000;
                     var x = 0;
                     while (len--) {
                         x = (Math.random() * 10).toFixed(3) - 0;
