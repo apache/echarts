@@ -1012,7 +1012,7 @@ define(function(require) {
             y -= 1;
             symbol = 'star';
         } 
-        else if (symbol == 'rectangle') {
+        else if (symbol == 'rectangle' || symbol == 'arrow') {
             x += (width - height) / 2;
             width = height;
         }
