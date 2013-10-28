@@ -1083,7 +1083,7 @@ NDArray.prototype = {
 
     /**
      * 
-     * @param {Number} [axis]
+     * @param {Number} [axis=-1]
      * @param {string} [order='ascending']
      *        'ascending' | 'descending'
      * @return {NDArray}
@@ -1137,7 +1137,7 @@ NDArray.prototype = {
 
     /**
      * 
-     * @param {Number} [axis]
+     * @param {Number} [axis=-1]
      * @param {string} [order='ascending']
      *        'ascending' | 'descending'
      * @param {NDArray} [out]
