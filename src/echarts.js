@@ -42,9 +42,9 @@
 define(function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
-    self.version = '1.2.0';
+    self.version = '1.2.1';
     self.dependencies = {
-        zrender : '1.0.3'
+        zrender : '1.0.4'
     };
     /**
      * 入口方法 
@@ -126,6 +126,9 @@ define(function(require) {
             );
             _messageCenter.bind(
                 ecConfig.EVENT.DATA_VIEW_CHANGED, _ondataViewChanged
+            );
+            _messageCenter.bind(
+                ecConfig.EVENT.TOOLTIP_HOVER, _tooltipHover
             );
             _messageCenter.bind(
                 ecConfig.EVENT.RESTORE, _onrestore
@@ -389,6 +392,20 @@ define(function(require) {
                 param
             );
             _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+        }
+        
+        /**
+         * tooltip与图表间通信 
+         */
+        function _tooltipHover(param) {
+            var len = _chartList.length;
+            var tipShape = [];
+            while (len--) {
+                _chartList[len]
+                && _chartList[len].ontooltipHover
+                && _chartList[len].ontooltipHover(param, tipShape);
+            }
+            //_zr.refreshHover();
         }
 
         /**

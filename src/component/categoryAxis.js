@@ -76,7 +76,7 @@ define(function (require) {
                 if (option.position == 'bottom' || option.position == 'top') {
                     // 横向
                     if (dataLength > 3) {
-                        var gap = getCoord(data[1]) -  getCoord(data[0]);
+                        var gap = getGap();
                         var isEnough = false;
                         var labelSpace;
                         var labelSize;
@@ -128,7 +128,7 @@ define(function (require) {
                 else {
                     // 纵向
                     if (dataLength > 3) {
-                        var gap = getCoord(data[0]) - getCoord(data[1]);
+                        var gap = getGap();
                         interval = 1;
                         // 标签上下至少间隔为3px
                         while ((gap * interval - 6) < fontSize
@@ -570,7 +570,8 @@ define(function (require) {
             // Math.floor可能引起一些偏差，但性能会更好
             for (var i = 0; i < dataLength; i++) {
                 if (data[i] == value
-                    || (data[i].value && data[i].value == value)
+                    || (typeof data[i].value != 'undefined' 
+                        && data[i].value == value)
                 ) {
                     if (option.position == 'bottom'
                         || option.position == 'top'
@@ -609,7 +610,27 @@ define(function (require) {
                 }
             }
             else {
-                return getCoord(option.data[dataIndex]);
+                var gap = getGap();
+                var position = option.boundaryGap ? gap : 0;
+    
+                position += dataIndex * gap;
+                
+                if (option.position == 'bottom'
+                    || option.position == 'top'
+                ) {
+                    // 横向
+                    position = grid.getX() + position;
+                }
+                else {
+                    // 纵向
+                    position = grid.getYend() - position;
+                }
+                
+                return (dataIndex === 0 || dataIndex == option.data.length - 1)
+                       ? position
+                       : Math.floor(position);
+                
+               // return getCoord(option.data[dataIndex]);
             }
         }
 

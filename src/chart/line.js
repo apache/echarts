@@ -33,6 +33,7 @@ define(function(require) {
 
         var _zlevelBase = self.getZlevelBase();
 
+        var finalPLMap = {}; // 完成的point list(PL)
         var _sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
         var _symbol = [
               'circle', 'rectangle', 'triangle', 'diamond',
@@ -45,6 +46,7 @@ define(function(require) {
         );
         
         function _buildShape() {
+            finalPLMap = {};
             self.selectedMap = {};
 
             // 水平垂直双向series索引 ，position索引到seriesIndex
@@ -59,7 +61,7 @@ define(function(require) {
             var xAxis;
             var yAxis;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].type == ecConfig.CHART_TYPE_LINE) {
+                if (series[i].type == self.type) {
                     series[i] = self.reformOption(series[i]);
                     xAxisIndex = series[i].xAxisIndex;
                     yAxisIndex = series[i].yAxisIndex;
@@ -221,7 +223,7 @@ define(function(require) {
             var baseYP;
             var lastYN; // 负向堆叠处理
             var baseYN;
-            var finalPLMap = {}; // 完成的point list(PL)
+            //var finalPLMap = {}; // 完成的point list(PL)
             var curPLMap = {};   // 正在记录的point list(PL)
             var data;
             var value;
@@ -341,7 +343,7 @@ define(function(require) {
             var baseXP;
             var lastXN; // 负向堆叠处理
             var baseXN;
-            var finalPLMap = {}; // 完成的point list(PL)
+            //var finalPLMap = {}; // 完成的point list(PL)
             var curPLMap = {};   // 正在记录的point list(PL)
             var data;
             var value;
@@ -440,7 +442,6 @@ define(function(require) {
                     curPLMap[sId] = [];
                 }
             }
-            //console.log(finalPLMap);
             _buildBorkenLine(finalPLMap, categoryAxis, 'vertical');
         }
 
@@ -473,9 +474,7 @@ define(function(require) {
             ) {
                 serie = series[seriesIndex];
                 seriesPL = pointList[seriesIndex];
-                if (serie.type == ecConfig.CHART_TYPE_LINE
-                    && typeof seriesPL != 'undefined'
-                ) {
+                if (serie.type == self.type && typeof seriesPL != 'undefined') {
                     defaultColor = _sIndex2ColorMap[seriesIndex];
                     // 多级控制
                     lineWidth = self.deepQuery(
@@ -606,7 +605,7 @@ define(function(require) {
                             });
                         }
                     }
-            }
+                }
             }
         }
         
@@ -683,7 +682,8 @@ define(function(require) {
                 },
                 highlightStyle : {
                     color : symbol.match('empty') ? '#fff' : emphasisColor,
-                    strokeColor : emphasisColor
+                    strokeColor : emphasisColor,
+                    lineWidth: lineWidth * 2 + 2
                 },
                 clickable : true
             };
@@ -762,6 +762,72 @@ define(function(require) {
             }
             self.clear();
             _buildShape();
+        }
+        
+        function ontooltipHover(param, tipShape) {
+            var seriesIndex = param.seriesIndex;
+            var dataIndex = param.dataIndex;
+            var seriesPL;
+            var serie;
+            var queryTarget;
+            var len = seriesIndex.length;
+            while (len--) {
+                seriesPL = finalPLMap[seriesIndex[len]];
+                if (seriesPL) {
+                    serie = series[seriesIndex[len]];
+                    queryTarget = [serie];
+                    defaultColor = _sIndex2ColorMap[seriesIndex[len]];
+                    // 多级控制
+                    lineWidth = self.deepQuery(
+                        [serie], 'itemStyle.normal.lineStyle.width'
+                    );
+                    lineType = self.deepQuery(
+                        [serie], 'itemStyle.normal.lineStyle.type'
+                    );
+                    lineColor = self.deepQuery(
+                        [serie], 'itemStyle.normal.lineStyle.color'
+                    );
+                    normalColor = self.deepQuery(
+                        [serie], 'itemStyle.normal.color'
+                    );
+                    emphasisColor = self.deepQuery(
+                        [serie], 'itemStyle.emphasis.color'
+                    );
+                    var shape;
+                    for (var i = 0, l = seriesPL.length; i < l; i++) {
+                        singlePL = seriesPL[i];
+                        for (var j = 0, k = singlePL.length; j < k; j++) {
+                            if (dataIndex == singlePL[j][2]) {
+                                data = serie.data[singlePL[j][2]];
+                                shape = _getSymbol(
+                                    seriesIndex[len],
+                                    singlePL[j][2], // dataIndex
+                                    singlePL[j][3], // name
+                                    singlePL[j][0], // x
+                                    singlePL[j][1], // y
+                                    self.deepQuery(
+                                        [data], 'itemStyle.normal.color'
+                                    ) || normalColor
+                                      || defaultColor,
+                                    self.deepQuery(
+                                        [data], 'itemStyle.emphasis.color'
+                                    ) || emphasisColor
+                                      || normalColor
+                                      || defaultColor,
+                                    lineWidth,
+                                    self.deepQuery(
+                                        [data, serie], 'symbolRotate'
+                                    ),
+                                    'horizontal'
+                                );
+                                //console.log(shape)
+                                //zr.addHoverShape(shape);
+                                tipShape.push(shape);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         /**
@@ -894,13 +960,11 @@ define(function(require) {
                             (self.deepQuery([serie],'animationDuration')
                             || duration)
                             + dataIndex * 100,
-
-                            {scale : [1, 1, x, y]},
-
-                            (self.deepQuery([serie], 'animationEasing')
-                            || easing)
+                            {scale : [1, 1, x, y]}
                         )
-                        .start();
+                        .start(
+                            self.deepQuery([serie], 'animationEasing') || easing
+                        );
                 }
                 else {
                     x = self.shapeList[i]._x || 0;
@@ -911,16 +975,16 @@ define(function(require) {
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             duration,
-                            {scale : [1, 1, x, y]},
-                            'QuinticOut'
+                            {scale : [1, 1, x, y]}
                         )
-                        .start();
+                        .start('QuinticOut');
                 }
             }
         }
 
         self.init = init;
         self.refresh = refresh;
+        self.ontooltipHover = ontooltipHover;
         self.addDataAnimation = addDataAnimation;
         self.animation = animation;
 

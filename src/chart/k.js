@@ -467,13 +467,11 @@ define(function(require) {
                         .when(
                             (self.deepQuery([serie],'animationDuration')
                             || duration),
-
-                            {scale : [1, 1, x, y]},
-
-                            (self.deepQuery([serie], 'animationEasing')
-                            || easing)
+                            {scale : [1, 1, x, y]}
                         )
-                        .start();
+                        .start(
+                            self.deepQuery([serie], 'animationEasing') || easing
+                        );
                 }
             }
         }
