@@ -39,6 +39,12 @@ define(function(require) {
         // Config
         var startAngle;
         var clockWise;
+        var innerRadius;
+        var outerRadius;
+        var padding;
+        var sortGroups;
+        var sortSubGroups;
+        var center;
 
         // Adjacency matrix
         var dataMat;
@@ -52,138 +58,141 @@ define(function(require) {
         function _buildShape() {
 
             self.selectedMap = {};
-
+            var chordSerie;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type === self.type) {
-                    var chordSerie = series[i];
+                    chordSerie = series[i];
 
                     self.reformOption(chordSerie);
 
-                    var innerRadius = chordSerie.innerRadius;
-                    var outerRadius = chordSerie.outerRadius;
-                    var padding = chordSerie.padding;
-                    var sortGroups = chordSerie.sort;
-                    var sortSubGroups = chordSerie.sortSub;
-                    var center = self.calAbsolute(chordSerie.center);
-
-                    var groups = chordSerie.data;
-                    var data = chordSerie.matrix;
-                    
-                    startAngle = chordSerie.startAngle;
-                    clockWise = chordSerie.clockWise;
-
-                    dataMat = new NDArray(data);
-
-                    // Filter the data by selected legend
-                    res = _filterData(dataMat, groups);
-                    dataMat = res[0];
-                    groups = res[1];
-
-                    var shape = dataMat.shape();
-                    // Check if data is valid
-                    if (shape[0] !== shape[1] || shape[0] !== groups.length) {
-                        throw new Error('Data not valid');
-                    }
-
-                    // Processing data
-                    var sumOut = dataMat.sum(1);
-                    switch (sortGroups) {
-                        case 'ascending':
-                        case 'descending':
-                            var groupIndices = sumOut
-                                    .argsort({order : sortGroups});
-                            sumOut.sort({order : sortGroups});
-                            break;
-                        default:
-                            var groupIndices = NDArray.range(shape[0]);
-                    }
-
-                    var percents = sumOut.mul(1 / sumOut.sum());
-
-                    var len = percents.shape()[0];
-
-                    var groupAngles = percents.mul(360 - padding * len);
-                    groupAngles.add(padding, groupAngles);
-
-                    var subGroupAngles = dataMat
-                            .mul(1 / dataMat.sum() * (360 - padding * len));
-                    switch (sortSubGroups) {
-                        case 'ascending':
-                        case 'descending':
-                            var subGroupIndices = subGroupAngles
-                                    .argsort(1, {order : sortSubGroups});
-                            subGroupAngles.sort(1, {order : sortSubGroups});
-                            break;
-                        default:
-                            var subGroupIndices = NDArray
-                                    .range(len).reshape(1, len).repeat(len, 0);
-                    }
-
-                    var groupIndicesArr = groupIndices.toArray();
-                    var groupAnglesArr = groupAngles.toArray();
-                    var subGroupIndicesArr = subGroupIndices.toArray();
-                    var subGroupAnglesArr = subGroupAngles.toArray();
-                    var sumOutArray = sumOut.toArray();
-
-                    var sectorAngles = [];
-                    var groupsTmp = [];
-                    var chordAngles = new NDArray(len, len).toArray();
-                    var values = [];
-                    var start = 0;
-                    var end = 0;
-                    for (var i = 0; i < len; i++) {
-                        var sortedIdx = groupIndicesArr[i];
-                        groupsTmp[sortedIdx] = groups[i];
-                        values[sortedIdx] = sumOutArray[i];
-
-                        end = start + groupAnglesArr[i];
-                        sectorAngles[sortedIdx] = [start, end - padding];
-
-                        // Sub Group
-                        var subStart = start;
-                        var subEnd = start;
-                        for (var j = 0; j < len; j++) {
-                            subEnd = subStart + subGroupAnglesArr[sortedIdx][j];
-                            /*jshint maxlen : 200*/
-                            chordAngles[sortedIdx][subGroupIndicesArr[sortedIdx][j]]
-                                = [subStart, subEnd];
-                            subStart = subEnd;
-                        }
-
-                        start = end;
-                    }
-                    groups = groupsTmp;
-
-                    // reset data
-                    chordShapes = new NDArray(len, len).toArray();
-                    sectorShapes = [];
-
-                    _buildSectors(
-                        groups,
-                        sectorAngles,
-                        center,
-                        innerRadius,
-                        outerRadius
-                    );
-
-                    _buildChords(
-                        groups,
-                        chordAngles,
-                        center,
-                        innerRadius
-                    );
-
-                    var res = normalizeValue(values);
-                    _buildScales(
-                        res[0],
-                        res[1],
-                        sectorAngles,
-                        center,
-                        outerRadius,
-                        new NDArray(res[0]).sum() / (360 - padding * len)
-                    );
+                    innerRadius = chordSerie.radius[0];
+                    outerRadius = chordSerie.radius[1];
+                    padding = chordSerie.padding;
+                    sortGroups = chordSerie.sort;
+                    sortSubGroups = chordSerie.sortSub;
+                    center = self.calAbsolute(chordSerie.center);
                 }
             }
+            if (!chordSerie) {
+                return;
+            }
+
+            var groups = chordSerie.data;
+            var data = chordSerie.matrix;
+            
+            startAngle = chordSerie.startAngle;
+            clockWise = chordSerie.clockWise;
+
+            dataMat = new NDArray(data);
+
+            // Filter the data by selected legend
+            res = _filterData(dataMat, groups);
+            dataMat = res[0];
+            groups = res[1];
+
+            var shape = dataMat.shape();
+            // Check if data is valid
+            if (shape[0] !== shape[1] || shape[0] !== groups.length) {
+                throw new Error('Data not valid');
+            }
+
+            // Processing data
+            var sumOut = dataMat.sum(1);
+            switch (sortGroups) {
+                case 'ascending':
+                case 'descending':
+                    var groupIndices = sumOut
+                            .argsort({order : sortGroups});
+                    sumOut.sort({order : sortGroups});
+                    break;
+                default:
+                    var groupIndices = NDArray.range(shape[0]);
+            }
+
+            var percents = sumOut.mul(1 / sumOut.sum());
+
+            var len = percents.shape()[0];
+
+            var groupAngles = percents.mul(360 - padding * len);
+            groupAngles.add(padding, groupAngles);
+
+            var subGroupAngles = dataMat
+                    .mul(1 / dataMat.sum() * (360 - padding * len));
+            switch (sortSubGroups) {
+                case 'ascending':
+                case 'descending':
+                    var subGroupIndices = subGroupAngles
+                            .argsort(1, {order : sortSubGroups});
+                    subGroupAngles.sort(1, {order : sortSubGroups});
+                    break;
+                default:
+                    var subGroupIndices = NDArray
+                            .range(len).reshape(1, len).repeat(len, 0);
+            }
+
+            var groupIndicesArr = groupIndices.toArray();
+            var groupAnglesArr = groupAngles.toArray();
+            var subGroupIndicesArr = subGroupIndices.toArray();
+            var subGroupAnglesArr = subGroupAngles.toArray();
+            var sumOutArray = sumOut.toArray();
+
+            var sectorAngles = [];
+            var groupsTmp = [];
+            var chordAngles = new NDArray(len, len).toArray();
+            var values = [];
+            var start = 0;
+            var end = 0;
+            for (var i = 0; i < len; i++) {
+                var sortedIdx = groupIndicesArr[i];
+                groupsTmp[sortedIdx] = groups[i];
+                values[sortedIdx] = sumOutArray[i];
+
+                end = start + groupAnglesArr[i];
+                sectorAngles[sortedIdx] = [start, end - padding];
+
+                // Sub Group
+                var subStart = start;
+                var subEnd = start;
+                for (var j = 0; j < len; j++) {
+                    subEnd = subStart + subGroupAnglesArr[sortedIdx][j];
+                    /*jshint maxlen : 200*/
+                    chordAngles[sortedIdx][subGroupIndicesArr[sortedIdx][j]]
+                        = [subStart, subEnd];
+                    subStart = subEnd;
+                }
+
+                start = end;
+            }
+            groups = groupsTmp;
+
+            // reset data
+            chordShapes = new NDArray(len, len).toArray();
+            sectorShapes = [];
+
+            _buildSectors(
+                groups,
+                sectorAngles,
+                center,
+                innerRadius,
+                outerRadius
+            );
+
+            _buildChords(
+                groups,
+                chordAngles,
+                center,
+                innerRadius
+            );
+
+            var res = normalizeValue(values);
+            _buildScales(
+                res[0],
+                res[1],
+                sectorAngles,
+                center,
+                outerRadius,
+                new NDArray(res[0]).sum() / (360 - padding * len)
+            );
         }
 
         function _filterData (dataMat, groups) {

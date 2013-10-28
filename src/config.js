@@ -663,8 +663,7 @@ define(function() {
         },
 
         chord : {
-            innerRadius : 140,
-            outerRadius : 160,
+            radius : [140, 160],
             // Source data matrix
             center : ['50%', '50%'],
             padding : 2,
