@@ -47,6 +47,9 @@ define(function(require) {
         var scaleUnitAngle = 4;
 
         function _buildShape() {
+
+            self.selectedMap = {};
+
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type === self.type) {
                     var chordSerie = series[i];
@@ -64,6 +67,10 @@ define(function(require) {
                     var data = chordSerie.matrix;
                     
                     dataMat = new NDArray(data);
+                    res = _filterData(dataMat, groups);
+                    dataMat = res[0];
+                    groups = res[1];
+
                     var shape = dataMat.shape();
                     // Check if data is valid
                     if (shape[0] !== shape[1] || shape[0] !== groups.length) {
@@ -124,7 +131,7 @@ define(function(require) {
                         end = start + groupAnglesArr[i];
                         sectorAngles[sortedIdx] = [start, end - padding];
 
-                        // Subgroup
+                        // Sub Group
                         var subStart = start;
                         var subEnd = start;
                         for (var j = 0; j < len; j++) {
@@ -168,8 +175,26 @@ define(function(require) {
                         new NDArray(res[0]).sum() / (360 - padding * len)
                     );
                 }
-
             }
+        }
+
+        function _filterData (dataMat, groups) {
+            var indices = [];
+            var groupsFilted = [];
+            for (var i = 0; i < groups.length; i++) {
+                var name = groups[i].name;
+                self.selectedMap[name] = legend.isSelected(name);
+                if (!self.selectedMap[name]) {
+                    indices.push(i);
+                } else {
+                    groupsFilted.push(groups[i]);
+                }
+            }
+
+            dataMat = dataMat.delete(indices, 0);
+            dataMat = dataMat.delete(indices, 1);
+
+            return [dataMat, groupsFilted];
         }
 
         function _buildSectors(

@@ -298,6 +298,7 @@ define(function (require) {
                 if (
                     series[i].type == ecConfig.CHART_TYPE_PIE 
                     || series[i].type == ecConfig.CHART_TYPE_RADAR
+                    || series[i].type == ecConfig.CHART_TYPE_CHORD
                 ) {
                     // 饼图得查找里面的数据名字
                     hasFind = false;

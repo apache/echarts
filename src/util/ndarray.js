@@ -2020,7 +2020,7 @@ NDArray.prototype = {
             }
         }
         this._shape[axis] -= obj.length;
-        this._size -= stride * obj.length;
+        this._size = getSize(this._shape);
 
         return this;
     }.kwargs(),
