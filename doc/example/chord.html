@@ -69,8 +69,8 @@
                     <textarea id="code" name="code">
 option = {
     title : {
-        text: '人物关系：乔布斯',
-        subtext: '数据来自人立方',
+        text: '测试数据',
+        subtext: 'From d3.js',
         x:'right',
         y:'bottom'
     },
@@ -80,14 +80,14 @@ option = {
     },
     legend: {
         x: 'left',
-        data:['家人','朋友']
+        data:['g1','g2', 'g3', 'g4']
     },
     series : [
         {
             type:'chord',
-            sortGroups : 'ascending',
-            sortSubGroups : 'descending',
-            groups : [{
+            sort : 'ascending',
+            sortSub : 'descending',
+            data : [{
                 name : 'g1'
             }, {
                 name : 'g2'

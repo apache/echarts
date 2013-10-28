@@ -56,11 +56,11 @@ define(function(require) {
                     var innerRadius = chordSerie.innerRadius;
                     var outerRadius = chordSerie.outerRadius;
                     var padding = chordSerie.padding;
-                    var sortGroups = chordSerie.sortGroups;
-                    var sortSubGroups = chordSerie.sortSubGroups;
+                    var sortGroups = chordSerie.sort;
+                    var sortSubGroups = chordSerie.sortSub;
                     var center = self.calAbsolute(chordSerie.center);
 
-                    var groups = chordSerie.groups;
+                    var groups = chordSerie.data;
                     var data = chordSerie.matrix;
                     
                     dataMat = new NDArray(data);

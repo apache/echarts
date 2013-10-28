@@ -667,8 +667,8 @@ define(function() {
             // Source data matrix
             center : ['50%', '50%'],
             padding : 2,
-            sortGroups : 'none', // can be 'none', 'ascending', 'descending'
-            sortSubGroups : 'none', // can be 'none', 'ascending', 'descending'
+            sort : 'none', // can be 'none', 'ascending', 'descending'
+            sortSub : 'none', // can be 'none', 'ascending', 'descending'
             matrix : []
         },
 
