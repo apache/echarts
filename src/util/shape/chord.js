@@ -107,14 +107,16 @@ define(function(require) {
                 (cy - sy1) * 0.70 + sy1,
                 (cx - tx0) * 0.70 + tx0, 
                 (cy - ty0) * 0.70 + ty0,
-                tx0, ty0);
+                tx0, ty0
+            );
             ctx.arc(cx, cy, style.r, t0, t1, false);
             ctx.bezierCurveTo(
                 (cx - tx1) * 0.70 + tx1, 
                 (cy - ty1) * 0.70 + ty1,
                 (cx - sx0) * 0.70 + sx0, 
                 (cy - sy0) * 0.70 + sy0,
-                sx0, sy0);
+                sx0, sy0
+            );
         },
         
         getRect : function(){

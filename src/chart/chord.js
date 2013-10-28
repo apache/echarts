@@ -36,8 +36,11 @@ define(function(require) {
 
         var _zlevelBase = self.getZlevelBase();
 
+        // Config
+        var startAngle;
+        var clockWise;
 
-        // Adjency matrix
+        // Adjacency matrix
         var dataMat;
 
         var sectorShapes = [];
@@ -66,7 +69,12 @@ define(function(require) {
                     var groups = chordSerie.data;
                     var data = chordSerie.matrix;
                     
+                    startAngle = chordSerie.startAngle;
+                    clockWise = chordSerie.clockWise;
+
                     dataMat = new NDArray(data);
+
+                    // Filter the data by selected legend
                     res = _filterData(dataMat, groups);
                     dataMat = res[0];
                     groups = res[1];
@@ -204,7 +212,6 @@ define(function(require) {
             innerRadius,
             outerRadius
         ) {
-            var startAngle = 90;
             var len = groups.length;
 
             function createMouseOver(idx) {
@@ -249,6 +256,8 @@ define(function(require) {
                 var group = groups[i];
                 var angle = angles[i];
 
+                var _start = (clockWise ? (360 - angle[1]) : angle[0]) + startAngle;
+                var _end = (clockWise ? (360 - angle[0]) : angle[1]) + startAngle;
                 var sector = {
                     id : zr.newShapeId(self.type),
                     shape : 'sector',
@@ -259,8 +268,8 @@ define(function(require) {
                         y : center[1],
                         r0 : innerRadius,
                         r : outerRadius,
-                        startAngle : (360 - angle[1]) + startAngle,
-                        endAngle : (360 - angle[0]) + startAngle,
+                        startAngle : _start,
+                        endAngle : _end,
                         brushType : 'fill',
                         color : legend.getColor(group.name)
                     }
@@ -282,9 +291,6 @@ define(function(require) {
             center,
             radius
         ) {
-
-            var startAngle = 90;
-
             var len = angles.length;
 
             for (var i = 0; i < len; i++) {
@@ -294,13 +300,13 @@ define(function(require) {
                         chordShapes[i][j] = chordShapes[j][i];
                     }
 
-                    var angleIJ = angles[i][j][0];
-                    var angleJI = angles[j][i][0];
+                    var angleIJ0 = angles[i][j][0];
+                    var angleJI0 = angles[j][i][0];
 
-                    var angleIJ0 = angles[i][j][1];
-                    var angleJI0 = angles[j][i][1];
+                    var angleIJ1 = angles[i][j][1];
+                    var angleJI1 = angles[j][i][1];
 
-                    var color = angleIJ0 - angleIJ < angleJI0 - angleJI
+                    var color = angleIJ1 - angleIJ0 < angleJI1 - angleJI0
                                     ? legend.getColor(groups[i].name)
                                     : legend.getColor(groups[j].name);
 
@@ -311,10 +317,10 @@ define(function(require) {
                         style : {
                             center : center,
                             r : radius,
-                            source0 : angleIJ - startAngle,
-                            source1 : angleIJ0 - startAngle,
-                            target0 : angleJI - startAngle,
-                            target1 : angleJI0 - startAngle,
+                            source0 : (!clockWise ? (360 - angleIJ1) : angleIJ0)-startAngle,
+                            source1 : (!clockWise ? (360 - angleIJ0) : angleIJ1)-startAngle,
+                            target0 : (!clockWise ? (360 - angleJI1) : angleJI0)-startAngle,
+                            target1 : (!clockWise ? (360 - angleJI0) : angleJI1)-startAngle,
                             brushType : 'both',
                             strokeColor : 'black',
                             opacity : 0.5,
@@ -338,14 +344,16 @@ define(function(require) {
             unitValue
         ) {
             for (var i = 0; i < angles.length; i++) {
-                var startAngle = angles[i][0];
-                var endAngle = angles[i][1];
+                var subStartAngle = angles[i][0];
+                var subEndAngle = angles[i][1];
 
-                var scaleAngle = startAngle;
-                while (scaleAngle < endAngle) {
+                var scaleAngle = subStartAngle;
+                while (scaleAngle < subEndAngle) {
+                    var thelta = ((clockWise ? (360 - scaleAngle) : scaleAngle)
+                                    + startAngle) / 180 * Math.PI;
                     var v = [
-                            Math.cos((scaleAngle - 90) / 180 * Math.PI),
-                            Math.sin((scaleAngle - 90) / 180 * Math.PI)
+                            Math.cos(thelta),
+                            -Math.sin(thelta)
                             ];
                     var start = vec2.scale([], v, radius + 1);
                     vec2.add(start, start, center);
@@ -373,13 +381,15 @@ define(function(require) {
                     scaleAngle += scaleUnitAngle;
                 }
 
-                var scaleTextAngle = startAngle;
+                var scaleTextAngle = subStartAngle;
                 var step = unitValue * 5 * scaleUnitAngle;
                 var scaleValues = NDArray.range(0, values[i], step).toArray();
-                while (scaleTextAngle < endAngle) {
-                    var scaleTextAngleFixed = scaleTextAngle - 90;
-                    var isRightSide = scaleTextAngleFixed <= 90
-                                     && scaleTextAngleFixed >= -90;
+                while (scaleTextAngle < subEndAngle) {
+                    var thelta = (clockWise ? (360 - scaleTextAngle) : scaleTextAngle)
+                                    + startAngle;
+                    thelta = thelta - 360;
+                    var isRightSide = thelta <= 90
+                                     && thelta >= -90;
                     var textShape = {
                         shape : 'text',
                         id : zr.newShapeId(self.type),
@@ -395,9 +405,9 @@ define(function(require) {
                         },
                         position : center.slice(),
                         rotation : isRightSide
-                            ? [-scaleTextAngleFixed / 180 * Math.PI, 0, 0]
+                            ? [thelta / 180 * Math.PI, 0, 0]
                             : [
-                                -(scaleTextAngleFixed + 180) / 180 * Math.PI,
+                                (thelta + 180) / 180 * Math.PI,
                                 0, 0
                               ] 
                     };

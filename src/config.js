@@ -663,13 +663,15 @@ define(function() {
         },
 
         chord : {
-            innerRadius : 160,
-            outerRadius : 180,
+            innerRadius : 140,
+            outerRadius : 160,
             // Source data matrix
             center : ['50%', '50%'],
             padding : 2,
             sort : 'none', // can be 'none', 'ascending', 'descending'
             sortSub : 'none', // can be 'none', 'ascending', 'descending'
+            startAngle : 90,
+            clockWise : false,
             matrix : []
         },
 
