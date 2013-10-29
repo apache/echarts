@@ -103,8 +103,12 @@ define(function(require) {
             showScale = chordSerieSample.showScale;
             showScaleText = chordSerieSample.showScaleText;
             center = self.calAbsolute(chordSerieSample.center);
-            showLabel = self.deepQuery([chordSerieSample], 'itemStyle.normal.label.show');
-            labelColor = self.deepQuery([chordSerieSample], 'itemStyle.normal.label.color');
+            showLabel = self.deepQuery(
+                [chordSerieSample], 'itemStyle.normal.label.show'
+            );
+            labelColor = self.deepQuery(
+                [chordSerieSample], 'itemStyle.normal.label.color'
+            );
             // Supporse the line width is 1;
             strokeFix = (1 / _devicePixelRatio) / innerRadius / Math.PI * 180;
 
@@ -227,12 +231,18 @@ define(function(require) {
         }
 
         function _filterData (dataMat, groups) {
+            var shape = dataMat.shape();
+            dataMat.reshape(shape[0], shape[1] * shape[2]);
+            // Empty data also need to be removed
+            var sumOutArray = dataMat.sum(1).toArray();
+            dataMat.reshape(shape);
+
             var indices = [];
             var groupsFilted = [];
             for (var i = 0; i < groups.length; i++) {
                 var name = groups[i].name;
                 self.selectedMap[name] = legend.isSelected(name);
-                if (!self.selectedMap[name]) {
+                if (!self.selectedMap[name] || sumOutArray[i] === 0) {
                     indices.push(i);
                 } else {
                     groupsFilted.push(groups[i]);
