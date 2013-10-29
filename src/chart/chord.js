@@ -63,34 +63,35 @@ define(function(require) {
         function _buildShape() {
 
             self.selectedMap = {};
-            var chordSerie;
+            chordSeries = [];
+            var chordSerieSample;
             var matrix = [];
             var serieNumber = 0;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type === self.type) {
                     // Use the config of first chord serie
-                    if (!chordSerie) {
-                        chordSerie = series[i];
-                        self.reformOption(chordSerie);
+                    if (!chordSerieSample) {
+                        chordSerieSample = series[i];
+                        self.reformOption(chordSerieSample);
                     }
                     chordSeries.push(series[i]);
                     matrix.push(series[i].matrix);
                     serieNumber++;
                 }
             }
-            if (!chordSerie) {
+            if (!chordSerieSample) {
                 return;
             }
 
-            groups = chordSerie.data;
-            startAngle = chordSerie.startAngle;
-            clockWise = chordSerie.clockWise;
-            innerRadius = chordSerie.radius[0];
-            outerRadius = chordSerie.radius[1];
-            padding = chordSerie.padding;
-            sortGroups = chordSerie.sort;
-            sortSubGroups = chordSerie.sortSub;
-            center = self.calAbsolute(chordSerie.center);
+            groups = chordSerieSample.data;
+            startAngle = chordSerieSample.startAngle;
+            clockWise = chordSerieSample.clockWise;
+            innerRadius = chordSerieSample.radius[0];
+            outerRadius = chordSerieSample.radius[1];
+            padding = chordSerieSample.padding;
+            sortGroups = chordSerieSample.sort;
+            sortSubGroups = chordSerieSample.sortSub;
+            center = self.calAbsolute(chordSerieSample.center);
             // Supporse the line width is 1;
             strokeFix = (1 / _devicePixelRatio) / innerRadius / Math.PI * 180;
 
