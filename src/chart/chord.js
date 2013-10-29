@@ -49,6 +49,8 @@ define(function(require) {
         var sortGroups;
         var sortSubGroups;
         var center;
+        var showScale;
+        var showScaleText;
 
         var strokeFix = 0;
         // Adjacency matrix
@@ -91,6 +93,8 @@ define(function(require) {
             padding = chordSerieSample.padding;
             sortGroups = chordSerieSample.sort;
             sortSubGroups = chordSerieSample.sortSub;
+            showScale = chordSerieSample.showScale;
+            showScaleText = chordSerieSample.showScaleText;
             center = self.calAbsolute(chordSerieSample.center);
             // Supporse the line width is 1;
             strokeFix = (1 / _devicePixelRatio) / innerRadius / Math.PI * 180;
@@ -203,12 +207,14 @@ define(function(require) {
             _buildChords(chordAngles);
 
             var res = normalizeValue(values);
-            _buildScales(
-                res[0],
-                res[1],
-                sectorAngles,
-                new NDArray(res[0]).sum() / (360 - padding * groupNumber)
-            );
+            if (showScale) {
+                _buildScales(
+                    res[0],
+                    res[1],
+                    sectorAngles,
+                    new NDArray(res[0]).sum() / (360 - padding * groupNumber)
+                );
+            }
         }
 
         function _filterData (dataMat, groups) {
@@ -246,8 +252,10 @@ define(function(require) {
                             for (var j = 0; j < len; j++) {
                                 for (var k = 0; k < len2; k++) {
                                     var chordShape = chordShapes[i][j][k];
-                                    chordShape.style.opacity = 0.03;
-                                    zr.modShape(chordShape.id, chordShape);   
+                                    if (chordShape) {
+                                        chordShape.style.opacity = 0.03;
+                                        zr.modShape(chordShape.id, chordShape);
+                                    }
                                 }
                             }
                         }
@@ -265,8 +273,10 @@ define(function(require) {
                         for (var j = 0; j < len; j++) {
                             for (var k = 0; k < len2; k++) {
                                 var chordShape = chordShapes[i][j][k];
-                                chordShape.style.opacity = 0.5;
-                                zr.modShape(chordShape.id, chordShape);   
+                                if (chordShape) {
+                                    chordShape.style.opacity = 0.5;
+                                    zr.modShape(chordShape.id, chordShape);  
+                                } 
                             }
                         }
                     }
@@ -330,6 +340,12 @@ define(function(require) {
 
                         var angleIJ1 = angles[i][j][k][1];
                         var angleJI1 = angles[j][i][k][1];
+
+                        if (angleIJ0 - angleJI1 === 0 ||
+                            angleJI0 - angleJI1 === 0) {
+                            chordShapes[i][j][k] = null;
+                            continue;
+                        }
 
                         var color;
                         if (len2 === 1) {
@@ -411,6 +427,9 @@ define(function(require) {
                     zr.addShape(scaleShape);
 
                     scaleAngle += scaleUnitAngle;
+                }
+                if (!showScaleText) {
+                    continue;
                 }
 
                 var scaleTextAngle = subStartAngle;

@@ -671,6 +671,20 @@ define(function() {
             sortSub : 'none', // can be 'none', 'ascending', 'descending'
             startAngle : 90,
             clockWise : false,
+            showScale : true,
+            showScaleText : true,
+            /**
+             *         source
+             *    -1--2--3--4--5-
+             *  1| x  x  x  x  x
+             *  2| x  x  x  x  x
+             *  3| x  x  x  x  x  target
+             *  4| x  x  x  x  x
+             *  5| x  x  x  x  x
+             *
+             *  Relation ship from source to target
+             *  Row based
+             */
             matrix : []
         },
 

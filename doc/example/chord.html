@@ -67,42 +67,7 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
-option = {
-    title : {
-        text: '测试数据',
-        subtext: 'From d3.js',
-        x:'right',
-        y:'bottom'
-    },
-    tooltip : {
-        trigger: 'item',
-        formatter: '{a} : {b}'
-    },
-    legend: {
-        x: 'left',
-        data:['g1','g2', 'g3', 'g4']
-    },
-    series : [
-        {
-            type:'chord',
-            sort : 'ascending',
-            sortSub : 'descending',
-            data : [{
-                name : 'g1'
-            }, {
-                name : 'g2'
-            }, {
-                name : 'g3'
-            }, {
-                name : 'g4'
-            }],
-            matrix : [[11975,  5871, 8916, 2868],
-                      [ 1951, 10048, 2060, 6171],
-                      [ 8010, 16145, 8090, 8045],
-                      [ 1013,   990,  940, 6907]]
-        }
-    ]
-};
+option = middleEastData
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->
@@ -135,6 +100,12 @@ option = {
     <script src="../asset/js/bootstrap-collapse.js"></script>
     <script src="../asset/js/bootstrap-carousel.js"></script>
     <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script type="text/javascript">
+        var middleEastData;
+        require(['middle-east'], function(data) {
+            middleEastData = data;
+        })
+    </script>
     <script src="../asset/js/echartsExample.js"></script>
 </body>
 </html>
