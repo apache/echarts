@@ -110,7 +110,7 @@ define(function(require) {
             }
 
             // Down to 2 dimension
-            // more convenient for angle calculating and sort
+            // More convenient for angle calculating and sort
             dataMat.reshape(shape[0], shape[1] * shape[2]);
 
             // Processing data
@@ -428,11 +428,12 @@ define(function(require) {
                         hoverable : false,
                         style : {
                             x : isRightSide 
-                                    ? outerRadius + scaleLineLength + 2 
-                                    : -outerRadius - scaleLineLength - 34,
+                                    ? outerRadius + scaleLineLength + 4 
+                                    : -outerRadius - scaleLineLength - 4,
                             y : 0,
                             text : Math.round(scaleValues.shift()*10)/10 
-                                    + unitPostfix
+                                    + unitPostfix,
+                            textAlign : isRightSide ? 'left' : 'right'
                         },
                         position : center.slice(),
                         rotation : isRightSide
@@ -440,7 +441,7 @@ define(function(require) {
                             : [
                                 (thelta + 180) / 180 * Math.PI,
                                 0, 0
-                              ] 
+                              ]
                     };
 
                     self.shapeList.push(textShape);
