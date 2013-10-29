@@ -106,8 +106,8 @@ for (var i = 0; i < dataSource.length; i++) {
     var val = dataSource[i][2];
     var serieIdx = attitudeMap[dataSource[i][3]];
     var matrix = series[serieIdx].matrix;
-    matrix[targetIdx][sourceIdx] += 100;
-    matrix[sourceIdx][targetIdx] += 50;
+    matrix[sourceIdx][targetIdx] += 100;
+    matrix[targetIdx][sourceIdx] += 10;
 }
 
 var res = {

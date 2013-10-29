@@ -674,15 +674,17 @@ define(function() {
             showScale : true,
             showScaleText : true,
             /**
-             *         source
+             *         target
              *    -1--2--3--4--5-
              *  1| x  x  x  x  x
              *  2| x  x  x  x  x
-             *  3| x  x  x  x  x  target
+             *  3| x  x  x  x  x  source
              *  4| x  x  x  x  x
              *  5| x  x  x  x  x
              *
              *  Relation ship from source to target
+             *  https://github.com/mbostock/d3/wiki/Chord-Layout#wiki-chord
+             *  
              *  Row based
              */
             matrix : []
