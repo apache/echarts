@@ -67,7 +67,36 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
-option = middleEastData
+option = {
+    title : {
+        text : "中东地区的敌友关系",
+        subtext: '数据来自财新网',
+        x:'right',
+        y:'bottom'
+    },
+    legend : {
+        data : [
+            "美国",
+            "叙利亚反对派",
+            "阿萨德",
+            "伊朗",
+            "塞西",
+            "哈马斯",
+            "以色列",
+            "穆斯林兄弟会",
+            "基地组织",
+            "俄罗斯",
+            "黎巴嫩什叶派",
+            "土耳其",
+            "卡塔尔",
+            "沙特",
+            "黎巴嫩逊尼派"
+        ],
+        orient : 'vertical',
+        x : 'left'
+    },
+    series : middleEastSeries
+};
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->
@@ -101,9 +130,9 @@ option = middleEastData
     <script src="../asset/js/bootstrap-carousel.js"></script>
     <script src="../asset/js/bootstrap-typeahead.js"></script>
     <script type="text/javascript">
-        var middleEastData;
+        var middleEastSeries;
         require(['middle-east'], function(data) {
-            middleEastData = data;
+            middleEastSeries = data;
         })
     </script>
     <script src="../asset/js/echartsExample.js"></script>

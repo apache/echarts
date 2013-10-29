@@ -51,6 +51,8 @@ define(function(require) {
         var center;
         var showScale;
         var showScaleText;
+        var showLabel;
+        var labelColor;
 
         var strokeFix = 0;
         // Adjacency matrix
@@ -87,6 +89,11 @@ define(function(require) {
 
             groups = chordSerieSample.data;
             startAngle = chordSerieSample.startAngle;
+            // Constrain to [0, 360]
+            startAngle = startAngle % 360;
+            if (startAngle < 0) {
+                startAngle = startAngle + 360;
+            }
             clockWise = chordSerieSample.clockWise;
             innerRadius = chordSerieSample.radius[0];
             outerRadius = chordSerieSample.radius[1];
@@ -96,6 +103,8 @@ define(function(require) {
             showScale = chordSerieSample.showScale;
             showScaleText = chordSerieSample.showScaleText;
             center = self.calAbsolute(chordSerieSample.center);
+            showLabel = self.deepQuery([chordSerieSample], 'itemStyle.normal.label.show');
+            labelColor = self.deepQuery([chordSerieSample], 'itemStyle.normal.label.color');
             // Supporse the line width is 1;
             strokeFix = (1 / _devicePixelRatio) / innerRadius / Math.PI * 180;
 
@@ -310,9 +319,35 @@ define(function(require) {
                         color : legend.getColor(group.name)
                     }
                 };
+                if (showLabel) {
+                    var halfAngle = [_start + _end] / 2;
+                    halfAngle %= 360;  // Constrain to [0,360]
+                    var isRightSide = halfAngle <= 90
+                                     || halfAngle >= 270;
+                    halfAngle = halfAngle * Math.PI / 180;
+                    var v = [Math.cos(halfAngle), -Math.sin(halfAngle)];
+                    var start = vec2.scale([], v, outerRadius + 20);
+                    vec2.add(start, start, center);
+
+                    var labelShape = {
+                        shape : 'text',
+                        id : zr.newShapeId(self.type),
+                        zlevel : _zlevelBase - 1,
+                        hoverable : false,
+                        style : {
+                            x : start[0],
+                            y : start[1],
+                            text : group.name,
+                            textAlign : isRightSide ? 'left' : 'right',
+                            color : labelColor,
+                            hoverable : false
+                        }
+                    };
+                    zr.addShape(labelShape);
+                    self.shapeList.push(labelShape)
+                }
 
                 sector.onmouseover = createMouseOver(i);
-
                 sector.onmouseout = createMouseOut();
 
                 self.shapeList.push(sector);
@@ -438,9 +473,9 @@ define(function(require) {
                 while (scaleTextAngle < subEndAngle) {
                     var thelta = clockWise 
                                     ? (360 - scaleTextAngle) : scaleTextAngle;
-                    thelta = thelta + startAngle - 360;
+                    thelta = (thelta + startAngle) % 360;
                     var isRightSide = thelta <= 90
-                                     && thelta >= -90;
+                                     || thelta >= 270;
                     var textShape = {
                         shape : 'text',
                         id : zr.newShapeId(self.type),

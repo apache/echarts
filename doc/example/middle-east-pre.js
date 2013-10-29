@@ -125,4 +125,4 @@ var res = {
     series : series 
 }
 
-fs.writeFileSync("middle-east.js", 'define(' + JSON.stringify(res) + ')');
+fs.writeFileSync("middle-east.js", 'define(' + JSON.stringify(series) + ')');

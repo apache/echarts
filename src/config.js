@@ -673,6 +673,14 @@ define(function() {
             clockWise : false,
             showScale : true,
             showScaleText : true,
+            itemStyle : {
+                normal : {
+                    label : {
+                        show : true,
+                        color : 'black'
+                    }
+                }
+            },
             /**
              *         target
              *    -1--2--3--4--5-
