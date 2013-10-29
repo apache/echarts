@@ -72,11 +72,19 @@ define(function(require) {
             var matrix = [];
             var serieNumber = 0;
             for (var i = 0, l = series.length; i < l; i++) {
+                
                 if (series[i].type === self.type) {
                     // Use the config of first chord serie
                     if (!chordSerieSample) {
                         chordSerieSample = series[i];
                         self.reformOption(chordSerieSample);
+                    }
+
+                    var isSelected = legend.isSelected(series[i].name);
+                    // Filter by selected serie
+                    self.selectedMap[series[i].name] = isSelected;
+                    if (!isSelected) {
+                        continue;
                     }
                     chordSeries.push(series[i]);
                     matrix.push(series[i].matrix);
@@ -233,6 +241,7 @@ define(function(require) {
         function _filterData (dataMat, groups) {
             var indices = [];
             var groupsFilted = [];
+            // Filter by selected group
             for (var i = 0; i < groups.length; i++) {
                 var name = groups[i].name;
                 self.selectedMap[name] = legend.isSelected(name);
@@ -242,9 +251,10 @@ define(function(require) {
                     groupsFilted.push(groups[i]);
                 }
             }
-
-            dataMat = dataMat['delete'](indices, 0);
-            dataMat = dataMat['delete'](indices, 1);
+            if (indices.length) {
+                dataMat = dataMat['delete'](indices, 0);
+                dataMat = dataMat['delete'](indices, 1);   
+            }
 
             // Empty data also need to be removed
             indices = [];
@@ -260,8 +270,10 @@ define(function(require) {
                     groupsFilted2.push(groups[i]);
                 }
             }
-            dataMat = dataMat['delete'](indices, 0);
-            dataMat = dataMat['delete'](indices, 1);
+            if (indices.length) {
+                dataMat = dataMat['delete'](indices, 0);
+                dataMat = dataMat['delete'](indices, 1);
+            }
 
             return [dataMat, groupsFilted2];
         }
