@@ -231,18 +231,12 @@ define(function(require) {
         }
 
         function _filterData (dataMat, groups) {
-            var shape = dataMat.shape();
-            dataMat.reshape(shape[0], shape[1] * shape[2]);
-            // Empty data also need to be removed
-            var sumOutArray = dataMat.sum(1).toArray();
-            dataMat.reshape(shape);
-
             var indices = [];
             var groupsFilted = [];
             for (var i = 0; i < groups.length; i++) {
                 var name = groups[i].name;
                 self.selectedMap[name] = legend.isSelected(name);
-                if (!self.selectedMap[name] || sumOutArray[i] === 0) {
+                if (!self.selectedMap[name]) {
                     indices.push(i);
                 } else {
                     groupsFilted.push(groups[i]);
@@ -252,7 +246,24 @@ define(function(require) {
             dataMat = dataMat['delete'](indices, 0);
             dataMat = dataMat['delete'](indices, 1);
 
-            return [dataMat, groupsFilted];
+            // Empty data also need to be removed
+            indices = [];
+            var groupsFilted2 = [];
+            var shape = dataMat.shape();
+            dataMat.reshape(shape[0], shape[1] * shape[2]);
+            var sumOutArray = dataMat.sum(1).toArray();
+            dataMat.reshape(shape);
+            for (var i = 0; i < groupsFilted.length; i++) {
+                if (sumOutArray[i] === 0) {
+                    indices.push(i);
+                } else {
+                    groupsFilted2.push(groups[i]);
+                }
+            }
+            dataMat = dataMat['delete'](indices, 0);
+            dataMat = dataMat['delete'](indices, 1);
+
+            return [dataMat, groupsFilted2];
         }
 
         function _buildSectors(angles) {
@@ -336,7 +347,9 @@ define(function(require) {
                                      || halfAngle >= 270;
                     halfAngle = halfAngle * Math.PI / 180;
                     var v = [Math.cos(halfAngle), -Math.sin(halfAngle)];
-                    var start = vec2.scale([], v, outerRadius + 20);
+
+                    var distance = showScaleText ? 45 : 20;
+                    var start = vec2.scale([], v, outerRadius + distance);
                     vec2.add(start, start, center);
 
                     var labelShape = {

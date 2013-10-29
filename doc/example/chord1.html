@@ -69,46 +69,33 @@
                     <textarea id="code" name="code">
 option = {
     title : {
-        text: '测试数据',
-        subtext: 'From d3.js',
+        text : "中东地区的敌友关系",
+        subtext: '数据来自财新网',
         x:'right',
         y:'bottom'
     },
-    tooltip : {
-        trigger: 'item',
-        formatter: '{a} : {b}'
+    legend : {
+        data : [
+            "美国",
+            "叙利亚反对派",
+            "阿萨德",
+            "伊朗",
+            "塞西",
+            "哈马斯",
+            "以色列",
+            "穆斯林兄弟会",
+            "基地组织",
+            "俄罗斯",
+            "黎巴嫩什叶派",
+            "土耳其",
+            "卡塔尔",
+            "沙特",
+            "黎巴嫩逊尼派"
+        ],
+        orient : 'vertical',
+        x : 'left'
     },
-    legend: {
-        x: 'left',
-        data:['g1','g2', 'g3', 'g4']
-    },
-    series : [
-        {
-            type:'chord',
-            sort : 'ascending',
-            sortSub : 'descending',
-            data : [{
-                name : 'g1'
-            }, {
-                name : 'g2'
-            }, {
-                name : 'g3'
-            }, {
-                name : 'g4'
-            }],
-            itemStyle : {
-                normal : {
-                    label : {
-                        color : 'blue'
-                    }
-                }
-            },
-            matrix : [[11975,  5871, 8916, 2868],
-                      [ 1951, 10048, 2060, 6171],
-                      [ 8010, 16145, 8090, 8045],
-                      [ 1013,   990,  940, 6907]]
-        }
-    ]
+    series : middleEastSeries
 };
                     </textarea>
               </div><!--/.well -->
@@ -142,6 +129,12 @@ option = {
     <script src="../asset/js/bootstrap-collapse.js"></script>
     <script src="../asset/js/bootstrap-carousel.js"></script>
     <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script type="text/javascript">
+        var middleEastSeries;
+        require(['middle-east'], function(data) {
+            middleEastSeries = data;
+        })
+    </script>
     <script src="../asset/js/echartsExample.js"></script>
 </body>
 </html>
