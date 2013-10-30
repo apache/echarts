@@ -370,13 +370,16 @@ define(function (require) {
                     || series[i].type == ecConfig.CHART_TYPE_RADAR
                     || series[i].type == ecConfig.CHART_TYPE_CHORD
                 ) {
-                    // 饼图得查找里面的数据名字
+                    // 饼图、雷达图、和弦图得查找里面的数据名字
                     hasFind = false;
                     data = series[i].data;
                     for (var j = 0, k = data.length; j < k; j++) {
                         if (data[j].name == name) {
                             data = data[j];
-                            data.type = series[i].type;
+                            data.type = 
+                                series[i].type == ecConfig.CHART_TYPE_CHORD 
+                                ? ecConfig.CHART_TYPE_PIE // 和弦图复用pie图样式
+                                : series[i].type;
                             hasFind = true;
                             break;
                         }
@@ -639,6 +642,49 @@ define(function (require) {
                 startAngle : 45,
                 endAngle : 135
             });
+        },
+        chord : function(ctx, style) {
+            var x = style.x;
+            var y = style.y;
+            var width = style.width;
+            var height = style.height;
+            var beziercurve = require('zrender/shape').get('beziercurve');
+            ctx.moveTo(x, y + height);
+            beziercurve.buildPath(ctx, {
+                xStart : x,
+                yStart : y + height,
+                cpX1 : x + width,
+                cpY1 : y + height,
+                cpX2 : x,
+                cpY2 : y + 4,
+                xEnd : x + width,
+                yEnd : y + 4,
+            });
+            ctx.lineTo(x + width, y);
+            beziercurve.buildPath(ctx, {
+                xStart : x + width,
+                yStart : y,
+                cpX1 : x,
+                cpY1 : y,
+                cpX2 : x + width,
+                cpY2 : y + height - 4,
+                xEnd : x,
+                yEnd : y + height - 4,
+            });
+            ctx.lineTo(x, y + height);
+            /*
+            var x = style.x + 2;
+            var y = style.y;
+            var width = style.width - 2;
+            var height = style.height;
+            var r = width / Math.sqrt(3);
+            ctx.moveTo(x, y);
+            ctx.quadraticCurveTo(x + width / 4 * 3, y, x + width, y + height);
+            ctx.arc(
+                x + width / 2, y + height + r / 2, 
+                r, -Math.PI / 6, -Math.PI / 6 * 5, true);
+            ctx.quadraticCurveTo(x - width / 2, y + height / 3, x, y);
+            */
         },
         k : function (ctx, style) {
             var x = style.x;
