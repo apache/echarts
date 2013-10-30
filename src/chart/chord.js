@@ -94,6 +94,10 @@ define(function(require) {
             if (!chordSerieSample) {
                 return;
             }
+            if (!chordSeries.length) {
+                return;
+            }
+
             var zrWidth = zr.getWidth();
             var zrHeight = zr.getHeight();
             var zrSize = Math.min(zrWidth, zrHeight);
@@ -145,6 +149,9 @@ define(function(require) {
             var shape = dataMat.shape();
             if (shape[0] !== shape[1] || shape[0] !== groups.length) {
                 throw new Error('Data not valid');
+            }
+            if (shape[0] === 0 || shape[2] === 0) {
+                return;
             }
 
             // Down to 2 dimension
@@ -270,7 +277,9 @@ define(function(require) {
                 dataMat = dataMat['delete'](indices, 0);
                 dataMat = dataMat['delete'](indices, 1);   
             }
-
+            if (!dataMat.size()) {
+                return [dataMat, groupsFilted];
+            }
             // Empty data also need to be removed
             indices = [];
             var groupsFilted2 = [];
@@ -282,7 +291,7 @@ define(function(require) {
                 if (sumOutArray[i] === 0) {
                     indices.push(i);
                 } else {
-                    groupsFilted2.push(groups[i]);
+                    groupsFilted2.push(groupsFilted[i]);
                 }
             }
             if (indices.length) {
@@ -334,7 +343,6 @@ define(function(require) {
                         clearTimeout(timeout);
                     }
                     timeout = setTimeout(function(){
-                        console.log('mouseout');
                         for (var i = 0; i < len; i++) {
                             sectorShapes[i].style.opacity = 1.0;
                             zr.modShape(sectorShapes[i].id, sectorShapes[i]);

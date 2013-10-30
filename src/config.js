@@ -671,8 +671,8 @@ define(function() {
             sortSub : 'none', // can be 'none', 'ascending', 'descending'
             startAngle : 90,
             clockWise : false,
-            showScale : false,
-            showScaleText : true,
+            showScale : true,
+            showScaleText : false,
             itemStyle : {
                 normal : {
                     label : {
