@@ -153,17 +153,6 @@ define(function(require) {
 
             // Processing data
             var sumOut = dataMat.sum(1);
-            switch (sortGroups) {
-                case 'ascending':
-                case 'descending':
-                    var groupIndices = sumOut
-                            .argsort({order : sortGroups});
-                    sumOut.sort({order : sortGroups});
-                    break;
-                default:
-                    var groupIndices = NDArray.range(shape[0]);
-            }
-
             var percents = sumOut.mul(1 / sumOut.sum());
 
             var groupNumber = shape[0];
@@ -176,6 +165,18 @@ define(function(require) {
             subGroupAngles = subGroupAngles.mul(
                 groupAngles.sub(strokeFix * 2).reshape(groupNumber, 1)
             );
+
+            switch (sortGroups) {
+                case 'ascending':
+                case 'descending':
+                    var groupIndices = groupAngles
+                            .argsort({order : sortGroups});
+                    groupAngles.sort({order : sortGroups});
+                    sumOut.sort({order : sortGroups});
+                    break;
+                default:
+                    var groupIndices = NDArray.range(shape[0]);
+            }
 
             switch (sortSubGroups) {
                 case 'ascending':
@@ -295,11 +296,17 @@ define(function(require) {
         function _buildSectors(angles) {
             var len = groups.length;
             var len2 = chordSeries.length;
+
+            var timeout;
             function createMouseOver(idx) {
                 return function() {
-                    for (var i = 0; i < len; i++) {
-                        if (i !== idx) {
-                            sectorShapes[i].style.opacity = 0.1;
+                    if (timeout) {
+                        clearTimeout(timeout);
+                    }
+                    timeout = setTimeout(function(){
+                        for (var i = 0; i < len; i++) {
+                            sectorShapes[i].style.opacity 
+                                = i === idx ? 1 : 0.1;
                             zr.modShape(
                                 sectorShapes[i].id,
                                 sectorShapes[i]
@@ -309,34 +316,41 @@ define(function(require) {
                                 for (var k = 0; k < len2; k++) {
                                     var chordShape = chordShapes[i][j][k];
                                     if (chordShape) {
-                                        chordShape.style.opacity = 0.03;
+                                        chordShape.style.opacity 
+                                            = i === idx ? 0.5 : 0.03;
                                         zr.modShape(chordShape.id, chordShape);
                                     }
                                 }
                             }
                         }
-                    }
-                    zr.refresh();
+                        zr.refresh();
+                    }, 50);
                 };
             }
 
             function createMouseOut() {
                 return function() {
-                    for (var i = 0; i < len; i++) {
-                        sectorShapes[i].style.opacity = 1.0;
-                        zr.modShape(sectorShapes[i].id, sectorShapes[i]);
+                    if (timeout) {
+                        clearTimeout(timeout);
+                    }
+                    timeout = setTimeout(function(){
+                        console.log('mouseout');
+                        for (var i = 0; i < len; i++) {
+                            sectorShapes[i].style.opacity = 1.0;
+                            zr.modShape(sectorShapes[i].id, sectorShapes[i]);
 
-                        for (var j = 0; j < len; j++) {
-                            for (var k = 0; k < len2; k++) {
-                                var chordShape = chordShapes[i][j][k];
-                                if (chordShape) {
-                                    chordShape.style.opacity = 0.5;
-                                    zr.modShape(chordShape.id, chordShape);  
-                                } 
+                            for (var j = 0; j < len; j++) {
+                                for (var k = 0; k < len2; k++) {
+                                    var chordShape = chordShapes[i][j][k];
+                                    if (chordShape) {
+                                        chordShape.style.opacity = 0.5;
+                                        zr.modShape(chordShape.id, chordShape);  
+                                    } 
+                                }
                             }
                         }
-                    }
-                    zr.refresh();
+                        zr.refresh();
+                    }, 50);
                 };
             }
 
@@ -354,7 +368,7 @@ define(function(require) {
                     id : zr.newShapeId(self.type),
                     shape : 'sector',
                     zlevel : _zlevelBase,
-                    hoverable : false,
+                    // hoverable : false,
                     style : {
                         x : center[0],
                         y : center[1],
@@ -364,8 +378,18 @@ define(function(require) {
                         endAngle : _end,
                         brushType : 'fill',
                         color : legend.getColor(group.name)
+                    },
+                    highlightStyle : {
+                        brushType : 'fill'
                     }
                 };
+                ecData.pack(
+                    sector,
+                    chordSeries[0],
+                    0,
+                    group, 0,
+                    group.name
+                );
                 if (showLabel) {
                     var halfAngle = [_start + _end] / 2;
                     halfAngle %= 360;  // Constrain to [0,360]
