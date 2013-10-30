@@ -235,12 +235,12 @@ define(function(require) {
                                 .toArray();
             sectorShapes = [];
 
-            _buildSectors(sectorAngles);
+            _buildSectors(sectorAngles, values);
 
             chordAngles = new NDArray(chordAngles).reshape(
                 groupNumber, groupNumber, serieNumber, 2
             ).toArray();
-            _buildChords(chordAngles);
+            _buildChords(chordAngles, dataMat.reshape(shape).toArray());
 
             var res = normalizeValue(values);
             if (showScale) {
@@ -293,7 +293,7 @@ define(function(require) {
             return [dataMat, groupsFilted2];
         }
 
-        function _buildSectors(angles) {
+        function _buildSectors(angles, data) {
             var len = groups.length;
             var len2 = chordSeries.length;
 
@@ -368,7 +368,6 @@ define(function(require) {
                     id : zr.newShapeId(self.type),
                     shape : 'sector',
                     zlevel : _zlevelBase,
-                    // hoverable : false,
                     style : {
                         x : center[0],
                         y : center[1],
@@ -387,7 +386,7 @@ define(function(require) {
                     sector,
                     chordSeries[0],
                     0,
-                    group, 0,
+                    data[i], 0,
                     group.name
                 );
                 if (showLabel) {
@@ -429,7 +428,7 @@ define(function(require) {
             }
         }
 
-        function _buildChords(angles) {
+        function _buildChords(angles, dataArr) {
             var len = angles.length;
             if (!len) {
                 return;
@@ -482,8 +481,21 @@ define(function(require) {
                                 strokeColor : 'black',
                                 opacity : 0.5,
                                 color : color
+                            },
+                            highlightStyle : {
+                                brushType : 'fill'
                             }
                         };
+
+                        ecData.pack(
+                            chord,
+                            chordSeries[k],
+                            k,
+                            dataArr[i][j][k], 0,
+                            groups[i].name,
+                            groups[j].name,
+                            dataArr[j][i][k]
+                        );
 
                         chordShapes[i][j][k] = chord;
                         self.shapeList.push(chord);

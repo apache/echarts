@@ -76,9 +76,11 @@
  */
 define(function(require) {
 
+    var util = require('zrender/tool/util')
     function ChordShape() {
         this.type = 'chord';
     }
+    var _ctx = util.getContext();
 
     ChordShape.prototype = {
         // center, source0, source1, target0, target1, r
@@ -126,6 +128,38 @@ define(function(require) {
                 width : 0,
                 height : 0
             };
+        },
+                
+        isCover : function(e, x, y) {
+            //对鼠标的坐标也做相同的变换
+            if(e.__needTransform && e._transform){
+                var inverseMatrix = [];
+                matrix.invert(inverseMatrix, e._transform);
+
+                var originPos = [x, y];
+                matrix.mulVector(originPos, inverseMatrix, [x, y, 1]);
+
+                if (x == originPos[0] && y == originPos[1]) {
+                    // 避免外部修改导致的__needTransform不准确
+                    if (Math.abs(e.rotation[0]) > 0.0001
+                        || Math.abs(e.position[0]) > 0.0001
+                        || Math.abs(e.position[1]) > 0.0001
+                        || Math.abs(e.scale[0] - 1) > 0.0001
+                        || Math.abs(e.scale[1] - 1) > 0.0001
+                    ) {
+                        e.__needTransform = true;
+                    } else {
+                        e.__needTransform = false;
+                    }
+                }
+
+                x = originPos[0];
+                y = originPos[1];
+            }
+            _ctx.beginPath();
+            ChordShape.prototype.buildPath.call(null, _ctx, e.style)
+            _ctx.closePath();
+            return _ctx.isPointInPath(x, y);
         }
     }
 
