@@ -94,6 +94,9 @@ define(function(require) {
             if (!chordSerieSample) {
                 return;
             }
+            var zrWidth = zr.getWidth();
+            var zrHeight = zr.getHeight();
+            var zrSize = Math.min(zrWidth, zrHeight);
 
             groups = chordSerieSample.data;
             startAngle = chordSerieSample.startAngle;
@@ -103,14 +106,23 @@ define(function(require) {
                 startAngle = startAngle + 360;
             }
             clockWise = chordSerieSample.clockWise;
-            innerRadius = chordSerieSample.radius[0];
-            outerRadius = chordSerieSample.radius[1];
+            innerRadius = self.parsePercent(
+                chordSerieSample.radius[0],
+                zrSize / 2
+            );
+            outerRadius = self.parsePercent(
+                chordSerieSample.radius[1],
+                zrSize / 2
+            );
             padding = chordSerieSample.padding;
             sortGroups = chordSerieSample.sort;
             sortSubGroups = chordSerieSample.sortSub;
             showScale = chordSerieSample.showScale;
             showScaleText = chordSerieSample.showScaleText;
-            center = self.calAbsolute(chordSerieSample.center);
+            center = [
+                self.parsePercent(chordSerieSample.center[0], zrWidth),
+                self.parsePercent(chordSerieSample.center[1], zrHeight),
+            ];
             showLabel = self.deepQuery(
                 [chordSerieSample], 'itemStyle.normal.label.show'
             );
@@ -154,15 +166,17 @@ define(function(require) {
 
             var percents = sumOut.mul(1 / sumOut.sum());
 
-            var groupNumber = percents.shape()[0];
-            var subGroupNumber = groupNumber * serieNumber;
+            var groupNumber = shape[0];
+            var subGroupNumber = shape[1] * shape[2];
 
             var groupAngles = percents.mul(360 - padding * groupNumber);
-            groupAngles.add(padding, groupAngles);
+            var subGroupAngles = dataMat.div(
+                dataMat.sum(1).reshape(groupNumber, 1)
+            );
+            subGroupAngles = subGroupAngles.mul(
+                groupAngles.sub(strokeFix * 2).reshape(groupNumber, 1)
+            );
 
-            var subGroupAngles = dataMat
-                    .mul(1 / dataMat.sum() 
-                        * (360 - (padding + strokeFix*2) * groupNumber));
             switch (sortSubGroups) {
                 case 'ascending':
                 case 'descending':
@@ -197,11 +211,11 @@ define(function(require) {
                 values[sortedIdx] = sumOutArray[i];
 
                 end = start + groupAnglesArr[i];
-                sectorAngles[sortedIdx] = [start, end - padding];
+                sectorAngles[sortedIdx] = [start, end];
 
                 // Sub Group
                 var subStart = start + strokeFix;
-                var subEnd = start;
+                var subEnd = subStart;
                 for (var j = 0; j < subGroupNumber; j++) {
                     subEnd = subStart + subGroupAnglesArr[sortedIdx][j];
                     var subSortedIndex = subGroupIndicesArr[sortedIdx][j];
@@ -211,7 +225,7 @@ define(function(require) {
                     subStart = subEnd;
                 }
 
-                start = end;
+                start = end + padding;
             }
             groups = groupsTmp;
 

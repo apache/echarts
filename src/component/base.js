@@ -247,31 +247,16 @@ define(function(require) {
         /**
          * 百分比计算
          */
-        function calAbsolute(pos) {
-            var x = pos[0];
-            var y = pos[1];
-            var ret = [];
-            if (typeof(x) == 'string') {
-                if (_trim(x).substr(-1) == '%') {
-                    ret[0] = parseFloat(x) / 100 * this.zr.getWidth();
+        function parsePercent(value, maxValue) {
+            if (typeof(value) === 'string') {
+                if (_trim(value).match(/%$/)) {
+                    return parseFloat(value) / 100 * maxValue;
                 } else {
-                    ret[0] = parseFloat(x);
+                    return parseFloat(value);
                 }
             } else {
-                ret[0] = x;
+                return value;
             }
-
-            if (typeof(y) == 'string') {
-                if (_trim(y).substr(-1) == '%') {
-                    ret[1] = parseFloat(y) / 100 * this.zr.getHeight();
-                } else {
-                    ret[1] = parseFloat(y);
-                }
-            } else {
-                ret[1] = y;
-            }
-
-            return ret;
         }
 
         function _trim(str) {
@@ -338,7 +323,7 @@ define(function(require) {
         self.deepQuery = deepQuery;
         self.getFont = getFont;
         self.addLabel = addLabel;
-        self.calAbsolute = calAbsolute;
+        self.parsePercent = parsePercent;
         self.clear = clear;
         self.dispose = dispose;
         self.backupAdaptiveParams = backupAdaptiveParams;
