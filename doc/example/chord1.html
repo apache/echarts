@@ -75,8 +75,23 @@ option = {
         y:'bottom'
     },
     tooltip : {
-        trigger: 'item'
-        //formatter: '{b} {a} {d}'
+        trigger: 'item',
+        formatter : function(params) {
+            var g1 = params[1];
+            var serie = params[0];
+            var g2 = params[3];
+            var data = params[2];
+            var data2 = params[4];
+            if (data2) {
+                if (data > data2) {
+                    return [g1, serie, g2].join(' ');
+                } else {
+                    return [g2, serie, g1].join(' ');
+                }
+            } else {
+                return g1
+            }
+        }
     },
     legend : {
         data : [

@@ -206,7 +206,6 @@ define(function(require) {
             var sumOutArray = sumOut.toArray();
 
             var sectorAngles = [];
-            var groupsTmp = [];
             var chordAngles = new NDArray(
                 groupNumber, subGroupNumber
             ).toArray();
@@ -215,7 +214,6 @@ define(function(require) {
             var end = 0;
             for (var i = 0; i < groupNumber; i++) {
                 var sortedIdx = groupIndicesArr[i];
-                groupsTmp[sortedIdx] = groups[i];
                 values[sortedIdx] = sumOutArray[i];
 
                 end = start + groupAnglesArr[i];
@@ -235,7 +233,6 @@ define(function(require) {
 
                 start = end + padding;
             }
-            groups = groupsTmp;
 
             // reset data
             chordShapes = new NDArray(groupNumber, groupNumber, serieNumber)

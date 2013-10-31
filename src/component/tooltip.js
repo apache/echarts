@@ -787,6 +787,7 @@ define(function (require) {
             var name = ecData.get(_curTarget, 'name');
             var value = ecData.get(_curTarget, 'value');
             var special = ecData.get(_curTarget, 'special');
+            var special2 = ecData.get(_curTarget, 'special2');
             // 从低优先级往上找到trigger为item的formatter和样式
             var formatter;
             var showContent;
@@ -839,7 +840,8 @@ define(function (require) {
                         serie.name || '',
                         name,
                         value,
-                        special
+                        special,
+                        special2
                     ],
                     _curTicket,
                     _setContent
@@ -891,19 +893,20 @@ define(function (require) {
                     _tDom.innerHTML = html;
                 }
                 else if (serie.type == ecConfig.CHART_TYPE_CHORD) {
-                    var special2 = ecData.get(_curTarget, 'special2');
                     if (typeof special2 == 'undefined') {
                         // 外环上
                         _tDom.innerHTML = _encodeHTML(name) + ' (' + value + ')';
                     }
                     else {
+                        var name1 = _encodeHTML(name);
+                        var name2 = _encodeHTML(special);
                         // 内部弦上
                         _tDom.innerHTML = (typeof serie.name != 'undefined'
                                           ? (_encodeHTML(serie.name) + '<br/>')
                                           : '')
-                              + _encodeHTML(name) + ' (' + value + ')'
-                              + ' : '
-                              + _encodeHTML(special) + ' (' + special2 + ')';
+                              + name1 + '->' + name2 + ' (' + value + ')'
+                              + '<br />'
+                              + name2 + '->' + name1+ ' (' + special2 + ')';
                     }
                 }
                 else {
