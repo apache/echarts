@@ -671,7 +671,7 @@ define(function() {
             sortSub : 'none', // can be 'none', 'ascending', 'descending'
             startAngle : 90,
             clockWise : false,
-            showScale : true,
+            showScale : false,
             showScaleText : false,
             itemStyle : {
                 normal : {

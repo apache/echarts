@@ -75,8 +75,7 @@ option = {
         y:'bottom'
     },
     tooltip : {
-        trigger: 'item',
-        formatter: '{b}'
+        trigger: 'item'
     },
     legend: {
         x: 'left',
@@ -87,19 +86,18 @@ option = {
             type:'chord',
             sort : 'ascending',
             sortSub : 'descending',
-            data : [{
-                name : 'g1'
-            }, {
-                name : 'g2'
-            }, {
-                name : 'g3'
-            }, {
-                name : 'g4'
-            }],
+            showScale : true,
+            showScaleText : true,
+            data : [
+                {name : 'g1'},
+                {name : 'g2'},
+                {name : 'g3'},
+                {name : 'g4'}
+            ],
             itemStyle : {
                 normal : {
                     label : {
-                        color : 'blue'
+                        show : false
                     }
                 }
             },

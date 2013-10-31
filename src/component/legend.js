@@ -570,6 +570,9 @@ define(function (require) {
          * @param {Object} itemShape
          */
         function getItemShape(name) {
+            if (typeof name == 'undefined') {
+                return;
+            }
             var shape;
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 shape = self.shapeList[i];
