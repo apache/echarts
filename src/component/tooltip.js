@@ -904,9 +904,9 @@ define(function (require) {
                         _tDom.innerHTML = (typeof serie.name != 'undefined'
                                           ? (_encodeHTML(serie.name) + '<br/>')
                                           : '')
-                              + name1 + '->' + name2 + ' (' + value + ')'
+                              + name1 + ' -> ' + name2 + ' (' + value + ')'
                               + '<br />'
-                              + name2 + '->' + name1+ ' (' + special2 + ')';
+                              + name2 + ' -> ' + name1+ ' (' + special2 + ')';
                     }
                 }
                 else {

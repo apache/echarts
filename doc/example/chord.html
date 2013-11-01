@@ -69,23 +69,25 @@
                     <textarea id="code" name="code">
 option = {
     title : {
-        text: '测试数据',
-        subtext: 'From d3.js',
-        x:'right',
-        y:'bottom'
+        text: '测试数据'
     },
     tooltip : {
         trigger: 'item'
     },
     legend: {
-        x: 'left',
+        x: 'right',
         data:['g1','g2', 'g3', 'g4']
     },
     series : [
         {
             type:'chord',
-            sort : 'ascending',
-            sortSub : 'descending',
+            radius : ['55%', '75%'],
+            center : ['50%', '50%'],
+            padding : 2,
+            sort : 'descending', // can be 'none', 'ascending', 'descending'
+            sortSub : 'descending', // can be 'none', 'ascending', 'descending'
+            startAngle : 90,
+            clockWise : false,
             showScale : true,
             showScaleText : true,
             data : [
@@ -96,15 +98,18 @@ option = {
             ],
             itemStyle : {
                 normal : {
-                    label : {
-                        show : false
+                    label: {
+                        show: true,
+                        color: 'red'
                     }
                 }
             },
-            matrix : [[11975,  5871, 8916, 2868],
-                      [ 1951, 10048, 2060, 6171],
-                      [ 8010, 16145, 8090, 8045],
-                      [ 1013,   990,  940, 6907]]
+            matrix : [
+                [11975,  5871, 8916, 2868],
+                [ 1951, 10048, 2060, 6171],
+                [ 8010, 16145, 8090, 8045],
+                [ 1013,   990,  940, 6907]
+            ]
         }
     ]
 };
