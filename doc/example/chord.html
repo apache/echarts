@@ -90,20 +90,48 @@ option = {
             clockWise : false,
             showScale : true,
             showScaleText : true,
-            data : [
-                {name : 'g1'},
-                {name : 'g2'},
-                {name : 'g3'},
-                {name : 'g4'}
-            ],
             itemStyle : {
                 normal : {
+                    lineStyle : {
+                        width: 1,
+                        color: '#ccc',
+                    },
                     label: {
                         show: true,
                         color: 'red'
                     }
+                },
+                emphasis : {
+                    lineStyle : {
+                        width: 2,
+                        color: '#fff',
+                    }
                 }
             },
+            data : [
+                {
+                    name : 'g1',
+                    itemStyle : {
+                        normal: {
+                            color: 'rgba(250,10,10,0.5)',
+                            lineStyle : {
+                                width: 1,
+                                color: 'green',
+                            }
+                        },
+                        emphasis: {
+                            color: 'yellow',
+                            lineStyle : {
+                                width: 2,
+                                color: 'blue',
+                            }
+                        }
+                    }
+                },
+                {name : 'g2'},
+                {name : 'g3'},
+                {name : 'g4'}
+            ],
             matrix : [
                 [11975,  5871, 8916, 2868],
                 [ 1951, 10048, 2060, 6171],
