@@ -329,7 +329,7 @@ define(function() {
         },
 
         polar : {
-            // center: null,                   // 默认全局居中
+            center : ['50%', '50%'],    // 默认全局居中
             // radius: [0, min(width,height) - 50],
             startAngle : 90,
             splitNumber : 5,
@@ -529,7 +529,7 @@ define(function() {
 
         // 饼图默认参数
         pie: {
-            // center: null,                   // 默认全局居中
+            center : ['50%', '50%'],    // 默认全局居中
             // radius: [0, min(width,height) - 50],
             startAngle: 90,
             minAngle: 5,
