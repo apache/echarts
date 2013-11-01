@@ -45,7 +45,9 @@ define(function() {
         // 图表标题
         title: {
             text: '',
+            //link: null,              // 超链接跳转
             subtext: '',
+            //sublink: null,           // 超链接跳转
             x: 'left',                 // 水平安放位置，默认为左对齐，可选为：
                                        // 'center' ¦ 'left' ¦ 'right'
                                        // ¦ {number}（x坐标，单位px）
