@@ -537,6 +537,7 @@ define(function() {
             minAngle: 5,
             selectedOffset: 10,             // 选中是扇区偏移量
             // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
+            // roseType : null,     // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
             itemStyle: {
                 normal: {
                     label: {

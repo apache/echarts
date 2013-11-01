@@ -611,9 +611,19 @@ require(['echarts'], function(ec){
                             <td> 主标题文本 </td>
                         </tr>
                         <tr>
+                            <td> {string} link </td>
+                            <td> '' </td>
+                            <td> 主标题文本超链接 </td>
+                        </tr>
+                        <tr>
                             <td> {string} subtext </td>
                             <td> '' </td>
                             <td> 副标题文本 </td>
+                        </tr>
+                        <tr>
+                            <td> {string} sublink </td>
+                            <td> '' </td>
+                            <td> 副标题文本超链接 </td>
                         </tr>
                         <tr>
                             <td> {string | number} x </td>
@@ -1833,6 +1843,12 @@ indicator : [
                             <td> 5 </td>
                             <td> 饼图 </td>
                             <td> 最小角度，防止某item的值过小而影响交互 </td>
+                        </tr>
+                        <tr>
+                            <td> {string} roseType </td>
+                            <td> null </td>
+                            <td> 饼图 </td>
+                            <td> 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）</td>
                         </tr>
                         <tr>
                             <td> {number} selectedOffset </td>
