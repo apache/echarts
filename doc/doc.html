@@ -1825,7 +1825,7 @@ indicator : [
                         <tr>
                             <td> {number} startAngle </td>
                             <td> 90 </td>
-                            <td> 饼图 </td>
+                            <td> 饼图, 弦图 </td>
                             <td> 开始角度, 有效输入范围：[-180,180]</td>
                         </tr>
                         <tr>
@@ -1915,6 +1915,48 @@ indicator : [
                             <td> 1 </td>
                             <td> 力导向 </td>
                             <td> 顶点之间的引力系数，影响到布局稳定之后的大小，值越大则稳定之后顶点之间的距离越小 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} padding </td>
+                            <td> 2 </td>
+                            <td> 弦图 </td>
+                            <td> 每个sector之间的间距(用角度表示) </td>
+                        </tr>
+                        <tr>
+                            <td> {string} sort </td>
+                            <td> 'none' </td>
+                            <td> 弦图 </td>
+                            <td> 数据排序， 可以取none, ascending, descending</td>
+                        </tr>
+                        <tr>
+                            <td> {string} sortSub </td>
+                            <td> 'none' </td>
+                            <td> 弦图 </td>
+                            <td> 数据排序（弦）， 可以取none, ascending, descending</td>
+                        </tr>
+                        <tr>
+                            <td> {boolean} showScale </td>
+                            <td> false </td>
+                            <td> 弦图 </td>
+                            <td> 是否显示刻度 </td>
+                        </tr>
+                        <tr>
+                            <td> {boolean} showScale </td>
+                            <td> false </td>
+                            <td> 弦图 </td>
+                            <td> 是否显示刻度文字 </td>
+                        </tr>
+                        <tr>
+                            <td> {boolean} clockWise </td>
+                            <td> false </td>
+                            <td> 弦图 </td>
+                            <td> 显示是否顺时针 </td>
+                        </tr>
+                        <tr>
+                            <td> {Array} matrix </td>
+                            <td>[[]]</td>
+                            <td> 弦图 </td>
+                            <td> 关系数据，用二维数组表示，项 [i][j] 的数值表示 i 到 j 的关系数据 </td>
                         </tr>
                     </table><h5>series.data<a name="SeriesData"> </a></h5>
                     <P> 系列中的数据内容数组，折线图以及柱状图时数组长度等于所使用类目轴文本标签数组<a href="#AxisData" title="">axis.data</a>的长度，并且他们间是一一对应的。数组项通常为数值，如:</P>
