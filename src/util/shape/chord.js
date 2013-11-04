@@ -131,6 +131,9 @@ define(function(require) {
         },
                 
         isCover : function(e, x, y) {
+            if (!_ctx.isPointInPath) {  // In ie
+                return false;
+            }
             //对鼠标的坐标也做相同的变换
             if(e.__needTransform && e._transform){
                 var inverseMatrix = [];
@@ -159,6 +162,7 @@ define(function(require) {
             _ctx.beginPath();
             ChordShape.prototype.buildPath.call(null, _ctx, e.style)
             _ctx.closePath();
+            
             return _ctx.isPointInPath(x, y);
         }
     }

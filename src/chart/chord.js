@@ -124,12 +124,13 @@ define(function(require) {
             showScaleText = chordSerieSample.showScaleText;
             center = [
                 self.parsePercent(chordSerieSample.center[0], zrWidth),
-                self.parsePercent(chordSerieSample.center[1], zrHeight),
+                self.parsePercent(chordSerieSample.center[1], zrHeight)
             ];
             var fixSize = 
                 chordSerieSample.itemStyle.normal.chordStyle.lineStyle.width -
                 chordSerieSample.itemStyle.normal.lineStyle.width;
-            strokeFix = (1 / _devicePixelRatio) / innerRadius / Math.PI * 180;
+            strokeFix = 
+                (fixSize / _devicePixelRatio) / innerRadius / Math.PI * 180;
 
 
             dataMat = new NDArray(matrix);
@@ -352,7 +353,7 @@ define(function(require) {
                                     var chordShape = chordShapes[i][j][k];
                                     if (chordShape) {
                                         chordShape.style.opacity = 0.5;
-                                        zr.modShape(chordShape.id, chordShape);  
+                                        zr.modShape(chordShape.id, chordShape);
                                     } 
                                 }
                             }
@@ -455,7 +456,7 @@ define(function(require) {
                         'itemStyle.normal.label.textStyle'
                     ));
                     zr.addShape(labelShape);
-                    self.shapeList.push(labelShape)
+                    self.shapeList.push(labelShape);
                 }
 
                 sector.onmouseover = createMouseOver(i);
@@ -522,7 +523,6 @@ define(function(require) {
                                 target0 : t0 - startAngle,
                                 target1 : t1 - startAngle,
                                 brushType : 'both',
-                                strokeColor : 'black',
                                 opacity : 0.5,
                                 color : color,
                                 lineWidth : chordLineStyle.width,
@@ -701,6 +701,7 @@ define(function(require) {
 
         self.init = init;
         self.refresh = refresh;
+        self.reformOption = reformOption;
 
         init(option, component);
     }
