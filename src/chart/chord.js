@@ -38,6 +38,7 @@ define(function(require) {
 
         var _zlevelBase = self.getZlevelBase();
 
+        var chordSerieSample;
         // Config
         var chordSeries = [];
         var groups;
@@ -51,8 +52,6 @@ define(function(require) {
         var center;
         var showScale;
         var showScaleText;
-        var showLabel;
-        var labelColor;
 
         var strokeFix = 0;
         // Adjacency matrix
@@ -68,7 +67,7 @@ define(function(require) {
 
             self.selectedMap = {};
             chordSeries = [];
-            var chordSerieSample;
+            chordSerieSample = null;
             var matrix = [];
             var serieNumber = 0;
             for (var i = 0, l = series.length; i < l; i++) {
@@ -127,13 +126,9 @@ define(function(require) {
                 self.parsePercent(chordSerieSample.center[0], zrWidth),
                 self.parsePercent(chordSerieSample.center[1], zrHeight),
             ];
-            showLabel = self.deepQuery(
-                [chordSerieSample], 'itemStyle.normal.label.show'
-            );
-            labelColor = self.deepQuery(
-                [chordSerieSample], 'itemStyle.normal.label.color'
-            );
-            // Supporse the line width is 1;
+            var fixSize = 
+                chordSerieSample.itemStyle.normal.chordStyle.lineStyle.width -
+                chordSerieSample.itemStyle.normal.lineStyle.width;
             strokeFix = (1 / _devicePixelRatio) / innerRadius / Math.PI * 180;
 
 
@@ -304,6 +299,14 @@ define(function(require) {
             var len2 = chordSeries.length;
 
             var timeout;
+
+            var showLabel = self.deepQuery(
+                [chordSerieSample], 'itemStyle.normal.label.show'
+            );
+            var labelColor = self.deepQuery(
+                [chordSerieSample], 'itemStyle.normal.label.color'
+            );
+
             function createMouseOver(idx) {
                 return function() {
                     if (timeout) {
@@ -381,12 +384,35 @@ define(function(require) {
                         startAngle : _start,
                         endAngle : _end,
                         brushType : 'fill',
+                        opacity: 1,
                         color : legend.getColor(group.name)
                     },
                     highlightStyle : {
                         brushType : 'fill'
                     }
                 };
+                sector.style.lineWidth = self.deepQuery(
+                    [group, chordSerieSample],
+                    'itemStyle.normal.lineStyle.width'
+                );
+                sector.highlightStyle.lineWidth = self.deepQuery(
+                    [group, chordSerieSample],
+                    'itemStyle.emphasis.lineStyle.width'
+                );
+                sector.style.strokeColor = self.deepQuery(
+                    [group, chordSerieSample],
+                    'itemStyle.normal.lineStyle.color'
+                );
+                sector.highlightStyle.strokeColor = self.deepQuery(
+                    [group, chordSerieSample],
+                    'itemStyle.emphasis.lineStyle.color'
+                );
+                if (sector.style.lineWidth > 0) {
+                    sector.style.brushType = 'both';
+                }
+                if (sector.highlightStyle.lineWidth > 0) {
+                    sector.highlightStyle.brushType = 'both';
+                }
                 ecData.pack(
                     sector,
                     chordSeries[0],
@@ -420,6 +446,14 @@ define(function(require) {
                             hoverable : false
                         }
                     };
+                    labelShape.style.textColor = self.deepQuery(
+                        [group, chordSerieSample],
+                        'itemStyle.normal.label.textStyle.color'
+                    ) || '#fff';
+                    sector.style.textFont = self.getFont(self.deepQuery(
+                        [group, chordSerieSample],
+                        'itemStyle.normal.label.textStyle'
+                    ));
                     zr.addShape(labelShape);
                     self.shapeList.push(labelShape)
                 }
@@ -439,6 +473,11 @@ define(function(require) {
                 return;
             }
             var len2 = angles[0][0].length;
+
+            var chordLineStyle 
+                = chordSerieSample.itemStyle.normal.chordStyle.lineStyle;
+            var chordLineStyleEmphsis
+                = chordSerieSample.itemStyle.emphasis.chordStyle.lineStyle;
 
             for (var i = 0; i < len; i++) {
                 for (var j = 0; j < len; j++) {
@@ -485,10 +524,14 @@ define(function(require) {
                                 brushType : 'both',
                                 strokeColor : 'black',
                                 opacity : 0.5,
-                                color : color
+                                color : color,
+                                lineWidth : chordLineStyle.width,
+                                strokeColor : chordLineStyle.color
                             },
                             highlightStyle : {
-                                brushType : 'fill'
+                                brushType : 'both',
+                                lineWidth : chordLineStyleEmphsis.width,
+                                strokeColor : chordLineStyleEmphsis.color
                             }
                         };
 
@@ -634,6 +677,26 @@ define(function(require) {
             _buildShape();
 
             zr.refresh();
+        }
+
+        function reformOption(opt) {
+            var _merge = zrUtil.merge;
+            opt = _merge(
+                      opt || {},
+                      ecConfig.pie,
+                      {
+                          'overwrite' : false,
+                          'recursive' : true
+                      }
+                  );
+            opt.itemStyle.normal.label.textStyle = _merge(
+                opt.itemStyle.normal.label.textStyle || {},
+                ecConfig.textStyle,
+                {
+                    'overwrite' : false,
+                    'recursive' : true
+                }
+            );
         }
 
         self.init = init;

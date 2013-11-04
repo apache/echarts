@@ -677,7 +677,29 @@ define(function() {
                 normal : {
                     label : {
                         show : true,
-                        color : 'black'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
+                    lineStyle : {
+                        width : 0,
+                        color : '#000'
+                    },
+                    chordStyle : {
+                        lineStyle : {
+                            width : 1,
+                            color : 'black'
+                        }
+                    }
+                },
+                emphasis : {
+                    lineStyle : {
+                        width : 0,
+                        color : '#000'
+                    },
+                    chordStyle : {
+                        lineStyle : {
+                            width : 2,
+                            color : 'black'
+                        }
                     }
                 }
             },
