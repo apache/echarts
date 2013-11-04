@@ -213,11 +213,17 @@ define(
 
                     style.styleFont = self.getFont(textStyle);
                     
-                    if (typeof name.formatter != 'function') {
-                        style.text = indicator[i].text;
+                    
+                    if (typeof name.formatter == 'function') {
+                        style.text = name.formatter(indicator[i].text, i);
+                    }
+                    else if (typeof name.formatter == 'string'){
+                        style.text = name.formatter.replace(
+                            '{value}', indicator[i].text
+                        );
                     }
                     else {
-                        style.text = name.formatter(i, indicator[i].text);
+                        style.text = indicator[i].text;
                     }
                     
                     vector = __ecIndicator[i].vector;

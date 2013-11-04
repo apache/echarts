@@ -94,7 +94,44 @@ option = {
                 { text : '指标五' }
             ],
             center : [250,210],
-            radius : 150
+            radius : 150,
+            startAngle: 90,
+            splitNumber: 8,
+            name : {
+                formatter:'【{value}】',
+                textStyle: {color:'red'}
+            },
+            scale: true,
+            precision: 1,
+            //power: 100,
+            axisLine: {            // 坐标轴线
+                show: true,        // 默认显示，属性show控制显示与否
+                lineStyle: {       // 属性lineStyle控制线条样式
+                    color: 'green',
+                    width: 2,
+                    type: 'solid'
+                }
+            },
+            axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
+                show: false,
+                // formatter: null,
+                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: '#ccc'
+                }
+            },
+            splitArea : {
+                show : true,
+                areaStyle : {
+                    color: ['rgba(250,0,250,0.3)','rgba(0,200,200,0.3)']
+                }
+            },
+            splitLine : {
+                show : true,
+                lineStyle : {
+                    width : 2,
+                    color : 'yellow'
+                }
+            }
         },
         {
             indicator : [
