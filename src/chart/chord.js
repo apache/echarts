@@ -683,7 +683,7 @@ define(function(require) {
             var _merge = zrUtil.merge;
             opt = _merge(
                       opt || {},
-                      ecConfig.pie,
+                      ecConfig.chord,
                       {
                           'overwrite' : false,
                           'recursive' : true

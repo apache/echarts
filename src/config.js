@@ -41,12 +41,6 @@ define(function() {
                 '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
                 '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
                 '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'],
-        color2 : [
-            '#FBB367','#80B1D2','#FB8070','#CC99FF','#B0D961',
-            '#99CCCC','#BEBBD8','#FFCC99','#8DD3C8','#FF9999',
-            '#CCEAC4','#BB81BC','#FBCCEC','#CCFF66','#99CC66',
-            '#66CC66','#FF6666','#FFED6F','#ff7f50','#87cefa',
-        ],
 
         // 图表标题
         title: {
@@ -698,7 +692,7 @@ define(function() {
                     chordStyle : {
                         lineStyle : {
                             width : 1,
-                            color : 'black'
+                            color : '#666'
                         }
                     }
                 },
@@ -710,7 +704,7 @@ define(function() {
                     chordStyle : {
                         lineStyle : {
                             width : 2,
-                            color : 'black'
+                            color : '#333'
                         }
                     }
                 }
