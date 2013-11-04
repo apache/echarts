@@ -45,7 +45,9 @@ define(function (require) {
          */
         function _buildItem() {
             var text = titleOption.text;
+            var link = titleOption.link;
             var subtext = titleOption.subtext;
+            var sublink = titleOption.sublink;
             var font = self.getFont(titleOption.textStyle);
             var subfont = self.getFont(titleOption.subtextStyle);
             
@@ -66,6 +68,13 @@ define(function (require) {
                 },
                 hoverable: false
             };
+            if (link) {
+                textShape.hoverable = true;
+                textShape.clickable = true;
+                textShape.onclick = function(){
+                    window.open(link);
+                }
+            }
             
             var subtextShape = {
                 shape : 'text',
@@ -79,6 +88,13 @@ define(function (require) {
                 },
                 hoverable: false
             };
+            if (sublink) {
+                subtextShape.hoverable = true;
+                subtextShape.clickable = true;
+                subtextShape.onclick = function(){
+                    window.open(sublink);
+                }
+            }
 
             
 

@@ -98,7 +98,6 @@ define(function(require) {
             }
         }
 
-
         /**
          * 获取多级控制嵌套属性的基础方法
          * 返回ctrList中优先级最高（最靠前）的非undefined属性，ctrList中均无定义则返回undefined
@@ -258,6 +257,16 @@ define(function(require) {
                 return value;
             }
         }
+        
+        /**
+         * 获取中心坐标
+         */ 
+        function parseCenter(center) {
+            return [
+                parsePercent(center[0], self.zr.getWidth()),
+                parsePercent(center[1], self.zr.getHeight()),
+            ];
+        }
 
         function _trim(str) {
             return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
@@ -324,6 +333,7 @@ define(function(require) {
         self.getFont = getFont;
         self.addLabel = addLabel;
         self.parsePercent = parsePercent;
+        self.parseCenter = parseCenter;
         self.clear = clear;
         self.dispose = dispose;
         self.backupAdaptiveParams = backupAdaptiveParams;

@@ -45,7 +45,9 @@ define(function() {
         // 图表标题
         title: {
             text: '',
+            //link: null,              // 超链接跳转
             subtext: '',
+            //sublink: null,           // 超链接跳转
             x: 'left',                 // 水平安放位置，默认为左对齐，可选为：
                                        // 'center' ¦ 'left' ¦ 'right'
                                        // ¦ {number}（x坐标，单位px）
@@ -329,7 +331,7 @@ define(function() {
         },
 
         polar : {
-            // center: null,                   // 默认全局居中
+            center : ['50%', '50%'],    // 默认全局居中
             // radius: [0, min(width,height) - 50],
             startAngle : 90,
             splitNumber : 5,
@@ -529,12 +531,13 @@ define(function() {
 
         // 饼图默认参数
         pie: {
-            // center: null,                   // 默认全局居中
+            center : ['50%', '50%'],    // 默认全局居中
             // radius: [0, min(width,height) - 50],
             startAngle: 90,
             minAngle: 5,
             selectedOffset: 10,             // 选中是扇区偏移量
             // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
+            // roseType : null,     // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
             itemStyle: {
                 normal: {
                     label: {
