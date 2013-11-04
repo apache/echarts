@@ -40,7 +40,13 @@ define(function() {
         color: ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
                 '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
                 '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
-                '#6b8e23','#ff00ff','#3cb371','#b8860b','#30e0e0'],
+                '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'],
+        color2 : [
+            '#FBB367','#80B1D2','#FB8070','#CC99FF','#B0D961',
+            '#99CCCC','#BEBBD8','#FFCC99','#8DD3C8','#FF9999',
+            '#CCEAC4','#BB81BC','#FBCCEC','#CCFF66','#99CC66',
+            '#66CC66','#FF6666','#FFED6F','#ff7f50','#87cefa',
+        ],
 
         // 图表标题
         title: {
@@ -81,7 +87,6 @@ define(function() {
             y: 'top',                  // 垂直安放位置，默认为全图顶端，可选为：
                                        // 'top' ¦ 'bottom' ¦ 'center'
                                        // ¦ {number}（y坐标，单位px）
-            selectedMode: true,        // 选择模式，默认开启图例开关
             backgroundColor: 'rgba(0,0,0,0)',
             borderColor: '#ccc',       // 图例边框颜色
             borderWidth: 0,            // 图例边框线宽，单位px，默认为0（无边框）
@@ -89,12 +94,14 @@ define(function() {
                                        // 接受数组分别设定上右下左边距，同css
             itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
-            // data: []                // 图例内容（详见legend.data，数组中每一项代表一个item
             itemWidth: 20,             // 图例图形宽度，非标准参数
             itemHeight: 14,            // 图例图形高度，非标准参数
             textStyle: {
                 color: '#333'          // 图例文字颜色
-            }
+            },
+            selectedMode: true        // 选择模式，默认开启图例开关
+            // selected: null,         // 配置默认选中状态，可配合LEGEND.SELECTED事件做动态数据载入
+            // data: [],               // 图例内容（详见legend.data，数组中每一项代表一个item
         },
         
         // 值域
@@ -116,9 +123,9 @@ define(function() {
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
             itemWidth: 20,             // 值域图形宽度，线性渐变水平布局宽度为该值 * 10
             itemHeight: 14,            // 值域图形高度，线性渐变垂直布局高度为该值 * 10
-            precision: 0,              // 小数精度，默认为0，无小数点
             // min: null,              // 最小值
             // max: null,              // 最大值
+            precision: 0,              // 小数精度，默认为0，无小数点
             splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变
             calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
             realtime: true,
@@ -164,9 +171,9 @@ define(function() {
             trigger: 'item',           // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
             // formatter: null         // 内容格式器：{string}（Template） ¦ {Function}
             islandFormatter: '{a} <br/>{b} : {c}',  // 数据孤岛内容格式器，非标准参数
-            transitionDuration : 0.4,  // 动画变换时间，单位s
             showDelay: 20,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
             hideDelay: 100,            // 隐藏延迟，单位ms
+            transitionDuration : 0.4,  // 动画变换时间，单位s
             backgroundColor: 'rgba(0,0,0,0.7)',     // 提示背景颜色，默认为透明度为0.7的黑色
             borderColor: '#333',       // 提示边框颜色
             borderRadius: 4,           // 提示边框圆角，单位px，默认为4
@@ -193,24 +200,23 @@ define(function() {
         // 区域缩放控制器
         dataZoom: {
             show: false,
-            realtime: false,
             orient: 'horizontal',          // 布局方式，默认为水平布局，可选为：
                                            // 'horizontal' ¦ 'vertical'
-            backgroundColor: '#eee',       // 背景颜色
-            dataBackgroundColor: '#ccc',   // 数据背景颜色
-            fillerColor: 'rgba(50,205,50,0.4)',        // 填充颜色
-            handleColor: 'rgba(70,130,180,0.8)'         // 手柄颜色
-
             // x: {number},            // 水平安放位置，默认为根据grid参数适配，可选为：
                                        // {number}（x坐标，单位px）
             // y: {number},            // 垂直安放位置，默认为根据grid参数适配，可选为：
                                        // {number}（y坐标，单位px）
             // width: {number},        // 指定宽度，横向布局时默认为根据grid参数适配
             // height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
+            backgroundColor: '#eee',       // 背景颜色
+            dataBackgroundColor: '#ccc',   // 数据背景颜色
+            fillerColor: 'rgba(50,205,50,0.4)',        // 填充颜色
+            handleColor: 'rgba(70,130,180,0.8)',         // 手柄颜色
             // xAxisIndex: [],         // 默认控制所有横向类目
             // yAxisIndex: [],         // 默认控制所有横向类目
             // start: 0,               // 默认为0
             // end: 100,               // 默认为全部 100%
+            realtime: false
             // zoomLock: false         // 是否锁定选择区域大小
         },
 
@@ -332,7 +338,7 @@ define(function() {
 
         polar : {
             center : ['50%', '50%'],    // 默认全局居中
-            // radius: [0, min(width,height) - 50],
+            // radius: 'min(width, height) / 2 - 50',
             startAngle : 90,
             splitNumber : 5,
             name : {
@@ -370,6 +376,7 @@ define(function() {
                     color : '#ccc'
                 }
             }
+            //indicator : []
         },
 
         // 柱形图默认参数
@@ -384,7 +391,7 @@ define(function() {
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
-                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
@@ -393,7 +400,7 @@ define(function() {
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
-                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
@@ -439,6 +446,7 @@ define(function() {
             //smooth : false,
             //symbol: null,         // 拐点图形类型，非标准参数
             symbolSize: 2,          // 可计算特性参数，空数据拖拽提示图形大小
+            //symbolRotate : null,  // 拐点图形旋转控制
             showAllSymbol: false    // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
         },
         
@@ -470,12 +478,14 @@ define(function() {
             yAxisIndex: 0,
             //symbol: null,      // 图形类型，非标准参数
             symbolSize: 4,       // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            //symbolRotate : null,  // 拐点图形旋转控制
             large: false,        // 大规模散点图
             largeThreshold: 2000,// 大规模阀值，large为true且数据量>largeThreshold才启用大规模模式
             itemStyle: {
                 normal: {
                     label: {
                         show: false,
+                        // 标签文本格式器，同Tooltip.formatter，不支持回调
                         formatter : function(a, b, c) {
                             if (typeof c[2] != 'undefined') {
                                 return c[2];
@@ -484,7 +494,6 @@ define(function() {
                                 return c[0] + ' , ' + c[1];
                             }
                         }
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
                         // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -493,6 +502,7 @@ define(function() {
                 emphasis: {
                     label: {
                         show: false,
+                        // 标签文本格式器，同Tooltip.formatter，不支持回调
                         formatter : function(a, b, c) {
                             if (typeof c[2] != 'undefined') {
                                 return c[2];
@@ -501,7 +511,6 @@ define(function() {
                                 return c[0] + ' , ' + c[1];
                             }
                         }
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
                         // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -532,7 +541,7 @@ define(function() {
         // 饼图默认参数
         pie: {
             center : ['50%', '50%'],    // 默认全局居中
-            // radius: [0, min(width,height) - 50],
+            // radius: [0, min(width, height) / 2 - 50],
             startAngle: 90,
             minAngle: 5,
             selectedOffset: 10,             // 选中是扇区偏移量
@@ -679,7 +688,7 @@ define(function() {
             itemStyle : {
                 normal : {
                     label : {
-                        show : true,
+                        show : true
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     lineStyle : {
