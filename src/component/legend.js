@@ -81,7 +81,7 @@ define(function (require) {
 
             for (var i = 0; i < dataLength; i++) {
                 itemName = data[i];
-                if (itemName == '') {
+                if (itemName === '') {
                     if (legendOption.orient == 'horizontal') {
                         lastX = _itemGroupLocation.x;
                         lastY += itemHeight + itemGap;
@@ -107,7 +107,7 @@ define(function (require) {
                         && (itemWidth + 5
                             + zrArea.getTextWidth(itemName, font)
                             // 分行的最后一个不用算itemGap
-                            + (i == dataLength - 1 || data[i+1] == ''
+                            + (i == dataLength - 1 || data[i+1] === ''
                                ? 0 : itemGap))
                             >= zrWidth - lastX
                     ) {
@@ -119,7 +119,7 @@ define(function (require) {
                     if (zrHeight - lastY < 200   // 最后200px做分行预判
                         && (itemHeight
                             // 分行的最后一个不用算itemGap
-                            + (i == dataLength - 1 || data[i+1] == ''
+                            + (i == dataLength - 1 || data[i+1] === ''
                                ? 0 : itemGap))
                             >= zrHeight - lastY
                     ) {
@@ -231,7 +231,7 @@ define(function (require) {
                 // 水平布局，计算总宽度
                 totalHeight = itemHeight;
                 for (var i = 0; i < dataLength; i++) {
-                    if (data[i] == '') {
+                    if (data[i] === '') {
                         temp -= itemGap;
                         if (temp > zrWidth) {
                             totalWidth = zrWidth;
@@ -274,7 +274,7 @@ define(function (require) {
                 maxWidth += itemWidth;
                 totalWidth = maxWidth;
                 for (var i = 0; i < dataLength; i++) {
-                    if (data[i] == '') {
+                    if (data[i] === '') {
                         temp -= itemGap;
                         if (temp > zrHeight) {
                             totalHeight = zrHeight;
@@ -479,7 +479,7 @@ define(function (require) {
             var color;
             for (var i = 0, dataLength = data.length; i < dataLength; i++) {
                 itemName = data[i];
-                if (itemName == '') {
+                if (itemName === '') {
                     continue;
                 }
                 serie = _getSeriesByName(itemName);

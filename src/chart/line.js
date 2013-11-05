@@ -630,7 +630,9 @@ define(function(require) {
         /**
          * 生成空数据所需的可计算提示图形
          */
-        function _getCalculableItem(seriesIndex, dataIndex, name, x, y, orient) {
+        function _getCalculableItem(
+            seriesIndex, dataIndex, name, x, y, orient
+        ) {
             var color = series[seriesIndex].calculableHolderColor
                         || ecConfig.calculableHolderColor;
 
@@ -719,11 +721,11 @@ define(function(require) {
             );
             if (symbol.match('empty')) {
                 if (typeof itemShape.style.textColor == 'undefined') {
-                    itemShape.style.textColor = itemShape.style.strokeColor
+                    itemShape.style.textColor = itemShape.style.strokeColor;
                 }
                 if (typeof itemShape.highlightStyle.textColor == 'undefined') {
                     itemShape.highlightStyle.textColor = 
-                        itemShape.highlightStyle.strokeColor
+                        itemShape.highlightStyle.strokeColor;
                 }
             }
             

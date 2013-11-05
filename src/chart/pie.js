@@ -105,7 +105,7 @@ define(function(require) {
                 if (self.selectedMap[itemName]) {
                     totalSelected++;
                     totalValue += +data[i].value;
-                    maxValue = Math.max(maxValue, +data[i].value)
+                    maxValue = Math.max(maxValue, +data[i].value);
                 }
             }
 
@@ -412,8 +412,8 @@ define(function(require) {
                 if (labelControl.position == 'outer') {
                     // 外部显示，默认
                     radius = serie.radius[1]
-                             - -itemStyle[status].labelLine.length
-                             - -textStyle.fontSize;
+                             - (-itemStyle[status].labelLine.length)
+                             - (-textStyle.fontSize);
                     textAlign = (midAngle >= 150 && midAngle <= 210)
                                 ? 'right'
                                 : ((midAngle <= 30 || midAngle >= 330)
@@ -554,7 +554,7 @@ define(function(require) {
                 // 视觉引导线起点半径
                 var midRadius = r1;
                 // 视觉引导线终点半径
-                var maxRadius = serie.radius[1] - -labelLineControl.length;
+                var maxRadius = serie.radius[1] - (-labelLineControl.length);
                 var midAngle = ((endAngle + startAngle) / 2) % 360; // 角度中值
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
@@ -1118,9 +1118,6 @@ define(function(require) {
             var startAngle = shape.style.startAngle;
             var endAngle = shape.style.endAngle;
             var defaultColor = shape.highlightStyle.color;
-            
-            var r0 = +series[seriesIndex].radius[0]; // 扇形内半径
-            var r1 = +series[seriesIndex].radius[1];  // 扇形外半径
             
             // 文本标签，需要显示则会有返回
             var label = _getLabel(

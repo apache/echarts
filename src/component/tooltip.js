@@ -895,7 +895,7 @@ define(function (require) {
                 else if (serie.type == ecConfig.CHART_TYPE_CHORD) {
                     if (typeof special2 == 'undefined') {
                         // 外环上
-                        _tDom.innerHTML = _encodeHTML(name) + ' (' + value + ')';
+                        _tDom.innerHTML = _encodeHTML(name)+' (' + value + ')';
                     }
                     else {
                         var name1 = _encodeHTML(name);
@@ -1196,7 +1196,7 @@ define(function (require) {
                     tipShape[i].ondragend = null;
                     tipShape[i].ondragover = null;
                     tipShape[i].ondrop = null;
-                    zr.addShape(tipShape[i])
+                    zr.addShape(tipShape[i]);
                 }
                 _lastTipShape = {
                     dataIndex : param.dataIndex,
@@ -1303,11 +1303,11 @@ define(function (require) {
          */
         _encodeHTML = function (source) {
             return String(source)
-                        .replace(/&/g,'&amp;')
-                        .replace(/</g,'&lt;')
-                        .replace(/>/g,'&gt;')
-                        .replace(/"/g, "&quot;")
-                        .replace(/'/g, "&#39;");
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
         };
         
         zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);

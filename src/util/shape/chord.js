@@ -76,7 +76,7 @@
  */
 define(function(require) {
 
-    var util = require('zrender/tool/util')
+    var util = require('zrender/tool/util');
     function ChordShape() {
         this.type = 'chord';
     }
@@ -160,12 +160,12 @@ define(function(require) {
                 y = originPos[1];
             }
             _ctx.beginPath();
-            ChordShape.prototype.buildPath.call(null, _ctx, e.style)
+            ChordShape.prototype.buildPath.call(null, _ctx, e.style);
             _ctx.closePath();
             
             return _ctx.isPointInPath(x, y);
         }
-    }
+    };
 
     require('zrender/shape/base').derive(ChordShape);
     require('zrender/shape').define('chord', new ChordShape());

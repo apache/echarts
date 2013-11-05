@@ -73,7 +73,7 @@ define(function (require) {
                 textShape.clickable = true;
                 textShape.onclick = function(){
                     window.open(link);
-                }
+                };
             }
             
             var subtextShape = {
@@ -93,7 +93,7 @@ define(function (require) {
                 subtextShape.clickable = true;
                 subtextShape.onclick = function(){
                     window.open(sublink);
-                }
+                };
             }
 
             

@@ -25,9 +25,6 @@ define(function(require) {
         var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
-        var zrConfig = require('zrender/config');
-        var zrEvent = require('zrender/tool/event');
-
         var zrUtil = require('zrender/tool/util');
         var vec2 = require('zrender/tool/vector');
         var NDArray = require('../util/ndarray');
