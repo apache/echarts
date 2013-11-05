@@ -94,7 +94,7 @@ else {
             'echarts/chart/pie': fileLocation,
             'echarts/chart/radar': fileLocation,
             'echarts/chart/map': fileLocation,
-            //'echarts/chart/chord': fileLocation,
+            'echarts/chart/chord': fileLocation,
             'echarts/chart/force': fileLocation
         }
     });
