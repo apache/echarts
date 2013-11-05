@@ -98,7 +98,6 @@ define(function(require) {
             }
         }
 
-
         /**
          * 获取多级控制嵌套属性的基础方法
          * 返回ctrList中优先级最高（最靠前）的非undefined属性，ctrList中均无定义则返回undefined
@@ -247,31 +246,26 @@ define(function(require) {
         /**
          * 百分比计算
          */
-        function calAbsolute(pos) {
-            var x = pos[0];
-            var y = pos[1];
-            var ret = [];
-            if (typeof(x) == 'string') {
-                if (_trim(x).substr(-1) == '%') {
-                    ret[0] = parseFloat(x) / 100 * this.zr.getWidth();
+        function parsePercent(value, maxValue) {
+            if (typeof(value) === 'string') {
+                if (_trim(value).match(/%$/)) {
+                    return parseFloat(value) / 100 * maxValue;
                 } else {
-                    ret[0] = parseFloat(x);
+                    return parseFloat(value);
                 }
             } else {
-                ret[0] = x;
+                return value;
             }
-
-            if (typeof(y) == 'string') {
-                if (_trim(y).substr(-1) == '%') {
-                    ret[1] = parseFloat(y) / 100 * this.zr.getHeight();
-                } else {
-                    ret[1] = parseFloat(y);
-                }
-            } else {
-                ret[1] = y;
-            }
-
-            return ret;
+        }
+        
+        /**
+         * 获取中心坐标
+         */ 
+        function parseCenter(center) {
+            return [
+                parsePercent(center[0], self.zr.getWidth()),
+                parsePercent(center[1], self.zr.getHeight()),
+            ];
         }
 
         function _trim(str) {
@@ -338,7 +332,8 @@ define(function(require) {
         self.deepQuery = deepQuery;
         self.getFont = getFont;
         self.addLabel = addLabel;
-        self.calAbsolute = calAbsolute;
+        self.parsePercent = parsePercent;
+        self.parseCenter = parseCenter;
         self.clear = clear;
         self.dispose = dispose;
         self.backupAdaptiveParams = backupAdaptiveParams;

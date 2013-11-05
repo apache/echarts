@@ -76,9 +76,11 @@
  */
 define(function(require) {
 
+    var util = require('zrender/tool/util');
     function ChordShape() {
         this.type = 'chord';
     }
+    var _ctx = util.getContext();
 
     ChordShape.prototype = {
         // center, source0, source1, target0, target1, r
@@ -107,14 +109,16 @@ define(function(require) {
                 (cy - sy1) * 0.70 + sy1,
                 (cx - tx0) * 0.70 + tx0, 
                 (cy - ty0) * 0.70 + ty0,
-                tx0, ty0);
+                tx0, ty0
+            );
             ctx.arc(cx, cy, style.r, t0, t1, false);
             ctx.bezierCurveTo(
                 (cx - tx1) * 0.70 + tx1, 
                 (cy - ty1) * 0.70 + ty1,
                 (cx - sx0) * 0.70 + sx0, 
                 (cy - sy0) * 0.70 + sy0,
-                sx0, sy0);
+                sx0, sy0
+            );
         },
         
         getRect : function(){
@@ -124,8 +128,44 @@ define(function(require) {
                 width : 0,
                 height : 0
             };
+        },
+                
+        isCover : function(e, x, y) {
+            if (!_ctx.isPointInPath) {  // In ie
+                return false;
+            }
+            //对鼠标的坐标也做相同的变换
+            if(e.__needTransform && e._transform){
+                var inverseMatrix = [];
+                matrix.invert(inverseMatrix, e._transform);
+
+                var originPos = [x, y];
+                matrix.mulVector(originPos, inverseMatrix, [x, y, 1]);
+
+                if (x == originPos[0] && y == originPos[1]) {
+                    // 避免外部修改导致的__needTransform不准确
+                    if (Math.abs(e.rotation[0]) > 0.0001
+                        || Math.abs(e.position[0]) > 0.0001
+                        || Math.abs(e.position[1]) > 0.0001
+                        || Math.abs(e.scale[0] - 1) > 0.0001
+                        || Math.abs(e.scale[1] - 1) > 0.0001
+                    ) {
+                        e.__needTransform = true;
+                    } else {
+                        e.__needTransform = false;
+                    }
+                }
+
+                x = originPos[0];
+                y = originPos[1];
+            }
+            _ctx.beginPath();
+            ChordShape.prototype.buildPath.call(null, _ctx, e.style);
+            _ctx.closePath();
+            
+            return _ctx.isPointInPath(x, y);
         }
-    }
+    };
 
     require('zrender/shape/base').derive(ChordShape);
     require('zrender/shape').define('chord', new ChordShape());

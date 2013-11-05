@@ -22,6 +22,7 @@
         'echarts/chart/scatter',
         'echarts/chart/k',
         'echarts/chart/radar',
+        'echarts/chart/chord',
         'echarts/chart/force',
         /*
         'echarts/chart/map',

@@ -15,8 +15,11 @@ define(function() {
      * @param {number | Object} data
      * @param {number} dataIndex
      * @param {*=} special
+     * @param {*=} special2
      */
-    function pack(shape, series, seriesIndex, data, dataIndex, name, special) {
+    function pack(
+        shape, series, seriesIndex, data, dataIndex, name, special, special2
+    ) {
         var value;
         if (typeof data != 'undefined') {
             if (typeof data.value != 'undefined') {
@@ -34,7 +37,8 @@ define(function() {
             '_dataIndex' : dataIndex,
             '_name' : name,
             '_value' : value,
-            '_special' : special
+            '_special' : special,
+            '_special2' : special2
         };
         return shape._echartsData;
     }
@@ -65,6 +69,8 @@ define(function() {
                 return data && data._value;
             case 'special' :
                 return data && data._special;
+            case 'special2' :
+                return data && data._special2;
         }
 
         return null;
@@ -99,6 +105,9 @@ define(function() {
                 break;
             case 'special' :
                 shape._echartsData._special = value;
+                break;
+            case 'special2' :
+                shape._echartsData._special2 = value;
                 break;
         }
     }

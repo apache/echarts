@@ -97,6 +97,7 @@ define(
                 rectangle : _iconRectangle,
                 triangle : _iconTriangle,
                 diamond : _iconDiamond,
+                arrow : _iconArrow,
                 star : _iconStar
             };
         }
@@ -365,6 +366,17 @@ define(
             ctx.lineTo(x, y + symbolSize);
             ctx.lineTo(x - symbolSize, y);
             ctx.lineTo(x, y - symbolSize);
+        }
+        
+        function _iconArrow(ctx, style) {
+            var x = style.x;
+            var y = style.y;
+            var dx = style.width / 16;
+            ctx.moveTo(x + 8 * dx,  y);
+            ctx.lineTo(x + dx,      y + style.height);
+            ctx.lineTo(x + 8 * dx,  y + style.height / 4 * 3);
+            ctx.lineTo(x + 15 * dx, y + style.height);
+            ctx.lineTo(x + 8 * dx,  y);
         }
         
         function _iconStar(ctx, style) {

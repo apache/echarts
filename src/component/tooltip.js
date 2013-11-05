@@ -573,7 +573,7 @@ define(function (require) {
                                : '-';
                                
                         params.push([
-                            seriesArray[i].name,
+                            seriesArray[i].name || '',
                             categoryAxis.getNameByIndex(dataIndex),
                             data
                         ]);
@@ -591,7 +591,7 @@ define(function (require) {
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
                         formatter = formatter.replace(
                             '{a' + i + '}',
-                            _encodeHTML(seriesArray[i].name)
+                            _encodeHTML(seriesArray[i].name || '')
                         );
                         formatter = formatter.replace(
                             '{b' + i + '}',
@@ -617,7 +617,8 @@ define(function (require) {
                     );
 
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
-                        formatter += '<br/>' + _encodeHTML(seriesArray[i].name)
+                        formatter += '<br/>' 
+                                     + _encodeHTML(seriesArray[i].name || '')
                                      + ' : ';
                         data = seriesArray[i].data[dataIndex];
                         data = typeof data != 'undefined'
@@ -706,8 +707,7 @@ define(function (require) {
                                : {name:'', value: {dataIndex:'-'}};
                                
                         params.push([
-                            typeof seriesArray[i].name != 'undefined'
-                                ? seriesArray[i].name : '',
+                            seriesArray[i].name || '',
                             data.name,
                             data.value[dataIndex],
                             indicatorName
@@ -786,7 +786,8 @@ define(function (require) {
             var data = ecData.get(_curTarget, 'data');
             var name = ecData.get(_curTarget, 'name');
             var value = ecData.get(_curTarget, 'value');
-            var speical = ecData.get(_curTarget, 'special');
+            var special = ecData.get(_curTarget, 'special');
+            var special2 = ecData.get(_curTarget, 'special2');
             // 从低优先级往上找到trigger为item的formatter和样式
             var formatter;
             var showContent;
@@ -831,15 +832,16 @@ define(function (require) {
             }
 
             if (typeof formatter == 'function') {
-                _curTicket = serie.name
+                _curTicket = (serie.name || '')
                              + ':'
                              + ecData.get(_curTarget, 'dataIndex');
                 _tDom.innerHTML = formatter(
                     [
-                        serie.name,
+                        serie.name || '',
                         name,
                         value,
-                        speical
+                        special,
+                        special2
                     ],
                     _curTicket,
                     _setContent
@@ -849,45 +851,72 @@ define(function (require) {
                 _curTicket = NaN;
                 formatter = formatter.replace('{a}','{a0}')
                                      .replace('{b}','{b0}')
-                                     .replace('{c}','{c0}')
-                                     .replace('{d}','{d0}');
-                formatter = formatter.replace('{a0}', _encodeHTML(serie.name))
+                                     .replace('{c}','{c0}');
+                formatter = formatter.replace(
+                                          '{a0}', _encodeHTML(serie.name || '')
+                                      )
                                      .replace('{b0}', _encodeHTML(name))
                                      .replace('{c0}', value);
 
-                if (typeof speical != 'undefined') {
-                    formatter = formatter.replace('{d0}', speical);
-                }
+                formatter = formatter.replace('{d}','{d0}')
+                                     .replace('{d0}', special || '');
+                formatter = formatter.replace('{e}','{e0}')
+                    .replace('{e0}', ecData.get(_curTarget, 'special2') || '');
 
                 _tDom.innerHTML = formatter;
             }
             else {
                 _curTicket = NaN;
                 if (serie.type == ecConfig.CHART_TYPE_SCATTER) {
-                    _tDom.innerHTML = _encodeHTML(serie.name) + '<br/>' +
-                                      (name === '' 
-                                           ? '' : (_encodeHTML(name) + ' : ')
+                    _tDom.innerHTML = (typeof serie.name != 'undefined'
+                                          ? (_encodeHTML(serie.name) + '<br/>')
+                                          : ''
+                                      ) 
+                                      + (name === '' 
+                                            ? '' : (_encodeHTML(name) + ' : ')
                                       ) 
                                       + value 
-                                      + (typeof speical == 'undefined'
+                                      + (typeof special == 'undefined'
                                           ? ''
-                                          : (' (' + speical + ')'));
+                                          : (' (' + special + ')'));
                 }
                 else if (serie.type == ecConfig.CHART_TYPE_RADAR) {
-                    indicator = speical;
-                    html += _encodeHTML(name === '' ? serie.name : name) + '<br />';
+                    indicator = special;
+                    html += _encodeHTML(
+                        name === '' ? (serie.name || '') : name
+                    );
+                    html += html === '' ? '' : '<br />';
                     for (var i = 0 ; i < indicator.length; i ++) {
                         html += _encodeHTML(indicator[i].text) + ' : ' 
                                 + value[i] + '<br />';
                     }
                     _tDom.innerHTML = html;
                 }
+                else if (serie.type == ecConfig.CHART_TYPE_CHORD) {
+                    if (typeof special2 == 'undefined') {
+                        // 外环上
+                        _tDom.innerHTML = _encodeHTML(name)+' (' + value + ')';
+                    }
+                    else {
+                        var name1 = _encodeHTML(name);
+                        var name2 = _encodeHTML(special);
+                        // 内部弦上
+                        _tDom.innerHTML = (typeof serie.name != 'undefined'
+                                          ? (_encodeHTML(serie.name) + '<br/>')
+                                          : '')
+                              + name1 + ' -> ' + name2 + ' (' + value + ')'
+                              + '<br />'
+                              + name2 + ' -> ' + name1+ ' (' + special2 + ')';
+                    }
+                }
                 else {
-                    _tDom.innerHTML = _encodeHTML(serie.name) + '<br/>' +
-                                      _encodeHTML(name) + ' : ' + value +
-                                      (typeof speical == 'undefined'
+                    _tDom.innerHTML = (typeof serie.name != 'undefined'
+                                      ? (_encodeHTML(serie.name) + '<br/>')
+                                      : '')
+                                      + _encodeHTML(name) + ' : ' + value +
+                                      (typeof special == 'undefined'
                                       ? ''
-                                      : (' (' + speical + ')'));
+                                      : (' (' + special + ')'));
                 }
             }
 
@@ -1167,7 +1196,7 @@ define(function (require) {
                     tipShape[i].ondragend = null;
                     tipShape[i].ondragover = null;
                     tipShape[i].ondrop = null;
-                    zr.addShape(tipShape[i])
+                    zr.addShape(tipShape[i]);
                 }
                 _lastTipShape = {
                     dataIndex : param.dataIndex,
@@ -1274,11 +1303,11 @@ define(function (require) {
          */
         _encodeHTML = function (source) {
             return String(source)
-                        .replace(/&/g,'&amp;')
-                        .replace(/</g,'&lt;')
-                        .replace(/>/g,'&gt;')
-                        .replace(/"/g, "&quot;")
-                        .replace(/'/g, "&#39;");
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
         };
         
         zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
