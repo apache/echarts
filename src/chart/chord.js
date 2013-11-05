@@ -683,13 +683,44 @@ define(function(require) {
                 getColor = legend.getColor;
                 isSelected = legend.isSelected;
             } else {
+                var colorIndices = {};
                 var colorMap = {};
                 var count = 0;
-                getColor = function(name) {
-                    if (colorMap[name] === undefined) {
-                        colorMap[name] = count++;
+                getColor = function(key) {
+                    if (colorMap[key]) {
+                        return colorMap[key];
                     }
-                    return zr.getColor(colorMap[name]);
+                    if (colorIndices[key] === undefined) {
+                        colorIndices[key] = count++;
+                    }
+                    // key is serie name
+                    for (var i = 0; i < chordSeries.length; i++) {
+                        if (chordSeries[i].name === key) {
+                            colorMap[key] = self.deepQuery(
+                                [chordSeries[i]],
+                                'itemStyle.normal.color'
+                            );
+                            break;
+                        }
+                    }
+                    if (!colorMap[key]) {
+                        var len = groups.length;
+                        // key is group name
+                        for (var i = 0; i < len; i++) {
+                            if (groups[i].name === key) {
+                                colorMap[key] = self.deepQuery(
+                                    [groups[i]],
+                                    'itemStyle.normal.color'
+                                );
+                                break;
+                            }
+                        }
+                    }
+                    if (!colorMap[key]) {
+                        colorMap[key] = zr.getColor(colorIndices[key]);
+                    }
+
+                    return colorMap[key];
                 };
                 isSelected = function() {
                     return true;
