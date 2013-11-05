@@ -17307,7 +17307,7 @@ define('echarts/component/legend',['require','./base','../config','zrender/tool/
                 cpX2 : x,
                 cpY2 : y + 4,
                 xEnd : x + width,
-                yEnd : y + 4,
+                yEnd : y + 4
             });
             ctx.lineTo(x + width, y);
             beziercurve.buildPath(ctx, {
@@ -17318,7 +17318,7 @@ define('echarts/component/legend',['require','./base','../config','zrender/tool/
                 cpX2 : x + width,
                 cpY2 : y + height - 4,
                 xEnd : x,
-                yEnd : y + height - 4,
+                yEnd : y + height - 4
             });
             ctx.lineTo(x, y + height);
             /*
@@ -25421,6 +25421,11 @@ define('echarts/util/shape/chord',['require','zrender/tool/util','zrender/shape/
                 (cy - ty0) * 0.70 + ty0,
                 tx0, ty0
             );
+            // Chord to self
+            if (style.source0 === style.target0 &&
+                style.source1 === style.target1) {
+                return;
+            }
             ctx.arc(cx, cy, style.r, t0, t1, false);
             ctx.bezierCurveTo(
                 (cx - tx1) * 0.70 + tx1, 
@@ -28011,9 +28016,9 @@ define('echarts/chart/chord',['require','../util/shape/chord','../component/base
                 case 'ascending':
                 case 'descending':
                     var groupIndices = groupAngles
-                            .argsort({order : sortGroups});
-                    groupAngles.sort({order : sortGroups});
-                    sumOut.sort({order : sortGroups});
+                            .argsort(0, sortGroups);
+                    groupAngles['sort'](0, sortGroups);
+                    sumOut['sort'](0, sortGroups);
                     break;
                 default:
                     var groupIndices = NDArray.range(shape[0]);
@@ -28023,8 +28028,8 @@ define('echarts/chart/chord',['require','../util/shape/chord','../component/base
                 case 'ascending':
                 case 'descending':
                     var subGroupIndices = subGroupAngles
-                            .argsort(1, {order : sortSubGroups});
-                    subGroupAngles.sort(1, {order : sortSubGroups});
+                            .argsort(1, sortSubGroups);
+                    subGroupAngles['sort'](1, sortSubGroups);
                     break;
                 default:
                     var subGroupIndices = NDArray
@@ -28206,7 +28211,6 @@ define('echarts/chart/chord',['require','../util/shape/chord','../component/base
                 
                 var group = groups[i];
                 var angle = angles[i];
-
                 var _start = (clockWise ? (360 - angle[1]) : angle[0])
                                 + startAngle;
                 var _end = (clockWise ? (360 - angle[0]) : angle[1])
@@ -28340,9 +28344,11 @@ define('echarts/chart/chord',['require','../util/shape/chord','../component/base
 
                         var color;
                         if (len2 === 1) {
-                            color = angleIJ1 - angleIJ0 < angleJI1 - angleJI0
-                                        ? getColor(groups[i].name)
-                                        : getColor(groups[j].name);
+                            if (angleIJ1 - angleIJ0 <= angleJI1 - angleJI0) {
+                                color = getColor(groups[i].name);
+                            } else {
+                                color = getColor(groups[j].name);
+                            }
                         } else {
                             color = getColor(chordSeries[k].name);
                         }

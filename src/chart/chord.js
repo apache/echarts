@@ -173,9 +173,9 @@ define(function(require) {
                 case 'ascending':
                 case 'descending':
                     var groupIndices = groupAngles
-                            .argsort({order : sortGroups});
-                    groupAngles.sort({order : sortGroups});
-                    sumOut.sort({order : sortGroups});
+                            .argsort(0, sortGroups);
+                    groupAngles['sort'](0, sortGroups);
+                    sumOut['sort'](0, sortGroups);
                     break;
                 default:
                     var groupIndices = NDArray.range(shape[0]);
@@ -185,8 +185,8 @@ define(function(require) {
                 case 'ascending':
                 case 'descending':
                     var subGroupIndices = subGroupAngles
-                            .argsort(1, {order : sortSubGroups});
-                    subGroupAngles.sort(1, {order : sortSubGroups});
+                            .argsort(1, sortSubGroups);
+                    subGroupAngles['sort'](1, sortSubGroups);
                     break;
                 default:
                     var subGroupIndices = NDArray
@@ -368,7 +368,6 @@ define(function(require) {
                 
                 var group = groups[i];
                 var angle = angles[i];
-
                 var _start = (clockWise ? (360 - angle[1]) : angle[0])
                                 + startAngle;
                 var _end = (clockWise ? (360 - angle[0]) : angle[1])
@@ -502,9 +501,11 @@ define(function(require) {
 
                         var color;
                         if (len2 === 1) {
-                            color = angleIJ1 - angleIJ0 < angleJI1 - angleJI0
-                                        ? getColor(groups[i].name)
-                                        : getColor(groups[j].name);
+                            if (angleIJ1 - angleIJ0 <= angleJI1 - angleJI0) {
+                                color = getColor(groups[i].name);
+                            } else {
+                                color = getColor(groups[j].name);
+                            }
                         } else {
                             color = getColor(chordSeries[k].name);
                         }

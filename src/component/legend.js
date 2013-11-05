@@ -661,7 +661,7 @@ define(function (require) {
                 cpX2 : x,
                 cpY2 : y + 4,
                 xEnd : x + width,
-                yEnd : y + 4,
+                yEnd : y + 4
             });
             ctx.lineTo(x + width, y);
             beziercurve.buildPath(ctx, {
@@ -672,7 +672,7 @@ define(function (require) {
                 cpX2 : x + width,
                 cpY2 : y + height - 4,
                 xEnd : x,
-                yEnd : y + height - 4,
+                yEnd : y + height - 4
             });
             ctx.lineTo(x, y + height);
             /*

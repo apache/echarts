@@ -111,6 +111,11 @@ define(function(require) {
                 (cy - ty0) * 0.70 + ty0,
                 tx0, ty0
             );
+            // Chord to self
+            if (style.source0 === style.target0 &&
+                style.source1 === style.target1) {
+                return;
+            }
             ctx.arc(cx, cy, style.r, t0, t1, false);
             ctx.bezierCurveTo(
                 (cx - tx1) * 0.70 + tx1, 
