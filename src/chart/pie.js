@@ -26,6 +26,7 @@ define(function(require) {
 
         var zrMath = require('zrender/tool/math');
         var zrUtil = require('zrender/tool/util');
+        var zrColor = require('zrender/tool/color');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_PIE;
@@ -228,7 +229,7 @@ define(function(require) {
             var normalColor = self.deepQuery(
                     [data, serie],
                     'itemStyle.normal.color'
-                );
+                ) || defaultColor;
 
             var emphasisColor = self.deepQuery(
                     [data, serie],
@@ -247,12 +248,18 @@ define(function(require) {
                     startAngle : startAngle,
                     endAngle : endAngle,
                     brushType : 'both',
-                    color : normalColor || defaultColor,
+                    color : normalColor,
                     strokeColor : '#fff',
                     lineWidth: 1
                 },
                 highlightStyle : {
-                    color : emphasisColor || normalColor || defaultColor
+                    //color : emphasisColor || normalColor
+                    color : emphasisColor 
+                            || (typeof normalColor == 'string'
+                                ? zrColor.lift(normalColor, -0.2)
+                                : normalColor
+                               ),
+                    strokeColor : 'rgba(0,0,0,0)'
                 },
                 _seriesIndex : seriesIndex, 
                 _dataIndex : dataIndex
