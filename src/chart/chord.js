@@ -32,7 +32,10 @@ define(function(require) {
         var vec2 = require('zrender/tool/vector');
         var NDArray = require('../util/ndarray');
 
-        var legend = component.legend;
+        var legend;
+        var getColor;
+        var isSelected;
+
         var series;
         this.type = ecConfig.CHART_TYPE_CHORD;
 
@@ -79,10 +82,10 @@ define(function(require) {
                         self.reformOption(chordSerieSample);
                     }
 
-                    var isSelected = legend.isSelected(series[i].name);
+                    var _isSelected = isSelected(series[i].name);
                     // Filter by selected serie
-                    self.selectedMap[series[i].name] = isSelected;
-                    if (!isSelected) {
+                    self.selectedMap[series[i].name] = _isSelected;
+                    if (!_isSelected) {
                         continue;
                     }
                     chordSeries.push(series[i]);
@@ -137,7 +140,7 @@ define(function(require) {
             dataMat = dataMat._transposelike([1, 2, 0]);
 
             // Filter the data by selected legend
-            res = _filterData(dataMat, groups);
+            var res = _filterData(dataMat, groups);
             dataMat = res[0];
             groups = res[1];
 
@@ -259,7 +262,7 @@ define(function(require) {
             // Filter by selected group
             for (var i = 0; i < groups.length; i++) {
                 var name = groups[i].name;
-                self.selectedMap[name] = legend.isSelected(name);
+                self.selectedMap[name] = isSelected(name);
                 if (!self.selectedMap[name]) {
                     indices.push(i);
                 } else {
@@ -327,7 +330,8 @@ define(function(require) {
                                     var chordShape = chordShapes[i][j][k];
                                     if (chordShape) {
                                         chordShape.style.opacity 
-                                            = i === idx ? 0.5 : 0.03;
+                                            = (i === idx || j === idx)
+                                                 ? 0.5 : 0.03;
                                         zr.modShape(chordShape.id, chordShape);
                                     }
                                 }
@@ -386,7 +390,7 @@ define(function(require) {
                         endAngle : _end,
                         brushType : 'fill',
                         opacity: 1,
-                        color : legend.getColor(group.name)
+                        color : getColor(group.name)
                     },
                     highlightStyle : {
                         brushType : 'fill'
@@ -484,7 +488,7 @@ define(function(require) {
                 for (var j = 0; j < len; j++) {
                     for (var k = 0; k < len2; k++) {
                         if (chordShapes[j][i][k]) {
-                            chordShapes[i][j][k] = chordShapes[j][i][k];
+                            continue;
                         }
 
                         var angleIJ0 = angles[i][j][k][0];
@@ -502,10 +506,10 @@ define(function(require) {
                         var color;
                         if (len2 === 1) {
                             color = angleIJ1 - angleIJ0 < angleJI1 - angleJI0
-                                        ? legend.getColor(groups[i].name)
-                                        : legend.getColor(groups[j].name);
+                                        ? getColor(groups[i].name)
+                                        : getColor(groups[j].name);
                         } else {
-                            color = legend.getColor(chordSeries[k].name);
+                            color = getColor(chordSeries[k].name);
                         }
                         var s0 = !clockWise ? (360 - angleIJ1) : angleIJ0;
                         var s1 = !clockWise ? (360 - angleIJ0) : angleIJ1;
@@ -674,9 +678,24 @@ define(function(require) {
                 series = option.series;
             }
             self.clear();
+            legend = component.legend;
+            if (legend) {
+                getColor = legend.getColor;
+                isSelected = legend.isSelected;
+            } else {
+                var colorMap = {};
+                var count = 0;
+                getColor = function(name) {
+                    if (colorMap[name] === undefined) {
+                        colorMap[name] = count++;
+                    }
+                    return zr.getColor(colorMap[name]);
+                };
+                isSelected = function() {
+                    return true;
+                };
+            }
             _buildShape();
-
-            zr.refresh();
         }
 
         function reformOption(opt) {
