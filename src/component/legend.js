@@ -63,6 +63,7 @@ define(function (require) {
             var font = self.getFont(legendOption.textStyle);
 
             var zrWidth = zr.getWidth();
+            var zrHeight = zr.getHeight();
             var lastX = _itemGroupLocation.x;
             var lastY = _itemGroupLocation.y;
             var itemWidth = legendOption.itemWidth;
@@ -80,6 +81,19 @@ define(function (require) {
 
             for (var i = 0; i < dataLength; i++) {
                 itemName = data[i];
+                if (itemName === '') {
+                    if (legendOption.orient == 'horizontal') {
+                        lastX = _itemGroupLocation.x;
+                        lastY += itemHeight + itemGap;
+                    }
+                    else {
+                        legendOption.x == 'right'
+                        ? lastX -= _itemGroupLocation.maxWidth + itemGap
+                        : lastX += _itemGroupLocation.maxWidth + itemGap;
+                        lastY = _itemGroupLocation.y;
+                    }
+                    continue;
+                }
                 itemType = _getSeriesByName(itemName);
                 if (itemType) {
                     itemType = itemType.type;
@@ -91,12 +105,28 @@ define(function (require) {
                 if (legendOption.orient == 'horizontal') {
                     if (zrWidth - lastX < 200   // 最后200px做分行预判
                         && (itemWidth + 5
-                         + zrArea.getTextWidth(itemName, font)
-                         + (i < dataLength - 1 ? itemGap : 0))
-                        >= zrWidth - lastX
+                            + zrArea.getTextWidth(itemName, font)
+                            // 分行的最后一个不用算itemGap
+                            + (i == dataLength - 1 || data[i+1] === ''
+                               ? 0 : itemGap))
+                            >= zrWidth - lastX
                     ) {
-                        lastX = 0;
+                        lastX = _itemGroupLocation.x;
                         lastY += itemHeight + itemGap;
+                    }
+                }
+                else {
+                    if (zrHeight - lastY < 200   // 最后200px做分行预判
+                        && (itemHeight
+                            // 分行的最后一个不用算itemGap
+                            + (i == dataLength - 1 || data[i+1] === ''
+                               ? 0 : itemGap))
+                            >= zrHeight - lastY
+                    ) {
+                        legendOption.x == 'right'
+                        ? lastX -= _itemGroupLocation.maxWidth + itemGap
+                        : lastX += _itemGroupLocation.maxWidth + itemGap;
+                        lastY = _itemGroupLocation.y;
                     }
                 }
 
@@ -191,25 +221,47 @@ define(function (require) {
             var font = self.getFont(legendOption.textStyle);
             var totalWidth = 0;
             var totalHeight = 0;
-
+            var padding = legendOption.padding;
+            var zrWidth = zr.getWidth() - padding[1] - padding[3];
+            var zrHeight = zr.getHeight() - padding[0] - padding[2];
+            
+            var temp = 0; // 宽高计算，用于多行判断
+            var maxWidth = 0; // 垂直布局有用
             if (legendOption.orient == 'horizontal') {
                 // 水平布局，计算总宽度
-                for (var i = 0; i < dataLength; i++) {
-                    totalWidth += itemWidth
-                                  + zrArea.getTextWidth(
-                                        data[i],
-                                        font
-                                    )
-                                  + itemGap;
-                }
-                totalWidth -= itemGap;      // 减去最后一个的itemGap
                 totalHeight = itemHeight;
+                for (var i = 0; i < dataLength; i++) {
+                    if (data[i] === '') {
+                        temp -= itemGap;
+                        if (temp > zrWidth) {
+                            totalWidth = zrWidth;
+                            totalHeight += itemHeight + itemGap;
+                        }
+                        else {
+                            totalWidth = Math.max(totalWidth, temp);
+                        }
+                        totalHeight += itemHeight + itemGap;
+                        temp = 0;
+                        continue;
+                    }
+                    temp += itemWidth
+                            + zrArea.getTextWidth(
+                                  data[i],
+                                  font
+                              )
+                            + itemGap;
+                }
+                totalHeight = Math.max(totalHeight, itemHeight);
+                temp -= itemGap;    // 减去最后一个的itemGap
+                if (temp > zrWidth) {
+                    totalWidth = zrWidth;
+                    totalHeight += itemHeight + itemGap;
+                } else {
+                    totalWidth = Math.max(totalWidth, temp);
+                }
             }
             else {
                 // 垂直布局，计算总高度
-                totalHeight = (itemHeight + itemGap) * dataLength;
-                totalHeight -= itemGap;     // 减去最后一个的itemGap;
-                var maxWidth = 0;
                 for (var i = 0; i < dataLength; i++) {
                     maxWidth = Math.max(
                         maxWidth,
@@ -219,11 +271,37 @@ define(function (require) {
                         )
                     );
                 }
-                totalWidth = itemWidth + maxWidth;
+                maxWidth += itemWidth;
+                totalWidth = maxWidth;
+                for (var i = 0; i < dataLength; i++) {
+                    if (data[i] === '') {
+                        temp -= itemGap;
+                        if (temp > zrHeight) {
+                            totalHeight = zrHeight;
+                            totalWidth += maxWidth + itemGap;
+                        }
+                        else {
+                            totalHeight = Math.max(totalHeight, temp);
+                        }
+                        totalWidth += maxWidth + itemGap;
+                        temp = 0;
+                        continue;
+                    }
+                    temp += itemHeight + itemGap;
+                }
+                totalWidth = Math.max(totalWidth, maxWidth);
+                temp -= itemGap;    // 减去最后一个的itemGap
+                if (temp > zrHeight) {
+                    totalHeight = zrHeight;
+                    totalWidth += maxWidth + itemGap;
+                } else {
+                    totalHeight = Math.max(totalHeight, temp);
+                }
             }
 
+            zrWidth = zr.getWidth();
+            zrHeight = zr.getHeight();
             var x;
-            var zrWidth = zr.getWidth();
             switch (legendOption.x) {
                 case 'center' :
                     x = Math.floor((zrWidth - totalWidth) / 2);
@@ -235,7 +313,8 @@ define(function (require) {
                     x = zrWidth
                         - totalWidth
                         - legendOption.padding[1]
-                        - legendOption.borderWidth;
+                        - legendOption.padding[3]
+                        - legendOption.borderWidth * 2;
                     break;
                 default :
                     x = legendOption.x - 0;
@@ -244,7 +323,6 @@ define(function (require) {
             }
 
             var y;
-            var zrHeight = zr.getHeight();
             switch (legendOption.y) {
                 case 'top' :
                     y = legendOption.padding[0] + legendOption.borderWidth;
@@ -252,8 +330,9 @@ define(function (require) {
                 case 'bottom' :
                     y = zrHeight
                         - totalHeight
+                        - legendOption.padding[0]
                         - legendOption.padding[2]
-                        - legendOption.borderWidth;
+                        - legendOption.borderWidth * 2;
                     break;
                 case 'center' :
                     y = Math.floor((zrHeight - totalHeight) / 2);
@@ -264,21 +343,12 @@ define(function (require) {
                     break;
             }
 
-            // 水平布局的横向超长自动分行，纵布局超长不考虑
-            if (legendOption.orient == 'horizontal' && totalWidth > zrWidth) {
-                totalWidth = zrWidth;
-                if (x < 0) {
-                    x = 0;
-                }
-                totalHeight += totalHeight + 10;
-            }
-
-
             return {
                 x : x,
                 y : y,
                 width : totalWidth,
-                height : totalHeight
+                height : totalHeight,
+                maxWidth : maxWidth
             };
         }
 
@@ -298,14 +368,18 @@ define(function (require) {
                 if (
                     series[i].type == ecConfig.CHART_TYPE_PIE 
                     || series[i].type == ecConfig.CHART_TYPE_RADAR
+                    || series[i].type == ecConfig.CHART_TYPE_CHORD
                 ) {
-                    // 饼图得查找里面的数据名字
+                    // 饼图、雷达图、和弦图得查找里面的数据名字
                     hasFind = false;
                     data = series[i].data;
                     for (var j = 0, k = data.length; j < k; j++) {
                         if (data[j].name == name) {
                             data = data[j];
-                            data.type = series[i].type;
+                            data.type = 
+                                series[i].type == ecConfig.CHART_TYPE_CHORD 
+                                ? ecConfig.CHART_TYPE_PIE // 和弦图复用pie图样式
+                                : series[i].type;
                             hasFind = true;
                             break;
                         }
@@ -405,6 +479,9 @@ define(function (require) {
             var color;
             for (var i = 0, dataLength = data.length; i < dataLength; i++) {
                 itemName = data[i];
+                if (itemName === '') {
+                    continue;
+                }
                 serie = _getSeriesByName(itemName);
                 if (!serie) {
                     _selectedMap[itemName] = false;
@@ -493,6 +570,9 @@ define(function (require) {
          * @param {Object} itemShape
          */
         function getItemShape(name) {
+            if (typeof name == 'undefined') {
+                return;
+            }
             var shape;
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 shape = self.shapeList[i];
@@ -565,6 +645,49 @@ define(function (require) {
                 startAngle : 45,
                 endAngle : 135
             });
+        },
+        chord : function(ctx, style) {
+            var x = style.x;
+            var y = style.y;
+            var width = style.width;
+            var height = style.height;
+            var beziercurve = require('zrender/shape').get('beziercurve');
+            ctx.moveTo(x, y + height);
+            beziercurve.buildPath(ctx, {
+                xStart : x,
+                yStart : y + height,
+                cpX1 : x + width,
+                cpY1 : y + height,
+                cpX2 : x,
+                cpY2 : y + 4,
+                xEnd : x + width,
+                yEnd : y + 4
+            });
+            ctx.lineTo(x + width, y);
+            beziercurve.buildPath(ctx, {
+                xStart : x + width,
+                yStart : y,
+                cpX1 : x,
+                cpY1 : y,
+                cpX2 : x + width,
+                cpY2 : y + height - 4,
+                xEnd : x,
+                yEnd : y + height - 4
+            });
+            ctx.lineTo(x, y + height);
+            /*
+            var x = style.x + 2;
+            var y = style.y;
+            var width = style.width - 2;
+            var height = style.height;
+            var r = width / Math.sqrt(3);
+            ctx.moveTo(x, y);
+            ctx.quadraticCurveTo(x + width / 4 * 3, y, x + width, y + height);
+            ctx.arc(
+                x + width / 2, y + height + r / 2, 
+                r, -Math.PI / 6, -Math.PI / 6 * 5, true);
+            ctx.quadraticCurveTo(x - width / 2, y + height / 3, x, y);
+            */
         },
         k : function (ctx, style) {
             var x = style.x;

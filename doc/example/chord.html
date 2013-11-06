@@ -69,37 +69,87 @@
                     <textarea id="code" name="code">
 option = {
     title : {
-        text: '人物关系：乔布斯',
-        subtext: '数据来自人立方',
-        x:'right',
-        y:'bottom'
+        text: '测试数据'
     },
     tooltip : {
-        trigger: 'item',
-        formatter: '{a} : {b}'
+        trigger: 'item'
     },
     legend: {
-        x: 'left',
-        data:['家人','朋友']
+        x: 'right',
+        data:['g1','g2', 'g3', 'g4']
     },
     series : [
         {
             type:'chord',
-            sortGroups : 'ascending',
-            sortSubGroups : 'descending',
-            groups : [{
-                name : 'g1'
-            }, {
-                name : 'g2'
-            }, {
-                name : 'g3'
-            }, {
-                name : 'g4'
-            }],
-            matrix : [[11975,  5871, 8916, 2868],
-                      [ 1951, 10048, 2060, 6171],
-                      [ 8010, 16145, 8090, 8045],
-                      [ 1013,   990,  940, 6907]]
+            radius : ['55%', '75%'],
+            center : ['50%', '50%'],
+            padding : 2,
+            sort : 'descending', // can be 'none', 'ascending', 'descending'
+            sortSub : 'descending', // can be 'none', 'ascending', 'descending'
+            startAngle : 90,
+            clockWise : false,
+            showScale : true,
+            showScaleText : true,
+            itemStyle : {
+                normal : {
+                    lineStyle : {
+                        width : 0,
+                        color : '#000'
+                    },
+                    chordStyle : {
+                        lineStyle : {
+                            width : 1,
+                            color : '#333'
+                        }
+                    },
+                    label: {
+                        show: true,
+                        color: 'red'
+                    }
+                },
+                emphasis : {
+                    lineStyle : {
+                        width : 0,
+                        color : '#000'
+                    },
+                    chordStyle : {
+                        lineStyle : {
+                            width : 2,
+                            color : 'black'
+                        }
+                    }
+                }
+            },
+            data : [
+                {
+                    name : 'g1',
+                    itemStyle : {
+                        normal: {
+                            color: 'rgba(255,30,30,0.5)',
+                            lineStyle : {
+                                width: 1,
+                                color: 'green',
+                            }
+                        },
+                        emphasis: {
+                            color: 'yellow',
+                            lineStyle : {
+                                width: 2,
+                                color: 'blue',
+                            }
+                        }
+                    }
+                },
+                {name : 'g2'},
+                {name : 'g3'},
+                {name : 'g4'}
+            ],
+            matrix : [
+                [11975,  5871, 8916, 2868],
+                [ 1951, 10048, 2060, 6171],
+                [ 8010, 16145, 8090, 8045],
+                [ 1013,   990,  940, 6907]
+            ]
         }
     ]
 };

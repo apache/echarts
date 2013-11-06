@@ -42,9 +42,9 @@
 define(function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
-    self.version = '1.2.1';
+    self.version = '1.3.0';
     self.dependencies = {
-        zrender : '1.0.4'
+        zrender : '1.0.5'
     };
     /**
      * 入口方法 
@@ -405,7 +405,6 @@ define(function(require) {
                 && _chartList[len].ontooltipHover
                 && _chartList[len].ontooltipHover(param, tipShape);
             }
-            //_zr.refreshHover();
         }
 
         /**

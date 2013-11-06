@@ -68,91 +68,48 @@
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
 option = {
-    color : (function(){
-        var zrColor = require('zrender/tool/color');
-        return zrColor.getStepColors('yellow', 'red', 28);
-    })(),
     title : {
-        text: '浏览器占比变化',
-        subtext: '纯属虚构',
+        text: '测试数据',
+        subtext: 'From d3.js',
         x:'right',
         y:'bottom'
     },
     tooltip : {
-        trigger: 'item',
-        backgroundColor : 'rgba(0,0,250,0.2)'
+        trigger: 'item'
     },
     legend: {
-       // orient : 'vertical',
-        //x : 'center',
-        data: function(){
-                var list = [];
-                for (var i = 1; i <=28; i++) {
-                    list.push(i + 2000);
-                }
-                return list;
-            }()
+        x: 'left',
+        data:['group1','group2', 'group3', 'group4']
     },
-    toolbox: {
-        show : true,
-        orient : 'vertical',
-        y:'center',
-        feature : {
-            mark : true,
-            dataView : {readOnly: false},
-            restore : true,
-            saveAsImage : true
-        }
-    },
-   polar : [
-       {
-           indicator : [
-               { text: 'IE8-', max: 400},
-               { text: 'IE9+', max: 400},
-               { text: 'Safari', max: 400},
-               { text: 'Firefox', max: 400},
-               { text: 'Chrome', max: 400}
+    series : [
+        {
+            type:'chord',
+            sort : 'ascending',
+            sortSub : 'descending',
+            showScale : true,
+            showScaleText : true,
+            data : [
+                {name : 'group1'},
+                {name : 'group2'},
+                {name : 'group3'},
+                {name : 'group4'}
             ],
-            center : ['50%', 240],
-            radius : 150
-        }
-    ],
-    calculable : false,
-    series : (function(){
-        var series = [];
-        for (var i = 1; i <= 28; i++) {
-            series.push({
-                name:'浏览器（数据纯属虚构）',
-                type:'radar',
-                symbol:'none',
-                itemStyle: {
-                    normal: {
-                        lineStyle: {
-                          width:1
-                        }
-                    },
-                    emphasis : {
-                        areaStyle: {color:'rgba(0,250,0,0.3)'}
+            itemStyle : {
+                normal : {
+                    label : {
+                        show : false
                     }
-                },
-                data:[
-                  {
-                    value:[
-                        (40 - i) * 10,
-                        (38 - i) * 4 + 60,
-                        i * 5 + 10,
-                        i * 9,
-                        i * i /2
-                    ],
-                    name:i + 2000
-                  }
-                ]
-            })
+                }
+            },
+            matrix : [
+                [11975,  5871, 8916, 2868],
+                [ 1951, 10048, 2060, 6171],
+                [ 8010, 16145, 8090, 8045],
+                [ 1013,   990,  940, 6907]
+            ]
         }
-        return series;
-    })()
+    ]
 };
-
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->

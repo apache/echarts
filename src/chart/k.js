@@ -264,7 +264,7 @@ define(function(require) {
                         singlePoint = seriesPL[i];
                         data = serie.data[singlePoint[6]];
                         queryTarget = [data];
-                        candleType = singlePoint[3] > singlePoint[2];
+                        candleType = singlePoint[3] < singlePoint[2];
                         self.shapeList.push(_getCandle(
                             seriesIndex,    // seriesIndex
                             singlePoint[6], // dataIndex

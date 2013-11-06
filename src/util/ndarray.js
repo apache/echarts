@@ -1083,7 +1083,7 @@ NDArray.prototype = {
 
     /**
      * 
-     * @param {Number} [axis]
+     * @param {Number} [axis=-1]
      * @param {string} [order='ascending']
      *        'ascending' | 'descending'
      * @return {NDArray}
@@ -1137,7 +1137,7 @@ NDArray.prototype = {
 
     /**
      * 
-     * @param {Number} [axis]
+     * @param {Number} [axis=-1]
      * @param {string} [order='ascending']
      *        'ascending' | 'descending'
      * @param {NDArray} [out]
@@ -2020,7 +2020,7 @@ NDArray.prototype = {
             }
         }
         this._shape[axis] -= obj.length;
-        this._size -= stride * obj.length;
+        this._size = getSize(this._shape);
 
         return this;
     }.kwargs(),

@@ -1439,7 +1439,7 @@ var optionMap = {
 			               { text: 'Firefox', max: 400},
 			               { text: 'Chrome', max: 400}
 			            ],
-			            center : [,240],
+			            center : ['50%', 240],
 			            radius : 150
 			        }
 			    ],

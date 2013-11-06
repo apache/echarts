@@ -68,35 +68,22 @@
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
 option = {
-    color : (function(){
-        var zrColor = require('zrender/tool/color');
-        return zrColor.getStepColors('yellow', 'red', 28);
-    })(),
     title : {
-        text: '浏览器占比变化',
+        text: '南丁格尔玫瑰图',
         subtext: '纯属虚构',
-        x:'right',
-        y:'bottom'
+        x:'center'
     },
     tooltip : {
         trigger: 'item',
-        backgroundColor : 'rgba(0,0,250,0.2)'
+        formatter: "{a} <br/>{b} : {c} ({d}%)"
     },
     legend: {
-       // orient : 'vertical',
-        //x : 'center',
-        data: function(){
-                var list = [];
-                for (var i = 1; i <=28; i++) {
-                    list.push(i + 2000);
-                }
-                return list;
-            }()
+        x : 'center',
+        y : 'bottom',
+        data:['rose1','rose2','rose3','rose4','rose5','rose6','rose7','rose8']
     },
     toolbox: {
         show : true,
-        orient : 'vertical',
-        y:'center',
         feature : {
             mark : true,
             dataView : {readOnly: false},
@@ -104,55 +91,62 @@ option = {
             saveAsImage : true
         }
     },
-   polar : [
-       {
-           indicator : [
-               { text: 'IE8-', max: 400},
-               { text: 'IE9+', max: 400},
-               { text: 'Safari', max: 400},
-               { text: 'Firefox', max: 400},
-               { text: 'Chrome', max: 400}
-            ],
-            center : ['50%', 240],
-            radius : 150
-        }
-    ],
-    calculable : false,
-    series : (function(){
-        var series = [];
-        for (var i = 1; i <= 28; i++) {
-            series.push({
-                name:'浏览器（数据纯属虚构）',
-                type:'radar',
-                symbol:'none',
-                itemStyle: {
-                    normal: {
-                        lineStyle: {
-                          width:1
-                        }
+    calculable : true,
+    series : [
+        {
+            name:'半径模式',
+            type:'pie',
+            radius : [20, 110],
+            center : ['25%', 200],
+            roseType : 'radius',
+            itemStyle :　{
+                normal : {
+                    label : {
+                        show : false
                     },
-                    emphasis : {
-                        areaStyle: {color:'rgba(0,250,0,0.3)'}
+                    labelLine : {
+                        show : false
                     }
                 },
-                data:[
-                  {
-                    value:[
-                        (40 - i) * 10,
-                        (38 - i) * 4 + 60,
-                        i * 5 + 10,
-                        i * 9,
-                        i * i /2
-                    ],
-                    name:i + 2000
-                  }
-                ]
-            })
+                emphasis : {
+                    label : {
+                        show : true
+                    },
+                    labelLine : {
+                        show : true
+                    }
+                }
+            },
+            data:[
+                {value:10, name:'rose1'},
+                {value:5, name:'rose2'},
+                {value:15, name:'rose3'},
+                {value:25, name:'rose4'},
+                {value:20, name:'rose5'},
+                {value:35, name:'rose6'},
+                {value:30, name:'rose7'},
+                {value:40, name:'rose8'}
+            ]
+        },
+        {
+            name:'面积模式',
+            type:'pie',
+            radius : [30, 110],
+            center : ['75%', 200],
+            roseType : 'area',
+            data:[
+                {value:10, name:'rose1'},
+                {value:5, name:'rose2'},
+                {value:15, name:'rose3'},
+                {value:25, name:'rose4'},
+                {value:20, name:'rose5'},
+                {value:35, name:'rose6'},
+                {value:30, name:'rose7'},
+                {value:40, name:'rose8'}
+            ]
         }
-        return series;
-    })()
+    ]
 };
-
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->

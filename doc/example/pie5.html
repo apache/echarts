@@ -67,92 +67,155 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
+var labelTop = {
+    normal : {
+        label : {
+            show : true,
+            position : 'center',
+            textStyle: {
+                baseline : 'bottom'
+            }
+        },
+        labelLine : {
+            show : false
+        }
+    }
+};
+var labelBottom = {
+    normal : {
+        color: '#ccc',
+        label : {
+            show : true,
+            position : 'center',
+            formatter : function(a,b,c){return 100 - c + '%'},
+            textStyle: {
+                baseline : 'top'
+            }
+        },
+        labelLine : {
+            show : false
+        }
+    },
+    emphasis: {
+        color: 'rgba(0,0,0,0)'
+    }
+};
+var radius = [40, 55];
 option = {
-    color : (function(){
-        var zrColor = require('zrender/tool/color');
-        return zrColor.getStepColors('yellow', 'red', 28);
-    })(),
-    title : {
-        text: '浏览器占比变化',
-        subtext: '纯属虚构',
-        x:'right',
-        y:'bottom'
-    },
-    tooltip : {
-        trigger: 'item',
-        backgroundColor : 'rgba(0,0,250,0.2)'
-    },
     legend: {
-       // orient : 'vertical',
-        //x : 'center',
-        data: function(){
-                var list = [];
-                for (var i = 1; i <=28; i++) {
-                    list.push(i + 2000);
-                }
-                return list;
-            }()
+        x : 'center',
+        y : 'center',
+        data:[
+            'GoogleMaps','Facebook','Youtube','Google+','Weixin',
+            'Twitter', 'Skype', 'Messenger', 'Whatsapp', 'Instagram'
+        ]
+    },
+    title : {
+        text: 'The App World',
+        subtext: 'from global web index',
+        x: 'center'
     },
     toolbox: {
         show : true,
-        orient : 'vertical',
-        y:'center',
         feature : {
-            mark : true,
             dataView : {readOnly: false},
             restore : true,
             saveAsImage : true
         }
     },
-   polar : [
-       {
-           indicator : [
-               { text: 'IE8-', max: 400},
-               { text: 'IE9+', max: 400},
-               { text: 'Safari', max: 400},
-               { text: 'Firefox', max: 400},
-               { text: 'Chrome', max: 400}
-            ],
-            center : ['50%', 240],
-            radius : 150
+    series : [
+        {
+            type : 'pie',
+            center : ['10%', '30%'],
+            radius : radius,
+            data : [
+                {name:'other', value:46, itemStyle : labelBottom},
+                {name:'GoogleMaps', value:54,itemStyle : labelTop}
+            ]
+        },
+        {
+            type : 'pie',
+            center : ['30%', '30%'],
+            radius : radius,
+            data : [
+                {name:'other', value:56, itemStyle : labelBottom},
+                {name:'Facebook', value:44,itemStyle : labelTop}
+            ]
+        },
+        {
+            type : 'pie',
+            center : ['50%', '30%'],
+            radius : radius,
+            data : [
+                {name:'other', value:65, itemStyle : labelBottom},
+                {name:'Youtube', value:35,itemStyle : labelTop}
+            ]
+        },
+        {
+            type : 'pie',
+            center : ['70%', '30%'],
+            radius : radius,
+            data : [
+                {name:'other', value:70, itemStyle : labelBottom},
+                {name:'Google+', value:30,itemStyle : labelTop}
+            ]
+        },
+        {
+            type : 'pie',
+            center : ['90%', '30%'],
+            radius : radius,
+            data : [
+                {name:'other', value:73, itemStyle : labelBottom},
+                {name:'Weixin', value:27,itemStyle : labelTop}
+            ]
+        },
+        {
+            type : 'pie',
+            center : ['10%', '70%'],
+            radius : radius,
+            data : [
+                {name:'other', value:78, itemStyle : labelBottom},
+                {name:'Twitter', value:22,itemStyle : labelTop}
+            ]
+        },
+        {
+            type : 'pie',
+            center : ['30%', '70%'],
+            radius : radius,
+            data : [
+                {name:'other', value:78, itemStyle : labelBottom},
+                {name:'Skype', value:22,itemStyle : labelTop}
+            ]
+        },
+        {
+            type : 'pie',
+            center : ['50%', '70%'],
+            radius : radius,
+            data : [
+                {name:'other', value:78, itemStyle : labelBottom},
+                {name:'Messenger', value:22,itemStyle : labelTop}
+            ]
+        },
+        {
+            type : 'pie',
+            center : ['70%', '70%'],
+            radius : radius,
+            data : [
+                {name:'other', value:83, itemStyle : labelBottom},
+                {name:'Whatsapp', value:17,itemStyle : labelTop}
+            ]
+        },
+        {
+            type : 'pie',
+            center : ['90%', '70%'],
+            radius : radius,
+            data : [
+                {name:'other', value:89, itemStyle : labelBottom},
+                {name:'Instagram', value:11,itemStyle : labelTop}
+            ]
         }
-    ],
-    calculable : false,
-    series : (function(){
-        var series = [];
-        for (var i = 1; i <= 28; i++) {
-            series.push({
-                name:'浏览器（数据纯属虚构）',
-                type:'radar',
-                symbol:'none',
-                itemStyle: {
-                    normal: {
-                        lineStyle: {
-                          width:1
-                        }
-                    },
-                    emphasis : {
-                        areaStyle: {color:'rgba(0,250,0,0.3)'}
-                    }
-                },
-                data:[
-                  {
-                    value:[
-                        (40 - i) * 10,
-                        (38 - i) * 4 + 60,
-                        i * 5 + 10,
-                        i * 9,
-                        i * i /2
-                    ],
-                    name:i + 2000
-                  }
-                ]
-            })
-        }
-        return series;
-    })()
+    ]
 };
-
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->

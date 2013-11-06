@@ -10,6 +10,8 @@ define(function(require) {
     require('../util/shape/chord');
 
     'use strict';
+
+    var _devicePixelRatio = window.devicePixelRatio || 1;
     
     function Chord(messageCenter, zr, option, component) {
         var self = this;
@@ -23,21 +25,36 @@ define(function(require) {
         var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
-        var zrConfig = require('zrender/config');
-        var zrEvent = require('zrender/tool/event');
-
         var zrUtil = require('zrender/tool/util');
         var vec2 = require('zrender/tool/vector');
         var NDArray = require('../util/ndarray');
 
-        var legend = component.legend;
+        var legend;
+        var getColor;
+        var isSelected;
+
         var series;
         this.type = ecConfig.CHART_TYPE_CHORD;
 
         var _zlevelBase = self.getZlevelBase();
 
+        var chordSerieSample;
+        // Config
+        var chordSeries = [];
+        var groups;
+        var startAngle;
+        var clockWise;
+        var innerRadius;
+        var outerRadius;
+        var padding;
+        var sortGroups;
+        var sortSubGroups;
+        var center;
+        var showScale;
+        var showScaleText;
 
-        // Adjency matrix
+        var strokeFix = 0;
+        // Adjacency matrix
         var dataMat;
 
         var sectorShapes = [];
@@ -47,175 +64,303 @@ define(function(require) {
         var scaleUnitAngle = 4;
 
         function _buildShape() {
+
+            self.selectedMap = {};
+            chordSeries = [];
+            chordSerieSample = null;
+            var matrix = [];
+            var serieNumber = 0;
             for (var i = 0, l = series.length; i < l; i++) {
+                
                 if (series[i].type === self.type) {
-                    var chordSerie = series[i];
-
-                    self.reformOption(chordSerie);
-
-                    var innerRadius = chordSerie.innerRadius;
-                    var outerRadius = chordSerie.outerRadius;
-                    var padding = chordSerie.padding;
-                    var sortGroups = chordSerie.sortGroups;
-                    var sortSubGroups = chordSerie.sortSubGroups;
-                    var center = self.calAbsolute(chordSerie.center);
-
-                    var groups = chordSerie.groups;
-                    var data = chordSerie.matrix;
-                    
-                    dataMat = new NDArray(data);
-                    var shape = dataMat.shape();
-                    // Check if data is valid
-                    if (shape[0] !== shape[1] || shape[0] !== groups.length) {
-                        throw new Error('Data not valid');
+                    // Use the config of first chord serie
+                    if (!chordSerieSample) {
+                        chordSerieSample = series[i];
+                        self.reformOption(chordSerieSample);
                     }
 
-                    // Processing data
-                    var sumOut = dataMat.sum(1);
-                    switch (sortGroups) {
-                        case 'ascending':
-                        case 'descending':
-                            var groupIndices = sumOut
-                                    .argsort({order : sortGroups});
-                            sumOut.sort({order : sortGroups});
-                            break;
-                        default:
-                            var groupIndices = NDArray.range(shape[0]);
+                    var _isSelected = isSelected(series[i].name);
+                    // Filter by selected serie
+                    self.selectedMap[series[i].name] = _isSelected;
+                    if (!_isSelected) {
+                        continue;
                     }
+                    chordSeries.push(series[i]);
+                    matrix.push(series[i].matrix);
+                    serieNumber++;
+                }
+            }
+            if (!chordSerieSample) {
+                return;
+            }
+            if (!chordSeries.length) {
+                return;
+            }
 
-                    var percents = sumOut.mul(1 / sumOut.sum());
+            var zrWidth = zr.getWidth();
+            var zrHeight = zr.getHeight();
+            var zrSize = Math.min(zrWidth, zrHeight);
 
-                    var len = percents.shape()[0];
+            groups = chordSerieSample.data;
+            startAngle = chordSerieSample.startAngle;
+            // Constrain to [0, 360]
+            startAngle = startAngle % 360;
+            if (startAngle < 0) {
+                startAngle = startAngle + 360;
+            }
+            clockWise = chordSerieSample.clockWise;
+            innerRadius = self.parsePercent(
+                chordSerieSample.radius[0],
+                zrSize / 2
+            );
+            outerRadius = self.parsePercent(
+                chordSerieSample.radius[1],
+                zrSize / 2
+            );
+            padding = chordSerieSample.padding;
+            sortGroups = chordSerieSample.sort;
+            sortSubGroups = chordSerieSample.sortSub;
+            showScale = chordSerieSample.showScale;
+            showScaleText = chordSerieSample.showScaleText;
+            center = [
+                self.parsePercent(chordSerieSample.center[0], zrWidth),
+                self.parsePercent(chordSerieSample.center[1], zrHeight)
+            ];
+            var fixSize = 
+                chordSerieSample.itemStyle.normal.chordStyle.lineStyle.width -
+                chordSerieSample.itemStyle.normal.lineStyle.width;
+            strokeFix = 
+                (fixSize / _devicePixelRatio) / innerRadius / Math.PI * 180;
 
-                    var groupAngles = percents.mul(360 - padding * len);
-                    groupAngles.add(padding, groupAngles);
 
-                    var subGroupAngles = dataMat
-                            .mul(1 / dataMat.sum() * (360 - padding * len));
-                    switch (sortSubGroups) {
-                        case 'ascending':
-                        case 'descending':
-                            var subGroupIndices = subGroupAngles
-                                    .argsort(1, {order : sortSubGroups});
-                            subGroupAngles.sort(1, {order : sortSubGroups});
-                            break;
-                        default:
-                            var subGroupIndices = NDArray
-                                    .range(len).reshape(1, len).repeat(len, 0);
-                    }
+            dataMat = new NDArray(matrix);
+            dataMat = dataMat._transposelike([1, 2, 0]);
 
-                    var groupIndicesArr = groupIndices.toArray();
-                    var groupAnglesArr = groupAngles.toArray();
-                    var subGroupIndicesArr = subGroupIndices.toArray();
-                    var subGroupAnglesArr = subGroupAngles.toArray();
-                    var sumOutArray = sumOut.toArray();
+            // Filter the data by selected legend
+            var res = _filterData(dataMat, groups);
+            dataMat = res[0];
+            groups = res[1];
 
-                    var sectorAngles = [];
-                    var groupsTmp = [];
-                    var chordAngles = new NDArray(len, len).toArray();
-                    var values = [];
-                    var start = 0;
-                    var end = 0;
-                    for (var i = 0; i < len; i++) {
-                        var sortedIdx = groupIndicesArr[i];
-                        groupsTmp[sortedIdx] = groups[i];
-                        values[sortedIdx] = sumOutArray[i];
+            // Check if data is valid
+            var shape = dataMat.shape();
+            if (shape[0] !== shape[1] || shape[0] !== groups.length) {
+                throw new Error('Data not valid');
+            }
+            if (shape[0] === 0 || shape[2] === 0) {
+                return;
+            }
 
-                        end = start + groupAnglesArr[i];
-                        sectorAngles[sortedIdx] = [start, end - padding];
+            // Down to 2 dimension
+            // More convenient for angle calculating and sort
+            dataMat.reshape(shape[0], shape[1] * shape[2]);
 
-                        // Subgroup
-                        var subStart = start;
-                        var subEnd = start;
-                        for (var j = 0; j < len; j++) {
-                            subEnd = subStart + subGroupAnglesArr[sortedIdx][j];
-                            /*jshint maxlen : 200*/
-                            chordAngles[sortedIdx][subGroupIndicesArr[sortedIdx][j]]
-                                = [subStart, subEnd];
-                            subStart = subEnd;
-                        }
+            // Processing data
+            var sumOut = dataMat.sum(1);
+            var percents = sumOut.mul(1 / sumOut.sum());
 
-                        start = end;
-                    }
-                    groups = groupsTmp;
+            var groupNumber = shape[0];
+            var subGroupNumber = shape[1] * shape[2];
 
-                    // reset data
-                    chordShapes = new NDArray(len, len).toArray();
-                    sectorShapes = [];
+            var groupAngles = percents.mul(360 - padding * groupNumber);
+            var subGroupAngles = dataMat.div(
+                dataMat.sum(1).reshape(groupNumber, 1)
+            );
+            subGroupAngles = subGroupAngles.mul(
+                groupAngles.sub(strokeFix * 2).reshape(groupNumber, 1)
+            );
 
-                    _buildSectors(
-                        groups,
-                        sectorAngles,
-                        center,
-                        innerRadius,
-                        outerRadius
-                    );
+            switch (sortGroups) {
+                case 'ascending':
+                case 'descending':
+                    var groupIndices = groupAngles
+                            .argsort(0, sortGroups);
+                    groupAngles['sort'](0, sortGroups);
+                    sumOut['sort'](0, sortGroups);
+                    break;
+                default:
+                    var groupIndices = NDArray.range(shape[0]);
+            }
 
-                    _buildChords(
-                        groups,
-                        chordAngles,
-                        center,
-                        innerRadius
-                    );
+            switch (sortSubGroups) {
+                case 'ascending':
+                case 'descending':
+                    var subGroupIndices = subGroupAngles
+                            .argsort(1, sortSubGroups);
+                    subGroupAngles['sort'](1, sortSubGroups);
+                    break;
+                default:
+                    var subGroupIndices = NDArray
+                            .range(subGroupNumber)
+                            .reshape(1, subGroupNumber)
+                            .repeat(groupNumber, 0);
+            }
 
-                    var res = normalizeValue(values);
-                    _buildScales(
-                        res[0],
-                        res[1],
-                        sectorAngles,
-                        center,
-                        outerRadius,
-                        new NDArray(res[0]).sum() / (360 - padding * len)
-                    );
+            var groupIndicesArr = groupIndices.toArray();
+            var groupAnglesArr = groupAngles.toArray();
+            var subGroupIndicesArr = subGroupIndices.toArray();
+            var subGroupAnglesArr = subGroupAngles.toArray();
+            var sumOutArray = sumOut.toArray();
+
+            var sectorAngles = [];
+            var chordAngles = new NDArray(
+                groupNumber, subGroupNumber
+            ).toArray();
+            var values = [];
+            var start = 0;
+            var end = 0;
+            for (var i = 0; i < groupNumber; i++) {
+                var sortedIdx = groupIndicesArr[i];
+                values[sortedIdx] = sumOutArray[i];
+
+                end = start + groupAnglesArr[i];
+                sectorAngles[sortedIdx] = [start, end];
+
+                // Sub Group
+                var subStart = start + strokeFix;
+                var subEnd = subStart;
+                for (var j = 0; j < subGroupNumber; j++) {
+                    subEnd = subStart + subGroupAnglesArr[sortedIdx][j];
+                    var subSortedIndex = subGroupIndicesArr[sortedIdx][j];
+                    /*jshint maxlen : 200*/
+                    chordAngles[sortedIdx][subSortedIndex]
+                        = [subStart, subEnd];
+                    subStart = subEnd;
                 }
 
+                start = end + padding;
+            }
+
+            // reset data
+            chordShapes = new NDArray(groupNumber, groupNumber, serieNumber)
+                                .toArray();
+            sectorShapes = [];
+
+            _buildSectors(sectorAngles, values);
+
+            chordAngles = new NDArray(chordAngles).reshape(
+                groupNumber, groupNumber, serieNumber, 2
+            ).toArray();
+            _buildChords(chordAngles, dataMat.reshape(shape).toArray());
+
+            var res = normalizeValue(values);
+            if (showScale) {
+                _buildScales(
+                    res[0],
+                    res[1],
+                    sectorAngles,
+                    new NDArray(res[0]).sum() / (360 - padding * groupNumber)
+                );
             }
         }
 
-        function _buildSectors(
-            groups,
-            angles,
-            center,
-            innerRadius,
-            outerRadius
-        ) {
-            var startAngle = 90;
+        function _filterData (dataMat, groups) {
+            var indices = [];
+            var groupsFilted = [];
+            // Filter by selected group
+            for (var i = 0; i < groups.length; i++) {
+                var name = groups[i].name;
+                self.selectedMap[name] = isSelected(name);
+                if (!self.selectedMap[name]) {
+                    indices.push(i);
+                } else {
+                    groupsFilted.push(groups[i]);
+                }
+            }
+            if (indices.length) {
+                dataMat = dataMat['delete'](indices, 0);
+                dataMat = dataMat['delete'](indices, 1);   
+            }
+            if (!dataMat.size()) {
+                return [dataMat, groupsFilted];
+            }
+            // Empty data also need to be removed
+            indices = [];
+            var groupsFilted2 = [];
+            var shape = dataMat.shape();
+            dataMat.reshape(shape[0], shape[1] * shape[2]);
+            var sumOutArray = dataMat.sum(1).toArray();
+            dataMat.reshape(shape);
+            for (var i = 0; i < groupsFilted.length; i++) {
+                if (sumOutArray[i] === 0) {
+                    indices.push(i);
+                } else {
+                    groupsFilted2.push(groupsFilted[i]);
+                }
+            }
+            if (indices.length) {
+                dataMat = dataMat['delete'](indices, 0);
+                dataMat = dataMat['delete'](indices, 1);
+            }
+
+            return [dataMat, groupsFilted2];
+        }
+
+        function _buildSectors(angles, data) {
             var len = groups.length;
+            var len2 = chordSeries.length;
+
+            var timeout;
+
+            var showLabel = self.deepQuery(
+                [chordSerieSample], 'itemStyle.normal.label.show'
+            );
+            var labelColor = self.deepQuery(
+                [chordSerieSample], 'itemStyle.normal.label.color'
+            );
 
             function createMouseOver(idx) {
                 return function() {
-                    for (var i = 0; i < len; i++) {
-                        if (i !== idx) {
-                            sectorShapes[i].style.opacity = 0.1;
+                    if (timeout) {
+                        clearTimeout(timeout);
+                    }
+                    timeout = setTimeout(function(){
+                        for (var i = 0; i < len; i++) {
+                            sectorShapes[i].style.opacity 
+                                = i === idx ? 1 : 0.1;
                             zr.modShape(
                                 sectorShapes[i].id,
                                 sectorShapes[i]
                             );
 
                             for (var j = 0; j < len; j++) {
-                                var chordShape = chordShapes[i][j];
-                                chordShape.style.opacity = 0.03;
-                                zr.modShape(chordShape.id, chordShape);
+                                for (var k = 0; k < len2; k++) {
+                                    var chordShape = chordShapes[i][j][k];
+                                    if (chordShape) {
+                                        chordShape.style.opacity 
+                                            = (i === idx || j === idx)
+                                                 ? 0.5 : 0.03;
+                                        zr.modShape(chordShape.id, chordShape);
+                                    }
+                                }
                             }
                         }
-                    }
-                    zr.refresh();
+                        zr.refresh();
+                    }, 50);
                 };
             }
 
             function createMouseOut() {
                 return function() {
-                    for (var i = 0; i < len; i++) {
-                        sectorShapes[i].style.opacity = 1.0;
-                        zr.modShape(sectorShapes[i].id, sectorShapes[i]);
-
-                        for (var j = 0; j < len; j++) {
-                            var chordShape = chordShapes[i][j];
-                            chordShape.style.opacity = 0.5;
-                            zr.modShape(chordShape.id, chordShape);
-                        }
+                    if (timeout) {
+                        clearTimeout(timeout);
                     }
-                    zr.refresh();
+                    timeout = setTimeout(function(){
+                        for (var i = 0; i < len; i++) {
+                            sectorShapes[i].style.opacity = 1.0;
+                            zr.modShape(sectorShapes[i].id, sectorShapes[i]);
+
+                            for (var j = 0; j < len; j++) {
+                                for (var k = 0; k < len2; k++) {
+                                    var chordShape = chordShapes[i][j][k];
+                                    if (chordShape) {
+                                        chordShape.style.opacity = 0.5;
+                                        zr.modShape(chordShape.id, chordShape);
+                                    } 
+                                }
+                            }
+                        }
+                        zr.refresh();
+                    }, 50);
                 };
             }
 
@@ -223,26 +368,98 @@ define(function(require) {
                 
                 var group = groups[i];
                 var angle = angles[i];
+                var _start = (clockWise ? (360 - angle[1]) : angle[0])
+                                + startAngle;
+                var _end = (clockWise ? (360 - angle[0]) : angle[1])
+                            + startAngle;
 
                 var sector = {
                     id : zr.newShapeId(self.type),
                     shape : 'sector',
                     zlevel : _zlevelBase,
-                    hoverable : false,
                     style : {
                         x : center[0],
                         y : center[1],
                         r0 : innerRadius,
                         r : outerRadius,
-                        startAngle : (360 - angle[1]) + startAngle,
-                        endAngle : (360 - angle[0]) + startAngle,
+                        startAngle : _start,
+                        endAngle : _end,
                         brushType : 'fill',
-                        color : legend.getColor(group.name)
+                        opacity: 1,
+                        color : getColor(group.name)
+                    },
+                    highlightStyle : {
+                        brushType : 'fill'
                     }
                 };
+                sector.style.lineWidth = self.deepQuery(
+                    [group, chordSerieSample],
+                    'itemStyle.normal.lineStyle.width'
+                );
+                sector.highlightStyle.lineWidth = self.deepQuery(
+                    [group, chordSerieSample],
+                    'itemStyle.emphasis.lineStyle.width'
+                );
+                sector.style.strokeColor = self.deepQuery(
+                    [group, chordSerieSample],
+                    'itemStyle.normal.lineStyle.color'
+                );
+                sector.highlightStyle.strokeColor = self.deepQuery(
+                    [group, chordSerieSample],
+                    'itemStyle.emphasis.lineStyle.color'
+                );
+                if (sector.style.lineWidth > 0) {
+                    sector.style.brushType = 'both';
+                }
+                if (sector.highlightStyle.lineWidth > 0) {
+                    sector.highlightStyle.brushType = 'both';
+                }
+                ecData.pack(
+                    sector,
+                    chordSeries[0],
+                    0,
+                    data[i], 0,
+                    group.name
+                );
+                if (showLabel) {
+                    var halfAngle = [_start + _end] / 2;
+                    halfAngle %= 360;  // Constrain to [0,360]
+                    var isRightSide = halfAngle <= 90
+                                     || halfAngle >= 270;
+                    halfAngle = halfAngle * Math.PI / 180;
+                    var v = [Math.cos(halfAngle), -Math.sin(halfAngle)];
+
+                    var distance = showScaleText ? 45 : 20;
+                    var start = vec2.scale([], v, outerRadius + distance);
+                    vec2.add(start, start, center);
+
+                    var labelShape = {
+                        shape : 'text',
+                        id : zr.newShapeId(self.type),
+                        zlevel : _zlevelBase - 1,
+                        hoverable : false,
+                        style : {
+                            x : start[0],
+                            y : start[1],
+                            text : group.name,
+                            textAlign : isRightSide ? 'left' : 'right',
+                            color : labelColor,
+                            hoverable : false
+                        }
+                    };
+                    labelShape.style.textColor = self.deepQuery(
+                        [group, chordSerieSample],
+                        'itemStyle.normal.label.textStyle.color'
+                    ) || '#fff';
+                    sector.style.textFont = self.getFont(self.deepQuery(
+                        [group, chordSerieSample],
+                        'itemStyle.normal.label.textStyle'
+                    ));
+                    zr.addShape(labelShape);
+                    self.shapeList.push(labelShape);
+                }
 
                 sector.onmouseover = createMouseOver(i);
-
                 sector.onmouseout = createMouseOut();
 
                 self.shapeList.push(sector);
@@ -251,55 +468,89 @@ define(function(require) {
             }
         }
 
-        function _buildChords(
-            groups,
-            angles,
-            center,
-            radius
-        ) {
-
-            var startAngle = 90;
-
+        function _buildChords(angles, dataArr) {
             var len = angles.length;
+            if (!len) {
+                return;
+            }
+            var len2 = angles[0][0].length;
+
+            var chordLineStyle 
+                = chordSerieSample.itemStyle.normal.chordStyle.lineStyle;
+            var chordLineStyleEmphsis
+                = chordSerieSample.itemStyle.emphasis.chordStyle.lineStyle;
 
             for (var i = 0; i < len; i++) {
                 for (var j = 0; j < len; j++) {
-
-                    if (chordShapes[j][i]) {
-                        chordShapes[i][j] = chordShapes[j][i];
-                    }
-
-                    var angleIJ = angles[i][j][0];
-                    var angleJI = angles[j][i][0];
-
-                    var angleIJ0 = angles[i][j][1];
-                    var angleJI0 = angles[j][i][1];
-
-                    var color = angleIJ0 - angleIJ < angleJI0 - angleJI
-                                    ? legend.getColor(groups[i].name)
-                                    : legend.getColor(groups[j].name);
-
-                    var chord = {
-                        id : zr.newShapeId(self.type),
-                        shape : 'chord',
-                        zlevel : _zlevelBase,
-                        style : {
-                            center : center,
-                            r : radius,
-                            source0 : angleIJ - startAngle,
-                            source1 : angleIJ0 - startAngle,
-                            target0 : angleJI - startAngle,
-                            target1 : angleJI0 - startAngle,
-                            brushType : 'both',
-                            strokeColor : 'black',
-                            opacity : 0.5,
-                            color : color
+                    for (var k = 0; k < len2; k++) {
+                        if (chordShapes[j][i][k]) {
+                            continue;
                         }
-                    };
 
-                    chordShapes[i][j] = chord;
-                    self.shapeList.push(chord);
-                    zr.addShape(chord);
+                        var angleIJ0 = angles[i][j][k][0];
+                        var angleJI0 = angles[j][i][k][0];
+
+                        var angleIJ1 = angles[i][j][k][1];
+                        var angleJI1 = angles[j][i][k][1];
+
+                        if (angleIJ0 - angleJI1 === 0 ||
+                            angleJI0 - angleJI1 === 0) {
+                            chordShapes[i][j][k] = null;
+                            continue;
+                        }
+
+                        var color;
+                        if (len2 === 1) {
+                            if (angleIJ1 - angleIJ0 <= angleJI1 - angleJI0) {
+                                color = getColor(groups[i].name);
+                            } else {
+                                color = getColor(groups[j].name);
+                            }
+                        } else {
+                            color = getColor(chordSeries[k].name);
+                        }
+                        var s0 = !clockWise ? (360 - angleIJ1) : angleIJ0;
+                        var s1 = !clockWise ? (360 - angleIJ0) : angleIJ1;
+                        var t0 = !clockWise ? (360 - angleJI1) : angleJI0;
+                        var t1 = !clockWise ? (360 - angleJI0) : angleJI1;
+                        var chord = {
+                            id : zr.newShapeId(self.type),
+                            shape : 'chord',
+                            zlevel : _zlevelBase,
+                            style : {
+                                center : center,
+                                r : innerRadius,
+                                source0 : s0 - startAngle,
+                                source1 : s1 - startAngle,
+                                target0 : t0 - startAngle,
+                                target1 : t1 - startAngle,
+                                brushType : 'both',
+                                opacity : 0.5,
+                                color : color,
+                                lineWidth : chordLineStyle.width,
+                                strokeColor : chordLineStyle.color
+                            },
+                            highlightStyle : {
+                                brushType : 'both',
+                                lineWidth : chordLineStyleEmphsis.width,
+                                strokeColor : chordLineStyleEmphsis.color
+                            }
+                        };
+
+                        ecData.pack(
+                            chord,
+                            chordSeries[k],
+                            k,
+                            dataArr[i][j][k], 0,
+                            groups[i].name,
+                            groups[j].name,
+                            dataArr[j][i][k]
+                        );
+
+                        chordShapes[i][j][k] = chord;
+                        self.shapeList.push(chord);
+                        zr.addShape(chord);
+                    }
                 }
             }
         }
@@ -308,23 +559,23 @@ define(function(require) {
             values,
             unitPostfix,
             angles,
-            center,
-            radius,
             unitValue
         ) {
             for (var i = 0; i < angles.length; i++) {
-                var startAngle = angles[i][0];
-                var endAngle = angles[i][1];
+                var subStartAngle = angles[i][0];
+                var subEndAngle = angles[i][1];
 
-                var scaleAngle = startAngle;
-                while (scaleAngle < endAngle) {
+                var scaleAngle = subStartAngle;
+                while (scaleAngle < subEndAngle) {
+                    var thelta = ((clockWise ? (360 - scaleAngle) : scaleAngle)
+                                    + startAngle) / 180 * Math.PI;
                     var v = [
-                            Math.cos((scaleAngle - 90) / 180 * Math.PI),
-                            Math.sin((scaleAngle - 90) / 180 * Math.PI)
+                            Math.cos(thelta),
+                            -Math.sin(thelta)
                             ];
-                    var start = vec2.scale([], v, radius + 1);
+                    var start = vec2.scale([], v, outerRadius + 1);
                     vec2.add(start, start, center);
-                    var end = vec2.scale([], v, radius + scaleLineLength);
+                    var end = vec2.scale([], v, outerRadius + scaleLineLength);
                     vec2.add(end, end, center);
                     var scaleShape = {
                         shape : 'line',
@@ -347,14 +598,19 @@ define(function(require) {
 
                     scaleAngle += scaleUnitAngle;
                 }
+                if (!showScaleText) {
+                    continue;
+                }
 
-                var scaleTextAngle = startAngle;
+                var scaleTextAngle = subStartAngle;
                 var step = unitValue * 5 * scaleUnitAngle;
                 var scaleValues = NDArray.range(0, values[i], step).toArray();
-                while (scaleTextAngle < endAngle) {
-                    var scaleTextAngleFixed = scaleTextAngle - 90;
-                    var isRightSide = scaleTextAngleFixed <= 90
-                                     && scaleTextAngleFixed >= -90;
+                while (scaleTextAngle < subEndAngle) {
+                    var thelta = clockWise 
+                                    ? (360 - scaleTextAngle) : scaleTextAngle;
+                    thelta = (thelta + startAngle) % 360;
+                    var isRightSide = thelta <= 90
+                                     || thelta >= 270;
                     var textShape = {
                         shape : 'text',
                         id : zr.newShapeId(self.type),
@@ -362,19 +618,20 @@ define(function(require) {
                         hoverable : false,
                         style : {
                             x : isRightSide 
-                                    ? radius + scaleLineLength + 2 
-                                    : -radius - scaleLineLength - 34,
+                                    ? outerRadius + scaleLineLength + 4 
+                                    : -outerRadius - scaleLineLength - 4,
                             y : 0,
                             text : Math.round(scaleValues.shift()*10)/10 
-                                    + unitPostfix
+                                    + unitPostfix,
+                            textAlign : isRightSide ? 'left' : 'right'
                         },
                         position : center.slice(),
                         rotation : isRightSide
-                            ? [-scaleTextAngleFixed / 180 * Math.PI, 0, 0]
+                            ? [thelta / 180 * Math.PI, 0, 0]
                             : [
-                                -(scaleTextAngleFixed + 180) / 180 * Math.PI,
+                                (thelta + 180) / 180 * Math.PI,
                                 0, 0
-                              ] 
+                              ]
                     };
 
                     self.shapeList.push(textShape);
@@ -419,13 +676,80 @@ define(function(require) {
                 series = option.series;
             }
             self.clear();
-            _buildShape();
+            legend = component.legend;
+            if (legend) {
+                getColor = legend.getColor;
+                isSelected = legend.isSelected;
+            } else {
+                var colorIndices = {};
+                var colorMap = {};
+                var count = 0;
+                getColor = function(key) {
+                    if (colorMap[key]) {
+                        return colorMap[key];
+                    }
+                    if (colorIndices[key] === undefined) {
+                        colorIndices[key] = count++;
+                    }
+                    // key is serie name
+                    for (var i = 0; i < chordSeries.length; i++) {
+                        if (chordSeries[i].name === key) {
+                            colorMap[key] = self.deepQuery(
+                                [chordSeries[i]],
+                                'itemStyle.normal.color'
+                            );
+                            break;
+                        }
+                    }
+                    if (!colorMap[key]) {
+                        var len = groups.length;
+                        // key is group name
+                        for (var i = 0; i < len; i++) {
+                            if (groups[i].name === key) {
+                                colorMap[key] = self.deepQuery(
+                                    [groups[i]],
+                                    'itemStyle.normal.color'
+                                );
+                                break;
+                            }
+                        }
+                    }
+                    if (!colorMap[key]) {
+                        colorMap[key] = zr.getColor(colorIndices[key]);
+                    }
 
-            zr.refresh();
+                    return colorMap[key];
+                };
+                isSelected = function() {
+                    return true;
+                };
+            }
+            _buildShape();
+        }
+
+        function reformOption(opt) {
+            var _merge = zrUtil.merge;
+            opt = _merge(
+                      opt || {},
+                      ecConfig.chord,
+                      {
+                          'overwrite' : false,
+                          'recursive' : true
+                      }
+                  );
+            opt.itemStyle.normal.label.textStyle = _merge(
+                opt.itemStyle.normal.label.textStyle || {},
+                ecConfig.textStyle,
+                {
+                    'overwrite' : false,
+                    'recursive' : true
+                }
+            );
         }
 
         self.init = init;
         self.refresh = refresh;
+        self.reformOption = reformOption;
 
         init(option, component);
     }

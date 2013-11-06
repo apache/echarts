@@ -24,7 +24,6 @@ define(function(require) {
         var ecConfig = require('../config');
         var ecData = require('../util/ecData');
         
-        var zrUtil = require('zrender/tool/util');
         var zrColor = require('zrender/tool/color');
 
         var self = this;

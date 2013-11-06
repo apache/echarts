@@ -94,7 +94,7 @@ else {
             'echarts/chart/pie': fileLocation,
             'echarts/chart/radar': fileLocation,
             'echarts/chart/map': fileLocation,
-            //'echarts/chart/chord': fileLocation,
+            'echarts/chart/chord': fileLocation,
             'echarts/chart/force': fileLocation
         }
     });
@@ -111,7 +111,7 @@ require(
         'echarts/chart/pie',
         'echarts/chart/radar',
         'echarts/chart/force',
-        //'echarts/chart/chord',
+        'echarts/chart/chord',
         needMap() ? 'echarts/chart/map' : 'echarts'
     ],
     requireCallback
