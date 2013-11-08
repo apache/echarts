@@ -140,12 +140,14 @@ define(
                 var precision = self.deepQuery(_queryTarget, 'precision');
 
                 for (var i = 0; i < indicator.length; i ++) {
-                    axisLabel = self.deepQuery([indicator[i], item, option],
-                        'axisLabel');
+                    axisLabel = self.deepQuery(
+                        [indicator[i], item, option], 'axisLabel'
+                    );
 
                     if (axisLabel.show) {
                         style = {};
-                        style.styleFont = self.getFont();
+                        style.textFont = self.getFont();
+                        //Todo: bug fix
                         style = zrUtil.merge(style, axisLabel);
                         style.lineWidth = style.width;
 
@@ -211,8 +213,8 @@ define(
 
                     style = {};
 
-                    style.styleFont = self.getFont(textStyle);
-                    
+                    style.textFont = self.getFont(textStyle);
+                    style.color = textStyle.color;
                     
                     if (typeof name.formatter == 'function') {
                         style.text = name.formatter(indicator[i].text, i);
