@@ -158,7 +158,7 @@
                 <div id="doc">
                     <h3>简介<a name="简介"> </a></h3>
                     <p>ECharts，纯Javascript图表库，基于Canvas，底层依赖<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>，商业产品常用图表库，提供直观，生动，可交互，可个性化定制的数据可视化图表。创新的拖拽重计算、数据视图、值域漫游等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。图表类型支持折线图（区域图）、柱状图（条状图）、散点图（气泡图）、K线图、饼图（环形图）、雷达图（填充雷达图）、和弦图、力导向布局图、地图，同时支持任意维度的堆积和多图表混合展现。</P>
-                    <img src="asset/img/architecture.png" />
+                    <img src="asset/img/architecture.png"  alt="Echarts Architecture"/>
                     <h3>名词解析<a name="名词解析"> </a></h3>
                     <p>基本名词</p>
                     <table cellspacing="0" class="ADoc_table">
@@ -852,12 +852,12 @@ require(['echarts'], function(ec){
                         <tr>
                             <td> {number} min </td>
                             <td> null </td>
-                            <td> 指定的最小值，eg: 0，默认无，会自动根据具体数值调整</td>
+                            <td> 指定的最小值，eg: 0，默认无，必须参数</td>
                         </tr>
                         <tr>
                             <td> {number} max </td>
                             <td> null </td>
-                            <td> 指定的最大值，eg: 100，默认无，会自动根据具体数值调整</td>
+                            <td> 指定的最大值，eg: 100，默认无，必须参数</td>
                         </tr>
                         <tr>
                             <td> {number} precision </td>
@@ -882,7 +882,7 @@ require(['echarts'], function(ec){
                         <tr>
                             <td> {Array} color </td>
                             <td> ['#1e90ff','#f0ffff'] </td>
-                            <td> 值域颜色标识，颜色数组长度必须>=2，颜色代表从数值高导低的变化，即颜色数组低位代表数值高的颜色标识 </td>
+                            <td> 值域颜色标识，颜色数组长度必须>=2，颜色代表从数值高到低的变化，即颜色数组低位代表数值高的颜色标识 </td>
                         </tr>
                         <tr>
                             <td> {Array} text </td>
@@ -2117,6 +2117,12 @@ indicator : [
                             <td> 图表各异 </td>
                             <td> 堆积折线图，地图</td>
                             <td> 区域样式，详见<a href="#AreaStyle" title="">areaStyle</a></td>
+                        </tr>
+                        <tr>
+                            <td> {Object} chordStyle </td>
+                            <td> 图表各异 </td>
+                            <td> 和弦图</td>
+                            <td> 弦样式，详见<a href="#ChordStyle" title="">chordStyle</a></td>
                         </tr>
                         <tr>
                             <td> {Object} label </td>

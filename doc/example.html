@@ -447,13 +447,19 @@
               var nav = $('ol>li>img', section[i]);
               var href;
               var src;
-              for (var j = 1, k = list.length - 1; j < k; j++) {
-                  href = list[j].href;
-                  src = list[j].firstChild.src.replace(
-                      'cache', href.slice(href.lastIndexOf('/') + 1, -5)
-                  );
-                  list[j].firstChild.src = src;
-                  nav[j - 1].src = src;
+              if (list.length > 0) {
+                  list[0].firstChild.alt = 'ECharts';
+                  for (var j = 1, k = list.length - 1; j < k; j++) {
+                      href = list[j].href.slice(list[j].href.lastIndexOf('/') + 1, -5);
+                      src = list[j].firstChild.src.replace(
+                          'cache', href
+                      );
+                      list[j].firstChild.alt = 'ECharts ' + href;
+                      list[j].firstChild.src = src;
+                      nav[j - 1].alt = 'ECharts ' + href;
+                      nav[j - 1].src = src;
+                  }
+                  list[list.length - 1].firstChild.alt = 'ECharts';
               }
           }, i * 500);
       }
