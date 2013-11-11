@@ -1049,7 +1049,7 @@ define(function(require) {
 
                 series[seriesIndex].data.push(data);
 
-                legend.add(
+                legend && legend.add(
                     data.name,
                     dragged.style.color || dragged.style.strokeColor
                 );
@@ -1061,7 +1061,7 @@ define(function(require) {
                 data.name += option.nameConnector
                              + ecData.get(dragged, 'name');
                 data.value += ecData.get(dragged, 'value');
-                legend.add(
+                legend && legend.add(
                     data.name,
                     dragged.style.color || dragged.style.strokeColor
                 );
@@ -1091,7 +1091,7 @@ define(function(require) {
             var dataIndex = ecData.get(target, 'dataIndex');
 
             // 被拖拽的图形是饼图sector，删除被拖拽走的数据
-            component.legend.del(
+            component.legend && component.legend.del(
                 series[seriesIndex].data[dataIndex].name
             );
             series[seriesIndex].data.splice(dataIndex, 1);
