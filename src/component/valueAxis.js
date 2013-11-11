@@ -544,7 +544,17 @@ define(function (require) {
                    ? (_max + Math.abs(_max * option.boundaryGap[1]))
                    : option.max;    // 指定max忽略boundaryGay[1]
             if (_min == _max) {
-                _max += 1;
+                if (_max === 0) {
+                    // 修复全0数据
+                    _max = option.power > 0 ? option.power : 1;
+                }
+                // 修复最大值==最小值时数据整形
+                else if (_max > 0) {
+                    _min = _max / option.splitNumber;
+                }
+                else { // _max < 0
+                    _max = _max / option.splitNumber;
+                }
             }
             _reformValue(option.scale);
         }
@@ -664,7 +674,6 @@ define(function (require) {
                             * power;
                     }
                 }
-                
                 _max = _min + splitGap * splitNumber;
             }
             else if (_min <= 0 && _max <= 0) {
