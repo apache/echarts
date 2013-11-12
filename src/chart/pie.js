@@ -1057,7 +1057,7 @@ define(function(require) {
             else {
                 // 落到sector上，数据被拖拽到某个数据项上，数据修改
                 data = series[seriesIndex].data[dataIndex];
-                legend.del(data.name);
+                legend && legend.del(data.name);
                 data.name += option.nameConnector
                              + ecData.get(dragged, 'name');
                 data.value += ecData.get(dragged, 'value');
