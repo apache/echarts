@@ -222,7 +222,7 @@ define(function() {
             y2: 60,
             // width: {totalWidth} - x - x2,
             // height: {totalHeight} - y - y2,
-            backgroundColor: '#fff',
+            backgroundColor: 'rgba(0,0,0,0)',
             borderWidth: 1,
             borderColor: '#ccc'
         },
@@ -760,7 +760,7 @@ define(function() {
         },
 
         // 可计算特性配置，孤岛，提示颜色
-        calculable: false,              // 默认开启可计算特性
+        calculable: false,              // 默认关闭可计算特性
         calculableColor: 'rgba(255,165,0,0.6)',       // 拖拽提示边框颜色
         calculableHolderColor: '#ccc', // 可计算占位提示颜色
         nameConnector: ' & ',

@@ -1,7 +1,7 @@
 /**
  * echarts坐标处理方法
  *
- * @author Neil (杨骥, linzhifeng@baidu.com)
+ * @author Neil (杨骥, yangji01@baidu.com)
  */
 
 define(
