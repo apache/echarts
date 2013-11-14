@@ -778,7 +778,7 @@ define(function(require) {
                 _option = zrUtil.clone(option);
             }
 
-            if (!option.series || option.series.length === 0) {
+            if (!_option.series || _option.series.length === 0) {
                 return;
             }
 
