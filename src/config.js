@@ -378,8 +378,10 @@ define(function() {
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
-            barMinHeight: 20,
+            barMinHeight: 0,          // 最小高度改为0
             // barWidth: null,        // 默认自适应
+            barGap: '30%',            // 柱间距离，默认为柱形宽度的30%，可设固定值
+            barCategoryGap : '20%',   // 类目间柱形距离，默认为类目间距的20%，可设固定值
             itemStyle: {
                 normal: {
                     label: {
@@ -537,7 +539,7 @@ define(function() {
             center : ['50%', '50%'],    // 默认全局居中
             // radius: [0, min(width, height) / 2 - 50],
             startAngle: 90,
-            minAngle: 5,
+            minAngle: 0,                    // 最小角度改为0
             selectedOffset: 10,             // 选中是扇区偏移量
             // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
             // roseType : null,     // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
