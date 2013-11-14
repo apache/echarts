@@ -111,7 +111,7 @@ var NDArray = function(array) {
         if (array instanceof NDArray) {
             array._dtype = this._dtype;
             return array;
-        } else if (array.length) {
+        } else if (typeof(array.length) !== 'undefined') {
             // Init from array
             this.initFromArray(array);
         } else if(typeof(array) === 'number') {
