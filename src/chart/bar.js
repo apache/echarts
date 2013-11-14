@@ -486,16 +486,20 @@ define(function(require) {
             var sBarWidthCounter = 0;
             var sBarWidthTotal = 0;
             var sBarMinHeight;
+            var barGap;
+            var barCategoryGap;
             var hasFound;
+            var queryTarget;
 
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 hasFound = false;   // 同一堆叠第一个barWidth生效
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     seriesIndex = locationMap[j][m];
+                    queryTarget = [series[seriesIndex]];
                     if (!ignoreUserDefined) {
                         if (!hasFound) {
                             sBarWidth = self.deepQuery(
-                                [series[seriesIndex]],
+                                queryTarget,
                                 'barWidth'
                             );
                             if (typeof sBarWidth != 'undefined') {
@@ -509,38 +513,97 @@ define(function(require) {
                         }
                     }
 
-                    sBarMinHeight = self.deepQuery(
-                        [series[seriesIndex]],
+                    barMinHeightMap[seriesIndex] = self.deepQuery(
+                        queryTarget,
                         'barMinHeight'
                     );
-                    if (typeof sBarMinHeight != 'undefined') {
-                        barMinHeightMap[seriesIndex] = sBarMinHeight;
-                    }
+                    barGap = typeof barGap != 'undefined' 
+                             ? barGap
+                             : self.deepQuery(
+                                   queryTarget,
+                                   'barGap'
+                               );
+                    barCategoryGap = typeof barCategoryGap != 'undefined' 
+                                     ? barCategoryGap
+                                     : self.deepQuery(
+                                           queryTarget,
+                                           'barCategoryGap'
+                                       );
                 }
             }
 
             var gap;
             var barWidth;
-            var barGap;
             if (locationMap.length != sBarWidthCounter) {
                 // 至少存在一个自适应宽度的柱形图
-                gap = Math.round(categoryAxis.getGap() * 4 / 5);
-                barWidth = Math.round(
-                        ((gap - sBarWidthTotal) * 3)
-                        / (4 * (locationMap.length) - 3 * sBarWidthCounter - 1)
-                    );
-                barGap = Math.round(barWidth / 3);
-                if (barWidth < 0) {
+                if (!ignoreUserDefined) {
+                    gap = typeof barCategoryGap == 'string' 
+                          && barCategoryGap.match(/%$/)
+                              // 百分比
+                              ? Math.floor(
+                                  categoryAxis.getGap() 
+                                  * (100 - parseFloat(barCategoryGap)) 
+                                  / 100
+                                )
+                              // 数值
+                              : (categoryAxis.getGap() - barCategoryGap);
+                    if (typeof barGap == 'string' && barGap.match(/%$/)) {
+                        barGap = parseFloat(barGap) / 100;
+                        barWidth = Math.floor(
+                            (gap - sBarWidthTotal)
+                            / ((locationMap.length - 1) * barGap 
+                               + locationMap.length - sBarWidthCounter)
+                        );
+                        barGap = Math.floor(barWidth * barGap);
+                    }
+                    else {
+                        barGap = parseFloat(barGap);
+                        barWidth = Math.floor(
+                            (gap - sBarWidthTotal 
+                                 - barGap * (locationMap.length - 1)
+                            )
+                            / (locationMap.length - sBarWidthCounter)
+                        );
+                    }
                     // 无法满足用户定义的宽度设计，忽略用户宽度，打回重做
-                    return _mapSize(categoryAxis, locationMap, true);
+                    if (barWidth < 0) {
+                        return _mapSize(categoryAxis, locationMap, true);
+                    }
+                }
+                else {
+                    // 忽略用户定义的宽度设定
+                    gap = categoryAxis.getGap();
+                    barGap = 0;
+                    barWidth = Math.floor(gap / locationMap.length);
+                    // 已经忽略用户定义的宽度设定依然还无法满足显示，只能硬来了;
+                    if (barWidth < 0) {
+                        barWidth = 1;
+                    }
                 }
             }
             else {
-                // 全是自定义宽度
+                // 全是自定义宽度，barGap无效，系列间隔决定barGap
+                gap = sBarWidthCounter > 1
+                      ? (typeof barCategoryGap == 'string' 
+                         && barCategoryGap.match(/%$/)
+                        )
+                          // 百分比
+                          ? Math.floor(
+                              categoryAxis.getGap() 
+                              * (100 - parseFloat(barCategoryGap)) 
+                              / 100
+                            )
+                          // 数值
+                          : (categoryAxis.getGap() - barCategoryGap)
+                      // 只有一个
+                      : sBarWidthTotal;
                 barWidth = 0;
-                barGap = Math.round((sBarWidthTotal / sBarWidthCounter) / 3);
-                gap = sBarWidthTotal + barGap * (sBarWidthCounter - 1);
-                if (Math.round(categoryAxis.getGap() * 4 / 5) < gap) {
+                barGap = sBarWidthCounter > 1 
+                         ? Math.floor(
+                               (gap - sBarWidthTotal) / (sBarWidthCounter - 1)
+                           )
+                         : 0;
+                if (barGap < 0) {
                     // 无法满足用户定义的宽度设计，忽略用户宽度，打回重做
                     return _mapSize(categoryAxis, locationMap, true);
                 }
