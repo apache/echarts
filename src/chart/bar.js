@@ -298,7 +298,7 @@ define(function(require) {
                                 [data, serie, option], 'calculable'
                             )
                         ) {
-                            lastYP -= barMinHeightMap[seriesIndex];
+                            lastYP -= ecConfig.island.r;
                             y = lastYP;
 
                             barShape = _getBarItem(
@@ -306,7 +306,7 @@ define(function(require) {
                                 categoryAxis.getNameByIndex(i),
                                 x + 1, y,
                                 (barWidthMap[seriesIndex] || barWidth) - 2,
-                                barMinHeightMap[seriesIndex],
+                                ecConfig.island.r,
                                 'vertical'
                             );
                             barShape.hoverable = false;
@@ -447,7 +447,7 @@ define(function(require) {
                             )
                         ) {
                             x = lastXP;
-                            lastXP += barMinHeightMap[seriesIndex];
+                            lastXP += ecConfig.island.r;
 
                             barShape = _getBarItem(
                                 seriesIndex,
@@ -455,7 +455,7 @@ define(function(require) {
                                 categoryAxis.getNameByIndex(i),
                                 x,
                                 y + 1 - (barWidthMap[seriesIndex] || barWidth),
-                                barMinHeightMap[seriesIndex],
+                                ecConfig.island.r,
                                 (barWidthMap[seriesIndex] || barWidth) - 2,
                                 'horizontal'
                             );

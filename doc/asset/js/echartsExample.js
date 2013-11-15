@@ -124,4 +124,5 @@ function requireCallback (ec) {
     }
     myChart = echarts.init(domMain);
     refresh();
+    window.onresize = myChart.resize;
 }

@@ -223,7 +223,7 @@ define('echarts/config',[],function() {
             y2: 60,
             // width: {totalWidth} - x - x2,
             // height: {totalHeight} - y - y2,
-            backgroundColor: '#fff',
+            backgroundColor: 'rgba(0,0,0,0)',
             borderWidth: 1,
             borderColor: '#ccc'
         },
@@ -379,8 +379,10 @@ define('echarts/config',[],function() {
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
-            barMinHeight: 20,
+            barMinHeight: 0,          // 最小高度改为0
             // barWidth: null,        // 默认自适应
+            barGap: '30%',            // 柱间距离，默认为柱形宽度的30%，可设固定值
+            barCategoryGap : '20%',   // 类目间柱形距离，默认为类目间距的20%，可设固定值
             itemStyle: {
                 normal: {
                     label: {
@@ -538,7 +540,7 @@ define('echarts/config',[],function() {
             center : ['50%', '50%'],    // 默认全局居中
             // radius: [0, min(width, height) / 2 - 50],
             startAngle: 90,
-            minAngle: 5,
+            minAngle: 0,                    // 最小角度改为0
             selectedOffset: 10,             // 选中是扇区偏移量
             // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
             // roseType : null,     // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
@@ -761,7 +763,7 @@ define('echarts/config',[],function() {
         },
 
         // 可计算特性配置，孤岛，提示颜色
-        calculable: false,              // 默认开启可计算特性
+        calculable: false,              // 默认关闭可计算特性
         calculableColor: 'rgba(255,165,0,0.6)',       // 拖拽提示边框颜色
         calculableHolderColor: '#ccc', // 可计算占位提示颜色
         nameConnector: ' & ',
@@ -12833,7 +12835,7 @@ define('echarts/component/base',['require','../config','zrender/tool/util'],func
                 }
             }
         }
-        
+
         // 还原自适应原始定义，resize用
         function restoreAdaptiveParams(series, attrs, isAll) {
             for (var i = 0, l = series.length; i < l; i++) {
@@ -12846,7 +12848,12 @@ define('echarts/component/base',['require','../config','zrender/tool/util'],func
                 }
             }
         }
-        
+
+        // 亚像素优化
+        function subPixelOptimize(position, lineWidth) {
+            position += position == Math.ceil(position) ? 0.5 : 0;
+        }
+
         function resize() {
             self.refresh && self.refresh();
         }
@@ -14954,7 +14961,17 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
                    ? (_max + Math.abs(_max * option.boundaryGap[1]))
                    : option.max;    // 指定max忽略boundaryGay[1]
             if (_min == _max) {
-                _max += 1;
+                if (_max === 0) {
+                    // 修复全0数据
+                    _max = option.power > 0 ? option.power : 1;
+                }
+                // 修复最大值==最小值时数据整形
+                else if (_max > 0) {
+                    _min = _max / option.splitNumber;
+                }
+                else { // _max < 0
+                    _max = _max / option.splitNumber;
+                }
             }
             _reformValue(option.scale);
         }
@@ -15074,7 +15091,6 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
                             * power;
                     }
                 }
-                
                 _max = _min + splitGap * splitNumber;
             }
             else if (_min <= 0 && _max <= 0) {
@@ -15536,6 +15552,12 @@ define('echarts/component/grid',['require','./base','../config','../component'],
             else {
                 _height = gridOption.height;
             }
+            
+            if (gridOption.borderWidth % 2 == 1) {
+                // 亚像素优化
+                _x += _x == Math.ceil(_x) ? 0.5 : 0;
+                _y += _y == Math.ceil(_y) ? 0.5 : 0;
+            }
 
             self.shapeList.push({
                 shape : 'rectangle',
@@ -15547,7 +15569,7 @@ define('echarts/component/grid',['require','./base','../config','../component'],
                     y : _y,
                     width : _width,
                     height : _height,
-                    brushType : 'both',
+                    brushType : gridOption.borderWidth > 0 ? 'both' : 'fill',
                     color : gridOption.backgroundColor,
                     strokeColor: gridOption.borderColor,
                     lineWidth : gridOption.borderWidth
@@ -21290,9 +21312,8 @@ define('echarts/component/dataView',['require','./base','../config','../componen
 });
 /**
  * echarts坐标处理方法
- * Copyright 2013 Baidu Inc. All rights reserved.
  *
- * @author Neil (杨骥, linzhifeng@baidu.com)
+ * @author Neil (杨骥, yangji01@baidu.com)
  */
 
 define(
@@ -21332,7 +21353,6 @@ define(
 );
 /**
  * echarts组件类：极坐标
- * Copyright 2013 Baidu Inc. All rights reserved.
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
  * @author Neil (杨骥, yangji01@baidu.com)
@@ -21472,12 +21492,14 @@ define(
                 var precision = self.deepQuery(_queryTarget, 'precision');
 
                 for (var i = 0; i < indicator.length; i ++) {
-                    axisLabel = self.deepQuery([indicator[i], item, option],
-                        'axisLabel');
+                    axisLabel = self.deepQuery(
+                        [indicator[i], item, option], 'axisLabel'
+                    );
 
                     if (axisLabel.show) {
                         style = {};
-                        style.styleFont = self.getFont();
+                        style.textFont = self.getFont();
+                        //Todo: bug fix
                         style = zrUtil.merge(style, axisLabel);
                         style.lineWidth = style.width;
 
@@ -21543,8 +21565,8 @@ define(
 
                     style = {};
 
-                    style.styleFont = self.getFont(textStyle);
-                    
+                    style.textFont = self.getFont(textStyle);
+                    style.color = textStyle.color;
                     
                     if (typeof name.formatter == 'function') {
                         style.text = name.formatter(indicator[i].text, i);
@@ -23056,7 +23078,7 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
                 _option = zrUtil.clone(option);
             }
 
-            if (!option.series || option.series.length === 0) {
+            if (!_option.series || _option.series.length === 0) {
                 return;
             }
 
@@ -24795,7 +24817,6 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
 });
 /**
  * echarts图表类：雷达图
- * Copyright 2013 Baidu Inc. All rights reserved.
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
  * @author Neil (杨骥, yangji01@baidu.com)
@@ -25646,7 +25667,7 @@ var NDArray = function(array) {
         if (array instanceof NDArray) {
             array._dtype = this._dtype;
             return array;
-        } else if (array.length) {
+        } else if (typeof(array.length) !== 'undefined') {
             // Init from array
             this.initFromArray(array);
         } else if(typeof(array) === 'number') {
@@ -32303,7 +32324,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                 [data, serie, option], 'calculable'
                             )
                         ) {
-                            lastYP -= barMinHeightMap[seriesIndex];
+                            lastYP -= ecConfig.island.r;
                             y = lastYP;
 
                             barShape = _getBarItem(
@@ -32311,7 +32332,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                 categoryAxis.getNameByIndex(i),
                                 x + 1, y,
                                 (barWidthMap[seriesIndex] || barWidth) - 2,
-                                barMinHeightMap[seriesIndex],
+                                ecConfig.island.r,
                                 'vertical'
                             );
                             barShape.hoverable = false;
@@ -32452,7 +32473,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             )
                         ) {
                             x = lastXP;
-                            lastXP += barMinHeightMap[seriesIndex];
+                            lastXP += ecConfig.island.r;
 
                             barShape = _getBarItem(
                                 seriesIndex,
@@ -32460,7 +32481,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                 categoryAxis.getNameByIndex(i),
                                 x,
                                 y + 1 - (barWidthMap[seriesIndex] || barWidth),
-                                barMinHeightMap[seriesIndex],
+                                ecConfig.island.r,
                                 (barWidthMap[seriesIndex] || barWidth) - 2,
                                 'horizontal'
                             );
@@ -32491,16 +32512,20 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
             var sBarWidthCounter = 0;
             var sBarWidthTotal = 0;
             var sBarMinHeight;
+            var barGap;
+            var barCategoryGap;
             var hasFound;
+            var queryTarget;
 
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 hasFound = false;   // 同一堆叠第一个barWidth生效
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     seriesIndex = locationMap[j][m];
+                    queryTarget = [series[seriesIndex]];
                     if (!ignoreUserDefined) {
                         if (!hasFound) {
                             sBarWidth = self.deepQuery(
-                                [series[seriesIndex]],
+                                queryTarget,
                                 'barWidth'
                             );
                             if (typeof sBarWidth != 'undefined') {
@@ -32514,38 +32539,97 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                         }
                     }
 
-                    sBarMinHeight = self.deepQuery(
-                        [series[seriesIndex]],
+                    barMinHeightMap[seriesIndex] = self.deepQuery(
+                        queryTarget,
                         'barMinHeight'
                     );
-                    if (typeof sBarMinHeight != 'undefined') {
-                        barMinHeightMap[seriesIndex] = sBarMinHeight;
-                    }
+                    barGap = typeof barGap != 'undefined' 
+                             ? barGap
+                             : self.deepQuery(
+                                   queryTarget,
+                                   'barGap'
+                               );
+                    barCategoryGap = typeof barCategoryGap != 'undefined' 
+                                     ? barCategoryGap
+                                     : self.deepQuery(
+                                           queryTarget,
+                                           'barCategoryGap'
+                                       );
                 }
             }
 
             var gap;
             var barWidth;
-            var barGap;
             if (locationMap.length != sBarWidthCounter) {
                 // 至少存在一个自适应宽度的柱形图
-                gap = Math.round(categoryAxis.getGap() * 4 / 5);
-                barWidth = Math.round(
-                        ((gap - sBarWidthTotal) * 3)
-                        / (4 * (locationMap.length) - 3 * sBarWidthCounter - 1)
-                    );
-                barGap = Math.round(barWidth / 3);
-                if (barWidth < 0) {
+                if (!ignoreUserDefined) {
+                    gap = typeof barCategoryGap == 'string' 
+                          && barCategoryGap.match(/%$/)
+                              // 百分比
+                              ? Math.floor(
+                                  categoryAxis.getGap() 
+                                  * (100 - parseFloat(barCategoryGap)) 
+                                  / 100
+                                )
+                              // 数值
+                              : (categoryAxis.getGap() - barCategoryGap);
+                    if (typeof barGap == 'string' && barGap.match(/%$/)) {
+                        barGap = parseFloat(barGap) / 100;
+                        barWidth = Math.floor(
+                            (gap - sBarWidthTotal)
+                            / ((locationMap.length - 1) * barGap 
+                               + locationMap.length - sBarWidthCounter)
+                        );
+                        barGap = Math.floor(barWidth * barGap);
+                    }
+                    else {
+                        barGap = parseFloat(barGap);
+                        barWidth = Math.floor(
+                            (gap - sBarWidthTotal 
+                                 - barGap * (locationMap.length - 1)
+                            )
+                            / (locationMap.length - sBarWidthCounter)
+                        );
+                    }
                     // 无法满足用户定义的宽度设计，忽略用户宽度，打回重做
-                    return _mapSize(categoryAxis, locationMap, true);
+                    if (barWidth < 0) {
+                        return _mapSize(categoryAxis, locationMap, true);
+                    }
+                }
+                else {
+                    // 忽略用户定义的宽度设定
+                    gap = categoryAxis.getGap();
+                    barGap = 0;
+                    barWidth = Math.floor(gap / locationMap.length);
+                    // 已经忽略用户定义的宽度设定依然还无法满足显示，只能硬来了;
+                    if (barWidth < 0) {
+                        barWidth = 1;
+                    }
                 }
             }
             else {
-                // 全是自定义宽度
+                // 全是自定义宽度，barGap无效，系列间隔决定barGap
+                gap = sBarWidthCounter > 1
+                      ? (typeof barCategoryGap == 'string' 
+                         && barCategoryGap.match(/%$/)
+                        )
+                          // 百分比
+                          ? Math.floor(
+                              categoryAxis.getGap() 
+                              * (100 - parseFloat(barCategoryGap)) 
+                              / 100
+                            )
+                          // 数值
+                          : (categoryAxis.getGap() - barCategoryGap)
+                      // 只有一个
+                      : sBarWidthTotal;
                 barWidth = 0;
-                barGap = Math.round((sBarWidthTotal / sBarWidthCounter) / 3);
-                gap = sBarWidthTotal + barGap * (sBarWidthCounter - 1);
-                if (Math.round(categoryAxis.getGap() * 4 / 5) < gap) {
+                barGap = sBarWidthCounter > 1 
+                         ? Math.floor(
+                               (gap - sBarWidthTotal) / (sBarWidthCounter - 1)
+                           )
+                         : 0;
+                if (barGap < 0) {
                     // 无法满足用户定义的宽度设计，忽略用户宽度，打回重做
                     return _mapSize(categoryAxis, locationMap, true);
                 }
@@ -33465,6 +33549,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                           'recursive' : true
                       }
                   );
+                  //console.log(opt)
             opt.center = self.parseCenter(opt.center);
             
             // 传数组实现环形图，[内半径，外半径]，传单个则默认为外半径为
@@ -33889,7 +33974,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
 
                 series[seriesIndex].data.push(data);
 
-                legend.add(
+                legend && legend.add(
                     data.name,
                     dragged.style.color || dragged.style.strokeColor
                 );
@@ -33897,11 +33982,11 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
             else {
                 // 落到sector上，数据被拖拽到某个数据项上，数据修改
                 data = series[seriesIndex].data[dataIndex];
-                legend.del(data.name);
+                legend && legend.del(data.name);
                 data.name += option.nameConnector
                              + ecData.get(dragged, 'name');
                 data.value += ecData.get(dragged, 'value');
-                legend.add(
+                legend && legend.add(
                     data.name,
                     dragged.style.color || dragged.style.strokeColor
                 );
@@ -33931,7 +34016,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
             var dataIndex = ecData.get(target, 'dataIndex');
 
             // 被拖拽的图形是饼图sector，删除被拖拽走的数据
-            component.legend.del(
+            component.legend && component.legend.del(
                 series[seriesIndex].data[dataIndex].name
             );
             series[seriesIndex].data.splice(dataIndex, 1);

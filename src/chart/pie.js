@@ -625,6 +625,7 @@ define(function(require) {
                           'recursive' : true
                       }
                   );
+                  //console.log(opt)
             opt.center = self.parseCenter(opt.center);
             
             // 传数组实现环形图，[内半径，外半径]，传单个则默认为外半径为
