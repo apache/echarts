@@ -1796,10 +1796,22 @@ indicator : [
                             <td><a href="#Yaxis" title="">yAxis</a>坐标轴数组的索引，指定该系列数据所用的纵坐标轴 </td>
                         </tr>
                         <tr>
-                            <td> {number} barMinHeight </td>
-                            <td> 20 </td>
+                            <td> {number | string} barGap </td>
+                            <td> '30%' </td>
                             <td> 柱状图 </td>
-                            <td> 柱条最小高度，防止某item的值过小而影响交互 </td>
+                            <td> 柱间距离，默认为柱形宽度的30%，可设固定值 </td>
+                        </tr>
+                        <tr>
+                            <td> {number | string} barCategoryGap </td>
+                            <td> '20%' </td>
+                            <td> 柱状图 </td>
+                            <td> 类目间柱形距离，默认为类目间距的20%，可设固定值 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} barMinHeight </td>
+                            <td> 0 </td>
+                            <td> 柱状图 </td>
+                            <td> 柱条最小高度，可用于防止某item的值过小而影响交互 </td>
                         </tr>
                         <tr>
                             <td> {number} barWidth </td>
@@ -1873,9 +1885,9 @@ indicator : [
                         </tr>
                         <tr>
                             <td> {number} minAngle </td>
-                            <td> 5 </td>
+                            <td> 0 </td>
                             <td> 饼图 </td>
-                            <td> 最小角度，防止某item的值过小而影响交互 </td>
+                            <td> 最小角度，可用于防止某item的值过小而影响交互 </td>
                         </tr>
                         <tr>
                             <td> {string} roseType </td>
@@ -2109,7 +2121,7 @@ indicator : [
                         <tr>
                             <td> {Object} lineStyle </td>
                             <td> 图表各异 </td>
-                            <td> 折线图，K线图 ，地图</td>
+                            <td> 折线图，柱状图，K线图 ，地图</td>
                             <td> 线条样式，详见<a href="#LineStyle" title="">lineStyle</a></td>
                         </tr>
                         <tr>
