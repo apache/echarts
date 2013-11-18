@@ -99,44 +99,71 @@ define(function(require) {
         }
 
         /**
+         * 获取嵌套选项的基础方法
+         * 返回optionTarget中位于optionLocation上的值，如果没有定义，则返回undefined
+         */
+        function query(optionTarget, optionLocation) {
+            if (typeof optionTarget == 'undefined') {
+                return undefined;
+            }
+            if (!optionLocation) {
+                return optionTarget;
+            }
+            optionLocation = optionLocation.split('.');
+
+            var length = optionLocation.length;
+            var curIdx = 0;
+            while (curIdx < length) {
+                optionTarget = optionTarget[optionLocation[curIdx]];
+                if (typeof optionTarget == 'undefined') {
+                    return undefined;
+                }
+                curIdx++;
+            }
+            return optionTarget;
+        }
+            
+        /**
          * 获取多级控制嵌套属性的基础方法
          * 返回ctrList中优先级最高（最靠前）的非undefined属性，ctrList中均无定义则返回undefined
          */
         var deepQuery = (function() {
-            /**
-             * 获取嵌套选项的基础方法
-             * 返回optionTarget中位于optionLocation上的值，如果没有定义，则返回undefined
-             */
-            function _query(optionTarget, optionLocation) {
-                if (typeof optionTarget == 'undefined') {
-                    return undefined;
-                }
-                if (!optionLocation) {
-                    return optionTarget;
-                }
-                optionLocation = optionLocation.split('.');
-
-                var length = optionLocation.length;
-                var curIdx = 0;
-                while (curIdx < length) {
-                    optionTarget = optionTarget[optionLocation[curIdx]];
-                    if (typeof optionTarget == 'undefined') {
-                        return undefined;
-                    }
-                    curIdx++;
-                }
-                return optionTarget;
-            }
-
             return function(ctrList, optionLocation) {
                 var finalOption;
                 for (var i = 0, l = ctrList.length; i < l; i++) {
-                    finalOption = _query(ctrList[i], optionLocation);
+                    finalOption = query(ctrList[i], optionLocation);
                     if (typeof finalOption != 'undefined') {
                         return finalOption;
                     }
                 }
                 return undefined;
+            };
+        })();
+        
+        /**
+         * 获取多级控制嵌套属性的基础方法
+         * 根据ctrList中优先级合并产出目标属性
+         */
+        var deepMerge = (function() {
+            return function(ctrList, optionLocation) {
+                var finalOption;
+                var tempOption;
+                var len = ctrList.length;
+                while (len--) {
+                    tempOption = query(ctrList[len], optionLocation);
+                    if (typeof tempOption != 'undefined') {
+                        if (typeof finalOption == 'undefined') {
+                            finalOption = tempOption;
+                        }
+                        else {
+                            zrUtil.merge(
+                                finalOption, tempOption,
+                                { 'overwrite': true, 'recursive': true }
+                            );
+                        }
+                    }
+                }
+                return finalOption;
             };
         })();
 
@@ -284,7 +311,7 @@ define(function(require) {
                 }
             }
         }
-        
+
         // 还原自适应原始定义，resize用
         function restoreAdaptiveParams(series, attrs, isAll) {
             for (var i = 0, l = series.length; i < l; i++) {
@@ -297,7 +324,12 @@ define(function(require) {
                 }
             }
         }
-        
+
+        // 亚像素优化
+        function subPixelOptimize(position, lineWidth) {
+            position += position == Math.ceil(position) ? 0.5 : 0;
+        }
+
         function resize() {
             self.refresh && self.refresh();
         }
@@ -329,7 +361,9 @@ define(function(require) {
         self.getZlevelBase = getZlevelBase;
         self.reformOption = reformOption;
         self.reformCssArray = reformCssArray;
+        self.query = query;
         self.deepQuery = deepQuery;
+        self.deepMerge = deepMerge;
         self.getFont = getFont;
         self.addLabel = addLabel;
         self.parsePercent = parsePercent;

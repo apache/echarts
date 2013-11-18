@@ -495,10 +495,10 @@ define(function(require) {
                 hasFound = false;   // 同一堆叠第一个barWidth生效
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     seriesIndex = locationMap[j][m];
-                    queryTarget = [series[seriesIndex]];
+                    queryTarget = series[seriesIndex];
                     if (!ignoreUserDefined) {
                         if (!hasFound) {
-                            sBarWidth = self.deepQuery(
+                            sBarWidth = self.query(
                                 queryTarget,
                                 'barWidth'
                             );
@@ -513,19 +513,19 @@ define(function(require) {
                         }
                     }
 
-                    barMinHeightMap[seriesIndex] = self.deepQuery(
+                    barMinHeightMap[seriesIndex] = self.query(
                         queryTarget,
                         'barMinHeight'
                     );
                     barGap = typeof barGap != 'undefined' 
                              ? barGap
-                             : self.deepQuery(
+                             : self.query(
                                    queryTarget,
                                    'barGap'
                                );
                     barCategoryGap = typeof barCategoryGap != 'undefined' 
                                      ? barCategoryGap
-                                     : self.deepQuery(
+                                     : self.query(
                                            queryTarget,
                                            'barCategoryGap'
                                        );
@@ -630,13 +630,22 @@ define(function(require) {
             var data = serie.data[dataIndex];
             // 多级控制
             var defaultColor = _sIndex2colorMap[seriesIndex];
+            var queryTarget = [data, serie];
             var normalColor = self.deepQuery(
-                [data, serie],
+                queryTarget,
                 'itemStyle.normal.color'
             ) || defaultColor;
             var emphasisColor = self.deepQuery(
-                [data, serie],
+                queryTarget,
                 'itemStyle.emphasis.color'
+            );
+            var normalLineStyle = self.deepMerge(
+                queryTarget,
+                'itemStyle.normal.lineStyle'
+            );
+            var emphasisLineStyle = self.deepMerge(
+                queryTarget,
+                'itemStyle.emphasis.lineStyle'
             );
             barShape = {
                 shape : 'rectangle',
@@ -649,7 +658,8 @@ define(function(require) {
                     height : height,
                     brushType : 'both',
                     color : normalColor,
-                    strokeColor : '#fff'
+                    lineWidth : normalLineStyle.width,
+                    strokeColor : normalLineStyle.color
                 },
                 highlightStyle : {
                     color : emphasisColor 
@@ -657,19 +667,30 @@ define(function(require) {
                                 ? zrColor.lift(normalColor, -0.2)
                                 : normalColor
                                ),
-                    strokeColor : 'rgba(0,0,0,0)'
+                    lineWidth : emphasisLineStyle.width,
+                    strokeColor : emphasisLineStyle.color
                 },
                 _orient : orient
             };
+            // 考虑线宽的显示优化
+            if (barShape.style.height > normalLineStyle.width
+                && barShape.style.width > normalLineStyle.width
+            ) {
+                barShape.style.y += normalLineStyle.width / 2;
+                barShape.style.height -= normalLineStyle.width;
+                barShape.style.x += normalLineStyle.width / 2;
+                barShape.style.width -= normalLineStyle.width;
+            }
+            else {
+                // 太小了，废了边线
+                barShape.style.brushType = 'fill';
+            }
+            
             barShape.highlightStyle.textColor = barShape.highlightStyle.color;
             
             barShape = self.addLabel(barShape, serie, data, name, orient);
 
-            if (self.deepQuery(
-                    [data, serie, option],
-                    'calculable'
-                )
-            ) {
+            if (self.deepQuery([data, serie, option],'calculable')) {
                 self.setCalculable(barShape);
                 barShape.draggable = true;
             }

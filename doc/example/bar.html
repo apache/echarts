@@ -104,6 +104,7 @@ option = {
             type:'bar',
             itemStyle: {        // 系列级个性化样式，纵向渐变填充
                 normal: {
+                    lineStyle:{color:'red'},
                     color : (function(){
                         var zrColor = require('zrender/tool/color');
                         return zrColor.getLinearGradient(
@@ -113,6 +114,7 @@ option = {
                     })()
                 },
                 emphasis: {
+                    lineStyle:{width:5, color:'green'},
                     color: (function(){
                         var zrColor = require('zrender/tool/color');
                         return zrColor.getLinearGradient(
@@ -144,9 +146,11 @@ option = {
             stack: '总量',
             itemStyle: {                // 系列级个性化
                 normal: {
+                    lineStyle:{width:10,color:'tomato'},
                     color: 'red'
                 },
                 emphasis: {
+                    lineStyle:{color:'red'},
                     color: 'blue'
                 }
             },

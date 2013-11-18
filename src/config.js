@@ -384,6 +384,10 @@ define(function() {
             barCategoryGap : '20%',   // 类目间柱形距离，默认为类目间距的20%，可设固定值
             itemStyle: {
                 normal: {
+                    lineStyle: {
+                        width: 1,
+                        color: '#fff'
+                    },
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -393,6 +397,10 @@ define(function() {
                     }
                 },
                 emphasis: {
+                    lineStyle: {
+                        width: 1,
+                        color: 'rgba(0,0,0,0)'
+                    },
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
