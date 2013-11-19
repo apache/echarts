@@ -98,7 +98,7 @@ define(
                 var splitArea = item.splitArea;
                 var splitLine = item.splitLine;
 
-                var center = item.center;
+                var center = getCenter(index);
                 var splitNumber = item.splitNumber;
 
                 var strokeColor = splitLine.lineStyle.color;
@@ -129,7 +129,7 @@ define(
                 var style;
                 var newStyle;
                 var splitNumber = self.deepQuery(_queryTarget, 'splitNumber');
-                var center = item.center;
+                var center = getCenter(index);
                 var vector;
                 var value;
                 var text;
@@ -189,7 +189,7 @@ define(
                 var __ecIndicator = item.__ecIndicator;
                 var vector;
                 var indicator = self.deepQuery(_queryTarget, 'indicator');
-                var center = item.center;
+                var center = getCenter(index);
                 var style;
                 var textAlign;
                 var name;
@@ -282,7 +282,7 @@ define(
             function _addDropBox(index) {
                 var index = index || 0;
                 var item = polar[index];
-                var center = item.center;
+                var center = getCenter(index);
                 var __ecIndicator = item.__ecIndicator;
                 var len = __ecIndicator.length;
                 var pointList = [];
@@ -452,7 +452,7 @@ define(
              */
             function getCenter(index) {
                 var index = index || 0;
-                return polar[index].center;
+                return self.parseCenter(polar[index].center);
             }
 
             /**
@@ -772,8 +772,6 @@ define(
                           }
                       );
 
-                opt.center = self.parseCenter(opt.center);
-                
                 if (!opt.radius) {
                     opt.radius = Math.floor(
                         Math.min(_width, _height) / 2 - 50
@@ -800,7 +798,7 @@ define(
                 }
 
                 var indicator = polar[polarIndex].__ecIndicator[indicatorIndex];
-                var center = polar[polarIndex].center;
+                var center = getCenter(polarIndex);
                 var vector = indicator.vector;
                 var max = indicator.value.max;
                 var min = indicator.value.min;
@@ -913,20 +911,12 @@ define(
                     option = newOption;
                     polar = option.polar;
                     series = option.series;
-                    self.backupAdaptiveParams(polar,['center', 'radius'],true);
                 }
                 self.clear();
                 _buildShape();
             }
-            
-            function resize() {
-                // 复位录原始定义
-                self.restoreAdaptiveParams(polar, ['center', 'radius'], true);
-                refresh();
-            }
 
             self.refresh = refresh;
-            self.resize = resize;
             self.reformOption = reformOption;
             self.getVector = getVector;
 

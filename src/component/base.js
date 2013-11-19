@@ -299,32 +299,6 @@ define(function(require) {
             return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
         }
 
-        // 记录自适应原始定义，resize用
-        function backupAdaptiveParams(series, attrs, isAll) {
-            for (var i = 0, l = series.length; i < l; i++) {
-                if (isAll || series[i].type == self.type) {
-                    for (var j = 0, k = attrs.length; j < k; j++) {
-                        series[i]['__' + attrs[i]] = zrUtil.clone(
-                            series[i][attrs[i]]
-                        );
-                    }
-                }
-            }
-        }
-
-        // 还原自适应原始定义，resize用
-        function restoreAdaptiveParams(series, attrs, isAll) {
-            for (var i = 0, l = series.length; i < l; i++) {
-                if (isAll || series[i].type == self.type) {
-                    for (var j = 0, k = attrs.length; j < k; j++) {
-                        series[i][attrs[i]] = zrUtil.clone(
-                            series[i]['__' + attrs[i]]
-                        );
-                    }
-                }
-            }
-        }
-
         // 亚像素优化
         function subPixelOptimize(position, lineWidth) {
             position += position == Math.ceil(position) ? 0.5 : 0;
@@ -370,8 +344,6 @@ define(function(require) {
         self.parseCenter = parseCenter;
         self.clear = clear;
         self.dispose = dispose;
-        self.backupAdaptiveParams = backupAdaptiveParams;
-        self.restoreAdaptiveParams =  restoreAdaptiveParams;
         self.resize = resize;
     }
 
