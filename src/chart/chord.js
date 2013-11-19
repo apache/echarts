@@ -451,7 +451,7 @@ define(function(require) {
                         [group, chordSerieSample],
                         'itemStyle.normal.label.textStyle.color'
                     ) || '#fff';
-                    sector.style.textFont = self.getFont(self.deepQuery(
+                    labelShape.style.textFont = self.getFont(self.deepQuery(
                         [group, chordSerieSample],
                         'itemStyle.normal.label.textStyle'
                     ));
