@@ -639,13 +639,14 @@ define(function(require) {
                 queryTarget,
                 'itemStyle.emphasis.color'
             );
-            var normalLineStyle = self.deepMerge(
+            var normal = self.deepMerge(
                 queryTarget,
-                'itemStyle.normal.lineStyle'
+                'itemStyle.normal'
             );
-            var emphasisLineStyle = self.deepMerge(
+            var normalBorderWidth = normal.borderWidth;
+            var emphasis = self.deepMerge(
                 queryTarget,
-                'itemStyle.emphasis.lineStyle'
+                'itemStyle.emphasis'
             );
             barShape = {
                 shape : 'rectangle',
@@ -658,8 +659,9 @@ define(function(require) {
                     height : height,
                     brushType : 'both',
                     color : normalColor,
-                    lineWidth : normalLineStyle.width,
-                    strokeColor : normalLineStyle.color
+                    radius : normal.borderRadius,
+                    lineWidth : normalBorderWidth,
+                    strokeColor : normal.borderColor
                 },
                 highlightStyle : {
                     color : emphasisColor 
@@ -667,19 +669,20 @@ define(function(require) {
                                 ? zrColor.lift(normalColor, -0.2)
                                 : normalColor
                                ),
-                    lineWidth : emphasisLineStyle.width,
-                    strokeColor : emphasisLineStyle.color
+                    radius : emphasis.borderRadius,
+                    lineWidth : emphasis.borderWidth,
+                    strokeColor : emphasis.borderColor
                 },
                 _orient : orient
             };
             // 考虑线宽的显示优化
-            if (barShape.style.height > normalLineStyle.width
-                && barShape.style.width > normalLineStyle.width
+            if (barShape.style.height > normalBorderWidth
+                && barShape.style.width > normalBorderWidth
             ) {
-                barShape.style.y += normalLineStyle.width / 2;
-                barShape.style.height -= normalLineStyle.width;
-                barShape.style.x += normalLineStyle.width / 2;
-                barShape.style.width -= normalLineStyle.width;
+                barShape.style.y += normalBorderWidth / 2;
+                barShape.style.height -= normalBorderWidth;
+                barShape.style.x += normalBorderWidth / 2;
+                barShape.style.width -= normalBorderWidth;
             }
             else {
                 // 太小了，废了边线

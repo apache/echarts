@@ -384,10 +384,9 @@ define(function() {
             barCategoryGap : '20%',   // 类目间柱形距离，默认为类目间距的20%，可设固定值
             itemStyle: {
                 normal: {
-                    lineStyle: {
-                        width: 1,
-                        color: '#fff'
-                    },
+                    borderColor: '#fff',       // 柱条边线
+                    borderRadius: 0,           // 柱条边线圆角，单位px，默认为0
+                    borderWidth: 1,            // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -397,10 +396,9 @@ define(function() {
                     }
                 },
                 emphasis: {
-                    lineStyle: {
-                        width: 1,
-                        color: 'rgba(0,0,0,0)'
-                    },
+                    borderColor: 'rgba(0,0,0,0)',   // 柱条边线
+                    borderRadius: 0,                // 柱条边线圆角，单位px，默认为0
+                    borderWidth: 1,                 // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
