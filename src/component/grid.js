@@ -65,6 +65,9 @@ define(function (require) {
             else {
                 _height = gridOption.height;
             }
+            
+            _x = self.subPixelOptimize(_x, gridOption.borderWidth);
+            _y = self.subPixelOptimize(_y, gridOption.borderWidth);
 
             self.shapeList.push({
                 shape : 'rectangle',
@@ -76,7 +79,7 @@ define(function (require) {
                     y : _y,
                     width : _width,
                     height : _height,
-                    brushType : 'both',
+                    brushType : gridOption.borderWidth > 0 ? 'both' : 'fill',
                     color : gridOption.backgroundColor,
                     strokeColor: gridOption.borderColor,
                     lineWidth : gridOption.borderWidth

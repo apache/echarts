@@ -316,7 +316,10 @@ define(function(require) {
 
         // 亚像素优化
         function subPixelOptimize(position, lineWidth) {
-            position += position == Math.ceil(position) ? 0.5 : 0;
+            if (lineWidth % 2 == 1) {
+                position += position == Math.ceil(position) ? 0.5 : 0;
+            }
+            return position;
         }
 
         function resize() {
@@ -358,6 +361,7 @@ define(function(require) {
         self.parsePercent = parsePercent;
         self.parseCenter = parseCenter;
         self.parseRadius = parseRadius;
+        self.subPixelOptimize = subPixelOptimize;
         self.clear = clear;
         self.dispose = dispose;
         self.resize = resize;
