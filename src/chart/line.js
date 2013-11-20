@@ -454,7 +454,6 @@ define(function(require) {
             // 折线相关
             var lineWidth;
             var lineType;
-            var lineColor;
             var normalColor;
             var emphasisColor;
 
@@ -482,9 +481,6 @@ define(function(require) {
                     );
                     lineType = self.deepQuery(
                         [serie], 'itemStyle.normal.lineStyle.type'
-                    );
-                    lineColor = self.deepQuery(
-                        [serie], 'itemStyle.normal.lineStyle.color'
                     );
                     normalColor = self.deepQuery(
                         [serie], 'itemStyle.normal.color'
@@ -548,9 +544,7 @@ define(function(require) {
                             zlevel : _zlevelBase,
                             style : {
                                 pointList : singlePL,
-                                strokeColor : lineColor
-                                              || normalColor
-                                              || defaultColor,
+                                strokeColor : normalColor || defaultColor,
                                 lineWidth : lineWidth,
                                 lineType : lineType,
                                 smooth : _getSmooth(serie.smooth),
@@ -770,8 +764,15 @@ define(function(require) {
             var seriesIndex = param.seriesIndex;
             var dataIndex = param.dataIndex;
             var seriesPL;
+            var singlePL;
             var serie;
             var queryTarget;
+            
+            var lineWidth;
+            var normalColor;
+            var emphasisColor;
+            var defaultColor;
+            
             var len = seriesIndex.length;
             while (len--) {
                 seriesPL = finalPLMap[seriesIndex[len]];
@@ -781,21 +782,16 @@ define(function(require) {
                     defaultColor = _sIndex2ColorMap[seriesIndex[len]];
                     // 多级控制
                     lineWidth = self.deepQuery(
-                        [serie], 'itemStyle.normal.lineStyle.width'
-                    );
-                    lineType = self.deepQuery(
-                        [serie], 'itemStyle.normal.lineStyle.type'
-                    );
-                    lineColor = self.deepQuery(
-                        [serie], 'itemStyle.normal.lineStyle.color'
+                        queryTarget, 'itemStyle.normal.lineStyle.width'
                     );
                     normalColor = self.deepQuery(
-                        [serie], 'itemStyle.normal.color'
+                        queryTarget, 'itemStyle.normal.color'
                     );
                     emphasisColor = self.deepQuery(
-                        [serie], 'itemStyle.emphasis.color'
+                        queryTarget, 'itemStyle.emphasis.color'
                     );
                     var shape;
+                    var data;
                     for (var i = 0, l = seriesPL.length; i < l; i++) {
                         singlePL = seriesPL[i];
                         for (var j = 0, k = singlePL.length; j < k; j++) {
