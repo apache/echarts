@@ -67,15 +67,12 @@ define(
                 var length = indicator.length;
                 var startAngle = item.startAngle ;
                 var dStep = 2 * Math.PI / length;
-                var radius = item.radius;
+                var radius = self.parsePercent(
+                    item.radius,
+                    Math.min(zr.getWidth(), zr.getHeight()) / 2
+                );
                 var __ecIndicator = item.__ecIndicator = [];
                 var vector;
-
-                if (typeof radius != 'number') {
-                    radius = Math.floor(
-                        Math.min(_width, _height) / 2 - 50
-                    );
-                }               
 
                 for (var i = 0 ;i < length ; i ++) {
                     vector = ecCoordinates.polar2cartesian(
@@ -760,27 +757,6 @@ define(
                 }
             }
 
-            function reformOption(opt) {
-                // 常用方法快捷方式
-                var _merge = zrUtil.merge;
-                opt = _merge(
-                          opt || {},
-                          ecConfig.polar,
-                          {
-                              'overwrite' : false,
-                              'recursive' : true
-                          }
-                      );
-
-                if (!opt.radius) {
-                    opt.radius = Math.floor(
-                        Math.min(_width, _height) / 2 - 50
-                    );
-                }
-
-                return opt;
-            }
-
             /**
              * 获取每个指标上某个value对应的坐标
              * @param {number} polarIndex
@@ -850,6 +826,7 @@ define(
                 var len;
                 var angle;
                 var finalAngle;
+                var zrSize = Math.min(zr.getWidth(), zr.getHeight()) / 2;
                 for (var i = 0 ; i < polar.length; i ++) {
                     item = polar[i];
                     center = getCenter(i);
@@ -859,7 +836,7 @@ define(
                             valueIndex : 0
                         };
                     }
-                    radius = self.deepQuery([item, option], 'radius');
+                    radius = self.parsePercent(item.radius, zrSize);
                     startAngle = item.startAngle;
                     indicator = item.indicator;
                     len = indicator.length;
@@ -917,7 +894,6 @@ define(
             }
 
             self.refresh = refresh;
-            self.reformOption = reformOption;
             self.getVector = getVector;
 
             self.getDropBox = _addDropBox;

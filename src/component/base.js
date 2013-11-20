@@ -295,6 +295,21 @@ define(function(require) {
             ];
         }
 
+        /**
+         * 获取自适应半径
+         */ 
+        function parseRadius(radius) {
+            // 传数组实现环形图，[内半径，外半径]，传单个则默认为外半径为
+            if (!(radius instanceof Array)) {
+                radius = [0, radius];
+            }
+            var zrSize = Math.min(self.zr.getWidth(), self.zr.getHeight()) / 2;
+            return [
+                parsePercent(radius[0], zrSize),
+                parsePercent(radius[1], zrSize),
+            ];
+        }
+        
         function _trim(str) {
             return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
         }
@@ -342,6 +357,7 @@ define(function(require) {
         self.addLabel = addLabel;
         self.parsePercent = parsePercent;
         self.parseCenter = parseCenter;
+        self.parseRadius = parseRadius;
         self.clear = clear;
         self.dispose = dispose;
         self.resize = resize;

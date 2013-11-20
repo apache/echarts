@@ -332,7 +332,7 @@ define(function() {
 
         polar : {
             center : ['50%', '50%'],    // 默认全局居中
-            // radius: 'min(width, height) / 2 - 50',
+            radius : '75%',
             startAngle : 90,
             splitNumber : 5,
             name : {
@@ -545,7 +545,7 @@ define(function() {
         // 饼图默认参数
         pie: {
             center : ['50%', '50%'],    // 默认全局居中
-            // radius: [0, min(width, height) / 2 - 50],
+            radius : [0, '75%'],
             startAngle: 90,
             minAngle: 0,                    // 最小角度改为0
             selectedOffset: 10,             // 选中是扇区偏移量
@@ -680,7 +680,6 @@ define(function() {
 
         chord : {
             radius : ['65%', '75%'],
-            // Source data matrix
             center : ['50%', '50%'],
             padding : 2,
             sort : 'none', // can be 'none', 'ascending', 'descending'
@@ -719,6 +718,7 @@ define(function() {
                     }
                 }
             },
+            // Source data matrix
             /**
              *         target
              *    -1--2--3--4--5-

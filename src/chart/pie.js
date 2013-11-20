@@ -42,6 +42,7 @@ define(function(require) {
             self.selectedMap = {};
             _selected = {};
             var center;
+            var radius;
 
             var pieCase;        // 饼图箱子
             _selectedMode = false;
@@ -49,20 +50,20 @@ define(function(require) {
                 if (series[i].type == ecConfig.CHART_TYPE_PIE) {
                     series[i] = self.reformOption(series[i]);
                     center = self.parseCenter(series[i].center);
+                    radius = self.parseRadius(series[i].radius);
                     _selectedMode = _selectedMode || series[i].selectedMode;
                     _selected[i] = [];
                     if (self.deepQuery([series[i], option], 'calculable')) {
                         pieCase = {
-                            shape : series[i].radius[0] <= 10
-                                    ? 'circle' : 'ring',
+                            shape : radius[0] <= 10 ? 'circle' : 'ring',
                             zlevel : _zlevelBase,
                             hoverable : false,
                             style : {
                                 x : center[0],          // 圆心横坐标
                                 y : center[1],          // 圆心纵坐标
-                                r0 : series[i].radius[0] <= 10    // 圆环内半径
-                                     ? 0 : series[i].radius[0] - 10,
-                                r : series[i].radius[1] + 10,     // 圆环外半径
+                                // 圆环内外半径
+                                r0 : radius[0] <= 10 ? 0 : radius[0] - 10,
+                                r : radius[1] + 10,
                                 brushType : 'stroke',
                                 strokeColor : series[i].calculableHolderColor
                                               || ecConfig.calculableHolderColor
@@ -118,6 +119,7 @@ define(function(require) {
             var totalAngle = 360 - (minAngle * totalSelected);
             var defaultColor;
             var roseType = serie.roseType;
+            var radius;
             var r0;     // 扇形内半径
             var r1;     // 扇形外半径
 
@@ -147,8 +149,9 @@ define(function(require) {
                 }
                 percent = (percent * 100).toFixed(2);
                 
-                r0 = +serie.radius[0];
-                r1 = +serie.radius[1];
+                radius = self.parseRadius(serie.radius);
+                r0 = +radius[0];
+                r1 = +radius[1];
                 
                 if (roseType == 'radius') {
                     r1 = data[i].value / maxValue * (r1 - r0) * 0.8 
@@ -412,11 +415,11 @@ define(function(require) {
                 var centerX = center[0];                      // 圆心横坐标
                 var centerY = center[1];                      // 圆心纵坐标
                 var midAngle = ((endAngle + startAngle) / 2) % 360; // 角度中值
-                var radius;                                         // 标签位置半径
+                var radius = self.parseRadius(serie.radius);  // 标签位置半径
                 var textAlign;
                 if (labelControl.position == 'outer') {
                     // 外部显示，默认
-                    radius = serie.radius[1]
+                    radius = radius[1]
                              - (-itemStyle[status].labelLine.length)
                              - (-textStyle.fontSize);
                     textAlign = (midAngle >= 150 && midAngle <= 210)
@@ -475,11 +478,6 @@ define(function(require) {
                 else {
                     // 内部显示由sector自带，不返回即可
                     return;
-                    /*
-                    radius = (serie.radius[0] + serie.radius[1]) / 2;
-                    textAlign = 'center';
-                    defaultColor = '#fff';
-                    */
                 }
             }
             else {
@@ -631,16 +629,6 @@ define(function(require) {
                           'recursive' : true
                       }
                   );
-
-            // 传数组实现环形图，[内半径，外半径]，传单个则默认为外半径为
-            if (typeof opt.radius == 'undefined') {
-                opt.radius = [
-                    0,
-                    Math.round(Math.min(zr.getWidth(), zr.getHeight()) / 2 - 50)
-                ];
-            } else if (!(opt.radius instanceof Array)) {
-                opt.radius = [0, opt.radius];
-            }
 
             // 通用字体设置
             opt.itemStyle.normal.label.textStyle = _merge(
