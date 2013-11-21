@@ -490,9 +490,19 @@ require(['echarts'], function(ec){
                             <td>万能接口，配置图表实例任何可配置选项（详见<a href="#Option" title="">option</a>），多次调用时option选项是默认是合并（merge）的，<br/>如果不需求，可以通过notMerger参数为true阻止与上次option的合并。 </td>
                         </tr>
                         <tr>
+                            <td>{Object} getOption</td>
+                            <td>{void}</td>
+                            <td>返回内部持有的当前显示option克隆  </td>
+                        </tr>
+                        <tr>
                             <td>{self} setSeries</td>
                             <td>{Array} series, <br/>{boolean=} notMerge</td>
                             <td>数据接口，驱动图表生成的数据内容（详见<a href="#Series" title="">series</a>），效果等同调用setOption({series:{...}}) </td>
+                        </tr>
+                        <tr>
+                            <td>{Object} getSeries</td>
+                            <td>{void}</td>
+                            <td>返回内部持有的当前显示series克隆，效果同return getOption().series</td>
                         </tr>
                         <tr>
                             <td>{self} addData</td>
@@ -539,6 +549,16 @@ require(['echarts'], function(ec){
                             <td>{ZRender} getZrender</td>
                             <td>{void}</td>
                             <td>获取当前图表所用ZRender实例，可用于添加额外图形或进行深度定制，zrender接口详见<a href="http://ecomfe.github.io/zrender/doc/doc.html#zrenderInstance" target="_blank">ZRender</a> </td>
+                        </tr>
+                        <tr>
+                            <td>{string} getDataURL</td>
+                            <td>{string=} imgType</td>
+                            <td>获取当前图表的Base64图片dataURL，imgType 图片类型，支持png|jpeg，默认为png</td>
+                        </tr>
+                        <tr>
+                            <td>{Dom} getImage</td>
+                            <td>{string=} imgType</td>
+                            <td>获取一个当前图表的img，imgType 图片类型，支持png|jpeg，默认为png</td>
                         </tr>
                         <tr>
                             <td>{self} resize</td>
@@ -964,6 +984,28 @@ require(['echarts'], function(ec){
                             <td> {Object} feature </td>
                             <td> {} </td>
                             <td> 启用功能，目前支持feature见下</td>
+                        </tr>
+                        <tr>
+                            <td> {boolean} showTitle </td>
+                            <td> true </td>
+                            <td> 是否显示工具箱文字提示，默认启用</td>
+                        </tr>
+                        <tr>
+                            <td> {Object} featureTitle </td>
+                            <td> {<br/>
+                                    mark : '辅助线开关',<br/>
+                                    markUndo : '删除辅助线',<br/>
+                                    markClear : '清空辅助线',<br/>
+                                    dataZoom : '区域缩放',<br/>
+                                    dataZoomReset : '区域缩放后退',<br/>
+                                    dataView : '数据视图',<br/>
+                                    lineChart : '折线图切换',<br/>
+                                    barChart : '柱形图切换',<br/>
+                                    restore : '还原',<br/>
+                                    saveAsImage : '保存为图片'<br/>
+                                 } 
+                            </td>
+                            <td> 工具箱文字提示默认话术</td>
                         </tr>
                     </table>
                     <p><img src="./asset/img/doc/toolbox.png" title="" alt="工具箱"/></P>
@@ -1660,12 +1702,12 @@ feature : {
                         <tr>
                             <td> {Array} center </td>
                             <td> ['50%', '50%'] </td>
-                            <td> 圆心坐标，默认为[width / 2, height / 2]自适应居中 </td>
+                            <td> 圆心坐标，支持绝对值（px）和百分比，百分比计算min(width, height) * 50% </td>
                         </tr>
                         <tr>
                             <td> {number} radius </td>
-                            <td> 自适应 </td>
-                            <td> 半径，默认为Min(width, height) / 2 - 50 </td>
+                            <td> '75%' </td>
+                            <td> 半径，支持绝对值（px）和百分比，百分比计算min(width, height) / 2 * 75%, </td>
                         </tr>
                         <tr>
                             <td> {number} startAngle </td>
@@ -1867,15 +1909,15 @@ indicator : [
                         </tr>
                         <tr>
                             <td> {Array} center </td>
-                            <td> null </td>
+                            <td> ['50%', '50%'] </td>
                             <td> 饼图 </td>
-                            <td> 圆心坐标，默认为[width / 2, height / 2]自适应居中 </td>
+                            <td> 圆心坐标，支持绝对值（px）和百分比，百分比计算min(width, height) * 50% </td>
                         </tr>
                         <tr>
                             <td> {number | Array} radius </td>
-                            <td> 自适应 </td>
+                            <td> [0, '75%'] </td>
                             <td> 饼图 </td>
-                            <td> 半径，默认为Min(width, height) / 2 - 50, 传数组实现环形图，[内半径，外半径] </td>
+                            <td> 半径，支持绝对值（px）和百分比，百分比计算比，min(width, height) / 2 * 75%， 传数组实现环形图，[内半径，外半径] </td>
                         </tr>
                         <tr>
                             <td> {number} startAngle </td>
@@ -2121,7 +2163,7 @@ indicator : [
                         <tr>
                             <td> {Object} lineStyle </td>
                             <td> 图表各异 </td>
-                            <td> 折线图，柱状图，K线图 ，地图</td>
+                            <td> 折线图，K线图 ，地图</td>
                             <td> 线条样式，详见<a href="#LineStyle" title="">lineStyle</a></td>
                         </tr>
                         <tr>
@@ -2135,6 +2177,24 @@ indicator : [
                             <td> 图表各异 </td>
                             <td> 和弦图</td>
                             <td> 弦样式，详见<a href="#ChordStyle" title="">chordStyle</a></td>
+                        </tr>
+                        <tr>
+                            <td> {string} borderColor </td>
+                            <td> '#fff' </td>
+                            <td> 柱形图</td>
+                            <td> 柱形边框颜色 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} borderRadius </td>
+                            <td> 0 </td>
+                            <td> 柱形图</td>
+                            <td> 柱形边框圆角，单位px，默认为0 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} borderWidth </td>
+                            <td> 1 </td>
+                            <td> 柱形图</td>
+                            <td> 柱形边框线宽，单位px，默认为1 </td>
                         </tr>
                         <tr>
                             <td> {Object} label </td>
