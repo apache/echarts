@@ -224,7 +224,7 @@ define(function() {
             // yAxisIndex: [],         // 默认控制所有横向类目
             // start: 0,               // 默认为0
             // end: 100,               // 默认为全部 100%
-            realtime: false
+            realtime: true
             // zoomLock: false         // 是否锁定选择区域大小
         },
 

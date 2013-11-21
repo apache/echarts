@@ -68,6 +68,7 @@ define(function(require) {
         var ecConfig = require('./config');
 
         var self = this;
+        var _id = '__ECharts__' + new Date() - 0;
         var _zr;
         var _option;
         var _optionBackup;          // for各种change和zoom
@@ -665,7 +666,7 @@ define(function(require) {
 
             _toolbox.render(magicOption, {dataZoom: dataZoom});
 
-            if (magicOption.animation) {
+            if (magicOption.animation && !magicOption.renderAsImage) {
                 var len = _chartList.length;
                 while (len--) {
                     _chartList[len]
@@ -675,6 +676,34 @@ define(function(require) {
             }
 
             _zr.render();
+            
+            var imgId = 'IMG' + _id;
+            var img = document.getElementById(imgId);
+            if (magicOption.renderAsImage && !G_vmlCanvasManager) {
+                // IE8- 不支持图片渲染形式
+                if (img) {
+                    // 已经渲染过则更显
+                    img.src = getDataURL(magicOption.renderAsImage);
+                }
+                else {
+                    // 没有渲染过插入img dom
+                    img = getImage(magicOption.renderAsImage);
+                    img.id = imgId;
+                    img.style.position = 'absolute';
+                    img.style.left = 0;
+                    img.style.top = 0;
+                    dom.firstChild.insertBefore(img,dom.firstChild.firstChild);
+                }
+                un();
+                _zr.un();
+                _disposeChartList();
+                _zr.clear();
+            }
+            else if (img) {
+                // 删除可能存在的img
+                img.parentNode.removeChild(img);
+            }
+            img = null;
         }
 
         /**
@@ -1160,6 +1189,11 @@ define(function(require) {
          */
         function resize() {
             _zr.resize();
+            if (_option.renderAsImage && !G_vmlCanvasManager) {
+                // 渲染为图片从走render模式
+                _render(_option);
+                return self;
+            }
             // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
             // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
