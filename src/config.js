@@ -151,10 +151,24 @@ define(function() {
             itemSize: 16,             // 工具箱图形宽度，非标准参数
             feature : {
                 //mark : true,
+                //dataZoom : true,
                 //dataView : {readOnly: false},
                 //magicType: ['line', 'bar'],
                 //restore : true,
                 //saveAsImage : true
+            },
+            showTitle : true,
+            featureTitle : {
+                mark : '辅助线开关',
+                markUndo : '删除辅助线',
+                markClear : '清空辅助线',
+                dataZoom : '区域缩放',
+                dataZoomReset : '区域缩放后退',
+                dataView : '数据视图',
+                lineChart : '折线图切换',
+                barChart : '柱形图切换',
+                restore : '还原',
+                saveAsImage : '保存为图片'
             }
         },
 
