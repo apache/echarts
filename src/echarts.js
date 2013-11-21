@@ -462,7 +462,6 @@ define(function(require) {
             while (len--) {
                 magicOption.series[len].data = _optionBackup.series[len].data;
             }
-            
             return magicOption;
         }
         
@@ -839,6 +838,23 @@ define(function(require) {
         }
 
         /**
+         * 返回内部持有的当前显示option克隆 
+         */
+        function getOption() {
+            var zrUtil = require('zrender/tool/util');
+            if (_optionBackup.toolbox
+                && _optionBackup.toolbox.show
+                && _optionBackup.toolbox.feature.magicType
+                && _optionBackup.toolbox.feature.magicType.length > 0
+            ) {
+                 return zrUtil.clone(_getMagicOption());
+            }
+            else {
+                 return zrUtil.clone(_getMagicOption(_island.getOption()));
+            }
+        }
+
+        /**
          * 数据设置快捷接口
          * @param {Array} series
          * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
@@ -852,8 +868,14 @@ define(function(require) {
                 _option.series = series;
                 self.setOption(_option, notMerge);
             }
-
             return self;
+        }
+
+        /**
+         * 返回内部持有的当前显示series克隆 
+         */
+        function getSeries() {
+            return getOption().series;
         }
         
         /**
@@ -1045,6 +1067,32 @@ define(function(require) {
         }
 
         /**
+         * 获取Base64图片dataURL
+         * @param {string} imgType 图片类型，支持png|jpeg，默认为png
+         * @return imgDataURL
+         */
+        function getDataURL(imgType) {
+            imgType = imgType || 'png';
+            if (imgType != 'png' && imgType != 'jpeg') {
+                imgType = 'png';
+            }
+            return _zr.toDataURL('image/' + imgType); 
+        }
+
+        /**
+         * 获取img
+         * @param {string} imgType 图片类型，支持png|jpeg，默认为png
+         * @return img dom
+         */
+        function getImage(imgType) {
+            var imgDom = document.createElement('img');
+            imgDom.src = getDataURL(imgType);
+            imgDom.title = (_optionRestore.title && _optionRestore.title.text)
+                           || 'ECharts';
+            return imgDom;
+        }
+
+        /**
          * 绑定事件
          * @param {Object} eventName 事件名称
          * @param {Object} eventListener 事件响应函数
@@ -1148,7 +1196,11 @@ define(function(require) {
         self.setOption = setOption;
         self.setSeries = setSeries;
         self.addData = addData;
+        self.getOption = getOption;
+        self.getSeries = getSeries;
         self.getZrender = getZrender;
+        self.getDataURL = getDataURL;
+        self.getImage =  getImage;
         self.on = on;
         self.un = un;
         self.showLoading = showLoading;
