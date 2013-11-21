@@ -454,6 +454,7 @@ define(function(require) {
             // 折线相关
             var lineWidth;
             var lineType;
+            var lineColor;
             var normalColor;
             var emphasisColor;
 
@@ -481,6 +482,9 @@ define(function(require) {
                     );
                     lineType = self.deepQuery(
                         [serie], 'itemStyle.normal.lineStyle.type'
+                    );
+                    lineColor = self.deepQuery(
+                        [serie], 'itemStyle.normal.lineStyle.color'
                     );
                     normalColor = self.deepQuery(
                         [serie], 'itemStyle.normal.color'
@@ -544,7 +548,9 @@ define(function(require) {
                             zlevel : _zlevelBase,
                             style : {
                                 pointList : singlePL,
-                                strokeColor : normalColor || defaultColor,
+                                strokeColor : lineColor
+                                              || normalColor 
+                                              || defaultColor,
                                 lineWidth : lineWidth,
                                 lineType : lineType,
                                 smooth : _getSmooth(serie.smooth),
