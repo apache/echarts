@@ -1042,11 +1042,15 @@ define(function(require) {
             }
             else {
                 // 落到sector上，数据被拖拽到某个数据项上，数据修改
+                var accMath = require('../util/accMath');
                 data = series[seriesIndex].data[dataIndex];
                 legend && legend.del(data.name);
                 data.name += option.nameConnector
                              + ecData.get(dragged, 'name');
-                data.value += ecData.get(dragged, 'value');
+                data.value = accMath.accAdd(
+                    data.value,
+                    ecData.get(dragged, 'value')
+                );
                 legend && legend.add(
                     data.name,
                     dragged.style.color || dragged.style.strokeColor
