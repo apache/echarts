@@ -153,7 +153,7 @@ define(function(require) {
                     tempOption = query(ctrList[len], optionLocation);
                     if (typeof tempOption != 'undefined') {
                         if (typeof finalOption == 'undefined') {
-                            finalOption = tempOption;
+                            finalOption = zrUtil.clone(tempOption);
                         }
                         else {
                             zrUtil.merge(
@@ -187,20 +187,9 @@ define(function(require) {
          */
         function addLabel(tarShape, serie, data, name, orient) {
             // 多级控制
-            var nLabel = zrUtil.merge(
-                    zrUtil.clone(
-                        self.deepQuery([serie], 'itemStyle.normal.label')
-                    ), 
-                    self.deepQuery([data], 'itemStyle.normal.label'),
-                    { 'overwrite': true, 'recursive': true }
-                );
-            var eLabel = zrUtil.merge(
-                    zrUtil.clone(
-                        self.deepQuery([serie], 'itemStyle.emphasis.label')
-                    ), 
-                    self.deepQuery([data], 'itemStyle.emphasis.label'),
-                    { 'overwrite': true, 'recursive': true }
-                );
+            var queryTarget = [data, serie];
+            var nLabel = deepMerge(queryTarget, 'itemStyle.normal.label');
+            var eLabel = deepMerge(queryTarget, 'itemStyle.emphasis.label');
 
             var nTextStyle = nLabel.textStyle || {};
             var eTextStyle = eLabel.textStyle || {};

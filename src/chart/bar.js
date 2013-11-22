@@ -122,6 +122,7 @@ define(function(require) {
             var legend = component.legend;
             var locationMap = [];                   // 需要返回的东西：数组位置映射到系列索引
             var maxDataLength = 0;                  // 需要返回的东西：最大数据长度
+            var iconShape;
             // 计算需要显示的个数和分配位置并记在下面这个结构里
             for (var i = 0, l = seriesArray.length; i < l; i++) {
                 serie = series[seriesArray[i]];
@@ -130,6 +131,15 @@ define(function(require) {
                     self.selectedMap[serieName] = legend.isSelected(serieName);
                     _sIndex2colorMap[seriesArray[i]] =
                         legend.getColor(serieName);
+                    
+                    iconShape = legend.getItemShape(serieName);
+                    if (iconShape) {
+                        // 回调legend，换一个更形象的icon
+                        iconShape.style.strokeColor = 
+                            serie.itemStyle.normal.borderColor;
+                        iconShape.style.brushType = 'both';
+                        legend.setItemShape(serieName, iconShape);
+                    }
                 } else {
                     self.selectedMap[serieName] = true;
                     _sIndex2colorMap[seriesArray[i]] =
@@ -243,7 +253,7 @@ define(function(require) {
                             }
                             lastYP -= barHeight;
                             y = lastYP;
-                            lastYP -= 0.5; //白色视觉分隔线宽修正
+                            //lastYP -= 0.5; //白色视觉分隔线宽修正
                         }
                         else if (value < 0){
                             // 负向堆叠
@@ -256,7 +266,7 @@ define(function(require) {
                             }
                             y = lastYN;
                             lastYN += barHeight;
-                            lastYN += 0.5; //白色视觉分隔线宽修正
+                            //lastYN += 0.5; //白色视觉分隔线宽修正
                         }
                         else {
                             // 0值
@@ -264,7 +274,7 @@ define(function(require) {
                             // 最小高度无效
                             lastYP -= barHeight;
                             y = lastYP;
-                            lastYP -= 0.5; //白色视觉分隔线宽修正
+                            //lastYP -= 0.5; //白色视觉分隔线宽修正
                         }
 
                         barShape = _getBarItem(
@@ -391,7 +401,7 @@ define(function(require) {
                             }
                             x = lastXP;
                             lastXP += barHeight;
-                            lastXP += 0.5; //白色视觉分隔线宽修正
+                            //lastXP += 0.5; //白色视觉分隔线宽修正
                         }
                         else if (value < 0){
                             // 负向堆叠
@@ -404,7 +414,7 @@ define(function(require) {
                             }
                             lastXN -= barHeight;
                             x = lastXN;
-                            lastXN -= 0.5; //白色视觉分隔线宽修正
+                            //lastXN -= 0.5; //白色视觉分隔线宽修正
                         }
                         else {
                             // 0值
@@ -412,7 +422,7 @@ define(function(require) {
                             // 最小高度无效
                             x = lastXP;
                             lastXP += barHeight;
-                            lastXP += 0.5; //白色视觉分隔线宽修正
+                            //lastXP += 0.5; //白色视觉分隔线宽修正
                         }
 
                         barShape = _getBarItem(

@@ -558,7 +558,8 @@ define(function(require) {
                 // 视觉引导线起点半径
                 var midRadius = r1;
                 // 视觉引导线终点半径
-                var maxRadius = serie.radius[1] - (-labelLineControl.length);
+                var maxRadius = self.parseRadius(serie.radius)[1]
+                                - (-labelLineControl.length);
                 var midAngle = ((endAngle + startAngle) / 2) % 360; // 角度中值
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
