@@ -81,6 +81,25 @@
         <span>[+]新增 [-]删除 [^]升级 [#]修复 【】重要</span>
         <div class="row-fluid">
             <div>
+                <h3>1.3.1<small>（2013-11-22）</small></h3>
+                <ul>
+                    <li>【+】 支持渲染为图片模式 renderAsImage</li>
+                    <li>【+】 新增接口getOption/getSeries/getDataURL/getImage</li>
+                    <li>【^】 [bar]barMinHeight默认值从20改为0</li>
+                    <li>【^】 [pie]minAngle默认值从5改为0</li>
+                    <li>[^] [bar]柱形支持borderColor/borderWidth/borderRadius(圆角)</li>
+                    <li>[^] [bar]柱间距离可配，支持百分比，barGap/barCategoryGap</li>
+                    <li>[#] [pie][radar]center无设置时resize报错，fix <a href="https://github.com/ecomfe/echarts/issues/133" target="_blank">this 》</a></li>
+                    <li>[^] [pie][polar]半径支持百分比格式</li>
+                    <li>[#] [island]孤岛数据小数精度bug，fix <a href="https://github.com/ecomfe/echarts/issues/126" target="_blank">this 》</a></li>
+                    <li>[#] [bar]dom极小情况下递归死循环bug，fix <a href="https://github.com/ecomfe/echarts/issues/138" target="_blank">this 》</a></li>
+                    <li>[+] [title]文字提示，support <a href="https://github.com/ecomfe/echarts/issues/136" target="_blank">this 》</a></li>
+                    <li>[^] [grid][axis]背景透明，直角系亚像素优化</li>
+                    <li>[#] [pie]拖拽重计算legend依赖修复</li>
+                    <li>[#] [chord][radar]文字样式修复</li>
+                </ul>
+            </div>
+            <div>
                 <h3>1.3.0<small>（2013-11-05）</small></h3>
                 <ul>
                     <li>【+】 [chord]新增和弦图，支持多维选择</li>
@@ -92,7 +111,7 @@
                     <li>[#] [k]修复阴阳线颜色错误，fix <a href="https://github.com/ecomfe/echarts/issues/112" target="_blank">this 》</a></li>
                     <li>[^] symbol增加箭头arrow，support <a href="http://www.oschina.net/question/1182177_128527" target="_blank">this 》</a></li>
                     <li>[^] [title]支持超链接跳转</li>
-                    <li>[^] [pie][polar]支持中心坐标百分比格式</li>
+                    <li>[^] [pie][polar]中心坐标支持百分比格式</li>
                     <li>[^] [legend]多维选择和多行控制</li>
                     <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.5+</li>
                 </ul>

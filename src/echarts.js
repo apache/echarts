@@ -42,7 +42,7 @@
 define(function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
-    self.version = '1.3.0';
+    self.version = '1.3.1';
     self.dependencies = {
         zrender : '1.0.5'
     };
@@ -682,7 +682,7 @@ define(function(require) {
             if (magicOption.renderAsImage && !G_vmlCanvasManager) {
                 // IE8- 不支持图片渲染形式
                 if (img) {
-                    // 已经渲染过则更显
+                    // 已经渲染过则更新显示
                     img.src = getDataURL(magicOption.renderAsImage);
                 }
                 else {
@@ -692,7 +692,7 @@ define(function(require) {
                     img.style.position = 'absolute';
                     img.style.left = 0;
                     img.style.top = 0;
-                    dom.firstChild.insertBefore(img,dom.firstChild.firstChild);
+                    dom.firstChild.appendChild(img);
                 }
                 un();
                 _zr.un();
@@ -1101,6 +1101,17 @@ define(function(require) {
          * @return imgDataURL
          */
         function getDataURL(imgType) {
+            if (G_vmlCanvasManager) {
+                return '';
+            }
+            if (_chartList.length == 0) {
+                // 渲染为图片
+                var imgId = 'IMG' + _id;
+                var img = document.getElementById(imgId);
+                if (img) {
+                    return img.src;
+                }
+            }
             imgType = imgType || 'png';
             if (imgType != 'png' && imgType != 'jpeg') {
                 imgType = 'png';
