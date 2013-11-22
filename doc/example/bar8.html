@@ -67,89 +67,78 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
+var labelRight = {normal: {label : {position: 'right'}}};
 option = {
     title: {
-        text: '阶梯瀑布图',
+        text: '交错正负轴标签',
         subtext: 'From ExcelHome',
-        sublink: 'http://e.weibo.com/1341556070/Aj1J2x5a5'
+        sublink: 'http://e.weibo.com/1341556070/AjwF2AgQm'
     },
     tooltip : {
         trigger: 'axis',
         axisPointer : {            // 坐标轴指示器，坐标轴触发有效
             type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
-        },
-        formatter: function(params) {
-            var tar;
-            if (params[1][2] != '-') {
-                tar = params[1];
-            }
-            else {
-                tar = params[2];
-            }
-            return tar[1] + '<br/>' + tar[0] + ' : ' + tar[2];
         }
-    },
-    legend: {
-        data:['支出','收入']
     },
     toolbox: {
         show : true,
         feature : {
             mark : true,
             dataView : {readOnly: false},
+            magicType:['line', 'bar'],
             restore : true,
             saveAsImage : true
         }
     },
+    grid: {
+        y: 80,
+        y2: 30
+    },
     xAxis : [
         {
-            type : 'category',
-            splitLine: {show:false},
-            data :  function(){
-                var list = [];
-                for (var i = 1; i <= 11; i++) {
-                    list.push('11月' + i + '日');
-                }
-                return list;
-            }()
+            type : 'value',
+            position: 'top',
+            precision: 2,
+            splitNumber:6,
+            min: -0.6,
+            max: 0.6,
+            splitLine: {lineStyle:{type:'dashed'}},
         }
     ],
     yAxis : [
         {
-            type : 'value',
-            splitArea: {show : true}
+            type : 'category',
+            axisLine: {show: false},
+            axisLabel: {show: false},
+            splitLine: {show: false},
+            data : ['ten', 'nine', 'eight', 'seven', 'six', 'five', 'four', 'three', 'two', 'one']
         }
     ],
     series : [
         {
-            name:'辅助',
+            name:'生活费',
             type:'bar',
             stack: '总量',
-            itemStyle:{
-                normal:{
-                    borderColor:'rgba(0,0,0,0)',
-                    color:'rgba(0,0,0,0)'
-                },
-                emphasis:{
-                    borderColor:'rgba(0,0,0,0)',
-                    color:'rgba(0,0,0,0)'
+            itemStyle : { normal: {
+                color: 'orange',
+                borderRadius: 5,
+                label : {
+                    show: true,
+                    position: 'left',
+                    formatter: '{b}'
                 }
-            },
-            data:[0, 900, 1245, 1530, 1376, 1376, 1511, 1689, 1856, 1495, 1292]
-        },
-        {
-            name:'收入',
-            type:'bar',
-            stack: '总量',
-            itemStyle : { normal: {label : {show: true, position: 'inside'}}},
-            data:[900, 345, 393, '-', '-', 135, 178, 286, '-', '-', '-',]
-        },
-        {
-            name:'支出',
-            type:'bar',
-            stack: '总量',
-            itemStyle : { normal: {label : {show: true, position: 'inside'}}},
-            data:['-', '-', '-', 108, 154, '-', '-', '-', 119, 361, 203]
+            }},
+            data:[
+                {value:-0.07, itemStyle:labelRight},
+                {value:-0.09, itemStyle:labelRight},
+                0.2, 0.44, 
+                {value:-0.23, itemStyle:labelRight},
+                0.08,
+                {value:-0.17, itemStyle:labelRight},
+                0.47,
+                {value:-0.36, itemStyle:labelRight},
+                0.18
+            ]
         }
     ]
 };

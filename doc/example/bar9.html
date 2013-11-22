@@ -67,30 +67,42 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
+var placeHoledStyle = {
+    normal:{
+        borderColor:'rgba(0,0,0,0)',
+        color:'rgba(0,0,0,0)'
+    },
+    emphasis:{
+        borderColor:'rgba(0,0,0,0)',
+        color:'rgba(0,0,0,0)'
+    }
+};
+var dataStyle = { 
+    normal: {
+        label : {
+            show: true,
+            position: 'inside',
+            formatter: '{c}%'
+        }
+    }
+};
 option = {
     title: {
-        text: '阶梯瀑布图',
+        text: '多维条形图',
         subtext: 'From ExcelHome',
-        sublink: 'http://e.weibo.com/1341556070/Aj1J2x5a5'
+        sublink: 'http://e.weibo.com/1341556070/AiEscco0H'
     },
     tooltip : {
         trigger: 'axis',
         axisPointer : {            // 坐标轴指示器，坐标轴触发有效
             type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
         },
-        formatter: function(params) {
-            var tar;
-            if (params[1][2] != '-') {
-                tar = params[1];
-            }
-            else {
-                tar = params[2];
-            }
-            return tar[1] + '<br/>' + tar[0] + ' : ' + tar[2];
-        }
+        formatter : '{b}<br/>{a0}:{c0}%<br/>{a2}:{c2}%<br/>{a4}:{c4}%<br/>{a6}:{c6}%'
     },
     legend: {
-        data:['支出','收入']
+        y: 55,
+        itemGap : document.getElementById('main').offsetWidth / 8,
+        data:['GML', 'PYP','WTC', 'ZTW']
     },
     toolbox: {
         show : true,
@@ -101,55 +113,81 @@ option = {
             saveAsImage : true
         }
     },
+    grid: {
+        y: 80,
+        y2: 30
+    },
     xAxis : [
         {
-            type : 'category',
-            splitLine: {show:false},
-            data :  function(){
-                var list = [];
-                for (var i = 1; i <= 11; i++) {
-                    list.push('11月' + i + '日');
-                }
-                return list;
-            }()
+            type : 'value',
+            position: 'top',
+            splitLine: {show: false},
+            axisLabel: {show: false}
         }
     ],
     yAxis : [
         {
-            type : 'value',
-            splitArea: {show : true}
+            type : 'category',
+            splitLine: {show: false},
+            data : ['重庆', '天津', '上海', '北京']
         }
     ],
     series : [
         {
-            name:'辅助',
+            name:'GML',
             type:'bar',
             stack: '总量',
-            itemStyle:{
-                normal:{
-                    borderColor:'rgba(0,0,0,0)',
-                    color:'rgba(0,0,0,0)'
-                },
-                emphasis:{
-                    borderColor:'rgba(0,0,0,0)',
-                    color:'rgba(0,0,0,0)'
-                }
-            },
-            data:[0, 900, 1245, 1530, 1376, 1376, 1511, 1689, 1856, 1495, 1292]
+            itemStyle : dataStyle,
+            data:[38, 50, 33, 72]
         },
         {
-            name:'收入',
+            name:'GML',
             type:'bar',
             stack: '总量',
-            itemStyle : { normal: {label : {show: true, position: 'inside'}}},
-            data:[900, 345, 393, '-', '-', 135, 178, 286, '-', '-', '-',]
+            itemStyle: placeHoledStyle,
+            data:[62, 50, 67, 28]
         },
         {
-            name:'支出',
+            name:'PYP',
             type:'bar',
             stack: '总量',
-            itemStyle : { normal: {label : {show: true, position: 'inside'}}},
-            data:['-', '-', '-', 108, 154, '-', '-', '-', 119, 361, 203]
+            itemStyle : dataStyle,
+            data:[61, 41, 42, 30]
+        },
+        {
+            name:'PYP',
+            type:'bar',
+            stack: '总量',
+            itemStyle: placeHoledStyle,
+            data:[39, 59, 58, 70]
+        },
+        {
+            name:'WTC',
+            type:'bar',
+            stack: '总量',
+            itemStyle : dataStyle,
+            data:[37, 35, 44, 60]
+        },
+        {
+            name:'WTC',
+            type:'bar',
+            stack: '总量',
+            itemStyle: placeHoledStyle,
+            data:[63, 65, 56, 40]
+        },
+        {
+            name:'ZTW',
+            type:'bar',
+            stack: '总量',
+            itemStyle : dataStyle,
+            data:[71, 50, 31, 39]
+        },
+        {
+            name:'ZTW',
+            type:'bar',
+            stack: '总量',
+            itemStyle: placeHoledStyle,
+            data:[29, 50, 69, 61]
         }
     ]
 };

@@ -75,7 +75,9 @@ img.flex-active {border-bottom:10px solid #c3e7fd}
   .flex-direction-nav .flex-next {opacity: 1; right: 0;}
 }
 
+.thumb6 .flex-control-thumbs li {width: 16.6%;}
 .thumb5 .flex-control-thumbs li {width: 20%;}
+.thumb4 .flex-control-thumbs li {width: 25%;}
 .thumb3 .flex-control-thumbs li {width: 33.3%;}
 .thumb2 .flex-control-thumbs li {width: 50%;}
 .slides p{
