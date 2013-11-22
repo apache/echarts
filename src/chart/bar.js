@@ -495,7 +495,6 @@ define(function(require) {
             var sBarWidth;
             var sBarWidthCounter = 0;
             var sBarWidthTotal = 0;
-            var sBarMinHeight;
             var barGap;
             var barCategoryGap;
             var hasFound;

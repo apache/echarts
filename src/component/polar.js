@@ -22,9 +22,6 @@ define(
 
             var polar; 
 
-            var _width = zr.getWidth();
-            var _height = zr.getHeight();
-
             var series;
             var _queryTarget;
 

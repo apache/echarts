@@ -171,7 +171,7 @@ define(function (require) {
                 
                 if (toolboxOption.orient == 'horizontal') {
                     // 修正左对齐第一个或右对齐最后一个
-                    if (i == 0 && textAlign == 'left') {
+                    if (i === 0 && textAlign == 'left') {
                         itemShape.highlightStyle.textPosition = 'specific';
                         itemShape.highlightStyle.textAlign = textAlign;
                         itemShape.highlightStyle.textBaseLine = textBaseLine;

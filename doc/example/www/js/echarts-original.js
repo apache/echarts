@@ -152,10 +152,24 @@ define('echarts/config',[],function() {
             itemSize: 16,             // 工具箱图形宽度，非标准参数
             feature : {
                 //mark : true,
+                //dataZoom : true,
                 //dataView : {readOnly: false},
                 //magicType: ['line', 'bar'],
                 //restore : true,
                 //saveAsImage : true
+            },
+            showTitle : true,
+            featureTitle : {
+                mark : '辅助线开关',
+                markUndo : '删除辅助线',
+                markClear : '清空辅助线',
+                dataZoom : '区域缩放',
+                dataZoomReset : '区域缩放后退',
+                dataView : '数据视图',
+                lineChart : '折线图切换',
+                barChart : '柱形图切换',
+                restore : '还原',
+                saveAsImage : '保存为图片'
             }
         },
 
@@ -211,7 +225,7 @@ define('echarts/config',[],function() {
             // yAxisIndex: [],         // 默认控制所有横向类目
             // start: 0,               // 默认为0
             // end: 100,               // 默认为全部 100%
-            realtime: false
+            realtime: true
             // zoomLock: false         // 是否锁定选择区域大小
         },
 
@@ -333,7 +347,7 @@ define('echarts/config',[],function() {
 
         polar : {
             center : ['50%', '50%'],    // 默认全局居中
-            // radius: 'min(width, height) / 2 - 50',
+            radius : '75%',
             startAngle : 90,
             splitNumber : 5,
             name : {
@@ -385,6 +399,9 @@ define('echarts/config',[],function() {
             barCategoryGap : '20%',   // 类目间柱形距离，默认为类目间距的20%，可设固定值
             itemStyle: {
                 normal: {
+                    borderColor: '#fff',       // 柱条边线
+                    borderRadius: 0,           // 柱条边线圆角，单位px，默认为0
+                    borderWidth: 1,            // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -394,6 +411,9 @@ define('echarts/config',[],function() {
                     }
                 },
                 emphasis: {
+                    borderColor: 'rgba(0,0,0,0)',   // 柱条边线
+                    borderRadius: 0,                // 柱条边线圆角，单位px，默认为0
+                    borderWidth: 1,                 // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -538,7 +558,7 @@ define('echarts/config',[],function() {
         // 饼图默认参数
         pie: {
             center : ['50%', '50%'],    // 默认全局居中
-            // radius: [0, min(width, height) / 2 - 50],
+            radius : [0, '75%'],
             startAngle: 90,
             minAngle: 0,                    // 最小角度改为0
             selectedOffset: 10,             // 选中是扇区偏移量
@@ -673,7 +693,6 @@ define('echarts/config',[],function() {
 
         chord : {
             radius : ['65%', '75%'],
-            // Source data matrix
             center : ['50%', '50%'],
             padding : 2,
             sort : 'none', // can be 'none', 'ascending', 'descending'
@@ -712,6 +731,7 @@ define('echarts/config',[],function() {
                     }
                 }
             },
+            // Source data matrix
             /**
              *         target
              *    -1--2--3--4--5-
@@ -12650,44 +12670,71 @@ define('echarts/component/base',['require','../config','zrender/tool/util'],func
         }
 
         /**
+         * 获取嵌套选项的基础方法
+         * 返回optionTarget中位于optionLocation上的值，如果没有定义，则返回undefined
+         */
+        function query(optionTarget, optionLocation) {
+            if (typeof optionTarget == 'undefined') {
+                return undefined;
+            }
+            if (!optionLocation) {
+                return optionTarget;
+            }
+            optionLocation = optionLocation.split('.');
+
+            var length = optionLocation.length;
+            var curIdx = 0;
+            while (curIdx < length) {
+                optionTarget = optionTarget[optionLocation[curIdx]];
+                if (typeof optionTarget == 'undefined') {
+                    return undefined;
+                }
+                curIdx++;
+            }
+            return optionTarget;
+        }
+            
+        /**
          * 获取多级控制嵌套属性的基础方法
          * 返回ctrList中优先级最高（最靠前）的非undefined属性，ctrList中均无定义则返回undefined
          */
         var deepQuery = (function() {
-            /**
-             * 获取嵌套选项的基础方法
-             * 返回optionTarget中位于optionLocation上的值，如果没有定义，则返回undefined
-             */
-            function _query(optionTarget, optionLocation) {
-                if (typeof optionTarget == 'undefined') {
-                    return undefined;
-                }
-                if (!optionLocation) {
-                    return optionTarget;
-                }
-                optionLocation = optionLocation.split('.');
-
-                var length = optionLocation.length;
-                var curIdx = 0;
-                while (curIdx < length) {
-                    optionTarget = optionTarget[optionLocation[curIdx]];
-                    if (typeof optionTarget == 'undefined') {
-                        return undefined;
-                    }
-                    curIdx++;
-                }
-                return optionTarget;
-            }
-
             return function(ctrList, optionLocation) {
                 var finalOption;
                 for (var i = 0, l = ctrList.length; i < l; i++) {
-                    finalOption = _query(ctrList[i], optionLocation);
+                    finalOption = query(ctrList[i], optionLocation);
                     if (typeof finalOption != 'undefined') {
                         return finalOption;
                     }
                 }
                 return undefined;
+            };
+        })();
+        
+        /**
+         * 获取多级控制嵌套属性的基础方法
+         * 根据ctrList中优先级合并产出目标属性
+         */
+        var deepMerge = (function() {
+            return function(ctrList, optionLocation) {
+                var finalOption;
+                var tempOption;
+                var len = ctrList.length;
+                while (len--) {
+                    tempOption = query(ctrList[len], optionLocation);
+                    if (typeof tempOption != 'undefined') {
+                        if (typeof finalOption == 'undefined') {
+                            finalOption = zrUtil.clone(tempOption);
+                        }
+                        else {
+                            zrUtil.merge(
+                                finalOption, tempOption,
+                                { 'overwrite': true, 'recursive': true }
+                            );
+                        }
+                    }
+                }
+                return finalOption;
             };
         })();
 
@@ -12711,20 +12758,9 @@ define('echarts/component/base',['require','../config','zrender/tool/util'],func
          */
         function addLabel(tarShape, serie, data, name, orient) {
             // 多级控制
-            var nLabel = zrUtil.merge(
-                    zrUtil.clone(
-                        self.deepQuery([serie], 'itemStyle.normal.label')
-                    ), 
-                    self.deepQuery([data], 'itemStyle.normal.label'),
-                    { 'overwrite': true, 'recursive': true }
-                );
-            var eLabel = zrUtil.merge(
-                    zrUtil.clone(
-                        self.deepQuery([serie], 'itemStyle.emphasis.label')
-                    ), 
-                    self.deepQuery([data], 'itemStyle.emphasis.label'),
-                    { 'overwrite': true, 'recursive': true }
-                );
+            var queryTarget = [data, serie];
+            var nLabel = deepMerge(queryTarget, 'itemStyle.normal.label');
+            var eLabel = deepMerge(queryTarget, 'itemStyle.emphasis.label');
 
             var nTextStyle = nLabel.textStyle || {};
             var eTextStyle = eLabel.textStyle || {};
@@ -12819,39 +12855,31 @@ define('echarts/component/base',['require','../config','zrender/tool/util'],func
             ];
         }
 
+        /**
+         * 获取自适应半径
+         */ 
+        function parseRadius(radius) {
+            // 传数组实现环形图，[内半径，外半径]，传单个则默认为外半径为
+            if (!(radius instanceof Array)) {
+                radius = [0, radius];
+            }
+            var zrSize = Math.min(self.zr.getWidth(), self.zr.getHeight()) / 2;
+            return [
+                parsePercent(radius[0], zrSize),
+                parsePercent(radius[1], zrSize),
+            ];
+        }
+        
         function _trim(str) {
             return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
         }
 
-        // 记录自适应原始定义，resize用
-        function backupAdaptiveParams(series, attrs, isAll) {
-            for (var i = 0, l = series.length; i < l; i++) {
-                if (isAll || series[i].type == self.type) {
-                    for (var j = 0, k = attrs.length; j < k; j++) {
-                        series[i]['__' + attrs[i]] = zrUtil.clone(
-                            series[i][attrs[i]]
-                        );
-                    }
-                }
-            }
-        }
-
-        // 还原自适应原始定义，resize用
-        function restoreAdaptiveParams(series, attrs, isAll) {
-            for (var i = 0, l = series.length; i < l; i++) {
-                if (isAll || series[i].type == self.type) {
-                    for (var j = 0, k = attrs.length; j < k; j++) {
-                        series[i][attrs[i]] = zrUtil.clone(
-                            series[i]['__' + attrs[i]]
-                        );
-                    }
-                }
-            }
-        }
-
         // 亚像素优化
         function subPixelOptimize(position, lineWidth) {
-            position += position == Math.ceil(position) ? 0.5 : 0;
+            if (lineWidth % 2 == 1) {
+                position += position == Math.ceil(position) ? 0.5 : 0;
+            }
+            return position;
         }
 
         function resize() {
@@ -12885,15 +12913,17 @@ define('echarts/component/base',['require','../config','zrender/tool/util'],func
         self.getZlevelBase = getZlevelBase;
         self.reformOption = reformOption;
         self.reformCssArray = reformCssArray;
+        self.query = query;
         self.deepQuery = deepQuery;
+        self.deepMerge = deepMerge;
         self.getFont = getFont;
         self.addLabel = addLabel;
         self.parsePercent = parsePercent;
         self.parseCenter = parseCenter;
+        self.parseRadius = parseRadius;
+        self.subPixelOptimize = subPixelOptimize;
         self.clear = clear;
         self.dispose = dispose;
-        self.backupAdaptiveParams = backupAdaptiveParams;
-        self.restoreAdaptiveParams =  restoreAdaptiveParams;
         self.resize = resize;
     }
 
@@ -13021,15 +13051,92 @@ define('echarts/util/ecData',[],function() {
     };
 });
 /**
+ * 高精度数学运算
+ */
+define('echarts/util/accMath',[],function() {
+    //除法函数，用来得到精确的除法结果 
+    //说明：javascript的除法结果会有误差，在两个浮点数相除的时候会比较明显。这个函数返回较为精确的除法结果。 
+    //调用：accDiv(arg1,arg2) 
+    //返回值：arg1除以arg2的精确结果
+    function accDiv(arg1, arg2) {
+        return accMul(arg1,1 / arg2);
+    }
+
+    //乘法函数，用来得到精确的乘法结果
+    //说明：javascript的乘法结果会有误差，在两个浮点数相乘的时候会比较明显。这个函数返回较为精确的乘法结果。 
+    //调用：accMul(arg1,arg2) 
+    //返回值：arg1乘以arg2的精确结果
+    function accMul(arg1, arg2) {
+        var m = 0;
+        var s1 = arg1.toString();
+        var s2 = arg2.toString(); 
+        try {
+            m += s1.split('.')[1].length;
+        }
+        catch(e) {}
+        
+        try {
+            m += s2.split('.')[1].length;
+        }
+        catch(e){}
+        
+        return Number(s1.replace('.', ''))
+               * Number(s2.replace('.', ''))
+               / Math.pow(10, m);
+    }
+
+    //加法函数，用来得到精确的加法结果 
+    //说明：javascript的加法结果会有误差，在两个浮点数相加的时候会比较明显。这个函数返回较为精确的加法结果。 
+    //调用：accAdd(arg1,arg2) 
+    //返回值：arg1加上arg2的精确结果 
+    function accAdd(arg1,arg2) {
+        var r1;
+        var r2;
+        var m;
+        try {
+            r1 = arg1.toString().split('.')[1].length;
+        }
+        catch(e) {
+            r1 = 0;
+        }
+        
+        try {
+            r2=arg2.toString().split('.')[1].length;
+        }
+        catch(e) {
+            r2=0;
+        }
+        
+        m = Math.pow(10, Math.max(r1, r2));
+        return (Math.round(arg1 * m) + Math.round(arg2 * m)) / m; 
+    }
+
+    //减法函数，用来得到精确的减法结果 
+    //说明：javascript的减法结果会有误差，在两个浮点数减法的时候会比较明显。这个函数返回较为精确的减法结果。 
+    //调用：accSub(arg1,arg2) 
+    //返回值：arg1减法arg2的精确结果 
+    function accSub(arg1,arg2) {
+        return accAdd(arg1, -arg2);
+    }
+
+    return {
+        accDiv : accDiv,
+        accMul : accMul,
+        accAdd : accAdd,
+        accSub : accSub
+    };
+});
+/**
  * echarts组件基类
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/calculableBase',['require','../util/ecData','zrender/tool/util'],function(require) {
+define('echarts/chart/calculableBase',['require','../util/ecData','../util/accMath','zrender/tool/util'],function(require) {
     function Base(zr, option){
         var ecData = require('../util/ecData');
+        var accMath = require('../util/accMath');
 
         var zrUtil = require('zrender/tool/util');
         var self = this;
@@ -13087,12 +13194,15 @@ define('echarts/chart/calculableBase',['require','../util/ecData','zrender/tool/
             var seriesIndex = ecData.get(target, 'seriesIndex');
             var dataIndex = ecData.get(target, 'dataIndex');
 
-            // 落到bar上，数据被拖拽到某个数据项上，数据修改
+            // 落到数据item上，数据被拖拽到某个数据项上，数据修改
             var data = option.series[seriesIndex].data[dataIndex] || '-';
             if (data.value) {
                 if (data.value != '-') {
-                    option.series[seriesIndex].data[dataIndex].value +=
-                        ecData.get(dragged, 'value');
+                    option.series[seriesIndex].data[dataIndex].value = 
+                        accMath.accAdd(
+                            option.series[seriesIndex].data[dataIndex].value,
+                            ecData.get(dragged, 'value')
+                        );
                 }
                 else {
                     option.series[seriesIndex].data[dataIndex].value =
@@ -13101,8 +13211,11 @@ define('echarts/chart/calculableBase',['require','../util/ecData','zrender/tool/
             }
             else {
                 if (data != '-') {
-                    option.series[seriesIndex].data[dataIndex] +=
-                        ecData.get(dragged, 'value');
+                    option.series[seriesIndex].data[dataIndex] = 
+                        accMath.accAdd(
+                            option.series[seriesIndex].data[dataIndex],
+                            ecData.get(dragged, 'value')
+                        );
                 }
                 else {
                     option.series[seriesIndex].data[dataIndex] =
@@ -13178,7 +13291,7 @@ define('echarts/chart/calculableBase',['require','../util/ecData','zrender/tool/
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/island',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/event','zrender/tool/color','../chart'],function (require) {
+define('echarts/chart/island',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/event','zrender/tool/color','../util/accMath','../chart'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -13216,8 +13329,11 @@ define('echarts/chart/island',['require','../component/base','./calculableBase',
          */
         function _combine(tarShape, srcShape) {
             var zrColor = require('zrender/tool/color');
-            var value = ecData.get(tarShape, 'value')
-                        + ecData.get(srcShape, 'value');
+            var accMath = require('../util/accMath');
+            var value = accMath.accAdd(
+                            ecData.get(tarShape, 'value'),
+                            ecData.get(srcShape, 'value')
+                        );
             var name = ecData.get(tarShape, 'name')
                        + _nameConnector
                        + ecData.get(srcShape, 'name');
@@ -13956,7 +14072,23 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
             }
 
             axShape.style.strokeColor = option.axisLine.lineStyle.color;
-            axShape.style.lineWidth = option.axisLine.lineStyle.width;
+            
+            var lineWidth = option.axisLine.lineStyle.width;
+            axShape.style.lineWidth = lineWidth;
+            // 亚像素优化
+            if (option.position == 'left' || option.position == 'right') {
+                // 纵向布局，优化x
+                axShape.style.xStart 
+                    = axShape.style.xEnd 
+                    = self.subPixelOptimize(axShape.style.xEnd, lineWidth);
+            }
+            else {
+                // 横向布局，优化y
+                axShape.style.yStart 
+                    = axShape.style.yEnd 
+                    = self.subPixelOptimize(axShape.style.yEnd, lineWidth);
+            }
+            
             axShape.style.lineType = option.axisLine.lineStyle.type;
 
             self.shapeList.push(axShape);
@@ -14124,6 +14256,8 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
             var axShape;
             var data       = option.data;
             var dataLength = option.data.length;
+            var lineType = option.splitLine.lineStyle.type;
+            var lineWidth = option.splitLine.lineStyle.width;
             var color = option.splitLine.lineStyle.color;
             color = color instanceof Array ? color : [color];
             var colorLength = color.length;
@@ -14135,7 +14269,10 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                 var x;
 
                 for (var i = 0; i < dataLength; i += _interval) {
-                    x = getCoord(data[i].value || data[i]);
+                    // 亚像素优化
+                    x = self.subPixelOptimize(
+                        getCoord(data[i].value || data[i]), lineWidth
+                    );
                     axShape = {
                         shape : 'line',
                         zlevel : _zlevelBase,
@@ -14146,8 +14283,8 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                             xEnd : x,
                             yEnd : ey,
                             strokeColor : color[(i / _interval) % colorLength],
-                            lineType : option.splitLine.lineStyle.type,
-                            lineWidth : option.splitLine.lineStyle.width
+                            lineType : lineType,
+                            lineWidth : lineWidth
                         }
                     };
                     self.shapeList.push(axShape);
@@ -14161,7 +14298,10 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                 var y;
 
                 for (var i = 0; i < dataLength; i += _interval) {
-                    y = getCoord(data[i].value || data[i]);
+                    // 亚像素优化
+                    y = self.subPixelOptimize(
+                        getCoord(data[i].value || data[i]), lineWidth
+                    );
                     axShape = {
                         shape : 'line',
                         zlevel : _zlevelBase,
@@ -14172,8 +14312,8 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                             xEnd : ex,
                             yEnd : y,
                             strokeColor : color[(i / _interval) % colorLength],
-                            linetype : option.splitLine.lineStyle.type,
-                            lineWidth : option.splitLine.lineStyle.width
+                            linetype : lineType,
+                            lineWidth : lineWidth
                         }
                     };
                     self.shapeList.push(axShape);
@@ -14515,7 +14655,23 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
                 axShape.style.textPosition = option.nameLocation;
             }
             axShape.style.strokeColor = option.axisLine.lineStyle.color;
-            axShape.style.lineWidth = option.axisLine.lineStyle.width;
+            
+            var lineWidth = option.axisLine.lineStyle.width;
+            axShape.style.lineWidth = lineWidth;
+            // 亚像素优化
+            if (option.position == 'left' || option.position == 'right') {
+                // 纵向布局，优化x
+                axShape.style.xStart 
+                    = axShape.style.xEnd 
+                    = self.subPixelOptimize(axShape.style.xEnd, lineWidth);
+            }
+            else {
+                // 横向布局，优化y
+                axShape.style.yStart 
+                    = axShape.style.yEnd 
+                    = self.subPixelOptimize(axShape.style.yEnd, lineWidth);
+            }
+            
             axShape.style.lineType = option.axisLine.lineStyle.type;
 
             self.shapeList.push(axShape);
@@ -14683,6 +14839,8 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
             var axShape;
             var data       = _valueList;
             var dataLength = _valueList.length;
+            var lineType = option.splitLine.lineStyle.type;
+            var lineWidth = option.splitLine.lineStyle.width;
             var color = option.splitLine.lineStyle.color;
             color = color instanceof Array ? color : [color];
             var colorLength = color.length;
@@ -14694,7 +14852,8 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
                 var x;
 
                 for (var i = 0; i < dataLength; i++) {
-                    x = getCoord(data[i]);
+                    // 亚像素优化
+                    x = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
                         shape : 'line',
                         zlevel : _zlevelBase,
@@ -14705,8 +14864,8 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
                             xEnd : x,
                             yEnd : ey,
                             strokeColor : color[i % colorLength],
-                            lineType : option.splitLine.lineStyle.type,
-                            lineWidth : option.splitLine.lineStyle.width
+                            lineType : lineType,
+                            lineWidth : lineWidth
                         }
                     };
                     self.shapeList.push(axShape);
@@ -14720,7 +14879,8 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
                 var y;
 
                 for (var i = 0; i < dataLength; i++) {
-                    y = getCoord(data[i]);
+                    // 亚像素优化
+                    y = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
                         shape : 'line',
                         zlevel : _zlevelBase,
@@ -14731,8 +14891,8 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
                             xEnd : ex,
                             yEnd : y,
                             strokeColor : color[i % colorLength],
-                            lineType : option.splitLine.lineStyle.type,
-                            lineWidth : option.splitLine.lineStyle.width
+                            lineType : lineType,
+                            lineWidth : lineWidth
                         }
                     };
                     self.shapeList.push(axShape);
@@ -15553,11 +15713,8 @@ define('echarts/component/grid',['require','./base','../config','../component'],
                 _height = gridOption.height;
             }
             
-            if (gridOption.borderWidth % 2 == 1) {
-                // 亚像素优化
-                _x += _x == Math.ceil(_x) ? 0.5 : 0;
-                _y += _y == Math.ceil(_y) ? 0.5 : 0;
-            }
+            _x = self.subPixelOptimize(_x, gridOption.borderWidth);
+            _y = self.subPixelOptimize(_y, gridOption.borderWidth);
 
             self.shapeList.push({
                 shape : 'rectangle',
@@ -17370,7 +17527,28 @@ define('echarts/component/legend',['require','./base','../config','zrender/tool/
             });
         },
         bar : function (ctx, style) {
-            ctx.rect(style.x, style.y + 1, style.width, style.height - 2);
+            //ctx.rect(style.x, style.y + 1, style.width, style.height - 2);
+            var x = style.x;
+            var y = style.y +1;
+            var width = style.width;
+            var height = style.height - 2;
+            var r = 3;
+            
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + width - r, y);
+            ctx.quadraticCurveTo(
+                x + width, y, x + width, y + r
+            );
+            ctx.lineTo(x + width, y + height - r);
+            ctx.quadraticCurveTo(
+                x + width, y + height, x + width - r, y + height
+            );
+            ctx.lineTo(x + r, y + height);
+            ctx.quadraticCurveTo(
+                x, y + height, x, y + height - r
+            );
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
         },
         force : function(ctx, style) {
             require('zrender/shape').get('icon').get('circle')(ctx, style);
@@ -18680,7 +18858,7 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
             if (!opt) {
                 return '';
             }
-            cssText = [];
+            var cssText = [];
             if (opt.transitionDuration) {
                 var transitionText = 'left ' + opt.transitionDuration + 's,'
                                     + 'top ' + opt.transitionDuration + 's';
@@ -19884,14 +20062,14 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
         /**
          * html转码的方法
          */
-        _encodeHTML = function (source) {
+        function _encodeHTML(source) {
             return String(source)
                         .replace(/&/g, '&amp;')
                         .replace(/</g, '&lt;')
                         .replace(/>/g, '&gt;')
                         .replace(/"/g, '&quot;')
                         .replace(/'/g, '&#39;');
-        };
+        }
         
         zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
         zr.on(zrConfig.EVENT.GLOBALOUT, _onglobalout);
@@ -20026,17 +20204,29 @@ define('echarts/component/toolbox',['require','./base','../config','zrender/conf
 
             var color = toolboxOption.color instanceof Array
                         ? toolboxOption.color : [toolboxOption.color];
-            /*
+            
+            var textFont = self.getFont(toolboxOption.textStyle);
             var textPosition;
+            var textAlign;
+            var textBaseLine;
             if (toolboxOption.orient == 'horizontal') {
-                textPosition = toolboxOption.y != 'bottom'
+                textPosition = _itemGroupLocation.y / zr.getHeight() < 0.5
                                ? 'bottom' : 'top';
+                textAlign = _itemGroupLocation.x / zr.getWidth() < 0.5
+                            ? 'left' : 'right';
+                textBaseLine = _itemGroupLocation.y / zr.getHeight() < 0.5
+                               ? 'top' : 'bottom';
             }
             else {
-                textPosition = toolboxOption.x != 'left'
-                               ? 'left' : 'right';
+                textPosition = _itemGroupLocation.x / zr.getWidth() < 0.5
+                               ? 'right' : 'left';
+                /*
+                textAlign = _itemGroupLocation.x / zr.getWidth() < 0.5
+                               ? 'right' : 'left';
+                textBaseLine = 'top';
+                */
             }
-            */
+            
            _iconShapeMap = {};
 
             for (var i = 0; i < iconLength; i++) {
@@ -20060,11 +20250,38 @@ define('echarts/component/toolbox',['require','./base','../config','zrender/conf
                     highlightStyle : {
                         lineWidth : 2,
                         shadowBlur: 5,
+                        text : toolboxOption.showTitle 
+                               ? toolboxOption.featureTitle[_iconList[i]]
+                               : false,
+                        textFont : textFont,
+                        textPosition : textPosition,
                         strokeColor : color[i % color.length]
                     },
                     hoverable : true,
                     clickable : true
                 };
+                
+                if (toolboxOption.orient == 'horizontal') {
+                    // 修正左对齐第一个或右对齐最后一个
+                    if (i === 0 && textAlign == 'left') {
+                        itemShape.highlightStyle.textPosition = 'specific';
+                        itemShape.highlightStyle.textAlign = textAlign;
+                        itemShape.highlightStyle.textBaseLine = textBaseLine;
+                        itemShape.highlightStyle.textX = lastX;
+                        itemShape.highlightStyle.textY = textBaseLine == 'top' 
+                                                     ? lastY + itemSize + 10
+                                                     : lastY - 10;
+                    }
+                    if (i == iconLength - 1 && textAlign == 'right') {
+                        itemShape.highlightStyle.textPosition = 'specific';
+                        itemShape.highlightStyle.textAlign = textAlign;
+                        itemShape.highlightStyle.textBaseLine = textBaseLine;
+                        itemShape.highlightStyle.textX = lastX + itemSize;
+                        itemShape.highlightStyle.textY = textBaseLine == 'top' 
+                                                     ? lastY + itemSize + 10
+                                                     : lastY - 10;
+                    }
+                }
 
                 switch(_iconList[i]) {
                     case 'mark':
@@ -21375,9 +21592,6 @@ define(
 
             var polar; 
 
-            var _width = zr.getWidth();
-            var _height = zr.getHeight();
-
             var series;
             var _queryTarget;
 
@@ -21420,15 +21634,12 @@ define(
                 var length = indicator.length;
                 var startAngle = item.startAngle ;
                 var dStep = 2 * Math.PI / length;
-                var radius = item.radius;
+                var radius = self.parsePercent(
+                    item.radius,
+                    Math.min(zr.getWidth(), zr.getHeight()) / 2
+                );
                 var __ecIndicator = item.__ecIndicator = [];
                 var vector;
-
-                if (typeof radius != 'number') {
-                    radius = Math.floor(
-                        Math.min(_width, _height) / 2 - 50
-                    );
-                }               
 
                 for (var i = 0 ;i < length ; i ++) {
                     vector = ecCoordinates.polar2cartesian(
@@ -21451,7 +21662,7 @@ define(
                 var splitArea = item.splitArea;
                 var splitLine = item.splitLine;
 
-                var center = item.center;
+                var center = getCenter(index);
                 var splitNumber = item.splitNumber;
 
                 var strokeColor = splitLine.lineStyle.color;
@@ -21482,7 +21693,7 @@ define(
                 var style;
                 var newStyle;
                 var splitNumber = self.deepQuery(_queryTarget, 'splitNumber');
-                var center = item.center;
+                var center = getCenter(index);
                 var vector;
                 var value;
                 var text;
@@ -21542,7 +21753,7 @@ define(
                 var __ecIndicator = item.__ecIndicator;
                 var vector;
                 var indicator = self.deepQuery(_queryTarget, 'indicator');
-                var center = item.center;
+                var center = getCenter(index);
                 var style;
                 var textAlign;
                 var name;
@@ -21635,7 +21846,7 @@ define(
             function _addDropBox(index) {
                 var index = index || 0;
                 var item = polar[index];
-                var center = item.center;
+                var center = getCenter(index);
                 var __ecIndicator = item.__ecIndicator;
                 var len = __ecIndicator.length;
                 var pointList = [];
@@ -21805,7 +22016,7 @@ define(
              */
             function getCenter(index) {
                 var index = index || 0;
-                return polar[index].center;
+                return self.parseCenter(polar[index].center);
             }
 
             /**
@@ -22113,29 +22324,6 @@ define(
                 }
             }
 
-            function reformOption(opt) {
-                // 常用方法快捷方式
-                var _merge = zrUtil.merge;
-                opt = _merge(
-                          opt || {},
-                          ecConfig.polar,
-                          {
-                              'overwrite' : false,
-                              'recursive' : true
-                          }
-                      );
-
-                opt.center = self.parseCenter(opt.center);
-                
-                if (!opt.radius) {
-                    opt.radius = Math.floor(
-                        Math.min(_width, _height) / 2 - 50
-                    );
-                }
-
-                return opt;
-            }
-
             /**
              * 获取每个指标上某个value对应的坐标
              * @param {number} polarIndex
@@ -22153,7 +22341,7 @@ define(
                 }
 
                 var indicator = polar[polarIndex].__ecIndicator[indicatorIndex];
-                var center = polar[polarIndex].center;
+                var center = getCenter(polarIndex);
                 var vector = indicator.vector;
                 var max = indicator.value.max;
                 var min = indicator.value.min;
@@ -22205,6 +22393,7 @@ define(
                 var len;
                 var angle;
                 var finalAngle;
+                var zrSize = Math.min(zr.getWidth(), zr.getHeight()) / 2;
                 for (var i = 0 ; i < polar.length; i ++) {
                     item = polar[i];
                     center = getCenter(i);
@@ -22214,7 +22403,7 @@ define(
                             valueIndex : 0
                         };
                     }
-                    radius = self.deepQuery([item, option], 'radius');
+                    radius = self.parsePercent(item.radius, zrSize);
                     startAngle = item.startAngle;
                     indicator = item.indicator;
                     len = indicator.length;
@@ -22266,21 +22455,12 @@ define(
                     option = newOption;
                     polar = option.polar;
                     series = option.series;
-                    self.backupAdaptiveParams(polar,['center', 'radius'],true);
                 }
                 self.clear();
                 _buildShape();
             }
-            
-            function resize() {
-                // 复位录原始定义
-                self.restoreAdaptiveParams(polar, ['center', 'radius'], true);
-                refresh();
-            }
 
             self.refresh = refresh;
-            self.resize = resize;
-            self.reformOption = reformOption;
             self.getVector = getVector;
 
             self.getDropBox = _addDropBox;
@@ -22339,10 +22519,10 @@ define(
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zrender/tool/event','zrender/config','./util/shape/icon','./chart','./chart/island','./component','./component/title','./component/axis','./component/categoryAxis','./component/valueAxis','./component/grid','./component/dataZoom','./component/legend','./component/dataRange','./component/tooltip','./component/toolbox','./component/dataView','./component/polar','./util/ecData','./chart','./component','zrender/tool/util','zrender/tool/util','zrender/tool/util','zrender/tool/color','zrender/tool/util','zrender/tool/util'],function(require) {
+define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zrender/tool/event','zrender/config','./util/shape/icon','./chart','./chart/island','./component','./component/title','./component/axis','./component/categoryAxis','./component/valueAxis','./component/grid','./component/dataZoom','./component/legend','./component/dataRange','./component/tooltip','./component/toolbox','./component/dataView','./component/polar','./util/ecData','./chart','./component','zrender/tool/util','zrender/tool/util','zrender/tool/util','zrender/tool/color','zrender/tool/util','zrender/tool/util','zrender/tool/util'],function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
-    self.version = '1.3.0';
+    self.version = '1.3.1';
     self.dependencies = {
         zrender : '1.0.5'
     };
@@ -22368,6 +22548,7 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
         var ecConfig = require('./config');
 
         var self = this;
+        var _id = '__ECharts__' + new Date() - 0;
         var _zr;
         var _option;
         var _optionBackup;          // for各种change和zoom
@@ -22762,7 +22943,6 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
             while (len--) {
                 magicOption.series[len].data = _optionBackup.series[len].data;
             }
-            
             return magicOption;
         }
         
@@ -22966,7 +23146,7 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
 
             _toolbox.render(magicOption, {dataZoom: dataZoom});
 
-            if (magicOption.animation) {
+            if (magicOption.animation && !magicOption.renderAsImage) {
                 var len = _chartList.length;
                 while (len--) {
                     _chartList[len]
@@ -22976,6 +23156,34 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
             }
 
             _zr.render();
+            
+            var imgId = 'IMG' + _id;
+            var img = document.getElementById(imgId);
+            if (magicOption.renderAsImage && !G_vmlCanvasManager) {
+                // IE8- 不支持图片渲染形式
+                if (img) {
+                    // 已经渲染过则更新显示
+                    img.src = getDataURL(magicOption.renderAsImage);
+                }
+                else {
+                    // 没有渲染过插入img dom
+                    img = getImage(magicOption.renderAsImage);
+                    img.id = imgId;
+                    img.style.position = 'absolute';
+                    img.style.left = 0;
+                    img.style.top = 0;
+                    dom.firstChild.appendChild(img);
+                }
+                un();
+                _zr.un();
+                _disposeChartList();
+                _zr.clear();
+            }
+            else if (img) {
+                // 删除可能存在的img
+                img.parentNode.removeChild(img);
+            }
+            img = null;
         }
 
         /**
@@ -23139,6 +23347,23 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
         }
 
         /**
+         * 返回内部持有的当前显示option克隆 
+         */
+        function getOption() {
+            var zrUtil = require('zrender/tool/util');
+            if (_optionBackup.toolbox
+                && _optionBackup.toolbox.show
+                && _optionBackup.toolbox.feature.magicType
+                && _optionBackup.toolbox.feature.magicType.length > 0
+            ) {
+                 return zrUtil.clone(_getMagicOption());
+            }
+            else {
+                 return zrUtil.clone(_getMagicOption(_island.getOption()));
+            }
+        }
+
+        /**
          * 数据设置快捷接口
          * @param {Array} series
          * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
@@ -23152,8 +23377,14 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
                 _option.series = series;
                 self.setOption(_option, notMerge);
             }
-
             return self;
+        }
+
+        /**
+         * 返回内部持有的当前显示series克隆 
+         */
+        function getSeries() {
+            return getOption().series;
         }
         
         /**
@@ -23345,6 +23576,43 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
         }
 
         /**
+         * 获取Base64图片dataURL
+         * @param {string} imgType 图片类型，支持png|jpeg，默认为png
+         * @return imgDataURL
+         */
+        function getDataURL(imgType) {
+            if (G_vmlCanvasManager) {
+                return '';
+            }
+            if (_chartList.length === 0) {
+                // 渲染为图片
+                var imgId = 'IMG' + _id;
+                var img = document.getElementById(imgId);
+                if (img) {
+                    return img.src;
+                }
+            }
+            imgType = imgType || 'png';
+            if (imgType != 'png' && imgType != 'jpeg') {
+                imgType = 'png';
+            }
+            return _zr.toDataURL('image/' + imgType); 
+        }
+
+        /**
+         * 获取img
+         * @param {string} imgType 图片类型，支持png|jpeg，默认为png
+         * @return img dom
+         */
+        function getImage(imgType) {
+            var imgDom = document.createElement('img');
+            imgDom.src = getDataURL(imgType);
+            imgDom.title = (_optionRestore.title && _optionRestore.title.text)
+                           || 'ECharts';
+            return imgDom;
+        }
+
+        /**
          * 绑定事件
          * @param {Object} eventName 事件名称
          * @param {Object} eventListener 事件响应函数
@@ -23412,6 +23680,11 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
          */
         function resize() {
             _zr.resize();
+            if (_option.renderAsImage && !G_vmlCanvasManager) {
+                // 渲染为图片从走render模式
+                _render(_option);
+                return self;
+            }
             // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
             // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
@@ -23448,7 +23721,11 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
         self.setOption = setOption;
         self.setSeries = setSeries;
         self.addData = addData;
+        self.getOption = getOption;
+        self.getSeries = getSeries;
         self.getZrender = getZrender;
+        self.getDataURL = getDataURL;
+        self.getImage =  getImage;
         self.on = on;
         self.un = un;
         self.showLoading = showLoading;
@@ -24823,7 +25100,7 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
  *
  */
 
- define('echarts/chart/radar',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/color','../chart'],function(require) {
+ define('echarts/chart/radar',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/color','../util/accMath','../chart'],function(require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -25194,7 +25471,6 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
             var value;
 
             if (dataIndex == -1) {
-                
                 data = {
                     value : ecData.get(dragged, 'value'),
                     name : ecData.get(dragged, 'name')
@@ -25208,13 +25484,15 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
                 );
             }
             else {
+                // 数据被拖拽到某个数据项上，数据修改
+                var accMath = require('../util/accMath');
                 data = series[seriesIndex].data[dataIndex];
                 legend && legend.del(data.name);
                 data.name += option.nameConnector
                              + ecData.get(dragged, 'name');
                 value = ecData.get(dragged, 'value');
                 for (var i = 0 ; i < value.length; i ++) {
-                    data.value[i] += value[i];
+                    data.value[i] = accMath.accAdd(data.value[i], value[i]);
                 }
                 
                 legend && legend.add(
@@ -28315,7 +28593,7 @@ define('echarts/chart/chord',['require','../util/shape/chord','../component/base
                         [group, chordSerieSample],
                         'itemStyle.normal.label.textStyle.color'
                     ) || '#fff';
-                    sector.style.textFont = self.getFont(self.deepQuery(
+                    labelShape.style.textFont = self.getFont(self.deepQuery(
                         [group, chordSerieSample],
                         'itemStyle.normal.label.textStyle'
                     ));
@@ -30001,7 +30279,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                             style : {
                                 pointList : singlePL,
                                 strokeColor : lineColor
-                                              || normalColor
+                                              || normalColor 
                                               || defaultColor,
                                 lineWidth : lineWidth,
                                 lineType : lineType,
@@ -30222,8 +30500,15 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
             var seriesIndex = param.seriesIndex;
             var dataIndex = param.dataIndex;
             var seriesPL;
+            var singlePL;
             var serie;
             var queryTarget;
+            
+            var lineWidth;
+            var normalColor;
+            var emphasisColor;
+            var defaultColor;
+            
             var len = seriesIndex.length;
             while (len--) {
                 seriesPL = finalPLMap[seriesIndex[len]];
@@ -30233,21 +30518,16 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                     defaultColor = _sIndex2ColorMap[seriesIndex[len]];
                     // 多级控制
                     lineWidth = self.deepQuery(
-                        [serie], 'itemStyle.normal.lineStyle.width'
-                    );
-                    lineType = self.deepQuery(
-                        [serie], 'itemStyle.normal.lineStyle.type'
-                    );
-                    lineColor = self.deepQuery(
-                        [serie], 'itemStyle.normal.lineStyle.color'
+                        queryTarget, 'itemStyle.normal.lineStyle.width'
                     );
                     normalColor = self.deepQuery(
-                        [serie], 'itemStyle.normal.color'
+                        queryTarget, 'itemStyle.normal.color'
                     );
                     emphasisColor = self.deepQuery(
-                        [serie], 'itemStyle.emphasis.color'
+                        queryTarget, 'itemStyle.emphasis.color'
                     );
                     var shape;
+                    var data;
                     for (var i = 0, l = seriesPL.length; i < l; i++) {
                         singlePL = seriesPL[i];
                         for (var j = 0, k = singlePL.length; j < k; j++) {
@@ -30615,6 +30895,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
             var legend = component.legend;
             var locationMap = [];                   // 需要返回的东西：数组位置映射到系列索引
             var maxDataLength = 0;                  // 需要返回的东西：最大数据长度
+            var iconShape;
             // 计算需要显示的个数和分配位置并记在下面这个结构里
             for (var i = 0, l = seriesArray.length; i < l; i++) {
                 serie = series[seriesArray[i]];
@@ -30623,6 +30904,15 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                     self.selectedMap[serieName] = legend.isSelected(serieName);
                     _sIndex2colorMap[seriesArray[i]] =
                         legend.getColor(serieName);
+                    
+                    iconShape = legend.getItemShape(serieName);
+                    if (iconShape) {
+                        // 回调legend，换一个更形象的icon
+                        iconShape.style.strokeColor = 
+                            serie.itemStyle.normal.borderColor;
+                        iconShape.style.brushType = 'both';
+                        legend.setItemShape(serieName, iconShape);
+                    }
                 } else {
                     self.selectedMap[serieName] = true;
                     _sIndex2colorMap[seriesArray[i]] =
@@ -30736,7 +31026,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             }
                             lastYP -= barHeight;
                             y = lastYP;
-                            lastYP -= 0.5; //白色视觉分隔线宽修正
+                            //lastYP -= 0.5; //白色视觉分隔线宽修正
                         }
                         else if (value < 0){
                             // 负向堆叠
@@ -30749,7 +31039,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             }
                             y = lastYN;
                             lastYN += barHeight;
-                            lastYN += 0.5; //白色视觉分隔线宽修正
+                            //lastYN += 0.5; //白色视觉分隔线宽修正
                         }
                         else {
                             // 0值
@@ -30757,7 +31047,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             // 最小高度无效
                             lastYP -= barHeight;
                             y = lastYP;
-                            lastYP -= 0.5; //白色视觉分隔线宽修正
+                            //lastYP -= 0.5; //白色视觉分隔线宽修正
                         }
 
                         barShape = _getBarItem(
@@ -30884,7 +31174,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             }
                             x = lastXP;
                             lastXP += barHeight;
-                            lastXP += 0.5; //白色视觉分隔线宽修正
+                            //lastXP += 0.5; //白色视觉分隔线宽修正
                         }
                         else if (value < 0){
                             // 负向堆叠
@@ -30897,7 +31187,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             }
                             lastXN -= barHeight;
                             x = lastXN;
-                            lastXN -= 0.5; //白色视觉分隔线宽修正
+                            //lastXN -= 0.5; //白色视觉分隔线宽修正
                         }
                         else {
                             // 0值
@@ -30905,7 +31195,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             // 最小高度无效
                             x = lastXP;
                             lastXP += barHeight;
-                            lastXP += 0.5; //白色视觉分隔线宽修正
+                            //lastXP += 0.5; //白色视觉分隔线宽修正
                         }
 
                         barShape = _getBarItem(
@@ -30978,7 +31268,6 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
             var sBarWidth;
             var sBarWidthCounter = 0;
             var sBarWidthTotal = 0;
-            var sBarMinHeight;
             var barGap;
             var barCategoryGap;
             var hasFound;
@@ -30988,10 +31277,10 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                 hasFound = false;   // 同一堆叠第一个barWidth生效
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     seriesIndex = locationMap[j][m];
-                    queryTarget = [series[seriesIndex]];
+                    queryTarget = series[seriesIndex];
                     if (!ignoreUserDefined) {
                         if (!hasFound) {
-                            sBarWidth = self.deepQuery(
+                            sBarWidth = self.query(
                                 queryTarget,
                                 'barWidth'
                             );
@@ -31006,19 +31295,19 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                         }
                     }
 
-                    barMinHeightMap[seriesIndex] = self.deepQuery(
+                    barMinHeightMap[seriesIndex] = self.query(
                         queryTarget,
                         'barMinHeight'
                     );
                     barGap = typeof barGap != 'undefined' 
                              ? barGap
-                             : self.deepQuery(
+                             : self.query(
                                    queryTarget,
                                    'barGap'
                                );
                     barCategoryGap = typeof barCategoryGap != 'undefined' 
                                      ? barCategoryGap
-                                     : self.deepQuery(
+                                     : self.query(
                                            queryTarget,
                                            'barCategoryGap'
                                        );
@@ -31123,13 +31412,23 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
             var data = serie.data[dataIndex];
             // 多级控制
             var defaultColor = _sIndex2colorMap[seriesIndex];
+            var queryTarget = [data, serie];
             var normalColor = self.deepQuery(
-                [data, serie],
+                queryTarget,
                 'itemStyle.normal.color'
             ) || defaultColor;
             var emphasisColor = self.deepQuery(
-                [data, serie],
+                queryTarget,
                 'itemStyle.emphasis.color'
+            );
+            var normal = self.deepMerge(
+                queryTarget,
+                'itemStyle.normal'
+            );
+            var normalBorderWidth = normal.borderWidth;
+            var emphasis = self.deepMerge(
+                queryTarget,
+                'itemStyle.emphasis'
             );
             barShape = {
                 shape : 'rectangle',
@@ -31142,7 +31441,9 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                     height : height,
                     brushType : 'both',
                     color : normalColor,
-                    strokeColor : '#fff'
+                    radius : normal.borderRadius,
+                    lineWidth : normalBorderWidth,
+                    strokeColor : normal.borderColor
                 },
                 highlightStyle : {
                     color : emphasisColor 
@@ -31150,19 +31451,31 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                 ? zrColor.lift(normalColor, -0.2)
                                 : normalColor
                                ),
-                    strokeColor : 'rgba(0,0,0,0)'
+                    radius : emphasis.borderRadius,
+                    lineWidth : emphasis.borderWidth,
+                    strokeColor : emphasis.borderColor
                 },
                 _orient : orient
             };
+            // 考虑线宽的显示优化
+            if (barShape.style.height > normalBorderWidth
+                && barShape.style.width > normalBorderWidth
+            ) {
+                barShape.style.y += normalBorderWidth / 2;
+                barShape.style.height -= normalBorderWidth;
+                barShape.style.x += normalBorderWidth / 2;
+                barShape.style.width -= normalBorderWidth;
+            }
+            else {
+                // 太小了，废了边线
+                barShape.style.brushType = 'fill';
+            }
+            
             barShape.highlightStyle.textColor = barShape.highlightStyle.color;
             
             barShape = self.addLabel(barShape, serie, data, name, orient);
 
-            if (self.deepQuery(
-                    [data, serie, option],
-                    'calculable'
-                )
-            ) {
+            if (self.deepQuery([data, serie, option],'calculable')) {
                 self.setCalculable(barShape);
                 barShape.draggable = true;
             }
@@ -31396,7 +31709,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/pie',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/math','zrender/tool/util','zrender/tool/color','../chart'],function(require) {
+define('echarts/chart/pie',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/math','zrender/tool/util','zrender/tool/color','../util/accMath','../chart'],function(require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -31432,26 +31745,29 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
         function _buildShape() {
             self.selectedMap = {};
             _selected = {};
+            var center;
+            var radius;
 
             var pieCase;        // 饼图箱子
             _selectedMode = false;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type == ecConfig.CHART_TYPE_PIE) {
                     series[i] = self.reformOption(series[i]);
+                    center = self.parseCenter(series[i].center);
+                    radius = self.parseRadius(series[i].radius);
                     _selectedMode = _selectedMode || series[i].selectedMode;
                     _selected[i] = [];
                     if (self.deepQuery([series[i], option], 'calculable')) {
                         pieCase = {
-                            shape : series[i].radius[0] <= 10
-                                    ? 'circle' : 'ring',
+                            shape : radius[0] <= 10 ? 'circle' : 'ring',
                             zlevel : _zlevelBase,
                             hoverable : false,
                             style : {
-                                x : series[i].center[0],          // 圆心横坐标
-                                y : series[i].center[1],          // 圆心纵坐标
-                                r0 : series[i].radius[0] <= 10    // 圆环内半径
-                                     ? 0 : series[i].radius[0] - 10,
-                                r : series[i].radius[1] + 10,     // 圆环外半径
+                                x : center[0],          // 圆心横坐标
+                                y : center[1],          // 圆心纵坐标
+                                // 圆环内外半径
+                                r0 : radius[0] <= 10 ? 0 : radius[0] - 10,
+                                r : radius[1] + 10,
                                 brushType : 'stroke',
                                 strokeColor : series[i].calculableHolderColor
                                               || ecConfig.calculableHolderColor
@@ -31507,6 +31823,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
             var totalAngle = 360 - (minAngle * totalSelected);
             var defaultColor;
             var roseType = serie.roseType;
+            var radius;
             var r0;     // 扇形内半径
             var r1;     // 扇形外半径
 
@@ -31536,8 +31853,9 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                 }
                 percent = (percent * 100).toFixed(2);
                 
-                r0 = +serie.radius[0];
-                r1 = +serie.radius[1];
+                radius = self.parseRadius(serie.radius);
+                r0 = +radius[0];
+                r1 = +radius[1];
                 
                 if (roseType == 'radius') {
                     r1 = data[i].value / maxValue * (r1 - r0) * 0.8 
@@ -31615,6 +31933,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
         ) {
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
+            var center = self.parseCenter(serie.center);
 
             // 多级控制
             var normalColor = self.deepQuery(
@@ -31632,8 +31951,8 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                 zlevel : _zlevelBase,
                 clickable : true,
                 style : {
-                    x : serie.center[0],          // 圆心横坐标
-                    y : serie.center[1],          // 圆心纵坐标
+                    x : center[0],          // 圆心横坐标
+                    y : center[1],          // 圆心纵坐标
                     r0 : r0,         // 圆环内半径
                     r : r1,          // 圆环外半径
                     startAngle : startAngle,
@@ -31706,12 +32025,12 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                     'itemStyle.normal.label.textStyle.baseline'
                 ) || 'middle';
                 sector.style.textX = Math.round(
-                    serie.center[0]
+                    center[0]
                     + (r1 + r0) / 2
                       * zrMath.cos((startAngle + endAngle) / 2, true)
                 );
                 sector.style.textY = Math.round(
-                    serie.center[1]
+                    center[1]
                     - (r1 + r0) / 2
                        * zrMath.sin((startAngle + endAngle) / 2, true)
                 );
@@ -31744,12 +32063,12 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                     'itemStyle.normal.label.textStyle.baseline'
                 ) || 'middle';
                 sector.highlightStyle.textX = Math.round(
-                    serie.center[0]
+                    center[0]
                     + (r1 + r0) / 2
                       * zrMath.cos((startAngle + endAngle) / 2, true)
                 );
                 sector.highlightStyle.textY = Math.round(
-                    serie.center[1]
+                    center[1]
                     - (r1 + r0) / 2
                       * zrMath.sin((startAngle + endAngle) / 2, true)
                 );
@@ -31778,6 +32097,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
         ) {
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
+            
             // 特定状态下是否需要显示文本标签
             if (_needLabel(serie, data, isEmphasis)) {
                 var status = isEmphasis ? 'emphasis' : 'normal';
@@ -31795,14 +32115,15 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                 var labelControl = itemStyle[status].label;
                 var textStyle = labelControl.textStyle || {};
 
-                var centerX = serie.center[0];                      // 圆心横坐标
-                var centerY = serie.center[1];                      // 圆心纵坐标
+                var center = self.parseCenter(serie.center);
+                var centerX = center[0];                      // 圆心横坐标
+                var centerY = center[1];                      // 圆心纵坐标
                 var midAngle = ((endAngle + startAngle) / 2) % 360; // 角度中值
-                var radius;                                         // 标签位置半径
+                var radius = self.parseRadius(serie.radius);  // 标签位置半径
                 var textAlign;
                 if (labelControl.position == 'outer') {
                     // 外部显示，默认
-                    radius = serie.radius[1]
+                    radius = radius[1]
                              - (-itemStyle[status].labelLine.length)
                              - (-textStyle.fontSize);
                     textAlign = (midAngle >= 150 && midAngle <= 210)
@@ -31861,11 +32182,6 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                 else {
                     // 内部显示由sector自带，不返回即可
                     return;
-                    /*
-                    radius = (serie.radius[0] + serie.radius[1]) / 2;
-                    textAlign = 'center';
-                    defaultColor = '#fff';
-                    */
                 }
             }
             else {
@@ -31940,12 +32256,14 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                 var labelLineControl = itemStyle[status].labelLine;
                 var lineStyle = labelLineControl.lineStyle || {};
 
-                var centerX = serie.center[0];                    // 圆心横坐标
-                var centerY = serie.center[1];                    // 圆心纵坐标
+                var center = self.parseCenter(serie.center);
+                var centerX = center[0];                    // 圆心横坐标
+                var centerY = center[1];                    // 圆心纵坐标
                 // 视觉引导线起点半径
                 var midRadius = r1;
                 // 视觉引导线终点半径
-                var maxRadius = serie.radius[1] - (-labelLineControl.length);
+                var maxRadius = self.parseRadius(serie.radius)[1]
+                                - (-labelLineControl.length);
                 var midAngle = ((endAngle + startAngle) / 2) % 360; // 角度中值
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
@@ -32016,18 +32334,6 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                           'recursive' : true
                       }
                   );
-                  //console.log(opt)
-            opt.center = self.parseCenter(opt.center);
-            
-            // 传数组实现环形图，[内半径，外半径]，传单个则默认为外半径为
-            if (typeof opt.radius == 'undefined') {
-                opt.radius = [
-                    0,
-                    Math.round(Math.min(zr.getWidth(), zr.getHeight()) / 2 - 50)
-                ];
-            } else if (!(opt.radius instanceof Array)) {
-                opt.radius = [0, opt.radius];
-            }
 
             // 通用字体设置
             opt.itemStyle.normal.label.textStyle = _merge(
@@ -32067,16 +32373,9 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
             if (newOption) {
                 option = newOption;
                 series = option.series;
-                self.backupAdaptiveParams(series, ['center', 'radius']);
             }
             self.clear();
             _buildShape();
-        }
-        
-        function resize() {
-            // 复位录原始定义
-            self.restoreAdaptiveParams(series, ['center', 'radius']);
-            refresh();
         }
         
         /**
@@ -32448,11 +32747,15 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
             }
             else {
                 // 落到sector上，数据被拖拽到某个数据项上，数据修改
+                var accMath = require('../util/accMath');
                 data = series[seriesIndex].data[dataIndex];
                 legend && legend.del(data.name);
                 data.name += option.nameConnector
                              + ecData.get(dragged, 'name');
-                data.value += ecData.get(dragged, 'value');
+                data.value = accMath.accAdd(
+                    data.value,
+                    ecData.get(dragged, 'value')
+                );
                 legend && legend.add(
                     data.name,
                     dragged.style.color || dragged.style.strokeColor
@@ -32537,7 +32840,6 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
         // 接口方法
         self.init = init;
         self.refresh = refresh;
-        self.resize = resize;
         self.addDataAnimation = addDataAnimation;
         self.animation = animation;
         self.onclick = onclick;

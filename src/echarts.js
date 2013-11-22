@@ -1104,7 +1104,7 @@ define(function(require) {
             if (G_vmlCanvasManager) {
                 return '';
             }
-            if (_chartList.length == 0) {
+            if (_chartList.length === 0) {
                 // 渲染为图片
                 var imgId = 'IMG' + _id;
                 var img = document.getElementById(imgId);

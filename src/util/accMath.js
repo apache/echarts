@@ -19,17 +19,17 @@ define(function() {
         var s1 = arg1.toString();
         var s2 = arg2.toString(); 
         try {
-            m += s1.split(".")[1].length;
+            m += s1.split('.')[1].length;
         }
         catch(e) {}
         
         try {
-            m += s2.split(".")[1].length;
+            m += s2.split('.')[1].length;
         }
         catch(e){}
         
-        return Number(s1.replace(".", ""))
-               * Number(s2.replace(".", ""))
+        return Number(s1.replace('.', ''))
+               * Number(s2.replace('.', ''))
                / Math.pow(10, m);
     }
 
@@ -42,14 +42,14 @@ define(function() {
         var r2;
         var m;
         try {
-            r1 = arg1.toString().split(".")[1].length;
+            r1 = arg1.toString().split('.')[1].length;
         }
         catch(e) {
             r1 = 0;
         }
         
         try {
-            r2=arg2.toString().split(".")[1].length;
+            r2=arg2.toString().split('.')[1].length;
         }
         catch(e) {
             r2=0;

@@ -1308,7 +1308,7 @@ define(function (require) {
                         .replace(/>/g, '&gt;')
                         .replace(/"/g, '&quot;')
                         .replace(/'/g, '&#39;');
-        };
+        }
         
         zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
         zr.on(zrConfig.EVENT.GLOBALOUT, _onglobalout);
