@@ -689,6 +689,12 @@ define(function(require) {
                 },
                 clickable : true
             };
+
+            if (symbol.match('image')) {
+                itemShape.style.image = 
+                    symbol.replace(/^image:\/\//, '');
+                itemShape.shape = 'image';
+            }
             
             if (typeof rotate != 'undefined') {
                 itemShape.rotation = [
