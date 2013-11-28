@@ -669,7 +669,6 @@ define(function (require) {
                 + 'line-height:' 
                 + document.documentElement.clientHeight + 'px;';
                 
-            downloadDiv.onclick = _close;
             var downloadLink = document.createElement('a');
             //downloadLink.onclick = _saveImageForIE;
             downloadLink.href = image;
@@ -695,13 +694,22 @@ define(function (require) {
             downloadLink = null;
             downloadDiv = null;
             
-            function _close() {
-                var d = document.getElementById('__echarts_download_wrap__');
-                d.onclick = null;
-                d.innerHTML = '';
-                document.body.removeChild(d);
-                d = null;
-            }
+            setTimeout(function(){
+                var _d = document.getElementById('__echarts_download_wrap__');
+                if (_d) {
+                    _d.onclick = function () {
+                        var d = document.getElementById(
+                            '__echarts_download_wrap__'
+                        );
+                        d.onclick = null;
+                        d.innerHTML = '';
+                        document.body.removeChild(d);
+                        d = null;
+                    }
+                    _d = null;
+                }
+            }, 500)
+            
             /*
             function _saveImageForIE() {
                 window.win = window.open(image);

@@ -2221,6 +2221,86 @@ else { // make the canvas test simple by kener.linfeng@gmail.com
 return G_vmlCanvasManager;
 }); // define;
 /**
+ * echarts设备环境识别
+ *
+ * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
+ * @author firede[firede@firede.us]
+ * @desc thanks zepto.
+ */
+define('zrender/tool/env',[],function() {
+    // Zepto.js
+    // (c) 2010-2013 Thomas Fuchs
+    // Zepto.js may be freely distributed under the MIT license.
+
+    function detect( ua ) {
+        var os = this.os = {};
+        var browser = this.browser = {};
+        var webkit = ua.match(/Web[kK]it[\/]{0,1}([\d.]+)/);
+        var android = ua.match(/(Android);?[\s\/]+([\d.]+)?/);
+        var ipad = ua.match(/(iPad).*OS\s([\d_]+)/);
+        var ipod = ua.match(/(iPod)(.*OS\s([\d_]+))?/);
+        var iphone = !ipad && ua.match(/(iPhone\sOS)\s([\d_]+)/);
+        var webos = ua.match(/(webOS|hpwOS)[\s\/]([\d.]+)/);
+        var touchpad = webos && ua.match(/TouchPad/);
+        var kindle = ua.match(/Kindle\/([\d.]+)/);
+        var silk = ua.match(/Silk\/([\d._]+)/);
+        var blackberry = ua.match(/(BlackBerry).*Version\/([\d.]+)/);
+        var bb10 = ua.match(/(BB10).*Version\/([\d.]+)/);
+        var rimtabletos = ua.match(/(RIM\sTablet\sOS)\s([\d.]+)/);
+        var playbook = ua.match(/PlayBook/);
+        var chrome = ua.match(/Chrome\/([\d.]+)/) || ua.match(/CriOS\/([\d.]+)/);
+        var firefox = ua.match(/Firefox\/([\d.]+)/);
+        var ie = ua.match(/MSIE ([\d.]+)/);
+        var safari = webkit && ua.match(/Mobile\//) && !chrome;
+        var webview = ua.match(/(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/) && !chrome;
+        var ie = ua.match(/MSIE\s([\d.]+)/);
+
+        // Todo: clean this up with a better OS/browser seperation:
+        // - discern (more) between multiple browsers on android
+        // - decide if kindle fire in silk mode is android or not
+        // - Firefox on Android doesn't specify the Android version
+        // - possibly devide in os, device and browser hashes
+
+        if (browser.webkit = !!webkit) browser.version = webkit[1];
+
+        if (android) os.android = true, os.version = android[2];
+        if (iphone && !ipod) os.ios = os.iphone = true, os.version = iphone[2].replace(/_/g, '.');
+        if (ipad) os.ios = os.ipad = true, os.version = ipad[2].replace(/_/g, '.');
+        if (ipod) os.ios = os.ipod = true, os.version = ipod[3] ? ipod[3].replace(/_/g, '.') : null;
+        if (webos) os.webos = true, os.version = webos[2];
+        if (touchpad) os.touchpad = true;
+        if (blackberry) os.blackberry = true, os.version = blackberry[2];
+        if (bb10) os.bb10 = true, os.version = bb10[2];
+        if (rimtabletos) os.rimtabletos = true, os.version = rimtabletos[2];
+        if (playbook) browser.playbook = true;
+        if (kindle) os.kindle = true, os.version = kindle[1];
+        if (silk) browser.silk = true, browser.version = silk[1];
+        if (!silk && os.android && ua.match(/Kindle Fire/)) browser.silk = true;
+        if (chrome) browser.chrome = true, browser.version = chrome[1];
+        if (firefox) browser.firefox = true, browser.version = firefox[1];
+        if (ie) browser.ie = true, browser.version = ie[1];
+        if (safari && (ua.match(/Safari/) || !!os.ios)) browser.safari = true;
+        if (webview) browser.webview = true;
+        if (ie) browser.ie = true, browser.version = ie[1];
+
+        os.tablet = !!(ipad || playbook || (android && !ua.match(/Mobile/)) ||
+            (firefox && ua.match(/Tablet/)) || (ie && !ua.match(/Phone/) && ua.match(/Touch/)));
+        os.phone  = !!(!os.tablet && !os.ipod && (android || iphone || webos || blackberry || bb10 ||
+            (chrome && ua.match(/Android/)) || (chrome && ua.match(/CriOS\/([\d.]+)/)) ||
+            (firefox && ua.match(/Mobile/)) || (ie && ua.match(/Touch/))));
+
+        return {
+            browser: browser,
+            os: os,
+            // 原生canvas支持
+            canvasSupported : document.createElement('canvas').getContext 
+                              ? true : false 
+        }
+    }
+
+    return detect( navigator.userAgent );
+});
+/**
  * zrender: shape仓库
  *
  * @desc zrender是一个轻量级的Canvas类库，MVC封装，数据驱动，提供类Dom事件模型。
@@ -7665,7 +7745,7 @@ define(
                         image = _cache[src];
                     }
                     else {
-                        image = document.createElement('image');//new Image();
+                        image = new Image();//document.createElement('image');
                         image.onload = function(){
                             image.onload = null;
                             clearTimeout( _refreshTimeout );
@@ -10021,7 +10101,7 @@ define(
  *
  */
 define(
-    'zrender/zrender',['require','./lib/excanvas','./shape','./shape/circle','./shape/ellipse','./shape/line','./shape/polygon','./shape/brokenLine','./shape/rectangle','./shape/ring','./shape/sector','./shape/text','./shape/heart','./shape/droplet','./shape/path','./shape/image','./shape/beziercurve','./shape/star','./shape/isogon','./animation/animation','./tool/util','./tool/util','./config','./tool/loadingEffect','./tool/loadingEffect','./config','./tool/event'],function(require) {
+    'zrender/zrender',['require','./lib/excanvas','./tool/env','./shape','./shape/circle','./shape/ellipse','./shape/line','./shape/polygon','./shape/brokenLine','./shape/rectangle','./shape/ring','./shape/sector','./shape/text','./shape/heart','./shape/droplet','./shape/path','./shape/image','./shape/beziercurve','./shape/star','./shape/isogon','./animation/animation','./tool/util','./tool/util','./config','./tool/loadingEffect','./tool/loadingEffect','./config','./tool/env','./tool/event'],function(require) {
         /*
          * HTML5 Canvas for Internet Explorer!
          * Modern browsers like Firefox, Safari, Chrome and Opera support
@@ -10042,7 +10122,7 @@ define(
         var _idx = 0;           //ZRender instance's id
         var _instances = {};    //ZRender实例map索引
 
-        self.version = '1.0.5';
+        self.version = '1.0.6';
 
         /**
          * zrender初始化
@@ -10134,7 +10214,14 @@ define(
 
             return self;
         };
-
+        /* for debug
+        self.log = function(mes) {
+            document.getElementById('wrong-message').innerHTML =
+                mes + ' ' + (new Date() - 0)
+                + '<br/>' 
+                + document.getElementById('wrong-message').innerHTML;
+        };
+        */
         /**
          * ZRender接口类，对外可用的所有接口都在这里！！
          * storage（M）、painter（V）、handler（C）为内部私有类，外部接口不可见
@@ -10148,6 +10235,8 @@ define(
          */
         function ZRender(id, dom, params) {
             var self = this;
+            self.env = require('./tool/env');
+            
             var shape = require('./shape');
             // 内置图形注册
             require('./shape/circle');
@@ -11407,6 +11496,7 @@ define(
          */
         function Handler(root, storage, painter, shape) {
             var config = require('./config');
+            var env = require('./tool/env');
             //添加事件分发器特性
             var eventTool = require('./tool/event');
             eventTool.Dispatcher.call(this);
@@ -11441,19 +11531,23 @@ define(
             function _init() {
                 if (window.addEventListener) {
                     window.addEventListener('resize', _resizeHandler);
-
-                    root.addEventListener('click', _clickHandler);
-                    root.addEventListener('mousewheel', _mouseWheelHandler);
+                    
+                    if (!env.os.tablet && !env.os.phone) {
+                        // mobile的click/move/up/down自己模拟
+                        root.addEventListener('click', _clickHandler);
+                        root.addEventListener('mousewheel', _mouseWheelHandler);
+                        root.addEventListener('mousemove', _mouseMoveHandler);
+                        root.addEventListener('mousedown', _mouseDownHandler);
+                        root.addEventListener('mouseup', _mouseUpHandler);
+                    }
+                    else {
+                        // mobile支持
+                        root.addEventListener('touchstart', _touchStartHandler);
+                        root.addEventListener('touchmove', _touchMoveHandler);
+                        root.addEventListener('touchend', _touchEndHandler);
+                    } 
                     root.addEventListener('DOMMouseScroll', _mouseWheelHandler);
-                    root.addEventListener('mousemove', _mouseMoveHandler);
                     root.addEventListener('mouseout', _mouseOutHandler);
-                    root.addEventListener('mousedown', _mouseDownHandler);
-                    root.addEventListener('mouseup', _mouseUpHandler);
-
-                    // mobile支持
-                    root.addEventListener('touchstart', _touchStartHandler);
-                    root.addEventListener('touchmove', _touchMoveHandler);
-                    root.addEventListener('touchend', _touchEndHandler);
                 }
                 else {
                     window.attachEvent('onresize', _resizeHandler);
@@ -11659,6 +11753,8 @@ define(
                 //eventTool.stop(event);// 阻止浏览器默认事件，重要
                 _event = _zrenderEventFixed(event, true);
                 _lastTouchMoment = new Date();
+                //平板补充一次findHover
+                _mobildFindFixed();
                 _mouseDownHandler(_event);
             }
 
@@ -11682,39 +11778,14 @@ define(
                 //eventTool.stop(event);// 阻止浏览器默认事件，重要
                 _event = _zrenderEventFixed(event, true);
                 _mouseUpHandler(_event);
-                painter.clearHover();
 
                 if (new Date() - _lastTouchMoment
                     < config.EVENT.touchClickDelay
                 ) {
-                    _lastHover = null;
-                    _mouseX = _event.zrenderX;
-                    _mouseY = _event.zrenderY;
-                    // touch有指尖错觉，四向尝试，让touch上的点击更好触发事件
-                    storage.iterShape(_findHover, { normal: 'down'});
-                    if (!_lastHover) {
-                        _mouseX += 10;
-                        storage.iterShape(_findHover, { normal: 'down'});
-                    }
-                    if (!_lastHover) {
-                        _mouseX -= 20;
-                        storage.iterShape(_findHover, { normal: 'down'});
-                    }
-                    if (!_lastHover) {
-                        _mouseX += 10;
-                        _mouseY += 10;
-                        storage.iterShape(_findHover, { normal: 'down'});
-                    }
-                    if (!_lastHover) {
-                        _mouseY -= 20;
-                        storage.iterShape(_findHover, { normal: 'down'});
-                    }
-                    if (_lastHover) {
-                        _event.zrenderX = _mouseX;
-                        _event.zrenderY = _mouseY;
-                    }
+                     _mobildFindFixed()
                     _clickHandler(_event);
                 }
+                painter.clearHover();
             }
 
             /**
@@ -11850,6 +11921,35 @@ define(
                 else if (!draggedShape) {
                     //无hover目标，无拖拽对象，原生事件分发
                     self.dispatch(eventName, _event);
+                }
+            }
+            
+            // touch有指尖错觉，四向尝试，让touch上的点击更好触发事件
+            function _mobildFindFixed() {
+                _lastHover = null;
+                _mouseX = _event.zrenderX;
+                _mouseY = _event.zrenderY;
+                storage.iterShape(_findHover, { normal: 'down'});
+                if (!_lastHover) {
+                    _mouseX += 10;
+                    storage.iterShape(_findHover, { normal: 'down'});
+                }
+                if (!_lastHover) {
+                    _mouseX -= 20;
+                    storage.iterShape(_findHover, { normal: 'down'});
+                }
+                if (!_lastHover) {
+                    _mouseX += 10;
+                    _mouseY += 10;
+                    storage.iterShape(_findHover, { normal: 'down'});
+                }
+                if (!_lastHover) {
+                    _mouseY -= 20;
+                    storage.iterShape(_findHover, { normal: 'down'});
+                }
+                if (_lastHover) {
+                    _event.zrenderX = _mouseX;
+                    _event.zrenderY = _mouseY;
                 }
             }
 
@@ -11992,20 +12092,42 @@ define(
                 if (window.removeEventListener) {
                     window.removeEventListener('resize', _resizeHandler);
 
-                    root.removeEventListener('click', _clickHandler);
-                    root.removeEventListener('mousewheel', _mouseWheelHandler);
+                    if (!env.os.tablet && !env.os.phone) {
+                        // mobile的click自己模拟
+                        root.removeEventListener(
+                            'click', _clickHandler
+                        );
+                        root.removeEventListener(
+                            'mousewheel', _mouseWheelHandler
+                        );
+                        root.removeEventListener(
+                            'mousemove', _mouseMoveHandler
+                        );
+                        root.removeEventListener(
+                            'mousedown', _mouseDownHandler
+                        );
+                        root.removeEventListener(
+                            'mouseup', _mouseUpHandler
+                        );
+                    }
+                    else {
+                        // mobile支持
+                        root.removeEventListener(
+                            'touchstart', _touchStartHandler
+                        );
+                        root.removeEventListener(
+                            'touchmove', _touchMoveHandler
+                        );
+                        root.removeEventListener(
+                            'touchend', _touchEndHandler
+                        );
+                    }
                     root.removeEventListener(
                         'DOMMouseScroll', _mouseWheelHandler
                     );
-                    root.removeEventListener('mousemove', _mouseMoveHandler);
-                    root.removeEventListener('mouseout', _mouseOutHandler);
-                    root.removeEventListener('mousedown', _mouseDownHandler);
-                    root.removeEventListener('mouseup', _mouseUpHandler);
-
-                    // mobile支持
-                    root.removeEventListener('touchstart', _touchStartHandler);
-                    root.removeEventListener('touchmove', _touchMoveHandler);
-                    root.removeEventListener('touchend', _touchEndHandler);
+                    root.removeEventListener(
+                        'mouseout', _mouseOutHandler
+                    );
                 }
                 else {
                     window.detachEvent('onresize', _resizeHandler);
@@ -20761,7 +20883,6 @@ define('echarts/component/toolbox',['require','./base','../config','zrender/conf
                 + 'line-height:' 
                 + document.documentElement.clientHeight + 'px;';
                 
-            downloadDiv.onclick = _close;
             var downloadLink = document.createElement('a');
             //downloadLink.onclick = _saveImageForIE;
             downloadLink.href = image;
@@ -20787,13 +20908,22 @@ define('echarts/component/toolbox',['require','./base','../config','zrender/conf
             downloadLink = null;
             downloadDiv = null;
             
-            function _close() {
-                var d = document.getElementById('__echarts_download_wrap__');
-                d.onclick = null;
-                d.innerHTML = '';
-                document.body.removeChild(d);
-                d = null;
-            }
+            setTimeout(function(){
+                var _d = document.getElementById('__echarts_download_wrap__');
+                if (_d) {
+                    _d.onclick = function () {
+                        var d = document.getElementById(
+                            '__echarts_download_wrap__'
+                        );
+                        d.onclick = null;
+                        d.innerHTML = '';
+                        document.body.removeChild(d);
+                        d = null;
+                    }
+                    _d = null;
+                }
+            }, 500)
+            
             /*
             function _saveImageForIE() {
                 window.win = window.open(image);
@@ -30419,6 +30549,12 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                 },
                 clickable : true
             };
+
+            if (symbol.match('image')) {
+                itemShape.style.image = 
+                    symbol.replace(/^image:\/\//, '');
+                itemShape.shape = 'image';
+            }
             
             if (typeof rotate != 'undefined') {
                 itemShape.rotation = [
