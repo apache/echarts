@@ -61,6 +61,8 @@ define(function (require) {
                 self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
+            
+            _syncShapeFromRange();
         }
 
         /**
@@ -290,7 +292,7 @@ define(function (require) {
                     y : _calculableLocation.y,
                     width : _calculableLocation.width,
                     height : _calculableLocation.height,
-                    color : 'rgba(255,255,255,0.2)'
+                    color : 'rgba(255,255,255,0)'
                 },
                 draggable : true,
                 ondrift : _ondrift,
@@ -863,7 +865,16 @@ define(function (require) {
             status.dragIn = true;
             
             if (!dataRangeOption.realtime) {
-                messageCenter.dispatch(ecConfig.EVENT.DATA_RANGE);
+                messageCenter.dispatch(
+                    ecConfig.EVENT.DATA_RANGE,
+                    null,
+                    {
+                        range : {
+                            start : _range.end,
+                            end : _range.start
+                        }
+                    }
+                );
             }
             
             status.needRefresh = false; // 会有消息触发fresh，不用再刷一遍
@@ -873,6 +884,39 @@ define(function (require) {
             return;
         }
         
+        // 外部传入range
+        function _syncShapeFromRange() {
+            if (dataRangeOption.range) {
+                // 做一个反转
+                if (typeof dataRangeOption.range.start != 'undefined') {
+                    _range.end = dataRangeOption.range.start;
+                }
+                if (typeof dataRangeOption.range.end != 'undefined') {
+                    _range.start = dataRangeOption.range.end;
+                }
+                if (_range.start != 100 || _range.end !== 0) {
+                    // 非默认满值同步一下图形
+                    if (dataRangeOption.orient == 'horizontal') {
+                        // 横向
+                        var width = _fillerShae.style.width;
+                        _fillerShae.style.x +=
+                            width * (100 - _range.start) / 100;
+                        _fillerShae.style.width = 
+                            width * (_range.start - _range.end) / 100;
+                    }
+                    else {
+                        // 纵向
+                        var height = _fillerShae.style.height;
+                        _fillerShae.style.y +=
+                            height * (100 - _range.start) / 100;
+                        _fillerShae.style.height = 
+                            height * (_range.start - _range.end) / 100;
+                    }
+                    zr.modShape(_fillerShae.id, _fillerShae);
+                    _syncHandleShape();
+                }
+            }
+        }
         
         function _syncHandleShape() {
             var x = _calculableLocation.x;
@@ -1022,7 +1066,16 @@ define(function (require) {
 
         function _syncData() {
             if (dataRangeOption.realtime) {
-                messageCenter.dispatch(ecConfig.EVENT.DATA_RANGE);
+                messageCenter.dispatch(
+                    ecConfig.EVENT.DATA_RANGE,
+                    null,
+                    {
+                        range : {
+                            start : _range.end,
+                            end : _range.start
+                        }
+                    }
+                );
             }
         }
 
@@ -1093,7 +1146,6 @@ define(function (require) {
                     )
                 );
             }
-            
             _range = {
                 start: 100,
                 end: 0
@@ -1117,10 +1169,17 @@ define(function (require) {
                 );
             }
             dataRangeOption = option.dataRange;
+            // 做一个反转
+            dataRangeOption.range = {
+                start: _range.end,
+                end: _range.start
+            };
+            /*
             _range = {
                 start: 100,
                 end: 0
             };
+            */
             self.clear();
             _buildShape();
         }

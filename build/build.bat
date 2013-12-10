@@ -6,3 +6,6 @@ node build.js optimize=true plain=true exclude=map output=echarts-plain.js
 node build.js optimize=true plain=true output=echarts-plain-map.js
 node build.js optimize=false plain=true exclude=map output=echarts-plain-original.js
 node build.js optimize=false plain=true output=echarts-plain-original-map.js
+del _config_tmp.js
+cd ../src
+del _chart.js
