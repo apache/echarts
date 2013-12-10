@@ -1,10 +1,7 @@
-/*
- * 图表按需加载，如需链接带入相关图表，选择性打开echarts.js中build注释内图表引用
- */
 {
     // appDir: './',
     baseUrl: '../src',
-    //optimize: 'none', // 是否压缩
+    optimize: 'none', // 是否压缩
     name: 'echarts',
     packages: [
         {
@@ -24,6 +21,7 @@
         'echarts/chart/radar',
         'echarts/chart/chord',
         'echarts/chart/force',
+        
         'echarts/chart/map',
         'echarts/util/mapData/china/0',     // 全国
         'echarts/util/mapData/china/65',    // 新疆
@@ -60,9 +58,14 @@
         'echarts/util/mapData/china/31',    // 上海
         'echarts/util/mapData/china/81',    // 香港
         'echarts/util/mapData/china/82',    // 澳门
+        
         'echarts/chart/line',
         'echarts/chart/bar',
         'echarts/chart/pie'
     ],
-    out: 'echarts-map.js'
+    wrap : {
+        startFile : ['wrap/start.js', "wrap/almond.js"],
+        endFile : 'wrap/end.js'
+    },
+    out: 'echarts.js'
 }
