@@ -75,7 +75,7 @@ define(function(require) {
                 3039.3970214233723, 2531.19589698184
             ],
             getData: function(callback) { 
-                require(['./china/0'], function(md){
+                require(['./geoJson/china.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -87,7 +87,7 @@ define(function(require) {
                 1216.4169237052663, 939.4360818385251
             ],
             getData: function(callback) { 
-                require(['./china/65'], function(md){
+                require(['./geoJson/xin_jiang.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -99,7 +99,7 @@ define(function(require) {
                 1182.4138890465167, 728.4762434212385
             ],
             getData: function(callback) { 
-                require(['./china/54'], function(md){
+                require(['./geoJson/xi_zang.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -111,7 +111,7 @@ define(function(require) {
                 1337.913665139638, 1168.7030286278964
             ],
             getData: function(callback) { 
-                require(['./china/15'], function(md){
+                require(['./geoJson/nei_meng_gu.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -123,7 +123,7 @@ define(function(require) {
                 770.5429460357634, 553.4881569694239
             ],
             getData: function(callback) { 
-                require(['./china/63'], function(md){
+                require(['./geoJson/qing_hai.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -135,7 +135,7 @@ define(function(require) {
                 654.265749584143, 581.5837904142871
             ],
             getData: function(callback) { 
-                require(['./china/51'], function(md){
+                require(['./geoJson/si_chuan.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -147,7 +147,7 @@ define(function(require) {
                 680.9449423479143, 618.3772597960831
             ],
             getData: function(callback) { 
-                require(['./china/23'], function(md){
+                require(['./geoJson/hei_long_jiang.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -159,7 +159,7 @@ define(function(require) {
                 884.6861134736321, 734.2542202456989
             ],
             getData: function(callback) { 
-                require(['./china/62'], function(md){
+                require(['./geoJson/gan_su.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -171,7 +171,7 @@ define(function(require) {
                 561.4971786143803, 565.9079094851168
             ],
             getData: function(callback) { 
-                require(['./china/53'], function(md){
+                require(['./geoJson/yun_nan.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -183,7 +183,7 @@ define(function(require) {
                 490.6548359068431, 384.1667316158848
             ],
             getData: function(callback) { 
-                require(['./china/45'], function(md){
+                require(['./geoJson/guang_xi.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -195,7 +195,7 @@ define(function(require) {
                 346.1702652872375, 377.50144051998274
             ],
             getData: function(callback) { 
-                require(['./china/43'], function(md){
+                require(['./geoJson/hu_nan.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -207,7 +207,7 @@ define(function(require) {
                 321.038690321553, 559.1002147021181
             ],
             getData: function(callback) { 
-                require(['./china/61'], function(md){
+                require(['./geoJson/shan_xi_1.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -219,7 +219,7 @@ define(function(require) {
                 494.8279567104971, 388.7112686526252
             ],
             getData: function(callback) { 
-                require(['./china/44'], function(md){
+                require(['./geoJson/guang_dong.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -231,7 +231,7 @@ define(function(require) {
                 504.33243011403374, 354.162667814153
             ],
             getData: function(callback) { 
-                require(['./china/22'], function(md){
+                require(['./geoJson/ji_lin.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -243,7 +243,7 @@ define(function(require) {
                 325.33903805510784, 477.4542727272415
             ],
             getData: function(callback) { 
-                require(['./china/13'], function(md){
+                require(['./geoJson/he_bei.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -255,7 +255,7 @@ define(function(require) {
                 468.66717545627034, 295.2142095820616
             ],
             getData: function(callback) { 
-                require(['./china/42'], function(md){
+                require(['./geoJson/hu_bei.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -267,7 +267,7 @@ define(function(require) {
                 375.50579966539516, 320.9420464446699
             ],
             getData: function(callback) { 
-                require(['./china/52'], function(md){
+                require(['./geoJson/gui_zhou.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -279,7 +279,7 @@ define(function(require) {
                 412.5747391303373, 313.152767793266
             ],
             getData: function(callback) { 
-                require(['./china/37'], function(md){
+                require(['./geoJson/shan_dong.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -291,7 +291,7 @@ define(function(require) {
                 295.599802392515, 400.86430917822287
             ],
             getData: function(callback) { 
-                require(['./china/36'], function(md){
+                require(['./geoJson/jiang_xi.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -303,7 +303,7 @@ define(function(require) {
                 362.6977821251186, 340.3902676066224
             ],
             getData: function(callback) { 
-                require(['./china/41'], function(md){
+                require(['./geoJson/he_nan.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -315,7 +315,7 @@ define(function(require) {
                 352.71788824534656, 357.71276541155214
             ],
             getData: function(callback) { 
-                require(['./china/21'], function(md){
+                require(['./geoJson/liao_ning.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -327,7 +327,7 @@ define(function(require) {
                 212.68572802329425, 448.08485211774945
             ],
             getData: function(callback) { 
-                require(['./china/14'], function(md){
+                require(['./geoJson/shan_xi_2.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -339,7 +339,7 @@ define(function(require) {
                 295.73127466484925, 352.03731065611606
             ],
             getData: function(callback) { 
-                require(['./china/34'], function(md){
+                require(['./geoJson/an_hui.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -351,7 +351,7 @@ define(function(require) {
                 288.99462739279807, 339.42845011348845
             ],
             getData: function(callback) { 
-                require(['./china/35'], function(md){
+                require(['./geoJson/fu_jian.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -363,7 +363,7 @@ define(function(require) {
                 286.17816622252326, 286.73860446060394
             ],
             getData: function(callback) { 
-                require(['./china/33'], function(md){
+                require(['./geoJson/zhe_jiang.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -375,7 +375,7 @@ define(function(require) {
                 356.1806346879009, 291.4961628010442
             ],
             getData: function(callback) { 
-                require(['./china/32'], function(md){
+                require(['./geoJson/jiang_su.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -387,7 +387,7 @@ define(function(require) {
                 291.91221530072164, 280.8880182020781
             ],
             getData: function(callback) { 
-                require(['./china/50'], function(md){
+                require(['./geoJson/chong_qing.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -399,7 +399,7 @@ define(function(require) {
                 183.76989823787306, 293.0024551112753
             ],
             getData: function(callback) { 
-                require(['./china/64'], function(md){
+                require(['./geoJson/ning_xia.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -411,7 +411,7 @@ define(function(require) {
                 183.33374783084207, 147.66048518654895
             ],
             getData: function(callback) { 
-                require(['./china/46'], function(md){
+                require(['./geoJson/hai_nan.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -423,7 +423,7 @@ define(function(require) {
                 103.06085087505835, 237.80851484008463
             ],
             getData: function(callback) { 
-                require(['./china/71'], function(md){
+                require(['./geoJson/tai_wan.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -435,7 +435,7 @@ define(function(require) {
                 103.23943439987329, 114.66079087790081
             ],
             getData: function(callback) { 
-                require(['./china/11'], function(md){
+                require(['./geoJson/bei_jing.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -447,7 +447,7 @@ define(function(require) {
                 71.21176554916747, 120.01987096046025
             ],
             getData: function(callback) { 
-                require(['./china/12'], function(md){
+                require(['./geoJson/tian_jin.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -459,7 +459,7 @@ define(function(require) {
                 70.41721601016525, 81.99461244072737
             ],
             getData: function(callback) { 
-                require(['./china/31'], function(md){
+                require(['./geoJson/shang_hai.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -471,7 +471,7 @@ define(function(require) {
                 50.65584483626753, 32.17422147262721
             ],
             getData: function(callback) { 
-                require(['./china/81'], function(md){
+                require(['./geoJson/xiang_gang.geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -483,7 +483,7 @@ define(function(require) {
                 5.387452843479423, 7.564113979470676
             ],
             getData: function(callback) { 
-                require(['./china/82'], function(md){
+                require(['./geoJson/ao_men.geo'], function(md){
                     callback(decode(md));
                 });
             }
