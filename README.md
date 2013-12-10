@@ -1,6 +1,6 @@
 ECharts
 =======
-http://ecomfe.github.com/echarts
+http://echarts.baidu.com
 
 基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据可视化图表。创新的拖拽重计算、数据视图、值域漫游等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。
 
@@ -20,7 +20,7 @@ ECharts (Enterprise Charts 商业产品图表库)
 
 特色
 
-我们诚挚邀请你翻阅这份在线文档 《 <a href="http://ecomfe.github.io/echarts/doc/slide/whyEcharts.html" target="_blank">Why ECharts ?</a> 》 你可以从中更直观的体验到ECharts的特性以及快速浏览到所有图表类型。
+我们诚挚邀请你翻阅这份在线文档 《 <a href="http://echarts.baidu.com/doc/slide/whyEcharts.html" target="_blank">Why ECharts ?</a> 》 你可以从中更直观的体验到ECharts的特性以及快速浏览到所有图表类型。
 
 *文档中展现的个别特性在IE8-中并没有得到支持，所以建议使用IE9+、chrome、safari、firefox或opear等高级浏览器阅读这份文档。
 
@@ -100,7 +100,7 @@ ECharts提供了方便快捷的图例开关，可以随时切换到你所关心�
 ![ECharts 多维度堆积](doc/asset/img/multiStack.png)
 
 ### 个性化定制
-近300个可配置选项结合多级控制设计满足高度定制的个性化需求。
+500+个可配置选项结合多级控制设计满足高度定制的个性化需求。
 
 ![ECharts 个性化定制](doc/asset/img/custom.png)
 

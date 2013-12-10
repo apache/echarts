@@ -98,7 +98,23 @@ define(function (require) {
                 axShape.style.textPosition = option.nameLocation;
             }
             axShape.style.strokeColor = option.axisLine.lineStyle.color;
-            axShape.style.lineWidth = option.axisLine.lineStyle.width;
+            
+            var lineWidth = option.axisLine.lineStyle.width;
+            axShape.style.lineWidth = lineWidth;
+            // 亚像素优化
+            if (option.position == 'left' || option.position == 'right') {
+                // 纵向布局，优化x
+                axShape.style.xStart 
+                    = axShape.style.xEnd 
+                    = self.subPixelOptimize(axShape.style.xEnd, lineWidth);
+            }
+            else {
+                // 横向布局，优化y
+                axShape.style.yStart 
+                    = axShape.style.yEnd 
+                    = self.subPixelOptimize(axShape.style.yEnd, lineWidth);
+            }
+            
             axShape.style.lineType = option.axisLine.lineStyle.type;
 
             self.shapeList.push(axShape);
@@ -266,6 +282,8 @@ define(function (require) {
             var axShape;
             var data       = _valueList;
             var dataLength = _valueList.length;
+            var lineType = option.splitLine.lineStyle.type;
+            var lineWidth = option.splitLine.lineStyle.width;
             var color = option.splitLine.lineStyle.color;
             color = color instanceof Array ? color : [color];
             var colorLength = color.length;
@@ -277,7 +295,8 @@ define(function (require) {
                 var x;
 
                 for (var i = 0; i < dataLength; i++) {
-                    x = getCoord(data[i]);
+                    // 亚像素优化
+                    x = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
                         shape : 'line',
                         zlevel : _zlevelBase,
@@ -288,8 +307,8 @@ define(function (require) {
                             xEnd : x,
                             yEnd : ey,
                             strokeColor : color[i % colorLength],
-                            lineType : option.splitLine.lineStyle.type,
-                            lineWidth : option.splitLine.lineStyle.width
+                            lineType : lineType,
+                            lineWidth : lineWidth
                         }
                     };
                     self.shapeList.push(axShape);
@@ -303,7 +322,8 @@ define(function (require) {
                 var y;
 
                 for (var i = 0; i < dataLength; i++) {
-                    y = getCoord(data[i]);
+                    // 亚像素优化
+                    y = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
                         shape : 'line',
                         zlevel : _zlevelBase,
@@ -314,8 +334,8 @@ define(function (require) {
                             xEnd : ex,
                             yEnd : y,
                             strokeColor : color[i % colorLength],
-                            lineType : option.splitLine.lineStyle.type,
-                            lineWidth : option.splitLine.lineStyle.width
+                            lineType : lineType,
+                            lineWidth : lineWidth
                         }
                     };
                     self.shapeList.push(axShape);

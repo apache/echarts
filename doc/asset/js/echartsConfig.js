@@ -117,10 +117,24 @@
             itemSize: 16,             // 工具箱图形宽度，非标准参数
             feature : {
                 //mark : true,
+                //dataZoom : true,
                 //dataView : {readOnly: false},
                 //magicType: ['line', 'bar'],
                 //restore : true,
                 //saveAsImage : true
+            },
+            showTitle : true,
+            featureTitle : {
+                mark : '辅助线开关',
+                markUndo : '删除辅助线',
+                markClear : '清空辅助线',
+                dataZoom : '区域缩放',
+                dataZoomReset : '区域缩放后退',
+                dataView : '数据视图',
+                lineChart : '折线图切换',
+                barChart : '柱形图切换',
+                restore : '还原',
+                saveAsImage : '保存为图片'
             }
         },
 
@@ -176,7 +190,7 @@
             yAxisIndex: [],         // 默认控制所有横向类目
             start: 0,               // 默认为0
             end: 100,               // 默认为全部 100%
-            realtime: false,
+            realtime: true,
             zoomLock: false         // 是否锁定选择区域大小
         },
 
@@ -188,7 +202,7 @@
             y2: 60,
             width: null,
             height: null,
-            backgroundColor: '#fff',
+            backgroundColor: 'rgba(0,0,0,0)',
             borderWidth: 1,
             borderColor: '#ccc'
         },
@@ -297,7 +311,7 @@
 
         polar : {
             center : ['50%', '50%'],    // 默认全局居中
-            radius: 'min(width,height) / 2 - 50',
+            radius : '75%',
             startAngle : 90,
             splitNumber : 5,
             name : {
@@ -343,10 +357,15 @@
             stack: null,
             xAxisIndex: 0,
             yAxisIndex: 0,
-            barMinHeight: 20,
+            barMinHeight: 0,
             barWidth: null,        // 默认自适应
+			barGap: '30%',            // 柱间距离，默认为柱形宽度的30%，可设固定值
+            barCategoryGap : '20%',   // 类目间柱形距离，默认为类目间距的20%，可设固定值
             itemStyle: {
                 normal: {
+                    borderColor: '#fff',       // 柱条边线
+                    borderRadius: 0,           // 柱条边线圆角，单位px，默认为0
+                    borderWidth: 1,            // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false,
                         formatter: '标签文本格式器，同Tooltip.formatter，不支持回调',
@@ -356,6 +375,9 @@
                     }
                 },
                 emphasis: {
+                    borderColor: 'rgba(0,0,0,0)',   // 柱条边线
+                    borderRadius: 0,                // 柱条边线圆角，单位px，默认为0
+                    borderWidth: 1,                 // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false,
                         formatter: '标签文本格式器，同Tooltip.formatter，不支持回调',
@@ -496,9 +518,9 @@
         // 饼图默认参数
         pie: {
             center : ['50%', '50%'],    // 默认全局居中
-            radius: '[0, min(width, height) / 2 - 50]',
+            radius : [0, '75%'],
             startAngle: 90,
-            minAngle: 5,
+            minAngle: 0,                    // 最小角度改为0
             selectedOffset: 10,             // 选中是扇区偏移量
             selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
 			roseType : null,     // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
@@ -630,7 +652,6 @@
 
         chord : {
             radius : ['65%', '75%'],
-            // Source data matrix
             center : ['50%', '50%'],
             padding : 2,
             sort : 'none', // can be 'none', 'ascending', 'descending'
@@ -652,7 +673,7 @@
                     chordStyle : {
                         lineStyle : {
                             width : 1,
-                            color : 'black'
+                            color : '#666'
                         }
                     }
                 },
@@ -664,11 +685,12 @@
                     chordStyle : {
                         lineStyle : {
                             width : 2,
-                            color : 'black'
+                            color : '#333'
                         }
                     }
                 }
             },
+            // Source data matrix
             /**
              *         target
              *    -1--2--3--4--5-
@@ -704,7 +726,8 @@
                 '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
                 '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
                 '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'],
-        // 可计算特性配置，孤岛，提示颜色
+        renderAsImage: false,
+		// 可计算特性配置，孤岛，提示颜色
         calculable: false,              // 默认开启可计算特性
         calculableColor: 'rgba(255,165,0,0.6)',       // 拖拽提示边框颜色
         calculableHolderColor: '#ccc', // 可计算占位提示颜色

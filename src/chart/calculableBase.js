@@ -8,6 +8,7 @@
 define(function(require) {
     function Base(zr, option){
         var ecData = require('../util/ecData');
+        var accMath = require('../util/accMath');
 
         var zrUtil = require('zrender/tool/util');
         var self = this;
@@ -65,12 +66,15 @@ define(function(require) {
             var seriesIndex = ecData.get(target, 'seriesIndex');
             var dataIndex = ecData.get(target, 'dataIndex');
 
-            // 落到bar上，数据被拖拽到某个数据项上，数据修改
+            // 落到数据item上，数据被拖拽到某个数据项上，数据修改
             var data = option.series[seriesIndex].data[dataIndex] || '-';
             if (data.value) {
                 if (data.value != '-') {
-                    option.series[seriesIndex].data[dataIndex].value +=
-                        ecData.get(dragged, 'value');
+                    option.series[seriesIndex].data[dataIndex].value = 
+                        accMath.accAdd(
+                            option.series[seriesIndex].data[dataIndex].value,
+                            ecData.get(dragged, 'value')
+                        );
                 }
                 else {
                     option.series[seriesIndex].data[dataIndex].value =
@@ -79,8 +83,11 @@ define(function(require) {
             }
             else {
                 if (data != '-') {
-                    option.series[seriesIndex].data[dataIndex] +=
-                        ecData.get(dragged, 'value');
+                    option.series[seriesIndex].data[dataIndex] = 
+                        accMath.accAdd(
+                            option.series[seriesIndex].data[dataIndex],
+                            ecData.get(dragged, 'value')
+                        );
                 }
                 else {
                     option.series[seriesIndex].data[dataIndex] =

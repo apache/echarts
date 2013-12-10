@@ -67,30 +67,35 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
+var placeHoledStyle = {
+    normal:{
+        borderColor:'rgba(0,0,0,0)',
+        color:'rgba(0,0,0,0)'
+    },
+    emphasis:{
+        borderColor:'rgba(0,0,0,0)',
+        color:'rgba(0,0,0,0)'
+    }
+};
 option = {
-    title: {
-        text: '阶梯瀑布图',
+    title : {
+        text: '温度计式图表',
         subtext: 'From ExcelHome',
-        sublink: 'http://e.weibo.com/1341556070/Aj1J2x5a5'
+        sublink: 'http://e.weibo.com/1341556070/AizJXrAEa'
     },
     tooltip : {
         trigger: 'axis',
         axisPointer : {            // 坐标轴指示器，坐标轴触发有效
             type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
         },
-        formatter: function(params) {
-            var tar;
-            if (params[1][2] != '-') {
-                tar = params[1];
-            }
-            else {
-                tar = params[2];
-            }
-            return tar[1] + '<br/>' + tar[0] + ' : ' + tar[2];
+        formatter: function(param){
+            return param[0][1] + '<br/>'
+                   + param[0][0] + ' : ' + param[0][2] + '<br/>'
+                   + param[1][0] + ' : ' + (param[1][2] + param[0][2]);
         }
     },
     legend: {
-        data:['支出','收入']
+        data:['Acutal', 'Forecast']
     },
     toolbox: {
         show : true,
@@ -101,55 +106,65 @@ option = {
             saveAsImage : true
         }
     },
+    calculable : true,
     xAxis : [
         {
             type : 'category',
-            splitLine: {show:false},
-            data :  function(){
-                var list = [];
-                for (var i = 1; i <= 11; i++) {
-                    list.push('11月' + i + '日');
-                }
-                return list;
-            }()
+            splitLine : {show: false},
+            data : ['Cosco','CMA','APL','OOCL','Wanhai','Zim']
         }
     ],
     yAxis : [
         {
             type : 'value',
-            splitArea: {show : true}
+            boundaryGap: [0, 0.1],
+            splitArea : {show : true}
         }
     ],
     series : [
         {
-            name:'辅助',
+            name:'Acutal',
             type:'bar',
-            stack: '总量',
-            itemStyle:{
-                normal:{
-                    borderColor:'rgba(0,0,0,0)',
-                    color:'rgba(0,0,0,0)'
-                },
-                emphasis:{
-                    borderColor:'rgba(0,0,0,0)',
-                    color:'rgba(0,0,0,0)'
+            stack: 'sum',
+            barCategoryGap: '50%',
+            itemStyle: {
+                normal: {
+                    color: 'tomato',
+                    borderColor: 'tomato',
+                    borderWidth: 6,
+                    label : {
+                        show: true, position: 'inside'
+                    }
                 }
             },
-            data:[0, 900, 1245, 1530, 1376, 1376, 1511, 1689, 1856, 1495, 1292]
+            data:[260, 200, 220, 120, 100, 80]
         },
         {
-            name:'收入',
+            name:'Forecast',
             type:'bar',
-            stack: '总量',
-            itemStyle : { normal: {label : {show: true, position: 'inside'}}},
-            data:[900, 345, 393, '-', '-', 135, 178, 286, '-', '-', '-']
-        },
-        {
-            name:'支出',
-            type:'bar',
-            stack: '总量',
-            itemStyle : { normal: {label : {show: true, position: 'inside'}}},
-            data:['-', '-', '-', 108, 154, '-', '-', '-', 119, 361, 203]
+            stack: 'sum',
+            itemStyle: {
+                normal: {
+                    color: '#fff',
+                    borderColor: 'tomato',
+                    borderWidth: 6,
+                    label : {
+                        show: true, 
+                        position: 'top',
+                        formatter: function(a, b, c) {
+                            for (var i = 0, l = option.xAxis[0].data.length; i < l; i++) {
+                                if (option.xAxis[0].data[i] == b) {
+                                    return option.series[0].data[i] + c;
+                                }
+                            }
+                        },
+                        textStyle: {
+                            color: 'tomato'
+                        }
+                    }
+                }
+            },
+            data:[40, 80, 50, 80,80, 70]
         }
     ]
 };

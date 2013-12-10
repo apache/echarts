@@ -377,7 +377,6 @@
             var value;
 
             if (dataIndex == -1) {
-                
                 data = {
                     value : ecData.get(dragged, 'value'),
                     name : ecData.get(dragged, 'name')
@@ -391,13 +390,15 @@
                 );
             }
             else {
+                // 数据被拖拽到某个数据项上，数据修改
+                var accMath = require('../util/accMath');
                 data = series[seriesIndex].data[dataIndex];
                 legend && legend.del(data.name);
                 data.name += option.nameConnector
                              + ecData.get(dragged, 'name');
                 value = ecData.get(dragged, 'value');
                 for (var i = 0 ; i < value.length; i ++) {
-                    data.value[i] += value[i];
+                    data.value[i] = accMath.accAdd(data.value[i], value[i]);
                 }
                 
                 legend && legend.add(

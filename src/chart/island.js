@@ -43,8 +43,11 @@ define(function (require) {
          */
         function _combine(tarShape, srcShape) {
             var zrColor = require('zrender/tool/color');
-            var value = ecData.get(tarShape, 'value')
-                        + ecData.get(srcShape, 'value');
+            var accMath = require('../util/accMath');
+            var value = accMath.accAdd(
+                            ecData.get(tarShape, 'value'),
+                            ecData.get(srcShape, 'value')
+                        );
             var name = ecData.get(tarShape, 'name')
                        + _nameConnector
                        + ecData.get(srcShape, 'name');

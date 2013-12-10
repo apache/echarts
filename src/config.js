@@ -151,10 +151,24 @@ define(function() {
             itemSize: 16,             // 工具箱图形宽度，非标准参数
             feature : {
                 //mark : true,
+                //dataZoom : true,
                 //dataView : {readOnly: false},
                 //magicType: ['line', 'bar'],
                 //restore : true,
                 //saveAsImage : true
+            },
+            showTitle : true,
+            featureTitle : {
+                mark : '辅助线开关',
+                markUndo : '删除辅助线',
+                markClear : '清空辅助线',
+                dataZoom : '区域缩放',
+                dataZoomReset : '区域缩放后退',
+                dataView : '数据视图',
+                lineChart : '折线图切换',
+                barChart : '柱形图切换',
+                restore : '还原',
+                saveAsImage : '保存为图片'
             }
         },
 
@@ -210,7 +224,7 @@ define(function() {
             // yAxisIndex: [],         // 默认控制所有横向类目
             // start: 0,               // 默认为0
             // end: 100,               // 默认为全部 100%
-            realtime: false
+            realtime: true
             // zoomLock: false         // 是否锁定选择区域大小
         },
 
@@ -332,7 +346,7 @@ define(function() {
 
         polar : {
             center : ['50%', '50%'],    // 默认全局居中
-            // radius: 'min(width, height) / 2 - 50',
+            radius : '75%',
             startAngle : 90,
             splitNumber : 5,
             name : {
@@ -384,10 +398,9 @@ define(function() {
             barCategoryGap : '20%',   // 类目间柱形距离，默认为类目间距的20%，可设固定值
             itemStyle: {
                 normal: {
-                    lineStyle: {
-                        width: 1,
-                        color: '#fff'
-                    },
+                    borderColor: '#fff',       // 柱条边线
+                    borderRadius: 0,           // 柱条边线圆角，单位px，默认为0
+                    borderWidth: 1,            // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -397,10 +410,9 @@ define(function() {
                     }
                 },
                 emphasis: {
-                    lineStyle: {
-                        width: 1,
-                        color: 'rgba(0,0,0,0)'
-                    },
+                    borderColor: 'rgba(0,0,0,0)',   // 柱条边线
+                    borderRadius: 0,                // 柱条边线圆角，单位px，默认为0
+                    borderWidth: 1,                 // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -545,7 +557,7 @@ define(function() {
         // 饼图默认参数
         pie: {
             center : ['50%', '50%'],    // 默认全局居中
-            // radius: [0, min(width, height) / 2 - 50],
+            radius : [0, '75%'],
             startAngle: 90,
             minAngle: 0,                    // 最小角度改为0
             selectedOffset: 10,             // 选中是扇区偏移量
@@ -680,7 +692,6 @@ define(function() {
 
         chord : {
             radius : ['65%', '75%'],
-            // Source data matrix
             center : ['50%', '50%'],
             padding : 2,
             sort : 'none', // can be 'none', 'ascending', 'descending'
@@ -719,6 +730,7 @@ define(function() {
                     }
                 }
             },
+            // Source data matrix
             /**
              *         target
              *    -1--2--3--4--5-

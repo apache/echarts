@@ -42,7 +42,7 @@
 define(function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
-    self.version = '1.3.0';
+    self.version = '1.3.1';
     self.dependencies = {
         zrender : '1.0.5'
     };
@@ -68,6 +68,7 @@ define(function(require) {
         var ecConfig = require('./config');
 
         var self = this;
+        var _id = '__ECharts__' + new Date() - 0;
         var _zr;
         var _option;
         var _optionBackup;          // for各种change和zoom
@@ -462,7 +463,6 @@ define(function(require) {
             while (len--) {
                 magicOption.series[len].data = _optionBackup.series[len].data;
             }
-            
             return magicOption;
         }
         
@@ -666,7 +666,7 @@ define(function(require) {
 
             _toolbox.render(magicOption, {dataZoom: dataZoom});
 
-            if (magicOption.animation) {
+            if (magicOption.animation && !magicOption.renderAsImage) {
                 var len = _chartList.length;
                 while (len--) {
                     _chartList[len]
@@ -676,6 +676,34 @@ define(function(require) {
             }
 
             _zr.render();
+            
+            var imgId = 'IMG' + _id;
+            var img = document.getElementById(imgId);
+            if (magicOption.renderAsImage && !G_vmlCanvasManager) {
+                // IE8- 不支持图片渲染形式
+                if (img) {
+                    // 已经渲染过则更新显示
+                    img.src = getDataURL(magicOption.renderAsImage);
+                }
+                else {
+                    // 没有渲染过插入img dom
+                    img = getImage(magicOption.renderAsImage);
+                    img.id = imgId;
+                    img.style.position = 'absolute';
+                    img.style.left = 0;
+                    img.style.top = 0;
+                    dom.firstChild.appendChild(img);
+                }
+                un();
+                _zr.un();
+                _disposeChartList();
+                _zr.clear();
+            }
+            else if (img) {
+                // 删除可能存在的img
+                img.parentNode.removeChild(img);
+            }
+            img = null;
         }
 
         /**
@@ -839,6 +867,23 @@ define(function(require) {
         }
 
         /**
+         * 返回内部持有的当前显示option克隆 
+         */
+        function getOption() {
+            var zrUtil = require('zrender/tool/util');
+            if (_optionBackup.toolbox
+                && _optionBackup.toolbox.show
+                && _optionBackup.toolbox.feature.magicType
+                && _optionBackup.toolbox.feature.magicType.length > 0
+            ) {
+                 return zrUtil.clone(_getMagicOption());
+            }
+            else {
+                 return zrUtil.clone(_getMagicOption(_island.getOption()));
+            }
+        }
+
+        /**
          * 数据设置快捷接口
          * @param {Array} series
          * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
@@ -852,8 +897,14 @@ define(function(require) {
                 _option.series = series;
                 self.setOption(_option, notMerge);
             }
-
             return self;
+        }
+
+        /**
+         * 返回内部持有的当前显示series克隆 
+         */
+        function getSeries() {
+            return getOption().series;
         }
         
         /**
@@ -1045,6 +1096,43 @@ define(function(require) {
         }
 
         /**
+         * 获取Base64图片dataURL
+         * @param {string} imgType 图片类型，支持png|jpeg，默认为png
+         * @return imgDataURL
+         */
+        function getDataURL(imgType) {
+            if (G_vmlCanvasManager) {
+                return '';
+            }
+            if (_chartList.length === 0) {
+                // 渲染为图片
+                var imgId = 'IMG' + _id;
+                var img = document.getElementById(imgId);
+                if (img) {
+                    return img.src;
+                }
+            }
+            imgType = imgType || 'png';
+            if (imgType != 'png' && imgType != 'jpeg') {
+                imgType = 'png';
+            }
+            return _zr.toDataURL('image/' + imgType); 
+        }
+
+        /**
+         * 获取img
+         * @param {string} imgType 图片类型，支持png|jpeg，默认为png
+         * @return img dom
+         */
+        function getImage(imgType) {
+            var imgDom = document.createElement('img');
+            imgDom.src = getDataURL(imgType);
+            imgDom.title = (_optionRestore.title && _optionRestore.title.text)
+                           || 'ECharts';
+            return imgDom;
+        }
+
+        /**
          * 绑定事件
          * @param {Object} eventName 事件名称
          * @param {Object} eventListener 事件响应函数
@@ -1112,6 +1200,11 @@ define(function(require) {
          */
         function resize() {
             _zr.resize();
+            if (_option.renderAsImage && !G_vmlCanvasManager) {
+                // 渲染为图片从走render模式
+                _render(_option);
+                return self;
+            }
             // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
             // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
@@ -1148,7 +1241,11 @@ define(function(require) {
         self.setOption = setOption;
         self.setSeries = setSeries;
         self.addData = addData;
+        self.getOption = getOption;
+        self.getSeries = getSeries;
         self.getZrender = getZrender;
+        self.getDataURL = getDataURL;
+        self.getImage =  getImage;
         self.on = on;
         self.un = un;
         self.showLoading = showLoading;

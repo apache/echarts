@@ -104,7 +104,7 @@ option = {
             type:'bar',
             itemStyle: {        // 系列级个性化样式，纵向渐变填充
                 normal: {
-                    lineStyle:{color:'red'},
+                    borderColor:'red',
                     color : (function(){
                         var zrColor = require('zrender/tool/color');
                         return zrColor.getLinearGradient(
@@ -114,7 +114,8 @@ option = {
                     })()
                 },
                 emphasis: {
-                    lineStyle:{width:5, color:'green'},
+                    borderWidth: 5,
+                    borderColor:'green',
                     color: (function(){
                         var zrColor = require('zrender/tool/color');
                         return zrColor.getLinearGradient(
@@ -146,16 +147,17 @@ option = {
             stack: '总量',
             itemStyle: {                // 系列级个性化
                 normal: {
-                    lineStyle:{width:10,color:'tomato'},
+                    borderWidth: 6,
+                    borderColor:'tomato',
                     color: 'red'
                 },
                 emphasis: {
-                    lineStyle:{color:'red'},
+                    borderColor:'red',
                     color: 'blue'
                 }
             },
             data:[
-                320, 332, '-', 334,
+                320, 332, 100, 334,
                 {
                     value: 390,
                     symbolSize : 10,   // 数据级个性化
@@ -177,6 +179,7 @@ option = {
             barWidth: 40,                   // 系列级个性化，柱形宽度
             itemStyle: {
                 normal: {                   // 系列级个性化，横向渐变填充
+                    borderRadius: 5,
                     color : (function(){
                         var zrColor = require('zrender/tool/color');
                         return zrColor.getLinearGradient(

@@ -153,7 +153,7 @@ define(function(require) {
                     tempOption = query(ctrList[len], optionLocation);
                     if (typeof tempOption != 'undefined') {
                         if (typeof finalOption == 'undefined') {
-                            finalOption = tempOption;
+                            finalOption = zrUtil.clone(tempOption);
                         }
                         else {
                             zrUtil.merge(
@@ -187,20 +187,9 @@ define(function(require) {
          */
         function addLabel(tarShape, serie, data, name, orient) {
             // 多级控制
-            var nLabel = zrUtil.merge(
-                    zrUtil.clone(
-                        self.deepQuery([serie], 'itemStyle.normal.label')
-                    ), 
-                    self.deepQuery([data], 'itemStyle.normal.label'),
-                    { 'overwrite': true, 'recursive': true }
-                );
-            var eLabel = zrUtil.merge(
-                    zrUtil.clone(
-                        self.deepQuery([serie], 'itemStyle.emphasis.label')
-                    ), 
-                    self.deepQuery([data], 'itemStyle.emphasis.label'),
-                    { 'overwrite': true, 'recursive': true }
-                );
+            var queryTarget = [data, serie];
+            var nLabel = deepMerge(queryTarget, 'itemStyle.normal.label');
+            var eLabel = deepMerge(queryTarget, 'itemStyle.emphasis.label');
 
             var nTextStyle = nLabel.textStyle || {};
             var eTextStyle = eLabel.textStyle || {};
@@ -295,39 +284,31 @@ define(function(require) {
             ];
         }
 
+        /**
+         * 获取自适应半径
+         */ 
+        function parseRadius(radius) {
+            // 传数组实现环形图，[内半径，外半径]，传单个则默认为外半径为
+            if (!(radius instanceof Array)) {
+                radius = [0, radius];
+            }
+            var zrSize = Math.min(self.zr.getWidth(), self.zr.getHeight()) / 2;
+            return [
+                parsePercent(radius[0], zrSize),
+                parsePercent(radius[1], zrSize),
+            ];
+        }
+        
         function _trim(str) {
             return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
         }
 
-        // 记录自适应原始定义，resize用
-        function backupAdaptiveParams(series, attrs, isAll) {
-            for (var i = 0, l = series.length; i < l; i++) {
-                if (isAll || series[i].type == self.type) {
-                    for (var j = 0, k = attrs.length; j < k; j++) {
-                        series[i]['__' + attrs[i]] = zrUtil.clone(
-                            series[i][attrs[i]]
-                        );
-                    }
-                }
-            }
-        }
-
-        // 还原自适应原始定义，resize用
-        function restoreAdaptiveParams(series, attrs, isAll) {
-            for (var i = 0, l = series.length; i < l; i++) {
-                if (isAll || series[i].type == self.type) {
-                    for (var j = 0, k = attrs.length; j < k; j++) {
-                        series[i][attrs[i]] = zrUtil.clone(
-                            series[i]['__' + attrs[i]]
-                        );
-                    }
-                }
-            }
-        }
-
         // 亚像素优化
         function subPixelOptimize(position, lineWidth) {
-            position += position == Math.ceil(position) ? 0.5 : 0;
+            if (lineWidth % 2 == 1) {
+                position += position == Math.ceil(position) ? 0.5 : 0;
+            }
+            return position;
         }
 
         function resize() {
@@ -368,10 +349,10 @@ define(function(require) {
         self.addLabel = addLabel;
         self.parsePercent = parsePercent;
         self.parseCenter = parseCenter;
+        self.parseRadius = parseRadius;
+        self.subPixelOptimize = subPixelOptimize;
         self.clear = clear;
         self.dispose = dispose;
-        self.backupAdaptiveParams = backupAdaptiveParams;
-        self.restoreAdaptiveParams =  restoreAdaptiveParams;
         self.resize = resize;
     }
 

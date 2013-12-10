@@ -69,9 +69,9 @@
                     <textarea id="code" name="code">
 option = {
     title: {
-        text: '阶梯瀑布图',
+        text: '深圳月最低生活费组成（单位:元）',
         subtext: 'From ExcelHome',
-        sublink: 'http://e.weibo.com/1341556070/Aj1J2x5a5'
+        sublink: 'http://e.weibo.com/1341556070/AjQH99che'
     },
     tooltip : {
         trigger: 'axis',
@@ -89,9 +89,6 @@ option = {
             return tar[1] + '<br/>' + tar[0] + ' : ' + tar[2];
         }
     },
-    legend: {
-        data:['支出','收入']
-    },
     toolbox: {
         show : true,
         feature : {
@@ -105,13 +102,7 @@ option = {
         {
             type : 'category',
             splitLine: {show:false},
-            data :  function(){
-                var list = [];
-                for (var i = 1; i <= 11; i++) {
-                    list.push('11月' + i + '日');
-                }
-                return list;
-            }()
+            data : ['总费用','房租','水电费','交通费','伙食费','日用品数']
         }
     ],
     yAxis : [
@@ -135,21 +126,14 @@ option = {
                     color:'rgba(0,0,0,0)'
                 }
             },
-            data:[0, 900, 1245, 1530, 1376, 1376, 1511, 1689, 1856, 1495, 1292]
+            data:[0, 1700, 1400, 1200, 300, 0]
         },
         {
-            name:'收入',
+            name:'生活费',
             type:'bar',
             stack: '总量',
             itemStyle : { normal: {label : {show: true, position: 'inside'}}},
-            data:[900, 345, 393, '-', '-', 135, 178, 286, '-', '-', '-']
-        },
-        {
-            name:'支出',
-            type:'bar',
-            stack: '总量',
-            itemStyle : { normal: {label : {show: true, position: 'inside'}}},
-            data:['-', '-', '-', 108, 154, '-', '-', '-', 119, 361, 203]
+            data:[2900, 1200, 300, 200, 900, 300]
         }
     ]
 };

@@ -702,7 +702,28 @@ define(function (require) {
             });
         },
         bar : function (ctx, style) {
-            ctx.rect(style.x, style.y + 1, style.width, style.height - 2);
+            //ctx.rect(style.x, style.y + 1, style.width, style.height - 2);
+            var x = style.x;
+            var y = style.y +1;
+            var width = style.width;
+            var height = style.height - 2;
+            var r = 3;
+            
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + width - r, y);
+            ctx.quadraticCurveTo(
+                x + width, y, x + width, y + r
+            );
+            ctx.lineTo(x + width, y + height - r);
+            ctx.quadraticCurveTo(
+                x + width, y + height, x + width - r, y + height
+            );
+            ctx.lineTo(x + r, y + height);
+            ctx.quadraticCurveTo(
+                x, y + height, x, y + height - r
+            );
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
         },
         force : function(ctx, style) {
             require('zrender/shape').get('icon').get('circle')(ctx, style);

@@ -112,17 +112,29 @@ define(function (require) {
 
             var color = toolboxOption.color instanceof Array
                         ? toolboxOption.color : [toolboxOption.color];
-            /*
+            
+            var textFont = self.getFont(toolboxOption.textStyle);
             var textPosition;
+            var textAlign;
+            var textBaseLine;
             if (toolboxOption.orient == 'horizontal') {
-                textPosition = toolboxOption.y != 'bottom'
+                textPosition = _itemGroupLocation.y / zr.getHeight() < 0.5
                                ? 'bottom' : 'top';
+                textAlign = _itemGroupLocation.x / zr.getWidth() < 0.5
+                            ? 'left' : 'right';
+                textBaseLine = _itemGroupLocation.y / zr.getHeight() < 0.5
+                               ? 'top' : 'bottom';
             }
             else {
-                textPosition = toolboxOption.x != 'left'
-                               ? 'left' : 'right';
+                textPosition = _itemGroupLocation.x / zr.getWidth() < 0.5
+                               ? 'right' : 'left';
+                /*
+                textAlign = _itemGroupLocation.x / zr.getWidth() < 0.5
+                               ? 'right' : 'left';
+                textBaseLine = 'top';
+                */
             }
-            */
+            
            _iconShapeMap = {};
 
             for (var i = 0; i < iconLength; i++) {
@@ -146,11 +158,38 @@ define(function (require) {
                     highlightStyle : {
                         lineWidth : 2,
                         shadowBlur: 5,
+                        text : toolboxOption.showTitle 
+                               ? toolboxOption.featureTitle[_iconList[i]]
+                               : false,
+                        textFont : textFont,
+                        textPosition : textPosition,
                         strokeColor : color[i % color.length]
                     },
                     hoverable : true,
                     clickable : true
                 };
+                
+                if (toolboxOption.orient == 'horizontal') {
+                    // 修正左对齐第一个或右对齐最后一个
+                    if (i === 0 && textAlign == 'left') {
+                        itemShape.highlightStyle.textPosition = 'specific';
+                        itemShape.highlightStyle.textAlign = textAlign;
+                        itemShape.highlightStyle.textBaseLine = textBaseLine;
+                        itemShape.highlightStyle.textX = lastX;
+                        itemShape.highlightStyle.textY = textBaseLine == 'top' 
+                                                     ? lastY + itemSize + 10
+                                                     : lastY - 10;
+                    }
+                    if (i == iconLength - 1 && textAlign == 'right') {
+                        itemShape.highlightStyle.textPosition = 'specific';
+                        itemShape.highlightStyle.textAlign = textAlign;
+                        itemShape.highlightStyle.textBaseLine = textBaseLine;
+                        itemShape.highlightStyle.textX = lastX + itemSize;
+                        itemShape.highlightStyle.textY = textBaseLine == 'top' 
+                                                     ? lastY + itemSize + 10
+                                                     : lastY - 10;
+                    }
+                }
 
                 switch(_iconList[i]) {
                     case 'mark':
@@ -630,7 +669,6 @@ define(function (require) {
                 + 'line-height:' 
                 + document.documentElement.clientHeight + 'px;';
                 
-            downloadDiv.onclick = _close;
             var downloadLink = document.createElement('a');
             //downloadLink.onclick = _saveImageForIE;
             downloadLink.href = image;
@@ -656,13 +694,22 @@ define(function (require) {
             downloadLink = null;
             downloadDiv = null;
             
-            function _close() {
-                var d = document.getElementById('__echarts_download_wrap__');
-                d.onclick = null;
-                d.innerHTML = '';
-                document.body.removeChild(d);
-                d = null;
-            }
+            setTimeout(function(){
+                var _d = document.getElementById('__echarts_download_wrap__');
+                if (_d) {
+                    _d.onclick = function () {
+                        var d = document.getElementById(
+                            '__echarts_download_wrap__'
+                        );
+                        d.onclick = null;
+                        d.innerHTML = '';
+                        document.body.removeChild(d);
+                        d = null;
+                    }
+                    _d = null;
+                }
+            }, 500)
+            
             /*
             function _saveImageForIE() {
                 window.win = window.open(image);

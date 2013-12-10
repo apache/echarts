@@ -41,26 +41,29 @@ define(function(require) {
         function _buildShape() {
             self.selectedMap = {};
             _selected = {};
+            var center;
+            var radius;
 
             var pieCase;        // 饼图箱子
             _selectedMode = false;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type == ecConfig.CHART_TYPE_PIE) {
                     series[i] = self.reformOption(series[i]);
+                    center = self.parseCenter(series[i].center);
+                    radius = self.parseRadius(series[i].radius);
                     _selectedMode = _selectedMode || series[i].selectedMode;
                     _selected[i] = [];
                     if (self.deepQuery([series[i], option], 'calculable')) {
                         pieCase = {
-                            shape : series[i].radius[0] <= 10
-                                    ? 'circle' : 'ring',
+                            shape : radius[0] <= 10 ? 'circle' : 'ring',
                             zlevel : _zlevelBase,
                             hoverable : false,
                             style : {
-                                x : series[i].center[0],          // 圆心横坐标
-                                y : series[i].center[1],          // 圆心纵坐标
-                                r0 : series[i].radius[0] <= 10    // 圆环内半径
-                                     ? 0 : series[i].radius[0] - 10,
-                                r : series[i].radius[1] + 10,     // 圆环外半径
+                                x : center[0],          // 圆心横坐标
+                                y : center[1],          // 圆心纵坐标
+                                // 圆环内外半径
+                                r0 : radius[0] <= 10 ? 0 : radius[0] - 10,
+                                r : radius[1] + 10,
                                 brushType : 'stroke',
                                 strokeColor : series[i].calculableHolderColor
                                               || ecConfig.calculableHolderColor
@@ -116,6 +119,7 @@ define(function(require) {
             var totalAngle = 360 - (minAngle * totalSelected);
             var defaultColor;
             var roseType = serie.roseType;
+            var radius;
             var r0;     // 扇形内半径
             var r1;     // 扇形外半径
 
@@ -145,8 +149,9 @@ define(function(require) {
                 }
                 percent = (percent * 100).toFixed(2);
                 
-                r0 = +serie.radius[0];
-                r1 = +serie.radius[1];
+                radius = self.parseRadius(serie.radius);
+                r0 = +radius[0];
+                r1 = +radius[1];
                 
                 if (roseType == 'radius') {
                     r1 = data[i].value / maxValue * (r1 - r0) * 0.8 
@@ -224,6 +229,7 @@ define(function(require) {
         ) {
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
+            var center = self.parseCenter(serie.center);
 
             // 多级控制
             var normalColor = self.deepQuery(
@@ -241,8 +247,8 @@ define(function(require) {
                 zlevel : _zlevelBase,
                 clickable : true,
                 style : {
-                    x : serie.center[0],          // 圆心横坐标
-                    y : serie.center[1],          // 圆心纵坐标
+                    x : center[0],          // 圆心横坐标
+                    y : center[1],          // 圆心纵坐标
                     r0 : r0,         // 圆环内半径
                     r : r1,          // 圆环外半径
                     startAngle : startAngle,
@@ -315,12 +321,12 @@ define(function(require) {
                     'itemStyle.normal.label.textStyle.baseline'
                 ) || 'middle';
                 sector.style.textX = Math.round(
-                    serie.center[0]
+                    center[0]
                     + (r1 + r0) / 2
                       * zrMath.cos((startAngle + endAngle) / 2, true)
                 );
                 sector.style.textY = Math.round(
-                    serie.center[1]
+                    center[1]
                     - (r1 + r0) / 2
                        * zrMath.sin((startAngle + endAngle) / 2, true)
                 );
@@ -353,12 +359,12 @@ define(function(require) {
                     'itemStyle.normal.label.textStyle.baseline'
                 ) || 'middle';
                 sector.highlightStyle.textX = Math.round(
-                    serie.center[0]
+                    center[0]
                     + (r1 + r0) / 2
                       * zrMath.cos((startAngle + endAngle) / 2, true)
                 );
                 sector.highlightStyle.textY = Math.round(
-                    serie.center[1]
+                    center[1]
                     - (r1 + r0) / 2
                       * zrMath.sin((startAngle + endAngle) / 2, true)
                 );
@@ -387,6 +393,7 @@ define(function(require) {
         ) {
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
+            
             // 特定状态下是否需要显示文本标签
             if (_needLabel(serie, data, isEmphasis)) {
                 var status = isEmphasis ? 'emphasis' : 'normal';
@@ -404,14 +411,15 @@ define(function(require) {
                 var labelControl = itemStyle[status].label;
                 var textStyle = labelControl.textStyle || {};
 
-                var centerX = serie.center[0];                      // 圆心横坐标
-                var centerY = serie.center[1];                      // 圆心纵坐标
+                var center = self.parseCenter(serie.center);
+                var centerX = center[0];                      // 圆心横坐标
+                var centerY = center[1];                      // 圆心纵坐标
                 var midAngle = ((endAngle + startAngle) / 2) % 360; // 角度中值
-                var radius;                                         // 标签位置半径
+                var radius = self.parseRadius(serie.radius);  // 标签位置半径
                 var textAlign;
                 if (labelControl.position == 'outer') {
                     // 外部显示，默认
-                    radius = serie.radius[1]
+                    radius = radius[1]
                              - (-itemStyle[status].labelLine.length)
                              - (-textStyle.fontSize);
                     textAlign = (midAngle >= 150 && midAngle <= 210)
@@ -470,11 +478,6 @@ define(function(require) {
                 else {
                     // 内部显示由sector自带，不返回即可
                     return;
-                    /*
-                    radius = (serie.radius[0] + serie.radius[1]) / 2;
-                    textAlign = 'center';
-                    defaultColor = '#fff';
-                    */
                 }
             }
             else {
@@ -549,12 +552,14 @@ define(function(require) {
                 var labelLineControl = itemStyle[status].labelLine;
                 var lineStyle = labelLineControl.lineStyle || {};
 
-                var centerX = serie.center[0];                    // 圆心横坐标
-                var centerY = serie.center[1];                    // 圆心纵坐标
+                var center = self.parseCenter(serie.center);
+                var centerX = center[0];                    // 圆心横坐标
+                var centerY = center[1];                    // 圆心纵坐标
                 // 视觉引导线起点半径
                 var midRadius = r1;
                 // 视觉引导线终点半径
-                var maxRadius = serie.radius[1] - (-labelLineControl.length);
+                var maxRadius = self.parseRadius(serie.radius)[1]
+                                - (-labelLineControl.length);
                 var midAngle = ((endAngle + startAngle) / 2) % 360; // 角度中值
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
@@ -625,18 +630,6 @@ define(function(require) {
                           'recursive' : true
                       }
                   );
-                  //console.log(opt)
-            opt.center = self.parseCenter(opt.center);
-            
-            // 传数组实现环形图，[内半径，外半径]，传单个则默认为外半径为
-            if (typeof opt.radius == 'undefined') {
-                opt.radius = [
-                    0,
-                    Math.round(Math.min(zr.getWidth(), zr.getHeight()) / 2 - 50)
-                ];
-            } else if (!(opt.radius instanceof Array)) {
-                opt.radius = [0, opt.radius];
-            }
 
             // 通用字体设置
             opt.itemStyle.normal.label.textStyle = _merge(
@@ -676,16 +669,9 @@ define(function(require) {
             if (newOption) {
                 option = newOption;
                 series = option.series;
-                self.backupAdaptiveParams(series, ['center', 'radius']);
             }
             self.clear();
             _buildShape();
-        }
-        
-        function resize() {
-            // 复位录原始定义
-            self.restoreAdaptiveParams(series, ['center', 'radius']);
-            refresh();
         }
         
         /**
@@ -1057,11 +1043,15 @@ define(function(require) {
             }
             else {
                 // 落到sector上，数据被拖拽到某个数据项上，数据修改
+                var accMath = require('../util/accMath');
                 data = series[seriesIndex].data[dataIndex];
                 legend && legend.del(data.name);
                 data.name += option.nameConnector
                              + ecData.get(dragged, 'name');
-                data.value += ecData.get(dragged, 'value');
+                data.value = accMath.accAdd(
+                    data.value,
+                    ecData.get(dragged, 'value')
+                );
                 legend && legend.add(
                     data.name,
                     dragged.style.color || dragged.style.strokeColor
@@ -1146,7 +1136,6 @@ define(function(require) {
         // 接口方法
         self.init = init;
         self.refresh = refresh;
-        self.resize = resize;
         self.addDataAnimation = addDataAnimation;
         self.animation = animation;
         self.onclick = onclick;

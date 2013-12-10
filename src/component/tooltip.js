@@ -97,7 +97,7 @@ define(function (require) {
             if (!opt) {
                 return '';
             }
-            cssText = [];
+            var cssText = [];
             if (opt.transitionDuration) {
                 var transitionText = 'left ' + opt.transitionDuration + 's,'
                                     + 'top ' + opt.transitionDuration + 's';
@@ -1301,14 +1301,14 @@ define(function (require) {
         /**
          * html转码的方法
          */
-        _encodeHTML = function (source) {
+        function _encodeHTML(source) {
             return String(source)
                         .replace(/&/g, '&amp;')
                         .replace(/</g, '&lt;')
                         .replace(/>/g, '&gt;')
                         .replace(/"/g, '&quot;')
                         .replace(/'/g, '&#39;');
-        };
+        }
         
         zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
         zr.on(zrConfig.EVENT.GLOBALOUT, _onglobalout);

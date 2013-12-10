@@ -122,6 +122,7 @@ define(function(require) {
             var legend = component.legend;
             var locationMap = [];                   // 需要返回的东西：数组位置映射到系列索引
             var maxDataLength = 0;                  // 需要返回的东西：最大数据长度
+            var iconShape;
             // 计算需要显示的个数和分配位置并记在下面这个结构里
             for (var i = 0, l = seriesArray.length; i < l; i++) {
                 serie = series[seriesArray[i]];
@@ -130,6 +131,15 @@ define(function(require) {
                     self.selectedMap[serieName] = legend.isSelected(serieName);
                     _sIndex2colorMap[seriesArray[i]] =
                         legend.getColor(serieName);
+                    
+                    iconShape = legend.getItemShape(serieName);
+                    if (iconShape) {
+                        // 回调legend，换一个更形象的icon
+                        iconShape.style.strokeColor = 
+                            serie.itemStyle.normal.borderColor;
+                        iconShape.style.brushType = 'both';
+                        legend.setItemShape(serieName, iconShape);
+                    }
                 } else {
                     self.selectedMap[serieName] = true;
                     _sIndex2colorMap[seriesArray[i]] =
@@ -243,7 +253,7 @@ define(function(require) {
                             }
                             lastYP -= barHeight;
                             y = lastYP;
-                            lastYP -= 0.5; //白色视觉分隔线宽修正
+                            //lastYP -= 0.5; //白色视觉分隔线宽修正
                         }
                         else if (value < 0){
                             // 负向堆叠
@@ -256,7 +266,7 @@ define(function(require) {
                             }
                             y = lastYN;
                             lastYN += barHeight;
-                            lastYN += 0.5; //白色视觉分隔线宽修正
+                            //lastYN += 0.5; //白色视觉分隔线宽修正
                         }
                         else {
                             // 0值
@@ -264,7 +274,7 @@ define(function(require) {
                             // 最小高度无效
                             lastYP -= barHeight;
                             y = lastYP;
-                            lastYP -= 0.5; //白色视觉分隔线宽修正
+                            //lastYP -= 0.5; //白色视觉分隔线宽修正
                         }
 
                         barShape = _getBarItem(
@@ -391,7 +401,7 @@ define(function(require) {
                             }
                             x = lastXP;
                             lastXP += barHeight;
-                            lastXP += 0.5; //白色视觉分隔线宽修正
+                            //lastXP += 0.5; //白色视觉分隔线宽修正
                         }
                         else if (value < 0){
                             // 负向堆叠
@@ -404,7 +414,7 @@ define(function(require) {
                             }
                             lastXN -= barHeight;
                             x = lastXN;
-                            lastXN -= 0.5; //白色视觉分隔线宽修正
+                            //lastXN -= 0.5; //白色视觉分隔线宽修正
                         }
                         else {
                             // 0值
@@ -412,7 +422,7 @@ define(function(require) {
                             // 最小高度无效
                             x = lastXP;
                             lastXP += barHeight;
-                            lastXP += 0.5; //白色视觉分隔线宽修正
+                            //lastXP += 0.5; //白色视觉分隔线宽修正
                         }
 
                         barShape = _getBarItem(
@@ -485,7 +495,6 @@ define(function(require) {
             var sBarWidth;
             var sBarWidthCounter = 0;
             var sBarWidthTotal = 0;
-            var sBarMinHeight;
             var barGap;
             var barCategoryGap;
             var hasFound;
@@ -639,13 +648,14 @@ define(function(require) {
                 queryTarget,
                 'itemStyle.emphasis.color'
             );
-            var normalLineStyle = self.deepMerge(
+            var normal = self.deepMerge(
                 queryTarget,
-                'itemStyle.normal.lineStyle'
+                'itemStyle.normal'
             );
-            var emphasisLineStyle = self.deepMerge(
+            var normalBorderWidth = normal.borderWidth;
+            var emphasis = self.deepMerge(
                 queryTarget,
-                'itemStyle.emphasis.lineStyle'
+                'itemStyle.emphasis'
             );
             barShape = {
                 shape : 'rectangle',
@@ -658,8 +668,9 @@ define(function(require) {
                     height : height,
                     brushType : 'both',
                     color : normalColor,
-                    lineWidth : normalLineStyle.width,
-                    strokeColor : normalLineStyle.color
+                    radius : normal.borderRadius,
+                    lineWidth : normalBorderWidth,
+                    strokeColor : normal.borderColor
                 },
                 highlightStyle : {
                     color : emphasisColor 
@@ -667,19 +678,20 @@ define(function(require) {
                                 ? zrColor.lift(normalColor, -0.2)
                                 : normalColor
                                ),
-                    lineWidth : emphasisLineStyle.width,
-                    strokeColor : emphasisLineStyle.color
+                    radius : emphasis.borderRadius,
+                    lineWidth : emphasis.borderWidth,
+                    strokeColor : emphasis.borderColor
                 },
                 _orient : orient
             };
             // 考虑线宽的显示优化
-            if (barShape.style.height > normalLineStyle.width
-                && barShape.style.width > normalLineStyle.width
+            if (barShape.style.height > normalBorderWidth
+                && barShape.style.width > normalBorderWidth
             ) {
-                barShape.style.y += normalLineStyle.width / 2;
-                barShape.style.height -= normalLineStyle.width;
-                barShape.style.x += normalLineStyle.width / 2;
-                barShape.style.width -= normalLineStyle.width;
+                barShape.style.y += normalBorderWidth / 2;
+                barShape.style.height -= normalBorderWidth;
+                barShape.style.x += normalBorderWidth / 2;
+                barShape.style.width -= normalBorderWidth;
             }
             else {
                 // 太小了，废了边线
