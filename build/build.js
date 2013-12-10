@@ -1,10 +1,10 @@
 /**
  * Example : 
  * node build.js optimize=true exclude=map,force,line output=echarts.js plain=true
- * @param -o 是否压缩, 默认false
+ * @param optimize 是否压缩, 默认false
  * @param exclude 不打包的图表，多个图表使用逗号分割, 默认使用所有图表
  * @param output 输出打包地址，默认为echarts.js
- * @param -p 是否打包esl, 打包的话可以直接使用scripts标签引入, 默认false
+ * @param plain 是否打包esl, 打包的话可以直接使用scripts标签引入, 默认false
  */
 var fs = require('fs');
 var spawn = require('child_process').spawn;
