@@ -692,7 +692,7 @@ define(function(require) {
 
             if (symbol.match('image')) {
                 itemShape.style.image = 
-                    symbol.replace(/^image:\/\//, '');
+                    symbol.replace(new RegExp('^image:\\/\\/'), '');
                 itemShape.shape = 'image';
             }
             
