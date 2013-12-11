@@ -102,20 +102,20 @@ function encode(val, prev){
     // var tmp = val;
     // Delta
     val = val - prev;
+
+    if (((val << 1) ^ (val >> 15)) + 64 === 8232) { //WTF, 8232 will get syntax error in js code
+        val--;
+    }
     // ZigZag
     val = (val << 1) ^ (val >> 15);
     // add offset and get unicode
-    if (val+64 === 8232) { //WTF, 8232 will get syntax error in js code
-        val--;
-    }
-    var str = String.fromCharCode(val+64);
+    return String.fromCharCode(val+64);
     // var tmp = {'tmp' : str};
     // try{
     //     eval("(" + JSON.stringify(tmp) + ")");
     // }catch(e) {
     //     console.log(val + 64);
     // }
-    return str;
 }
 
 function quantize(val) {
