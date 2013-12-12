@@ -7,6 +7,12 @@
 
 define(function(require) {
     'use strict';
+
+    var requrestAnimationFrame = window.requrestAnimationFrame
+                                || window.msRequestAnimationFrame
+                                || window.mozRequestAnimationFrame
+                                || window.webkitRequestAnimationFrame
+                                || function(func){setTimeout(func, 16)};
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -142,8 +148,8 @@ define(function(require) {
                         [serie], 'itemStyle.emphasis.nodeStyle'
                     );
                     
-                    _filterData(
-                        zrUtil.clone(self.deepQuery([serie], 'nodes')),
+                    _preProcessData(
+                        self.deepQuery([serie], 'nodes'),
                         zrUtil.clone(self.deepQuery([serie], 'links'))
                     );
                     // Reset data
@@ -160,7 +166,7 @@ define(function(require) {
 
                     // Formula in 'Graph Drawing by Force-directed Placement'
                     k = 0.5 / attractiveness 
-                        * Math.sqrt( area / nodesRawData.length );
+                        * Math.sqrt(area / nodesRawData.length);
                     
                     // 这两方法里需要加上读取self.selectedMap判断当前系列是否显示的逻辑
                     _buildLinkShapes(nodesRawData, linksRawData);
@@ -169,17 +175,17 @@ define(function(require) {
             }
         }
 
-        function _filterData(nodes, links) {
+        function _preProcessData(nodes, links) {
             var filteredNodeMap = [];
             var cursor = 0;
             nodesRawData = _filter(nodes, function(node, idx) {
-                if(!node){
+                if (!node) {
                     return;
                 }
                 if (self.selectedMap[node.category]) {
                     filteredNodeMap[idx] = cursor++;
                     return true;
-                }else{
+                } else {
                     filteredNodeMap[idx] = -1;
                 }
             });
@@ -232,17 +238,17 @@ define(function(require) {
                 );
                 x = typeof(node.initial) === 'undefined' 
                     ? random.x
-                    : node.initial.x;
+                    : node.initial[0];
                 y = typeof(node.initial) === 'undefined'
                     ? random.y
-                    : node.initial.y;
+                    : node.initial[1];
                 // 初始化位置
-                nodePositions[i] = [x, y];
-                nodePrePositions[i] = [x, y];
+                nodePositions[i] = vec2.create(x, y);
+                nodePrePositions[i] = vec2.create(x, y);
                 // 初始化受力
-                nodeForces[i] = [0, 0];
+                nodeForces[i] = vec2.create(0, 0);
                 // 初始化加速度
-                nodeAccelerations[i] = [0, 0];
+                nodeAccelerations[i] = vec2.create(0, 0);
                 // 初始化质量
                 nodeMasses[i] = r * r * density * 0.035;
 
@@ -254,9 +260,9 @@ define(function(require) {
                         x : 0,
                         y : 0
                     },
+                    clickable : true,
                     highlightStyle : {},
                     position : [x, y],
-
                     __forceIndex : i
                 };
 
@@ -318,12 +324,12 @@ define(function(require) {
                 }
                 if (typeof(node.itemStyle) !== 'undefined') {
                     var style = node.itemStyle;
-                    if( style.normal ){ 
+                    if(style.normal ){ 
                         zrUtil.merge(shape.style, style.normal, {
                             overwrite : true
                         });
                     }
-                    if( style.normal ){ 
+                    if(style.normal ){ 
                         zrUtil.merge(shape.highlightStyle, style.emphasis, {
                             overwrite : true
                         });
@@ -454,14 +460,13 @@ define(function(require) {
                         d = 5;
                     }
 
-                    vec2.scale(v12, v12, 1/d);
+                    vec2.scale(v12, v12, 1 / d);
                     var forceFactor = 1 * (w1 + w2) * k2 / d;
 
-                    vec2.scale(v12, v12, forceFactor);
                     //节点1受到的力
-                    vec2.sub(nodeForces[i], nodeForces[i], v12);
+                    vec2.scaleAndAdd(nodeForces[i], nodeForces[i], v12, -forceFactor);
                     //节点2受到的力
-                    vec2.add(nodeForces[j], nodeForces[j], v12);
+                    vec2.scaleAndAdd(nodeForces[j], nodeForces[j], v12, forceFactor);
                 }
             }
             // 计算节点之间引力
@@ -482,7 +487,9 @@ define(function(require) {
                 vec2.scale(v12, v12, forceFactor);
                 vec2.add(nodeForces[s], nodeForces[s], v12);
                 // 节点2受到的力
-                vec2.sub(nodeForces[t], nodeForces[t], v12);
+                vec2.sub(
+                    nodeForces[t], nodeForces[t], v12
+                );
             }
             // 到质心的向心力
             for (var i = 0, l = nodesRawData.length; i < l; i++){
@@ -492,9 +499,9 @@ define(function(require) {
                 vec2.normalize(v12, v12);
                 // 100是可调参数
                 var forceFactor = d2 / 100 * centripetal;
-                vec2.scale(v12, v12, forceFactor);
-                vec2.add(nodeForces[i], nodeForces[i], v12);
-
+                vec2.scaleAndAdd(
+                    nodeForces[i], nodeForces[i], v12, forceFactor
+                );
             }
             // 计算加速度
             for (var i = 0, l = nodeAccelerations.length; i < l; i++) {
@@ -503,17 +510,14 @@ define(function(require) {
                 );
             }
             var velocity = [];
-            var tmp = [];
             // 计算位置(verlet积分)
             for (var i = 0, l = nodePositions.length; i < l; i++) {
                 if (nodesRawData[i].fixed) {
                     // 拖拽同步
-                    nodePositions[i][0] = mouseX;
-                    nodePositions[i][1] = mouseY;
-                    nodePrePositions[i][0] = mouseX;
-                    nodePrePositions[i][1] = mouseY;
-                    nodeShapes[i].position[0] = mouseX;
-                    nodeShapes[i].position[1] = mouseY;
+                    vec2.set(nodePositions[i], mouseX, mouseY);
+                    vec2.set(nodePrePositions[i], mouseX, mouseY);
+                    vec2.set(nodeShapes[i].position, mouseX, mouseY);
+                    vec2.set(nodesRawData[i].initial, mouseX, mouseY);
                     continue;
                 }
                 var p = nodePositions[i];
@@ -521,10 +525,10 @@ define(function(require) {
                 vec2.sub(velocity, p, __P);
                 __P[0] = p[0];
                 __P[1] = p[1];
-                vec2.add(
-                    velocity, 
-                    velocity, 
-                    vec2.scale(tmp, nodeAccelerations[i], stepTime)
+                vec2.scaleAndAdd(
+                    velocity, velocity,
+                    nodeAccelerations[i],
+                    stepTime
                 );
                 // Damping
                 vec2.scale(velocity, velocity, temperature);
@@ -533,8 +537,12 @@ define(function(require) {
                 velocity[1] = Math.max(Math.min(velocity[1], 100), -100);
 
                 vec2.add(p, p, velocity);
-                nodeShapes[i].position[0] = p[0];
-                nodeShapes[i].position[1] = p[1];
+                vec2.copy(nodeShapes[i].position, p);
+
+                if (nodesRawData[i].initial === undefined) {
+                    nodesRawData[i].initial = vec2.create();
+                }
+                vec2.copy(nodesRawData[i].initial, p);
 
                 if(isNaN(p[0]) || isNaN(p[1])){
                     throw new Error('NaN');
@@ -550,13 +558,17 @@ define(function(require) {
             _update(stepTime);
             _updateLinkShapes();
 
+            var tmp = {};
             for (var i = 0; i < nodeShapes.length; i++) {
                 var shape = nodeShapes[i];
-                zr.modShape(shape.id, shape);
+                tmp.position = shape.position;
+                zr.modShape(shape.id, tmp, true);
             }
+            tmp = {};
             for (var i = 0; i < linkShapes.length; i++) {
                 var shape = linkShapes[i];
-                zr.modShape(shape.id, shape);
+                tmp.style = shape.style;
+                zr.modShape(shape.id, tmp, true);
             }
 
             zr.refresh();
@@ -580,10 +592,10 @@ define(function(require) {
             function cb() {
                 if (_updating) {
                     _step();
-                    setTimeout(cb, stepTime * 1000);
+                    requrestAnimationFrame(cb);
                 }
             }
-            setTimeout(cb, stepTime * 1000);
+            requrestAnimationFrame(cb);
         }
 
         function refresh(newOption) {
@@ -599,7 +611,7 @@ define(function(require) {
         function dispose(){
             _updating = false;
         }
-        
+
         /**
          * 输出动态视觉引导线
          */
@@ -607,6 +619,9 @@ define(function(require) {
             self.isDragstart = true;
         };
         
+        function onclick(param) {
+        }
+
         /**
          * 拖拽开始
          */
@@ -662,6 +677,7 @@ define(function(require) {
         self.ondragstart = ondragstart;
         self.ondragend = ondragend;
         self.dispose = dispose;
+        self.onclick = onclick;
 
         init(option, component);
     }
