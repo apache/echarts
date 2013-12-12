@@ -1,0 +1,388 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+
+    <script src="../asset/js/esl/esl.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+    <style type="text/css">
+        .CodeMirror {
+            height: 550px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVBAR
+    ================================================== -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="../../index.html">ECharts</a>
+          <div class="nav-collapse collapse">
+              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
+              <ul class="nav">
+                <li><a href="../../index.html"><i class="icon-home icon-white"></i> Home</a></li>
+                <li class="active"><a href="../example.html" class="active">Example</a></li>
+                <li><a href="../doc.html" >API &amp; Doc</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a id="last-release-link" href=""> </a></li>
+                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
+                  </ul>
+                </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
+                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
+                    <li class="divider"></li>
+                    <!--li class="nav-header">Library</li-->
+                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
+                    
+                  </ul>
+                </li>
+              </ul>
+           </div><!--/.nav-collapse -->
+        </div><!-- /.container -->
+      </div><!-- /.navbar-inner -->
+    </div><!-- /.navbar-wrapper -->
+
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div id="sidebar-code" class="span4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+option = {
+    tooltip : {
+        trigger: 'item',
+        formatter: '{b}'
+    },
+    series : [
+        {
+            name: '世界地图',
+            type: 'map',mapLocation:{width:2000},
+            mapType: 'world',
+            selectedMode : 'single',
+            itemStyle:{
+                normal:{label:{show:true}},
+                emphasis:{label:{show:true}}
+            },
+            data:[
+                {name:'CN',selected:true}
+            ],
+            // 自定义名称
+            nameMap : {
+                'Afghanistan':'AF',
+                'Andorra':'AD',
+                'United Arab Emirates':'AE',
+                'Antigua and Barbuda':'AG',
+                'Anguilla':'AI',
+                'Albania':'AL',
+                'Armenia':'AM',
+                'Netherlands Antilles':'AN',
+                'Angola':'AO',
+                'Antarctica':'AQ',
+                'Argentina':'AR',
+                'American Samoa':'AS',
+                'Austria':'AT',
+                'Australia':'AU',
+                'Aruba':'AW',
+                'Azerbaijan':'AZ',
+                'Bosnia and Herzegovina':'BA',
+                'Barbados':'BB',
+                'Bangladesh':'BD',
+                'Belgium':'BE',
+                'Burkina Faso':'BF',
+                'Bulgaria':'BG',
+                'Bahrain':'BH',
+                'Burundi':'BI',
+                'Benin':'BJ',
+                'Bermuda':'BM',
+                'Brunei':'BN',
+                'Bolivia':'BO',
+                'Brazil':'BR',
+                'The Bahamas':'BS',
+                'Bhutan':'BT',
+                'Bouvet Island':'BV',
+                'Botswana':'BW',
+                'Belarus':'BY',
+                'Belize':'BZ',
+                'Canada':'CA',
+                'Cocos Islands':'CC',
+                'Central African Republic':'CF',
+                'Democratic Republic of the Congo' : 'CD',
+                'Republic of the Congo' : 'CG',
+                'Switzerland':'CH',
+                'Ivory Coast':'CI',
+                'Cook Islands':'CK',
+                'Chile':'CL',
+                'Cameroon':'CM',
+                'China':'CN',
+                'Colombia':'CO',
+                'Equatorial Guinea':'CQ',
+                'Costa Rica':'CR',
+                'Cuba':'CU',
+                'Cape Verde':'CV',
+                'Christmas Island':'CX',
+                'Northern Cyprus':'CY',
+                'Czech Republic':'CZ',
+                'Germany':'DE',
+                'Djibouti':'DJ',
+                'Denmark':'DK',
+                'Dominica':'DM',
+                'Dominican Republic':'DO',
+                'Algeria':'DZ',
+                'Ecuador':'EC',
+                'Estonia':'EE',
+                'Egypt':'EG',
+                'Western Sahara':'EH',
+                'Spain':'ES',
+                'Ethiopia':'ET',
+                'El Salvador':'EV',
+                'Eritrea' : '?',
+                'Finland':'FI',
+                'Fiji':'FJ',
+                'Falkland Islands':'FK',
+                'Micronesia':'FM',
+                'Faroe Islands':'FO',
+                'France':'FR',
+                'Gabon':'GA',
+                'Great Britain (UK)':'GB',
+                'Grenada':'GD',
+                'Georgia':'GE',
+                'French Guiana':'GF',
+                'Ghana':'GH',
+                'Gibraltar':'GI',
+                'Greenland':'GL',
+                'Gambia':'GM',
+                'Guinea':'GN',
+                'Guadeloupe':'GP',
+                'Greece':'GR',
+                'Guatemala':'GT',
+                'Guam':'GU',
+                'Guinea Bissau':'GW',
+                'Guyana':'GY',
+                'Hong Kong':'HK',
+                'Heard and McDonald Is.':'HM',
+                'Honduras':'HN',
+                'Croatia':'HR',
+                'Haiti':'HT',
+                'Hungary':'HU',
+                'Indonesia':'ID',
+                'Ireland':'IE',
+                'Israel':'IL',
+                'India':'IN',
+                'British Indian Ocean Territory':'IO',
+                'Iraq':'IQ',
+                'Iran':'IR',
+                'Iceland':'IS',
+                'Italy':'IT',
+                'Jamaica':'JM',
+                'Jordan':'JO',
+                'Japan':'JP',
+                'Kenya':'KE',
+                'Kyrgyzstan':'KG',
+                'Kosovo' : '?',
+                'Cambodia':'KH',
+                'Kiribati':'KI',
+                'Comoros':'KM',
+                'St. Kitts & Nevis':'KN',
+                'North Korea':'KP',
+                'South Korea':'KR',
+                'Kuwait':'KW',
+                'Cayman Islands':'KY',
+                'Kazakhstan':'KZ',
+                "Laos":'LA',
+                'Lebanon':'LB',
+                'St. Lucia':'LC',
+                'Liechtenstein':'LI',
+                'Sri Lanka':'LK',
+                'Liberia':'LR',
+                'Lesotho':'LS',
+                'Lithuania':'LT',
+                'Luxembourg':'LU',
+                'Latvia':'LV',
+                'Libya':'LY',
+                'Morocco':'MA',
+                'Monaco':'MC',
+                'Moldova':'MD',
+                'Montenegro':'ME',
+                'Madagascar':'MG',
+                'Marshall Islands':'MH',
+                'Mali':'ML',
+                'Myanmar':'MM',
+                'Mongolia':'MN',
+                'Macau':'MO',
+                'Northern Mariana Islands':'MP',
+                'Martinique':'MQ',
+                'Mauritania':'MR',
+                'Montserrat':'MS',
+                'Malta':'MT',
+                'Maldives':'MV',
+                'Malawi':'MW',
+                'Mexico':'MX',
+                'Malaysia':'MY',
+                'Mozambique':'MZ',
+                'Macedonia' : 'MKD',
+                'Namibia':'NA',
+                'New Caledonia':'NC',
+                'Niger':'NE',
+                'Norfolk Island':'NF',
+                'Nigeria':'NG',
+                'Nicaragua':'NI',
+                'Netherlands':'NL',
+                'Norway':'NO',
+                'Nepal':'NP',
+                'Nauru':'NR',
+                'Neutral Zone':'NT',
+                'Niue':'NU',
+                'New Zealand':'NZ',
+                'Oman':'OM',
+                'Panama':'PA',
+                'Peru':'PE',
+                'French Polynesia':'PF',
+                'Papua New Guinea':'PG',
+                'Philippines':'PH',
+                'Pakistan':'PK',
+                'Poland':'PL',
+                'St. Pierre & Mequielon':'PM',
+                'Pitcairn Island':'PN',
+                'Puerto Rico':'PR',
+                'Portugal':'PT',
+                'Palau':'PW',
+                'Paraguay':'PY',
+                'Qatar':'QA',
+                'Reunion Island':'RE',
+                'Republic of Serbia' : 'SRB',
+                'Romania':'RO',
+                'Russia':'RU',
+                'Rwanda':'RW',
+                'Saudi Arabia':'SA',
+                'Solomon Islands':'SB',
+                'Seychelles':'SC',
+                'South Sudan':'SSP',
+                'Sudan' : 'SD',
+                'Sweden':'SE',
+                'Singapore':'SG',
+                'St. Helena':'SH',
+                'Slovenia':'SI',
+                'Svalbard & Jan Mayen':'SJ',
+                'Slovakia':'SK',
+                'Sierra Leone':'SL',
+                'San Marino':'SM',
+                'Senegal':'SN',
+                'Somaliland': '?',
+                'Somalia':'SO',
+                'Suriname':'SR',
+                'Sao Tome & Principe':'ST',
+                'USSR':'SU',
+                'Syria':'SY',
+                'Swaziland':'SZ',
+                'Turks & Caicos Islands':'TC',
+                'Chad':'TD',
+                'French Southern Territories':'TF',
+                'Togo':'TG',
+                'Thailand':'TH',
+                'Tajikistan':'TJ',
+                'tokelau':'TK',
+                'Turkmenistan':'TM',
+                'Tunisia':'TN',
+                'Tonga':'TO',
+                'East Timor':'TP',
+                'Turkey':'TR',
+                'Trinidad and Tobago':'TT',
+                'Tuvalu':'TV',
+                'Taiwan':'TW',
+                'United Republic of Tanzania':'TZ',
+                'Ukraine':'UA',
+                'Uganda':'UG',
+                'United Kingdom':'UK',
+                'United States of America':'US',
+                'Uruguay':'UY',
+                'Uzbekistan' : '?',
+                'Vatican City State':'VA',
+                'St. Vincent and the Grenadines':'VC',
+                'Venezuela':'VE',
+                'Virgin Islands':'VG',
+                'Vietnam':'VN',
+                'Vanuatu':'VU',
+                'Wallis and Fortuna Is.':'WF',
+                'Samoa':'WS',
+                'Yemen':'YE',
+                'Yugoslavia':'YU',
+                'South Africa':'ZA',
+                'Zambia':'ZM',
+                'Zaire':'ZR',
+                'Zimbabwe':'ZW',
+                'West Bank' : '?',
+                
+                'French Southern and Antarctic Lands' : '?'
+            }
+        }
+    ]
+};
+var ecConfig = require('echarts/config');
+myChart.on(ecConfig.EVENT.MAP_SELECTED, function(param){
+    var selected = param.selected;
+    var str = '当前选择： ';
+    for (var p in selected) {
+        if (selected[p]) {
+            str += p + ' ';
+        }
+    }
+    document.getElementById('wrong-message').innerHTML = str;
+})
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="span8">
+                <div id="main" class="main" style="height: 530px;"></div>
+                <div>
+                    <button onclick="refresh(true)">Refresh ~</button>
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        <hr>
+        <!-- FOOTER -->
+        <footer>
+          <p class="pull-right"><a href="#">Back to top</a></p>
+          <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="../changelog.html" target="_blank">Changelog</a></p>
+        </footer>
+    </div><!--/.fluid-container-->
+
+    <script src="../asset/js/jquery.js"></script>
+    <script src="../asset/js/bootstrap-transition.js"></script>
+    <script src="../asset/js/bootstrap-alert.js"></script>
+    <script src="../asset/js/bootstrap-modal.js"></script>
+    <script src="../asset/js/bootstrap-dropdown.js"></script>
+    <script src="../asset/js/bootstrap-scrollspy.js"></script>
+    <script src="../asset/js/bootstrap-tab.js"></script>
+    <script src="../asset/js/bootstrap-tooltip.js"></script>
+    <script src="../asset/js/bootstrap-popover.js"></script>
+    <script src="../asset/js/bootstrap-button.js"></script>
+    <script src="../asset/js/bootstrap-collapse.js"></script>
+    <script src="../asset/js/bootstrap-carousel.js"></script>
+    <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>
