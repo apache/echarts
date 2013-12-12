@@ -67,8 +67,6 @@ define(function(require) {
 
         // 节点的受力
         var nodeForces = [];
-        // 节点的加速度
-        var nodeAccelerations = [];
         // 节点的位置
         var nodePositions = [];
         var nodePrePositions = [];
@@ -247,8 +245,6 @@ define(function(require) {
                 nodePrePositions[i] = vec2.create(x, y);
                 // 初始化受力
                 nodeForces[i] = vec2.create(0, 0);
-                // 初始化加速度
-                nodeAccelerations[i] = vec2.create(0, 0);
                 // 初始化质量
                 nodeMasses[i] = r * r * density * 0.035;
 
@@ -480,33 +476,24 @@ define(function(require) {
 
                 vec2.sub(v12, p2, p1);
                 var d2 = vec2.lengthSquare(v12);
-                vec2.normalize(v12, v12);
+                if (d2 === 0) {
+                    continue;
+                }
 
-                var forceFactor = w * d2 / k;
+                var forceFactor = w * d2 / k / Math.sqrt(d2);
                 // 节点1受到的力
-                vec2.scale(v12, v12, forceFactor);
-                vec2.add(nodeForces[s], nodeForces[s], v12);
+                vec2.scaleAndAdd(nodeForces[s], nodeForces[s], v12, forceFactor);
                 // 节点2受到的力
-                vec2.sub(
-                    nodeForces[t], nodeForces[t], v12
-                );
+                vec2.scaleAndAdd(nodeForces[t], nodeForces[t], v12, -forceFactor);
             }
             // 到质心的向心力
             for (var i = 0, l = nodesRawData.length; i < l; i++){
                 var p = nodePositions[i];
                 vec2.sub(v12, centroid, p);
                 var d2 = vec2.lengthSquare(v12);
-                vec2.normalize(v12, v12);
-                // 100是可调参数
-                var forceFactor = d2 / 100 * centripetal;
+                var forceFactor = d2 * centripetal / (100 * Math.sqrt(d2));
                 vec2.scaleAndAdd(
                     nodeForces[i], nodeForces[i], v12, forceFactor
-                );
-            }
-            // 计算加速度
-            for (var i = 0, l = nodeAccelerations.length; i < l; i++) {
-                vec2.scale(
-                    nodeAccelerations[i], nodeForces[i], 1 / nodeMasses[i]
                 );
             }
             var velocity = [];
@@ -527,8 +514,8 @@ define(function(require) {
                 __P[1] = p[1];
                 vec2.scaleAndAdd(
                     velocity, velocity,
-                    nodeAccelerations[i],
-                    stepTime
+                    nodeForces[i],
+                    stepTime / nodeMasses[i]
                 );
                 // Damping
                 vec2.scale(velocity, velocity, temperature);
@@ -544,9 +531,9 @@ define(function(require) {
                 }
                 vec2.copy(nodesRawData[i].initial, p);
 
-                if(isNaN(p[0]) || isNaN(p[1])){
-                    throw new Error('NaN');
-                }
+                // if(isNaN(p[0]) || isNaN(p[1])){
+                //     throw new Error('NaN');
+                // }
             }
         }
 
