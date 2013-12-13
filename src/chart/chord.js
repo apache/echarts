@@ -443,8 +443,7 @@ define(function(require) {
                             y : start[1],
                             text : group.name,
                             textAlign : isRightSide ? 'left' : 'right',
-                            color : labelColor,
-                            hoverable : false
+                            color : labelColor
                         }
                     };
                     labelShape.style.textColor = self.deepQuery(
