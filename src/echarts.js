@@ -506,7 +506,8 @@ define(function(require) {
                 var ecData = require('./util/ecData');
                 return {
                     seriesIndex : ecData.get(target, 'seriesIndex'),
-                    dataIndex : ecData.get(target, 'dataIndex')
+                    dataIndex : ecData.get(target, 'dataIndex'),
+                    data : ecData.get(target, 'data')
                 };
             }
             return;

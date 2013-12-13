@@ -151,7 +151,7 @@ define(function(require) {
                     );
                     
                     rawNodes = self.deepQuery([serie], 'nodes');
-                    rawLinks = self.deepQuery([serie], 'links');
+                    rawLinks = zrUtil.clone(self.deepQuery([serie], 'links'));
                     _preProcessData(rawNodes, rawLinks);
                     // Reset data
                     nodePositions = [];
@@ -193,7 +193,7 @@ define(function(require) {
             var source;
             var target;
             var ret;
-            filteredLinks = _filter(links, function(link/*, idx*/){
+            filteredLinks = _filter(links, function(link, idx){
                 source = link.source;
                 target = link.target;
                 ret = true;
@@ -207,6 +207,8 @@ define(function(require) {
                 } else {
                     ret = false;
                 }
+                // 保存原始链接中的index
+                link.rawIndex = idx;
 
                 return ret;
             });
@@ -355,7 +357,7 @@ define(function(require) {
                     {
                         name : categoryName
                     },
-                    // serie index
+                    // series index
                     0,
                     // data
                     node,
@@ -426,13 +428,16 @@ define(function(require) {
                     // serie index
                     0,
                     // link data
-                    link,
+                    rawLinks[link.rawIndex],
                     // link data index
-                    rawLinks.indexOf(link),
+                    link.rawIndex,
                     // source name - target name
                     source.name + '-' + target.name,
                     // link value
-                    link.value || 0
+                    link.value || 0,
+                    // special
+                    // 这一项只是为了表明这是条边
+                    true
                 );
 
                 zr.addShape(linkShape);

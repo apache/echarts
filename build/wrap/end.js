@@ -14,10 +14,13 @@ zrender.animation = {
     Cip : require('zrender/animation/clip'),
     easing : require('zrender/animation/easing')
 }
+var echarts = require('echarts');
+echarts.config = require('echarts/config');
+
 // 加载需要的图表，由build.js临时生成
 var chart = require('_chart');
 
-_global['echarts'] = require("echarts");
+_global['echarts'] = echarts;
 _global['zrender'] = zrender;
 
 })(window);

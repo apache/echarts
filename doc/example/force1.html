@@ -176,6 +176,25 @@ option = {
         }
     ]
 };
+var ecConfig = require('echarts/config');
+function focus(param) {
+    var data = param.data;
+    var links = option.series[0].links;
+    var nodes = option.series[0].nodes;
+    if (
+        data.source !== undefined
+        && data.target !== undefined
+    ) { //点击的是边
+        var sourceNode = nodes[data.source];
+        var targetNode = nodes[data.target];
+        console.log("选中了边 " + sourceNode.name + ' -> ' + targetNode.name);
+    } else { // 点击的是点
+        console.log("选中了" + data.name);
+    }
+    console.log(param);
+}
+myChart.on(ecConfig.EVENT.CLICK, focus)
+
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->
