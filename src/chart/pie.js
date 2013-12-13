@@ -891,13 +891,17 @@ define(function(require) {
                     r0 = self.shapeList[i].style.r0;
                     r = self.shapeList[i].style.r;
 
-                    zr.modShape(self.shapeList[i].id, {
-                        rotation : [Math.PI*2, x, y],
-                        style : {
-                            r0 : 0,
-                            r : 0
-                        }
-                    });
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {
+                            rotation : [Math.PI*2, x, y],
+                            style : {
+                                r0 : 0,
+                                r : 0
+                            }
+                        },
+                        true
+                    );
 
                     serie = ecData.get(self.shapeList[i], 'series');
                     dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
@@ -925,9 +929,13 @@ define(function(require) {
                 }
                 else {
                     dataIndex = self.shapeList[i]._dataIndex;
-                    zr.modShape(self.shapeList[i].id, {
-                        scale : [0, 0, x, y]
-                    });
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {
+                            scale : [0, 0, x, y]
+                        },
+                        true
+                    );
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             duration + dataIndex * 100,

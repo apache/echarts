@@ -418,9 +418,13 @@ define(function(require) {
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 x = self.shapeList[i]._x || 0;
                 y = self.shapeList[i]._y || 0;
-                zr.modShape(self.shapeList[i].id, {
-                    scale : [0, 0, x, y]
-                });
+                zr.modShape(
+                    self.shapeList[i].id, 
+                    {
+                        scale : [0, 0, x, y]
+                    },
+                    true
+                );
                 zr.animate(self.shapeList[i].id, '')
                     .when(
                         (self.deepQuery([serie],'animationDuration')

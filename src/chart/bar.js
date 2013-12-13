@@ -838,7 +838,8 @@ define(function(require) {
                                         x : x + width,
                                         width: 0
                                     }
-                                }
+                                },
+                                true
                             );
                             zr.animate(self.shapeList[i].id, 'style')
                                 .when(
@@ -857,7 +858,8 @@ define(function(require) {
                                     style: {
                                         width: 0
                                     }
-                                }
+                                },
+                                true
                             );
                             zr.animate(self.shapeList[i].id, 'style')
                                 .when(
@@ -880,7 +882,8 @@ define(function(require) {
                                     style: {
                                         height: 0
                                     }
-                                }
+                                },
+                                true
                             );
                             zr.animate(self.shapeList[i].id, 'style')
                                 .when(
@@ -899,7 +902,8 @@ define(function(require) {
                                         y: y + height,
                                         height: 0
                                     }
-                                }
+                                },
+                                true
                             );
                             zr.animate(self.shapeList[i].id, 'style')
                                 .when(

@@ -904,11 +904,15 @@ define(function(require) {
                             }
                             isHorizontal ? (x = -dx, y = 0) : (x = 0, y = dy);
                         }
-                        zr.modShape(self.shapeList[i].id, {
-                            style : {
-                                pointList : self.shapeList[i].style.pointList
-                            }
-                        });
+                        zr.modShape(
+                            self.shapeList[i].id, 
+                            {
+                                style : {
+                                    pointList: self.shapeList[i].style.pointList
+                                }
+                            },
+                            true
+                        );
                     }
                     else {
                         // 拐点动画
@@ -956,14 +960,22 @@ define(function(require) {
                     x = self.shapeList[i].style.pointList[0][0];
                     y = self.shapeList[i].style.pointList[0][1];
                     if (self.shapeList[i]._orient == 'horizontal') {
-                        zr.modShape(self.shapeList[i].id, {
-                            scale : [0, 1, x, y]
-                        });
+                        zr.modShape(
+                            self.shapeList[i].id, 
+                            {
+                                scale : [0, 1, x, y]
+                            },
+                            true
+                        );
                     }
                     else {
-                        zr.modShape(self.shapeList[i].id, {
-                            scale : [1, 0, x, y]
-                        });
+                        zr.modShape(
+                            self.shapeList[i].id, 
+                            {
+                                scale : [1, 0, x, y]
+                            },
+                            true
+                        );
                     }
                     zr.animate(self.shapeList[i].id, '')
                         .when(
@@ -979,9 +991,13 @@ define(function(require) {
                 else {
                     x = self.shapeList[i]._x || 0;
                     y = self.shapeList[i]._y || 0;
-                    zr.modShape(self.shapeList[i].id, {
-                        scale : [0, 0, x, y]
-                    });
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {
+                            scale : [0, 0, x, y]
+                        },
+                        true
+                    );
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             duration,

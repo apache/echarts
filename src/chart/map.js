@@ -65,15 +65,13 @@ define(function(require) {
                                         || _nameMap[mapType] 
                                         || {};
                     if (series[i].textFixed) {
-                        zrUtil.merge(
-                            _textFixed, series[i].textFixed,
-                            { 'overwrite': true}
+                        zrUtil.mergeFast(
+                            _textFixed, series[i].textFixed, true, false
                         );
                     }
                     if (series[i].geoCoord) {
-                        zrUtil.merge(
-                            _geoCoord, series[i].geoCoord,
-                            { 'overwrite': true}
+                        zrUtil.mergeFast(
+                            _geoCoord, series[i].geoCoord, true, false
                         );
                     }
                     
@@ -122,7 +120,7 @@ define(function(require) {
                         valueData[mt][k].value = 
                             valueData[mt][k].value 
                             / valueData[mt][k].seriesIndex.length;
-                            
+                        // TODO:小数点精度可配
                         if (valueData[mt][k].value > 10) {
                             valueData[mt][k].value = Math.round(
                                 valueData[mt][k].value
