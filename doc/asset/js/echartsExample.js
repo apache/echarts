@@ -47,6 +47,10 @@ function refresh(isBtnRefresh){
         return;
     }
     needRefresh = false;
+    if (myChart && myChart.dispose) {
+        myChart.dispose();
+    }
+    myChart = echarts.init(domMain);
     (new Function(editor.doc.getValue()))();
     myChart.setOption(option, true);
     domMessage.innerHTML = '';
