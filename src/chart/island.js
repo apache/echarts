@@ -106,7 +106,8 @@ define(function (require) {
                             x: Math.round(self.shapeList[i].style.x * xScale),
                             y: Math.round(self.shapeList[i].style.y * yScale)
                         }
-                    }
+                    },
+                    true
                 );
             }
         }

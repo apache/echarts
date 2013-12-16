@@ -467,9 +467,13 @@
                     center = polar.getCenter(polarIndex);
                     x = center[0];
                     y = center[1];
-                    zr.modShape(self.shapeList[i].id, {
-                        scale : [0.1, 0.1, x, y]
-                    });
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {
+                            scale : [0.1, 0.1, x, y]
+                        },
+                        true
+                    );
                     
                     zr.animate(item.id, '')
                         .when(
@@ -485,9 +489,13 @@
                 else {
                     x = self.shapeList[i]._x || 0;
                     y = self.shapeList[i]._y || 0;
-                    zr.modShape(self.shapeList[i].id, {
-                        scale : [0, 0, x, y]
-                    });
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {
+                            scale : [0, 0, x, y]
+                        },
+                        true
+                    );
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             duration,

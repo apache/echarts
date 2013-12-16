@@ -460,9 +460,11 @@ define(function(require) {
                     serie = series[self.shapeList[i]._seriesIndex];
                     x = self.shapeList[i].style.x;
                     y = self.shapeList[i].style.y[0];
-                    zr.modShape(self.shapeList[i].id, {
-                        scale : [1, 0, x, y]
-                    });
+                    zr.modShape(
+                        self.shapeList[i].id,
+                        { scale : [1, 0, x, y] },
+                        true
+                    );
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             (self.deepQuery([serie],'animationDuration')

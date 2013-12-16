@@ -24,7 +24,10 @@ define(function(require) {
         var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
+        var zrConfig = require('zrender/config');
         var zrUtil = require('zrender/tool/util');
+        var zrArea = require('zrender/tool/area');
+        var zrEvent = require('zrender/tool/event');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_MAP;
@@ -35,13 +38,22 @@ define(function(require) {
         var _selectedMode;      // 选择模式
         var _selected = {};     // 地图选择状态
         var _mapTypeMap = {};   // 图例类型索引
-        var _transformMap = {}; // 根据地图类型索引transform
+        var _mapDataMap = {};   // 根据地图类型索引bbox,transform,path
         var _nameMap = {};      // 个性化地名
 
+        var _refreshDelayTicket; // 滚轮缩放时让refresh飞一会
         var _mapDataRequireCounter;
         var _mapParams = require('../util/mapData/params');
         var _textFixed = require('../util/mapData/textFixed');
         var _geoCoord = require('../util/mapData/geoCoord');
+        
+        // 漫游相关信息
+        var _roamMap = {};
+        var _mx;
+        var _my;
+        var _mousedown;
+        var _justMove;   // 避免移动响应点击
+        var _curMapType; // 当前移动的地图类型
 
         function _buildShape() {
             self.selectedMap = {};
@@ -61,19 +73,18 @@ define(function(require) {
                     mapType = series[i].mapType;
                     mapSeries[mapType] = mapSeries[mapType] || {};
                     mapSeries[mapType][i] = true;
+                    _roamMap[mapType] = series[i].roam;
                     _nameMap[mapType] = series[i].nameMap 
                                         || _nameMap[mapType] 
                                         || {};
                     if (series[i].textFixed) {
-                        zrUtil.merge(
-                            _textFixed, series[i].textFixed,
-                            { 'overwrite': true}
+                        zrUtil.mergeFast(
+                            _textFixed, series[i].textFixed, true, false
                         );
                     }
                     if (series[i].geoCoord) {
-                        zrUtil.merge(
-                            _geoCoord, series[i].geoCoord,
-                            { 'overwrite': true}
+                        zrUtil.mergeFast(
+                            _geoCoord, series[i].geoCoord, true, false
                         );
                     }
                     
@@ -117,12 +128,15 @@ define(function(require) {
             
             _mapDataRequireCounter = 0;
             for (var mt in valueData) {
+                _mapDataRequireCounter++;
+            }
+            for (var mt in valueData) {
                 if (valueCalculation[mt] && valueCalculation[mt] == 'average') {
                     for (var k in valueData[mt]) {
                         valueData[mt][k].value = 
                             valueData[mt][k].value 
                             / valueData[mt][k].seriesIndex.length;
-                            
+                        // TODO:小数点精度可配
                         if (valueData[mt][k].value > 10) {
                             valueData[mt][k].value = Math.round(
                                 valueData[mt][k].value
@@ -134,7 +148,15 @@ define(function(require) {
                         }
                     }
                 }
-                if (_mapParams[mt].getData) {
+                
+                _mapDataMap[mt] = _mapDataMap[mt] || {};
+                if (_mapDataMap[mt].mapData) {
+                    // 已经缓存了则直接用
+                    _mapDataCallback(mt, valueData[mt], mapSeries[mt])(
+                        _mapDataMap[mt].mapData
+                    )
+                }
+                else if (_mapParams[mt].getData) {
                     _mapParams[mt].getData(
                         _mapDataCallback(mt, valueData[mt], mapSeries[mt])
                     );
@@ -148,8 +170,8 @@ define(function(require) {
          * @param {Object} ms mapSeries
          */
         function _mapDataCallback(mt, vd, ms) {
-            _mapDataRequireCounter++;
             return function(md) {
+                _mapDataMap[mt].mapData = md; // 缓存这份数据
                 _buildMap(
                     mt,                             // 类型
                     _getProjectionData(             // 地图数据
@@ -178,18 +200,56 @@ define(function(require) {
             var single;
             var textPosition;
             
-            var bbox = _getBbox(mapData);
+            // bbox永远不变
+            var bbox = _mapDataMap[mapType].bbox || _getBbox(mapData);
             //console.log(bbox)
-            var transform = _getTransform(
-                bbox,
-                mapSeries
-            );
-            //console.log(1111,transform)
-            // 一般投射
-            var normalProjection = require('../util/projection/normal');
-            var pathArray = normalProjection.geoJson2Path(mapData, transform);
             
-            _transformMap[mapType] = transform;
+            var transform;
+            //console.log(1111,transform)
+            console.log('-------------')
+            if (!_mapDataMap[mapType].hasRoam) {
+                // 第一次或者发生了resize，需要判断
+                transform = _getTransform(
+                    bbox,
+                    mapSeries
+                );
+                console.log(1)
+            }
+            else {
+                //经过用户漫游不再响应resize
+                transform = _mapDataMap[mapType].transform;
+                console.log(2)
+            }
+            
+            var lastTransform = _mapDataMap[mapType].lastTransform 
+                                || {scale:{}};
+            
+            var pathArray;
+            if (transform.left != lastTransform.left
+                || transform.top != lastTransform.top
+                || transform.scale.x != lastTransform.scale.x
+                || transform.scale.y != lastTransform.scale.y
+            ) {
+                // 发生过变化，需要重新生成pathArray
+                // 一般投射
+                console.log(transform)
+                pathArray = require('../util/projection/normal').geoJson2Path(
+                                mapData, transform
+                            );
+                lastTransform = zrUtil.clone(transform);
+                console.log(3)
+            }
+            else {
+                transform = _mapDataMap[mapType].transform;
+                pathArray = _mapDataMap[mapType].pathArray;
+                console.log(4)
+            }
+            
+            _mapDataMap[mapType].bbox = bbox;
+            _mapDataMap[mapType].transform = transform;
+            _mapDataMap[mapType].lastTransform = lastTransform;
+            _mapDataMap[mapType].pathArray = pathArray;
+            
             //console.log(pathArray)
             var name;
             var position = [transform.left, transform.top];
@@ -235,8 +295,6 @@ define(function(require) {
                 };
                 province.push(single);
             }
-            
-            
             //console.log(province)
             return province;
         }
@@ -423,6 +481,7 @@ define(function(require) {
                                 shape : 'circle',
                                 zlevel : _zlevelBase + 1,
                                 position : style.position,
+                                _mapType : mapType,
                                 style : {
                                     x : style.textX + 3 + j * 7,
                                     y : style.textY - 10,
@@ -499,6 +558,7 @@ define(function(require) {
                     hoverable: tooSmall,
                     clickable : tooSmall,
                     position : style.position,
+                    _mapType : mapType,
                     style : {
                         brushType: 'both',
                         x : style.textX,
@@ -621,11 +681,151 @@ define(function(require) {
         function _nameChange(mapType, name) {
             return _nameMap[mapType][name] || name;
         }
+        
+        function _findMapTypeByPos(mx, my) {
+            var transform;
+            var left;
+            var top;
+            var width;
+            var height;
+            var geoAndPos;
+            for (var mapType in _mapDataMap) {
+                transform = _mapDataMap[mapType].transform;
+                if (!transform || !_roamMap[mapType]) {
+                    continue;
+                }
+                left = transform.left;
+                top = transform.top;
+                width = transform.width;
+                height = transform.height;
+                if (mx >= left
+                    && mx <= (left + width)
+                    && my >= top
+                    && my <= (top + height)
+                ) {
+                    return mapType;
+                }
+            }
+            return;
+        }
+        /**
+         * 滚轮缩放 
+         */
+        function _onmousewheel(param) {
+            var event = param.event;
+            var mx = zrEvent.getX(event);
+            var my = zrEvent.getY(event);
+            var delta = zrEvent.getDelta(event);
+            //delta = delta > 0 ? (-1) : 1;
+            var mapType = _findMapTypeByPos(mx, my);
+            if (mapType) {
+                var transform = _mapDataMap[mapType].transform;
+                var left = transform.left;
+                var top = transform.top;
+                var width = transform.width;
+                var height = transform.height;
+                // 位置转经纬度
+                geoAndPos = pos2geo(mapType, [mx - left, my - top]);
+                if (delta > 0) {
+                    delta = 1.2;
+                    // 放大
+                    transform.scale.x *= delta;
+                    transform.scale.y *= delta;
+                    transform.width = width * delta;
+                    transform.height = height * delta;
+                    //transform.left = left - (transform.width - width) / 2;
+                    //transform.top = top - (transform.height - height) / 2;
+                }
+                else {
+                    // 缩小
+                    delta = 1.2;
+                    transform.scale.x /= delta;
+                    transform.scale.y /= delta;
+                    transform.width = width / delta;
+                    transform.height = height / delta;
+                    //transform.left = left + (width - transform.width) / 2;
+                    //transform.top = top + (height - transform.height) / 2;
+                }
+                _mapDataMap[mapType].hasRoam = true;
+                _mapDataMap[mapType].transform = transform;
+                // 经纬度转位置
+                geoAndPos = geo2pos(mapType,geoAndPos);
+                // 保持视觉中心
+                transform.left -= geoAndPos[0] - (mx - left);
+                transform.top -= geoAndPos[1] - (my - top);
+                _mapDataMap[mapType].transform = transform;
+                // 让refresh飞一会
+                clearTimeout(_refreshDelayTicket);
+                _refreshDelayTicket = setTimeout(refresh, 100);
+                
+                zrEvent.stop(event);
+            }
+        }
+        
+        function _onmousedown(param) {
+            var event = param.event;
+            var mx = zrEvent.getX(event);
+            var my = zrEvent.getY(event);
+            var mapType = _findMapTypeByPos(mx, my);
+            if (mapType) {
+                _mousedown = true;
+                _mx = mx;
+                _my = my;
+                _curMapType = mapType;
+                setTimeout(function(){
+                    zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
+                    zr.on(zrConfig.EVENT.MOUSEUP, _onmouseup);
+                },50)
+            }
+            
+        }
+        
+        function _onmousemove(param) {
+            if (!_mousedown) {
+                return;
+            }
+            var event = param.event;
+            var mx = zrEvent.getX(event);
+            var my = zrEvent.getY(event);
+            var transform = _mapDataMap[_curMapType].transform;
+            transform.hasRoam = true;
+            transform.left -= _mx - mx;
+            transform.top -= _my - my;
+            _mx = mx;
+            _my = my;
+            _mapDataMap[_curMapType].transform = transform;
+            
+            var position = [transform.left, transform.top];
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                if(self.shapeList[i]._mapType == _curMapType) {
+                    self.shapeList[i].position = position;
+                    zr.modShape(self.shapeList[i].id, self.shapeList[i]);
+                }
+            }
+            zr.refresh();
+            _justMove = true;
+            zrEvent.stop(event);
+        }
+        
+        function _onmouseup(param) {
+            console.log('up')
+            var event = param.event;
+            _mx = zrEvent.getX(event);
+            _my = zrEvent.getY(event);
+            _mousedown = false;
+            setTimeout(function(){
+                _justMove = false;
+                zr.un(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
+                zr.un(zrConfig.EVENT.MOUSEUP, _onmouseup);
+            },100);
+        }
+        
         /**
          * 点击响应 
          */
         function onclick(param) {
-            if (!self.isClick || !param.target) {
+            console.log('click')
+            if (!self.isClick || !param.target || _justMove) {
                 // 没有在当前实例上发生点击直接返回
                 return;
             }
@@ -690,22 +890,31 @@ define(function(require) {
             component = newComponent;
             _selected = {};
             _mapTypeMap = {};
-            _transformMap = {};
+            _mapDataMap = {};
             _nameMap = {};
+            _roamMap = {};
 
             refresh(newOption);
+            
+            zr.on(zrConfig.EVENT.MOUSEWHEEL, _onmousewheel);
+            zr.on(zrConfig.EVENT.MOUSEDOWN, _onmousedown);
         }
 
         /**
          * 刷新
          */
         function refresh(newOption) {
+            if (!self) {
+                console.log(11111111111111)
+                return;
+            }
             if (newOption) {
                 option = newOption;
                 series = option.series;
             }
             self.clear();
             _buildShape();
+            zr.refreshHover();
         }
         
         /**
@@ -726,7 +935,7 @@ define(function(require) {
          */
         function pos2geo(mapType, p) {
             return require('../util/projection/normal').pos2geo(
-                _transformMap[mapType], p
+                _mapDataMap[mapType].transform, p
             );
         }
         
@@ -736,11 +945,25 @@ define(function(require) {
          */
         function geo2pos(mapType, p) {
             return require('../util/projection/normal').geo2pos(
-                _transformMap[mapType], p
+                _mapDataMap[mapType].transform, p
             );
         }
+        
+        /**
+         * 释放后实例不可用
+         */
+        function dispose() {
+            console.log(123123131313)
+            self.clear();
+            self.shapeList = null;
+            self = null;
+            zr.un(zrConfig.EVENT.MOUSEWHEEL, _onmousewheel);
+            zr.un(zrConfig.EVENT.MOUSEDOWN, _onmousedown);
+        }
 
-
+        // 重载基类方法
+        self.dispose = dispose;
+        
         self.init = init;
         self.refresh = refresh;
         self.ondataRange = ondataRange;
