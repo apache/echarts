@@ -115,7 +115,7 @@ define(function(require) {
             var percent;
             var startAngle = serie.startAngle.toFixed(2) - 0;
             var endAngle;
-            var minAngle = serie.minAngle;
+            var minAngle = serie.minAngle || 0.01; // #bugfixed
             var totalAngle = 360 - (minAngle * totalSelected);
             var defaultColor;
             var roseType = serie.roseType;
