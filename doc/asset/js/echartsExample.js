@@ -51,6 +51,7 @@ function refresh(isBtnRefresh){
         myChart.dispose();
     }
     myChart = echarts.init(domMain);
+    window.onresize = myChart.resize;
     (new Function(editor.doc.getValue()))();
     myChart.setOption(option, true);
     domMessage.innerHTML = '';

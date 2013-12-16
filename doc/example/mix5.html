@@ -17,6 +17,11 @@
     <link href="../asset/css/monokai.css" rel="stylesheet">
     <link href="../asset/css/echartsHome.css" rel="stylesheet">
     <link rel="shortcut icon" href="../asset/ico/favicon.png">
+    <style type="text/css">
+        .CodeMirror {
+            height: 550px;
+        }
+    </style>
 </head>
 
 <body>
@@ -92,11 +97,13 @@ option = {
             mapType: 'china',
             mapLocation: {
                 x: 'left',
-                width: 500
+                y: 'top',
+                width: 400
             },
+            roam: true,
             selectedMode : 'single',
             itemStyle:{
-                normal:{label:{show:true}},
+                //normal:{label:{show:true}},
                 emphasis:{label:{show:true}}
             },
             data:[
@@ -169,6 +176,7 @@ myChart.on(ecConfig.EVENT.MAP_SELECTED, function(param){
         mapLocation: {
             x: 500
         },
+        roam: true,
         data:[
             {name: '重庆市',value: Math.round(Math.random()*1000)},
             {name: '北京市',value: Math.round(Math.random()*1000)},
@@ -554,7 +562,7 @@ myChart.on(ecConfig.EVENT.MAP_SELECTED, function(param){
               </div><!--/.well -->
             </div><!--/span-->
             <div id="graphic" class="span8">
-                <div id="main" class="main"></div>
+                <div id="main" class="main" style="height: 530px;"></div>
                 <div>
                     <button onclick="refresh(true)">Refresh ~</button>
                     <span id='wrong-message' style="color:red"></span>

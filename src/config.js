@@ -612,6 +612,7 @@ define(function() {
             // mapValueCalculation: 'sum', // 数值合并方式，默认加和，可选为：
                                            // 'sum' | 'average' | 'max' | 'min' 
             // selectedMode: false,        // 选择模式，默认关闭，可选single，multiple
+            // roam : false,               // 是否开启缩放及漫游模式
             itemStyle: {
                 normal: {
                     // color: 各异,

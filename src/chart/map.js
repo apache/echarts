@@ -49,6 +49,7 @@ define(function(require) {
         
         // 漫游相关信息
         var _roamMap = {};
+        var _needRoam;
         var _mx;
         var _my;
         var _mousedown;
@@ -67,13 +68,15 @@ define(function(require) {
             var mapSeries = {};
             _selectedMode = {};
             var valueCalculation = {};
+            _needRoam = false;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type == ecConfig.CHART_TYPE_MAP) { // map
                     series[i] = self.reformOption(series[i]);
                     mapType = series[i].mapType;
                     mapSeries[mapType] = mapSeries[mapType] || {};
                     mapSeries[mapType][i] = true;
-                    _roamMap[mapType] = series[i].roam;
+                    _roamMap[mapType] = series[i].roam || _roamMap[mapType];
+                    _needRoam = _needRoam || _roamMap[mapType];
                     _nameMap[mapType] = series[i].nameMap 
                                         || _nameMap[mapType] 
                                         || {};
@@ -206,19 +209,16 @@ define(function(require) {
             
             var transform;
             //console.log(1111,transform)
-            console.log('-------------')
             if (!_mapDataMap[mapType].hasRoam) {
                 // 第一次或者发生了resize，需要判断
                 transform = _getTransform(
                     bbox,
                     mapSeries
                 );
-                console.log(1)
             }
             else {
                 //经过用户漫游不再响应resize
                 transform = _mapDataMap[mapType].transform;
-                console.log(2)
             }
             
             var lastTransform = _mapDataMap[mapType].lastTransform 
@@ -232,17 +232,15 @@ define(function(require) {
             ) {
                 // 发生过变化，需要重新生成pathArray
                 // 一般投射
-                console.log(transform)
+                //console.log(transform)
                 pathArray = require('../util/projection/normal').geoJson2Path(
                                 mapData, transform
                             );
                 lastTransform = zrUtil.clone(transform);
-                console.log(3)
             }
             else {
                 transform = _mapDataMap[mapType].transform;
                 pathArray = _mapDataMap[mapType].pathArray;
-                console.log(4)
             }
             
             _mapDataMap[mapType].bbox = bbox;
@@ -272,7 +270,7 @@ define(function(require) {
                     );
                 }
                 else if (pathArray[i].cp) {
-                    textPosition = pathArray[i].cp;
+                    textPosition = [pathArray[i].cp[0], pathArray[i].cp[1]];
                 }
                 else {
                     textPosition = geo2pos(
@@ -296,6 +294,35 @@ define(function(require) {
                 province.push(single);
             }
             //console.log(province)
+            
+            // 中国地图加入南海诸岛
+            if (mapType == 'china') {
+                var leftTop = geo2pos(
+                    mapType, 
+                    _geoCoord['南海诸岛'] 
+                    || _mapParams['南海诸岛'].textCoord
+                );
+                // scale.x : width  = 10.51 : 64
+                var scale = transform.scale.x / 10.5;
+                textPosition = [
+                    32 * scale + leftTop[0], 
+                    83 * scale + leftTop[1]
+                ];
+                if (_textFixed['南海诸岛']) {
+                    textPosition[0] += _textFixed['南海诸岛'][0];
+                    textPosition[1] += _textFixed['南海诸岛'][1];
+                }
+                province.push({
+                    text : _nameChange(mapType, '南海诸岛'),
+                    path : _mapParams['南海诸岛'].getPath(
+                               leftTop, scale
+                           ),
+                    position : position,
+                    textX : textPosition[0],
+                    textY : textPosition[1]
+                })
+                
+            }
             return province;
         }
         
@@ -763,6 +790,10 @@ define(function(require) {
         }
         
         function _onmousedown(param) {
+            var target = param.target;
+            if (target && target.draggable) {
+                return;
+            }
             var event = param.event;
             var mx = zrEvent.getX(event);
             var my = zrEvent.getY(event);
@@ -808,7 +839,6 @@ define(function(require) {
         }
         
         function _onmouseup(param) {
-            console.log('up')
             var event = param.event;
             _mx = zrEvent.getX(event);
             _my = zrEvent.getY(event);
@@ -824,7 +854,6 @@ define(function(require) {
          * 点击响应 
          */
         function onclick(param) {
-            console.log('click')
             if (!self.isClick || !param.target || _justMove) {
                 // 没有在当前实例上发生点击直接返回
                 return;
@@ -896,18 +925,16 @@ define(function(require) {
 
             refresh(newOption);
             
-            zr.on(zrConfig.EVENT.MOUSEWHEEL, _onmousewheel);
-            zr.on(zrConfig.EVENT.MOUSEDOWN, _onmousedown);
+            if (_needRoam) {
+                zr.on(zrConfig.EVENT.MOUSEWHEEL, _onmousewheel);
+                zr.on(zrConfig.EVENT.MOUSEDOWN, _onmousedown);
+            }
         }
 
         /**
          * 刷新
          */
         function refresh(newOption) {
-            if (!self) {
-                console.log(11111111111111)
-                return;
-            }
             if (newOption) {
                 option = newOption;
                 series = option.series;
@@ -953,12 +980,13 @@ define(function(require) {
          * 释放后实例不可用
          */
         function dispose() {
-            console.log(123123131313)
             self.clear();
             self.shapeList = null;
             self = null;
-            zr.un(zrConfig.EVENT.MOUSEWHEEL, _onmousewheel);
-            zr.un(zrConfig.EVENT.MOUSEDOWN, _onmousedown);
+            if (_needRoam) {
+                zr.un(zrConfig.EVENT.MOUSEWHEEL, _onmousewheel);
+                zr.un(zrConfig.EVENT.MOUSEDOWN, _onmousedown);
+            }
         }
 
         // 重载基类方法
