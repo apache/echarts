@@ -421,6 +421,8 @@ define(function(require) {
 
                 var source = filteredNodes[link.source];
                 var target = filteredNodes[link.target];
+
+                var link = rawLinks[link.rawIndex];
                 ecData.pack(
                     linkShape,
                     // serie
@@ -428,11 +430,15 @@ define(function(require) {
                     // serie index
                     0,
                     // link data
-                    rawLinks[link.rawIndex],
+                    {
+                        source : link.source,
+                        target : link.target,
+                        value : link.value || 0
+                    },
                     // link data index
                     link.rawIndex,
                     // source name - target name
-                    source.name + '-' + target.name,
+                    source.name + ' - ' + target.name,
                     // link value
                     link.value || 0,
                     // special
