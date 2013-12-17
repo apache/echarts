@@ -7,6 +7,14 @@
  *
  */
 define(function() {
+    function getBbox(json) {
+        if (!json.srcSize) {
+            parseSrcSize(json);
+        }
+        
+        return json.srcSize;
+    }
+    
     function parseSrcSize(json) {
         convertor_parse.xmin = 360;
         convertor_parse.xmax = 0;
@@ -50,6 +58,12 @@ define(function() {
         },
         'makePoint' : function(p) {
             var self = this;
+            // for cp
+            if (self._bbox.xmin > p[0]) { self._bbox.xmin = p[0]; }
+            if (self._bbox.xmax < p[0]) { self._bbox.xmax = p[0]; }
+            if (self._bbox.ymin > p[1]) { self._bbox.ymin = p[1]; }
+            if (self._bbox.ymax < p[1]) { self._bbox.ymax = p[1]; }
+            
             var point = self.formatPoint(p);
             var x = (point[0] - convertor.offset.x) * convertor.scale.x;
             var y = (point[1] - convertor.offset.y) * convertor.scale.y;
@@ -185,13 +199,22 @@ define(function() {
         function pushApath(gm, shape) {
             shapeType = gm.type;
             shapeCoordinates = gm.coordinates;
+            convertor._bbox = {
+                xmin : 360,
+                xmax : 0,
+                ymin : 180,
+                ymax : 0
+            };
             str = convertor[shapeType](shapeCoordinates);
             pathArray.push({
                 //type : shapeType,
                 path : str,
                 cp : shape.properties.cp
                      ? convertor.makePoint(shape.properties.cp)
-                     : [-99999, -99999],
+                     : convertor.makePoint([
+                            (convertor._bbox.xmin + convertor._bbox.xmax) / 2,
+                            (convertor._bbox.ymin + convertor._bbox.ymax) / 2
+                       ]),
                 properties : shape.properties,
                 id : shape.id
             });
@@ -226,6 +249,7 @@ define(function() {
     }
     
     return {
+        getBbox : getBbox,
         geoJson2Path : geoJson2Path,
         pos2geo : pos2geo,
         geo2pos : geo2pos

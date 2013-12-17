@@ -40,10 +40,11 @@ define(function(require) {
         var _mapTypeMap = {};   // 图例类型索引
         var _mapDataMap = {};   // 根据地图类型索引bbox,transform,path
         var _nameMap = {};      // 个性化地名
+        var _specialArea = {};  // 特殊
 
         var _refreshDelayTicket; // 滚轮缩放时让refresh飞一会
         var _mapDataRequireCounter;
-        var _mapParams = require('../util/mapData/params');
+        var _mapParams = require('../util/mapData/params').params;
         var _textFixed = require('../util/mapData/textFixed');
         var _geoCoord = require('../util/mapData/geoCoord');
         
@@ -80,6 +81,7 @@ define(function(require) {
                     _nameMap[mapType] = series[i].nameMap 
                                         || _nameMap[mapType] 
                                         || {};
+                                        
                     if (series[i].textFixed) {
                         zrUtil.mergeFast(
                             _textFixed, series[i].textFixed, true, false
@@ -159,8 +161,8 @@ define(function(require) {
                         _mapDataMap[mt].mapData
                     )
                 }
-                else if (_mapParams[mt].getData) {
-                    _mapParams[mt].getData(
+                else if (_mapParams[mt].getGeoJson) {
+                    _mapParams[mt].getGeoJson(
                         _mapDataCallback(mt, valueData[mt], mapSeries[mt])
                     );
                 }
@@ -174,6 +176,7 @@ define(function(require) {
          */
         function _mapDataCallback(mt, vd, ms) {
             return function(md) {
+                console.log(md)
                 _mapDataMap[mt].mapData = md; // 缓存这份数据
                 _buildMap(
                     mt,                             // 类型
@@ -199,12 +202,24 @@ define(function(require) {
          * 按需加载相关地图 
          */
         function _getProjectionData(mapType, mapData, mapSeries) {
+            var normalProjection = require('../util/projection/normal');
             var province = [];
             var single;
             var textPosition;
             
             // bbox永远不变
-            var bbox = _mapDataMap[mapType].bbox || _getBbox(mapData);
+            var bbox = _mapDataMap[mapType].bbox 
+                       || normalProjection.getBbox(mapData);
+            
+            /*
+             var bbox = {
+                left : mapData.bbox[0],
+                top : mapData.bbox[1],
+                width : mapData.bbox[2] - mapData.bbox[0],
+                height : mapData.bbox[3] - mapData.bbox[1]
+            }
+            * 
+             */
             //console.log(bbox)
             
             var transform;
@@ -220,7 +235,7 @@ define(function(require) {
                 //经过用户漫游不再响应resize
                 transform = _mapDataMap[mapType].transform;
             }
-            
+            //console.log(bbox,transform)
             var lastTransform = _mapDataMap[mapType].lastTransform 
                                 || {scale:{}};
             
@@ -233,7 +248,7 @@ define(function(require) {
                 // 发生过变化，需要重新生成pathArray
                 // 一般投射
                 //console.log(transform)
-                pathArray = require('../util/projection/normal').geoJson2Path(
+                pathArray = normalProjection.geoJson2Path(
                                 mapData, transform
                             );
                 lastTransform = zrUtil.clone(transform);
@@ -283,7 +298,7 @@ define(function(require) {
                     textPosition[0] += _textFixed[name][0];
                     textPosition[1] += _textFixed[name][1];
                 }
-                    
+                //console.log(textPosition)
                 single = {
                     text : _nameChange(mapType, name),
                     path : pathArray[i].path,
@@ -326,45 +341,6 @@ define(function(require) {
             return province;
         }
         
-        function _getBbox(mapData) {
-            var features = mapData.features;
-            var xMax = Number.NEGATIVE_INFINITY;
-            var xMin = Number.MAX_VALUE;
-            var yMax = Number.NEGATIVE_INFINITY;
-            var yMin = Number.MAX_VALUE;
-            
-            function calMinMax(pointList) {
-                for (var i = 0, l = pointList.length; i < l; i++) {
-                    xMax = Math.max(xMax, pointList[i][0]);
-                    xMin = Math.min(xMin, pointList[i][0]);
-                    yMax = Math.max(yMax, pointList[i][1]);
-                    yMin = Math.min(yMin, pointList[i][1]);
-                }
-            }
-            for (var f = 0; f < features.length; f++) {
-                var feature = features[f];
-                var coordinates = feature.geometry.coordinates;
-                for (var c = 0, cl = coordinates.length; c < cl; c++) {
-                    var coordinate = coordinates[c];
-                    if (feature.geometry.type === 'Polygon') {
-                        calMinMax(coordinate)
-                    }
-                    else {
-                        for (var c2=0, cl2=coordinate.length; c2 < cl2; c2++) {
-                            calMinMax(coordinate[c2]);
-                        }
-                    }
-                }
-            }
-            //console.log(xMax,xMin,yMax,yMin);
-            return {
-                left : xMin,
-                top : yMin,
-                width : xMax - xMin,
-                height : yMax - yMin
-            }
-        }
-
         /**
          * 获取缩放 
          */
