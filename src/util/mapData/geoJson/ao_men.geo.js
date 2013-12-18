@@ -1,3 +1,3 @@
 define(function() {
-    return {"type":"FeatureCollection","features":[{"type":"Feature","id":"8200","properties":{"name":"澳门","cp":[113.5715,22.1583],"childNum":1},"geometry":{"type":"Polygon","coordinates":["@@HQFMDIDGBI@E@EEKEGCEIGGEKEMGSEU@CBEDAJAP@F@LBT@JCHMPOdADCFADAB@LFLDFFP@DAB@@AF@D@B@@FBD@FADHBBHAD@FAJ@JEDCJI`gFIJW"],"encodeOffsets":[[116325,22699]]}}],"srcSize":{"left":283.5327,"top":67.7856,"width":0.0776,"height":0.1121},"UTF8Encoding":true};
+    return {"type":"FeatureCollection","features":[{"type":"Feature","id":"8200","properties":{"name":"澳门","cp":[113.5715,22.1583],"childNum":1},"geometry":{"type":"Polygon","coordinates":["@@HQFMDIDGBI@E@EEKEGCEIGGEKEMGSEU@CBEDAJAP@F@LBT@JCHMPOdADCFADAB@LFLDFFP@DAB@@AF@D@B@@FBD@FADHBBHAD@FAJ@JEDCJI`gFIJW"],"encodeOffsets":[[116325,22699]]}}],"UTF8Encoding":true};
 });

@@ -17,17 +17,11 @@ glob('geoJson/*.json', {}, function(err, files) {
         features.forEach(function(feature){
             var encodeOffsets = feature.geometry.encodeOffsets = [];
             var coordinates = feature.geometry.coordinates;
-            var bb = [[999999, 999999], [-999999, -999999]];
             if (feature.geometry.type === 'Polygon') {
                 coordinates.forEach(function(coordinate, idx){
                     coordinates[idx] = encodePolygon(
                         coordinate, encodeOffsets[idx] = []
                     );
-                    var _bb = computeBoundingBox(coordinate);
-                    bb[0][0] = Math.min(bb[0][0], _bb[0][0]);
-                    bb[0][1] = Math.min(bb[0][1], _bb[0][1]);
-                    bb[1][0] = Math.max(bb[1][0], _bb[1][0]);
-                    bb[1][1] = Math.max(bb[1][1], _bb[1][1]);
                 });
             } else if(feature.geometry.type === 'MultiPolygon') {
                 coordinates.forEach(function(polygon, idx1){
@@ -36,16 +30,8 @@ glob('geoJson/*.json', {}, function(err, files) {
                         coordinates[idx1][idx2] = encodePolygon(
                             coordinate, encodeOffsets[idx1][idx2] = []
                         );
-                        var _bb = computeBoundingBox(coordinate);
-                        bb[0][0] = Math.min(bb[0][0], _bb[0][0]);
-                        bb[0][1] = Math.min(bb[0][1], _bb[0][1]);
-                        bb[1][0] = Math.max(bb[1][0], _bb[1][0]);
-                        bb[1][1] = Math.max(bb[1][1], _bb[1][1]);
                     });
                 });
-            }
-            if (!feature.properties.cp) {
-                feature.properties.cp = [(bb[0][0] + bb[1][0]) / 2, (bb[0][1] + bb[1][1]) / 2];
             }
         });
         fs.writeFileSync(
@@ -53,21 +39,6 @@ glob('geoJson/*.json', {}, function(err, files) {
         );
     });
 });
-
-function computeBoundingBox(coordinate) {
-    var min = coordinate[0].slice();
-    var max = min.slice();
-
-    for (var i = 0; i < coordinate.length; i++) {
-        var point = coordinate[i];
-        min[0] = Math.min(point[0], min[0]);
-        min[1] = Math.min(point[1], min[1]);
-        max[0] = Math.max(point[0], max[0]);
-        max[1] = Math.max(point[1], max[1]);
-    }
-
-    return [min, max];
-}
 
 function encodePolygon(coordinate, encodeOffsets) {
     var result = '';
