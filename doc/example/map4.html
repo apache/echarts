@@ -80,14 +80,34 @@ option = {
         y:'bottom'
     },
     tooltip : {
-        trigger: 'item'
+        trigger: 'item',
+        formatter : function(a) {
+            var sName = a[0];
+            var pName = a[1];
+            var value = (a[2] + '').split('.');
+            value = value[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,')
+                    + '.' + value[1];
+            return sName + '<br/>' + pName + ' : ' + value;
+        }
+    },
+    toolbox: {
+        show : true,
+        orient : 'vertical',
+        x: 'right',
+        y: 'center',
+        feature : {
+            mark : true,
+            dataView : {readOnly: false},
+            restore : true,
+            saveAsImage : true
+        }
     },
     dataRange: {
         min: 0,
         max: 1000000,
         text:['High','Low'],
         calculable : true,
-        color: ['red', 'yellow', 'lightgreen']
+        color: ['orangered','yellow','lightskyblue']
     },
     series : [
         {

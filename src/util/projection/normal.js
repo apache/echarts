@@ -7,25 +7,30 @@
  *
  */
 define(function() {
-    function getBbox(json) {
+    function getBbox(json, specialArea) {
+        specialArea = specialArea || {};
         if (!json.srcSize) {
-            parseSrcSize(json);
+            parseSrcSize(json, specialArea);
         }
         
         return json.srcSize;
     }
     
-    function parseSrcSize(json) {
+    function parseSrcSize(json, specialArea) {
+        specialArea = specialArea || {};
         convertor_parse.xmin = 360;
-        convertor_parse.xmax = 0;
+        convertor_parse.xmax = -360;
         convertor_parse.ymin = 180;
-        convertor_parse.ymax = 0;
+        convertor_parse.ymax = -180;
 
         var shapes = json.features;
         var geometries;
         var shape;
         for (var i = 0, len = shapes.length; i < len; i++) {
             shape = shapes[i];
+            if (shape.properties.name && specialArea[shape.properties.name]) {
+                continue;
+            }
             if (shape.type == 'Feature') {
                 convertor_parse[shape.geometry.type](
                     shape.geometry.coordinates
@@ -52,21 +57,25 @@ define(function() {
     }
 
     var convertor = {
-        //调整Alaska到右侧
+        //调整俄罗斯东部到地图右侧与俄罗斯相连
         'formatPoint' : function(p) {
-            return [(p[0] < -168.5 ? p[0] + 360 : p[0]) + 170, 90 - p[1]];
+            return [
+                ((p[0] < -168.5 && p[1] > 63.8) ? p[0] + 360 : p[0]) + 168.5, 
+                90 - p[1]
+            ];
         },
         'makePoint' : function(p) {
             var self = this;
+            var point = self.formatPoint(p);
             // for cp
             if (self._bbox.xmin > p[0]) { self._bbox.xmin = p[0]; }
             if (self._bbox.xmax < p[0]) { self._bbox.xmax = p[0]; }
             if (self._bbox.ymin > p[1]) { self._bbox.ymin = p[1]; }
             if (self._bbox.ymax < p[1]) { self._bbox.ymax = p[1]; }
-            
-            var point = self.formatPoint(p);
-            var x = (point[0] - convertor.offset.x) * convertor.scale.x;
-            var y = (point[1] - convertor.offset.y) * convertor.scale.y;
+            var x = (point[0] - convertor.offset.x) * convertor.scale.x
+                    + convertor.offset.left;
+            var y = (point[1] - convertor.offset.y) * convertor.scale.y
+                    + convertor.offset.top;
             return [x, y];
         },
         'Point' : function(coordinates) {
@@ -158,21 +167,24 @@ define(function() {
         }
     };
 
-    function geoJson2Path(json, obj) {
+    function geoJson2Path(json, transform, specialArea) {
+        specialArea = specialArea || {};
         convertor.scale = null;
         convertor.offset = null;
 
-        if ((!obj.scale || !obj.offset) && !json.srcSize) {
-            parseSrcSize(json);
+        if ((!transform.scale || !transform.offset) && !json.srcSize) {
+            parseSrcSize(json, specialArea);
         }
         
-        obj.offset = {
+        transform.offset = {
             x : json.srcSize.left,
-            y : json.srcSize.top
+            y : json.srcSize.top,
+            left : transform.OffsetLeft || 0,
+            top : transform.OffsetTop || 0
         };
 
-        convertor.scale = obj.scale;
-        convertor.offset = obj.offset;
+        convertor.scale = transform.scale;
+        convertor.offset = transform.offset;
         
         var shapes = json.features;
         var geometries;
@@ -181,6 +193,10 @@ define(function() {
         var shape;
         for (var i = 0, len = shapes.length; i < len; i++) {
             shape = shapes[i];
+            if (shape.properties.name && specialArea[shape.properties.name]) {
+                // 忽略specialArea
+                continue;
+            }
             if (shape.type == 'Feature') {
                 pushApath(shape.geometry, shape);
             } 
@@ -201,9 +217,9 @@ define(function() {
             shapeCoordinates = gm.coordinates;
             convertor._bbox = {
                 xmin : 360,
-                xmax : 0,
+                xmax : -360,
                 ymin : 180,
-                ymax : 0
+                ymax : -180
             };
             str = convertor[shapeType](shapeCoordinates);
             pathArray.push({
@@ -230,7 +246,7 @@ define(function() {
     function pos2geo(obj, p) {
         var x = p[0] * 1;
         var y = p[1] * 1;
-        x = x / obj.scale.x + obj.offset.x - 170;
+        x = x / obj.scale.x + obj.offset.x - 168.5;
         x = x > 180 ? x - 360 : x;
         y = 90 - (y / obj.scale.y + obj.offset.y);
         return [x, y];
