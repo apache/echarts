@@ -98,7 +98,8 @@ define(
                 triangle : _iconTriangle,
                 diamond : _iconDiamond,
                 arrow : _iconArrow,
-                star : _iconStar
+                star : _iconStar,
+                image : _iconImage
             };
         }
 
@@ -389,6 +390,14 @@ define(
                 r : Math.min(width, height),
                 n : style.n || 5
             });
+        }
+        
+        function _iconImage(ctx, style) {
+            setTimeout(function(){
+                require('zrender/shape').get('image').brush(ctx, {
+                    style : style
+                });                
+            },100)
         }
 
         Icon.prototype =  {

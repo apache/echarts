@@ -76,7 +76,21 @@ define(function(require) {
                                 iconShape.style.n = 
                                     (iconType.replace('star','') - 0) || 5;
                                 iconType = 'star';
-                            } 
+                            }
+                            
+                            if (iconType.match('image')) {
+                                iconShape.style.image = iconType.replace(
+                                    new RegExp('^image:\\/\\/'), ''
+                                );
+                                iconShape.style.x += Math.round(
+                                    (iconShape.style.width 
+                                     - iconShape.style.height) 
+                                    / 2
+                                );
+                                iconShape.style.width = iconShape.style.height;
+                                iconType = 'image';
+                            }
+            
                             iconShape.style.iconType = iconType;
                             legend.setItemShape(serieName, iconShape);
                         }
@@ -310,6 +324,12 @@ define(function(require) {
                 itemShape.rotation = [
                     symbolRotate * Math.PI / 180, x, y
                 ];
+            }
+            
+            if (symbol.match('image')) {
+                itemShape.style.image = 
+                    symbol.replace(new RegExp('^image:\\/\\/'), '');
+                itemShape.shape = 'image';
             }
             
             if (symbol.match('star')) {

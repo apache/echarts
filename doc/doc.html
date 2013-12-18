@@ -1982,6 +1982,30 @@ indicator : [
                             <td> 地图数值计算方式，默认为加和，可选为：'sum'（总数） | 'average'（均值）</td>
                         </tr>
                         <tr>
+                            <td> {Object} roam </td>
+                            <td> false </td>
+                            <td> 地图 </td>
+                            <td> 是否开启滚轮缩放和拖拽漫游</td>
+                        </tr>
+                        <tr>
+                            <td> {Object} nameMap </td>
+                            <td> null </td>
+                            <td> 地图 </td>
+                            <td> 自定义地区的名称映射，如{'China' : '中国'}</td>
+                        </tr>
+                        <tr>
+                            <td> {Object} textFixed </td>
+                            <td> null </td>
+                            <td> 地图 </td>
+                            <td> 地区的名称文本位置修正，数值单位为px，正直为左下偏移，负值为右上偏移，如{'China' : [10, -10]}</td>
+                        </tr>
+                        <tr>
+                            <td> {Object} geoCoord </td>
+                            <td> null </td>
+                            <td> 地图 </td>
+                            <td> 通过绝对经纬度指定地区的名称文本位置，如{'Islands':[113.95, 22.26]}，香港离岛区名称显示定位到东经113.95，北纬22.26上</td>
+                        </tr>
+                        <tr>
                             <td> {Array} categories </td>
                             <td> [] </td>
                             <td> 力导向 </td>

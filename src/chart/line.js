@@ -156,6 +156,7 @@ define(function(require) {
                         iconShape.style.iconType = 'legendLineIcon';
                         iconShape.style.symbol = 
                             _sIndex2ShapeMap[seriesArray[i]];
+                        
                         legend.setItemShape(serieName, iconShape);
                     }
                 } else {
@@ -179,7 +180,6 @@ define(function(require) {
                 // 兼职帮算一下最大长度
                 maxDataLength = Math.max(maxDataLength, serie.data.length);
             }
-
             /* 调试输出
             var s = '';
             for (var i = 0, l = maxDataLength; i < l; i++) {
@@ -1042,6 +1042,16 @@ define(function(require) {
             x += (width - height) / 2;
             width = height;
         }
+        
+        var imageLocation = '';
+        if (symbol.match('image')) {
+            imageLocation = symbol.replace(
+                    new RegExp('^image:\\/\\/'), ''
+                );
+            symbol = 'image';
+            x += Math.round((width - height) / 2);
+            width = height;
+        }
         symbol = require('zrender/shape').get('icon').get(symbol);
         
         if (symbol) {
@@ -1050,7 +1060,8 @@ define(function(require) {
                 y : y + 3,
                 width : width - 6,
                 height : height - 6,
-                n : dy
+                n : dy,
+                image : imageLocation
             });
         }
     }
