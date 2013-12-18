@@ -81,7 +81,7 @@ define(function(require) {
                     _nameMap[mapType] = series[i].nameMap 
                                         || _nameMap[mapType] 
                                         || {};
-                                        
+
                     if (series[i].textFixed) {
                         zrUtil.mergeFast(
                             _textFixed, series[i].textFixed, true, false
@@ -162,6 +162,9 @@ define(function(require) {
                     )
                 }
                 else if (_mapParams[mt].getGeoJson) {
+                    // 特殊区域
+                    _specialArea[mt] = _mapParams[mt].specialArea
+                                       || _specialArea[mt];
                     _mapParams[mt].getGeoJson(
                         _mapDataCallback(mt, valueData[mt], mapSeries[mt])
                     );
@@ -176,7 +179,6 @@ define(function(require) {
          */
         function _mapDataCallback(mt, vd, ms) {
             return function(md) {
-                console.log(md)
                 _mapDataMap[mt].mapData = md; // 缓存这份数据
                 _buildMap(
                     mt,                             // 类型
@@ -204,22 +206,12 @@ define(function(require) {
         function _getProjectionData(mapType, mapData, mapSeries) {
             var normalProjection = require('../util/projection/normal');
             var province = [];
-            var single;
-            var textPosition;
             
             // bbox永远不变
             var bbox = _mapDataMap[mapType].bbox 
-                       || normalProjection.getBbox(mapData);
-            
-            /*
-             var bbox = {
-                left : mapData.bbox[0],
-                top : mapData.bbox[1],
-                width : mapData.bbox[2] - mapData.bbox[0],
-                height : mapData.bbox[3] - mapData.bbox[1]
-            }
-            * 
-             */
+                       || normalProjection.getBbox(
+                              mapData, _specialArea[mapType]
+                          );
             //console.log(bbox)
             
             var transform;
@@ -249,7 +241,7 @@ define(function(require) {
                 // 一般投射
                 //console.log(transform)
                 pathArray = normalProjection.geoJson2Path(
-                                mapData, transform
+                                mapData, transform, _specialArea[mapType]
                             );
                 lastTransform = zrUtil.clone(transform);
             }
@@ -264,7 +256,6 @@ define(function(require) {
             _mapDataMap[mapType].pathArray = pathArray;
             
             //console.log(pathArray)
-            var name;
             var position = [transform.left, transform.top];
             for (var i = 0, l = pathArray.length; i < l; i++) {
                 /* for test
@@ -277,38 +268,21 @@ define(function(require) {
                     geo2pos(mapType, mapData.features[i].properties.cp)
                 )
                 */
-                name = pathArray[i].properties.name;
-                if (_geoCoord[name]) {
-                    textPosition = geo2pos(
-                        mapType, 
-                        _geoCoord[name]
-                    );
-                }
-                else if (pathArray[i].cp) {
-                    textPosition = [pathArray[i].cp[0], pathArray[i].cp[1]];
-                }
-                else {
-                    textPosition = geo2pos(
-                        mapType, 
-                        [bbox.left + bbox.width / 2, bbox.top + bbox.height / 2]
-                    );
+                province.push(_getSingleProvince(
+                    mapType, pathArray[i], position
+                ));
+            }
+            
+            if (_specialArea[mapType]) {
+                for (var area in _specialArea[mapType]) {
+                    province.push(_getSpecialProjectionData(
+                        mapType, mapData, 
+                        area, _specialArea[mapType][area], 
+                        position
+                    ))
                 }
                 
-                if (_textFixed[name]) {
-                    textPosition[0] += _textFixed[name][0];
-                    textPosition[1] += _textFixed[name][1];
-                }
-                //console.log(textPosition)
-                single = {
-                    text : _nameChange(mapType, name),
-                    path : pathArray[i].path,
-                    position : position,
-                    textX : textPosition[0],
-                    textY : textPosition[1]
-                };
-                province.push(single);
             }
-            //console.log(province)
             
             // 中国地图加入南海诸岛
             if (mapType == 'china') {
@@ -319,7 +293,7 @@ define(function(require) {
                 );
                 // scale.x : width  = 10.51 : 64
                 var scale = transform.scale.x / 10.5;
-                textPosition = [
+                var textPosition = [
                     32 * scale + leftTop[0], 
                     83 * scale + leftTop[1]
                 ];
@@ -338,9 +312,120 @@ define(function(require) {
                 })
                 
             }
+            
             return province;
         }
         
+        /**
+         * 特殊地区投射数据
+         */
+        function _getSpecialProjectionData(
+            mapType, oriMapData, areaName, mapSize, position
+        ) {
+            //console.log('_getSpecialProjectionData--------------')
+            // 构造单独的geoJson地图数据
+            var mapData;
+            var features = oriMapData.features;
+            for (var i = 0, l = features.length; i < l; i++) {
+                if (features[i].properties 
+                    && features[i].properties.name == areaName
+                ) {
+                    mapData = {
+                        'type' : 'FeatureCollection',
+                        'features':[
+                            features[i]
+                        ]
+                    }
+                    break;
+                }
+            }
+            
+            // bbox
+            var normalProjection = require('../util/projection/normal');
+            var bbox = normalProjection.getBbox(mapData);
+            //console.log('bbox', bbox)
+            
+            // transform
+            var leftTop = geo2pos(
+                mapType, 
+                [mapSize.left, mapSize.top]
+            );
+            var rightBottom = geo2pos(
+                mapType, 
+                [mapSize.left + mapSize.width, mapSize.top + mapSize.height]
+            );
+            //console.log('leftright' , leftTop, rightBottom);
+            var width = Math.abs(rightBottom[0] - leftTop[0]);
+            var height = Math.abs(rightBottom[1] - leftTop[1]);
+            var mapWidth = bbox.width;
+            var mapHeight = bbox.height;
+            //var minScale;
+            var xScale = (width / 0.75) / mapWidth;
+            var yScale = height / mapHeight;
+            if (xScale > yScale) {
+                xScale = yScale * 0.75;
+                width = mapWidth * xScale;
+            }
+            else {
+                yScale = xScale;
+                xScale = yScale * 0.75;
+                height = mapHeight * yScale;
+            }
+            var transform = {
+                OffsetLeft : leftTop[0],
+                OffsetTop : leftTop[1],
+                //width: width,
+                //height: height,
+                scale : {
+                    x : xScale,
+                    y : yScale
+                }
+            }
+            
+            //console.log('**',areaName, transform)
+            var pathArray = normalProjection.geoJson2Path(
+                mapData, transform
+            );
+            
+            //console.log(pathArray)
+            return _getSingleProvince(
+                mapType, pathArray[0], position
+            );
+        }
+        
+        function _getSingleProvince(mapType, path, position) {
+            var textPosition;
+            var name = path.properties.name;
+            if (_geoCoord[name]) {
+                textPosition = geo2pos(
+                    mapType, 
+                    _geoCoord[name]
+                );
+            }
+            else if (path.cp) {
+                textPosition = [path.cp[0], path.cp[1]];
+            }
+            /*
+            else {
+                textPosition = geo2pos(
+                    mapType, 
+                    [bbox.left + bbox.width / 2, bbox.top + bbox.height / 2]
+                );
+            }
+            */
+            if (_textFixed[name]) {
+                textPosition[0] += _textFixed[name][0];
+                textPosition[1] += _textFixed[name][1];
+            }
+            //console.log(textPosition)
+            return {
+                text : _nameChange(mapType, name),
+                path : path.path,
+                position : position,
+                textX : textPosition[0],
+                textY : textPosition[1]
+            };
+        }
         /**
          * 获取缩放 
          */
@@ -736,8 +821,6 @@ define(function(require) {
                     transform.scale.y *= delta;
                     transform.width = width * delta;
                     transform.height = height * delta;
-                    //transform.left = left - (transform.width - width) / 2;
-                    //transform.top = top - (transform.height - height) / 2;
                 }
                 else {
                     // 缩小
@@ -746,8 +829,6 @@ define(function(require) {
                     transform.scale.y /= delta;
                     transform.width = width / delta;
                     transform.height = height / delta;
-                    //transform.left = left + (width - transform.width) / 2;
-                    //transform.top = top + (height - transform.height) / 2;
                 }
                 _mapDataMap[mapType].hasRoam = true;
                 _mapDataMap[mapType].transform = transform;
@@ -803,10 +884,11 @@ define(function(require) {
             _mapDataMap[_curMapType].transform = transform;
             
             var position = [transform.left, transform.top];
+            var mod = {position : [transform.left, transform.top]};
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 if(self.shapeList[i]._mapType == _curMapType) {
                     self.shapeList[i].position = position;
-                    zr.modShape(self.shapeList[i].id, self.shapeList[i]);
+                    zr.modShape(self.shapeList[i].id, mod, true);
                 }
             }
             zr.refresh();
@@ -869,10 +951,12 @@ define(function(require) {
                         );
                     }
                     else {
-                       
                         self.shapeList[i].style = self.shapeList[i]._style;
                     }
-                    zr.modShape(self.shapeList[i].id, self.shapeList[i]);
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {style : self.shapeList[i].style}
+                    );
                 }
             }
             
@@ -898,6 +982,7 @@ define(function(require) {
             _mapDataMap = {};
             _nameMap = {};
             _roamMap = {};
+            _specialArea = {};
 
             refresh(newOption);
             
