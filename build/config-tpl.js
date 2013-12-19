@@ -21,44 +21,43 @@
         'echarts/chart/radar',
         'echarts/chart/chord',
         'echarts/chart/force',
-        
         'echarts/chart/map',
-        'echarts/util/mapData/china/0',     // 全国
-        'echarts/util/mapData/china/65',    // 新疆
-        'echarts/util/mapData/china/54',    // 西藏
-        'echarts/util/mapData/china/15',    // 内蒙古
-        'echarts/util/mapData/china/63',    // 青海
-        'echarts/util/mapData/china/51',    // 四川
-        'echarts/util/mapData/china/23',    // 黑龙江
-        'echarts/util/mapData/china/62',    // 甘肃
-        'echarts/util/mapData/china/53',    // 云南
-        'echarts/util/mapData/china/45',    // 广西
-        'echarts/util/mapData/china/43',    // 湖南
-        'echarts/util/mapData/china/61',    // 陕西
-        'echarts/util/mapData/china/44',    // 广东
-        'echarts/util/mapData/china/22',    // 吉林
-        'echarts/util/mapData/china/13',    // 河北
-        'echarts/util/mapData/china/42',    // 湖北
-        'echarts/util/mapData/china/52',    // 贵州
-        'echarts/util/mapData/china/37',    // 山东
-        'echarts/util/mapData/china/36',    // 江西
-        'echarts/util/mapData/china/41',    // 河南
-        'echarts/util/mapData/china/21',    // 辽宁
-        'echarts/util/mapData/china/14',    // 山西
-        'echarts/util/mapData/china/34',    // 安徽
-        'echarts/util/mapData/china/35',    // 福建
-        'echarts/util/mapData/china/33',    // 浙江
-        'echarts/util/mapData/china/32',    // 江苏
-        'echarts/util/mapData/china/50',    // 重庆
-        'echarts/util/mapData/china/64',    // 宁夏
-        'echarts/util/mapData/china/46',    // 海南
-        'echarts/util/mapData/china/71',    // 台湾
-        'echarts/util/mapData/china/11',    // 北京
-        'echarts/util/mapData/china/12',    // 天津
-        'echarts/util/mapData/china/31',    // 上海
-        'echarts/util/mapData/china/81',    // 香港
-        'echarts/util/mapData/china/82',    // 澳门
-        
+        'echarts/util/mapData/geoJson/an_hui.geo',
+        'echarts/util/mapData/geoJson/ao_men.geo',
+        'echarts/util/mapData/geoJson/bei_jing.geo',
+        'echarts/util/mapData/geoJson/china.geo',
+        'echarts/util/mapData/geoJson/chong_qing.geo',
+        'echarts/util/mapData/geoJson/fu_jian.geo',
+        'echarts/util/mapData/geoJson/gan_su.geo',
+        'echarts/util/mapData/geoJson/guang_dong.geo',
+        'echarts/util/mapData/geoJson/guang_xi.geo',
+        'echarts/util/mapData/geoJson/gui_zhou.geo',
+        'echarts/util/mapData/geoJson/hai_nan.geo',
+        'echarts/util/mapData/geoJson/hei_long_jiang.geo',
+        'echarts/util/mapData/geoJson/he_bei.geo',
+        'echarts/util/mapData/geoJson/he_nan.geo',
+        'echarts/util/mapData/geoJson/hu_bei.geo',
+        'echarts/util/mapData/geoJson/hu_nan.geo',
+        'echarts/util/mapData/geoJson/jiang_su.geo',
+        'echarts/util/mapData/geoJson/jiang_xi.geo',
+        'echarts/util/mapData/geoJson/ji_lin.geo',
+        'echarts/util/mapData/geoJson/liao_ning.geo',
+        'echarts/util/mapData/geoJson/nei_meng_gu.geo',
+        'echarts/util/mapData/geoJson/ning_xia.geo',
+        'echarts/util/mapData/geoJson/qing_hai.geo',
+        'echarts/util/mapData/geoJson/shang_hai.geo',
+        'echarts/util/mapData/geoJson/shan_dong.geo',
+        'echarts/util/mapData/geoJson/shan_xi_1.geo',
+        'echarts/util/mapData/geoJson/shan_xi_2.geo',
+        'echarts/util/mapData/geoJson/si_chuan.geo',
+        'echarts/util/mapData/geoJson/tai_wan.geo',
+        'echarts/util/mapData/geoJson/tian_jin.geo',
+        'echarts/util/mapData/geoJson/world.geo',
+        'echarts/util/mapData/geoJson/xiang_gang.geo',
+        'echarts/util/mapData/geoJson/xin_jiang.geo',
+        'echarts/util/mapData/geoJson/xi_zang.geo',
+        'echarts/util/mapData/geoJson/yun_nan.geo',
+        'echarts/util/mapData/geoJson/zhe_jiang.geo',
         'echarts/chart/line',
         'echarts/chart/bar',
         'echarts/chart/pie'

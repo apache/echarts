@@ -613,6 +613,7 @@ define('echarts/config',[],function() {
             // mapValueCalculation: 'sum', // 数值合并方式，默认加和，可选为：
                                            // 'sum' | 'average' | 'max' | 'min' 
             // selectedMode: false,        // 选择模式，默认关闭，可选single，multiple
+            // roam : false,               // 是否开启缩放及漫游模式
             itemStyle: {
                 normal: {
                     // color: 各异,
@@ -2338,38 +2339,60 @@ define(
  * zrender: 向量操作类
  *
  * author : lang(shenyi01@baidu.com)
- * code from vec2 in http://glmatrix.net/
  */
 define(
     'zrender/tool/vector',[],function() {
-       var vector = {
+        var ArrayCtor
+            = typeof Float32Array === 'undefined'
+            ? Array
+            : Float32Array;
+        var vector = {
+            create : function(x, y) {
+                var out = new ArrayCtor(2);
+                out[0] = x || 0;
+                out[1] = y || 0;
+                return out;
+            },
+            copy : function(out, v) {
+                out[0] = v[0];
+                out[1] = v[1];
+            },
+            set : function(out, a, b) {
+                out[0] = a;
+                out[1] = b;
+            },
             add : function(out, v1, v2) {
-                out[0] = v1[0]+v2[0];
-                out[1] = v1[1]+v2[1];
+                out[0] = v1[0] + v2[0];
+                out[1] = v1[1] + v2[1];
+                return out;
+            },
+            scaleAndAdd : function(out, v1, v2, a) {
+                out[0] = v1[0] + v2[0] * a;
+                out[1] = v1[1] + v2[1] * a;
                 return out;
             },
             sub : function(out, v1, v2) {
-                out[0] = v1[0]-v2[0];
-                out[1] = v1[1]-v2[1];
+                out[0] = v1[0] - v2[0];
+                out[1] = v1[1] - v2[1];
                 return out;
             },
             length : function(v) {
-                return Math.sqrt( this.lengthSquare(v) );
+                return Math.sqrt(this.lengthSquare(v));
             },
             lengthSquare : function(v) {
-                return v[0]*v[0]+v[1]*v[1];
+                return v[0] * v[0] + v[1] * v[1];
             },
             mul : function(out, v1, v2) {
-                out[0] = v1[0]*v2[0];
-                out[1] = v1[1]*v2[1];
+                out[0] = v1[0] * v2[0];
+                out[1] = v1[1] * v2[1];
                 return out;
             },
             dot : function(v1, v2) {
-                return v1[0]*v2[0]+v1[1]*v2[1];
+                return v1[0] * v2[0] + v1[1] * v2[1];
             },
             scale : function(out, v, s) {
-                out[0] = v[0]*s;
-                out[1] = v[1]*s;
+                out[0] = v[0] * s;
+                out[1] = v[1] * s;
                 return out;
             },
             normalize : function(out, v) {
@@ -2394,8 +2417,8 @@ define(
                 out[1] = -v[1];
             },
             middle : function(out, v1, v2) {
-                out[0] = (v1[0]+v2[0])/2;
-                out[1] = (v1[1]+v2[1])/2;
+                out[0] = (v1[0] + v2[0])/2;
+                out[1] = (v1[1] + v2[1])/2;
                 return out;
             }
         };
@@ -2532,6 +2555,44 @@ define(
                 return target;
             };
         })();
+
+        /**
+         * 简化版的merge操作，舍去很多判断
+         * @param  {*} target   
+         * @param  {*} source   
+         * @param  {boolean} overwrite
+         * @param  {boolean} recursive     
+         */
+        function mergeFast(target, source, overwrite, recursive) {
+            if (!target || !source) {
+                return;
+            }
+            if (source instanceof Object) {
+                for (var name in source) {
+                    if (source.hasOwnProperty(name)) {
+                        if (
+                            source[name] instanceof Object 
+                            && recursive
+                            && target[name]
+                        ) {
+                            mergeFast(
+                                target[name],
+                                source[name],
+                                overwrite,
+                                recursive
+                            );
+                        } else {
+                            if (
+                                overwrite
+                                || !target.hasOwnProperty(name)
+                            ) {
+                                target[name] = source[name];
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         var _ctx;
 
@@ -2841,6 +2902,7 @@ define(
         return {
             clone : clone,
             merge : merge,
+            mergeFast : mergeFast,
             getContext : getContext,
 
             getPixelContext : getPixelContext,
@@ -3077,7 +3139,7 @@ define(
             var _y1 = area.yStart;
             var _x2 = area.xEnd;
             var _y2 = area.yEnd;
-            var _l = area.lineWidth;
+            var _l = Math.max(area.lineWidth, 3);
             var _a = 0;
             var _b = _x1;
 
@@ -8699,6 +8761,8 @@ var Animation = function(options) {
     this._clips = [];
 
     this._running = false;
+
+    this._time = 0;
 };
 
 Animation.prototype = {
@@ -8712,7 +8776,9 @@ Animation.prototype = {
         }
     },
     update : function() {
+
         var time = new Date().getTime();
+        var delta = time - this._time;
         var clips = this._clips;
         var len = clips.length;
 
@@ -8736,19 +8802,22 @@ Animation.prototype = {
         }
 
         // Remove the finished clip
-        var newArray = [];
-        for (var i = 0; i < len; i++) {
-            if (!clips[i]._needsRemove) {
-                newArray.push(clips[i]);
-                clips[i]._needsRemove = false;
+        for (var i = 0; i < len;) {
+            if (clips[i]._needsRemove) {
+                clips[i] = clips[len-1];
+                clips.pop();
+                len--;
+            } else {
+                i++;
             }
         }
-        this._clips = newArray;
 
         len = deferredEvents.length;
         for (var i = 0; i < len; i++) {
             deferredClips[i].fire(deferredEvents[i]);
         }
+
+        this._time = time;
 
         this.onframe();
 
@@ -10122,7 +10191,7 @@ define(
         var _idx = 0;           //ZRender instance's id
         var _instances = {};    //ZRender实例map索引
 
-        self.version = '1.0.6';
+        self.version = '1.0.7';
 
         /**
          * zrender初始化
@@ -10318,9 +10387,10 @@ define(
              * 修改图形形状
              * @param {string} shapeId 形状对象唯一标识
              * @param {Object} shape 形状对象
+             * @param {fast} boolean 默认为false, 如果为true的话会在merge中省略部分判断
              */
-            self.modShape = function(shapeId, shape) {
-                storage.mod(shapeId, shape);
+            self.modShape = function(shapeId, shape, fast) {
+                storage.mod(shapeId, shape, fast);
                 return self;
             };
 
@@ -10733,19 +10803,29 @@ define(
              * 修改
              * @param {string} idx 唯一标识
              * @param {Object} params]参数
+             * @param {boolean} fast
              */
-            function mod(shapeId, params) {
+            function mod(shapeId, params, fast) {
                 var e = _elements[shapeId];
                 if (e) {
                     _changedZlevel[e.zlevel] = true;    // 可能修改前后不在一层
-                    util.merge(
-                        e,
-                        params,
-                        {
-                            'overwrite': true,
-                            'recursive': true
-                        }
-                    );
+                    if (fast) {
+                        util.mergeFast(
+                            e,
+                            params,
+                            true,
+                            true
+                        );
+                    } else {
+                        util.merge(
+                            e,
+                            params,
+                            {
+                                'overwrite': true,
+                                'recursive': true
+                            }
+                        );
+                    }
                     _mark(e);
                     _changedZlevel[e.zlevel] = true;    // 可能修改前后不在一层
                     _maxZlevel = Math.max(_maxZlevel,e.zlevel);
@@ -12243,7 +12323,7 @@ define('zrender', ['zrender/zrender'], function (main) { return main; });
    }
  */
 define(
-    'echarts/util/shape/icon',['require','zrender/tool/matrix','zrender/shape','zrender/shape/base','zrender/shape'],function(require) {
+    'echarts/util/shape/icon',['require','zrender/tool/matrix','zrender/shape','zrender/shape','zrender/shape/base','zrender/shape'],function(require) {
         var matrix = require('zrender/tool/matrix');
         
         function Icon() {
@@ -12266,7 +12346,8 @@ define(
                 triangle : _iconTriangle,
                 diamond : _iconDiamond,
                 arrow : _iconArrow,
-                star : _iconStar
+                star : _iconStar,
+                image : _iconImage
             };
         }
 
@@ -12557,6 +12638,14 @@ define(
                 r : Math.min(width, height),
                 n : style.n || 5
             });
+        }
+        
+        function _iconImage(ctx, style) {
+            setTimeout(function(){
+                require('zrender/shape').get('image').brush(ctx, {
+                    style : style
+                });                
+            },100)
         }
 
         Icon.prototype =  {
@@ -13514,7 +13603,8 @@ define('echarts/chart/island',['require','../component/base','./calculableBase',
                             x: Math.round(self.shapeList[i].style.x * xScale),
                             y: Math.round(self.shapeList[i].style.y * yScale)
                         }
-                    }
+                    },
+                    true
                 );
             }
         }
@@ -17766,6 +17856,8 @@ define('echarts/component/dataRange',['require','./base','../config','zrender/to
                 self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
+            
+            _syncShapeFromRange();
         }
 
         /**
@@ -17995,7 +18087,7 @@ define('echarts/component/dataRange',['require','./base','../config','zrender/to
                     y : _calculableLocation.y,
                     width : _calculableLocation.width,
                     height : _calculableLocation.height,
-                    color : 'rgba(255,255,255,0.2)'
+                    color : 'rgba(255,255,255,0)'
                 },
                 draggable : true,
                 ondrift : _ondrift,
@@ -18568,7 +18660,16 @@ define('echarts/component/dataRange',['require','./base','../config','zrender/to
             status.dragIn = true;
             
             if (!dataRangeOption.realtime) {
-                messageCenter.dispatch(ecConfig.EVENT.DATA_RANGE);
+                messageCenter.dispatch(
+                    ecConfig.EVENT.DATA_RANGE,
+                    null,
+                    {
+                        range : {
+                            start : _range.end,
+                            end : _range.start
+                        }
+                    }
+                );
             }
             
             status.needRefresh = false; // 会有消息触发fresh，不用再刷一遍
@@ -18578,6 +18679,39 @@ define('echarts/component/dataRange',['require','./base','../config','zrender/to
             return;
         }
         
+        // 外部传入range
+        function _syncShapeFromRange() {
+            if (dataRangeOption.range) {
+                // 做一个反转
+                if (typeof dataRangeOption.range.start != 'undefined') {
+                    _range.end = dataRangeOption.range.start;
+                }
+                if (typeof dataRangeOption.range.end != 'undefined') {
+                    _range.start = dataRangeOption.range.end;
+                }
+                if (_range.start != 100 || _range.end !== 0) {
+                    // 非默认满值同步一下图形
+                    if (dataRangeOption.orient == 'horizontal') {
+                        // 横向
+                        var width = _fillerShae.style.width;
+                        _fillerShae.style.x +=
+                            width * (100 - _range.start) / 100;
+                        _fillerShae.style.width = 
+                            width * (_range.start - _range.end) / 100;
+                    }
+                    else {
+                        // 纵向
+                        var height = _fillerShae.style.height;
+                        _fillerShae.style.y +=
+                            height * (100 - _range.start) / 100;
+                        _fillerShae.style.height = 
+                            height * (_range.start - _range.end) / 100;
+                    }
+                    zr.modShape(_fillerShae.id, _fillerShae);
+                    _syncHandleShape();
+                }
+            }
+        }
         
         function _syncHandleShape() {
             var x = _calculableLocation.x;
@@ -18727,7 +18861,16 @@ define('echarts/component/dataRange',['require','./base','../config','zrender/to
 
         function _syncData() {
             if (dataRangeOption.realtime) {
-                messageCenter.dispatch(ecConfig.EVENT.DATA_RANGE);
+                messageCenter.dispatch(
+                    ecConfig.EVENT.DATA_RANGE,
+                    null,
+                    {
+                        range : {
+                            start : _range.end,
+                            end : _range.start
+                        }
+                    }
+                );
             }
         }
 
@@ -18798,7 +18941,6 @@ define('echarts/component/dataRange',['require','./base','../config','zrender/to
                     )
                 );
             }
-            
             _range = {
                 start: 100,
                 end: 0
@@ -18822,10 +18964,17 @@ define('echarts/component/dataRange',['require','./base','../config','zrender/to
                 );
             }
             dataRangeOption = option.dataRange;
+            // 做一个反转
+            dataRangeOption.range = {
+                start: _range.end,
+                end: _range.start
+            };
+            /*
             _range = {
                 start: 100,
                 end: 0
             };
+            */
             self.clear();
             _buildShape();
         }
@@ -22652,9 +22801,9 @@ define(
 define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zrender/tool/event','zrender/config','./util/shape/icon','./chart','./chart/island','./component','./component/title','./component/axis','./component/categoryAxis','./component/valueAxis','./component/grid','./component/dataZoom','./component/legend','./component/dataRange','./component/tooltip','./component/toolbox','./component/dataView','./component/polar','./util/ecData','./chart','./component','zrender/tool/util','zrender/tool/util','zrender/tool/util','zrender/tool/color','zrender/tool/util','zrender/tool/util','zrender/tool/util'],function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
-    self.version = '1.3.1';
+    self.version = '1.3.5';
     self.dependencies = {
-        zrender : '1.0.5'
+        zrender : '1.0.7'
     };
     /**
      * 入口方法 
@@ -23116,7 +23265,8 @@ define('echarts/echarts',['require','./config','zrender','zrender/tool/util','zr
                 var ecData = require('./util/ecData');
                 return {
                     seriesIndex : ecData.get(target, 'seriesIndex'),
-                    dataIndex : ecData.get(target, 'dataIndex')
+                    dataIndex : ecData.get(target, 'dataIndex'),
+                    data : ecData.get(target, 'data')
                 };
             }
             return;
@@ -24165,7 +24315,21 @@ define('echarts/chart/scatter',['require','../component/base','./calculableBase'
                                 iconShape.style.n = 
                                     (iconType.replace('star','') - 0) || 5;
                                 iconType = 'star';
-                            } 
+                            }
+                            
+                            if (iconType.match('image')) {
+                                iconShape.style.image = iconType.replace(
+                                    new RegExp('^image:\\/\\/'), ''
+                                );
+                                iconShape.style.x += Math.round(
+                                    (iconShape.style.width 
+                                     - iconShape.style.height) 
+                                    / 2
+                                );
+                                iconShape.style.width = iconShape.style.height;
+                                iconType = 'image';
+                            }
+            
                             iconShape.style.iconType = iconType;
                             legend.setItemShape(serieName, iconShape);
                         }
@@ -24401,6 +24565,12 @@ define('echarts/chart/scatter',['require','../component/base','./calculableBase'
                 ];
             }
             
+            if (symbol.match('image')) {
+                itemShape.style.image = 
+                    symbol.replace(new RegExp('^image:\\/\\/'), '');
+                itemShape.shape = 'image';
+            }
+            
             if (symbol.match('star')) {
                 itemShape.style.iconType = 'star';
                 itemShape.style.n = 
@@ -24507,9 +24677,13 @@ define('echarts/chart/scatter',['require','../component/base','./calculableBase'
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 x = self.shapeList[i]._x || 0;
                 y = self.shapeList[i]._y || 0;
-                zr.modShape(self.shapeList[i].id, {
-                    scale : [0, 0, x, y]
-                });
+                zr.modShape(
+                    self.shapeList[i].id, 
+                    {
+                        scale : [0, 0, x, y]
+                    },
+                    true
+                );
                 zr.animate(self.shapeList[i].id, '')
                     .when(
                         (self.deepQuery([serie],'animationDuration')
@@ -25190,9 +25364,11 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
                     serie = series[self.shapeList[i]._seriesIndex];
                     x = self.shapeList[i].style.x;
                     y = self.shapeList[i].style.y[0];
-                    zr.modShape(self.shapeList[i].id, {
-                        scale : [1, 0, x, y]
-                    });
+                    zr.modShape(
+                        self.shapeList[i].id,
+                        { scale : [1, 0, x, y] },
+                        true
+                    );
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             (self.deepQuery([serie],'animationDuration')
@@ -25691,9 +25867,13 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
                     center = polar.getCenter(polarIndex);
                     x = center[0];
                     y = center[1];
-                    zr.modShape(self.shapeList[i].id, {
-                        scale : [0.1, 0.1, x, y]
-                    });
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {
+                            scale : [0.1, 0.1, x, y]
+                        },
+                        true
+                    );
                     
                     zr.animate(item.id, '')
                         .when(
@@ -25709,9 +25889,13 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
                 else {
                     x = self.shapeList[i]._x || 0;
                     y = self.shapeList[i]._y || 0;
-                    zr.modShape(self.shapeList[i].id, {
-                        scale : [0, 0, x, y]
-                    });
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {
+                            scale : [0, 0, x, y]
+                        },
+                        true
+                    );
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             duration,
@@ -28715,8 +28899,7 @@ define('echarts/chart/chord',['require','../util/shape/chord','../component/base
                             y : start[1],
                             text : group.name,
                             textAlign : isRightSide ? 'left' : 'right',
-                            color : labelColor,
-                            hoverable : false
+                            color : labelColor
                         }
                     };
                     labelShape.style.textColor = self.deepQuery(
@@ -29039,6 +29222,12 @@ define('echarts/chart/chord',['require','../util/shape/chord','../component/base
 
 define('echarts/chart/force',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/config','zrender/tool/event','zrender/tool/util','zrender/tool/vector','../util/ndarray','../chart'],function(require) {
     
+
+    var requrestAnimationFrame = window.requrestAnimationFrame
+                                || window.msRequestAnimationFrame
+                                || window.mozRequestAnimationFrame
+                                || window.webkitRequestAnimationFrame
+                                || function(func){setTimeout(func, 16)};
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -29083,9 +29272,13 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
         // 默认边样式
         var linkStyle;
         var linkEmphasisStyle;
-        // nodes和links的原始数据
-        var nodesRawData = [];
-        var linksRawData = [];
+
+        var rawNodes;
+        var rawLinks;
+
+        // nodes和links过滤后的原始数据
+        var filteredNodes = [];
+        var filteredLinks = [];
 
         // nodes和links的权重, 用来计算引力和斥力
         var nodeWeights = [];
@@ -29093,8 +29286,6 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
 
         // 节点的受力
         var nodeForces = [];
-        // 节点的加速度
-        var nodeAccelerations = [];
         // 节点的位置
         var nodePositions = [];
         var nodePrePositions = [];
@@ -29174,10 +29365,9 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                         [serie], 'itemStyle.emphasis.nodeStyle'
                     );
                     
-                    _filterData(
-                        zrUtil.clone(self.deepQuery([serie], 'nodes')),
-                        zrUtil.clone(self.deepQuery([serie], 'links'))
-                    );
+                    rawNodes = self.deepQuery([serie], 'nodes');
+                    rawLinks = zrUtil.clone(self.deepQuery([serie], 'links'));
+                    _preProcessData(rawNodes, rawLinks);
                     // Reset data
                     nodePositions = [];
                     nodePrePositions = [];
@@ -29192,33 +29382,33 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
 
                     // Formula in 'Graph Drawing by Force-directed Placement'
                     k = 0.5 / attractiveness 
-                        * Math.sqrt( area / nodesRawData.length );
+                        * Math.sqrt(area / filteredNodes.length);
                     
                     // 这两方法里需要加上读取self.selectedMap判断当前系列是否显示的逻辑
-                    _buildLinkShapes(nodesRawData, linksRawData);
-                    _buildNodeShapes(nodesRawData, minRadius, maxRadius);
+                    _buildLinkShapes(filteredNodes, filteredLinks);
+                    _buildNodeShapes(filteredNodes, minRadius, maxRadius);
                 }
             }
         }
 
-        function _filterData(nodes, links) {
+        function _preProcessData(nodes, links) {
             var filteredNodeMap = [];
             var cursor = 0;
-            nodesRawData = _filter(nodes, function(node, idx) {
-                if(!node){
+            filteredNodes = _filter(nodes, function(node, idx) {
+                if (!node) {
                     return;
                 }
                 if (self.selectedMap[node.category]) {
                     filteredNodeMap[idx] = cursor++;
                     return true;
-                }else{
+                } else {
                     filteredNodeMap[idx] = -1;
                 }
             });
             var source;
             var target;
             var ret;
-            linksRawData = _filter(links, function(link/*, idx*/){
+            filteredLinks = _filter(links, function(link, idx){
                 source = link.source;
                 target = link.target;
                 ret = true;
@@ -29232,6 +29422,8 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                 } else {
                     ret = false;
                 }
+                // 保存原始链接中的index
+                link.rawIndex = idx;
 
                 return ret;
             });
@@ -29264,17 +29456,15 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                 );
                 x = typeof(node.initial) === 'undefined' 
                     ? random.x
-                    : node.initial.x;
+                    : node.initial[0];
                 y = typeof(node.initial) === 'undefined'
                     ? random.y
-                    : node.initial.y;
+                    : node.initial[1];
                 // 初始化位置
-                nodePositions[i] = [x, y];
-                nodePrePositions[i] = [x, y];
+                nodePositions[i] = vec2.create(x, y);
+                nodePrePositions[i] = vec2.create(x, y);
                 // 初始化受力
-                nodeForces[i] = [0, 0];
-                // 初始化加速度
-                nodeAccelerations[i] = [0, 0];
+                nodeForces[i] = vec2.create(0, 0);
                 // 初始化质量
                 nodeMasses[i] = r * r * density * 0.035;
 
@@ -29286,9 +29476,9 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                         x : 0,
                         y : 0
                     },
+                    clickable : true,
                     highlightStyle : {},
                     position : [x, y],
-
                     __forceIndex : i
                 };
 
@@ -29350,12 +29540,12 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                 }
                 if (typeof(node.itemStyle) !== 'undefined') {
                     var style = node.itemStyle;
-                    if( style.normal ){ 
+                    if(style.normal ){ 
                         zrUtil.merge(shape.style, style.normal, {
                             overwrite : true
                         });
                     }
-                    if( style.normal ){ 
+                    if(style.normal ){ 
                         zrUtil.merge(shape.highlightStyle, style.emphasis, {
                             overwrite : true
                         });
@@ -29370,23 +29560,30 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                 nodeShapes.push(shape);
                 self.shapeList.push(shape);
 
-                zr.addShape(shape);
-
-
                 var categoryName = '';
                 if (typeof(node.category) !== 'undefined') {
                     var category = categories[node.category];
                     categoryName = (category && category.name) || '';
                 }
+                // !!Pack data before addShape
                 ecData.pack(
                     shape,
+                    // category
                     {
                         name : categoryName
                     },
+                    // series index
                     0,
-                    node, 0,
-                    node.name || ''
+                    // data
+                    node,
+                    // data index
+                    rawNodes.indexOf(node),
+                    // name
+                    node.name || '',
+                    // value
+                    node.value
                 );
+                zr.addShape(shape);
             }
 
             // _normalize(nodeMasses, nodeMasses);
@@ -29402,39 +29599,69 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                 var weight = link.weight || 1;
                 linkWeights.push(weight);
 
-                var shape = {
+                var linkShape = {
                     id : zr.newShapeId(self.type),
                     shape : 'line',
                     style : {
                         xStart : 0,
                         yStart : 0,
                         xEnd : 0,
-                        yEnd : 0
+                        yEnd : 0,
+                        lineWidth : 1
                     },
+                    clickable : true,
                     highlightStyle : {}
                 };
 
-                zrUtil.merge(shape.style, linkStyle);
-                zrUtil.merge(shape.highlightStyle, linkEmphasisStyle);
+                zrUtil.merge(linkShape.style, linkStyle);
+                zrUtil.merge(linkShape.highlightStyle, linkEmphasisStyle);
                 if (typeof(link.itemStyle) !== 'undefined') {
                     if(link.itemStyle.normal){
-                        zrUtil.merge(shape.style, link.itemStyle.normal, {
+                        zrUtil.merge(linkShape.style, link.itemStyle.normal, {
                             overwrite : true
                         });
                     }
                     if(link.itemStyle.emphasis){
                         zrUtil.merge(
-                            shape.highlightStyle, 
+                            linkShape.highlightStyle, 
                             link.itemStyle.emphasis, 
                             { overwrite : true }
                         );
                     }
                 }
 
-                linkShapes.push(shape);
-                self.shapeList.push(shape);
+                linkShapes.push(linkShape);
+                self.shapeList.push(linkShape);
 
-                zr.addShape(shape);
+
+                var source = filteredNodes[link.source];
+                var target = filteredNodes[link.target];
+
+                var link = rawLinks[link.rawIndex];
+                ecData.pack(
+                    linkShape,
+                    // serie
+                    forceSerie,
+                    // serie index
+                    0,
+                    // link data
+                    {
+                        source : link.source,
+                        target : link.target,
+                        value : link.value || 0
+                    },
+                    // link data index
+                    link.rawIndex,
+                    // source name - target name
+                    source.name + ' - ' + target.name,
+                    // link value
+                    link.value || 0,
+                    // special
+                    // 这一项只是为了表明这是条边
+                    true
+                );
+
+                zr.addShape(linkShape);
             }
 
             var narr = new NDArray(linkWeights);
@@ -29445,8 +29672,8 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
         }
 
         function _updateLinkShapes(){
-            for (var i = 0, l = linksRawData.length; i < l; i++) {
-                var link = linksRawData[i];
+            for (var i = 0, l = filteredLinks.length; i < l; i++) {
+                var link = filteredLinks[i];
                 var linkShape = linkShapes[i];
                 var sourceShape = nodeShapes[link.source];
                 var targetShape = nodeShapes[link.target];
@@ -29486,19 +29713,18 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                         d = 5;
                     }
 
-                    vec2.scale(v12, v12, 1/d);
+                    vec2.scale(v12, v12, 1 / d);
                     var forceFactor = 1 * (w1 + w2) * k2 / d;
 
-                    vec2.scale(v12, v12, forceFactor);
                     //节点1受到的力
-                    vec2.sub(nodeForces[i], nodeForces[i], v12);
+                    vec2.scaleAndAdd(nodeForces[i], nodeForces[i], v12, -forceFactor);
                     //节点2受到的力
-                    vec2.add(nodeForces[j], nodeForces[j], v12);
+                    vec2.scaleAndAdd(nodeForces[j], nodeForces[j], v12, forceFactor);
                 }
             }
             // 计算节点之间引力
-            for (var i = 0, l = linksRawData.length; i < l; i++) {
-                var link = linksRawData[i];
+            for (var i = 0, l = filteredLinks.length; i < l; i++) {
+                var link = filteredLinks[i];
                 var w = linkWeights[i];
                 var s = link.source;
                 var t = link.target;
@@ -29507,45 +29733,35 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
 
                 vec2.sub(v12, p2, p1);
                 var d2 = vec2.lengthSquare(v12);
-                vec2.normalize(v12, v12);
+                if (d2 === 0) {
+                    continue;
+                }
 
-                var forceFactor = w * d2 / k;
+                var forceFactor = w * d2 / k / Math.sqrt(d2);
                 // 节点1受到的力
-                vec2.scale(v12, v12, forceFactor);
-                vec2.add(nodeForces[s], nodeForces[s], v12);
+                vec2.scaleAndAdd(nodeForces[s], nodeForces[s], v12, forceFactor);
                 // 节点2受到的力
-                vec2.sub(nodeForces[t], nodeForces[t], v12);
+                vec2.scaleAndAdd(nodeForces[t], nodeForces[t], v12, -forceFactor);
             }
             // 到质心的向心力
-            for (var i = 0, l = nodesRawData.length; i < l; i++){
+            for (var i = 0, l = filteredNodes.length; i < l; i++){
                 var p = nodePositions[i];
                 vec2.sub(v12, centroid, p);
                 var d2 = vec2.lengthSquare(v12);
-                vec2.normalize(v12, v12);
-                // 100是可调参数
-                var forceFactor = d2 / 100 * centripetal;
-                vec2.scale(v12, v12, forceFactor);
-                vec2.add(nodeForces[i], nodeForces[i], v12);
-
-            }
-            // 计算加速度
-            for (var i = 0, l = nodeAccelerations.length; i < l; i++) {
-                vec2.scale(
-                    nodeAccelerations[i], nodeForces[i], 1 / nodeMasses[i]
+                var forceFactor = d2 * centripetal / (100 * Math.sqrt(d2));
+                vec2.scaleAndAdd(
+                    nodeForces[i], nodeForces[i], v12, forceFactor
                 );
             }
             var velocity = [];
-            var tmp = [];
             // 计算位置(verlet积分)
             for (var i = 0, l = nodePositions.length; i < l; i++) {
-                if (nodesRawData[i].fixed) {
+                if (filteredNodes[i].fixed) {
                     // 拖拽同步
-                    nodePositions[i][0] = mouseX;
-                    nodePositions[i][1] = mouseY;
-                    nodePrePositions[i][0] = mouseX;
-                    nodePrePositions[i][1] = mouseY;
-                    nodeShapes[i].position[0] = mouseX;
-                    nodeShapes[i].position[1] = mouseY;
+                    vec2.set(nodePositions[i], mouseX, mouseY);
+                    vec2.set(nodePrePositions[i], mouseX, mouseY);
+                    vec2.set(nodeShapes[i].position, mouseX, mouseY);
+                    vec2.set(filteredNodes[i].initial, mouseX, mouseY);
                     continue;
                 }
                 var p = nodePositions[i];
@@ -29553,10 +29769,10 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                 vec2.sub(velocity, p, __P);
                 __P[0] = p[0];
                 __P[1] = p[1];
-                vec2.add(
-                    velocity, 
-                    velocity, 
-                    vec2.scale(tmp, nodeAccelerations[i], stepTime)
+                vec2.scaleAndAdd(
+                    velocity, velocity,
+                    nodeForces[i],
+                    stepTime / nodeMasses[i]
                 );
                 // Damping
                 vec2.scale(velocity, velocity, temperature);
@@ -29565,12 +29781,16 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                 velocity[1] = Math.max(Math.min(velocity[1], 100), -100);
 
                 vec2.add(p, p, velocity);
-                nodeShapes[i].position[0] = p[0];
-                nodeShapes[i].position[1] = p[1];
+                vec2.copy(nodeShapes[i].position, p);
 
-                if(isNaN(p[0]) || isNaN(p[1])){
-                    throw new Error('NaN');
+                if (filteredNodes[i].initial === undefined) {
+                    filteredNodes[i].initial = vec2.create();
                 }
+                vec2.copy(filteredNodes[i].initial, p);
+
+                // if(isNaN(p[0]) || isNaN(p[1])){
+                //     throw new Error('NaN');
+                // }
             }
         }
 
@@ -29582,13 +29802,17 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
             _update(stepTime);
             _updateLinkShapes();
 
+            var tmp = {};
             for (var i = 0; i < nodeShapes.length; i++) {
                 var shape = nodeShapes[i];
-                zr.modShape(shape.id, shape);
+                tmp.position = shape.position;
+                zr.modShape(shape.id, tmp, true);
             }
+            tmp = {};
             for (var i = 0; i < linkShapes.length; i++) {
                 var shape = linkShapes[i];
-                zr.modShape(shape.id, shape);
+                tmp.style = shape.style;
+                zr.modShape(shape.id, tmp, true);
             }
 
             zr.refresh();
@@ -29612,10 +29836,10 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
             function cb() {
                 if (_updating) {
                     _step();
-                    setTimeout(cb, stepTime * 1000);
+                    requrestAnimationFrame(cb);
                 }
             }
-            setTimeout(cb, stepTime * 1000);
+            requrestAnimationFrame(cb);
         }
 
         function refresh(newOption) {
@@ -29631,7 +29855,7 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
         function dispose(){
             _updating = false;
         }
-        
+
         /**
          * 输出动态视觉引导线
          */
@@ -29639,6 +29863,9 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
             self.isDragstart = true;
         };
         
+        function onclick(param) {
+        }
+
         /**
          * 拖拽开始
          */
@@ -29649,7 +29876,7 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
             }
             var shape = param.target;
             var idx = shape.__forceIndex;
-            var node = nodesRawData[idx];
+            var node = filteredNodes[idx];
             node.fixed = true;
 
             // 处理完拖拽事件后复位
@@ -29668,7 +29895,7 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
             }
             var shape = param.target;
             var idx = shape.__forceIndex;
-            var node = nodesRawData[idx];
+            var node = filteredNodes[idx];
             node.fixed = false;
 
             // 别status = {}赋值啊！！
@@ -29694,6 +29921,7 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
         self.ondragstart = ondragstart;
         self.ondragend = ondragend;
         self.dispose = dispose;
+        self.onclick = onclick;
 
         init(option, component);
     }
@@ -30016,6 +30244,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                         iconShape.style.iconType = 'legendLineIcon';
                         iconShape.style.symbol = 
                             _sIndex2ShapeMap[seriesArray[i]];
+                        
                         legend.setItemShape(serieName, iconShape);
                     }
                 } else {
@@ -30039,7 +30268,6 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                 // 兼职帮算一下最大长度
                 maxDataLength = Math.max(maxDataLength, serie.data.length);
             }
-
             /* 调试输出
             var s = '';
             for (var i = 0, l = maxDataLength; i < l; i++) {
@@ -30552,7 +30780,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
 
             if (symbol.match('image')) {
                 itemShape.style.image = 
-                    symbol.replace(/^image:\/\//, '');
+                    symbol.replace(new RegExp('^image:\\/\\/'), '');
                 itemShape.shape = 'image';
             }
             
@@ -30764,11 +30992,15 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                             }
                             isHorizontal ? (x = -dx, y = 0) : (x = 0, y = dy);
                         }
-                        zr.modShape(self.shapeList[i].id, {
-                            style : {
-                                pointList : self.shapeList[i].style.pointList
-                            }
-                        });
+                        zr.modShape(
+                            self.shapeList[i].id, 
+                            {
+                                style : {
+                                    pointList: self.shapeList[i].style.pointList
+                                }
+                            },
+                            true
+                        );
                     }
                     else {
                         // 拐点动画
@@ -30816,14 +31048,22 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                     x = self.shapeList[i].style.pointList[0][0];
                     y = self.shapeList[i].style.pointList[0][1];
                     if (self.shapeList[i]._orient == 'horizontal') {
-                        zr.modShape(self.shapeList[i].id, {
-                            scale : [0, 1, x, y]
-                        });
+                        zr.modShape(
+                            self.shapeList[i].id, 
+                            {
+                                scale : [0, 1, x, y]
+                            },
+                            true
+                        );
                     }
                     else {
-                        zr.modShape(self.shapeList[i].id, {
-                            scale : [1, 0, x, y]
-                        });
+                        zr.modShape(
+                            self.shapeList[i].id, 
+                            {
+                                scale : [1, 0, x, y]
+                            },
+                            true
+                        );
                     }
                     zr.animate(self.shapeList[i].id, '')
                         .when(
@@ -30839,9 +31079,13 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                 else {
                     x = self.shapeList[i]._x || 0;
                     y = self.shapeList[i]._y || 0;
-                    zr.modShape(self.shapeList[i].id, {
-                        scale : [0, 0, x, y]
-                    });
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {
+                            scale : [0, 0, x, y]
+                        },
+                        true
+                    );
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             duration,
@@ -30886,6 +31130,16 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
             x += (width - height) / 2;
             width = height;
         }
+        
+        var imageLocation = '';
+        if (symbol.match('image')) {
+            imageLocation = symbol.replace(
+                    new RegExp('^image:\\/\\/'), ''
+                );
+            symbol = 'image';
+            x += Math.round((width - height) / 2);
+            width = height;
+        }
         symbol = require('zrender/shape').get('icon').get(symbol);
         
         if (symbol) {
@@ -30894,7 +31148,8 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                 y : y + 3,
                 width : width - 6,
                 height : height - 6,
-                n : dy
+                n : dy,
+                image : imageLocation
             });
         }
     }
@@ -31747,7 +32002,8 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                         x : x + width,
                                         width: 0
                                     }
-                                }
+                                },
+                                true
                             );
                             zr.animate(self.shapeList[i].id, 'style')
                                 .when(
@@ -31766,7 +32022,8 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                     style: {
                                         width: 0
                                     }
-                                }
+                                },
+                                true
                             );
                             zr.animate(self.shapeList[i].id, 'style')
                                 .when(
@@ -31789,7 +32046,8 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                     style: {
                                         height: 0
                                     }
-                                }
+                                },
+                                true
                             );
                             zr.animate(self.shapeList[i].id, 'style')
                                 .when(
@@ -31808,7 +32066,8 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                         y: y + height,
                                         height: 0
                                     }
-                                }
+                                },
+                                true
                             );
                             zr.animate(self.shapeList[i].id, 'style')
                                 .when(
@@ -31955,7 +32214,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
             var percent;
             var startAngle = serie.startAngle.toFixed(2) - 0;
             var endAngle;
-            var minAngle = serie.minAngle;
+            var minAngle = serie.minAngle || 0.01; // #bugfixed
             var totalAngle = 360 - (minAngle * totalSelected);
             var defaultColor;
             var roseType = serie.roseType;
@@ -32731,13 +32990,17 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                     r0 = self.shapeList[i].style.r0;
                     r = self.shapeList[i].style.r;
 
-                    zr.modShape(self.shapeList[i].id, {
-                        rotation : [Math.PI*2, x, y],
-                        style : {
-                            r0 : 0,
-                            r : 0
-                        }
-                    });
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {
+                            rotation : [Math.PI*2, x, y],
+                            style : {
+                                r0 : 0,
+                                r : 0
+                            }
+                        },
+                        true
+                    );
 
                     serie = ecData.get(self.shapeList[i], 'series');
                     dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
@@ -32765,9 +33028,13 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                 }
                 else {
                     dataIndex = self.shapeList[i]._dataIndex;
-                    zr.modShape(self.shapeList[i].id, {
-                        scale : [0, 0, x, y]
-                    });
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {
+                            scale : [0, 0, x, y]
+                        },
+                        true
+                    );
                     zr.animate(self.shapeList[i].id, '')
                         .when(
                             duration + dataIndex * 100,
@@ -32989,4 +33256,14 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
     require('../chart').define('pie', Pie);
     
     return Pie;
+});
+define('_chart',['require','echarts/chart/scatter','echarts/chart/k','echarts/chart/radar','echarts/chart/chord','echarts/chart/force','echarts/chart/line','echarts/chart/bar','echarts/chart/pie'],function(require) {
+    require("echarts/chart/scatter");
+    require("echarts/chart/k");
+    require("echarts/chart/radar");
+    require("echarts/chart/chord");
+    require("echarts/chart/force");
+    require("echarts/chart/line");
+    require("echarts/chart/bar");
+    require("echarts/chart/pie");
 });
