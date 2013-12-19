@@ -71,38 +71,20 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
-// 自定义扩展图表类型：mapType = USA
-require('echarts/util/mapData/params').params.USA = {
-    getGeoJson: function(callback) {
-        $.getJSON('geoJson/usa.geo.json', callback);
-    },
-    specialArea : {
-        Alaska : {              // 把阿拉斯加移到美国主大陆左下方
-            left : -131,        // 安放位置起始点为西经113
-            top : 31,           // 北纬31度
-            width : 15,         // 区间大小宽高不大于15度
-            height : 15
-        },
-        Hawaii : {
-            left : -112,        // 夏威夷
-            top : 29,
-            width : 5,
-            height : 5
-        },
-        'Puerto Rico' : {       // 波多黎各
-            left : -76,
-            top : 26,
-            width : 2,
-            height : 2
-        }
-    }
-}
+var itemStyle = {
+    normal:{label:{
+        show:true,
+        formatter:'{b}',
+        textStyle: {fontSize: 20,fontWeight : 'bold'}
+    }},
+    emphasis:{label:{show:true}}
+};
 option = {
     title : {
-        text: 'USA Population Estimates (2012)',
-        subtext: 'Data from www.census.gov.',
-        sublink: 'http://www.census.gov/popest/data/datasets.html',
-        x:'right'
+        text : '2012 World GDP Top 8',
+        subtext : 'from baike （Billion $）',
+        sublink : 'http://baike.baidu.com/link?url=MyQikkoGI08hUfVmiB0g01ZJ6Wpyu18s8e6XdA3dwcI73-i0J7Ce32LuPNqfEWBj2rUcSfIHYIVI0aL8czbS_a',
+        x : 'center'
     },
     tooltip : {
         trigger: 'item',
@@ -110,25 +92,15 @@ option = {
         transitionDuration: 0.2,
         formatter : function(a) {
             var sName = a[0];
-            var pName = a[1];
             var value = a[2] + '';
             value = value.replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,');
-            return sName + '<br/>' + pName + ' : ' + value;
+            return sName + '<br/>' + value + ' Billion';
         }
-    },
-    dataRange: {
-        x : 'right',
-        min: 500000,
-        max: 38000000,
-        color: ['orangered','yellow','lightskyblue'],
-        text:['High','Low'],           // 文本，默认为数值文本
-        calculable : true
     },
     toolbox: {
         show : true,
-        //orient : 'vertical',
-        x: 'left',
-        y: 'top',
+        x: 'right',
+        y: 'bottom',
         feature : {
             mark : true,
             dataView : {readOnly: false},
@@ -136,72 +108,98 @@ option = {
             saveAsImage : true
         }
     },
+    dataRange: {
+        orient: 'horizontal',
+        x : 'center',
+        y: 'center',
+        min: 2000,
+        max: 16000,
+        splitNumber: 0,            // 分割段数，默认为5
+        text:['16,000B','2,000B'],  
+        calculable : true,
+        itemWidth:40,
+        color: ['orangered','yellow','lightskyblue']
+    },
     series : [
         {
-            name: 'USA PopEstimates',
+            name: 'USA',
             type: 'map',
-            roam: true,
-            mapType: 'USA', // 自定义扩展图表类型
-            itemStyle:{
-                emphasis:{label:{show:true}}
-            },
-            // 文本位置修正
-            textFixed : {
-                Alaska : [20, -20]
-            },
+            mapType: 'world|United States of America',
+            mapLocation: {x:'5%', y:'10%',width:'22%',height:'35%'},
+            itemStyle: itemStyle,
             data:[
-                {name : 'Alabama', value : 4822023},
-                {name : 'Alaska', value : 731449},
-                {name : 'Arizona', value : 6553255},
-                {name : 'Arkansas', value : 2949131},
-                {name : 'California', value : 38041430},
-                {name : 'Colorado', value : 5187582},
-                {name : 'Connecticut', value : 3590347},
-                {name : 'Delaware', value : 917092},
-                {name : 'District of Columbia', value : 632323},
-                {name : 'Florida', value : 19317568},
-                {name : 'Georgia', value : 9919945},
-                {name : 'Hawaii', value : 1392313},
-                {name : 'Idaho', value : 1595728},
-                {name : 'Illinois', value : 12875255},
-                {name : 'Indiana', value : 6537334},
-                {name : 'Iowa', value : 3074186},
-                {name : 'Kansas', value : 2885905},
-                {name : 'Kentucky', value : 4380415},
-                {name : 'Louisiana', value : 4601893},
-                {name : 'Maine', value : 1329192},
-                {name : 'Maryland', value : 5884563},
-                {name : 'Massachusetts', value : 6646144},
-                {name : 'Michigan', value : 9883360},
-                {name : 'Minnesota', value : 5379139},
-                {name : 'Mississippi', value : 2984926},
-                {name : 'Missouri', value : 6021988},
-                {name : 'Montana', value : 1005141},
-                {name : 'Nebraska', value : 1855525},
-                {name : 'Nevada', value : 2758931},
-                {name : 'New Hampshire', value : 1320718},
-                {name : 'New Jersey', value : 8864590},
-                {name : 'New Mexico', value : 2085538},
-                {name : 'New York', value : 19570261},
-                {name : 'North Carolina', value : 9752073},
-                {name : 'North Dakota', value : 699628},
-                {name : 'Ohio', value : 11544225},
-                {name : 'Oklahoma', value : 3814820},
-                {name : 'Oregon', value : 3899353},
-                {name : 'Pennsylvania', value : 12763536},
-                {name : 'Rhode Island', value : 1050292},
-                {name : 'South Carolina', value : 4723723},
-                {name : 'South Dakota', value : 833354},
-                {name : 'Tennessee', value : 6456243},
-                {name : 'Texas', value : 26059203},
-                {name : 'Utah', value : 2855287},
-                {name : 'Vermont', value : 626011},
-                {name : 'Virginia', value : 8185867},
-                {name : 'Washington', value : 6897012},
-                {name : 'West Virginia', value : 1855413},
-                {name : 'Wisconsin', value : 5726398},
-                {name : 'Wyoming', value : 576412},
-                {name : 'Puerto Rico', value : 3667084}
+                {name : 'United States of America', value : 15684.7}
+            ]
+        },
+        {
+            name: 'China',
+            type: 'map',
+            mapType: 'world|China',
+            mapLocation: {x:'30%', y:'10%',width:'22%',height:'35%'},
+            itemStyle: itemStyle,
+            itemStyle: itemStyle,
+            data:[
+                {name : 'China', value : 8227}
+            ]
+        },
+        {
+            name: 'Japan',
+            type: 'map',
+            mapType: 'world|Japan',
+            mapLocation: {x:'55%', y:'10%',width:'22%',height:'35%'},
+            itemStyle: itemStyle,
+            data:[
+                {name : 'Japan', value : 5963.9}
+            ]
+        },
+        {
+            name: 'Germany',
+            type: 'map',
+            mapType: 'world|Germany',
+            mapLocation: {x:'76%', y:'10%',width:'22%',height:'35%'},
+            itemStyle: itemStyle,
+            data:[
+                {name : 'Germany', value : 3400.5}
+            ]
+        },
+        {
+            name: 'France',
+            type: 'map',
+            mapType: 'world|France',
+            mapLocation: {x:'5%', y:'60%',width:'22%',height:'35%'},
+            itemStyle: itemStyle,
+            data:[
+                {name : 'France', value : 2608.6}
+            ]
+        },
+        {
+            name: 'United Kingdom',
+            type: 'map',
+            mapType: 'world|United Kingdom',
+            mapLocation: {x:'33%', y:'60%',width:'22%',height:'35%'},
+            itemStyle: itemStyle,
+            data:[
+                {name : 'United Kingdom', value : 2440.5}
+            ]
+        },
+        {
+            name: 'Brazil',
+            type: 'map',
+            mapType: 'world|Brazil',
+            mapLocation: {x:'55%', y:'60%',width:'22%',height:'35%'},
+            itemStyle: itemStyle,
+            data:[
+                {name : 'Brazil', value : 2395.9}
+            ]
+        },
+        {
+            name: 'Russia',
+            type: 'map',
+            mapType: 'world|Russia',
+            mapLocation: {x:'76%', y:'70%',width:'22%',height:'35%'},
+            itemStyle: itemStyle,
+            data:[
+                {name : 'Russia', value : 2021.9}
             ]
         }
     ]

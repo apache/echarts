@@ -77,7 +77,7 @@ option = {
         subtext: 'from United Nations, Total population, both sexes combined, as of 1 July (thousands)',
         sublink : 'http://esa.un.org/wpp/Excel-Data/population.htm',
         x:'center',
-        y:'bottom'
+        y:'top'
     },
     tooltip : {
         trigger: 'item',
@@ -112,9 +112,12 @@ option = {
     series : [
         {
             name: 'World Population (2010)',
-            type: 'map',mapLocation:{width:2000},
+            type: 'map',
             mapType: 'world',
             roam: true,
+            mapLocation: {
+                y : 60
+            },
             itemStyle:{
                 emphasis:{label:{show:true}}
             },

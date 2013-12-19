@@ -87,6 +87,11 @@
                                 <li><a href="#Map">map</a></li>
                             </ul>
                             <li><a href="#引入ECharts">引入ECharts</a></li>
+                            <ul>
+                                <li><a href="#引入ECharts1">模块化包引入</a></li>
+                                <li><a href="#引入ECharts2">模块化单文件引入</a></li>
+                                <li><a href="#引入ECharts3">标签式单文件引入</a></li>
+                            </ul>
                             <li><a href="#初始化">初始化</a></li>
                             <li><a href="#实例方法">实例方法</a></li>
                             <li><a href="#选项">选项</a></li>
@@ -131,6 +136,7 @@
                                 <li><a href="#AnimationEasing">animationEasing</a></li>
                             </ul>
                             <li><a href="#多级控制设计">多级控制设计</a></li>
+                            <li><a href="#附录地图扩展">附录：地图扩展</a></li>
                             <li><a href="#附录一个直观的事例">附录：一个直观的事例</a></li>
                         </ul>
                         </div>
@@ -373,7 +379,11 @@
                     </table>
                     
                     <h3>引入ECharts<a name="引入ECharts"> </a></h3>
-                    <P>如果你的项目本身就是模块化的，那引入echarts将很简单，只需要配置好packet路径指向src即可，而且你还可以实现图表的按需加载，由于echarts依赖底层zrender，建议你同时下载<a href="https://github.com/ecomfe/zrender" target="_blank">zrender</a>到本地，可参考<a href="example/demo.html" target="_blank">demo</a>，你需要配置如下</P>
+                    <p>echarts提供多种引入方式，请根据你的项目类型选择合适的方式：</p>
+                    
+                    <h3>模块化包引入<a name="引入ECharts1"> </a></h3>
+                    <P>如果你的项目本身就是模块化的，那引入echarts将很简单，只需要配置好packet路径指向src即可，而且你还可以实现图表的按需加载，由于echarts依赖底层zrender，建议你同时下载<a href="https://github.com/ecomfe/zrender" target="_blank">zrender</a>到本地，可参考<a href="example/demo.html" target="_blank">demo</a>，你需要配置如下。</p>
+                    <p>需要注意的时，包引入提供了开发阶段最大的灵活性，但并不适合直接上线，减少请求的文件数量是前端性能优化中很基本也是很重要的规则，务必在上线时做文件的连接压缩。</P>
                     <div class="code">
                         <pre>//from echarts example
 require.config({
@@ -392,14 +402,16 @@ require.config({
 });
 </pre>
                     </div>
-                    <P>你也可以使用单一文件引入，node环境下安装<a href="http://requirejs.org/docs/optimization.html" target="_blank">require.js</a>，build文件夹内为你准备好配置项，可根据你的项目需求，选择性的开启或关闭include数组中的模块以构建你的最佳配置。</P>
-                    <p>如你所发现的，build文件夹下已经生成了多个单文件见下，根据你的需求使用：</p>
+                    
+                    <h3>模块化单文件引入（<b>推荐</b>）<a name="引入ECharts2"> </a></h3>
+                    <P>我们建议你使用单一文件引入，如你所发现的，build文件夹下已经生成了多个单文件见下，根据你的需求使用：</P>
                     <ul>
                         <li>echarts.js : 经过压缩，包含除地图外的全部图表</li>
                         <li>echarts-original.js : 未压缩，可用于调试，包含除地图外的全部图表</li>
-                        <li>echarts-map.js : 经过压缩，全图表，包含全国以及34个省市级地图数据</li>
-                        <li>echarts-original-map.js : 未压缩，可用于调试，全图表，包含全国以及34个省市级地图数据</li>
+                        <li>echarts-map.js : 经过压缩，全图表，包含world，china以及34个省市级地图数据</li>
+                        <li>echarts-original-map.js : 未压缩，可用于调试，全图表，包含world，china以及34个省市级地图数据</li>
                     </ul>
+                    <p>如果需要更加定制的打包文件，建议在node环境下安装<a href="http://requirejs.org/docs/optimization.html" target="_blank">require.js</a>，build文件夹内为你准备好配置项，可根据你的项目需求，修改config-tpl.js以构建你的最佳配置。</p>
                     <p>采用单一文件使用例子见<a href="example/www/index.html" target="_blank">ECharts单一文件引入</a>，存放在example/www下，你需要配置如下：</p>
                     <div class="code">
                         <pre>//from echarts example
@@ -431,7 +443,7 @@ require(
 );
 </pre>
                     </div>
-                    <p>不管如何引入ECharts，你都需要如下4步：</p>
+                    <p>总结来说，模块化如何引入ECharts，你都需要如下4步：</p>
                     <ol>
                         <li>引入一个模块加载器，如<a href="https://github.com/ecomfe/esl" target="_blank">esl.js</a>或者<a href="http://requirejs.org" target="_blank">require.js</a></li>
                         <li>为ECharts准备一个具备大小（宽高）的Dom（当然可以是动态生成的）</li>
@@ -439,6 +451,21 @@ require(
                         <li>动态加载echarts然后在回调函数中开始使用（容我罗嗦一句，当你确保同一页面已经加载过echarts，再使用时直接require('echarts').init(dom)就行）</li>
                     </ol>
 
+                    <h3>标签式单文件引入<a name="引入ECharts3"> </a></h3>
+                    <P>自1.3.5开始，ECharts提供标签式引入。如果你的项目本身并不是基于模块化开发的，或者是基于CMD规范（如使用的是seajs），那么引入基于AMD模块化的echarts可能并不方便，我们建议你采用srcipt标签式引入，忘掉require，srcipt标签引入echarts后将可以直接使用两个全局的命名空间：echarts，zrender，可参考<a href="example/www2/index.html" target="_blank">ECharts标签式引入</a></p>
+                    <div class="code">
+                        <pre>//from echarts example
+&lt; script src="example/www2/js/echarts-plain.js" &gt; &lt; /script&gt;
+&lt; script &gt;
+    var myChart = echarts.init(domMain);
+    var option = {
+        ...
+    }
+    myChart.setOption(option);
+&lt; /script&gt;
+</pre>
+                    </div>
+                    
                     <h3>初始化<a name="初始化"> </a></h3>
                     <p>通过require获得echarts接口后可实例化图表，echarts接口仅有一个方法init，执行init时传入一个具备大小的dom节点（width、height可被计算得到即可，不一定可见）后即可实例化出图表对象，图表库实现为多实例的，同一页面可多次init出多个图表。图表实例可用方法见<a href="#方法">方法</a>，</p>
                     <p>引入ECharts后的的初始化代码如下：</p>
@@ -1172,10 +1199,10 @@ feature : {
                                             力导向图 : 
                                             <ul>
                                                 <li>
-                                                    节点 : a（类目名称），b（节点名称），c（节点值)
+                                                    节点 : a（类目名称），b（节点名称），c（节点值）
                                                 </li>
                                                 <li>
-                                                    边 : a（系列名称），b（源名称-目标名称），c（边权重), d(如果为true的话则数据来源是边)
+                                                    边 : a（系列名称），b（源名称-目标名称），c（边权重）， d（如果为true的话则数据来源是边）
                                                 </li>
                                         </li>
                                     </ul>
@@ -1963,10 +1990,12 @@ indicator : [
                             <td> {string} mapType </td>
                             <td> 'china' </td>
                             <td> 地图 </td>
-                            <td> 地图类型，支持中国及全国34个省市自治区。省市自治区的mapType直接使用简体中文：
+                            <td> 地图类型，支持world，china及全国34个省市自治区。省市自治区的mapType直接使用简体中文：
                                 <br/>新疆， 西藏， 内蒙古， 青海， 四川， 黑龙江， 甘肃， 云南， 广西， 湖南， 陕西，
                                 <br/>广东，吉林， 河北， 湖北， 贵州， 山东， 江西， 河南， 辽宁， 山西， 安徽， 福建，
                                 <br/>浙江， 江苏，重庆， 宁夏， 海南， 台湾， 北京， 天津， 上海， 香港， 澳门'
+                                <br/>支持子区域模式，通过主地图类型扩展出所包含的子区域地图，格式为'主地图类型|子区域名称'，如
+                                <br/>'world|Brazil'，'china|广东'，详见例子 <a href="./example/map8.html" target="_blank">this 》</a>
                             </td>
                         </tr>
                         <tr>
@@ -2551,12 +2580,63 @@ indicator : [
                     </ul>
                     <p><img src="./asset/img/doc/multiControl.jpg" title="" alt="多级控制"/></P>
 
+                    <h3>附录：地图扩展<a name="附录地图扩展"> </a></h3>
+                    <p>支持标准<a href='http://www.oschina.net/translate/geojson-spec?cmp' target="_blank">GeoJson</a>动态扩展地图类型，try <a href="./example/map6.html" target="_blank">HK 》</a> <a href="./example/map7.html" target="_blank">USA 》</a></p>
+                    <div class="code">
+<pre>
+// step1: 找到目标地区的geoJson数据文件，如HK.geo.json
+
+// step2: 在require('echarts/util/mapData/params').params中命名你的地图类型，如HK
+// step3: 命名赋值为对象{}, 实现接口方法getGeoJson，通过callback返回目标地区geoJson数据文件
+require('echarts/util/mapData/params').params.HK = {
+    getGeoJson: function(callback) {
+        $.getJSON('geoJson/HK.geo.json',callback);
+    }
+}
+
+// step3*: 对于数据地图类型，一般不需要特殊的投射算法，ECharts统一使用了简化的投射算法，因而对于个别地区可能需要人为调整，可以通过specialArea指定个别地区安的经纬度坐标和区间大小，如
+require('echarts/util/mapData/params').params.USA = {
+    getGeoJson: function(callback) {
+        $.getJSON('geoJson/usa.geo.json', callback);
+    },
+    specialArea : {
+        Alaska : {              // 把阿拉斯加移到美国主大陆左下方
+            left : -131,        // 安放位置起始点：西经113度
+            top : 31,           // 安放位置起始点：北纬31度
+            width : 15,         // 区间大小宽高不大于15度
+            height : 15
+        },
+        Hawaii : {
+            left : -112,        // 夏威夷
+            top : 29,
+            width : 5,
+            height : 5
+        },
+        'Puerto Rico' : {       // 波多黎各
+            left : -76,
+            top : 26,
+            width : 2,
+            height : 2
+        }
+    }
+}
+
+// step4: 已经有这个地图类型了，可以在option中使用了
+option.series = [
+        {
+            type: 'map',
+            mapType: 'HK', // 自定义扩展图表类型
+            ...
+         }
+ ]
+</pre>
+                    </div>
+                    
                     <h3>附录：一个直观的事例<a name="附录一个直观的事例"> </a></h3>
                     <p>查看更多实例 <a href="example.html" target="_blank">example</a>，或者使用这个<a href="example/demo.html" target="_blank">demo</a> 或 <a href="example/www/index.html" target="_blank">ECharts单一文件引入</a>作为你的模板</p>
                     <div class="code">
                         <pre>// 图表实例化------------------
-var echarts = require('echarts');
-require('echarts/chart/line');  // 图表按需加载，需要主动require
+// srcipt标签式引入
 var myChart = echarts.init(document.getElementById('main'));
 
 // ajax getting data...............
