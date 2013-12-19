@@ -12,10 +12,12 @@ function option0 () {
         dataRange: {
             min: 600,
             max: 60000,
+            orient: 'horizontal',
             color:['red','yellow'],
             text:['高','低'],           // 文本，默认为数值文本
             calculable : true,
-            x: 'right',
+            x: 'center',
+            y: 'bottom',
             textStyle: {
                 color: 'orange'
             }

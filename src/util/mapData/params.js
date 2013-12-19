@@ -80,7 +80,7 @@ define(function(require) {
             }
         },
         '南海诸岛' : {
-            textCoord : [126, 24.5],
+            textCoord : [126, 25],
             getPath : function(leftTop, scale) {
                 // scale.x : width  = 10.51 : 64
                 var pList = [

@@ -18,7 +18,7 @@ function option3 (name) {
             {
                 type: 'map',
                 mapType: 'china',
-                itemSdtyle:{
+                itemStyle:{
                     normal:{label:{show:true}}
                 }
             }

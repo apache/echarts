@@ -20,10 +20,7 @@ function option2 (name) {
         series : [
             {
                 type: 'map',
-                mapType: 'china',
-                mapLocation: {
-                    y: 0
-                }
+                mapType: 'china'
             }
         ]
     };
