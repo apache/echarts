@@ -67,14 +67,14 @@ define(function(require) {
     var mapParams = {
         'world': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/world.geo.js'], function(md){
+                require(['./geoJson/world_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         'china': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/china.geo.js'], function(md){
+                require(['./geoJson/china_geo'], function(md){
                     callback(decode(md));
                 });
             }
@@ -143,238 +143,238 @@ define(function(require) {
         },
         '新疆': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/xin_jiang.geo.js'], function(md){
+                require(['./geoJson/xin_jiang_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '西藏': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/xi_zang.geo.js'], function(md){
+                require(['./geoJson/xi_zang_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '内蒙古': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/nei_meng_gu.geo.js'], function(md){
+                require(['./geoJson/nei_meng_gu_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '青海': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/qing_hai.geo.js'], function(md){
+                require(['./geoJson/qing_hai_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '四川': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/si_chuan.geo.js'], function(md){
+                require(['./geoJson/si_chuan_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '黑龙江': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/hei_long_jiang.geo.js'], function(md){
+                require(['./geoJson/hei_long_jiang_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '甘肃': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/gan_su.geo.js'], function(md){
+                require(['./geoJson/gan_su_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '云南': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/yun_nan.geo.js'], function(md){
+                require(['./geoJson/yun_nan_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '广西': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/guang_xi.geo.js'], function(md){
+                require(['./geoJson/guang_xi_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '湖南': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/hu_nan.geo.js'], function(md){
+                require(['./geoJson/hu_nan_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '陕西': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/shan_xi_1.geo.js'], function(md){
+                require(['./geoJson/shan_xi_1_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '广东': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/guang_dong.geo.js'], function(md){
+                require(['./geoJson/guang_dong_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '吉林': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/ji_lin.geo.js'], function(md){
+                require(['./geoJson/ji_lin_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '河北': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/he_bei.geo.js'], function(md){
+                require(['./geoJson/he_bei_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '湖北': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/hu_bei.geo.js'], function(md){
+                require(['./geoJson/hu_bei_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '贵州': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/gui_zhou.geo.js'], function(md){
+                require(['./geoJson/gui_zhou_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '山东': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/shan_dong.geo.js'], function(md){
+                require(['./geoJson/shan_dong_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '江西': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/jiang_xi.geo.js'], function(md){
+                require(['./geoJson/jiang_xi_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '河南': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/he_nan.geo.js'], function(md){
+                require(['./geoJson/he_nan_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '辽宁': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/liao_ning.geo.js'], function(md){
+                require(['./geoJson/liao_ning_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '山西': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/shan_xi_2.geo.js'], function(md){
+                require(['./geoJson/shan_xi_2_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '安徽': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/an_hui.geo.js'], function(md){
+                require(['./geoJson/an_hui_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '福建': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/fu_jian.geo.js'], function(md){
+                require(['./geoJson/fu_jian_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '浙江': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/zhe_jiang.geo.js'], function(md){
+                require(['./geoJson/zhe_jiang_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '江苏': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/jiang_su.geo.js'], function(md){
+                require(['./geoJson/jiang_su_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '重庆': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/chong_qing.geo.js'], function(md){
+                require(['./geoJson/chong_qing_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '宁夏': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/ning_xia.geo.js'], function(md){
+                require(['./geoJson/ning_xia_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '海南': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/hai_nan.geo.js'], function(md){
+                require(['./geoJson/hai_nan_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '台湾': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/tai_wan.geo.js'], function(md){
+                require(['./geoJson/tai_wan_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '北京': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/bei_jing.geo.js'], function(md){
+                require(['./geoJson/bei_jing_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '天津': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/tian_jin.geo.js'], function(md){
+                require(['./geoJson/tian_jin_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '上海': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/shang_hai.geo.js'], function(md){
+                require(['./geoJson/shang_hai_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '香港': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/xiang_gang.geo.js'], function(md){
+                require(['./geoJson/xiang_gang_geo'], function(md){
                     callback(decode(md));
                 });
             }
         },
         '澳门': {
             getGeoJson: function(callback) { 
-                require(['./geoJson/ao_men.geo.js'], function(md){
+                require(['./geoJson/ao_men_geo'], function(md){
                     callback(decode(md));
                 });
             }

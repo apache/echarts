@@ -8,6 +8,7 @@ glob('geoJson/*.json', {}, function(err, files) {
         var output = '../' + file.replace('.json', '.js');
         var rawStr = fs.readFileSync(file, 'utf8');
         var json = JSON.parse(rawStr);
+        console.log(output)
         // Meta tag
         json.UTF8Encoding = true;
         var features = json.features;

@@ -12,6 +12,7 @@
     <!--Step:2 Prepare a dom for ECharts which (must) has size (width & hight)-->
     <!--Step:2 为ECharts准备一个具备大小（宽高）的Dom-->
     <div id="main" style="height:500px;border:1px solid #ccc;padding:10px;"></div>
+    <div id="mainMap" style="height:500px;border:1px solid #ccc;padding:10px;"></div>
     
     <script type="text/javascript">
     // Step:3 conifg ECharts's path, link to echarts.js from current page.
@@ -19,8 +20,9 @@
     require.config({
         paths:{ 
             echarts:'./js/echarts',
-            'echarts/chart/bar' : './js/echarts',
-            'echarts/chart/line': './js/echarts'
+            'echarts/chart/bar' : './js/echarts-map',
+            'echarts/chart/line': './js/echarts-map',
+            'echarts/chart/map' : './js/echarts-map'
         }
     });
     
@@ -30,11 +32,13 @@
         [
             'echarts',
             'echarts/chart/bar',
-            'echarts/chart/line'
+            'echarts/chart/line',
+            'echarts/chart/map'
         ],
         function(ec) {
+            //--- 折柱 ---
             var myChart = ec.init(document.getElementById('main'));
-            var option = {
+            myChart.setOption({
                 tooltip : {
                     trigger: 'axis'
                 },
@@ -76,9 +80,31 @@
                         data:[2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3]
                     }
                 ]
-            };
+            });
             
-            myChart.setOption(option);
+            // --- 地图 ---
+            var myChart2 = ec.init(document.getElementById('mainMap'));
+            myChart2.setOption({
+                tooltip : {
+                    trigger: 'item',
+                    formatter: '{b}'
+                },
+                series : [
+                    {
+                        name: '中国',
+                        type: 'map',
+                        mapType: 'china',
+                        selectedMode : 'multiple',
+                        itemStyle:{
+                            normal:{label:{show:true}},
+                            emphasis:{label:{show:true}}
+                        },
+                        data:[
+                            {name:'广东',selected:true}
+                        ]
+                    }
+                ]
+            });
         }
     );
     </script>
