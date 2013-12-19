@@ -172,7 +172,7 @@ define(function() {
         convertor.scale = null;
         convertor.offset = null;
 
-        if ((!transform.scale || !transform.offset) && !json.srcSize) {
+        if (!json.srcSize) {
             parseSrcSize(json, specialArea);
         }
         

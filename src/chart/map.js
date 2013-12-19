@@ -161,11 +161,12 @@ define(function(require) {
                         _mapDataMap[mt].mapData
                     )
                 }
-                else if (_mapParams[mt].getGeoJson) {
+                else if (_mapParams[mt.replace(/\|.*/, '')].getGeoJson) {
                     // 特殊区域
-                    _specialArea[mt] = _mapParams[mt].specialArea
-                                       || _specialArea[mt];
-                    _mapParams[mt].getGeoJson(
+                    _specialArea[mt] = 
+                        _mapParams[mt.replace(/\|.*/, '')].specialArea
+                        || _specialArea[mt];
+                    _mapParams[mt.replace(/\|.*/, '')].getGeoJson(
                         _mapDataCallback(mt, valueData[mt], mapSeries[mt])
                     );
                 }
@@ -179,7 +180,12 @@ define(function(require) {
          */
         function _mapDataCallback(mt, vd, ms) {
             return function(md) {
-                _mapDataMap[mt].mapData = md; // 缓存这份数据
+                // 缓存这份数据
+                if (mt.indexOf('|') != -1) {
+                    // 子地图，加工一份新的mapData
+                    md = _getSubMapData(mt, md);
+                }
+                _mapDataMap[mt].mapData = md;
                 _buildMap(
                     mt,                             // 类型
                     _getProjectionData(             // 地图数据
@@ -198,6 +204,39 @@ define(function(require) {
                     zr.refresh();
                 }
             };
+        }
+        
+        function _getSubMapData(mapType, mapData) {
+            var subType = mapType.replace(/^.*\|/, '');
+            var features = mapData.features;
+            for (var i = 0, l = features.length; i < l; i++) {
+                if (features[i].properties 
+                    && features[i].properties.name == subType
+                ) {
+                    features = features[i];
+                    if (subType == 'United States of America'
+                        && features.geometry.coordinates.length > 1 // 未被简化
+                    ) {
+                        features = {
+                            geometry: {
+                                coordinates: features.geometry
+                                                     .coordinates.slice(5,6),
+                                type: features.geometry.type
+                            },
+                            id: features.id,
+                            properties: features.properties,
+                            type: features.type,
+                        }
+                    }
+                    break;
+                }
+            }
+            return {
+                'type' : 'FeatureCollection',
+                'features':[
+                    features
+                ]
+            }
         }
         
         /**
@@ -320,25 +359,11 @@ define(function(require) {
          * 特殊地区投射数据
          */
         function _getSpecialProjectionData(
-            mapType, oriMapData, areaName, mapSize, position
+            mapType, mapData, areaName, mapSize, position
         ) {
             //console.log('_getSpecialProjectionData--------------')
             // 构造单独的geoJson地图数据
-            var mapData;
-            var features = oriMapData.features;
-            for (var i = 0, l = features.length; i < l; i++) {
-                if (features[i].properties 
-                    && features[i].properties.name == areaName
-                ) {
-                    mapData = {
-                        'type' : 'FeatureCollection',
-                        'features':[
-                            features[i]
-                        ]
-                    }
-                    break;
-                }
-            }
+            mapData = _getSubMapData('x|' + areaName, mapData);
             
             // bbox
             var normalProjection = require('../util/projection/normal');
@@ -449,21 +474,31 @@ define(function(require) {
                 height = mapLocation.height || height;
             }
             
-            x = isNaN(cusX) ? padding : cusX;
-            y = isNaN(cusY) ? padding : cusY;
+            //x = isNaN(cusX) ? padding : cusX;
+            x = self.parsePercent(cusX, zrWidth);
+            x = isNaN(x) ? padding : x;
+            //y = isNaN(cusY) ? padding : cusY;
+            y = self.parsePercent(cusY, zrHeight);
+            y = isNaN(y) ? padding : y;
             
             if (typeof width == 'undefined') {
-                width = zrWidth;
-                if (x + width > zrWidth) {
-                    width = zrWidth - x - 2 * padding;
-                }
+                width = isNaN(cusX) 
+                        ? zrWidth
+                        : zrWidth - x - 2 * padding;
             }
+            else {
+                width = self.parsePercent(width, zrWidth);
+            }
+            
             if (typeof height == 'undefined') {
-                height = zrHeight;
-                if (y + height > zrHeight) {
-                    height = zrHeight - y - 2 * padding;
-                }
+                height = isNaN(cusY) 
+                         ? zrHeight
+                         : zrHeight - y - 2 * padding;
             }
+            else {
+                height = self.parsePercent(height, zrHeight);
+            }
+            
             var mapWidth = bbox.width;
             var mapHeight = bbox.height;
             //var minScale;
@@ -494,7 +529,7 @@ define(function(require) {
                         break;
                     //case 'left' :
                     default:
-                        x = padding;
+                        //x = padding;
                         break;
                 }
             }
@@ -509,11 +544,11 @@ define(function(require) {
                         break;
                     //case 'top' :
                     default:
-                        y = padding;
+                        //y = padding;
                         break;
                 }
             }
-            //console.log(width,height, minScale)
+            //console.log(x,y,width,height)
             return {
                 left : x,
                 top : y,
@@ -621,7 +656,8 @@ define(function(require) {
                     queryTarget,
                     'itemStyle.normal.lineStyle.width'
                 );
-                style.text = name;
+                style.text = _getLabelText(name, value, queryTarget, 'normal');
+                style._text = name;
                 style.textAlign = 'center';
                 style.textColor = self.deepQuery(
                     queryTarget,
@@ -651,7 +687,10 @@ define(function(require) {
                         brushType: 'both',
                         x : style.textX,
                         y : style.textY,
-                        text : style.text,
+                        text : _getLabelText(
+                            name, value, queryTarget, 'normal'
+                        ),
+                        _text : name,
                         textAlign : 'center',
                         color : style.textColor,
                         strokeColor : 'rgba(0,0,0,0)',
@@ -681,7 +720,10 @@ define(function(require) {
                     queryTarget,
                     'itemStyle.emphasis.label.show'
                 )) {
-                    highlightStyle.text = name;
+                    highlightStyle.text = _getLabelText(
+                        name, value, queryTarget, 'emphasis'
+                    );
+                    highlightStyle._text = name;
                     highlightStyle.textAlign = 'center';
                     highlightStyle.textColor = self.deepQuery(
                         queryTarget,
@@ -770,6 +812,35 @@ define(function(require) {
             return _nameMap[mapType][name] || name;
         }
         
+        /**
+         * 根据lable.format计算label text
+         */
+        function _getLabelText(name, value, queryTarget, status) {
+            var formatter = self.deepQuery(
+                queryTarget,
+                'itemStyle.' + status + '.label.formatter'
+            );
+            if (formatter) {
+                if (typeof formatter == 'function') {
+                    return formatter(
+                        name,
+                        value
+                    );
+                }
+                else if (typeof formatter == 'string') {
+                    formatter = formatter.replace('{a}','{a0}')
+                                         .replace('{b}','{b0}')
+                    formatter = formatter.replace('{a0}', name)
+                                         .replace('{b0}', value)
+    
+                    return formatter;
+                }
+            }
+            else {
+                return name;
+            }
+        }
+        
         function _findMapTypeByPos(mx, my) {
             var transform;
             var left;
@@ -833,7 +904,7 @@ define(function(require) {
                 _mapDataMap[mapType].hasRoam = true;
                 _mapDataMap[mapType].transform = transform;
                 // 经纬度转位置
-                geoAndPos = geo2pos(mapType,geoAndPos);
+                geoAndPos = geo2pos(mapType, geoAndPos);
                 // 保持视觉中心
                 transform.left -= geoAndPos[0] - (mx - left);
                 transform.top -= geoAndPos[1] - (my - top);
@@ -869,7 +940,7 @@ define(function(require) {
         }
         
         function _onmousemove(param) {
-            if (!_mousedown) {
+            if (!_mousedown || !self) {
                 return;
             }
             var event = param.event;
@@ -918,7 +989,7 @@ define(function(require) {
             }
 
             var target = param.target;
-            var name = target.style.text;
+            var name = target.style._text;
             var len = self.shapeList.length;
             var mapType = target._mapType || '';
             if (_selectedMode[mapType] == 'single') {
@@ -927,7 +998,7 @@ define(function(require) {
                     if (_selected[p] && _mapTypeMap[p] == mapType) {
                         // 复位那些生效shape（包括文字）
                         for (var i = 0; i < len; i++) {
-                            if (self.shapeList[i].style.text == p) {
+                            if (self.shapeList[i].style._text == p) {
                                 self.shapeList[i].style = 
                                     self.shapeList[i]._style;
                                 zr.modShape(
@@ -944,7 +1015,7 @@ define(function(require) {
             
             // 更新当前点击shape（包括文字）
             for (var i = 0; i < len; i++) {
-                if (self.shapeList[i].style.text == name) {
+                if (self.shapeList[i].style._text == name) {
                    if (_selected[name]) {
                         self.shapeList[i].style = zrUtil.clone(
                             self.shapeList[i].highlightStyle
