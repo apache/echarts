@@ -8,11 +8,11 @@
 define(function(require) {
     'use strict';
 
-    var requrestAnimationFrame = window.requrestAnimationFrame
+    var requestAnimationFrame = window.requestAnimationFrame
                                 || window.msRequestAnimationFrame
                                 || window.mozRequestAnimationFrame
                                 || window.webkitRequestAnimationFrame
-                                || function(func){setTimeout(func, 16);};
+                                || function(func){setTimeout(func, 16)};
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -502,13 +502,9 @@ define(function(require) {
                     var forceFactor = 1 * (w1 + w2) * k2 / d;
 
                     //节点1受到的力
-                    vec2.scaleAndAdd(
-                        nodeForces[i], nodeForces[i], v12, -forceFactor
-                    );
+                    vec2.scaleAndAdd(nodeForces[i], nodeForces[i], v12, -forceFactor);
                     //节点2受到的力
-                    vec2.scaleAndAdd(
-                        nodeForces[j], nodeForces[j], v12, forceFactor
-                    );
+                    vec2.scaleAndAdd(nodeForces[j], nodeForces[j], v12, forceFactor);
                 }
             }
             // 计算节点之间引力
@@ -528,13 +524,9 @@ define(function(require) {
 
                 var forceFactor = w * d2 / k / Math.sqrt(d2);
                 // 节点1受到的力
-                vec2.scaleAndAdd(
-                    nodeForces[s], nodeForces[s], v12, forceFactor
-                );
+                vec2.scaleAndAdd(nodeForces[s], nodeForces[s], v12, forceFactor);
                 // 节点2受到的力
-                vec2.scaleAndAdd(
-                    nodeForces[t], nodeForces[t], v12, -forceFactor
-                );
+                vec2.scaleAndAdd(nodeForces[t], nodeForces[t], v12, -forceFactor);
             }
             // 到质心的向心力
             for (var i = 0, l = filteredNodes.length; i < l; i++){
@@ -629,10 +621,10 @@ define(function(require) {
             function cb() {
                 if (_updating) {
                     _step();
-                    requrestAnimationFrame(cb);
+                    requestAnimationFrame(cb);
                 }
             }
-            requrestAnimationFrame(cb);
+            requestAnimationFrame(cb);
         }
 
         function refresh(newOption) {
@@ -656,7 +648,7 @@ define(function(require) {
             self.isDragstart = true;
         };
         
-        function onclick() {
+        function onclick(param) {
         }
 
         /**
