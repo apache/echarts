@@ -1,2 +1,2 @@
-src/util/mapData/china/*
-src/util/mapData/rawData/china/*
+src/util/mapData/geoJson/*
+src/util/mapData/rawData/geoJson/*

@@ -8,7 +8,7 @@ glob('geoJson/*.json', {}, function(err, files) {
         var output = '../' + file.replace('.json', '.js');
         var rawStr = fs.readFileSync(file, 'utf8');
         var json = JSON.parse(rawStr);
-        console.log(output)
+        console.log(output);
         // Meta tag
         json.UTF8Encoding = true;
         var features = json.features;
@@ -75,7 +75,8 @@ function encode(val, prev){
     // Delta
     val = val - prev;
 
-    if (((val << 1) ^ (val >> 15)) + 64 === 8232) { //WTF, 8232 will get syntax error in js code
+    if (((val << 1) ^ (val >> 15)) + 64 === 8232) { 
+        //WTF, 8232 will get syntax error in js code
         val--;
     }
     // ZigZag

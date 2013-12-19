@@ -705,10 +705,10 @@ define(function (require) {
                         d.innerHTML = '';
                         document.body.removeChild(d);
                         d = null;
-                    }
+                    };
                     _d = null;
                 }
-            }, 500)
+            }, 500);
             
             /*
             function _saveImageForIE() {

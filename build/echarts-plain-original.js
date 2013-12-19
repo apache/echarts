@@ -13052,7 +13052,7 @@ define(
                 require('zrender/shape').get('image').brush(ctx, {
                     style : style
                 });                
-            },100)
+            },100);
         }
 
         Icon.prototype =  {
@@ -21475,10 +21475,10 @@ define('echarts/component/toolbox',['require','./base','../config','zrender/conf
                         d.innerHTML = '';
                         document.body.removeChild(d);
                         d = null;
-                    }
+                    };
                     _d = null;
                 }
-            }, 500)
+            }, 500);
             
             /*
             function _saveImageForIE() {
@@ -29634,7 +29634,7 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                                 || window.msRequestAnimationFrame
                                 || window.mozRequestAnimationFrame
                                 || window.webkitRequestAnimationFrame
-                                || function(func){setTimeout(func, 16)};
+                                || function(func){setTimeout(func, 16);};
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -30124,9 +30124,13 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                     var forceFactor = 1 * (w1 + w2) * k2 / d;
 
                     //节点1受到的力
-                    vec2.scaleAndAdd(nodeForces[i], nodeForces[i], v12, -forceFactor);
+                    vec2.scaleAndAdd(
+                        nodeForces[i], nodeForces[i], v12, -forceFactor
+                    );
                     //节点2受到的力
-                    vec2.scaleAndAdd(nodeForces[j], nodeForces[j], v12, forceFactor);
+                    vec2.scaleAndAdd(
+                        nodeForces[j], nodeForces[j], v12, forceFactor
+                    );
                 }
             }
             // 计算节点之间引力
@@ -30146,9 +30150,13 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
 
                 var forceFactor = w * d2 / k / Math.sqrt(d2);
                 // 节点1受到的力
-                vec2.scaleAndAdd(nodeForces[s], nodeForces[s], v12, forceFactor);
+                vec2.scaleAndAdd(
+                    nodeForces[s], nodeForces[s], v12, forceFactor
+                );
                 // 节点2受到的力
-                vec2.scaleAndAdd(nodeForces[t], nodeForces[t], v12, -forceFactor);
+                vec2.scaleAndAdd(
+                    nodeForces[t], nodeForces[t], v12, -forceFactor
+                );
             }
             // 到质心的向心力
             for (var i = 0, l = filteredNodes.length; i < l; i++){
@@ -30270,7 +30278,7 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
             self.isDragstart = true;
         };
         
-        function onclick(param) {
+        function onclick() {
         }
 
         /**

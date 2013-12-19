@@ -18,10 +18,10 @@ define(function() {
     
     function parseSrcSize(json, specialArea) {
         specialArea = specialArea || {};
-        convertor_parse.xmin = 360;
-        convertor_parse.xmax = -360;
-        convertor_parse.ymin = 180;
-        convertor_parse.ymax = -180;
+        convertorParse.xmin = 360;
+        convertorParse.xmax = -360;
+        convertorParse.ymin = 180;
+        convertorParse.ymax = -180;
 
         var shapes = json.features;
         var geometries;
@@ -32,14 +32,14 @@ define(function() {
                 continue;
             }
             if (shape.type == 'Feature') {
-                convertor_parse[shape.geometry.type](
+                convertorParse[shape.geometry.type](
                     shape.geometry.coordinates
                 );
             } 
-            else if (shape.type = 'GeometryCollection') {
+            else if (shape.type == 'GeometryCollection') {
                 geometries = shape.geometries;
                 for (var j = 0, len2 = geometries.length; j < len2; j++) {
-                    convertor_parse[geometries[j].type](
+                    convertorParse[geometries[j].type](
                         geometries[j].coordinates
                     );
                 }
@@ -47,10 +47,10 @@ define(function() {
         }
 
         json.srcSize = {
-            left : convertor_parse.xmin.toFixed(4)*1,
-            top : convertor_parse.ymin.toFixed(4)*1,
-            width : (convertor_parse.xmax - convertor_parse.xmin).toFixed(4)*1,
-            height : (convertor_parse.ymax - convertor_parse.ymin).toFixed(4)*1
+            left : convertorParse.xmin.toFixed(4)*1,
+            top : convertorParse.ymin.toFixed(4)*1,
+            width : (convertorParse.xmax - convertorParse.xmin).toFixed(4)*1,
+            height : (convertorParse.ymax - convertorParse.ymin).toFixed(4)*1
         };
 
         return json;
@@ -87,7 +87,7 @@ define(function() {
             var point;
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 point = convertor.makePoint(coordinates[i]);
-                if (i == 0) {
+                if (i === 0) {
                     str = 'M' + point.join(',');
                 } else {
                     str = str + 'L' + point.join(',');
@@ -125,7 +125,7 @@ define(function() {
         }
     };
     
-    var convertor_parse = {
+    var convertorParse = {
         'formatPoint' : convertor.formatPoint,
         'makePoint' : function(p) {
             var self = this;
@@ -200,7 +200,7 @@ define(function() {
             if (shape.type == 'Feature') {
                 pushApath(shape.geometry, shape);
             } 
-            else if (shape.type = 'GeometryCollection') {
+            else if (shape.type == 'GeometryCollection') {
                 geometries = shape.geometries;
                 for (var j = 0, len2 = geometries.length; j < len2; j++) {
                     val = geometries[j];

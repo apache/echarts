@@ -26,7 +26,6 @@ define(function(require) {
 
         var zrConfig = require('zrender/config');
         var zrUtil = require('zrender/tool/util');
-        var zrArea = require('zrender/tool/area');
         var zrEvent = require('zrender/tool/event');
 
         var self = this;
@@ -159,7 +158,7 @@ define(function(require) {
                     // 已经缓存了则直接用
                     _mapDataCallback(mt, valueData[mt], mapSeries[mt])(
                         _mapDataMap[mt].mapData
-                    )
+                    );
                 }
                 else if (_mapParams[mt.replace(/\|.*/, '')].getGeoJson) {
                     // 特殊区域
@@ -225,8 +224,8 @@ define(function(require) {
                             },
                             id: features.id,
                             properties: features.properties,
-                            type: features.type,
-                        }
+                            type: features.type
+                        };
                     }
                     break;
                 }
@@ -236,7 +235,7 @@ define(function(require) {
                 'features':[
                     features
                 ]
-            }
+            };
         }
         
         /**
@@ -318,7 +317,7 @@ define(function(require) {
                         mapType, mapData, 
                         area, _specialArea[mapType][area], 
                         position
-                    ))
+                    ));
                 }
                 
             }
@@ -348,7 +347,7 @@ define(function(require) {
                     position : position,
                     textX : textPosition[0],
                     textY : textPosition[1]
-                })
+                });
                 
             }
             
@@ -405,7 +404,7 @@ define(function(require) {
                     x : xScale,
                     y : yScale
                 }
-            }
+            };
             
             //console.log('**',areaName, transform)
             var pathArray = normalProjection.geoJson2Path(
@@ -480,10 +479,9 @@ define(function(require) {
             //y = isNaN(cusY) ? padding : cusY;
             y = self.parsePercent(cusY, zrHeight);
             y = isNaN(y) ? padding : y;
-            
             if (typeof width == 'undefined') {
                 width = isNaN(cusX) 
-                        ? zrWidth
+                        ? zrWidth - 2 * padding
                         : zrWidth - x - 2 * padding;
             }
             else {
@@ -492,7 +490,7 @@ define(function(require) {
             
             if (typeof height == 'undefined') {
                 height = isNaN(cusY) 
-                         ? zrHeight
+                         ? zrHeight - 2 * padding
                          : zrHeight - y - 2 * padding;
             }
             else {
@@ -829,9 +827,9 @@ define(function(require) {
                 }
                 else if (typeof formatter == 'string') {
                     formatter = formatter.replace('{a}','{a0}')
-                                         .replace('{b}','{b0}')
+                                         .replace('{b}','{b0}');
                     formatter = formatter.replace('{a0}', name)
-                                         .replace('{b0}', value)
+                                         .replace('{b0}', value);
     
                     return formatter;
                 }
@@ -847,7 +845,6 @@ define(function(require) {
             var top;
             var width;
             var height;
-            var geoAndPos;
             for (var mapType in _mapDataMap) {
                 transform = _mapDataMap[mapType].transform;
                 if (!transform || !_roamMap[mapType]) {
@@ -934,7 +931,7 @@ define(function(require) {
                 setTimeout(function(){
                     zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
                     zr.on(zrConfig.EVENT.MOUSEUP, _onmouseup);
-                },50)
+                },50);
             }
             
         }

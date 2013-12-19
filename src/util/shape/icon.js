@@ -397,7 +397,7 @@ define(
                 require('zrender/shape').get('image').brush(ctx, {
                     style : style
                 });                
-            },100)
+            },100);
         }
 
         Icon.prototype =  {

@@ -12645,7 +12645,7 @@ define(
                 require('zrender/shape').get('image').brush(ctx, {
                     style : style
                 });                
-            },100)
+            },100);
         }
 
         Icon.prototype =  {
@@ -21068,10 +21068,10 @@ define('echarts/component/toolbox',['require','./base','../config','zrender/conf
                         d.innerHTML = '';
                         document.body.removeChild(d);
                         d = null;
-                    }
+                    };
                     _d = null;
                 }
-            }, 500)
+            }, 500);
             
             /*
             function _saveImageForIE() {
@@ -29227,7 +29227,7 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                                 || window.msRequestAnimationFrame
                                 || window.mozRequestAnimationFrame
                                 || window.webkitRequestAnimationFrame
-                                || function(func){setTimeout(func, 16)};
+                                || function(func){setTimeout(func, 16);};
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -29717,9 +29717,13 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                     var forceFactor = 1 * (w1 + w2) * k2 / d;
 
                     //节点1受到的力
-                    vec2.scaleAndAdd(nodeForces[i], nodeForces[i], v12, -forceFactor);
+                    vec2.scaleAndAdd(
+                        nodeForces[i], nodeForces[i], v12, -forceFactor
+                    );
                     //节点2受到的力
-                    vec2.scaleAndAdd(nodeForces[j], nodeForces[j], v12, forceFactor);
+                    vec2.scaleAndAdd(
+                        nodeForces[j], nodeForces[j], v12, forceFactor
+                    );
                 }
             }
             // 计算节点之间引力
@@ -29739,9 +29743,13 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
 
                 var forceFactor = w * d2 / k / Math.sqrt(d2);
                 // 节点1受到的力
-                vec2.scaleAndAdd(nodeForces[s], nodeForces[s], v12, forceFactor);
+                vec2.scaleAndAdd(
+                    nodeForces[s], nodeForces[s], v12, forceFactor
+                );
                 // 节点2受到的力
-                vec2.scaleAndAdd(nodeForces[t], nodeForces[t], v12, -forceFactor);
+                vec2.scaleAndAdd(
+                    nodeForces[t], nodeForces[t], v12, -forceFactor
+                );
             }
             // 到质心的向心力
             for (var i = 0, l = filteredNodes.length; i < l; i++){
@@ -29863,7 +29871,7 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
             self.isDragstart = true;
         };
         
-        function onclick(param) {
+        function onclick() {
         }
 
         /**
@@ -30042,12 +30050,13 @@ define('echarts/util/mapData/params',['require'],function(require) {
             }
         },
         '南海诸岛' : {
-            textCoord : [126, 24.5],
+            textCoord : [126, 25],
             getPath : function(leftTop, scale) {
                 // scale.x : width  = 10.51 : 64
                 var pList = [
                     [
-                        [0,3.5],[7,11.2],[15,11.9],[30,7],[42,0.7],[52,0.7],[56,7.7],[59,0.7],[64,0.7],[64,0],[5,0],[0,3.5]
+                        [0,3.5],[7,11.2],[15,11.9],[30,7],[42,0.7],[52,0.7],
+                        [56,7.7],[59,0.7],[64,0.7],[64,0],[5,0],[0,3.5]
                     ],
                     [
                         [13,16.1],[19,14.7],[16,21.7],[11,23.1],[13,16.1]
@@ -30080,7 +30089,8 @@ define('echarts/util/mapData/params',['require'],function(require) {
                         [58,12.6],[62,7],[63,7],[60,12.6],[58,12.6]
                     ],
                     [
-                        [0,3.5],[0,93.1],[64,93.1],[64,0],[63,0],[63,92.4],[1,92.4],[1,3.5],[0,3.5]
+                        [0,3.5],[0,93.1],[64,93.1],[64,0],[63,0],[63,92.4],
+                        [1,92.4],[1,3.5],[0,3.5]
                     ]
                 ];
                 var str = '';
@@ -30094,7 +30104,7 @@ define('echarts/util/mapData/params',['require'],function(require) {
                            + ' ';
                     for (var j = 1, k = pList[i].length; j < k; j++) {
                         str += 'L ' 
-                              + ((pList[i][j][0] * scale + left).toFixed(2) - 0) 
+                              + ((pList[i][j][0] * scale + left).toFixed(2) - 0)
                               + ' ' 
                               + ((pList[i][j][1] * scale + top).toFixed(2) - 0)
                               + ' ';
@@ -30346,7 +30356,7 @@ define('echarts/util/mapData/params',['require'],function(require) {
     return {
         decode : decode,
         params : mapParams
-    }
+    };
 });
 /**
  * 地图文本位置修正
@@ -30410,10 +30420,10 @@ define('echarts/util/projection/normal',[],function() {
     
     function parseSrcSize(json, specialArea) {
         specialArea = specialArea || {};
-        convertor_parse.xmin = 360;
-        convertor_parse.xmax = -360;
-        convertor_parse.ymin = 180;
-        convertor_parse.ymax = -180;
+        convertorParse.xmin = 360;
+        convertorParse.xmax = -360;
+        convertorParse.ymin = 180;
+        convertorParse.ymax = -180;
 
         var shapes = json.features;
         var geometries;
@@ -30424,14 +30434,14 @@ define('echarts/util/projection/normal',[],function() {
                 continue;
             }
             if (shape.type == 'Feature') {
-                convertor_parse[shape.geometry.type](
+                convertorParse[shape.geometry.type](
                     shape.geometry.coordinates
                 );
             } 
-            else if (shape.type = 'GeometryCollection') {
+            else if (shape.type == 'GeometryCollection') {
                 geometries = shape.geometries;
                 for (var j = 0, len2 = geometries.length; j < len2; j++) {
-                    convertor_parse[geometries[j].type](
+                    convertorParse[geometries[j].type](
                         geometries[j].coordinates
                     );
                 }
@@ -30439,10 +30449,10 @@ define('echarts/util/projection/normal',[],function() {
         }
 
         json.srcSize = {
-            left : convertor_parse.xmin.toFixed(4)*1,
-            top : convertor_parse.ymin.toFixed(4)*1,
-            width : (convertor_parse.xmax - convertor_parse.xmin).toFixed(4)*1,
-            height : (convertor_parse.ymax - convertor_parse.ymin).toFixed(4)*1
+            left : convertorParse.xmin.toFixed(4)*1,
+            top : convertorParse.ymin.toFixed(4)*1,
+            width : (convertorParse.xmax - convertorParse.xmin).toFixed(4)*1,
+            height : (convertorParse.ymax - convertorParse.ymin).toFixed(4)*1
         };
 
         return json;
@@ -30479,7 +30489,7 @@ define('echarts/util/projection/normal',[],function() {
             var point;
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 point = convertor.makePoint(coordinates[i]);
-                if (i == 0) {
+                if (i === 0) {
                     str = 'M' + point.join(',');
                 } else {
                     str = str + 'L' + point.join(',');
@@ -30517,7 +30527,7 @@ define('echarts/util/projection/normal',[],function() {
         }
     };
     
-    var convertor_parse = {
+    var convertorParse = {
         'formatPoint' : convertor.formatPoint,
         'makePoint' : function(p) {
             var self = this;
@@ -30592,7 +30602,7 @@ define('echarts/util/projection/normal',[],function() {
             if (shape.type == 'Feature') {
                 pushApath(shape.geometry, shape);
             } 
-            else if (shape.type = 'GeometryCollection') {
+            else if (shape.type == 'GeometryCollection') {
                 geometries = shape.geometries;
                 for (var j = 0, len2 = geometries.length; j < len2; j++) {
                     val = geometries[j];
@@ -30670,7 +30680,7 @@ define('echarts/util/projection/normal',[],function() {
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/map',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/config','zrender/tool/util','zrender/tool/area','zrender/tool/event','../util/mapData/params','../util/mapData/textFixed','../util/mapData/geoCoord','../util/projection/normal','../util/projection/normal','../util/projection/normal','../util/projection/normal','../chart'],function(require) {
+define('echarts/chart/map',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/config','zrender/tool/util','zrender/tool/event','../util/mapData/params','../util/mapData/textFixed','../util/mapData/geoCoord','../util/projection/normal','../util/projection/normal','../util/projection/normal','../util/projection/normal','../chart'],function(require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -30691,7 +30701,6 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
 
         var zrConfig = require('zrender/config');
         var zrUtil = require('zrender/tool/util');
-        var zrArea = require('zrender/tool/area');
         var zrEvent = require('zrender/tool/event');
 
         var self = this;
@@ -30824,7 +30833,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                     // 已经缓存了则直接用
                     _mapDataCallback(mt, valueData[mt], mapSeries[mt])(
                         _mapDataMap[mt].mapData
-                    )
+                    );
                 }
                 else if (_mapParams[mt.replace(/\|.*/, '')].getGeoJson) {
                     // 特殊区域
@@ -30890,8 +30899,8 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                             },
                             id: features.id,
                             properties: features.properties,
-                            type: features.type,
-                        }
+                            type: features.type
+                        };
                     }
                     break;
                 }
@@ -30901,7 +30910,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                 'features':[
                     features
                 ]
-            }
+            };
         }
         
         /**
@@ -30983,7 +30992,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                         mapType, mapData, 
                         area, _specialArea[mapType][area], 
                         position
-                    ))
+                    ));
                 }
                 
             }
@@ -31013,7 +31022,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                     position : position,
                     textX : textPosition[0],
                     textY : textPosition[1]
-                })
+                });
                 
             }
             
@@ -31070,7 +31079,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                     x : xScale,
                     y : yScale
                 }
-            }
+            };
             
             //console.log('**',areaName, transform)
             var pathArray = normalProjection.geoJson2Path(
@@ -31145,10 +31154,9 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
             //y = isNaN(cusY) ? padding : cusY;
             y = self.parsePercent(cusY, zrHeight);
             y = isNaN(y) ? padding : y;
-            
             if (typeof width == 'undefined') {
                 width = isNaN(cusX) 
-                        ? zrWidth
+                        ? zrWidth - 2 * padding
                         : zrWidth - x - 2 * padding;
             }
             else {
@@ -31157,7 +31165,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
             
             if (typeof height == 'undefined') {
                 height = isNaN(cusY) 
-                         ? zrHeight
+                         ? zrHeight - 2 * padding
                          : zrHeight - y - 2 * padding;
             }
             else {
@@ -31494,9 +31502,9 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                 }
                 else if (typeof formatter == 'string') {
                     formatter = formatter.replace('{a}','{a0}')
-                                         .replace('{b}','{b0}')
+                                         .replace('{b}','{b0}');
                     formatter = formatter.replace('{a0}', name)
-                                         .replace('{b0}', value)
+                                         .replace('{b0}', value);
     
                     return formatter;
                 }
@@ -31512,7 +31520,6 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
             var top;
             var width;
             var height;
-            var geoAndPos;
             for (var mapType in _mapDataMap) {
                 transform = _mapDataMap[mapType].transform;
                 if (!transform || !_roamMap[mapType]) {
@@ -31599,7 +31606,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                 setTimeout(function(){
                     zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
                     zr.on(zrConfig.EVENT.MOUSEUP, _onmouseup);
-                },50)
+                },50);
             }
             
         }

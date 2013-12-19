@@ -19,7 +19,7 @@ define(function() {
                     )) / radians) / 360;
             return [
                 scale * x + translate[0],
-                scale * Math.max(-.5, Math.min(.5, y)) + translate[1]
+                scale * Math.max(-0.5, Math.min(0.5, y)) + translate[1]
             ];
         }
 
@@ -50,7 +50,7 @@ define(function() {
         };
 
         return mercator;
-    };
+    }
 
     return _mercator;
 }); 
