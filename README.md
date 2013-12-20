@@ -99,12 +99,22 @@ ECharts提供了方便快捷的图例开关，可以随时切换到你所关心�
 
 ![ECharts 多维度堆积](doc/asset/img/multiStack.png)
 
+### 子区域地图模式
+地图类型支持world，china及全国34个省市自治区。同时支持子区域模式，通过主地图类型扩展出所包含的子区域地图，轻易输出全球176个国家地区和全国600多个省市区域简图。
+
+![ECharts 个性化定制](doc/asset/img/subMapType.png)
+
+### GeoJson地图扩展
+内置地图由标准GeoJson地理数据并经过高效的压缩算法压缩生成的地图数据（大小仅为标准geoJson的30%左右）驱动而来。如果内置地图类型或数据如果并未满足你的项目需要，可通过简单动态注册产生你所需要的新类型。
+
+![ECharts 个性化定制](doc/asset/img/example/map7.png)
+
 ### 个性化定制
 500+个可配置选项结合多级控制设计满足高度定制的个性化需求。
 
 ![ECharts 个性化定制](doc/asset/img/custom.png)
 
 ### 事件交互
-可以捕获的用户交互和数据变化事件实现图表与外界的联动。
+可以捕获的用户交互和数据变化事件实现图表与外界的联动。<a href="doc/example/event.html" target="_blank">try this &raquo;</a>
 
-<a href="doc/example/event.html" target="_blank">try this &raquo;</a>
+![ECharts 个性化定制](doc/asset/img/example/mix3.png)

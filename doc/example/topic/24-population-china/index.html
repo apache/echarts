@@ -6,6 +6,9 @@
 <script src="../../../asset/js/esl/esl.js"></script>
 <title>中国人口流动大潮</title>
 <style type="text/css">
+* {
+    font-family: "Microsoft YaHei" !important;
+}
 h1 {
     font-family: "Microsoft YaHei";
     font-weight: bold;
@@ -20,10 +23,9 @@ h1 {
     padding-top: 15px;
 }
 
-h5{
-    padding: 15px;
-    line-height: 20px;
-    }
+p {
+    padding: 0 15px;
+}
     
 .select_box {
     border-top-width: 1px;
@@ -62,10 +64,10 @@ body {
 </head>
 
 <body>
-<h1>中国人口流动大潮1987-2011</h1>
-<h5>人口流动是人口在短期离开后又返回原居住地的现象，一般指离家外出工作、读书、旅游、探亲和从军一段时间，未改变定居地的人口移动。
-探讨的流动人口，是指以中国城乡二元社会结构和特有的户籍政策为前提，其就业、生活或学习所在地与其户籍所在地处于分离状态的人口，它与其他国家的人口自由迁移现象存在着差异。
-中国人口的大规模流动，是自20世纪80年代改革开放以来随着农村户籍居民离开本乡本土进城或外出务工而出现的社会现象，它表现出明显的中国时代特色：</h5>
+<h1>中国人口流动大潮1987-2011（单位：万人）</h1>
+<p>自上世纪90年代以来，随着中国社会经济的发展和城市化进程的加快，人口的迁移和移动已经愈发频繁。国家统计局公布的数据显示，2012年我国流动人口数量达2.36亿人，相当于每六个人中有一个是流动人口。</p>
+<p>探讨的流动人口，是指以中国城乡二元社会结构和特有的户籍政策为前提，其就业、生活或学习所在地与其户籍所在地处于分离状态的人口，它与其他国家的人口自由迁移现象存在着差异。
+中国人口的大规模流动，是自20世纪80年代改革开放以来随着农村户籍居民离开本乡本土进城或外出务工而出现的社会现象，它表现出明显的中国时代特色：</p>
 <div class="select_box"><form id="form1" name="form1" method="post" action="">
   <label for="year">请选择年份</label>
   <select name="year" id="year">
@@ -97,7 +99,7 @@ body {
   </select>
 </form></div>
 
-<div id="main" style="height:500px;border:1px solid #ccc;padding:10px;"></div>
+<div id="main" style="height:500px;border:1px solid #ccc;padding:20px;"></div>
     <script src="js/data-people.js"></script>
     <script type="text/javascript">
     var fileLocation = '../../www/js/echarts-map';
@@ -128,7 +130,7 @@ body {
         ],
         function(ec) {
             colorList = require('zrender/tool/color').getGradientColors(
-                ['red', 'yellow', 'lightgreen'], 10
+                ['red','yellow','lightskyblue'], 10
             );
             //console.log(colorList)
             myChart = ec.init(document.getElementById('main'));
