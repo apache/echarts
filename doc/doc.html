@@ -2584,20 +2584,20 @@ indicator : [
                     <p>支持标准<a href='http://www.oschina.net/translate/geojson-spec?cmp' target="_blank">GeoJson</a>动态扩展地图类型，try <a href="./example/map6.html" target="_blank">HK 》</a> <a href="./example/map7.html" target="_blank">USA 》</a></p>
                     <div class="code">
 <pre>
-// step1: 找到目标地区的geoJson数据文件，如HK.geo.json
+// step1: 找到目标地区的geoJson数据文件，如HK_geo.json
 
 // step2: 在require('echarts/util/mapData/params').params中命名你的地图类型，如HK
 // step3: 命名赋值为对象{}, 实现接口方法getGeoJson，通过callback返回目标地区geoJson数据文件
 require('echarts/util/mapData/params').params.HK = {
     getGeoJson: function(callback) {
-        $.getJSON('geoJson/HK.geo.json',callback);
+        $.getJSON('geoJson/HK_geo.json',callback);
     }
 }
 
 // step3*: 对于数据地图类型，一般不需要特殊的投射算法，ECharts统一使用了简化的投射算法，因而对于个别地区可能需要人为调整，可以通过specialArea指定个别地区安的经纬度坐标和区间大小，如
 require('echarts/util/mapData/params').params.USA = {
     getGeoJson: function(callback) {
-        $.getJSON('geoJson/usa.geo.json', callback);
+        $.getJSON('geoJson/usa_geo.json', callback);
     },
     specialArea : {
         Alaska : {              // 把阿拉斯加移到美国主大陆左下方
