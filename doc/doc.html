@@ -371,10 +371,14 @@
                         <tr>
                             <th> 中国地图 </th>
                             <th> 全国34个省市自治区 </th>
+                            <th> 世界地图</th>
+                            <th> 子区域模式</th>
                         </tr>
                         <tr>
                             <td><img src="./asset/img/example/map1.png" title="" alt="中国地图"/></td>
-                            <td><img src="./asset/img/example/map3.png" title="" alt="中国地图"/></td>
+                            <td><img src="./asset/img/example/map3.png" title="" alt="全国34个省市自治区"/></td>
+                            <td><img src="./asset/img/example/map4.png" title="" alt="世界地图"/></td>
+                            <td><img src="./asset/img/example/map8.png" title="" alt="子区域模式"/></td>
                         </tr>
                     </table>
                     
@@ -1912,6 +1916,8 @@ indicator : [
                                 'circle' | 'rectangle' | 'triangle' | 'diamond' |<br/>
                                 'emptyCircle' | 'emptyRectangle' | 'emptyTriangle' | 'emptyDiamond'
                                 <br/>另外，还支持两种更特别的标志图形'arrow'（箭头）和'star'（五角星），这并不出现在常规的8类图形中，但无论是在系列级还是数据级上你都可以指定使用，同时，'star' + n（n>=3)可变化出N角星，如指定为'star6'则可以显示6角星
+                                <br/>自1.3.5起支持symbol为自定义图片，格式为'image://' + '图片路径'， 如'image://../asset/ico/favicon.png'
+                                <br/>详见例子 <a href="./example/line.html" target="_blank">this 》</a>
                             </td>
                         </tr>
                         <tr>
