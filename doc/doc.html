@@ -2603,7 +2603,7 @@ require('echarts/util/mapData/params').params.HK = {
 // step3*: 对于数据地图类型，一般不需要特殊的投射算法，ECharts统一使用了简化的投射算法，因而对于个别地区可能需要人为调整，可以通过specialArea指定个别地区安的经纬度坐标和区间大小，如
 require('echarts/util/mapData/params').params.USA = {
     getGeoJson: function(callback) {
-        $.getJSON('geoJson/usa_geo.json', callback);
+        $.getJSON('geoJson/USA_geo.json', callback);
     },
     specialArea : {
         Alaska : {              // 把阿拉斯加移到美国主大陆左下方
