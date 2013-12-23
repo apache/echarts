@@ -166,11 +166,17 @@ define(
                 var ratio = window.devicePixelRatio || 1;
                 // console.log(rect)
                 // var ti = new Date();
+                // bbox取整
+                rect = {
+                    x : Math.floor(rect.x),
+                    y : Math.floor(rect.y),
+                    width : Math.floor(rect.width),
+                    height : Math.floor(rect.height)
+                };
                 var pixels = ctx.getImageData(
                     rect.x * ratio, rect.y * ratio, 
                     rect.width * ratio, rect.height * ratio
                 );
-               
                 var data = pixels.data;
                 var idx;
                 var zrColor = require('zrender/tool/color');
