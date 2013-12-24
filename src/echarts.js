@@ -152,6 +152,8 @@ define(function(require) {
             // 工具箱
             var Toolbox = componentLibrary.get('toolbox');
             _toolbox = new Toolbox(_messageCenter, _zr, dom);
+            
+            _disposeChartList();
         }
 
         /**
@@ -507,6 +509,7 @@ define(function(require) {
                     _messageCenter, _zr, magicOption
                 );
                 _chartList.push(title);
+                self.compoent.title = title;
             }
 
             // 提示
@@ -515,6 +518,7 @@ define(function(require) {
                 var Tooltip = componentLibrary.get('tooltip');
                 tooltip = new Tooltip(_messageCenter, _zr, magicOption, dom);
                 _chartList.push(tooltip);
+                self.compoent.tooltip = tooltip;
             }
 
             // 图例
@@ -525,6 +529,7 @@ define(function(require) {
                     _messageCenter, _zr, magicOption, _selectedMap
                 );
                 _chartList.push(legend);
+                self.compoent.legend = legend;
             }
 
             // 值域控件
@@ -535,6 +540,7 @@ define(function(require) {
                     _messageCenter, _zr, magicOption
                 );
                 _chartList.push(dataRange);
+                self.compoent.dataRange = dataRange;
             }
 
             // 直角坐标系
@@ -546,6 +552,7 @@ define(function(require) {
                 var Grid = componentLibrary.get('grid');
                 grid = new Grid(_messageCenter, _zr, magicOption);
                 _chartList.push(grid);
+                self.compoent.grid = grid;
 
                 var DataZoom = componentLibrary.get('dataZoom');
                 dataZoom = new DataZoom(
@@ -558,6 +565,7 @@ define(function(require) {
                     }
                 );
                 _chartList.push(dataZoom);
+                self.compoent.dataZoom = dataZoom;
 
                 var Axis = componentLibrary.get('axis');
                 xAxis = new Axis(
@@ -571,6 +579,7 @@ define(function(require) {
                     'xAxis'
                 );
                 _chartList.push(xAxis);
+                self.compoent.xAxis = xAxis;
 
                 yAxis = new Axis(
                     _messageCenter,
@@ -583,6 +592,7 @@ define(function(require) {
                     'yAxis'
                 );
                 _chartList.push(yAxis);
+                self.compoent.yAxis = yAxis;
             }
 
             // 极坐标系
@@ -598,6 +608,7 @@ define(function(require) {
                     }
                 );
                 _chartList.push(polar);
+                self.compoent.polar = polar;
             }
             
             tooltip && tooltip.setComponent({
@@ -635,6 +646,7 @@ define(function(require) {
                             }
                         );
                         _chartList.push(chart);
+                        self.chart[chartType] = chart;
                     }
                 }
             }
@@ -759,6 +771,13 @@ define(function(require) {
                 && _chartList[len].dispose();
             }
             _chartList = [];
+            
+            self.chart = {
+                island : _island
+            };
+            self.compoent = {
+                toolbox : _toolbox
+            };
         }
 
         /**
@@ -1190,6 +1209,9 @@ define(function(require) {
             _island.resize();
             _toolbox.resize();
             _zr.refresh();
+            _messageCenter.dispatch(
+                ecConfig.EVENT.RESIZE
+            );
             return self;
         }
 

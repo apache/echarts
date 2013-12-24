@@ -590,7 +590,7 @@ define(function() {
                     },
                     labelLine: {
                         show: false,
-                        length: 40,
+                        length: 30,
                         lineStyle: {
                             // color: 各异,
                             width: 1,
@@ -766,6 +766,7 @@ define(function() {
             // -------全局通用
             REFRESH: 'refresh',
             RESTORE: 'restore',
+            RESIZE: 'resize',
             CLICK: 'click',
             HOVER: 'hover',
             MOUSEWHEEL: 'mousewheel',
