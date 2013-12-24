@@ -3,18 +3,17 @@
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
-    <!--Step:1 Import echarts-plain.js or echarts-plain-map.js-->
-    <!--Step:1 引入echarts-plain.js或者 echarts-plain-map.js-->
-    <script src="js/echarts-plain-map.js"></script>
 </head>
-
 <body>
     <!--Step:2 Prepare a dom for ECharts which (must) has size (width & hight)-->
     <!--Step:2 为ECharts准备一个具备大小（宽高）的Dom-->
     <div id="main" style="height:500px;border:1px solid #ccc;padding:10px;"></div>
     <div id="mainMap" style="height:500px;border:1px solid #ccc;padding:10px;"></div>
-    
-    <script type="text/javascript">
+</body>
+<!--Step:1 Import echarts-plain.js or echarts-plain-map.js-->
+<!--Step:1 引入echarts-plain.js或者 echarts-plain-map.js-->
+<script src="js/echarts-plain-map.js"></script>
+<script type="text/javascript">
     // Step:3 echarts & zrender as a Global Interface by the echarts-plain.js.
     // Step:3 echarts和zrender被echarts-plain.js写入为全局接口
     var myChart = echarts.init(document.getElementById('main'));
@@ -85,7 +84,5 @@
             }
         ]
     });
-            
     </script>
-</body>
 </html>
