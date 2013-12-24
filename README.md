@@ -6,6 +6,9 @@ http://echarts.baidu.com
 
 **———— 大数据时代，重新定义数据图表的时候到了**
 
+LICENSE:
+https://github.com/ecomfe/echarts/blob/master/LICENSE.txt
+ 
 Architecture
 ------------
 ECharts (Enterprise Charts 商业产品图表库)

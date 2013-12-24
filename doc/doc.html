@@ -49,7 +49,6 @@
                     <li class="divider"></li>
                     <!--li class="nav-header">Library</li-->
                     <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
-                    
                   </ul>
                 </li>
               </ul>
@@ -469,6 +468,13 @@ require(
 &lt; /script&gt;
 </pre>
                     </div>
+                    <p>可以直接引入的单文件如下：</p>
+                    <ul>
+                        <li>echarts-plain.js : 经过压缩，包含除地图外的全部图表</li>
+                        <li>echarts-plain-original.js : 未压缩，可用于调试，包含除地图外的全部图表</li>
+                        <li>echarts-plain-map.js : 经过压缩，全图表，包含world，china以及34个省市级地图数据</li>
+                        <li>echarts-plain-original-map.js : 未压缩，可用于调试，全图表，包含world，china以及34个省市级地图数据</li>
+                    </ul>
                     
                     <h3>初始化<a name="初始化"> </a></h3>
                     <p>通过require获得echarts接口后可实例化图表，echarts接口仅有一个方法init，执行init时传入一个具备大小的dom节点（width、height可被计算得到即可，不一定可见）后即可实例化出图表对象，图表库实现为多实例的，同一页面可多次init出多个图表。图表实例可用方法见<a href="#方法">方法</a>，</p>
@@ -2719,7 +2725,7 @@ myChart.dispose();
         <!-- FOOTER -->
         <footer>
           <p class="pull-right"><a href="#">Back to top</a></p>
-          <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="changelog.html" target="_blank">Changelog</a></p>
+          <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">License</a> &middot; <a href="changelog.html" target="_blank">Changelog</a></p>
         </footer>
     </div><!--/.fluid-container-->
 
