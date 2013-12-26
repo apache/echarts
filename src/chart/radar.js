@@ -193,7 +193,7 @@
             var queryTarget = [data, serie];
             var symbol = self.deepQuery(queryTarget,'symbol')
                          || _symbol[_radarDataCounter % _symbol.length]
-                         || 'cricle';
+                         || 'circle';
             
             if (symbol != 'none') {
                 var symbolSize = self.deepQuery(queryTarget,'symbolSize');

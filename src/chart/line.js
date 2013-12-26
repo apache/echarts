@@ -665,7 +665,7 @@ define(function(require) {
             var data = serie.data[dataIndex];
             var symbol = self.deepQuery([data], 'symbol')
                          || _sIndex2ShapeMap[seriesIndex]
-                         || 'cricle';
+                         || 'circle';
             var symbolSize = self.deepQuery([data, serie],'symbolSize');
 
             var itemShape = {
