@@ -99,6 +99,9 @@ define(
                 diamond : _iconDiamond,
                 arrow : _iconArrow,
                 star : _iconStar,
+                heart : _iconHeart,
+                droplet : _iconDroplet,
+                pin : _iconPin,
                 image : _iconImage
             };
         }
@@ -392,6 +395,42 @@ define(
             });
         }
         
+        function _iconHeart(ctx, style) {
+            var heart = require('zrender/shape').get('heart');
+            heart.buildPath(ctx, {
+                x : style.x + style.width / 2,
+                y : style.y + style.height * 0.2,
+                a : style.width / 2,
+                b : style.height * 0.8
+            });
+        }
+        
+        function _iconDroplet(ctx, style) {
+            var droplet = require('zrender/shape').get('droplet');
+            droplet.buildPath(ctx, {
+                x : style.x + style.width * 0.5,
+                y : style.y + style.height * 0.5,
+                a : style.width * 0.5,
+                b : style.height * 0.8
+            });
+        }
+        
+        function _iconPin(ctx, style) {
+            var x = style.x;
+            var y = style.y - style.height / 2 * 1.5;
+            var width = style.width / 2;
+            var height = style.height / 2;
+            var r = Math.min(width, height);
+            ctx.arc(
+                x + width, 
+                y + height, 
+                r,
+                Math.PI / 5 * 4, 
+                Math.PI / 5
+            );
+            ctx.lineTo(x + width, y + height + r * 1.5);
+        }
+        
         function _iconImage(ctx, style) {
             setTimeout(function(){
                 require('zrender/shape').get('image').brush(ctx, {
@@ -426,9 +465,12 @@ define(
              * @param {Object} style
              */
             getRect : function(style) {
+                // pin比较特殊，让尖端在目标x,y上
                 return {
                     x : Math.round(style.x),
-                    y : Math.round(style.y),
+                    y : Math.round(style.y - (style.iconType == 'pin' 
+                                             ? (style.height / 2 * 1.5) : 0)
+                                   ),
                     width : style.width,
                     height : style.height
                 };
@@ -471,8 +513,8 @@ define(
                     rect = this.getRect(e.style);
                     e.style.__rect = rect;
                 }
-                // 提高交互体验，包围盒四向扩大5px
-                var delta = 5;
+                // 提高交互体验，太小的图形包围盒四向扩大4px
+                var delta = rect.height < 10 ? 4 : 0;
                 if (x >= rect.x - delta
                     && x <= (rect.x + rect.width + 2 * delta)
                     && y >= rect.y - delta
