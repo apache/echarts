@@ -25,6 +25,7 @@ define(function(require) {
         var ecData = require('../util/ecData');
 
         var zrColor = require('zrender/tool/color');
+        var zrUtil = require('zrender/tool/util');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_LINE;
@@ -116,6 +117,7 @@ define(function(require) {
                     _buildVertical(maxDataLength, locationMap);
                     break;
             }
+            _buildMark(seriesArray);
         }
 
         /**
@@ -750,6 +752,54 @@ define(function(require) {
             return itemShape;
         }
 
+        // 添加标注
+        function _buildMark(seriesArray) {
+            var markPoint;
+            var mpData;
+            var pos;
+            var shapeList;
+            var serie;
+            var seriesIndex;
+            var xAxis;
+            var yAxis;
+            for (var j = 0, k = seriesArray.length; j < k; j++) {
+                seriesIndex = seriesArray[j];
+                serie = series[seriesIndex];
+                if (serie.markPoint && self.selectedMap[serie.name]) {
+                    markPoint = zrUtil.clone(serie.markPoint);
+                    for (var i = 0, l = markPoint.data.length; i < l; i++) {
+                        mpData = markPoint.data[i];
+                        xAxis = component.xAxis.getAxis(serie.xAxisIndex);
+                        yAxis = component.yAxis.getAxis(serie.yAxisIndex);
+                        
+                        pos = [
+                            xAxis.type == ecConfig.COMPONENT_TYPE_AXIS_VALUE
+                            ? xAxis.getCoord(mpData.xAxis || 0)
+                            : xAxis.getCoordByIndex(mpData.xAxis || 0),
+                            yAxis.type == ecConfig.COMPONENT_TYPE_AXIS_VALUE
+                            ? yAxis.getCoord(mpData.yAxis || 0)
+                            : yAxis.getCoordByIndex(mpData.yAxis || 0)
+                        ];
+                        markPoint.data[i].x = typeof mpData.x != 'undefined'
+                                              ? mpData.x : pos[0];
+                        markPoint.data[i].y = typeof mpData.y != 'undefined'
+                                              ? mpData.y : pos[1];
+                    }
+                    shapeList = self.markPoint(
+                        serie, seriesIndex, markPoint, component
+                    );
+                    for (var i = 0, l = shapeList.length; i < l; i++) {
+                        shapeList[i].zlevel = _zlevelBase + 1;
+                        shapeList[i]._x = shapeList[i].style.x 
+                                          + shapeList[i].style.width / 2;
+                        shapeList[i]._y = shapeList[i].style.y 
+                                          + shapeList[i].style.height / 2;
+                        self.shapeList.push(shapeList[i]);
+                    }
+                }
+            }
+        }
+        
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
          * @param {Object} newSeries

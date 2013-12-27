@@ -195,6 +195,7 @@ define(function(require) {
                     vd,                  // 用户数据
                     ms                   // 系列
                 );
+                _buildMark(mt, ms);
                 if (--_mapDataRequireCounter <= 0) {
                     for (var i = 0, l = self.shapeList.length; i < l; i++) {
                         self.shapeList[i].id = zr.newShapeId(self.type);
@@ -804,6 +805,46 @@ define(function(require) {
                 self.shapeList.push(shape);
             }
             //console.log(_selected);
+        }
+        
+        // 添加标注
+        function _buildMark(mapType, mapSeries) {
+            var markPoint;
+            var pos;
+            var shapeList;
+            for (var sIdx in mapSeries) {
+                if (series[sIdx].markPoint) {
+                    markPoint = zrUtil.clone(series[sIdx].markPoint);
+                    for (var i = 0, l = markPoint.data.length; i < l; i++) {
+                        pos = _geoCoord[markPoint.data[i].name]
+                              ? geo2pos(
+                                    mapType, _geoCoord[markPoint.data[i].name]
+                                )
+                              : [0, 0];
+                        markPoint.data[i].x = 
+                            typeof markPoint.data[i].x != 'undefined'
+                            ? markPoint.data[i].x
+                            : pos[0];
+                        markPoint.data[i].y = 
+                            typeof markPoint.data[i].y != 'undefined'
+                            ? markPoint.data[i].y
+                            : pos[1];
+                    }
+                    shapeList = self.markPoint(
+                        series[sIdx], sIdx, markPoint, component
+                    );
+                    var position = [
+                        _mapDataMap[mapType].transform.left,
+                        _mapDataMap[mapType].transform.top
+                    ];
+                    for (var i = 0, l = shapeList.length; i < l; i++) {
+                        shapeList[i].zlevel = _zlevelBase + 1;
+                        shapeList[i]._mapType = mapType;
+                        shapeList[i].position = position;
+                        self.shapeList.push(shapeList[i]);
+                    }
+                }
+            }
         }
         
         function _nameChange(mapType, name) {

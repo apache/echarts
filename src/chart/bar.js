@@ -25,6 +25,7 @@ define(function(require) {
         var ecData = require('../util/ecData');
         
         var zrColor = require('zrender/tool/color');
+        var zrUtil = require('zrender/tool/util');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_BAR;
@@ -98,11 +99,11 @@ define(function(require) {
             switch (position) {
                 case 'bottom' :
                 case 'top' :
-                    _buildHorizontal(maxDataLength, locationMap);
+                    _buildHorizontal(maxDataLength, locationMap, seriesArray);
                     break;
                 case 'left' :
                 case 'right' :
-                    _buildVertical(maxDataLength, locationMap);
+                    _buildVertical(maxDataLength, locationMap, seriesArray);
                     break;
             }
         }
@@ -190,7 +191,7 @@ define(function(require) {
         /**
          * 构建类目轴为水平方向的柱形图系列
          */
-        function _buildHorizontal(maxDataLength, locationMap) {
+        function _buildHorizontal(maxDataLength, locationMap, seriesArray) {
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
             var serie = series[seriesIndex];
@@ -207,6 +208,7 @@ define(function(require) {
             var barMinHeightMap = size.barMinHeightMap;
             var barHeight;
 
+            var xMarkMap = {}; // 为标注记录一个横向偏移
             var x;
             var y;
             var lastYP; // 正向堆叠处理
@@ -285,6 +287,10 @@ define(function(require) {
                             barHeight,
                             'vertical'
                         );
+                        
+                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] || {};
+                        xMarkMap[seriesIndex][i] = 
+                            x + (barWidthMap[seriesIndex] || barWidth) / 2;
 
                         self.shapeList.push(barShape);
                     }
@@ -333,12 +339,13 @@ define(function(require) {
                     x += ((barWidthMap[seriesIndex] || barWidth) + barGap);
                 }
             }
+            _buildMark(seriesArray, xMarkMap, true);
         }
 
         /**
          * 构建类目轴为垂直方向的柱形图系列
          */
-        function _buildVertical(maxDataLength, locationMap) {
+        function _buildVertical(maxDataLength, locationMap, seriesArray) {
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
             var serie = series[seriesIndex];
@@ -355,6 +362,7 @@ define(function(require) {
             var barMinHeightMap = size.barMinHeightMap;
             var barHeight;
 
+            var xMarkMap = {}; // 为标注记录一个横向偏移
             var x;
             var y;
             var lastXP; // 正向堆叠处理
@@ -433,6 +441,10 @@ define(function(require) {
                             barWidthMap[seriesIndex] || barWidth,
                             'horizontal'
                         );
+                        
+                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] || {};
+                        xMarkMap[seriesIndex][i] = 
+                            y - (barWidthMap[seriesIndex] || barWidth) / 2;
 
                         self.shapeList.push(barShape);
                     }
@@ -483,6 +495,7 @@ define(function(require) {
                     y -= ((barWidthMap[seriesIndex] || barWidth) + barGap);
                 }
             }
+            _buildMark(seriesArray, xMarkMap, false);
         }
         /**
          * 我真是自找麻烦啊，为啥要允许系列级个性化最小宽度和高度啊！！！
@@ -717,6 +730,59 @@ define(function(require) {
             return barShape;
         }
 
+        // 添加标注
+        function _buildMark(seriesArray, xMarkMap ,isHorizontal) {
+            var markPoint;
+            var mpData;
+            var pos;
+            var shapeList;
+            var serie;
+            var seriesIndex;
+            var xAxis;
+            var yAxis;
+            for (var j = 0, k = seriesArray.length; j < k; j++) {
+                seriesIndex = seriesArray[j];
+                serie = series[seriesIndex];
+                if (serie.markPoint && self.selectedMap[serie.name]) {
+                    markPoint = zrUtil.clone(serie.markPoint);
+                    for (var i = 0, l = markPoint.data.length; i < l; i++) {
+                        mpData = markPoint.data[i];
+                        xAxis = component.xAxis.getAxis(serie.xAxisIndex);
+                        yAxis = component.yAxis.getAxis(serie.yAxisIndex);
+                        if (isHorizontal) {
+                            // 横向
+                            pos = [
+                                xMarkMap[seriesIndex][mpData.xAxis || 0],
+                                yAxis.getCoord(mpData.yAxis || 0)
+                            ]
+                        }
+                        else {
+                            // 纵向
+                            pos = [
+                                xAxis.getCoord(mpData.xAxis || 0),
+                                xMarkMap[seriesIndex][mpData.yAxis || 0]
+                            ]
+                        }
+                        markPoint.data[i].x = typeof mpData.x != 'undefined'
+                                              ? mpData.x : pos[0];
+                        markPoint.data[i].y = typeof mpData.y != 'undefined'
+                                              ? mpData.y : pos[1];
+                    }
+                    shapeList = self.markPoint(
+                        serie, seriesIndex, markPoint, component
+                    );
+                    for (var i = 0, l = shapeList.length; i < l; i++) {
+                        shapeList[i].zlevel = _zlevelBase + 1;
+                        shapeList[i]._x = shapeList[i].style.x 
+                                          + shapeList[i].style.width / 2;
+                        shapeList[i]._y = shapeList[i].style.y 
+                                          + shapeList[i].style.height / 2;
+                        self.shapeList.push(shapeList[i]);
+                    }
+                }
+            }
+        }
+        
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
          * @param {Object} newSeries

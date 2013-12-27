@@ -88,8 +88,8 @@ define(function() {
                                        // 接受数组分别设定上右下左边距，同css
             itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
-            itemWidth: 20,             // 图例图形宽度，非标准参数
-            itemHeight: 14,            // 图例图形高度，非标准参数
+            itemWidth: 20,             // 图例图形宽度
+            itemHeight: 14,            // 图例图形高度
             textStyle: {
                 color: '#333'          // 图例文字颜色
             },
@@ -148,7 +148,7 @@ define(function() {
                                        // 接受数组分别设定上右下左边距，同css
             itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
-            itemSize: 16,             // 工具箱图形宽度，非标准参数
+            itemSize: 16,             // 工具箱图形宽度
             feature : {
                 //mark : true,
                 //dataZoom : true,
@@ -178,7 +178,7 @@ define(function() {
             showContent: true,         // tooltip主体内容
             trigger: 'item',           // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
             // formatter: null         // 内容格式器：{string}（Template） ¦ {Function}
-            islandFormatter: '{a} <br/>{b} : {c}',  // 数据孤岛内容格式器，非标准参数
+            islandFormatter: '{a} <br/>{b} : {c}',  // 数据孤岛内容格式器
             showDelay: 20,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
             hideDelay: 100,            // 隐藏延迟，单位ms
             transitionDuration : 0.4,  // 动画变换时间，单位s
@@ -435,7 +435,7 @@ define(function() {
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
-                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
@@ -452,7 +452,7 @@ define(function() {
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
-                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
@@ -460,7 +460,7 @@ define(function() {
                 }
             },
             //smooth : false,
-            //symbol: null,         // 拐点图形类型，非标准参数
+            //symbol: null,         // 拐点图形类型
             symbolSize: 2,          // 可计算特性参数，空数据拖拽提示图形大小
             //symbolRotate : null,  // 拐点图形旋转控制
             showAllSymbol: false    // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
@@ -492,13 +492,14 @@ define(function() {
         scatter: {
             xAxisIndex: 0,
             yAxisIndex: 0,
-            //symbol: null,      // 图形类型，非标准参数
+            //symbol: null,      // 图形类型
             symbolSize: 4,       // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             //symbolRotate : null,  // 拐点图形旋转控制
             large: false,        // 大规模散点图
             largeThreshold: 2000,// 大规模阀值，large为true且数据量>largeThreshold才启用大规模模式
             itemStyle: {
                 normal: {
+                    // color: 各异,
                     label: {
                         show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -510,7 +511,7 @@ define(function() {
                                 return c[0] + ' , ' + c[1];
                             }
                         }
-                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
@@ -527,7 +528,7 @@ define(function() {
                                 return c[0] + ' , ' + c[1];
                             }
                         }
-                        // position: 默认自使用，水平布局为'top'，垂直布局为'right'，可选为
+                        // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
@@ -550,7 +551,7 @@ define(function() {
                     // color: 各异,
                 }
             },
-            //symbol: null,         // 拐点图形类型，非标准参数
+            //symbol: null,         // 拐点图形类型
             symbolSize: 2           // 可计算特性参数，空数据拖拽提示图形大小
         },
 
@@ -565,6 +566,7 @@ define(function() {
             // roseType : null,     // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
             itemStyle: {
                 normal: {
+                    // color: 各异,
                     label: {
                         show: true,
                         position: 'outer'
@@ -752,6 +754,36 @@ define(function() {
         island: {
             r: 15,
             calculateStep: 0.1  // 滚轮可计算步长 0.1 = 10%
+        },
+        
+        markPoint : {
+            symbol: 'pin',         // 标注类型
+            symbolSize: 10,       // 标注大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            //symbolRotate : null,// 标注旋转控制
+            itemStyle: {
+                normal: {
+                    // color: 各异，
+                    // borderColor: '各异',      // 标注边线颜色，优先于color 
+                    borderRadius: 0,           // 标注边线圆角，单位px，默认为0，方形有效
+                    borderWidth: 2,            // 标注边线线宽，单位px，默认为1
+                    label: {
+                        show: true,
+                        // 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter : null,
+                        position: 'inside' // 可选为'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                },
+                emphasis: {
+                    label: {
+                        show: true,
+                        // 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter : null,
+                        position: 'inside' // 可选为'left'|'right'|'top'|'bottom'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                }
+            }
         },
 
         textStyle: {

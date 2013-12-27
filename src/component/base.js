@@ -8,6 +8,7 @@
 define(function(require) {
     function Base(zr){
         var ecConfig = require('../config');
+        var ecData = require('../util/ecData');
         var zrUtil = require('zrender/tool/util');
         var self = this;
 
@@ -259,6 +260,151 @@ define(function(require) {
             }
         }
         
+        function markPoint(series, seriesIndex, mpOption, component) {
+            zrUtil.merge(
+                mpOption,
+                ecConfig.markPoint,
+                {
+                    'overwrite': false,
+                    'recursive': true
+                }
+            );
+            mpOption.name = series.name;
+                   
+            var dataRange = component.dataRange;
+            var pList = [];
+            var data = mpOption.data;
+            var queryTarget;
+            var symbol;
+            var symbolSize;
+            var symbolRotate;
+            var itemShape;
+            
+            // 多级控制
+            var color;
+            var nColor;
+            var eColor;
+            var nBorderColor;
+            var eBorderColor;
+            var nBorderWidth;
+            var eBorderWidth
+            var x;
+            var y;
+            for (var i = 0, l = data.length; i < l; i++) {
+                queryTarget = [data[i], mpOption];
+                symbol = self.deepQuery(queryTarget, 'symbol') || 'pin';
+                symbolSize = self.deepQuery(queryTarget,'symbolSize');
+                symbolSize = typeof symbolSize == 'function'
+                             ? symbolSize(data[i].value)
+                             : symbolSize;
+                symbolRotate = self.deepQuery(queryTarget, 'symbolRotate');
+                color = (dataRange && !isNaN(data[i].value))
+                        ? dataRange.getColor(data[i].value)
+                        : null;
+                // 用户设定优先于从值域控件里取
+                nColor = self.deepQuery(
+                    queryTarget, 'itemStyle.normal.color'
+                ) 
+                || color 
+                || (component.legend && component.legend.getColor(series.name));
+                eColor = self.deepQuery(
+                    queryTarget, 'itemStyle.emphasis.color'
+                ) || nColor;
+                
+                nBorderColor = self.deepQuery(
+                    queryTarget, 'itemStyle.normal.borderColor'
+                ) || nColor;
+                eBorderColor = self.deepQuery(
+                    queryTarget, 'itemStyle.emphasis.borderColor'
+                ) || nBorderColor;
+                
+                nBorderWidth = self.deepQuery(
+                    queryTarget, 'itemStyle.normal.borderWidth'
+                );
+                eBorderWidth = self.deepQuery(
+                    queryTarget, 'itemStyle.emphasis.borderWidth'
+                ) || (nBorderWidth + 2);
+                
+                x = data[i].x;
+                y = data[i].y;
+                
+                itemShape = {
+                    shape : 'icon',
+                    style : {
+                        iconType : symbol.replace('empty', '').toLowerCase(),
+                        x : x - symbolSize,
+                        y : y - symbolSize,
+                        width : symbolSize * 2,
+                        height : symbolSize * 2,
+                        brushType : 'both',
+                        color : symbol.match('empty') 
+                                ? 'rgba(0,0,0,0)' : nColor,
+                        strokeColor : nBorderColor,
+                        lineWidth: nBorderWidth
+                    },
+                    highlightStyle : {
+                        color : symbol.match('empty') 
+                                ? 'rgba(0,0,0,0)' : eColor,
+                        strokeColor : eBorderColor,
+                        lineWidth: eBorderWidth
+                    },
+                    clickable : true
+                };
+    
+                if (symbol.match('image')) {
+                    itemShape.style.image = 
+                        symbol.replace(new RegExp('^image:\\/\\/'), '');
+                    itemShape.shape = 'image';
+                }
+                
+                if (typeof symbolRotate != 'undefined') {
+                    itemShape.rotation = [
+                        symbolRotate * Math.PI / 180, x, y
+                    ];
+                }
+                
+                if (symbol.match('star')) {
+                    itemShape.style.iconType = 'star';
+                    itemShape.style.n = 
+                        (symbol.replace('empty', '').replace('star','') - 0) 
+                        || 5;
+                }
+                
+                if (symbol == 'none' ||(nColor == null && eColor == null)) {
+                    itemShape.invisible = true;
+                    itemShape.hoverable = false;
+                }
+    
+                itemShape = self.addLabel(
+                    itemShape, 
+                    mpOption,
+                    data[i], 
+                    data[i].name, 
+                    'horizontal'
+                );
+                if (symbol.match('empty')) {
+                    if (typeof itemShape.style.textColor == 'undefined') {
+                        itemShape.style.textColor = itemShape.style.strokeColor;
+                    }
+                    if (typeof itemShape.highlightStyle.textColor == 'undefined'
+                    ) {
+                        itemShape.highlightStyle.textColor = 
+                            itemShape.highlightStyle.strokeColor;
+                    }
+                }
+                
+                ecData.pack(
+                    itemShape,
+                    series, seriesIndex,
+                    data[i], 0,
+                    data[i].name
+                );
+                pList.push(itemShape)
+            }
+            //console.log(pList);
+            return pList;
+        }
+        
         /**
          * 百分比计算
          */
@@ -347,6 +493,7 @@ define(function(require) {
         self.deepMerge = deepMerge;
         self.getFont = getFont;
         self.addLabel = addLabel;
+        self.markPoint = markPoint;
         self.parsePercent = parsePercent;
         self.parseCenter = parseCenter;
         self.parseRadius = parseRadius;

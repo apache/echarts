@@ -97,7 +97,7 @@ option = {
             type : 'value',
             splitArea : {show : true}
         }
-    ],
+    ],animation:false,
     series : [
         {
             name:'邮件营销',
@@ -118,7 +118,11 @@ option = {
                     }
                 }
             },
-            data:[120, 132, 301, 134, 90, 230, 210]
+            data:[
+                120, 132, 301, 134, 
+                {value:90, symbol:'droplet',symbolSize:5},
+                230, 210
+            ]
         },
         {
             name:'联盟广告',
@@ -146,7 +150,13 @@ option = {
                     value:134,
                     symbol: 'none'
                 },
-                190, 230, 110
+                190, 
+                {
+                    value : 230,
+                    symbol: 'emptypin',
+                    symbolSize: 8
+                },
+                110
             ]
         },
         {
@@ -219,7 +229,11 @@ option = {
                     label : {show: true}
                 }
             },
-            data:[620, 732, 791, 734, 890, 930, 820]
+            data:[
+                620, 732, 791, 
+                {value:734, symbol:'emptyHeart',symbolSize:10},
+                890, 930, 820
+            ]
         }
     ]
 };
