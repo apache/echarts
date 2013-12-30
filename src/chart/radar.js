@@ -115,7 +115,7 @@
 
                 pointList = _getPointList(serie.polarIndex, data[i]);
                 // 添加拐点形状
-                _addSymbol(pointList, defaultColor, data[i], index);
+                _addSymbol(pointList, defaultColor, i, index);
                 // 添加数据形状
                 _addDataShape(
                     pointList, defaultColor, data[i],
@@ -147,77 +147,27 @@
         }
         
         /**
-         * 生成折线图上的拐点图形
-         */
-        function _getSymbol(
-            x, y, symbol, symbolSize, normalColor, emphasisColor, lineWidth
-        ) {
-            var itemShape = {
-                shape : 'icon',
-                zlevel : _zlevelBase + 1,
-                style : {
-                    iconType : symbol.replace('empty', '').toLowerCase(),
-                    x : x - symbolSize,
-                    y : y - symbolSize,
-                    width : symbolSize * 2,
-                    height : symbolSize * 2,
-                    brushType : 'both',
-                    color : symbol.match('empty') ? '#fff' : normalColor,
-                    strokeColor : normalColor,
-                    lineWidth: lineWidth * 2
-                },
-                hoverable: false
-            };
-            
-            if (symbol.match('star')) {
-                itemShape.style.iconType = 'star';
-                itemShape.style.n = 
-                    (symbol.replace('empty', '').replace('star','') - 0) || 5;
-            }
-            
-            itemShape._x = x;
-            itemShape._y = y;
-
-            return itemShape;
-        }
-        
-        /**
          * 添加拐点
          * @param {Array<Array<number>>} pointList 点集
          * @param {string} defaultColor 默认填充颜色
          * @param {object} data 数据
          * @param {number} serieIndex
          */
-        function _addSymbol(pointList, defaultColor, data) {
-            // 多级控制
-            var queryTarget = [data, serie];
-            var symbol = self.deepQuery(queryTarget,'symbol')
-                         || _symbol[_radarDataCounter % _symbol.length]
-                         || 'circle';
-            
-            if (symbol != 'none') {
-                var symbolSize = self.deepQuery(queryTarget,'symbolSize');
-                var nColor = self.deepQuery(
-                    queryTarget, 'itemStyle.normal.color'
+        function _addSymbol(pointList, defaultColor, dataIndex, seriesIndex) {
+            var itemShape;
+            for (var i = 0, l = pointList.length; i < l; i++) {
+                itemShape = self.getSymbolShape(
+                    series[seriesIndex], seriesIndex, 
+                    series[seriesIndex].data[dataIndex], dataIndex, '', 
+                    pointList[i][0],    // x
+                    pointList[i][1],    // y
+                    _symbol[_radarDataCounter % _symbol.length],
+                    defaultColor,
+                    '#fff',
+                    'vertical'
                 );
-                var eColor = self.deepQuery(
-                    queryTarget, 'itemStyle.emphasis.color'
-                );
-                var lineWidth = self.deepQuery(
-                    queryTarget, 'itemStyle.normal.lineStyle.width'
-                );
-                
-                for (var i = 0, l = pointList.length; i < l; i++) {
-                    self.shapeList.push(_getSymbol(
-                        pointList[i][0],    // x
-                        pointList[i][1],    // y
-                        symbol,
-                        symbolSize,
-                        nColor || defaultColor,
-                        eColor || nColor || defaultColor,
-                        lineWidth
-                    ));
-                }
+                itemShape.zlevel = _zlevelBase + 1;
+                self.shapeList.push(itemShape);
             }
         }
         

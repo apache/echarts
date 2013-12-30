@@ -461,7 +461,7 @@ define(function() {
             },
             //smooth : false,
             //symbol: null,         // 拐点图形类型
-            symbolSize: 2,          // 可计算特性参数，空数据拖拽提示图形大小
+            symbolSize: 2,          // 拐点图形大小
             //symbolRotate : null,  // 拐点图形旋转控制
             showAllSymbol: false    // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
         },
@@ -542,12 +542,18 @@ define(function() {
             itemStyle: {
                 normal: {
                     // color: 各异,
+                    label: {
+                        show: false
+                    },
                     lineStyle: {
                         width: 2,
                         type: 'solid'
                     }
                 },
                 emphasis: {
+                    label: {
+                        show: false
+                    }
                     // color: 各异,
                 }
             },
@@ -763,7 +769,7 @@ define(function() {
             itemStyle: {
                 normal: {
                     // color: 各异，
-                    // borderColor: '各异',      // 标注边线颜色，优先于color 
+                    // borderColor: '各异',     // 标注边线颜色，优先于color 
                     borderRadius: 0,           // 标注边线圆角，单位px，默认为0，方形有效
                     borderWidth: 2,            // 标注边线线宽，单位px，默认为1
                     label: {

@@ -129,7 +129,6 @@ define(function(require) {
             var pointList = {};
             var x;
             var y;
-            var symbolSize;
             for (var j = 0, k = seriesArray.length; j < k; j++) {
                 seriesIndex = seriesArray[j];
                 serie = series[seriesIndex];
@@ -140,7 +139,6 @@ define(function(require) {
                 xAxis = component.xAxis.getAxis(serie.xAxisIndex || 0);
                 yAxis = component.yAxis.getAxis(serie.yAxisIndex || 0);
                 
-                symbolSize = self.deepQuery([serie], 'symbolSize');
                 pointList[seriesIndex] = [];
                 for (var i = 0, l = serie.data.length; i < l; i++) {
                     data = serie.data[i];
@@ -156,14 +154,10 @@ define(function(require) {
                     x = xAxis.getCoord(value[0]);
                     y = yAxis.getCoord(value[1]);
                     pointList[seriesIndex].push([
-                        x,  // 横坐标
-                        y,  // 纵坐标
-                        (typeof symbolSize == 'function'
-                        ? symbolSize(value)
-                        : symbolSize),                  // 图形大小
-                        _sIndex2ShapeMap[seriesIndex],  // 图形类型
-                        i,                              // 数据index
-                        data.name || ''                 // 名称
+                        x,                  // 横坐标
+                        y,                  // 纵坐标
+                        i,                  // 数据index
+                        data.name || ''     // 名称
                     ]);
                 }
             }
@@ -175,46 +169,19 @@ define(function(require) {
          * 生成折线和折线上的拐点
          */
         function _buildPointList(pointList) {
-            var dataRange = component.dataRange;
-            var rangColor;  // 更高优先级
-            var nColor;     // normal
-            var nLineWidth;
-            var eColor;     // emphasis
-            var eLineWidth;
-            
             var serie;
-            var queryTarget;
-            var data;
             var seriesPL;
             var singlePoint;
-            var symbolRotate;
-            
+            var shape;
             for (var seriesIndex in pointList) {
                 serie = series[seriesIndex];
                 seriesPL = pointList[seriesIndex];
-                // 多级控制
-                queryTarget = [serie];
-                nColor = self.deepQuery(
-                    queryTarget, 'itemStyle.normal.color'
-                ) || _sIndex2ColorMap[seriesIndex];
-                nLineWidth = self.deepQuery(
-                    queryTarget, 'itemStyle.normal.lineStyle.width'
-                );
-                
-                eColor = self.deepQuery(
-                    queryTarget, 'itemStyle.emphasis.color'
-                );
-                eLineWidth = self.deepQuery(
-                    queryTarget, 'itemStyle.emphasis.lineStyle.width'
-                );
-                
-                symbolRotate = self.deepQuery(
-                    queryTarget, 'symbolRotate'
-                );
-                
                 if (serie.large && serie.data.length > serie.largeThreshold) {
                     self.shapeList.push(_getLargeSymbol(
-                        seriesPL, nColor, eColor
+                        seriesPL, 
+                        self.query(
+                            serie, 'itemStyle.normal.color'
+                        ) || _sIndex2ColorMap[seriesIndex]
                     ));
                     continue;
                 }
@@ -223,156 +190,61 @@ define(function(require) {
                  * pointlist=[
                  *      0  x,
                  *      1  y, 
-                 *      2  图形大小
-                 *      3  图形类型
-                 *      4  数据index
-                 *      5  名称
+                 *      2  数据index
+                 *      3  名称
                  * ]
                  */
+                
                 for (var i = 0, l = seriesPL.length; i < l; i++) {
                     singlePoint = seriesPL[i];
-                    data = serie.data[singlePoint[4]];
-                    
-                    if (dataRange) {
-                        if (isNaN(data[2])) {
-                            continue;
-                        }
-                        rangColor = dataRange.getColor(data[2]);
-                        if (!rangColor) {
-                            continue;
-                        }
-                    }
-                    else {
-                        rangColor = nColor;
-                    }
-                    
-                    queryTarget = [data];
-                    self.shapeList.push(_getSymbol(
+                    shape = _getSymbol(
                         seriesIndex,    // seriesIndex
-                        singlePoint[4], // dataIndex
-                        singlePoint[5], // name
-                        
+                        singlePoint[2], // dataIndex
+                        singlePoint[3], // name
                         singlePoint[0], // x
-                        singlePoint[1], // y
-                        
-                        // 大小
-                        self.deepQuery(queryTarget, 'symbolSize')
-                        || singlePoint[2],
-                        
-                        // 方向
-                        self.deepQuery(queryTarget, 'symbolRotate') 
-                        || symbolRotate,
-                        
-                        // 类型
-                        self.deepQuery(queryTarget, 'symbol')
-                        || singlePoint[3],
-                        
-                        // 填充颜色
-                        self.deepQuery(queryTarget, 'itemStyle.normal.color')
-                        || rangColor,
-                        // 线宽
-                        self.deepQuery(
-                            queryTarget, 'itemStyle.normal.lineStyle.width'
-                        )|| nLineWidth,
-                        
-                        //------------高亮
-                        // 填充颜色
-                        self.deepQuery(
-                            queryTarget, 'itemStyle.emphasis.color'
-                        ) || eColor || nColor,
-                        // 线宽
-                        self.deepQuery(
-                            queryTarget, 'itemStyle.emphasis.lineStyle.width'
-                        )|| eLineWidth || nLineWidth
-                    ));
+                        singlePoint[1] // y
+                    );
+                    shape && self.shapeList.push(shape);
                 }
             }
             // console.log(self.shapeList)
         }
 
         /**
-         * 生成散点图上的图形
+         * 生成折线图上的拐点图形
          */
-        function _getSymbol(
-            seriesIndex, dataIndex, name, 
-            x, y, symbolSize, symbolRotate, symbol,
-            nColor, nLineWidth, eColor, eLineWidth
-        ) {
-            var itemShape = {
-                shape : 'icon',
-                zlevel : _zlevelBase,
-                style : {
-                    iconType : symbol.replace('empty', '').toLowerCase(),
-                    x : x - symbolSize,
-                    y : y - symbolSize,
-                    width : symbolSize * 2,
-                    height : symbolSize * 2,
-                    brushType : symbol.match('empty') ? 'stroke' : 'fill',
-                    color : nColor,
-                    strokeColor : nColor,
-                    lineWidth: nLineWidth
-                },
-                highlightStyle : {
-                    color : eColor,
-                    strokeColor : eColor,
-                    lineWidth : eLineWidth
-                },
-                clickable : true
-            };
+        function _getSymbol(seriesIndex, dataIndex, name, x, y) {
+            var dataRange = component.dataRange;
+            var serie = series[seriesIndex];
+            var data = serie.data[dataIndex];
             
-            if (typeof symbolRotate != 'undefined') {
-                itemShape.rotation = [
-                    symbolRotate * Math.PI / 180, x, y
-                ];
+            var rangColor;
+            if (dataRange) {
+                rangColor = isNaN(data[2]) 
+                            ? _sIndex2ColorMap[seriesIndex]
+                            : dataRange.getColor(data[2]);
+                if (!rangColor) {
+                    return null;
+                }
+            }
+            else {
+                rangColor = _sIndex2ColorMap[seriesIndex];
             }
             
-            if (symbol.match('image')) {
-                itemShape.style.image = 
-                    symbol.replace(new RegExp('^image:\\/\\/'), '');
-                itemShape.shape = 'image';
-            }
-            
-            if (symbol.match('star')) {
-                itemShape.style.iconType = 'star';
-                itemShape.style.n = 
-                    (symbol.replace('empty', '').replace('star','') - 0) || 5;
-            }
-            
-            if (symbol == 'none') {
-                itemShape.invisible = true;
-                itemShape.hoverable = false;
-            }
-
-            /*
-            if (self.deepQuery([data, serie, option], 'calculable')) {
-                self.setCalculable(itemShape);
-                itemShape.draggable = true;
-            }
-            */
-           
-           itemShape = self.addLabel(
-                itemShape, 
-                series[seriesIndex], 
-                series[seriesIndex].data[dataIndex], 
-                name, 
+            var itemShape = self.getSymbolShape(
+                serie, seriesIndex, data, dataIndex, name, 
+                x, y,
+                _sIndex2ShapeMap[seriesIndex], 
+                rangColor,
+                'rgba(0,0,0,0)',
                 'vertical'
             );
-
-            ecData.pack(
-                itemShape,
-                series[seriesIndex], seriesIndex,
-                series[seriesIndex].data[dataIndex], dataIndex,
-                name
-            );
-
-            // for animation
-            itemShape._x = x;
-            itemShape._y = y;
-            
+            itemShape.zlevel = _zlevelBase;
             return itemShape;
         }
         
-        function _getLargeSymbol(symbolList, nColor, eColor) {
+        
+        function _getLargeSymbol(symbolList, nColor) {
             return {
                 shape : 'symbol',
                 zlevel : _zlevelBase,
@@ -381,10 +253,6 @@ define(function(require) {
                     pointList : symbolList,
                     color : nColor,
                     strokeColor : nColor
-                },
-                highlightStyle : {
-                    color : eColor,
-                    strokeColor : eColor
                 }
             };
         }

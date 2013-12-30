@@ -458,7 +458,6 @@ define(function(require) {
             var lineType;
             var lineColor;
             var normalColor;
-            var emphasisColor;
 
             // 填充相关
             var isFill;
@@ -479,28 +478,25 @@ define(function(require) {
                 if (serie.type == self.type && typeof seriesPL != 'undefined') {
                     defaultColor = _sIndex2ColorMap[seriesIndex];
                     // 多级控制
-                    lineWidth = self.deepQuery(
-                        [serie], 'itemStyle.normal.lineStyle.width'
+                    lineWidth = self.query(
+                        serie, 'itemStyle.normal.lineStyle.width'
                     );
-                    lineType = self.deepQuery(
-                        [serie], 'itemStyle.normal.lineStyle.type'
+                    lineType = self.query(
+                        serie, 'itemStyle.normal.lineStyle.type'
                     );
-                    lineColor = self.deepQuery(
-                        [serie], 'itemStyle.normal.lineStyle.color'
+                    lineColor = self.query(
+                        serie, 'itemStyle.normal.lineStyle.color'
                     );
-                    normalColor = self.deepQuery(
-                        [serie], 'itemStyle.normal.color'
-                    );
-                    emphasisColor = self.deepQuery(
-                        [serie], 'itemStyle.emphasis.color'
+                    normalColor = self.query(
+                        serie, 'itemStyle.normal.color'
                     );
 
-                    isFill = typeof self.deepQuery(
-                        [serie], 'itemStyle.normal.areaStyle'
+                    isFill = typeof self.query(
+                        serie, 'itemStyle.normal.areaStyle'
                     ) != 'undefined';
 
-                    fillNormalColor = self.deepQuery(
-                        [serie], 'itemStyle.normal.areaStyle.color'
+                    fillNormalColor = self.query(
+                        serie, 'itemStyle.normal.areaStyle.color'
                     );
 
                     for (var i = 0, l = seriesPL.length; i < l; i++) {
@@ -526,19 +522,6 @@ define(function(require) {
                                     singlePL[j][3], // name
                                     singlePL[j][0], // x
                                     singlePL[j][1], // y
-                                    self.deepQuery(
-                                        [data], 'itemStyle.normal.color'
-                                    ) || normalColor
-                                      || defaultColor,
-                                    self.deepQuery(
-                                        [data], 'itemStyle.emphasis.color'
-                                    ) || emphasisColor
-                                      || normalColor
-                                      || defaultColor,
-                                    lineWidth,
-                                    self.deepQuery(
-                                        [data, serie], 'symbolRotate'
-                                    ),
                                     orient
                                 ));
                             }
@@ -556,20 +539,20 @@ define(function(require) {
                                 lineWidth : lineWidth,
                                 lineType : lineType,
                                 smooth : _getSmooth(serie.smooth),
-                                shadowColor : self.deepQuery(
-                                  [serie],
+                                shadowColor : self.query(
+                                  serie,
                                   'itemStyle.normal.lineStyle.shadowColor'
                                 ),
-                                shadowBlur: self.deepQuery(
-                                  [serie],
+                                shadowBlur: self.query(
+                                  serie,
                                   'itemStyle.normal.lineStyle.shadowBlur'
                                 ),
-                                shadowOffsetX: self.deepQuery(
-                                  [serie],
+                                shadowOffsetX: self.query(
+                                  serie,
                                   'itemStyle.normal.lineStyle.shadowOffsetX'
                                 ),
-                                shadowOffsetY: self.deepQuery(
-                                  [serie],
+                                shadowOffsetY: self.query(
+                                  serie,
                                   'itemStyle.normal.lineStyle.shadowOffsetY'
                                 )
                             },
@@ -640,18 +623,14 @@ define(function(require) {
 
             var itemShape = _getSymbol(
                 seriesIndex, dataIndex, name,
-                x, y,
-                color,
-                _sIndex2ColorMap[seriesIndex],
-                2,
-                0,
-                orient
+                x, y, orient
             );
-
+            itemShape.style.color = color;
+            itemShape.style.strokeColor = color;
+            itemShape.rotation = [0,0];
             itemShape.hoverable = false;
             itemShape.draggable = false;
             itemShape.style.text = undefined;
-            //itemShape.highlightStyle.lineWidth = 20;
 
             return itemShape;
         }
@@ -659,96 +638,25 @@ define(function(require) {
         /**
          * 生成折线图上的拐点图形
          */
-        function _getSymbol(
-            seriesIndex, dataIndex, name, x, y,
-            normalColor, emphasisColor, lineWidth, rotate, orient
-        ) {
+        function _getSymbol(seriesIndex, dataIndex, name, x, y, orient) {
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
-            var symbol = self.deepQuery([data], 'symbol')
-                         || _sIndex2ShapeMap[seriesIndex]
-                         || 'circle';
-            var symbolSize = self.deepQuery([data, serie],'symbolSize');
-
-            var itemShape = {
-                shape : 'icon',
-                zlevel : _zlevelBase + 1,
-                style : {
-                    iconType : symbol.replace('empty', '').toLowerCase(),
-                    x : x - symbolSize,
-                    y : y - symbolSize,
-                    width : symbolSize * 2,
-                    height : symbolSize * 2,
-                    brushType : 'both',
-                    color : symbol.match('empty') ? '#fff' : normalColor,
-                    strokeColor : normalColor,
-                    lineWidth: lineWidth * 2
-                },
-                highlightStyle : {
-                    color : symbol.match('empty') ? '#fff' : emphasisColor,
-                    strokeColor : emphasisColor,
-                    lineWidth: lineWidth * 2 + 2
-                },
-                clickable : true
-            };
-
-            if (symbol.match('image')) {
-                itemShape.style.image = 
-                    symbol.replace(new RegExp('^image:\\/\\/'), '');
-                itemShape.shape = 'image';
-            }
             
-            if (typeof rotate != 'undefined') {
-                itemShape.rotation = [
-                    rotate * Math.PI / 180, x, y
-                ];
-            }
+            var itemShape = self.getSymbolShape(
+                serie, seriesIndex, data, dataIndex, name, 
+                x, y,
+                _sIndex2ShapeMap[seriesIndex], 
+                _sIndex2ColorMap[seriesIndex],
+                '#fff',
+                orient == 'vertical' ? 'horizontal' : 'vertical' // 翻转
+            );
+            itemShape.zlevel = _zlevelBase + 1;
             
-            if (symbol.match('star')) {
-                itemShape.style.iconType = 'star';
-                itemShape.style.n = 
-                    (symbol.replace('empty', '').replace('star','') - 0) || 5;
-            }
-            
-            if (symbol == 'none') {
-                itemShape.invisible = true;
-                itemShape.hoverable = false;
-            }
-
             if (self.deepQuery([data, serie, option], 'calculable')) {
                 self.setCalculable(itemShape);
                 itemShape.draggable = true;
             }
-
-            itemShape = self.addLabel(
-                itemShape, 
-                series[seriesIndex], 
-                series[seriesIndex].data[dataIndex], 
-                name, 
-                orient == 'vertical' ? 'horizontal' : 'vertical'
-            );
-            if (symbol.match('empty')) {
-                if (typeof itemShape.style.textColor == 'undefined') {
-                    itemShape.style.textColor = itemShape.style.strokeColor;
-                }
-                if (typeof itemShape.highlightStyle.textColor == 'undefined') {
-                    itemShape.highlightStyle.textColor = 
-                        itemShape.highlightStyle.strokeColor;
-                }
-            }
             
-            ecData.pack(
-                itemShape,
-                series[seriesIndex], seriesIndex,
-                series[seriesIndex].data[dataIndex], dataIndex,
-                name
-            );
-
-            itemShape._x = x;
-            itemShape._y = y;
-            itemShape._dataIndex = dataIndex;
-            itemShape._seriesIndex = seriesIndex;
-
             return itemShape;
         }
 
@@ -827,62 +735,22 @@ define(function(require) {
             var dataIndex = param.dataIndex;
             var seriesPL;
             var singlePL;
-            var serie;
-            var queryTarget;
-            
-            var lineWidth;
-            var normalColor;
-            var emphasisColor;
-            var defaultColor;
-            
             var len = seriesIndex.length;
             while (len--) {
                 seriesPL = finalPLMap[seriesIndex[len]];
                 if (seriesPL) {
-                    serie = series[seriesIndex[len]];
-                    queryTarget = [serie];
-                    defaultColor = _sIndex2ColorMap[seriesIndex[len]];
-                    // 多级控制
-                    lineWidth = self.deepQuery(
-                        queryTarget, 'itemStyle.normal.lineStyle.width'
-                    );
-                    normalColor = self.deepQuery(
-                        queryTarget, 'itemStyle.normal.color'
-                    );
-                    emphasisColor = self.deepQuery(
-                        queryTarget, 'itemStyle.emphasis.color'
-                    );
-                    var shape;
-                    var data;
                     for (var i = 0, l = seriesPL.length; i < l; i++) {
                         singlePL = seriesPL[i];
                         for (var j = 0, k = singlePL.length; j < k; j++) {
                             if (dataIndex == singlePL[j][2]) {
-                                data = serie.data[singlePL[j][2]];
-                                shape = _getSymbol(
-                                    seriesIndex[len],
-                                    singlePL[j][2], // dataIndex
-                                    singlePL[j][3], // name
-                                    singlePL[j][0], // x
-                                    singlePL[j][1], // y
-                                    self.deepQuery(
-                                        [data], 'itemStyle.normal.color'
-                                    ) || normalColor
-                                      || defaultColor,
-                                    self.deepQuery(
-                                        [data], 'itemStyle.emphasis.color'
-                                    ) || emphasisColor
-                                      || normalColor
-                                      || defaultColor,
-                                    lineWidth,
-                                    self.deepQuery(
-                                        [data, serie], 'symbolRotate'
-                                    ),
+                                tipShape.push(_getSymbol(
+                                    seriesIndex[len],   // seriesIndex
+                                    singlePL[j][2],     // dataIndex
+                                    singlePL[j][3],     // name
+                                    singlePL[j][0],     // x
+                                    singlePL[j][1],     // y
                                     'horizontal'
-                                );
-                                //console.log(shape)
-                                //zr.addHoverShape(shape);
-                                tipShape.push(shape);
+                                ));
                             }
                         }
                     }

@@ -128,45 +128,41 @@ define(function(require) {
          * 获取多级控制嵌套属性的基础方法
          * 返回ctrList中优先级最高（最靠前）的非undefined属性，ctrList中均无定义则返回undefined
          */
-        var deepQuery = (function() {
-            return function(ctrList, optionLocation) {
-                var finalOption;
-                for (var i = 0, l = ctrList.length; i < l; i++) {
-                    finalOption = query(ctrList[i], optionLocation);
-                    if (typeof finalOption != 'undefined') {
-                        return finalOption;
-                    }
+        function deepQuery(ctrList, optionLocation) {
+            var finalOption;
+            for (var i = 0, l = ctrList.length; i < l; i++) {
+                finalOption = query(ctrList[i], optionLocation);
+                if (typeof finalOption != 'undefined') {
+                    return finalOption;
                 }
-                return undefined;
-            };
-        })();
+            }
+            return undefined;
+        }
         
         /**
          * 获取多级控制嵌套属性的基础方法
          * 根据ctrList中优先级合并产出目标属性
          */
-        var deepMerge = (function() {
-            return function(ctrList, optionLocation) {
-                var finalOption;
-                var tempOption;
-                var len = ctrList.length;
-                while (len--) {
-                    tempOption = query(ctrList[len], optionLocation);
-                    if (typeof tempOption != 'undefined') {
-                        if (typeof finalOption == 'undefined') {
-                            finalOption = zrUtil.clone(tempOption);
-                        }
-                        else {
-                            zrUtil.merge(
-                                finalOption, tempOption,
-                                { 'overwrite': true, 'recursive': true }
-                            );
-                        }
+        function deepMerge (ctrList, optionLocation) {
+            var finalOption;
+            var tempOption;
+            var len = ctrList.length;
+            while (len--) {
+                tempOption = query(ctrList[len], optionLocation);
+                if (typeof tempOption != 'undefined') {
+                    if (typeof finalOption == 'undefined') {
+                        finalOption = zrUtil.clone(tempOption);
+                    }
+                    else {
+                        zrUtil.merge(
+                            finalOption, tempOption,
+                            { 'overwrite': true, 'recursive': true }
+                        );
                     }
                 }
-                return finalOption;
-            };
-        })();
+            }
+            return finalOption;
+        }
 
         /**
          * 获取自定义和默认配置合并后的字体设置
@@ -405,6 +401,136 @@ define(function(require) {
             return pList;
         }
         
+        function getSymbolShape(
+            series, seriesIndex,    // 系列 
+            data, dataIndex, name,  // 数据
+            x, y,                   // 坐标
+            symbol, color,          // 默认symbol和color，来自legend全局分配
+            emptyColor,             // 折线的emptySymbol用白色填充
+            orient                  // 走向，用于默认文字定位
+        ) {
+            var queryTarget = [data, series];
+            var value = typeof data != 'undefined'
+                        ? (typeof data.value != 'undefined'
+                          ? data.value
+                          : data)
+                        : '-';
+            
+            symbol = self.deepQuery(queryTarget, 'symbol') || symbol;
+            var symbolSize = self.deepQuery(queryTarget, 'symbolSize');
+            symbolSize = typeof symbolSize == 'function'
+                         ? symbolSize(value)
+                         : symbolSize;
+            var symbolRotate = self.deepQuery(queryTarget, 'symbolRotate');
+            
+            var normal = self.deepMerge(
+                queryTarget,
+                'itemStyle.normal'
+            );
+            var emphasis = self.deepMerge(
+                queryTarget,
+                'itemStyle.emphasis'
+            );
+            var nBorderWidth = typeof normal.borderWidth != 'undefined'
+                       ? normal.borderWidth
+                       : (normal.lineStyle && normal.lineStyle.width * 2);
+            if (typeof nBorderWidth == 'undefined') {
+                nBorderWidth = 0;
+            }
+            var eBorderWidth = typeof emphasis.borderWidth != 'undefined'
+                       ? emphasis.borderWidth
+                       : (emphasis.lineStyle && emphasis.lineStyle.width * 2);
+            if (typeof eBorderWidth == 'undefined') {
+                eBorderWidth = nBorderWidth + 2;
+            }
+            
+            var itemShape = {
+                shape : 'icon',
+                style : {
+                    iconType : symbol.replace('empty', '').toLowerCase(),
+                    x : x - symbolSize,
+                    y : y - symbolSize,
+                    width : symbolSize * 2,
+                    height : symbolSize * 2,
+                    brushType : 'both',
+                    color : symbol.match('empty') 
+                            ? emptyColor 
+                            : (normal.color || color),
+                    strokeColor : normal.borderColor || normal.color || color,
+                    lineWidth: nBorderWidth
+                },
+                highlightStyle : {
+                    color : symbol.match('empty') 
+                            ? emptyColor 
+                            : (emphasis.color|| normal.color || color),
+                    strokeColor : emphasis.borderColor || normal.borderColor 
+                                  || emphasis.color || normal.color || color,
+                    lineWidth: eBorderWidth
+                },
+                clickable : true
+            };
+
+            if (symbol.match('image')) {
+                itemShape.style.image = 
+                    symbol.replace(new RegExp('^image:\\/\\/'), '');
+                itemShape.shape = 'image';
+            }
+            
+            if (typeof symbolRotate != 'undefined') {
+                itemShape.rotation = [
+                    symbolRotate * Math.PI / 180, x, y
+                ];
+            }
+            
+            if (symbol.match('star')) {
+                itemShape.style.iconType = 'star';
+                itemShape.style.n = 
+                    (symbol.replace('empty', '').replace('star','') - 0) || 5;
+            }
+            
+            if (symbol == 'none') {
+                itemShape.invisible = true;
+                itemShape.hoverable = false;
+            }
+            
+            /*
+            if (self.deepQuery([data, serie, option], 'calculable')) {
+                self.setCalculable(itemShape);
+                itemShape.draggable = true;
+            }
+            */
+
+            itemShape = self.addLabel(
+                itemShape, 
+                series, data, name, 
+                orient
+            );
+            
+            if (symbol.match('empty')) {
+                if (typeof itemShape.style.textColor == 'undefined') {
+                    itemShape.style.textColor = itemShape.style.strokeColor;
+                }
+                if (typeof itemShape.highlightStyle.textColor == 'undefined') {
+                    itemShape.highlightStyle.textColor = 
+                        itemShape.highlightStyle.strokeColor;
+                }
+            }
+            
+            ecData.pack(
+                itemShape,
+                series, seriesIndex,
+                data, dataIndex,
+                name
+            );
+
+            itemShape._x = x;
+            itemShape._y = y;
+            itemShape._dataIndex = dataIndex;
+            itemShape._seriesIndex = seriesIndex;
+
+            return itemShape;
+        }
+        
         /**
          * 百分比计算
          */
@@ -494,6 +620,7 @@ define(function(require) {
         self.getFont = getFont;
         self.addLabel = addLabel;
         self.markPoint = markPoint;
+        self.getSymbolShape = getSymbolShape;
         self.parsePercent = parsePercent;
         self.parseCenter = parseCenter;
         self.parseRadius = parseRadius;
