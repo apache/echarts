@@ -214,10 +214,10 @@ define(function(require) {
          * 生成折线图上的拐点图形
          */
         function _getSymbol(seriesIndex, dataIndex, name, x, y) {
-            var dataRange = component.dataRange;
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
             
+            var dataRange = component.dataRange;
             var rangColor;
             if (dataRange) {
                 rangColor = isNaN(data[2]) 

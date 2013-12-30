@@ -267,127 +267,52 @@ define(function(require) {
             );
             mpOption.name = series.name;
                    
-            var dataRange = component.dataRange;
             var pList = [];
             var data = mpOption.data;
-            var queryTarget;
-            var symbol;
-            var symbolSize;
-            var symbolRotate;
             var itemShape;
             
-            // 多级控制
+            var dataRange = component.dataRange;
+            var legend = component.legend;
             var color;
+            var value
+            var queryTarget;
             var nColor;
             var eColor;
-            var nBorderColor;
-            var eBorderColor;
-            var nBorderWidth;
-            var eBorderWidth
-            var x;
-            var y;
             for (var i = 0, l = data.length; i < l; i++) {
-                queryTarget = [data[i], mpOption];
-                symbol = self.deepQuery(queryTarget, 'symbol') || 'pin';
-                symbolSize = self.deepQuery(queryTarget,'symbolSize');
-                symbolSize = typeof symbolSize == 'function'
-                             ? symbolSize(data[i].value)
-                             : symbolSize;
-                symbolRotate = self.deepQuery(queryTarget, 'symbolRotate');
-                color = (dataRange && !isNaN(data[i].value))
-                        ? dataRange.getColor(data[i].value)
-                        : null;
-                // 用户设定优先于从值域控件里取
-                nColor = self.deepQuery(
-                    queryTarget, 'itemStyle.normal.color'
-                ) 
-                || color 
-                || (component.legend && component.legend.getColor(series.name));
-                eColor = self.deepQuery(
-                    queryTarget, 'itemStyle.emphasis.color'
-                ) || nColor;
-                
-                nBorderColor = self.deepQuery(
-                    queryTarget, 'itemStyle.normal.borderColor'
-                ) || nColor;
-                eBorderColor = self.deepQuery(
-                    queryTarget, 'itemStyle.emphasis.borderColor'
-                ) || nBorderColor;
-                
-                nBorderWidth = self.deepQuery(
-                    queryTarget, 'itemStyle.normal.borderWidth'
-                );
-                eBorderWidth = self.deepQuery(
-                    queryTarget, 'itemStyle.emphasis.borderWidth'
-                ) || (nBorderWidth + 2);
-                
-                x = data[i].x;
-                y = data[i].y;
-                
-                itemShape = {
-                    shape : 'icon',
-                    style : {
-                        iconType : symbol.replace('empty', '').toLowerCase(),
-                        x : x - symbolSize,
-                        y : y - symbolSize,
-                        width : symbolSize * 2,
-                        height : symbolSize * 2,
-                        brushType : 'both',
-                        color : symbol.match('empty') 
-                                ? 'rgba(0,0,0,0)' : nColor,
-                        strokeColor : nBorderColor,
-                        lineWidth: nBorderWidth
-                    },
-                    highlightStyle : {
-                        color : symbol.match('empty') 
-                                ? 'rgba(0,0,0,0)' : eColor,
-                        strokeColor : eBorderColor,
-                        lineWidth: eBorderWidth
-                    },
-                    clickable : true
-                };
-    
-                if (symbol.match('image')) {
-                    itemShape.style.image = 
-                        symbol.replace(new RegExp('^image:\\/\\/'), '');
-                    itemShape.shape = 'image';
+                // 图例
+                if (legend) {
+                    color = legend.getColor(series.name)
                 }
-                
-                if (typeof symbolRotate != 'undefined') {
-                    itemShape.rotation = [
-                        symbolRotate * Math.PI / 180, x, y
-                    ];
-                }
-                
-                if (symbol.match('star')) {
-                    itemShape.style.iconType = 'star';
-                    itemShape.style.n = 
-                        (symbol.replace('empty', '').replace('star','') - 0) 
-                        || 5;
-                }
-                
-                if (symbol == 'none' ||(nColor == null && eColor == null)) {
-                    itemShape.invisible = true;
-                    itemShape.hoverable = false;
-                }
-    
-                itemShape = self.addLabel(
-                    itemShape, 
-                    mpOption,
-                    data[i], 
-                    data[i].name, 
-                    'horizontal'
-                );
-                if (symbol.match('empty')) {
-                    if (typeof itemShape.style.textColor == 'undefined') {
-                        itemShape.style.textColor = itemShape.style.strokeColor;
-                    }
-                    if (typeof itemShape.highlightStyle.textColor == 'undefined'
-                    ) {
-                        itemShape.highlightStyle.textColor = 
-                            itemShape.highlightStyle.strokeColor;
+                // 值域
+                if (dataRange) {
+                    value = typeof data[i] != 'undefined'
+                            ? (typeof data[i].value != 'undefined'
+                              ? data[i].value
+                              : data[i])
+                            : '-';
+                    color = isNaN(value) ? color : dataRange.getColor(value);
+                    
+                    queryTarget = [data[i], mpOption];
+                    nColor = self.deepQuery(
+                        queryTarget, 'itemStyle.normal.color'
+                    ) || color;
+                    eColor = self.deepQuery(
+                        queryTarget, 'itemStyle.emphasis.color'
+                    ) || nColor;
+                    // 有值域，并且值域返回null且用户没有自己定义颜色，则隐藏这个mark
+                    if (nColor == null && eColor == null) {
+                        continue;
                     }
                 }
+                // 复用getSymbolShape
+                itemShape = getSymbolShape(
+                    mpOption, seriesIndex,      // 系列 
+                    data[i], i, data[i].name,   // 数据
+                    data[i].x, data[i].y,       // 坐标
+                    'pin', color,               // 默认symbol和color
+                    'rgba(0,0,0,0)',
+                    'horizontal'                // 走向，用于默认文字定位
+                )
                 
                 ecData.pack(
                     itemShape,
