@@ -313,7 +313,7 @@ define(function(require) {
                     'rgba(0,0,0,0)',
                     'horizontal'                // 走向，用于默认文字定位
                 )
-                
+                // 重新pack一下数据
                 ecData.pack(
                     itemShape,
                     series, seriesIndex,

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+
+    <script src="../../doc/asset/js/esl/esl.js"></script>
+    <script src="../../doc/asset/js/codemirror.js"></script>
+    <script src="../../doc/asset/js/javascript.js"></script>
+
+    <link href="../../doc/asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../../doc/asset/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../../doc/asset/css/codemirror.css" rel="stylesheet">
+    <link href="../../doc/asset/css/monokai.css" rel="stylesheet">
+    <link rel="shortcut icon" href="../../doc/asset/ico/favicon.png">
+    <style type="text/css">
+        .test-head {padding-left: 20px;margin-top:0;background-color:#eee;}
+        .CodeMirror pre{color: #f8f8f2;}
+        .sidebar-nav {
+            padding: 9px 0;
+            margin-bottom: 0;
+        }
+        .icon-resize-full, .icon-resize-small {
+            float: right;
+            opacity: .3;
+        }
+        .span4.ani {
+            transition: width 1s;
+            -moz-transition: width 1s; /* Firefox 4 */
+            -webkit-transition: width 1s; /* Safari and Chrome */
+            -o-transition: width 1s; /* Opera */
+        }
+        .span8.ani {
+            transition: width 1s;
+            -moz-transition: width 1s; /* Firefox 4 */
+            -webkit-transition: width 1s; /* Safari and Chrome */
+            -o-transition: width 1s; /* Opera */
+        }
+        .main {
+            height: 400px;
+            overflow: hidden;
+            padding : 10px;
+            margin-bottom: 10px;
+            border: 1px solid #e3e3e3;
+            -webkit-border-radius: 4px;
+               -moz-border-radius: 4px;
+                    border-radius: 4px;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+               -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+                    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+        }
+
+    </style>
+</head>
+
+<body>
+    <h3 class="test-head"><a href="../../index.html">ECharts</a> - test all <button onclick="refreshAll()">Refresh All</button></h3>
+    <div class="container-fluid" idx='0'>
+        <div class="row-fluid">
+            <div md="sidebar-code" class="span4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" md ="icon-resize" ></a>option</div>
+                    <textarea md="code" name="code">
+option = {
+    tooltip : {
+        trigger: 'axis'
+    },
+    legend: {
+        data:['邮件营销','联盟广告','直接访问','搜索引擎']
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : true,
+            dataView : {readOnly: false},
+            magicType:['line', 'bar'],
+            restore : true,
+            saveAsImage : true
+        }
+    },
+    calculable : true,
+    xAxis : [
+        {
+            type : 'category',
+            boundaryGap : false,
+            data : ['周一','周二','周三','周四','周五','周六','周日']
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value',
+            splitArea : {show : true}
+        }
+    ],
+    series : [
+        {
+            name:'邮件营销',
+            type:'line',
+            stack: '总量',
+            symbol: 'none',
+            itemStyle: {
+                normal: {
+                    areaStyle: {
+                        // 区域图，纵向渐变填充
+                        color : (function(){
+                            var zrColor = require('zrender/tool/color');
+                            return zrColor.getLinearGradient(
+                                0, 200, 0, 400,
+                                [[0, 'rgba(255,0,0,0.8)'],[0.8, 'rgba(255,255,255,0.1)']]
+                            )
+                        })()
+                    }
+                }
+            },
+            data:[
+                120, 132, 301, 134, 
+                {value:90, symbol:'droplet',symbolSize:5},
+                230, 210
+            ]
+        },
+        {
+            name:'联盟广告',
+            type:'line',
+            stack: '总量',
+            smooth: true,
+            symbol: 'image://../../doc/asset/ico/favicon.png',     // 系列级个性化拐点图形
+            symbolSize: 8,
+            data:[
+                120, 82,
+                {
+                    value:201,
+                    symbol: 'star',  // 数据级个性化拐点图形
+                    symbolSize : 15,
+                    itemStyle : { normal: {label : {
+                        show: true,
+                        textStyle : {
+                            fontSize : '20',
+                            fontFamily : '微软雅黑',
+                            fontWeight : 'bold'
+                        }
+                    }}}
+                },
+                {
+                    value:134,
+                    symbol: 'none'
+                },
+                190, 
+                {
+                    value : 230,
+                    symbol: 'emptypin',
+                    symbolSize: 8
+                },
+                110
+            ]
+        },
+        {
+            name:'直接访问',
+            type:'line',
+            stack: '总量',
+            symbol: 'arrow',
+            symbolSize: 6,
+            symbolRotate: -45,
+            itemStyle: {
+                normal: {
+                    color: 'red',
+                    lineStyle: {        // 系列级个性化折线样式
+                        width: 2,
+                        type: 'dashed'
+                    }
+                },
+                emphasis: {
+                    color: 'blue'
+                }
+            },
+            data:[
+                320, 332, '-', 334,
+                {
+                    value: 390,
+                    symbol: 'star6',
+                    symbolSize : 20,
+                    symbolRotate : 10,
+                    itemStyle: {        // 数据级个性化折线样式
+                        normal: {
+                            color: 'yellowgreen'
+                        },
+                        emphasis: {
+                            color: 'orange',
+                            label : {
+                                show: true,
+                                position: 'inside',
+                                textStyle : {
+                                    fontSize : '20'
+                                }
+                            }
+                        }
+                    }
+                },
+                330, 320
+            ]
+        },
+        {
+            name:'搜索引擎',
+            type:'line',
+            symbol:'emptyCircle',
+            itemStyle: {
+                normal: {
+                    lineStyle: {            // 系列级个性化折线样式，横向渐变描边
+                        width: 2,
+                        color: (function(){
+                            var zrColor = require('zrender/tool/color');
+                            return zrColor.getLinearGradient(
+                                0, 0, 1000, 0,
+                                [[0, 'rgba(255,0,0,0.8)'],[0.8, 'rgba(255,255,0,0.8)']]
+                            )
+                        })(),
+                        shadowColor : 'rgba(0,0,0,0.5)',
+                        shadowBlur: 10,
+                        shadowOffsetX: 8,
+                        shadowOffsetY: 8
+                    }
+                },
+                emphasis : {
+                    label : {show: true}
+                }
+            },
+            data:[
+                620, 732, 791, 
+                {value:734, symbol:'emptyHeart',symbolSize:10},
+                890, 930, 820
+            ]
+        }
+    ]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div md="graphic" class="span8">
+                <div md="main" class="main"></div>
+                <div>
+                    <button onclick="refresh(true, 0)">Refresh ~</button>
+                    <span md='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+    </div><!--/.fluid-container-->
+    
+    <!--------1--------->
+    <div class="container-fluid" idx="1">
+        <div class="row-fluid">
+            <div md="sidebar-code" class="span4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" md ="icon-resize"></a>option</div>
+                    <textarea md="code" name="code">
+option = {
+    tooltip : {
+        show: true,
+        trigger: 'item'
+    },
+    legend: {
+        data:['邮件营销','联盟广告','直接访问','搜索引擎']
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : true,
+            dataView : {readOnly: false},
+            magicType:['line', 'bar'],
+            restore : true,
+            saveAsImage : true
+        }
+    },
+    calculable : true,
+    xAxis : [
+        {
+            type : 'category',
+            data : ['周一','周二','周三','周四','周五','周六','周日']
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value',
+            splitArea : {show : true}
+        }
+    ],
+    series : [
+        {
+            name:'邮件营销',
+            type:'bar',
+            itemStyle: {        // 系列级个性化样式，纵向渐变填充
+                normal: {
+                    borderColor:'red',
+                    color : (function(){
+                        var zrColor = require('zrender/tool/color');
+                        return zrColor.getLinearGradient(
+                            0, 400, 0, 300,
+                            [[0, 'green'],[1, 'yellow']]
+                        )
+                    })()
+                },
+                emphasis: {
+                    borderWidth: 5,
+                    borderColor:'green',
+                    color: (function(){
+                        var zrColor = require('zrender/tool/color');
+                        return zrColor.getLinearGradient(
+                            0, 400, 0, 300,
+                            [[0, 'red'],[1, 'orange']]
+                        )
+                    })(),
+                    label : {
+                        show : true,
+                        position : 'top',
+                        formatter : "{a} {b} {c}",
+                        textStyle : {
+                            color: 'blue'
+                        }
+                    }
+                }
+            },
+            data:[220, 232, 101, 234, 190, 330, 210]
+        },
+        {
+            name:'联盟广告',
+            type:'bar',
+            stack: '总量',
+            data:[120, '-', 451, 134, 190, 230, 110]
+        },
+        {
+            name:'直接访问',
+            type:'bar',
+            stack: '总量',
+            itemStyle: {                // 系列级个性化
+                normal: {
+                    borderWidth: 6,
+                    borderColor:'tomato',
+                    color: 'red'
+                },
+                emphasis: {
+                    borderColor:'red',
+                    color: 'blue'
+                }
+            },
+            data:[
+                320, 332, 100, 334,
+                {
+                    value: 390,
+                    symbolSize : 10,   // 数据级个性化
+                    itemStyle: {
+                        normal: {
+                            color :'lime'
+                        },
+                        emphasis: {
+                            color: 'skyBlue'
+                        }
+                    }
+                },
+                330, 320
+            ]
+        },
+        {
+            name:'搜索引擎',
+            type:'bar',
+            barWidth: 40,                   // 系列级个性化，柱形宽度
+            itemStyle: {
+                normal: {                   // 系列级个性化，横向渐变填充
+                    borderRadius: 5,
+                    color : (function(){
+                        var zrColor = require('zrender/tool/color');
+                        return zrColor.getLinearGradient(
+                            0, 0, 1000, 0,
+                            [[0, 'rgba(30,144,255,0.8)'],[1, 'rgba(138,43,226,0.8)']]
+                        )
+                    })(),
+                    label : {
+                        show : true,
+                        textStyle : {
+                            fontSize : '20',
+                            fontFamily : '微软雅黑',
+                            fontWeight : 'bold'
+                        }
+                    }
+                }
+            },
+            data:[
+                620, 732, 
+                {
+                    value: 701,
+                    itemStyle : { normal: {label : {position: 'inside'}}}
+                },
+                734, 890, 930, 820]
+        }
+    ]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div md="graphic" class="span8">
+                <div md="main" class="main"></div>
+                <div>
+                    <button onclick="refresh(true, 1)">Refresh ~</button>
+                    <span md='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+    </div><!--/.fluid-container-->
+
+    <script src="../../doc/asset/js/jquery.js"></script>
+    <script src="all.js"></script>
+</body>
+</html>
