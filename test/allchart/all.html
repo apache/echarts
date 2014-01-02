@@ -231,7 +231,12 @@ option = {
                 620, 732, 791, 
                 {value:734, symbol:'emptyHeart',symbolSize:10},
                 890, 930, 820
-            ]
+            ],
+            markPoint : {
+                data : [
+                    {name : '周最高', value : 930, xAxis: '周六', yAxis: 935}
+                ]
+            }
         }
     ]
 };
@@ -390,7 +395,18 @@ option = {
                     value: 701,
                     itemStyle : { normal: {label : {position: 'inside'}}}
                 },
-                734, 890, 930, 820]
+                734, 890, 
+                {
+                    value: 930,
+                    itemStyle : { normal: {label : {show: false}}}
+                },
+                820
+            ],
+            markPoint : {
+                data : [
+                    {name : '最高', value : 930, xAxis: '周六', yAxis: 930, symbolSize:14},
+                ]
+            }
         }
     ]
 };
@@ -519,7 +535,16 @@ option = {
                     symbolSize:30
                 })
                 return d;
-            })()
+            })(),
+            markPoint : {
+                symbol: 'emptyCircle',
+                itemStyle:{
+                    normal:{label:{position:'top'}}
+                },
+                data : [
+                    {name : '有个东西', value : 1000, xAxis: 5, yAxis: 5, symbolSize:80},
+                ]
+            }
         }
     ]
 };
@@ -731,7 +756,17 @@ option = {
                 [2295.35, 2346.5, 2295.35, 2346.92],
                 [2300, 2291.3, 2288.26, 2308.38],
                 [2320.26, 2302.6, 2287.3, 2362.94]
-            ]
+            ],
+            markPoint : {
+                symbol: 'star',
+                //symbolSize:20,
+                itemStyle:{
+                    normal:{label:{position:'top'}}
+                },
+                data : [
+                    {name : '最高', value : 2444.8, xAxis: '2013/2/18', yAxis: 2466}
+                ]
+            }
         }
     ]
 };
@@ -926,7 +961,13 @@ option = {
                 {value:234, name:'联盟广告'},
                 {value:135, name:'视频广告'},
                 {value:1548, name:'搜索引擎'}
-            ]
+            ],
+            markPoint : {
+                symbol: 'emptyHeart',
+                data : [
+                    {name : '打酱油的标注', value : 100, x:'50%', y:'15%', symbolSize:32},
+                ]
+            }
         }
     ]
 };
@@ -1120,7 +1161,13 @@ option = {
                         }
                     }
                 }
-            ]
+            ],
+            markPoint : {
+                symbol: 'emptyHeart',
+                data : [
+                    {name : '打酱油的标注', value : 100, x:'50%', y:'15%', symbolSize:32},
+                ]
+            }
         }
     ]
 };
@@ -1225,7 +1272,14 @@ option = {
                 [ 1951, 10048, 2060, 6171],
                 [ 8010, 16145, 8090, 8045],
                 [ 1013,   990,  940, 6907]
-            ]
+            ],
+            markPoint : {
+                symbol: 'star',
+                data : [
+                    {name : '打酱油的标注', value : 100, x:'5%', y:'50%', symbolSize:32},
+                    {name : '打酱油的标注', value : 100, x:'95%', y:'50%', symbolSize:32},
+                ]
+            }
         }
     ]
 };
@@ -1354,7 +1408,14 @@ option = {
                 {source : 7, target : 6, weight : 6},
                 {source : 7, target : 3, weight : 1},
                 {source : 9, target : 6, weight : 1}
-            ]
+            ],
+            markPoint : {
+                symbol: 'emptyCircle',
+                data : [
+                    {name : '打酱油的标注', value : 100, x:'5%', y:'50%', symbolSize:32},
+                    {name : '打酱油的标注', value : 100, x:'95%', y:'50%', symbolSize:32},
+                ]
+            }
         }
     ]
 };
@@ -1493,7 +1554,32 @@ option = {
                 {name: '台湾',value: Math.round(Math.random()*1000)},
                 {name: '香港',value: Math.round(Math.random()*1000)},
                 {name: '澳门',value: Math.round(Math.random()*1000)}
-            ]
+            ],
+            markPoint : {
+                itemStyle : {
+                    normal:{
+                        color:'skyblue'
+                    }
+                },
+                data : [
+                    {name : '北京', value : 350},
+                    {name : '天津', value : 123},
+                    {name : '上海', value : 103},
+                    {name : '东莞', value : 83},
+                    {name : '东营', value : 13},
+                    {name : '中山', value : 153},
+                    {name : '临汾', value : 303}
+                ]
+            },
+            geoCoord: {
+                '上海': [121.4648,31.2891],
+                '东莞': [113.8953,22.901],
+                '东营': [118.7073,37.5513],
+                '中山': [113.4229,22.478],
+                '临汾': [111.4783,36.1615],
+                '北京': [116.4551,40.2539],
+                '天津': [117.4219,39.4189]
+            }
         }
     ]
 };

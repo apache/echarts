@@ -662,6 +662,21 @@ define(function (require) {
         function getNameByIndex(dataIndex) {
             return option.data[dataIndex];
         }
+        
+        // 根据类目轴数据索引换算类目轴名称
+        function getIndexByName(name) {
+            var data = option.data;
+            var dataLength = data.length;
+
+            for (var i = 0; i < dataLength; i++) {
+                if (data[i] == name
+                    || (typeof data[i].value != 'undefined' 
+                        && data[i].value == name)
+                ) {
+                    return i;
+                }
+            }
+        }
 
         /**
          * 根据类目轴数据索引返回是否为主轴线
@@ -682,6 +697,7 @@ define(function (require) {
         self.getCoord = getCoord;
         self.getCoordByIndex = getCoordByIndex;
         self.getNameByIndex = getNameByIndex;
+        self.getIndexByName = getIndexByName;
         self.isMainAxis = isMainAxis;
         self.getPosition = getPosition;
 

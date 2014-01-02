@@ -12,7 +12,7 @@ define(function(require) {
                                 || window.msRequestAnimationFrame
                                 || window.mozRequestAnimationFrame
                                 || window.webkitRequestAnimationFrame
-                                || function(func){setTimeout(func, 16)};
+                                || function(func){setTimeout(func, 16);};
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -108,6 +108,7 @@ define(function(require) {
                 var serie = series[i];
                 if (serie.type === ecConfig.CHART_TYPE_FORCE) {
                     series[i] = self.reformOption(series[i]);
+                    _buildMark(i);
                     forceSerie = serie;
 
                     var minRadius = self.deepQuery([serie], 'minRadius');
@@ -502,9 +503,13 @@ define(function(require) {
                     var forceFactor = 1 * (w1 + w2) * k2 / d;
 
                     //节点1受到的力
-                    vec2.scaleAndAdd(nodeForces[i], nodeForces[i], v12, -forceFactor);
+                    vec2.scaleAndAdd(
+                        nodeForces[i], nodeForces[i], v12, -forceFactor
+                    );
                     //节点2受到的力
-                    vec2.scaleAndAdd(nodeForces[j], nodeForces[j], v12, forceFactor);
+                    vec2.scaleAndAdd(
+                        nodeForces[j], nodeForces[j], v12, forceFactor
+                    );
                 }
             }
             // 计算节点之间引力
@@ -524,9 +529,13 @@ define(function(require) {
 
                 var forceFactor = w * d2 / k / Math.sqrt(d2);
                 // 节点1受到的力
-                vec2.scaleAndAdd(nodeForces[s], nodeForces[s], v12, forceFactor);
+                vec2.scaleAndAdd(
+                    nodeForces[s], nodeForces[s], v12, forceFactor
+                );
                 // 节点2受到的力
-                vec2.scaleAndAdd(nodeForces[t], nodeForces[t], v12, -forceFactor);
+                vec2.scaleAndAdd(
+                    nodeForces[t], nodeForces[t], v12, -forceFactor
+                );
             }
             // 到质心的向心力
             for (var i = 0, l = filteredNodes.length; i < l; i++){
@@ -607,6 +616,21 @@ define(function(require) {
         }
 
         var _updating;
+        
+        // 添加标注
+        function _buildMark(seriesIndex) {
+            var serie = series[seriesIndex];
+            if (serie.markPoint) {
+                var shapeList = self.markPoint(
+                    serie, seriesIndex, serie.markPoint, component
+                );
+                for (var i = 0, l = shapeList.length; i < l; i++) {
+                    shapeList[i].id = zr.newShapeId(self.type);
+                    self.shapeList.push(shapeList[i]);
+                    zr.addShape(shapeList[i]);
+                }
+            }
+        }
 
         function init(newOption, newComponent) {
             option = newOption;
@@ -648,8 +672,7 @@ define(function(require) {
             self.isDragstart = true;
         };
         
-        function onclick(param) {
-        }
+        function onclick() { }
 
         /**
          * 拖拽开始

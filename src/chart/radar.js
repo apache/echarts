@@ -62,6 +62,7 @@
                         _addDropBox(i);
                     }
                     _buildSingleRadar(i);
+                    _buildMark(i);
                 }
             }
 
@@ -275,6 +276,19 @@
             }
         }
 
+        // 添加标注
+        function _buildMark(seriesIndex) {
+            var serie = series[seriesIndex];
+            if (serie.markPoint) {
+                var shapeList = self.markPoint(
+                    serie, seriesIndex, serie.markPoint, component
+                );
+                for (var i = 0, l = shapeList.length; i < l; i++) {
+                    shapeList[i].zlevel = _zlevelBase + 1;
+                    self.shapeList.push(shapeList[i]);
+                }
+            }
+        }
 
         /**
          * 数据项被拖拽出去，重载基类方法

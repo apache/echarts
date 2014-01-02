@@ -880,7 +880,7 @@ define(function (require) {
                                           ? ''
                                           : (' (' + special + ')'));
                 }
-                else if (serie.type == ecConfig.CHART_TYPE_RADAR) {
+                else if (serie.type == ecConfig.CHART_TYPE_RADAR && special) {
                     indicator = special;
                     html += _encodeHTML(
                         name === '' ? (serie.name || '') : name

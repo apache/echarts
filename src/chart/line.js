@@ -22,7 +22,6 @@ define(function(require) {
         CalculableBase.call(this, zr, option);
 
         var ecConfig = require('../config');
-        var ecData = require('../util/ecData');
 
         var zrColor = require('zrender/tool/color');
         var zrUtil = require('zrender/tool/util');
@@ -681,12 +680,15 @@ define(function(require) {
                         yAxis = component.yAxis.getAxis(serie.yAxisIndex);
                         
                         pos = [
-                            xAxis.type == ecConfig.COMPONENT_TYPE_AXIS_VALUE
-                            ? xAxis.getCoord(mpData.xAxis || 0)
-                            : xAxis.getCoordByIndex(mpData.xAxis || 0),
-                            yAxis.type == ecConfig.COMPONENT_TYPE_AXIS_VALUE
-                            ? yAxis.getCoord(mpData.yAxis || 0)
-                            : yAxis.getCoordByIndex(mpData.yAxis || 0)
+                            typeof mpData.xAxis != 'string' 
+                            && xAxis.getCoordByIndex
+                            ? xAxis.getCoordByIndex(mpData.xAxis || 0)
+                            : xAxis.getCoord(mpData.xAxis || 0),
+                            
+                            typeof mpData.yAxis != 'string' 
+                            && yAxis.getCoordByIndex
+                            ? yAxis.getCoordByIndex(mpData.yAxis || 0)
+                            : yAxis.getCoord(mpData.yAxis || 0)
                         ];
                         markPoint.data[i].x = typeof mpData.x != 'undefined'
                                               ? mpData.x : pos[0];

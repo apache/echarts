@@ -74,6 +74,7 @@ define(function(require) {
                         self.shapeList.push(pieCase);
                     }
                     _buildSinglePie(i);
+                    _buildMark(i);
                 }
             }
 
@@ -615,6 +616,21 @@ define(function(require) {
                 +'.labelLine.show'
             );
         }
+        
+        // 添加标注
+        function _buildMark(seriesIndex) {
+            var serie = series[seriesIndex];
+            if (serie.markPoint) {
+                var shapeList = self.markPoint(
+                    serie, seriesIndex, serie.markPoint, component
+                );
+                for (var i = 0, l = shapeList.length; i < l; i++) {
+                    shapeList[i].zlevel = _zlevelBase + 1;
+                    self.shapeList.push(shapeList[i]);
+                }
+            }
+        }
+        
         /**
          * 参数修正&默认值赋值，重载基类方法
          * @param {Object} opt 参数

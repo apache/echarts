@@ -591,8 +591,8 @@ define(function() {
                 },
                 emphasis: {
                     label: {
-                        show: false,
-                        position: 'outer'
+                        show: false
+                        // position: 'outer'
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
@@ -782,10 +782,10 @@ define(function() {
                 },
                 emphasis: {
                     label: {
-                        show: true,
+                        show: true
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
                         // formatter : null,
-                        position: 'inside' // 可选为'left'|'right'|'top'|'bottom'
+                        // position: 'inside' // 可选为'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
                 }

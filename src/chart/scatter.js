@@ -22,9 +22,9 @@ define(function(require) {
         CalculableBase.call(this, zr, option);
 
         var ecConfig = require('../config');
-        var ecData = require('../util/ecData');
 
         var zrColor = require('zrender/tool/color');
+        var zrUtil = require('zrender/tool/util');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_SCATTER;
@@ -163,6 +163,8 @@ define(function(require) {
             }
             // console.log(pointList)
             _buildPointList(pointList);
+            
+            _buildMark(seriesArray);
         }
 
         /**
@@ -243,7 +245,6 @@ define(function(require) {
             return itemShape;
         }
         
-        
         function _getLargeSymbol(symbolList, nColor) {
             return {
                 shape : 'symbol',
@@ -255,6 +256,57 @@ define(function(require) {
                     strokeColor : nColor
                 }
             };
+        }
+        
+        // 添加标注
+        function _buildMark(seriesArray) {
+            var markPoint;
+            var mpData;
+            var pos;
+            var shapeList;
+            var serie;
+            var seriesIndex;
+            var xAxis;
+            var yAxis;
+            for (var j = 0, k = seriesArray.length; j < k; j++) {
+                seriesIndex = seriesArray[j];
+                serie = series[seriesIndex];
+                if (serie.markPoint && self.selectedMap[serie.name]) {
+                    markPoint = zrUtil.clone(serie.markPoint);
+                    for (var i = 0, l = markPoint.data.length; i < l; i++) {
+                        mpData = markPoint.data[i];
+                        xAxis = component.xAxis.getAxis(serie.xAxisIndex);
+                        yAxis = component.yAxis.getAxis(serie.yAxisIndex);
+                        
+                        pos = [
+                            typeof mpData.xAxis != 'string' 
+                            && xAxis.getCoordByIndex
+                            ? xAxis.getCoordByIndex(mpData.xAxis || 0)
+                            : xAxis.getCoord(mpData.xAxis || 0),
+                            
+                            typeof mpData.yAxis != 'string' 
+                            && yAxis.getCoordByIndex
+                            ? yAxis.getCoordByIndex(mpData.yAxis || 0)
+                            : yAxis.getCoord(mpData.yAxis || 0)
+                        ];
+                        markPoint.data[i].x = typeof mpData.x != 'undefined'
+                                              ? mpData.x : pos[0];
+                        markPoint.data[i].y = typeof mpData.y != 'undefined'
+                                              ? mpData.y : pos[1];
+                    }
+                    shapeList = self.markPoint(
+                        serie, seriesIndex, markPoint, component
+                    );
+                    for (var i = 0, l = shapeList.length; i < l; i++) {
+                        shapeList[i].zlevel = _zlevelBase + 1;
+                        shapeList[i]._x = shapeList[i].style.x 
+                                          + shapeList[i].style.width / 2;
+                        shapeList[i]._y = shapeList[i].style.y 
+                                          + shapeList[i].style.height / 2;
+                        self.shapeList.push(shapeList[i]);
+                    }
+                }
+            }
         }
 
         /**

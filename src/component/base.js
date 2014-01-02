@@ -206,10 +206,11 @@ define(function(require) {
                 tarShape.highlightStyle.text = _getLabelText(
                     serie, data, name, 'emphasis'
                 );
-                tarShape.highlightStyle.textPosition = 
-                    typeof eLabel.position == 'undefined'
+                tarShape.highlightStyle.textPosition = nLabel.show
+                    ? tarShape.style.textPosition
+                    : (typeof eLabel.position == 'undefined'
                         ? (orient == 'horizontal' ? 'right' : 'top')
-                        : eLabel.position;
+                        : eLabel.position);
                 tarShape.highlightStyle.textColor = eTextStyle.color;
                 tarShape.highlightStyle.textFont = self.getFont(eTextStyle);
             }
@@ -274,14 +275,16 @@ define(function(require) {
             var dataRange = component.dataRange;
             var legend = component.legend;
             var color;
-            var value
+            var value;
             var queryTarget;
             var nColor;
             var eColor;
+            var zrWidth = self.zr.getWidth();
+            var zrHeight = self.zr.getHeight();
             for (var i = 0, l = data.length; i < l; i++) {
                 // 图例
                 if (legend) {
-                    color = legend.getColor(series.name)
+                    color = legend.getColor(series.name);
                 }
                 // 值域
                 if (dataRange) {
@@ -304,15 +307,25 @@ define(function(require) {
                         continue;
                     }
                 }
+                
+                // 标准化一些参数
+                data[i].tooltip = {trigger:'item'}; // tooltip.trigger指定为item
+                data[i].name = typeof data[i].name != 'undefined'
+                               ? data[i].name : '';
+                data[i].value = typeof data[i].value != 'undefined'
+                                ? data[i].value : '';
+                
                 // 复用getSymbolShape
                 itemShape = getSymbolShape(
                     mpOption, seriesIndex,      // 系列 
                     data[i], i, data[i].name,   // 数据
-                    data[i].x, data[i].y,       // 坐标
+                    parsePercent(data[i].x, zrWidth),   // 坐标
+                    parsePercent(data[i].y, zrHeight),  // 坐标
                     'pin', color,               // 默认symbol和color
                     'rgba(0,0,0,0)',
                     'horizontal'                // 走向，用于默认文字定位
-                )
+                );
+                
                 // 重新pack一下数据
                 ecData.pack(
                     itemShape,
@@ -320,7 +333,7 @@ define(function(require) {
                     data[i], 0,
                     data[i].name
                 );
-                pList.push(itemShape)
+                pList.push(itemShape);
             }
             //console.log(pList);
             return pList;

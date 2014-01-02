@@ -71,7 +71,6 @@ define(function(require) {
             var matrix = [];
             var serieNumber = 0;
             for (var i = 0, l = series.length; i < l; i++) {
-                
                 if (series[i].type === self.type) {
                     // Use the config of first chord serie
                     if (!chordSerieSample) {
@@ -86,6 +85,7 @@ define(function(require) {
                         continue;
                     }
                     chordSeries.push(series[i]);
+                    _buildMark(i);
                     matrix.push(series[i].matrix);
                     serieNumber++;
                 }
@@ -636,6 +636,22 @@ define(function(require) {
                     self.shapeList.push(textShape);
                     zr.addShape(textShape);
                     scaleTextAngle += scaleUnitAngle * 5;
+                }
+            }
+        }
+        
+        // 添加标注
+        function _buildMark(seriesIndex) {
+            var serie = series[seriesIndex];
+            if (serie.markPoint) {
+                var shapeList = self.markPoint(
+                    serie, seriesIndex, serie.markPoint, component
+                );
+                for (var i = 0, l = shapeList.length; i < l; i++) {
+                    shapeList[i].id = zr.newShapeId(self.type);
+                    shapeList[i].zlevel = _zlevelBase + 1;
+                    self.shapeList.push(shapeList[i]);
+                    zr.addShape(shapeList[i]);
                 }
             }
         }

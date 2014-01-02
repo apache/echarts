@@ -740,6 +740,7 @@ define(function(require) {
             var seriesIndex;
             var xAxis;
             var yAxis;
+            var dataIndex;
             for (var j = 0, k = seriesArray.length; j < k; j++) {
                 seriesIndex = seriesArray[j];
                 serie = series[seriesIndex];
@@ -749,19 +750,28 @@ define(function(require) {
                         mpData = markPoint.data[i];
                         xAxis = component.xAxis.getAxis(serie.xAxisIndex);
                         yAxis = component.yAxis.getAxis(serie.yAxisIndex);
+                        
                         if (isHorizontal) {
                             // 横向
+                            dataIndex = typeof mpData.xAxis == 'string'
+                                        && xAxis.getIndexByName
+                                        ? xAxis.getIndexByName(mpData.xAxis)
+                                        : (mpData.xAxis || 0);
                             pos = [
-                                xMarkMap[seriesIndex][mpData.xAxis || 0],
+                                xMarkMap[seriesIndex][dataIndex],
                                 yAxis.getCoord(mpData.yAxis || 0)
-                            ]
+                            ];
                         }
                         else {
                             // 纵向
+                            dataIndex = typeof mpData.xAxis == 'string'
+                                        && xAxis.getIndexByName
+                                        ? xAxis.getIndexByName(mpData.xAxis)
+                                        : (mpData.xAxis || 0);
                             pos = [
                                 xAxis.getCoord(mpData.xAxis || 0),
-                                xMarkMap[seriesIndex][mpData.yAxis || 0]
-                            ]
+                                xMarkMap[seriesIndex][dataIndex]
+                            ];
                         }
                         markPoint.data[i].x = typeof mpData.x != 'undefined'
                                               ? mpData.x : pos[0];
@@ -773,10 +783,6 @@ define(function(require) {
                     );
                     for (var i = 0, l = shapeList.length; i < l; i++) {
                         shapeList[i].zlevel = _zlevelBase + 1;
-                        shapeList[i]._x = shapeList[i].style.x 
-                                          + shapeList[i].style.width / 2;
-                        shapeList[i]._y = shapeList[i].style.y 
-                                          + shapeList[i].style.height / 2;
                         self.shapeList.push(shapeList[i]);
                     }
                 }
