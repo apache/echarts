@@ -91,6 +91,7 @@
                                 <li><a href="#引入ECharts2">模块化单文件引入</a></li>
                                 <li><a href="#引入ECharts3">标签式单文件引入</a></li>
                             </ul>
+                            <li><a href="#自定义构建echarts单文件">自定义构建echarts单文件</a></li>
                             <li><a href="#初始化">初始化</a></li>
                             <li><a href="#实例方法">实例方法</a></li>
                             <li><a href="#选项">选项</a></li>
@@ -475,7 +476,44 @@ require(
                         <li>echarts-plain-map.js : 经过压缩，全图表，包含world，china以及34个省市级地图数据</li>
                         <li>echarts-plain-original-map.js : 未压缩，可用于调试，全图表，包含world，china以及34个省市级地图数据</li>
                     </ul>
-                    
+                        
+                    <h3>自定义构建echarts单文件<a name="自定义构建echarts单文件"></a></h3>
+                    <p>
+                        默认echarts通过build目录下的build.sh(build.bat)脚本可以输出是否包含地图，是否压缩和是否打包esl（可以标签引入）排列组合总共6个版本的echarts单文件，大部分场景下已经够用，但是如果你还是觉得很多图表用不到还放在里面非常浪费，可以通过build目录下的build.js来构建一个更加贴身的echarts单文件。
+                    </p>
+                    <p>
+                        运行build.js只需要一个<a href="http://nodejs.org/">node</a>环境，然后就可以直接在终端里运行 node build.js 运行构建脚本了，具体示例：
+                    </p>
+                    <div class="code">
+                        <pre>node build.js optimize=true exclude=map,force,line output=echarts.js plain=true</pre>
+                    </div>
+
+                    <p>参数说明:</p>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td>optimize</td>
+                            <td>是否压缩, 默认false</td>
+                        </tr>
+                        <tr>
+                            <td>exclude</td>
+                            <td>不打包的图表，多个图表使用逗号分割, 默认使用所有图表</td>
+                        </tr>
+                        <tr>
+                            <td>output</td>
+                            <td>输出打包地址，默认为echarts.js</td>
+                        </tr>
+                        <tr>
+                            <td>plain</td>
+                            <td>是否打包esl, 打包的话可以直接使用scripts标签引入, 默认false</td>
+                        </tr>
+                    </table>
+
+                    <p>更详细的配置在build/config-tpl.js目录下，具体的配置项使用可以参考requirejs optimizer的<a href="https://github.com/jrburke/r.js/blob/master/build/example.build.js">example build file</a>，要注意的的是optimize, include, wrap三个配置项会在build过程中根据输入的参数被改掉，所以不建议直接修改这三个配置项，修改config-tpl.js最常见的场景是zrender和echarts不在同一个目录下从而需要修改zrender的package路径。</p>
+
                     <h3>初始化<a name="初始化"> </a></h3>
                     <p>通过require获得echarts接口后可实例化图表，echarts接口仅有一个方法init，执行init时传入一个具备大小的dom节点（width、height可被计算得到即可，不一定可见）后即可实例化出图表对象，图表库实现为多实例的，同一页面可多次init出多个图表。图表实例可用方法见<a href="#方法">方法</a>，</p>
                     <p>引入ECharts后的的初始化代码如下：</p>

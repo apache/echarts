@@ -16,7 +16,11 @@ zrender.animation = {
 }
 var echarts = require('echarts');
 echarts.config = require('echarts/config');
-echarts.util = {};
+echarts.util = {
+    mapData : {
+        params : require('echarts/util/mapData/params')
+    }
+}
 
 // 加载需要的图表，由build.js临时生成
 var chart = require('_chart');

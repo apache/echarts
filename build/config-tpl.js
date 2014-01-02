@@ -1,7 +1,6 @@
 {
     // appDir: './',
     baseUrl: '../src',
-    optimize: 'none', // 是否压缩
     name: 'echarts',
     packages: [
         {
@@ -62,9 +61,5 @@
         'echarts/chart/bar',
         'echarts/chart/pie'
     ],
-    wrap : {
-        startFile : ['wrap/start.js', "wrap/almond.js"],
-        endFile : 'wrap/end.js'
-    },
     out: 'echarts.js'
 }

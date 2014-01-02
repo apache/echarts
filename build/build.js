@@ -23,19 +23,23 @@ var optimize = args['optimize'] === 'true' ? true : false;
 var configTplStr = fs.readFileSync('./config-tpl.js', 'utf-8');
 var configTpl = eval('(' + configTplStr + ')');
 
-if (optimize) {
-    delete configTpl.optimize;
-} else {
+if (!optimize) {
     configTpl.optimize = 'none';
 }
 if (plain) {
-    configTpl.wrap = {
-        startFile : ['wrap/start.js', "wrap/almond.js"],
-        endFile : 'wrap/end.js'
+    if (exclude.indexOf('map') >= 0) {
+        configTpl.wrap = {
+            startFile : ['wrap/start.js', "wrap/almond.js"],
+            endFile : 'wrap/end.js'
+        }
+    } else {
+        configTpl.wrap = {
+            startFile : ['wrap/start.js', "wrap/almond.js"],
+            endFile : 'wrap/end-map.js'
+        }
     }
-} else {
-    delete configTpl.wrap;
 }
+
 configTpl.out = outputFile;
 
 if (exclude) {
