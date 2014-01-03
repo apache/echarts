@@ -251,9 +251,9 @@ define(function (require) {
                         zlevel : _zlevelBase,
                         hoverable : false,
                         style : {
-                            xStart : getCoord(data[i].value || data[i]),
+                            xStart : getCoordByIndex(i),
                             yStart : yPosition,
-                            xEnd : getCoord(data[i].value || data[i]),
+                            xEnd : getCoordByIndex(i),
                             yEnd : yPosition + length,
                             strokeColor : color,
                             lineWidth : lineWidth
@@ -274,9 +274,9 @@ define(function (require) {
                         hoverable : false,
                         style : {
                             xStart : xPosition,
-                            yStart : getCoord(data[i].value || data[i]),
+                            yStart : getCoordByIndex(i),
                             xEnd : xPosition + length,
-                            yEnd : getCoord(data[i].value || data[i]),
+                            yEnd : getCoordByIndex(i),
                             strokeColor : color,
                             lineWidth : lineWidth
                         }
@@ -320,7 +320,7 @@ define(function (require) {
                         zlevel : _zlevelBase,
                         hoverable : false,
                         style : {
-                            x : getCoord(data[i].value || data[i]),
+                            x : getCoordByIndex(i),
                             y : yPosition,
                             color : dataTextStyle.color,
                             text : _labelData[i].value || _labelData[i],
@@ -369,7 +369,7 @@ define(function (require) {
                         hoverable : false,
                         style : {
                             x : xPosition,
-                            y : getCoord(data[i].value || data[i]),
+                            y : getCoordByIndex(i),
                             color : dataTextStyle.color,
                             text : _labelData[i].value || _labelData[i],
                             textFont : self.getFont(dataTextStyle),
@@ -408,7 +408,7 @@ define(function (require) {
                 for (var i = 0; i < dataLength; i += _interval) {
                     // 亚像素优化
                     x = self.subPixelOptimize(
-                        getCoord(data[i].value || data[i]), lineWidth
+                        getCoordByIndex(i), lineWidth
                     );
                     axShape = {
                         shape : 'line',
@@ -437,7 +437,7 @@ define(function (require) {
                 for (var i = 0; i < dataLength; i += _interval) {
                     // 亚像素优化
                     y = self.subPixelOptimize(
-                        getCoord(data[i].value || data[i]), lineWidth
+                        getCoordByIndex(i), lineWidth
                     );
                     axShape = {
                         shape : 'line',
@@ -475,7 +475,7 @@ define(function (require) {
 
                 for (var i = 0; i <= dataLength; i += _interval) {
                     curX = i < dataLength
-                           ? getCoord(data[i].value || data[i])
+                           ? getCoordByIndex(i)
                            : grid.getXend();
                     axShape = {
                         shape : 'rectangle',
@@ -503,7 +503,7 @@ define(function (require) {
 
                 for (var i = 0; i <= dataLength; i += _interval) {
                     curY = i < dataLength
-                           ? getCoord(data[i].value || data[i])
+                           ? getCoordByIndex(i)
                            : grid.getY();
                     axShape = {
                         shape : 'rectangle',
