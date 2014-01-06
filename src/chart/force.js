@@ -103,12 +103,26 @@ define(function(require) {
             viewportWidth = zr.getWidth();
             viewportHeight = zr.getHeight();
             centroid = [viewportWidth/2, viewportHeight/2];
-
+            
+            var serieName;
             for (var i = 0, l = series.length; i < l; i++) {
                 var serie = series[i];
                 if (serie.type === ecConfig.CHART_TYPE_FORCE) {
                     series[i] = self.reformOption(series[i]);
-                    _buildMark(i);
+                    
+                    serieName = series[i].name || '';
+                    // 系列图例开关
+                    self.selectedMap[serieName] = 
+                        legend ? legend.isSelected(serieName) : true;
+                    if (!self.selectedMap[serieName]) {
+                        continue;
+                    }
+                    self.buildMark(
+                        series[i],
+                        i,
+                        component
+                    );
+                    
                     forceSerie = serie;
 
                     var minRadius = self.deepQuery([serie], 'minRadius');
@@ -616,22 +630,6 @@ define(function(require) {
         }
 
         var _updating;
-        
-        // 添加标注
-        function _buildMark(seriesIndex) {
-            var serie = series[seriesIndex];
-            if (serie.markPoint) {
-                var shapeList = self.markPoint(
-                    serie, seriesIndex, serie.markPoint, component
-                );
-                for (var i = 0, l = shapeList.length; i < l; i++) {
-                    shapeList[i].id = zr.newShapeId(self.type);
-                    self.shapeList.push(shapeList[i]);
-                    zr.addShape(shapeList[i]);
-                }
-            }
-        }
-
         function init(newOption, newComponent) {
             option = newOption;
             component = newComponent;

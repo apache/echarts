@@ -732,61 +732,48 @@ define(function(require) {
 
         // 添加标注
         function _buildMark(seriesArray, xMarkMap ,isHorizontal) {
-            var markPoint;
-            var mpData;
-            var pos;
-            var shapeList;
-            var serie;
-            var seriesIndex;
-            var xAxis;
-            var yAxis;
-            var dataIndex;
-            for (var j = 0, k = seriesArray.length; j < k; j++) {
-                seriesIndex = seriesArray[j];
-                serie = series[seriesIndex];
-                if (serie.markPoint && self.selectedMap[serie.name]) {
-                    markPoint = zrUtil.clone(serie.markPoint);
-                    for (var i = 0, l = markPoint.data.length; i < l; i++) {
-                        mpData = markPoint.data[i];
-                        xAxis = component.xAxis.getAxis(serie.xAxisIndex);
-                        yAxis = component.yAxis.getAxis(serie.yAxisIndex);
-                        
-                        if (isHorizontal) {
-                            // 横向
-                            dataIndex = typeof mpData.xAxis == 'string'
-                                        && xAxis.getIndexByName
-                                        ? xAxis.getIndexByName(mpData.xAxis)
-                                        : (mpData.xAxis || 0);
-                            pos = [
-                                xMarkMap[seriesIndex][dataIndex],
-                                yAxis.getCoord(mpData.yAxis || 0)
-                            ];
-                        }
-                        else {
-                            // 纵向
-                            dataIndex = typeof mpData.xAxis == 'string'
-                                        && xAxis.getIndexByName
-                                        ? xAxis.getIndexByName(mpData.xAxis)
-                                        : (mpData.xAxis || 0);
-                            pos = [
-                                xAxis.getCoord(mpData.xAxis || 0),
-                                xMarkMap[seriesIndex][dataIndex]
-                            ];
-                        }
-                        markPoint.data[i].x = typeof mpData.x != 'undefined'
-                                              ? mpData.x : pos[0];
-                        markPoint.data[i].y = typeof mpData.y != 'undefined'
-                                              ? mpData.y : pos[1];
+            for (var i = 0, l = seriesArray.length; i < l; i++) {
+                self.buildMark(
+                    series[seriesArray[i]],
+                    seriesArray[i],
+                    component,
+                    {
+                        isHorizontal : isHorizontal,
+                        xMarkMap : xMarkMap
                     }
-                    shapeList = self.markPoint(
-                        serie, seriesIndex, markPoint, component
-                    );
-                    for (var i = 0, l = shapeList.length; i < l; i++) {
-                        shapeList[i].zlevel = _zlevelBase + 1;
-                        self.shapeList.push(shapeList[i]);
-                    }
-                }
+                );
             }
+        }
+        
+        // 位置转换
+        function getMarkCoord(serie, seriesIndex, mpData, markCoordParams) {
+            var xAxis = component.xAxis.getAxis(serie.xAxisIndex);
+            var yAxis = component.yAxis.getAxis(serie.yAxisIndex);
+            var dataIndex;
+            var pos;
+            if (markCoordParams.isHorizontal) {
+                // 横向
+                dataIndex = typeof mpData.xAxis == 'string'
+                            && xAxis.getIndexByName
+                            ? xAxis.getIndexByName(mpData.xAxis)
+                            : (mpData.xAxis || 0);
+                pos = [
+                    markCoordParams.xMarkMap[seriesIndex][dataIndex],
+                    yAxis.getCoord(mpData.yAxis || 0)
+                ];
+            }
+            else {
+                // 纵向
+                dataIndex = typeof mpData.xAxis == 'string'
+                            && xAxis.getIndexByName
+                            ? xAxis.getIndexByName(mpData.xAxis)
+                            : (mpData.xAxis || 0);
+                pos = [
+                    xAxis.getCoord(mpData.xAxis || 0),
+                    markCoordParams.xMarkMap[seriesIndex][dataIndex]
+                ];
+            }
+            return pos;
         }
         
         /**
@@ -992,6 +979,9 @@ define(function(require) {
             }
         }
 
+        // 重载基类方法
+        self.getMarkCoord = getMarkCoord;
+        
         self.init = init;
         self.refresh = refresh;
         self.addDataAnimation = addDataAnimation;

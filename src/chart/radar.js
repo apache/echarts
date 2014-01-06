@@ -48,21 +48,34 @@
         /**
          * 绘制图形
          */
-        function _buildShape() {  
+        function _buildShape() {
+            var legend = component.legend;
             self.selectedMap = {};
             _dropBoxList = [];
             _radarDataCounter = 0;
+            var serieName;
             for (var i = 0, l = series.length; i < l ; i ++) {
                 if (series[i].type == ecConfig.CHART_TYPE_RADAR) {
                     serie = self.reformOption(series[i]);
-                    _queryTarget = [serie, option];
-
-                    // 添加可拖拽提示框，多系列共用一个极坐标，第一个优先
-                    if (self.deepQuery(_queryTarget, 'calculable')) {
-                        _addDropBox(i);
+                    serieName = serie.name || '';
+                    // 系列图例开关
+                    self.selectedMap[serieName] = 
+                        legend ? legend.isSelected(serieName) : true;
+                    
+                    if (self.selectedMap[serieName]) {
+                        _queryTarget = [serie, option];
+    
+                        // 添加可拖拽提示框，多系列共用一个极坐标，第一个优先
+                        if (self.deepQuery(_queryTarget, 'calculable')) {
+                            _addDropBox(i);
+                        }
+                        _buildSingleRadar(i);
+                        self.buildMark(
+                            series[i],
+                            i,
+                            component
+                        );
                     }
-                    _buildSingleRadar(i);
-                    _buildMark(i);
                 }
             }
 
@@ -273,20 +286,6 @@
                 ecData.pack(shape, series, index, undefined, -1);
                 self.shapeList.push(shape);
                 _dropBoxList[polarIndex] = true;
-            }
-        }
-
-        // 添加标注
-        function _buildMark(seriesIndex) {
-            var serie = series[seriesIndex];
-            if (serie.markPoint) {
-                var shapeList = self.markPoint(
-                    serie, seriesIndex, serie.markPoint, component
-                );
-                for (var i = 0, l = shapeList.length; i < l; i++) {
-                    shapeList[i].zlevel = _zlevelBase + 1;
-                    self.shapeList.push(shapeList[i]);
-                }
             }
         }
 

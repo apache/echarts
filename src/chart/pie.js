@@ -39,6 +39,7 @@ define(function(require) {
         var _selected = {};
 
         function _buildShape() {
+            var legend = component.legend;
             self.selectedMap = {};
             _selected = {};
             var center;
@@ -46,9 +47,18 @@ define(function(require) {
 
             var pieCase;        // 饼图箱子
             _selectedMode = false;
+            var serieName;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type == ecConfig.CHART_TYPE_PIE) {
                     series[i] = self.reformOption(series[i]);
+                    serieName = series[i].name || '';
+                    // 系列图例开关
+                    self.selectedMap[serieName] = 
+                        legend ? legend.isSelected(serieName) : true;
+                    if (!self.selectedMap[serieName]) {
+                        continue;
+                    }
+                    
                     center = self.parseCenter(series[i].center);
                     radius = self.parseRadius(series[i].radius);
                     _selectedMode = _selectedMode || series[i].selectedMode;
@@ -74,7 +84,11 @@ define(function(require) {
                         self.shapeList.push(pieCase);
                     }
                     _buildSinglePie(i);
-                    _buildMark(i);
+                    self.buildMark(
+                        series[i],
+                        i,
+                        component
+                    );
                 }
             }
 
@@ -615,20 +629,6 @@ define(function(require) {
                 + (isEmphasis ? 'emphasis' : 'normal')
                 +'.labelLine.show'
             );
-        }
-        
-        // 添加标注
-        function _buildMark(seriesIndex) {
-            var serie = series[seriesIndex];
-            if (serie.markPoint) {
-                var shapeList = self.markPoint(
-                    serie, seriesIndex, serie.markPoint, component
-                );
-                for (var i = 0, l = shapeList.length; i < l; i++) {
-                    shapeList[i].zlevel = _zlevelBase + 1;
-                    self.shapeList.push(shapeList[i]);
-                }
-            }
         }
         
         /**

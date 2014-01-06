@@ -809,44 +809,34 @@ define(function(require) {
         
         // 添加标注
         function _buildMark(mapType, mapSeries) {
-            var markPoint;
-            var pos;
-            var shapeList;
+            var position = [
+                _mapDataMap[mapType].transform.left,
+                _mapDataMap[mapType].transform.top
+            ];
             for (var sIdx in mapSeries) {
-                if (series[sIdx].markPoint) {
-                    markPoint = zrUtil.clone(series[sIdx].markPoint);
-                    for (var i = 0, l = markPoint.data.length; i < l; i++) {
-                        pos = _geoCoord[markPoint.data[i].name]
-                              ? geo2pos(
-                                    mapType, _geoCoord[markPoint.data[i].name]
-                                )
-                              : [0, 0];
-                        markPoint.data[i].x = 
-                            typeof markPoint.data[i].x != 'undefined'
-                            ? markPoint.data[i].x
-                            : pos[0];
-                        markPoint.data[i].y = 
-                            typeof markPoint.data[i].y != 'undefined'
-                            ? markPoint.data[i].y
-                            : pos[1];
+                self.buildMark(
+                    series[sIdx],
+                    sIdx,
+                    component,
+                    {
+                        mapType : mapType
+                    },
+                    {
+                        position : position
                     }
-                    shapeList = self.markPoint(
-                        series[sIdx], sIdx, markPoint, component
-                    );
-                    var position = [
-                        _mapDataMap[mapType].transform.left,
-                        _mapDataMap[mapType].transform.top
-                    ];
-                    for (var i = 0, l = shapeList.length; i < l; i++) {
-                        shapeList[i].zlevel = _zlevelBase + 1;
-                        shapeList[i]._mapType = mapType;
-                        shapeList[i].position = position;
-                        self.shapeList.push(shapeList[i]);
-                    }
-                }
+                );
             }
         }
         
+        // 位置转换
+        function getMarkCoord(serie, seriesIndex, mpData, markCoordParams) {
+            return _geoCoord[mpData.name]
+                   ? geo2pos(
+                         markCoordParams.mapType, _geoCoord[mpData.name]
+                     )
+                   : [0, 0];
+        }
+            
         function _nameChange(mapType, name) {
             return _nameMap[mapType][name] || name;
         }
@@ -1160,6 +1150,7 @@ define(function(require) {
         }
 
         // 重载基类方法
+        self.getMarkCoord = getMarkCoord;
         self.dispose = dispose;
         
         self.init = init;

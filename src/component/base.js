@@ -257,7 +257,75 @@ define(function(require) {
             }
         }
         
-        function markPoint(series, seriesIndex, mpOption, component) {
+        function buildMark(
+            serie, seriesIndex, component, markCoordParams, attachStyle
+        ) {
+            var _zlevelBase = self.getZlevelBase();
+            var markPoint;
+            var mpData;
+            var pos;
+            var shapeList;
+            if (self.selectedMap[serie.name]) {
+                serie.markPoint && _buildMarkPoint(
+                    serie, seriesIndex, component, markCoordParams, attachStyle
+                );
+                serie.markLine && _buildMarkLine(
+                    serie, seriesIndex, component, markCoordParams, attachStyle
+                );
+            }
+        }
+        
+        function _buildMarkPoint(
+            serie, seriesIndex, component, markCoordParams, attachStyle
+        ) {
+            var _zlevelBase = self.getZlevelBase();
+            var mpData;
+            var pos;
+            var markPoint = zrUtil.clone(serie.markPoint);
+            for (var i = 0, l = markPoint.data.length; i < l; i++) {
+                mpData = markPoint.data[i];
+                pos = self.getMarkCoord(
+                        serie, seriesIndex, mpData, markCoordParams
+                      );
+                markPoint.data[i].x = typeof mpData.x != 'undefined'
+                                      ? mpData.x : pos[0];
+                markPoint.data[i].y = typeof mpData.y != 'undefined'
+                                      ? mpData.y : pos[1];
+            }
+            
+            var shapeList = _markPoint(
+                serie, seriesIndex, markPoint, component
+            );
+            
+            for (var i = 0, l = shapeList.length; i < l; i++) {
+                shapeList[i].zlevel = _zlevelBase + 1;
+                shapeList[i]._x = shapeList[i].style.x 
+                                  + shapeList[i].style.width / 2;
+                shapeList[i]._y = shapeList[i].style.y 
+                                  + shapeList[i].style.height / 2;
+                for (var key in attachStyle) {
+                    shapeList[i][key] = attachStyle[key];
+                }
+                self.shapeList.push(shapeList[i]);
+            }
+            // 个别特殊图表需要自己addShape
+            if (self.type == ecConfig.CHART_TYPE_FORCE
+                || self.type == ecConfig.CHART_TYPE_CHORD
+            ) {
+                for (var i = 0, l = shapeList.length; i < l; i++) {
+                    shapeList[i].id = zr.newShapeId(self.type);
+                    self.zr.addShape(shapeList[i]);
+                }
+            }
+        }
+        
+        function _buildMarkLine(
+            serie, seriesIndex, component, markCoordParams, attachStyle
+        ) {
+            
+        }
+        
+        function _markPoint(serie, seriesIndex, mpOption, component) {
             zrUtil.merge(
                 mpOption,
                 ecConfig.markPoint,
@@ -266,7 +334,7 @@ define(function(require) {
                     'recursive': true
                 }
             );
-            mpOption.name = series.name;
+            mpOption.name = serie.name;
                    
             var pList = [];
             var data = mpOption.data;
@@ -284,7 +352,7 @@ define(function(require) {
             for (var i = 0, l = data.length; i < l; i++) {
                 // 图例
                 if (legend) {
-                    color = legend.getColor(series.name);
+                    color = legend.getColor(serie.name);
                 }
                 // 值域
                 if (dataRange) {
@@ -329,7 +397,7 @@ define(function(require) {
                 // 重新pack一下数据
                 ecData.pack(
                     itemShape,
-                    series, seriesIndex,
+                    serie, seriesIndex,
                     data[i], 0,
                     data[i].name
                 );
@@ -339,15 +407,20 @@ define(function(require) {
             return pList;
         }
         
+        function getMarkCoord() {
+            // 无转换位置
+            return [0, 0];
+        }
+        
         function getSymbolShape(
-            series, seriesIndex,    // 系列 
+            serie, seriesIndex,    // 系列 
             data, dataIndex, name,  // 数据
             x, y,                   // 坐标
             symbol, color,          // 默认symbol和color，来自legend全局分配
             emptyColor,             // 折线的emptySymbol用白色填充
             orient                  // 走向，用于默认文字定位
         ) {
-            var queryTarget = [data, series];
+            var queryTarget = [data, serie];
             var value = typeof data != 'undefined'
                         ? (typeof data.value != 'undefined'
                           ? data.value
@@ -440,7 +513,7 @@ define(function(require) {
 
             itemShape = self.addLabel(
                 itemShape, 
-                series, data, name, 
+                serie, data, name, 
                 orient
             );
             
@@ -456,7 +529,7 @@ define(function(require) {
             
             ecData.pack(
                 itemShape,
-                series, seriesIndex,
+                serie, seriesIndex,
                 data, dataIndex,
                 name
             );
@@ -557,7 +630,8 @@ define(function(require) {
         self.deepMerge = deepMerge;
         self.getFont = getFont;
         self.addLabel = addLabel;
-        self.markPoint = markPoint;
+        self.buildMark = buildMark;
+        self.getMarkCoord = getMarkCoord;
         self.getSymbolShape = getSymbolShape;
         self.parsePercent = parsePercent;
         self.parseCenter = parseCenter;
