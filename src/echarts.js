@@ -127,6 +127,7 @@ define(function(require) {
 
             // 动态扩展zrender shape：icon
             require('./util/shape/icon');
+            require('./util/shape/markLine');
 
             // 内置图表注册
             var chartLibrary = require('./chart');

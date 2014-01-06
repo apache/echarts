@@ -260,11 +260,6 @@ define(function(require) {
         function buildMark(
             serie, seriesIndex, component, markCoordParams, attachStyle
         ) {
-            var _zlevelBase = self.getZlevelBase();
-            var markPoint;
-            var mpData;
-            var pos;
-            var shapeList;
             if (self.selectedMap[serie.name]) {
                 serie.markPoint && _buildMarkPoint(
                     serie, seriesIndex, component, markCoordParams, attachStyle
@@ -285,7 +280,7 @@ define(function(require) {
             for (var i = 0, l = markPoint.data.length; i < l; i++) {
                 mpData = markPoint.data[i];
                 pos = self.getMarkCoord(
-                        serie, seriesIndex, mpData, markCoordParams
+                          serie, seriesIndex, mpData, markCoordParams
                       );
                 markPoint.data[i].x = typeof mpData.x != 'undefined'
                                       ? mpData.x : pos[0];
@@ -313,7 +308,7 @@ define(function(require) {
                 || self.type == ecConfig.CHART_TYPE_CHORD
             ) {
                 for (var i = 0, l = shapeList.length; i < l; i++) {
-                    shapeList[i].id = zr.newShapeId(self.type);
+                    shapeList[i].id = self.zr.newShapeId(self.type);
                     self.zr.addShape(shapeList[i]);
                 }
             }
@@ -322,7 +317,50 @@ define(function(require) {
         function _buildMarkLine(
             serie, seriesIndex, component, markCoordParams, attachStyle
         ) {
+            var _zlevelBase = self.getZlevelBase();
+            var mlData;
+            var pos;
+            var markLine = zrUtil.clone(serie.markLine);
+            for (var i = 0, l = markLine.data.length; i < l; i++) {
+                mlData = markLine.data[i];
+                pos = [
+                    self.getMarkCoord(
+                        serie, seriesIndex, mlData[0], markCoordParams
+                    ),
+                    self.getMarkCoord(
+                        serie, seriesIndex, mlData[1], markCoordParams
+                    )
+                ];
+                markLine.data[i][0].x = typeof mlData[0].x != 'undefined'
+                                      ? mlData[0].x : pos[0][0];
+                markLine.data[i][0].y = typeof mlData[0].y != 'undefined'
+                                      ? mlData[0].y : pos[0][1];
+                markLine.data[i][1].x = typeof mlData[1].x != 'undefined'
+                                      ? mlData[1].x : pos[1][0];
+                markLine.data[i][1].y = typeof mlData[1].y != 'undefined'
+                                      ? mlData[1].y : pos[1][1];
+            }
             
+            var shapeList = _markLine(
+                serie, seriesIndex, markLine, component
+            );
+            
+            for (var i = 0, l = shapeList.length; i < l; i++) {
+                shapeList[i].zlevel = _zlevelBase + 1;
+                for (var key in attachStyle) {
+                    shapeList[i][key] = attachStyle[key];
+                }
+                self.shapeList.push(shapeList[i]);
+            }
+            // 个别特殊图表需要自己addShape
+            if (self.type == ecConfig.CHART_TYPE_FORCE
+                || self.type == ecConfig.CHART_TYPE_CHORD
+            ) {
+                for (var i = 0, l = shapeList.length; i < l; i++) {
+                    shapeList[i].id = self.zr.newShapeId(self.type);
+                    self.zr.addShape(shapeList[i]);
+                }
+            }
         }
         
         function _markPoint(serie, seriesIndex, mpOption, component) {
@@ -407,6 +445,107 @@ define(function(require) {
             return pList;
         }
         
+        function _markLine(serie, seriesIndex, mlOption, component) {
+            zrUtil.merge(
+                mlOption,
+                ecConfig.markLine,
+                {
+                    'overwrite': false,
+                    'recursive': true
+                }
+            );
+            // 标准化一些同时支持Array和String的参数
+            mlOption.symbol = mlOption.symbol instanceof Array
+                      ? mlOption.symbol.length > 1 
+                        ? mlOption.symbol 
+                        : [mlOption.symbol[0], mlOption.symbol[0]]
+                      : [mlOption.symbol, mlOption.symbol];
+            mlOption.symbolSize = mlOption.symbolSize instanceof Array
+                      ? mlOption.symbolSize.length > 1 
+                        ? mlOption.symbolSize 
+                        : [mlOption.symbolSize[0], mlOption.symbolSize[0]]
+                      : [mlOption.symbolSize, mlOption.symbolSize];
+            mlOption.symbolRotate = mlOption.symbolRotate instanceof Array
+                      ? mlOption.symbolRotate.length > 1 
+                        ? mlOption.symbolRotate 
+                        : [mlOption.symbolRotate[0], mlOption.symbolRotate[0]]
+                      : [mlOption.symbolRotate, mlOption.symbolRotate];
+            
+            mlOption.name = serie.name;
+                   
+            var pList = [];
+            var data = mlOption.data;
+            var itemShape;
+            
+            var dataRange = component.dataRange;
+            var legend = component.legend;
+            var color;
+            var value;
+            var queryTarget;
+            var nColor;
+            var eColor;
+            var zrWidth = self.zr.getWidth();
+            var zrHeight = self.zr.getHeight();
+            for (var i = 0, l = data.length; i < l; i++) {
+                // 图例
+                if (legend) {
+                    color = legend.getColor(serie.name);
+                }
+                // 值域
+                if (dataRange) {
+                    value = typeof data[i][0] != 'undefined'
+                            ? (typeof data[i][0].value != 'undefined'
+                              ? data[i][0].value
+                              : data[i][0])
+                            : '-';
+                    color = isNaN(value) ? color : dataRange.getColor(value);
+                    
+                    queryTarget = [data[i][0], mlOption];
+                    nColor = self.deepQuery(
+                        queryTarget, 'itemStyle.normal.color'
+                    ) || color;
+                    eColor = self.deepQuery(
+                        queryTarget, 'itemStyle.emphasis.color'
+                    ) || nColor;
+                    // 有值域，并且值域返回null且用户没有自己定义颜色，则隐藏这个mark
+                    if (nColor == null && eColor == null) {
+                        continue;
+                    }
+                }
+                
+                // 标准化一些参数
+                data[i][0].tooltip = {trigger:'item'}; // tooltip.trigger指定为item
+                data[i][0].name = typeof data[i][0].name != 'undefined'
+                                  ? data[i][0].name : '';
+                data[i][1].name = typeof data[i][1].name != 'undefined'
+                                  ? data[i][1].name : '';
+                data[i][0].value = typeof data[i][0].value != 'undefined'
+                                   ? data[i][0].value : '';
+                
+                // 复用getSymbolShape
+                itemShape = getLineMarkShape(
+                    mlOption,                   // markLine 
+                    data[i],                    // 数据
+                    parsePercent(data[i][0].x, zrWidth),   // 坐标
+                    parsePercent(data[i][0].y, zrHeight),  // 坐标
+                    parsePercent(data[i][1].x, zrWidth),   // 坐标
+                    parsePercent(data[i][1].y, zrHeight),  // 坐标
+                    color               // 默认symbol和color
+                );
+                
+                // 重新pack一下数据
+                ecData.pack(
+                    itemShape,
+                    serie, seriesIndex,
+                    data[i][0], 0,
+                    data[i][0].name + ':' + data[i][1].name
+                );
+                pList.push(itemShape);
+            }
+            //console.log(pList);
+            return pList;
+        }
+        
         function getMarkCoord() {
             // 无转换位置
             return [0, 0];
@@ -416,7 +555,7 @@ define(function(require) {
             serie, seriesIndex,    // 系列 
             data, dataIndex, name,  // 数据
             x, y,                   // 坐标
-            symbol, color,          // 默认symbol和color，来自legend全局分配
+            symbol, color,          // 默认symbol和color，来自legend或dataRange全局分配
             emptyColor,             // 折线的emptySymbol用白色填充
             orient                  // 走向，用于默认文字定位
         ) {
@@ -538,6 +677,93 @@ define(function(require) {
             itemShape._y = y;
             itemShape._dataIndex = dataIndex;
             itemShape._seriesIndex = seriesIndex;
+
+            return itemShape;
+        }
+        
+        function getLineMarkShape(
+            mlOption,                  // 系列 
+            data,                   // 数据
+            xStart, yStart,         // 坐标
+            xEnd, yEnd,             // 坐标
+            color                   // 默认color，来自legend或dataRange全局分配
+        ) {
+            var symbol = [
+                self.query(data[0], 'symbol') || mlOption.symbol[0],
+                self.query(data[1], 'symbol') || mlOption.symbol[1]
+            ];
+            var symbolSize = [
+                self.query(data[0], 'symbolSize') || mlOption.symbolSize[0],
+                self.query(data[1], 'symbolSize') || mlOption.symbolSize[1]
+            ];
+            var symbolRotate = [
+                self.query(data[0], 'symbolRotate') || mlOption.symbolRotate[0],
+                self.query(data[1], 'symbolRotate') || mlOption.symbolRotate[1]
+            ];
+            console.log(symbol, symbolSize, symbolRotate);
+            
+            var queryTarget = [data[0], mlOption];
+            var normal = self.deepMerge(
+                queryTarget,
+                'itemStyle.normal'
+            );
+            var emphasis = self.deepMerge(
+                queryTarget,
+                'itemStyle.emphasis'
+            );
+            var nBorderWidth = typeof normal.borderWidth != 'undefined'
+                       ? normal.borderWidth
+                       : (normal.lineStyle && normal.lineStyle.width);
+            if (typeof nBorderWidth == 'undefined') {
+                nBorderWidth = 0;
+            }
+            var eBorderWidth = typeof emphasis.borderWidth != 'undefined'
+                       ? emphasis.borderWidth
+                       : (emphasis.lineStyle && emphasis.lineStyle.width);
+            if (typeof eBorderWidth == 'undefined') {
+                eBorderWidth = nBorderWidth + 2;
+            }
+            
+            var itemShape = {
+                shape : 'markLine',
+                style : {
+                    symbol : symbol, 
+                    symbolSize : symbolSize,
+                    symbolRotate : symbolRotate,
+                    xStart : xStart,
+                    yStart : yStart,         // 坐标
+                    xEnd : xEnd,
+                    yEnd : yEnd,             // 坐标
+                    brushType : 'both',
+                    color : normal.color || color,
+                    strokeColor : normal.lineStyle.color
+                                  || normal.borderColor
+                                  || color
+                                  || normal.color,
+                    lineWidth: nBorderWidth
+                },
+                highlightStyle : {
+                    color : emphasis.color|| normal.color || color,
+                    strokeColor : emphasis.lineStyle.color
+                                  || normal.lineStyle.color
+                                  || emphasis.borderColor 
+                                  || normal.borderColor
+                                  || color 
+                                  || emphasis.color 
+                                  || normal.color,
+                    lineWidth: eBorderWidth
+                },
+                clickable : true
+            };
+            
+            // TODO:label
+            /*
+            itemShape = self.addLabel(
+                itemShape, 
+                mlOption, data, name, 
+                orient
+            );
+            */
 
             return itemShape;
         }
