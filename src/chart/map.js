@@ -35,6 +35,7 @@ define(function(require) {
 
         var _zlevelBase = self.getZlevelBase();
         var _selectedMode;      // 选择模式
+        var _hoverable;         // 悬浮高亮模式
         var _selected = {};     // 地图选择状态
         var _mapTypeMap = {};   // 图例类型索引
         var _mapDataMap = {};   // 根据地图类型索引bbox,transform,path
@@ -67,6 +68,7 @@ define(function(require) {
             var name;
             var mapSeries = {};
             _selectedMode = {};
+            _hoverable = {};
             var valueCalculation = {};
             _needRoam = false;
             for (var i = 0, l = series.length; i < l; i++) {
@@ -94,7 +96,13 @@ define(function(require) {
                     
                     _selectedMode[mapType] = _selectedMode[mapType] 
                                              || series[i].selectedMode;
-                                             
+                    if (typeof _hoverable[mapType] == 'undefined'
+                        || _hoverable[mapType]
+                    ) {
+                        _hoverable[mapType] = !series[i].hoverable
+                                              ? false : true; // 1票否决
+                    }
+                    
                     valueCalculation[mapType] = valueCalculation[mapType] 
                                                || series[i].mapValueCalculation;
                     
@@ -678,7 +686,7 @@ define(function(require) {
                 textShape = {
                     shape : 'text',
                     zlevel : _zlevelBase + 1,
-                    hoverable: tooSmall,
+                    hoverable: tooSmall ? _hoverable[mapType] : tooSmall,
                     clickable : tooSmall,
                     position : style.position,
                     _mapType : mapType,
@@ -790,6 +798,7 @@ define(function(require) {
                     _mapTypeMap[name] = mapType;
                     shape.onclick = self.shapeHandler.onclick;
                 }
+                shape.hoverable = _hoverable[mapType];
                 // console.log(name,shape);
                 
                 ecData.pack(
@@ -822,7 +831,8 @@ define(function(require) {
                         mapType : mapType
                     },
                     {
-                        position : position
+                        position : position,
+                        _mapType : mapType
                     }
                 );
             }
