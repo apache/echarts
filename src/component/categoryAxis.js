@@ -310,6 +310,10 @@ define(function (require) {
                 }
 
                 for (var i = 0; i < dataLength; i += _interval) {
+                    if ((_labelData[i].value || _labelData[i]) == '') {
+                        // 空文本优化
+                        continue;
+                    }
                     dataTextStyle = zrUtil.merge(
                         data[i].textStyle || {},
                         textStyle,
@@ -358,6 +362,10 @@ define(function (require) {
                 }
 
                 for (var i = 0; i < dataLength; i += _interval) {
+                    if ((_labelData[i].value || _labelData[i]) == '') {
+                        // 空文本优化
+                        continue;
+                    }
                     dataTextStyle = zrUtil.merge(
                         data[i].textStyle || {},
                         textStyle,
