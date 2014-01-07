@@ -538,7 +538,7 @@ define(function(require) {
                     itemShape,
                     serie, seriesIndex,
                     data[i][0], 0,
-                    data[i][0].name + ':' + data[i][1].name
+                    data[i][0].name + ' : ' + data[i][1].name
                 );
                 pList.push(itemShape);
             }
@@ -700,7 +700,7 @@ define(function(require) {
                 self.query(data[0], 'symbolRotate') || mlOption.symbolRotate[0],
                 self.query(data[1], 'symbolRotate') || mlOption.symbolRotate[1]
             ];
-            console.log(symbol, symbolSize, symbolRotate);
+            //console.log(symbol, symbolSize, symbolRotate);
             
             var queryTarget = [data[0], mlOption];
             var normal = self.deepMerge(
@@ -711,17 +711,22 @@ define(function(require) {
                 queryTarget,
                 'itemStyle.emphasis'
             );
-            var nBorderWidth = typeof normal.borderWidth != 'undefined'
-                       ? normal.borderWidth
-                       : (normal.lineStyle && normal.lineStyle.width);
+            
+            var nlineStyle = normal.lineStyle;
+            var elineStyle = emphasis.lineStyle;
+            
+            var nBorderWidth = nlineStyle.width;
             if (typeof nBorderWidth == 'undefined') {
-                nBorderWidth = 0;
+                nBorderWidth = normal.borderWidth;
             }
-            var eBorderWidth = typeof emphasis.borderWidth != 'undefined'
-                       ? emphasis.borderWidth
-                       : (emphasis.lineStyle && emphasis.lineStyle.width);
+            var eBorderWidth = elineStyle.width;
             if (typeof eBorderWidth == 'undefined') {
-                eBorderWidth = nBorderWidth + 2;
+                if (typeof emphasis.borderWidth != 'undefined') {
+                    eBorderWidth = emphasis.borderWidth;
+                }
+                else {
+                    eBorderWidth = nBorderWidth + 2;
+                }
             }
             
             var itemShape = {
@@ -730,41 +735,61 @@ define(function(require) {
                     symbol : symbol, 
                     symbolSize : symbolSize,
                     symbolRotate : symbolRotate,
+                    //data : [data[0].name,data[1].name],
                     xStart : xStart,
                     yStart : yStart,         // 坐标
                     xEnd : xEnd,
                     yEnd : yEnd,             // 坐标
                     brushType : 'both',
+                    lineType : nlineStyle.type,
+                    shadowColor : nlineStyle.shadowColor,
+                    shadowBlur: nlineStyle.shadowBlur,
+                    shadowOffsetX: nlineStyle.shadowOffsetX,
+                    shadowOffsetY: nlineStyle.shadowOffsetY,
                     color : normal.color || color,
-                    strokeColor : normal.lineStyle.color
+                    strokeColor : nlineStyle.color
                                   || normal.borderColor
                                   || color
                                   || normal.color,
-                    lineWidth: nBorderWidth
+                    lineWidth: nBorderWidth,
+                    symbolBorderColor: normal.borderColor
+                                       || color
+                                       || normal.color,
+                    symbolBorder: normal.borderWidth * 2
                 },
                 highlightStyle : {
+                    shadowColor : elineStyle.shadowColor,
+                    shadowBlur: elineStyle.shadowBlur,
+                    shadowOffsetX: elineStyle.shadowOffsetX,
+                    shadowOffsetY: elineStyle.shadowOffsetY,
                     color : emphasis.color|| normal.color || color,
-                    strokeColor : emphasis.lineStyle.color
-                                  || normal.lineStyle.color
+                    strokeColor : elineStyle.color
+                                  || nlineStyle.color
                                   || emphasis.borderColor 
                                   || normal.borderColor
                                   || color 
                                   || emphasis.color 
                                   || normal.color,
-                    lineWidth: eBorderWidth
+                    lineWidth: eBorderWidth,
+                    symbolBorderColor: emphasis.borderColor
+                                       || normal.borderColor
+                                       || color
+                                       || emphasis.color
+                                       || normal.color,
+                    symbolBorder: typeof emphasis.borderWidth == 'undefined'
+                                  ? (normal.borderWidth * 2 + 2)
+                                  : (emphasis.borderWidth * 2)
                 },
                 clickable : true
             };
             
-            // TODO:label
-            /*
             itemShape = self.addLabel(
                 itemShape, 
-                mlOption, data, name, 
-                orient
+                mlOption, 
+                data[0], 
+                data[0].name + ' : ' + data[1].name
             );
-            */
-
+            
             return itemShape;
         }
         

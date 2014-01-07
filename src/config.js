@@ -620,6 +620,7 @@ define(function() {
             // mapValueCalculation: 'sum', // 数值合并方式，默认加和，可选为：
                                            // 'sum' | 'average' | 'max' | 'min' 
             // selectedMode: false,        // 选择模式，默认关闭，可选single，multiple
+            hoverable: true,
             // roam : false,               // 是否开启缩放及漫游模式
             itemStyle: {
                 normal: {
@@ -801,18 +802,20 @@ define(function() {
             itemStyle: {
                 normal: {
                     // color: 各异,           // 标线主色，线色，symbol主色
-                    // borderColor: 各异,     // 标线symbol边框颜色，优先于color 
+                    // borderColor: 随color,     // 标线symbol边框颜色，优先于color 
                     borderWidth: 2,          // 标线symbol边框线宽，单位px，默认为2
                     label: {
-                        show: true,
+                        show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
                         // formatter : null,
-                        position: 'inside'      // 可选为 'start'|'end'|'left'|'right'|'top'|'bottom'
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                        position: 'inside',  // 可选为 'start'|'end'|'left'|'right'|'top'|'bottom'
+                        textStyle: {         // 默认使用全局文本样式，详见TEXTSTYLE
+                            color: '#333'
+                        }
                     },
                     lineStyle: {
-                        // color: 各异,       // 标线主色，线色，优先级高于borderColor和color
-                        width: 2,
+                        // color: 随borderColor, // 标线主色，线色，优先级高于borderColor和color
+                        // width: 随borderWidth, // 优先于borderWidth
                         type: 'solid',
                         shadowColor : 'rgba(0,0,0,0)', //默认透明
                         shadowBlur: 5,
@@ -822,7 +825,7 @@ define(function() {
                 },
                 emphasis: {
                     label: {
-                        show: true
+                        show: false
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
                         // formatter : null,
                         // position: 'inside' // 可选为'left'|'right'|'top'|'bottom'
