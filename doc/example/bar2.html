@@ -130,7 +130,22 @@ option = {
         {
             name:'搜索引擎',
             type:'bar',
-            data:[862, 1018, 964, 1026, 1679, 1600, 1570]
+            data:[862, 1018, 964, 1026, 1679, 1600, 1570],
+            markLine : {
+                itemStyle:{
+                    normal:{
+                        lineStyle:{
+                            type: 'dashed'
+                        }
+                    }
+                },
+                data : [
+                    [
+                        {name : '周最低', xAxis: '周一', yAxis: 900},
+                        {name : '周最高', xAxis: '周五', yAxis: 1750}
+                    ]
+                ]
+            }
         },
         {
             name:'百度',

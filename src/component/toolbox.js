@@ -921,12 +921,12 @@ define(function (require) {
         function resize() {
             _resetMark();
             self.clear();
-            if (option.toolbox.show) {
+            if (option && option.toolbox && option.toolbox.show) {
                _buildShape();
-           }
-           if (_dataView) {
-               _dataView.resize();
-           }
+            }
+            if (_dataView) {
+                _dataView.resize();
+            }
         }
 
         function hideDataView() {
