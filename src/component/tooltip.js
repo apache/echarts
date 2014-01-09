@@ -40,6 +40,7 @@ define(function (require) {
         var yAxis;
         var polar;
 
+        var _selectedMap = {};
         // tooltip dom & css
         var _tDom = document.createElement('div');
         // 通用样式
@@ -474,6 +475,9 @@ define(function (require) {
                 // 横轴为类目轴，找到所有用这条横轴并且axis触发的系列数据
                 categoryAxis = xAxis.getAxis(xAxisIndex);
                 for (var i = 0, l = series.length; i < l; i++) {
+                    if (!_isSelected(series[i].name)) {
+                        continue;
+                    }
                     if (series[i].xAxisIndex == xAxisIndex
                         && self.deepQuery(
                                [series[i], option], 'tooltip.trigger'
@@ -520,6 +524,9 @@ define(function (require) {
                 // 纵轴为类目轴，找到所有用这条纵轴并且axis触发的系列数据
                 categoryAxis = yAxis.getAxis(yAxisIndex);
                 for (var i = 0, l = series.length; i < l; i++) {
+                    if (!_isSelected(series[i].name)) {
+                        continue;
+                    }
                     if (series[i].yAxisIndex == yAxisIndex
                         && self.deepQuery(
                                [series[i], option], 'tooltip.trigger'
@@ -669,9 +676,14 @@ define(function (require) {
                 }
                 formatter = option.tooltip.formatter;
             }
+            var indicatorName = 
+                    option.polar[polarIndex].indicator[dataIndex].text;
 
             // 找到所有用这个极坐标并且axis触发的系列数据
             for (var i = 0, l = series.length; i < l; i++) {
+                if (!_isSelected(series[i].name)) {
+                    continue;
+                }
                 if (series[i].polarIndex == polarIndex
                     && self.deepQuery(
                            [series[i], option], 'tooltip.trigger'
@@ -695,13 +707,14 @@ define(function (require) {
                 var polarData;
                 var data;
                 var params = [];
-                var indicatorName = 
-                    option.polar[polarIndex].indicator[dataIndex].text;
 
                 for (var i = 0, l = seriesArray.length; i < l; i++) {
                     polarData = seriesArray[i].data;
                     for (var j = 0, k = polarData.length; j < k; j++) {
                         data = polarData[j];
+                        if (!_isSelected(data.name)) {
+                            continue;
+                        }
                         data = typeof data != 'undefined'
                                ? data
                                : {name:'', value: {dataIndex:'-'}};
@@ -1208,6 +1221,29 @@ define(function (require) {
         function ondragend() {
             _hide();
         }
+        
+        /**
+         * 图例选择
+         */
+        function onlegendSelected(param, status) {
+            _selectedMap = param.selected;
+        }
+        function _setSelectedMap() {
+            if (option.legend && option.legend.selected) {
+                _selectedMap = option.legend.selected;
+            }
+            else {
+                _selectedMap = {};
+            }
+        }
+        function _isSelected(itemName) {
+            if (typeof _selectedMap[itemName] != 'undefined') {
+                return _selectedMap[itemName];
+            }
+            else {
+                return true; // 没在legend里定义的都为true啊~
+            }
+        }
 
         function init(newOption, newDom) {
             option = newOption;
@@ -1247,6 +1283,7 @@ define(function (require) {
             _defaultCssText = _style(option.tooltip);
             _tDom.style.position = 'absolute';  // 不是多余的，别删！
             self.hasAppend = false;
+            _setSelectedMap();
         }
         
         /**
@@ -1268,6 +1305,7 @@ define(function (require) {
                 option.tooltip.padding = self.reformCssArray(
                     option.tooltip.padding
                 );
+                _setSelectedMap();
             }
         }
 
@@ -1322,6 +1360,7 @@ define(function (require) {
         self.setComponent = setComponent;
         self.ontooltipHover = ontooltipHover;
         self.ondragend = ondragend;
+        self.onlegendSelected = onlegendSelected;
         init(option, dom);
     }
 
