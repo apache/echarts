@@ -565,6 +565,9 @@ define(
 
                 for (var i = 0; i < series.length; i ++) {
                     serie = series[i];
+                    if (serie.type != ecConfig.CHART_TYPE_RADAR) {
+                        continue;
+                    }
                     serieData = serie.data || [];
                     for (var j = 0; j < serieData.length; j ++) {
                         polarIndex = self.deepQuery(

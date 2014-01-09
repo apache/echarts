@@ -861,6 +861,7 @@ define(function() {
             PIE_SELECTED: 'pieSelected',
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',
             DATA_VIEW_CHANGED: 'dataViewChanged',
+            MAP_ROAM : 'mapRoam',
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover'
         },
