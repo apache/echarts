@@ -692,7 +692,7 @@ define(function (require) {
                         - dataRangeOption.borderWidth;
                     break;
                 default :
-                    x = dataRangeOption.x - 0;
+                    x = self.parsePercent(dataRangeOption.x, zrWidth);
                     x = isNaN(x) ? 0 : x;
                     break;
             }
@@ -714,7 +714,7 @@ define(function (require) {
                     y = Math.floor((zrHeight - totalHeight) / 2);
                     break;
                 default :
-                    y = dataRangeOption.y - 0;
+                    y = self.parsePercent(dataRangeOption.y, zrHeight)
                     y = isNaN(y) ? 0 : y;
                     break;
             }

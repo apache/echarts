@@ -45,25 +45,26 @@ define(function (require) {
             option.grid = self.reformOption(option.grid);
 
             var gridOption = option.grid;
-            _x = gridOption.x;
-            _y = gridOption.y;
-            var x2 = gridOption.x2;
-            var y2 = gridOption.y2;
             _zrWidth = zr.getWidth();
             _zrHeight = zr.getHeight();
+            _x = self.parsePercent(gridOption.x, _zrWidth);
+            _y = self.parsePercent(gridOption.y, _zrHeight);
+            var x2 = self.parsePercent(gridOption.x2, _zrWidth);
+            var y2 = self.parsePercent(gridOption.y2, _zrHeight);
+            
 
             if (typeof gridOption.width == 'undefined') {
                 _width = _zrWidth - _x - x2;
             }
             else {
-                _width = gridOption.width;
+                _width = self.parsePercent(gridOption.width, _zrWidth);
             }
 
             if (typeof gridOption.height == 'undefined') {
                 _height = _zrHeight - _y - y2;
             }
             else {
-                _height = gridOption.height;
+                _height = self.parsePercent(gridOption.height, _zrHeight);
             }
             
             _x = self.subPixelOptimize(_x, gridOption.borderWidth);
