@@ -775,11 +775,13 @@ define(function (require) {
             }
             
             // console.log(xStart,xEnd,yStart,yEnd);
+            var value;
             for (var i = 0, l = data.length; i < l; i++) {
-                if (data[i][0] >= xStart 
-                    && data[i][0] <= xEnd
-                    && data[i][1] >= yStart
-                    && data[i][1] <= yEnd
+                value = data[i].value || data[i];
+                if (value[0] >= xStart 
+                    && value[0] <= xEnd
+                    && value[1] >= yStart
+                    && value[1] <= yEnd
                 ) {
                     newData.push(data[i]);
                 }
@@ -891,8 +893,8 @@ define(function (require) {
             
             var total;
             var sdx = (rect.x - gridArea.x) / gridArea.width;
-            var edx = 1- (rect.x + rect.width - gridArea.x) / gridArea.width;
-            var sdy = 1- (rect.y + rect.height - gridArea.y) / gridArea.height;
+            var edx = 1 - (rect.x + rect.width - gridArea.x) / gridArea.width;
+            var sdy = 1 - (rect.y + rect.height - gridArea.y) / gridArea.height;
             var edy = (rect.y - gridArea.y) / gridArea.height;
             //console.log('this',sdy,edy,_zoom.start,_zoom.end)
             if (zoomOption.orient == 'horizontal') {
