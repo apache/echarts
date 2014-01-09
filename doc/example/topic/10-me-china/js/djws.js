@@ -187,7 +187,7 @@ window.onload = function() {
     window.onresize = function() {
         clearTimeout(resizeTicket);
         resizeTicket = setTimeout(function(){
-            myChart0.resize();console.log(curTabIdx)
+            myChart0.resize();
             if (curTabIdx == 1) {
                 myChart1.resize();
             }

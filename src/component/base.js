@@ -226,6 +226,13 @@ define(function(require) {
                 [data, serie],
                 'itemStyle.' + status + '.label.formatter'
             );
+            if (!formatter && status == 'emphasis') {
+                // emphasis时需要看看normal下是否有formatter
+                formatter = self.deepQuery(
+                    [data, serie],
+                    'itemStyle.normal.label.formatter'
+                )
+            }
             
             var value = typeof data != 'undefined'
                         ? (typeof data.value != 'undefined'
