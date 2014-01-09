@@ -950,7 +950,11 @@ define(function(require) {
                 // 让refresh飞一会
                 clearTimeout(_refreshDelayTicket);
                 _refreshDelayTicket = setTimeout(refresh, 100);
-                
+                messageCenter.dispatch(
+                    ecConfig.EVENT.MAP_ROAM,
+                    param.event,
+                    {type : 'scale'}
+                );
                 zrEvent.stop(event);
             }
         }
@@ -1000,6 +1004,11 @@ define(function(require) {
                     zr.modShape(self.shapeList[i].id, mod, true);
                 }
             }
+            messageCenter.dispatch(
+                ecConfig.EVENT.MAP_ROAM,
+                param.event,
+                {type : 'move'}
+            );
             zr.refresh();
             _justMove = true;
             zrEvent.stop(event);
@@ -1131,9 +1140,34 @@ define(function(require) {
          * 平面坐标转经纬度
          */
         function pos2geo(mapType, p) {
+            if (!_mapDataMap[mapType].transform) {
+                return null;
+            }
             return require('../util/projection/normal').pos2geo(
                 _mapDataMap[mapType].transform, p
             );
+        }
+        
+        /**
+         * 公开接口 : 平面坐标转经纬度
+         */
+        function getGeoByPos(mapType, p) {
+            if (!_mapDataMap[mapType].transform) {
+                return null;
+            }
+            var position = [
+                _mapDataMap[mapType].transform.left,
+                _mapDataMap[mapType].transform.top
+            ];
+            if (p instanceof Array) {
+                p[0] -= position[0];
+                p[1] -= position[1];
+            }
+            else {
+                p.x -= position[0];
+                p.y -= position[1];
+            }
+            return pos2geo(mapType, p);
         }
         
         /**
@@ -1141,11 +1175,59 @@ define(function(require) {
          * @param {Object} p
          */
         function geo2pos(mapType, p) {
+            if (!_mapDataMap[mapType].transform) {
+                return null;
+            }
             return require('../util/projection/normal').geo2pos(
                 _mapDataMap[mapType].transform, p
             );
         }
         
+        /**
+         * 公开接口 : 经纬度转平面坐标
+         */
+        function getPosByGeo(mapType, p) {
+            if (!_mapDataMap[mapType].transform) {
+                return null;
+            }
+            var pos = geo2pos(mapType, p);
+            pos[0] += _mapDataMap[mapType].transform.left;
+            pos[1] += _mapDataMap[mapType].transform.top;
+            return pos;
+        }
+        
+        /**
+         * 公开接口 : 经纬度转平面坐标
+         */
+        function getMapPosition(mapType) {
+            if (!_mapDataMap[mapType].transform) {
+                return null;
+            }
+            return [
+                _mapDataMap[mapType].transform.left,
+                _mapDataMap[mapType].transform.top
+            ];
+        }
+        
+        /*
+        function appendShape(mapType, shapeList) {
+            shapeList = shapeList instanceof Array
+                        ? shapeList : [shapeList];
+            for (var i = 0, l = shapeList.length; i < l; i++) {
+                if (typeof shapeList[i].id == 'undefined') {
+                    shapeList[i].id = zr.newShapeId(self.type);
+                }
+                if (typeof shapeList[i].zlevel == 'undefined') {
+                    shapeList[i].zlevel = _zlevelBase + 1;
+                }
+                shapeList[i]._mapType = mapType;
+                self.shapeList.push(shapeList[i]);
+                zr.addShape(shapeList[i]);
+            }
+            zr.refresh();
+        }
+        */
+       
         /**
          * 释放后实例不可用
          */
@@ -1166,9 +1248,15 @@ define(function(require) {
         self.init = init;
         self.refresh = refresh;
         self.ondataRange = ondataRange;
+        self.onclick = onclick;
+        
+        // 稳定接口
         self.pos2geo = pos2geo;
         self.geo2pos = geo2pos;
-        self.onclick = onclick;
+        self.getMapPosition = getMapPosition;
+        self.getPosByGeo = getPosByGeo;
+        self.getGeoByPos = getGeoByPos;
+        //self.appendShape = appendShape;
         
         init(option, component);
     }

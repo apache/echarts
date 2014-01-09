@@ -244,8 +244,17 @@ define(function() {
      * @param {Array} p
      */
     function pos2geo(obj, p) {
-        var x = p[0] * 1;
-        var y = p[1] * 1;
+        var x;
+        var y;
+        if (p instanceof Array) {
+            x = p[0] * 1;
+            y = p[1] * 1;
+        }
+        else {
+            x = p.x * 1;
+            y = p.y * 1;
+        }
+        
         x = x / obj.scale.x + obj.offset.x - 168.5;
         x = x > 180 ? x - 360 : x;
         y = 90 - (y / obj.scale.y + obj.offset.y);
