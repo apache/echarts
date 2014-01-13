@@ -326,6 +326,7 @@ define(function(require) {
             var serie;
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                serie = series[self.shapeList[i]._seriesIndex];
                 x = self.shapeList[i]._x || 0;
                 y = self.shapeList[i]._y || 0;
                 zr.modShape(

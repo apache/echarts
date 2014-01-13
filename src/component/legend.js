@@ -610,6 +610,10 @@ define(function (require) {
                 return true;
             }
         }
+        
+        function getSelectedMap() {
+            return _selectedMap;
+        }
 
         self.init = init;
         self.refresh = refresh;
@@ -621,6 +625,7 @@ define(function (require) {
         self.getItemShape = getItemShape;
         self.setItemShape = setItemShape;
         self.isSelected = isSelected;
+        self.getSelectedMap = getSelectedMap;
 
         init(option);
     }
