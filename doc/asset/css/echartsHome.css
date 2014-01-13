@@ -133,6 +133,7 @@ body {
 }
 .main {
     height: 400px;
+    /*width: 800px;*/
     overflow: hidden;
     padding : 10px;
     margin-bottom: 10px;

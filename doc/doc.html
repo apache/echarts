@@ -119,6 +119,14 @@
                                 <li><a href="#Series">series</a></li>
                                 <ul>
                                     <li><a href="#SeriesData">data</a></li>
+                                    <li><a href="#SeriesMarkPoint">markPoint</a></li>
+                                    <ul>
+                                        <li><a href="#SeriesMarkPointData">data</a></li>
+                                    </ul>
+                                    <li><a href="#SeriesMarkLine">markLine</a></li>
+                                    <ul>
+                                        <li><a href="#SeriesMarkLineData">data</a></li>
+                                    </ul>
                                 </ul>
                                 <li><a href="#ItemStyle">itemStyle</a></li>
                                 <li><a href="#LineStyle">lineStyle</a></li>
@@ -1959,7 +1967,7 @@ indicator : [
                             <td> 标志图形类型，默认自动选择（8种类型循环使用，不显示标志图形可设为'none'），默认循环选择类型有：<br/>
                                 'circle' | 'rectangle' | 'triangle' | 'diamond' |<br/>
                                 'emptyCircle' | 'emptyRectangle' | 'emptyTriangle' | 'emptyDiamond'
-                                <br/>另外，还支持两种更特别的标志图形'arrow'（箭头）和'star'（五角星），这并不出现在常规的8类图形中，但无论是在系列级还是数据级上你都可以指定使用，同时，'star' + n（n>=3)可变化出N角星，如指定为'star6'则可以显示6角星
+                                <br/>另外，还支持五种更特别的标志图形'heart'（心形）、'droplet'（水滴）、'pin'（标注）、'arrow'（箭头）和'star'（五角星），这并不出现在常规的8类图形中，但无论是在系列级还是数据级上你都可以指定使用，同时，'star' + n（n>=3)可变化出N角星，如指定为'star6'则可以显示6角星
                                 <br/>自1.3.5起支持symbol为自定义图片，格式为'image://' + '图片路径'， 如'image://../asset/ico/favicon.png'
                                 <br/>详见例子 <a href="./example/line.html" target="_blank">this 》</a>
                             </td>
@@ -2047,6 +2055,12 @@ indicator : [
                                 <br/>支持子区域模式，通过主地图类型扩展出所包含的子区域地图，格式为'主地图类型|子区域名称'，如
                                 <br/>'world|Brazil'，'china|广东'，详见例子 <a href="./example/map8.html" target="_blank">this 》</a>
                             </td>
+                        </tr>
+                        <tr>
+                            <td> {boolean} hoverable </td>
+                            <td> true </td>
+                            <td> 地图 </td>
+                            <td> 非数值显示（如仅用于显示标注标线时），可以通过hoverable:false关闭区域悬浮高亮 </td>
                         </tr>
                         <tr>
                             <td> {Object} mapLocation </td>
@@ -2174,7 +2188,8 @@ indicator : [
                             <td> 通用 </td>
                             <td> 数据（详见<a href="#SeriesData" title="">series.data</a>） </td>
                         </tr>
-                    </table><h5>series.data<a name="SeriesData"> </a></h5>
+                    </table>
+                    <h5>series.data<a name="SeriesData"> </a></h5>
                     <P> 系列中的数据内容数组，折线图以及柱状图时数组长度等于所使用类目轴文本标签数组<a href="#AxisData" title="">axis.data</a>的长度，并且他们间是一一对应的。数组项通常为数值，如:</P>
                     <div class="code">
                         <pre>[12, 34, 56, ..., 10, 23]</pre>
@@ -2243,6 +2258,170 @@ indicator : [
     },
     ...
 ]
+</pre>
+                    </div>
+                    
+                    <h5>series.markPoint<a name="SeriesMarkPoint"> </a></h5>
+                    <P> 系列中的数据标注内容</P>
+                    <table cellspacing="0" class="ADoc_table">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {string} symbol </td>
+                            <td> 'pin' </td>
+                            <td> 标注类型，同series中的<a href="#Series">symbol</a> </td>
+                        </tr>
+                        <tr>
+                            <td> {number|function} symbolSize </td>
+                            <td> 10 </td>
+                            <td> 标注大小，同series中的<a href="#Series">symbolSize</a> </td>
+                        </tr>
+                        <tr>
+                            <td> {number} symbolRotate </td>
+                            <td> null </td>
+                            <td> 标注图形旋转角度，同series中的<a href="#Series">symbolRotate</a> </td>
+                        </tr>
+                        <tr>
+                            <td> {number} itemStyle </td>
+                            <td> {...} </td>
+                            <td> 标注图形样式属性，同series中的<a href="#Series">itemStyle</a> </td>
+                        </tr>
+                        <tr>
+                            <td> {Object} geoCoord </td>
+                            <td> {} </td>
+                            <td> 地图特有，标注图形定位坐标，同series中的<a href="#Series">geoCoord</a> </td>
+                        </tr>
+                        <tr>
+                            <td> {Array} data </td>
+                            <td> [] </td>
+                            <td> 标注图形数据，见下 </td>
+                        </tr>
+                    </table>
+                    
+                    <h5>series.markPoint.data<a name="SeriesMarkPointData"> </a></h5>
+                    <P> 标注的数据内容数组，最直接的数据项可直接指定标注位置（x，y）以及相关名称（name）和值（value），在饼图、雷达图、力导、和弦图中基本如下:</P>
+                    <div class="code">
+                        <pre>data : [
+    {name: '标注1', value: 100, x: 50, y: 20},
+    {name: '标注2', value: 200, x: 150, y: 120},
+    ...
+]</pre>
+                    </div>
+                    <P> 在存在直角坐标系的图表如折线、柱形、K线、散点图中，除了通过直接指定位置外，如果希望标注基于直角系的定位，可以通过xAxis，yAxis实现，这两个值都会根据坐标轴类型以及传入参数的不同自动换算如下：</P>
+                    <div class="code">
+                        <pre>data : [
+    {name: '标注1', value: 100, xAxis: 1, yAxis: 20},      // 当xAxis为类目轴时，数值1会被理解为类目轴的index
+    {name: '标注2', value: 100, xAxis: '周三', yAxis: 20}, // 当xAxis为类目轴时，字符串'周三'会被理解为与类目轴的文本进行匹配
+    {name: '标注3', value: 200, xAxis: 10, yAxis: 20},     // 当xAxis或yAxis为数值轴时，不管传入是什么，都被理解为数值后做空间位置换算
+    ...
+]</pre>
+                    </div>
+                    <P> 标注数据比较特殊也最为常用的地图上，除了直接位置定位外，如果希望基于地理坐标标注，并且能够随地图漫游缩放，需要为markPoint提供一份geoCoord，如下</P>
+                    <div class="code">
+                        <pre>data : [
+    {name: '北京', value: 100},
+    {name: '上海', value: 200},
+    ...
+],
+geoCoord : {
+    "北京":[116.46,39.92],           // 支持数组[经度，维度]
+    "上海": {x: 121.48, y: 31.22},   // 支持对象{x:经度,y:纬度}
+    ...
+}
+</pre>
+                    </div>
+
+                    <h5>series.markLine<a name="SeriesMarkLine"> </a></h5>
+                    <P> 系列中的数据标线内容</P>
+                    <table cellspacing="0" class="ADoc_table">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {Array | string} symbol </td>
+                            <td> ['circle', 'arrow'] </td>
+                            <td> 标线起始和结束的symbol介绍类型，如果都一样，可以直接传string，同series中的<a href="#Series">symbol</a></td>
+                        </tr>
+                        <tr>
+                            <td> {Array | number | Function} symbolSize </td>
+                            <td> [2, 4] </td>
+                            <td> 标线起始和结束的symbol大小，半宽（半径）参数，如果都一样，可以直接传number或function，同series中的<a href="#Series">symbolSize</a> </td>
+                        </tr>
+                        <tr>
+                            <td> {Array | number} symbolRotate </td>
+                            <td> null </td>
+                            <td> 标线起始和结束的symbol旋转控制，同series中的<a href="#Series">symbolRotate</a> </td>
+                        </tr>
+                        <tr>
+                            <td> {number} itemStyle </td>
+                            <td> {...} </td>
+                            <td> 标线图形样式属性，同series中的<a href="#Series">itemStyle</a> </td>
+                        </tr>
+                        <tr>
+                            <td> {Object} geoCoord </td>
+                            <td> {} </td>
+                            <td> 地图特有，标线图形定位坐标，同series中的<a href="#Series">geoCoord</a> </td>
+                        </tr>
+                        <tr>
+                            <td> {Array} data </td>
+                            <td> [] </td>
+                            <td> 标线图形数据，见下 </td>
+                        </tr>
+                    </table>
+                    
+                    <h5>series.markLine.data<a name="SeriesMarkLineData"> </a></h5>
+                    <P> 标线的数据内容数组，最直接的数据项可直接指定标线起始和结束位置（x，y）以及相关名称（name）和值（value），在饼图、雷达图、力导、和弦图中基本如下:</P>
+                    <div class="code">
+                        <pre>data : [
+    [
+        {name: '标线1起点', value: 100, x: 50, y: 20}, 
+        {name: '标线1终点', x: 150, y: 120}
+    ],
+    [
+        {name: '标线2起点', value: 200, x: 30, y: 80}, 
+        {name: '标线2终点', x: 270, y: 190}
+    ],
+    ...
+]</pre>
+                    </div>
+                    <P> 在存在直角坐标系的图表如折线、柱形、K线、散点图中，除了通过直接指定位置外，如果希望标线基于直角系的定位，可以通过xAxis，yAxis实现，这两个值都会根据坐标轴类型以及传入参数的不同自动换算如下：</P>
+                    <div class="code">
+                        <pre>data : [
+    [
+        {name: '标线1起点', value: 100, xAxis: 1, yAxis: 20},      // 当xAxis为类目轴时，数值1会被理解为类目轴的index
+        {name: '标线1终点', xAxis: '周三', yAxis: 20},             // 当xAxis为类目轴时，字符串'周三'会被理解为与类目轴的文本进行匹配
+    ],
+    [
+        {name: '标线2起点', value: 200, xAxis: 10, yAxis: 20},     // 当xAxis或yAxis为数值轴时，不管传入是什么，都被理解为数值后做空间位置换算
+        {name: '标线2终点', xAxis: 270, yAxis: 190}
+    ],
+    ...
+]</pre>
+                    </div>
+                    <P> 标线数据比较特殊也最为常用的地图上，除了直接位置定位外，如果希望基于地理坐标标线，并且能够随地图漫游缩放，需要为markLine提供一份geoCoord，如下</P>
+                    <div class="code">
+                        <pre>data : [
+    [
+        {name: '北京', value: 100},
+        {name:'上海'}
+    ],
+    [
+        {name: '北京', value: 100},
+        {name:'广州'}
+    ],
+    ...
+],
+geoCoord : {
+    "北京":[116.46,39.92],           // 支持数组[经度，维度]
+    "广州":[113.23,23.16],
+    "上海": {x: 121.48, y: 31.22},   // 支持对象{x:经度,y:纬度}
+    ...
+}
 </pre>
                     </div>
 

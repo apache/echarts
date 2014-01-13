@@ -25,7 +25,6 @@ function option0 (name) {
             min : data[name + 'Min'],
             max : data[name + 'Max'],
             calculable : true,
-            x: 'left',
             color: ['maroon','purple','red','orange','yellow','lightgreen'],
             textStyle:{
                 color:'#fff'
