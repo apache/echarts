@@ -1,4 +1,4 @@
-function option2 (idx) {
+function option2 (idx, selected) {
     var option = {
         tooltip : {
             trigger: 'item'
@@ -45,10 +45,12 @@ function option2 (idx) {
                 splitArea : {show : true}
             }
         ],
+        animation:false,
         series : [
             {
                 name:'城市',
                 type:'scatter',
+                
                 symbolSize: function(value){
                     return Math.round(value[2] / sizeCtrl);
                 }
@@ -68,16 +70,18 @@ function option2 (idx) {
                        + '人口 : ' + v[2][1] + '（万人）<br/>'
                        + 'PM2.5 : ' + v[2][2];
             }
-            for (var city in PG) {
-                scatterData.push({
-                    name: city,
-                    value: [
-                        PG[city].gdp,
-                        PG[city].pop,
-                        data.cityToData[city].pm2_5
-                    ],
-                    itemStyle:{normal:{color:PG[city].color}}
-                });
+            for (var city in selected) {
+                if (selected[city]) {
+                    scatterData.push({
+                        name: city,
+                        value: [
+                            PG[city].gdp,
+                            PG[city].pop,
+                            data.cityToData[city].pm2_5
+                        ],
+                        itemStyle:{normal:{color:PG[city].color}}
+                    });
+                }
             }
             break;
         case '1':
@@ -88,16 +92,18 @@ function option2 (idx) {
                        + 'GDP : ' + v[2][1] + '（亿元）<br/>'
                        + '人口 : ' + v[2][2] + '（万人）';
             }
-            for (var city in PG) {
-                scatterData.push({
-                    name: city,
-                    value: [
-                        data.cityToData[city].pm2_5,
-                        PG[city].gdp,
-                        PG[city].pop
-                    ],
-                    itemStyle:{normal:{color:PG[city].color}}
-                });
+            for (var city in selected) {
+                if (selected[city]) {
+                    scatterData.push({
+                        name: city,
+                        value: [
+                            data.cityToData[city].pm2_5,
+                            PG[city].gdp,
+                            PG[city].pop
+                        ],
+                        itemStyle:{normal:{color:PG[city].color}}
+                    });
+                }
             }
             break;
         case '2':
@@ -108,16 +114,18 @@ function option2 (idx) {
                        + '人口  : ' + v[2][1] + '（万人）<br/>'
                        + 'GDP : ' + v[2][2] + '（亿元）';
             }
-            for (var city in PG) {
-                scatterData.push({
-                    name: city,
-                    value: [
-                        data.cityToData[city].pm2_5,
-                        PG[city].pop,
-                        PG[city].gdp
-                    ],
-                    itemStyle:{normal:{color:PG[city].color}}
-                });
+            for (var city in selected) {
+                if (selected[city]) {
+                    scatterData.push({
+                        name: city,
+                        value: [
+                            data.cityToData[city].pm2_5,
+                            PG[city].pop,
+                            PG[city].gdp
+                        ],
+                        itemStyle:{normal:{color:PG[city].color}}
+                    });
+                }
             }
     }
     option.tooltip.formatter = tipFormatter;

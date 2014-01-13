@@ -64,22 +64,13 @@ require(
         myChart3 = ec.init(document.getElementById('g3')).showLoading({effect:'bubble'});
         
         require(
-            ['echarts'],
+            ['air'],
             function (airData) {
                 DATA_READY = true;
-                airData = testData;
+                //airData = testData;
                 $('#time')[0].innerHTML = airData[0].time_point.replace(/[T|Z]/g, ' ')
-                var zrColor = require('zrender/tool/color');
                 var ecConfig = require('echarts/config');
-                var color = ecConfig.color;
-                var cidx = 0;
-                for (var city in PG) {
-                    PG[city].color = zrColor.alpha(
-                        //zrColor.getColor(cidx++),
-                        color[cidx++ % color.length], 
-                        0.6
-                    );
-                }
+                
                 //console.log(airData);
                 data.format(airData,testData);
                 showTabContent(0, oCurTabIdx);
@@ -87,6 +78,8 @@ require(
                 showTabContent(2);
                 showTabContent(3, rCurTabIdx);
                 myChart0.on(ecConfig.EVENT.MAP_ROAM, extMark);
+                
+                myChart1.on(ecConfig.EVENT.LEGEND_SELECTED, legendShare)
             }
         );
     }
@@ -216,9 +209,31 @@ functionMap.chart1 = function () {
 }
 
 functionMap.chart2 = function () {
-    myChart20.setOption(option2(0));
-    myChart21.setOption(option2(1));
-    myChart22.setOption(option2(2));
+    legendShare();
+}
+function legendShare() {
+    var zrColor = require('zrender/tool/color');
+    /*
+    var color = ecConfig.color;
+    var cidx = 0;
+    for (var city in PG) {
+        PG[city].color = zrColor.alpha(
+            //zrColor.getColor(cidx++),
+            color[cidx++ % color.length], 
+            0.6
+        );
+    }
+    */
+    var legend = myChart1.compoent.legend;
+    var selected = legend.getSelectedMap();
+    for (var city in selected) {
+        if (selected[city]) {
+            PG[city].color = zrColor.alpha(legend.getColor(city), 0.6);
+        }
+    }
+    myChart20.setOption(option2(0, selected));
+    myChart21.setOption(option2(1, selected));
+    myChart22.setOption(option2(2, selected));
 }
 
 functionMap.chart3 = function (type) {
