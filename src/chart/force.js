@@ -39,6 +39,7 @@ define(function(require) {
 
         var NDArray = require('../util/ndarray');
 
+        var legend;
         var self = this;
         self.type = ecConfig.CHART_TYPE_FORCE;
 
@@ -98,7 +99,7 @@ define(function(require) {
         var mouseX, mouseY;
 
         function _buildShape() {
-            var legend = component.legend;
+            legend = component.legend;
             temperature = 1.0;
             viewportWidth = zr.getWidth();
             viewportHeight = zr.getHeight();
@@ -321,6 +322,7 @@ define(function(require) {
                 if (typeof(node.category) !== 'undefined') {
                     var category = categories[node.category];
                     if (category) {
+                        shape.style.color = legend.getColor(category.name);
                         var style = category.itemStyle;
                         if (style) {
                             if (style.normal) {
