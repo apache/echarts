@@ -695,6 +695,16 @@ define(function(require) {
             xEnd, yEnd,             // 坐标
             color                   // 默认color，来自legend或dataRange全局分配
         ) {
+            var value0 = typeof data[0] != 'undefined'
+                        ? (typeof data[0].value != 'undefined'
+                          ? data[0].value
+                          : data[0])
+                        : '-';
+            var value1 = typeof data[1] != 'undefined'
+                        ? (typeof data[1].value != 'undefined'
+                          ? data[1].value
+                          : data[1])
+                        : '-';
             var symbol = [
                 self.query(data[0], 'symbol') || mlOption.symbol[0],
                 self.query(data[1], 'symbol') || mlOption.symbol[1]
@@ -703,6 +713,12 @@ define(function(require) {
                 self.query(data[0], 'symbolSize') || mlOption.symbolSize[0],
                 self.query(data[1], 'symbolSize') || mlOption.symbolSize[1]
             ];
+            symbolSize[0] = typeof symbolSize[0] == 'function'
+                            ? symbolSize[0](value0)
+                            : symbolSize[0];
+            symbolSize[1] = typeof symbolSize[1] == 'function'
+                            ? symbolSize[1](value1)
+                            : symbolSize[1];
             var symbolRotate = [
                 self.query(data[0], 'symbolRotate') || mlOption.symbolRotate[0],
                 self.query(data[1], 'symbolRotate') || mlOption.symbolRotate[1]
