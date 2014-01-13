@@ -42,6 +42,7 @@ function option3 (name) {
         },
         dataRange: {
             orient: 'horizontal',
+            precision: name != 'co' ? 0 : 2,
             min : data[name + 'Min'],
             max : data[name + 'Max'],
             text:['高','低'],           // 文本，默认为数值文本

@@ -111,6 +111,8 @@ function option1 (name) {
         series.push({
             name: city,
             type: 'bar',
+            barGap:'5%',
+            barCategoryGap:'10%',
             data: seriesData
         });
         selected[city] = false;
@@ -124,6 +126,6 @@ function option1 (name) {
     //selected['拉萨'] = true;
     option.legend.selected = selected;
     option.series = series;
-    console.log(option);
+    //console.log(option);
     return option;
 }

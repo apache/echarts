@@ -37,7 +37,7 @@ var data = {
     co : [],    coMin:0,    coMax:15,
     no2 : [],   no2Min:0,   no2Max:300,
     o3 : [],    o3Min:0,    o3Max:300,
-    so2 : [],   so2Min:0,   so2Max:300,
+    so2 : [],   so2Min:0,   so2Max:500,
     geoCoord : {}
 };
 data.format = function(oriData) {

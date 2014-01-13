@@ -25,7 +25,11 @@
         h1 {
             color: #FFF;
             font-weight : bolder;
-            margin:20px 0;
+            margin:20px 0 5px 0;
+        }
+        header p {
+            color: #FFF;
+            margin-bottom: 20px;
         }
         section {
             background-image: url(../../../asset/img/ticks.png);
@@ -72,6 +76,9 @@
             margin-bottom: 5px;
             font-weight: bold;
         }
+        footer a:hover {
+            color:#62C462
+        }
     </style>
     <script src="../../../asset/js/esl/esl.js"></script>
 </head>
@@ -81,19 +88,20 @@
     <header>
         <div class="container">
             <h1>中国主要城市空气质量实况</h1>
+            <p>数据更新时间：<span id="time">****-**-** --:--:--</span></p>
         </div>
     </header>
     <section>
         <div class="container">
             <strong>引言：</strong>你关注或者不关注，它就在我们身边...
-            <p>空气质量指数（Air Quality Index，简称AQI）定义为定量描述空气质量状况的无量纲指数，其数值越大说明空气污染状况越严重，对人体健康的危害也就越大。参与空气质量评价的主要污染物为细颗粒物（pm2.5）、可吸入颗粒物（pm10）、二氧化硫（SO2）、二氧化氮（NO2）、臭氧（O3）、一氧化碳（CO）等六项。</p>
+            <div style="text-align: right"><i>忘记从什么时候开始，用颜色表示空气；不知道什么时候可以，用甜度描述空气。</i> from <a href="http://www.pm25.in/" target="_blank">pm25.in</a></div>
         </div>
     </section>
     <div class="container">
         <!-- CONTAINER -->
         <div class="row">
             <div id="overview" class="span12">
-                <h3>概况：今天爆表了吗？</h3>
+                <h3>概况：今天哪里又爆表了？</h3>
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs nav-justified">
                     <li class="active">
@@ -110,22 +118,21 @@
                         <div id="g0" style="height:500px"></div>
                     </div>
                     <div>
-                        <h4 id="overview-head"></h4>
+                        <h4 id="overview-head"></h4><hr>
                         <p id="overview-content"></p>
+                        <p style="text-align: right">更多详见 <a id="overview-link" target="_blank">百度百科 »</a></p>
                     </div>
                 </div>
             </div>
-            <div class="span12">
-                <h3>城市对比</h3>
+            <div class="span12" style="margin-top:15px;">
+                <h3>重点城市对比</h3>
                 <div id="g1" style="height:400px"></div>
-            </div>
-            <div class="span12">
-                <h3>重点城市：PM2.5 vs 经济 vs 人口</h3>
+                <h4 style="text-align: center">“PM2.5 vs 经济 vs 人口” 关联分析</h4>
                 <div id="g20" class="g2wrap"></div>
                 <div id="g21" class="g2wrap"></div>
                 <div id="g22" class="g2wrap"></div>
             </div>
-            <div class="span12">
+            <div class="span12" style="margin-top:15px;">
                 <h3>空气质量排行榜</h3>
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs nav-justified">
@@ -146,7 +153,7 @@
     </div>
     <!-- FOOTER -->
     <footer>
-      <p>&copy; 2014 大佛（百度）  &middot; 林峰（百度） 特别鸣谢 <a href="http://www.pm25.in/" target="_blank">PM25.in</a>  &middot; </p>
+      <p>&copy; 2014 大佛（百度）  &middot; 林峰（百度） 特别鸣谢 <a href="http://www.pm25.in/" target="_blank">PM25.in</a> &middot; <a href="http://www.iconpng.com/" target="_blank">iconpng</a></p>
       <p><a href="http://echarts.baidu.com" target="_blank">Data Visualization by ECharts</a></p>
     </footer>
 
