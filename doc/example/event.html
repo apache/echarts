@@ -150,9 +150,30 @@ function eConsole(param) {
     }
     console.log(param);
 }
-for (var e in ecConfig.EVENT) {
-    myChart.on(ecConfig.EVENT[e], eConsole);
-}
+/*
+REFRESH: 'refresh',
+RESTORE: 'restore',
+RESIZE: 'resize',
+CLICK: 'click',
+HOVER: 'hover',
+MOUSEWHEEL: 'mousewheel',
+// -------业务交互逻辑
+DATA_CHANGED: 'dataChanged',
+DATA_ZOOM: 'dataZoom',
+DATA_RANGE: 'dataRange',
+LEGEND_SELECTED: 'legendSelected',
+MAP_SELECTED: 'mapSelected',
+PIE_SELECTED: 'pieSelected',
+MAGIC_TYPE_CHANGED: 'magicTypeChanged',
+DATA_VIEW_CHANGED: 'dataViewChanged',
+MAP_ROAM : 'mapRoam',
+*/
+myChart.on(ecConfig.EVENT.CLICK, eConsole);
+//myChart.on(ecConfig.EVENT.HOVER, eConsole);
+myChart.on(ecConfig.EVENT.DATA_ZOOM, eConsole);
+myChart.on(ecConfig.EVENT.LEGEND_SELECTED, eConsole);
+myChart.on(ecConfig.EVENT.MAGIC_TYPE_CHANGED, eConsole);
+myChart.on(ecConfig.EVENT.DATA_VIEW_CHANGED, eConsole);
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->

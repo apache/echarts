@@ -504,7 +504,12 @@ define(function (require) {
                     _event,
                     {
                         seriesIndex : seriesIndex,
-                        dataIndex : dataIndex
+                        dataIndex : component.dataZoom
+                                    ? component.dataZoom.getRealDataIndex(
+                                        seriesIndex,
+                                        dataIndex
+                                      )
+                                    : dataIndex
                     }
                 );
                 y = zrEvent.getY(_event) + 10;
@@ -553,7 +558,12 @@ define(function (require) {
                     _event,
                     {
                         seriesIndex : seriesIndex,
-                        dataIndex : dataIndex
+                        dataIndex : component.dataZoom
+                                    ? component.dataZoom.getRealDataIndex(
+                                        seriesIndex,
+                                        dataIndex
+                                      )
+                                    : dataIndex
                     }
                 );
                 x = zrEvent.getX(_event) + 10;

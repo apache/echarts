@@ -951,8 +951,18 @@ define(function (require) {
                 }
             }
         }
+        
         function silence(s) {
             _isSilence = s;
+        }
+        
+        function getRealDataIndex(sIdx, dIdx) {
+            var sreies = _originalData.series;
+            if (sreies[sIdx]) {
+                return Math.floor(_zoom.start / 100 * sreies[sIdx].length) 
+                       + dIdx;
+            }
+            return -1;
         }
 
         function init(newOption) {
@@ -1019,6 +1029,7 @@ define(function (require) {
         self.ondragend = ondragend;
         self.ondataZoom = ondataZoom;
         self.silence = silence;
+        self.getRealDataIndex = getRealDataIndex;
 
         init(option);
     }

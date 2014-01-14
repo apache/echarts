@@ -483,10 +483,22 @@ define(function(require) {
         function _eventPackage(target) {
             if (target) {
                 var ecData = require('./util/ecData');
+                
+                var seriesIndex = ecData.get(target, 'seriesIndex');
+                var dataIndex = ecData.get(target, 'dataIndex');
+                
+                dataIndex = self.compoent.dataZoom
+                            ? self.compoent.dataZoom.getRealDataIndex(
+                                seriesIndex,
+                                dataIndex
+                              )
+                            : dataIndex
                 return {
-                    seriesIndex : ecData.get(target, 'seriesIndex'),
-                    dataIndex : ecData.get(target, 'dataIndex'),
-                    data : ecData.get(target, 'data')
+                    seriesIndex : seriesIndex,
+                    dataIndex : dataIndex,
+                    data : ecData.get(target, 'data'),
+                    name : ecData.get(target, 'name'),
+                    value : ecData.get(target, 'value')
                 };
             }
             return;
