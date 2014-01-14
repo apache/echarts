@@ -81,7 +81,7 @@ define(function (require) {
             var itemWidth = dataRangeOption.itemWidth;
             var itemHeight = dataRangeOption.itemHeight;
             var itemGap = dataRangeOption.itemGap;
-            var textHeight = zrArea.getTextWidth('国', font);
+            var textHeight = zrArea.getTextHeight('国', font);
             var color;
 
             if (dataRangeOption.orient == 'vertical'
@@ -108,6 +108,8 @@ define(function (require) {
                     }
                     else {
                         lastY += textHeight + _textGap;
+                        textShape.style.y += textHeight / 2 + _textGap;
+                        textShape.style.textBaseline = 'bottom';
                     }
                     self.shapeList.push(textShape);
                 }
@@ -178,6 +180,11 @@ define(function (require) {
                 textShape = _getTextShape(
                     lastX, lastY, dataRangeOption.text[1]
                 );
+                
+                if (dataRangeOption.orient != 'horizontal') {
+                    textShape.style.y -= 5;
+                    textShape.style.textBaseline = 'top';
+                }
 
                 self.shapeList.push(textShape);
             }
@@ -195,7 +202,7 @@ define(function (require) {
             var lastY = _itemGroupLocation.y;
             var itemWidth = dataRangeOption.itemWidth;
             var itemHeight = dataRangeOption.itemHeight;
-            var textHeight = zrArea.getTextWidth('国', font);
+            var textHeight = zrArea.getTextHeight('国', font);
 
             
             var needValueText = true;
@@ -215,6 +222,8 @@ define(function (require) {
                     }
                     else {
                         lastY += textHeight + _textGap;
+                        textShape.style.y += textHeight / 2 + _textGap;
+                        textShape.style.textBaseline = 'bottom';
                     }
                     self.shapeList.push(textShape);
                 } 
@@ -313,7 +322,7 @@ define(function (require) {
             var height = _calculableLocation.height;
             
             var font = self.getFont(dataRangeOption.textStyle);
-            var textHieght = zrArea.getTextWidth('国', font) + 2;
+            var textHeight = zrArea.getTextHeight('国', font);
             var textWidth = Math.max(
                     zrArea.getTextWidth(
                         dataRangeOption.precision === 0
@@ -344,23 +353,23 @@ define(function (require) {
                     // 手柄统统在下方
                     pointListStart = [
                         [x, y],
-                        [x, y + height + textHieght / 2 * 3],
-                        [x - textWidth, y + height + textHieght / 2 * 3],
-                        [x - textWidth, y + height + textHieght / 2],
-                        [x - textHieght / 2, y + height + textHieght / 2],
+                        [x, y + height + textHeight / 2 * 3],
+                        [x - textWidth, y + height + textHeight / 2 * 3],
+                        [x - textWidth, y + height + textHeight / 2],
+                        [x - textHeight / 2, y + height + textHeight / 2],
                         [x - 1, y + height],
                         [x - 1, y]
                         
                     ];
                     textXStart = x - textWidth / 2;
-                    textYStart = y + height + textHieght;
+                    textYStart = y + height + textHeight;
                     
                     pointListEnd = [
                         [x + width, y],
-                        [x + width, y + height + textHieght / 2 * 3],
-                        [x + width + textWidth, y + height + textHieght/2*3],
-                        [x + width + textWidth, y + height + textHieght / 2],
-                        [x + width + textHieght / 2, y + height + textHieght/2],
+                        [x + width, y + height + textHeight / 2 * 3],
+                        [x + width + textWidth, y + height + textHeight/2*3],
+                        [x + width + textWidth, y + height + textHeight / 2],
+                        [x + width + textHeight / 2, y + height + textHeight/2],
                         [x + width + 1, y + height],
                         [x + width + 1, y]
                     ];
@@ -371,23 +380,23 @@ define(function (require) {
                     // 手柄在上方
                     pointListStart = [
                         [x, y + height],
-                        [x, y - textHieght / 2 * 3],
-                        [x - textWidth, y - textHieght / 2 * 3],
-                        [x - textWidth, y - textHieght / 2],
-                        [x - textHieght / 2, y - textHieght / 2],
+                        [x, y - textHeight / 2 * 3],
+                        [x - textWidth, y - textHeight / 2 * 3],
+                        [x - textWidth, y - textHeight / 2],
+                        [x - textHeight / 2, y - textHeight / 2],
                         [x - 1, y],
                         [x - 1, y + height]
                         
                     ];
                     textXStart = x - textWidth / 2;
-                    textYStart = y - textHieght;
+                    textYStart = y - textHeight;
                     
                     pointListEnd = [
                         [x + width, y + height],
-                        [x + width, y - textHieght / 2 * 3],
-                        [x + width + textWidth, y - textHieght / 2 * 3],
-                        [x + width + textWidth, y - textHieght / 2],
-                        [x  + width + textHieght / 2, y - textHieght / 2],
+                        [x + width, y - textHeight / 2 * 3],
+                        [x + width + textWidth, y - textHeight / 2 * 3],
+                        [x + width + textWidth, y - textHeight / 2],
+                        [x  + width + textHeight / 2, y - textHeight / 2],
                         [x + width + 1, y],
                         [x + width + 1, y + height]
                     ];
@@ -396,55 +405,54 @@ define(function (require) {
                 }
             }
             else {
-                textWidth += textHieght;
+                textWidth += textHeight;
                 // 垂直
                 if (dataRangeOption.x != 'right') {
                     // 手柄统统在右侧
                     pointListStart = [
                         [x, y],
                         [x + width + textWidth, y],
-                        [x + width + textWidth, y - textHieght],
-                        [x + width + textHieght, y - textHieght],
+                        [x + width + textWidth, y - textHeight],
+                        [x + width + textHeight, y - textHeight],
                         [x + width, y - 1],
                         [x, y - 1]
                     ];
-                    textXStart = x + width + textWidth / 2 + textHieght / 2;
-                    textYStart = y - textHieght / 2;
-                    
+                    textXStart = x + width + textWidth / 2 + textHeight / 2;
+                    textYStart = y - textHeight / 2;
                     pointListEnd = [
                         [x, y + height],
                         [x + width + textWidth, y + height],
-                        [x + width + textWidth, y + textHieght + height],
-                        [x + width + textHieght, y + textHieght + height],
+                        [x + width + textWidth, y + textHeight + height],
+                        [x + width + textHeight, y + textHeight + height],
                         [x + width, y + 1 + height],
                         [x, y + height + 1]
                     ];
                     textXEnd = textXStart;
-                    textYEnd = y  + height + textHieght / 2;
+                    textYEnd = y  + height + textHeight / 2;
                 }
                 else {
                     // 手柄在左侧
                     pointListStart = [
                         [x + width, y],
                         [x - textWidth, y],
-                        [x - textWidth, y - textHieght],
-                        [x - textHieght, y - textHieght],
+                        [x - textWidth, y - textHeight],
+                        [x - textHeight, y - textHeight],
                         [x, y - 1],
                         [x + width, y - 1]
                     ];
-                    textXStart = x - textWidth / 2 - textHieght / 2;
-                    textYStart = y - textHieght / 2;
+                    textXStart = x - textWidth / 2 - textHeight / 2;
+                    textYStart = y - textHeight / 2;
                     
                     pointListEnd = [
                         [x + width, y + height],
                         [x - textWidth, y + height],
-                        [x - textWidth, y + textHieght + height],
-                        [x - textHieght, y + textHieght + height],
+                        [x - textWidth, y + textHeight + height],
+                        [x - textHeight, y + textHeight + height],
                         [x, y + 1 + height],
                         [x + width, y + height + 1]
                     ];
                     textXEnd = textXStart;
-                    textYEnd = y  + height + textHieght / 2;
+                    textYEnd = y  + height + textHeight / 2;
                 }
             }
             
@@ -458,7 +466,7 @@ define(function (require) {
                     textY : textYStart,
                     textPosition : 'specific',
                     textAlign : 'center',
-                    textBaseline : 'middle ',
+                    textBaseline : 'middle',
                     textColor: dataRangeOption.textStyle.color,
                     color : getColor(dataRangeOption.max),
                     width : 0,                 // for ondrif计算统一
@@ -483,7 +491,7 @@ define(function (require) {
                     textY : textYEnd,
                     textPosition : 'specific',
                     textAlign : 'center',
-                    textBaseline : 'middle ',
+                    textBaseline : 'middle',
                     textColor: dataRangeOption.textStyle.color,
                     color : getColor(dataRangeOption.min),
                     width : 0,                 // for ondrif计算统一
@@ -576,7 +584,7 @@ define(function (require) {
             var totalWidth = 0;
             var totalHeight = 0;
             var font = self.getFont(dataRangeOption.textStyle);
-            var textHeight = zrArea.getTextWidth('国', font);
+            var textHeight = zrArea.getTextHeight('国', font);
 
             if (dataRangeOption.orient == 'horizontal') {
                 // 水平布局，计算总宽度

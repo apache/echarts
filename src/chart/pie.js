@@ -332,7 +332,7 @@ define(function(require) {
                     queryTarget,
                     'itemStyle.normal.label.textStyle.align'
                 ) || 'center';
-                sector.style.textBaseLine = self.deepQuery(
+                sector.style.textBaseline = self.deepQuery(
                     queryTarget,
                     'itemStyle.normal.label.textStyle.baseline'
                 ) || 'middle';
@@ -370,7 +370,7 @@ define(function(require) {
                     queryTarget,
                     'itemStyle.emphasis.label.textStyle.align'
                 ) || 'center';
-                sector.highlightStyle.textBaseLine = self.deepQuery(
+                sector.highlightStyle.textBaseline = self.deepQuery(
                     queryTarget,
                     'itemStyle.normal.label.textStyle.baseline'
                 ) || 'middle';

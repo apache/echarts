@@ -116,13 +116,13 @@ define(function (require) {
             var textFont = self.getFont(toolboxOption.textStyle);
             var textPosition;
             var textAlign;
-            var textBaseLine;
+            var textBaseline;
             if (toolboxOption.orient == 'horizontal') {
                 textPosition = _itemGroupLocation.y / zr.getHeight() < 0.5
                                ? 'bottom' : 'top';
                 textAlign = _itemGroupLocation.x / zr.getWidth() < 0.5
                             ? 'left' : 'right';
-                textBaseLine = _itemGroupLocation.y / zr.getHeight() < 0.5
+                textBaseline = _itemGroupLocation.y / zr.getHeight() < 0.5
                                ? 'top' : 'bottom';
             }
             else {
@@ -131,7 +131,7 @@ define(function (require) {
                 /*
                 textAlign = _itemGroupLocation.x / zr.getWidth() < 0.5
                                ? 'right' : 'left';
-                textBaseLine = 'top';
+                textBaseline = 'top';
                 */
             }
             
@@ -174,18 +174,18 @@ define(function (require) {
                     if (i === 0 && textAlign == 'left') {
                         itemShape.highlightStyle.textPosition = 'specific';
                         itemShape.highlightStyle.textAlign = textAlign;
-                        itemShape.highlightStyle.textBaseLine = textBaseLine;
+                        itemShape.highlightStyle.textBaseline = textBaseline;
                         itemShape.highlightStyle.textX = lastX;
-                        itemShape.highlightStyle.textY = textBaseLine == 'top' 
+                        itemShape.highlightStyle.textY = textBaseline == 'top' 
                                                      ? lastY + itemSize + 10
                                                      : lastY - 10;
                     }
                     if (i == iconLength - 1 && textAlign == 'right') {
                         itemShape.highlightStyle.textPosition = 'specific';
                         itemShape.highlightStyle.textAlign = textAlign;
-                        itemShape.highlightStyle.textBaseLine = textBaseLine;
+                        itemShape.highlightStyle.textBaseline = textBaseline;
                         itemShape.highlightStyle.textX = lastX + itemSize;
-                        itemShape.highlightStyle.textY = textBaseLine == 'top' 
+                        itemShape.highlightStyle.textY = textBaseline == 'top' 
                                                      ? lastY + itemSize + 10
                                                      : lastY - 10;
                     }

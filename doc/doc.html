@@ -735,7 +735,7 @@ require(['echarts'], function(ec){
                         <tr>
                             <td> {string} text </td>
                             <td> '' </td>
-                            <td> 主标题文本 </td>
+                            <td> 主标题文本，'\n'指定换行 </td>
                         </tr>
                         <tr>
                             <td> {string} link </td>
@@ -745,7 +745,7 @@ require(['echarts'], function(ec){
                         <tr>
                             <td> {string} subtext </td>
                             <td> '' </td>
-                            <td> 副标题文本 </td>
+                            <td> 副标题文本，'\n'指定换行 </td>
                         </tr>
                         <tr>
                             <td> {string} sublink </td>
@@ -990,7 +990,7 @@ require(['echarts'], function(ec){
                         <tr>
                             <td> {Array} text </td>
                             <td> null </td>
-                            <td> 值域文字显示，splitNumber生效时默认以计算所得数值作为值域文字显示，可指定长度为2的文本数组显示简介的值域文本，如['高', '低']</td>
+                            <td> 值域文字显示，splitNumber生效时默认以计算所得数值作为值域文字显示，可指定长度为2的文本数组显示简介的值域文本，如['高', '低']，'\n'指定换行</td>
                         </tr>
                         <tr>
                             <td> {Object} textStyle </td>
@@ -1763,8 +1763,7 @@ feature : {
                     </table>
 
                     <h5>axis.data<a name="AxisData"> </a></h5>
-                    <P> 类目型坐标轴文本标签数组，指定label内容。
-                        数组项通常为文本，如:</P>
+                    <P> 类目型坐标轴文本标签数组，指定label内容。 数组项通常为文本，'\n'指定换行，如:</P>
                     <div class="code">
                         <pre>[&#39;Jan&#39;, &#39;Feb&#39;, &#39;Mar&#39;, &#39;Apr&#39;, &#39;May&#39;, &#39;Jun&#39;, ..., &#39;Dec&#39;]
 </pre>
@@ -2721,7 +2720,7 @@ geoCoord : {
                         <tr>
                             <td> {string} text </td>
                             <td> 'Loading...' </td>
-                            <td> 显示话术 </td>
+                            <td> 显示话术 ，'\n'指定换行</td>
                         </tr>
                         <tr>
                             <td> {string | number} x </td>

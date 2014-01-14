@@ -167,11 +167,11 @@ define(function (require) {
                     zrArea.getTextWidth(text, font),
                     zrArea.getTextWidth(subtext, subfont)
                 );
-            var totalHeight = zrArea.getTextWidth('国', font)
+            var totalHeight = zrArea.getTextHeight(text, font)
                               + (subtext === ''
                                  ? 0
                                  : (titleOption.itemGap
-                                    + zrArea.getTextWidth('国', subfont))
+                                    + zrArea.getTextHeight(subtext, subfont))
                                 );
 
             var x;

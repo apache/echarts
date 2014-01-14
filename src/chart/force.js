@@ -294,7 +294,7 @@ define(function(require) {
                     ) || {};
                     shape.style.textColor = labelStyle.color || '#fff';
                     shape.style.textAlign = labelStyle.align || 'center';
-                    shape.style.textBaseLine = labelStyle.baseline || 'middle';
+                    shape.style.textBaseline = labelStyle.baseline || 'middle';
                     shape.style.textFont = self.getFont(labelStyle);
                 }
 
@@ -307,7 +307,7 @@ define(function(require) {
                     shape.highlightStyle.textColor = labelStyle.color || '#fff';
                     shape.highlightStyle.textAlign = labelStyle.align 
                                                      || 'center';
-                    shape.highlightStyle.textBaseLine = labelStyle.baseline 
+                    shape.highlightStyle.textBaseline = labelStyle.baseline 
                                                         || 'middle';
                     shape.highlightStyle.textFont = self.getFont(labelStyle);
                 }
