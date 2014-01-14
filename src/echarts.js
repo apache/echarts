@@ -28,6 +28,7 @@ define(function(require) {
     self.init = function(dom, libOption) {
         libOption = libOption || {type : 'canvas'};
         if (libOption.type == 'canvas') {
+            dom = dom instanceof Array ? dom[0] : dom;
             return new Echarts(dom);
         }
         else if (libOption.type == 'flash') {
@@ -671,9 +672,14 @@ define(function(require) {
             if (magicOption.animation && !magicOption.renderAsImage) {
                 var len = _chartList.length;
                 while (len--) {
-                    _chartList[len]
-                    && _chartList[len].animation
-                    && _chartList[len].animation();
+                    chart = _chartList[len];                 
+                    if (chart 
+                        && chart.animation 
+                        && chart.shapeList 
+                        && chart.shapeList.length < ecConfig.animationThreshold
+                    ) {
+                        chart.animation();
+                    }
                 }
             }
 

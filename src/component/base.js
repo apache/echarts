@@ -15,6 +15,16 @@ define(function(require) {
         self.zr =zr;
 
         self.shapeList = [];
+        
+        var _aniMap = {};
+        _aniMap[ecConfig.CHART_TYPE_LINE] = true;
+        _aniMap[ecConfig.CHART_TYPE_BAR] = true;
+        _aniMap[ecConfig.CHART_TYPE_SCATTER] = true;
+        _aniMap[ecConfig.CHART_TYPE_PIE] = true;
+        _aniMap[ecConfig.CHART_TYPE_RADAR] = true;
+        _aniMap[ecConfig.CHART_TYPE_MAP] = true;
+        _aniMap[ecConfig.CHART_TYPE_K] = true;
+        _aniMap[ecConfig.CHART_TYPE_CHORD] = true;
 
         /**
          * 获取zlevel基数配置
@@ -881,7 +891,9 @@ define(function(require) {
          * 动画设定
          */
         function animation() {
-            self.animationMark(ecConfig.animationDuration);
+            if (_aniMap[self.type]) {
+                self.animationMark(ecConfig.animationDuration);
+            }
         }
         
         function animationMark(duration /*, easing*/) {
