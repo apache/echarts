@@ -62,7 +62,7 @@ define(function (require) {
 
         function show(newOption) {
             _hasShow = true;
-            var lang = self.deepQuery([option],'toolbox.feature.dataView.lang')
+            var lang = self.query(option, 'toolbox.feature.dataView.lang')
                        || _lang;
 
             option = newOption;
@@ -77,8 +77,8 @@ define(function (require) {
                 'display:block;margin:0 0 8px 0;padding:4px 6px;overflow:auto;'
                 + 'width:' + (_zrWidth - 15) + 'px;'
                 + 'height:' + (_zrHeight - 100) + 'px;';
-            var customContent = self.deepQuery(
-                [option], 'toolbox.feature.dataView.optionToContent'
+            var customContent = self.query(
+                option, 'toolbox.feature.dataView.optionToContent'
             );
             if (typeof customContent != 'function') {
                 _textArea.value = _optionToContent();
@@ -93,7 +93,7 @@ define(function (require) {
             _buttonClose.onclick = hide;
             _tDom.appendChild(_buttonClose);
 
-            if (self.deepQuery([option], 'toolbox.feature.dataView.readOnly')
+            if (self.query(option, 'toolbox.feature.dataView.readOnly')
                 === false
             ) {
                 _buttonRefresh.style.cssText =
@@ -210,8 +210,8 @@ define(function (require) {
 
         function _save() {
             var text = _textArea.value;
-            var customContent = self.deepQuery(
-                [option], 'toolbox.feature.dataView.contentToOption'
+            var customContent = self.query(
+                option, 'toolbox.feature.dataView.contentToOption'
             );
             if (typeof customContent != 'function') {
                 text = text.split('\n');

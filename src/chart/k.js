@@ -225,36 +225,36 @@ define(function(require) {
                     && typeof seriesPL != 'undefined'
                 ) {
                     // 多级控制
-                    queryTarget = [serie];
-                    nLineWidth = self.deepQuery(
+                    queryTarget = serie;
+                    nLineWidth = self.query(
                         queryTarget, 'itemStyle.normal.lineStyle.width'
                     );
-                    nLineColor = self.deepQuery(
+                    nLineColor = self.query(
                         queryTarget, 'itemStyle.normal.lineStyle.color'
                     );
-                    nLineColor0 = self.deepQuery(
+                    nLineColor0 = self.query(
                         queryTarget, 'itemStyle.normal.lineStyle.color0'
                     );
-                    nColor = self.deepQuery(
+                    nColor = self.query(
                         queryTarget, 'itemStyle.normal.color'
                     );
-                    nColor0 = self.deepQuery(
+                    nColor0 = self.query(
                         queryTarget, 'itemStyle.normal.color0'
                     );
                     
-                    eLineWidth = self.deepQuery(
+                    eLineWidth = self.query(
                         queryTarget, 'itemStyle.emphasis.lineStyle.width'
                     );
-                    eLineColor = self.deepQuery(
+                    eLineColor = self.query(
                         queryTarget, 'itemStyle.emphasis.lineStyle.color'
                     );
-                    eLineColor0 = self.deepQuery(
+                    eLineColor0 = self.query(
                         queryTarget, 'itemStyle.emphasis.lineStyle.color0'
                     );
-                    eColor = self.deepQuery(
+                    eColor = self.query(
                         queryTarget, 'itemStyle.emphasis.color'
                     );
-                    eColor0 = self.deepQuery(
+                    eColor0 = self.query(
                         queryTarget, 'itemStyle.emphasis.color0'
                     );
 
@@ -273,7 +273,7 @@ define(function(require) {
                     for (var i = 0, l = seriesPL.length; i < l; i++) {
                         singlePoint = seriesPL[i];
                         data = serie.data[singlePoint[6]];
-                        queryTarget = [data];
+                        queryTarget = data;
                         candleType = singlePoint[3] < singlePoint[2];
                         self.shapeList.push(_getCandle(
                             seriesIndex,    // seriesIndex
@@ -289,25 +289,25 @@ define(function(require) {
                             
                             // 填充颜色
                             candleType
-                            ? (self.deepQuery(          // 阳
+                            ? (self.query(          // 阳
                                    queryTarget, 'itemStyle.normal.color'
                                ) || nColor)
-                            : (self.deepQuery(          // 阴
+                            : (self.query(          // 阴
                                    queryTarget, 'itemStyle.normal.color0'
                                ) || nColor0),
                             
                             // 线宽
-                            self.deepQuery(
+                            self.query(
                                queryTarget, 'itemStyle.normal.lineStyle.width'
                             ) || nLineWidth,
                             
                             // 线色
                             candleType
-                            ? (self.deepQuery(          // 阳
+                            ? (self.query(          // 阳
                                    queryTarget,
                                    'itemStyle.normal.lineStyle.color'
                                ) || nLineColor)
-                            : (self.deepQuery(          // 阴
+                            : (self.query(          // 阴
                                    queryTarget,
                                    'itemStyle.normal.lineStyle.color0'
                                ) || nLineColor0),
@@ -316,25 +316,25 @@ define(function(require) {
                             
                             // 填充颜色
                             candleType
-                            ? (self.deepQuery(          // 阳
+                            ? (self.query(          // 阳
                                    queryTarget, 'itemStyle.emphasis.color'
                                ) || eColor || nColor)
-                            : (self.deepQuery(          // 阴
+                            : (self.query(          // 阴
                                    queryTarget, 'itemStyle.emphasis.color0'
                                ) || eColor0 || nColor0),
                             
                             // 线宽
-                            self.deepQuery(
+                            self.query(
                                queryTarget, 'itemStyle.emphasis.lineStyle.width'
                             ) || eLineWidth || nLineWidth,
                             
                             // 线色
                             candleType
-                            ? (self.deepQuery(          // 阳
+                            ? (self.query(          // 阳
                                    queryTarget,
                                    'itemStyle.emphasis.lineStyle.color'
                                ) || eLineColor || nLineColor)
-                            : (self.deepQuery(          // 阴
+                            : (self.query(          // 阴
                                    queryTarget,
                                    'itemStyle.emphasis.lineStyle.color0'
                                ) || eLineColor0 || nLineColor0)
@@ -477,8 +477,8 @@ define(function(require) {
          * 动画设定
          */
         function animation() {
-            var duration = self.deepQuery([option], 'animationDuration');
-            var easing = self.deepQuery([option], 'animationEasing');
+            var duration = self.query(option, 'animationDuration');
+            var easing = self.query(option, 'animationEasing');
             var x;
             var y;
             var serie;
@@ -495,12 +495,12 @@ define(function(require) {
                     );
                     zr.animate(self.shapeList[i].id, '')
                         .when(
-                            (self.deepQuery([serie],'animationDuration')
+                            (self.query(serie,'animationDuration')
                             || duration),
                             {scale : [1, 1, x, y]}
                         )
                         .start(
-                            self.deepQuery([serie], 'animationEasing') || easing
+                            self.query(serie, 'animationEasing') || easing
                         );
                 }
             }

@@ -147,7 +147,7 @@ define(function(require) {
                 
                 _sIndex2ShapeMap[seriesArray[i]]
                     = _sIndex2ShapeMap[seriesArray[i]]
-                      || self.deepQuery([serie],'symbol')
+                      || self.query(serie,'symbol')
                       || _symbol[i % _symbol.length];
                       
                 if (legend){
@@ -839,8 +839,8 @@ define(function(require) {
          * 动画设定
          */
         function animation() {
-            var duration = self.deepQuery([option], 'animationDuration');
-            var easing = self.deepQuery([option], 'animationEasing');
+            var duration = self.query(option, 'animationDuration');
+            var easing = self.query(option, 'animationEasing');
             var x;
             var y;
             var serie;
@@ -872,13 +872,13 @@ define(function(require) {
                     }
                     zr.animate(self.shapeList[i].id, '')
                         .when(
-                            (self.deepQuery([serie],'animationDuration')
+                            (self.query(serie,'animationDuration')
                             || duration)
                             + dataIndex * 100,
                             {scale : [1, 1, x, y]}
                         )
                         .start(
-                            self.deepQuery([serie], 'animationEasing') || easing
+                            self.query(serie, 'animationEasing') || easing
                         );
                 }
                 else {

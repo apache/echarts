@@ -244,16 +244,17 @@ define(function(require) {
         ) {
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
+            var queryTarget = [data, serie];
             var center = self.parseCenter(serie.center);
 
             // 多级控制
             var normalColor = self.deepQuery(
-                    [data, serie],
+                    queryTarget,
                     'itemStyle.normal.color'
                 ) || defaultColor;
 
             var emphasisColor = self.deepQuery(
-                    [data, serie],
+                    queryTarget,
                     'itemStyle.emphasis.color'
                 );
 
@@ -293,7 +294,7 @@ define(function(require) {
                 sector.style._hasSelected = true;
                 sector.style._x = sector.style.x;
                 sector.style._y = sector.style.y;
-                var offset = self.deepQuery([serie], 'selectedOffset');
+                var offset = self.query(serie, 'selectedOffset');
                 sector.style.x += zrMath.cos(midAngle, true) * offset;
                 sector.style.y -= zrMath.sin(midAngle, true) * offset;
                 
@@ -315,7 +316,7 @@ define(function(require) {
 
             if (_needLabel(serie, data, false)
                 && self.deepQuery(
-                    [data, serie],
+                    queryTarget,
                     'itemStyle.normal.label.position'
                 ) == 'inner'
             ) {
@@ -324,15 +325,15 @@ define(function(require) {
                 );
                 sector.style.textPosition = 'specific';
                 sector.style.textColor = self.deepQuery(
-                    [data, serie],
+                    queryTarget,
                     'itemStyle.normal.label.textStyle.color'
                 ) || '#fff';
                 sector.style.textAlign = self.deepQuery(
-                    [data, serie],
+                    queryTarget,
                     'itemStyle.normal.label.textStyle.align'
                 ) || 'center';
                 sector.style.textBaseLine = self.deepQuery(
-                    [data, serie],
+                    queryTarget,
                     'itemStyle.normal.label.textStyle.baseline'
                 ) || 'middle';
                 sector.style.textX = Math.round(
@@ -346,14 +347,14 @@ define(function(require) {
                        * zrMath.sin((startAngle + endAngle) / 2, true)
                 );
                 sector.style.textFont = self.getFont(self.deepQuery(
-                    [data, serie],
+                    queryTarget,
                     'itemStyle.normal.label.textStyle'
                 ));
             }
 
             if (_needLabel(serie, data, true)
                 && self.deepQuery(
-                    [data, serie],
+                    queryTarget,
                     'itemStyle.emphasis.label.position'
                 ) == 'inner'
             ) {
@@ -362,15 +363,15 @@ define(function(require) {
                 );
                 sector.highlightStyle.textPosition = 'specific';
                 sector.highlightStyle.textColor = self.deepQuery(
-                    [data, serie],
+                    queryTarget,
                     'itemStyle.emphasis.label.textStyle.color'
                 ) || '#fff';
                 sector.highlightStyle.textAlign = self.deepQuery(
-                    [data, serie],
+                    queryTarget,
                     'itemStyle.emphasis.label.textStyle.align'
                 ) || 'center';
                 sector.highlightStyle.textBaseLine = self.deepQuery(
-                    [data, serie],
+                    queryTarget,
                     'itemStyle.normal.label.textStyle.baseline'
                 ) || 'middle';
                 sector.highlightStyle.textX = Math.round(
@@ -384,7 +385,7 @@ define(function(require) {
                       * zrMath.sin((startAngle + endAngle) / 2, true)
                 );
                 sector.highlightStyle.textFont = self.getFont(self.deepQuery(
-                    [data, serie],
+                    queryTarget,
                     'itemStyle.emphasis.label.textStyle'
                 ));
             }
@@ -888,8 +889,8 @@ define(function(require) {
          * 动画设定
          */
         function animation() {
-            var duration = self.deepQuery([option], 'animationDuration');
-            var easing = self.deepQuery([option], 'animationEasing');
+            var duration = self.query(option, 'animationDuration');
+            var easing = self.query(option, 'animationEasing');
             var x;
             var y;
             var r0;
@@ -923,7 +924,7 @@ define(function(require) {
                     dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
                     zr.animate(self.shapeList[i].id, 'style')
                         .when(
-                            (self.deepQuery([serie],'animationDuration')
+                            (self.query(serie,'animationDuration')
                             || duration)
                             + dataIndex * 10,
                             {
@@ -934,13 +935,13 @@ define(function(require) {
                         .start('QuinticOut');
                     zr.animate(self.shapeList[i].id, '')
                         .when(
-                            (self.deepQuery([serie],'animationDuration')
+                            (self.query(serie,'animationDuration')
                             || duration)
                             + dataIndex * 100,
                             {rotation : [0, x, y]}
                         )
                         .start(
-                            self.deepQuery([serie], 'animationEasing') || easing
+                            self.query(serie, 'animationEasing') || easing
                         );
                 }
                 else {
@@ -986,8 +987,8 @@ define(function(require) {
                         _selected[seriesIndex][dataIndex] = true;
                         target.style._x = target.style.x;
                         target.style._y = target.style.y;
-                        offset = self.deepQuery(
-                            [series[seriesIndex]],
+                        offset = self.query(
+                            series[seriesIndex],
                             'selectedOffset'
                         );
                         target.style.x += zrMath.cos(midAngle, true) 

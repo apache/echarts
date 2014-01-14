@@ -432,12 +432,12 @@ define(function (require) {
                     break;
                 case 'k' :
                     itemShape.style.brushType = 'both';
-                    itemShape.style.color = self.deepQuery(
-                        [ecConfig], 'k.itemStyle.normal.color'
+                    itemShape.style.color = self.query(
+                        ecConfig, 'k.itemStyle.normal.color'
                     ) || '#fff';
                     itemShape.style.strokeColor = color != '#ccc' 
-                        ? self.deepQuery(
-                              [ecConfig], 'k.itemStyle.normal.lineStyle.color'
+                        ? self.query(
+                              ecConfig, 'k.itemStyle.normal.lineStyle.color'
                           ) || '#ff3200'
                         : color;
             }
@@ -455,7 +455,7 @@ define(function (require) {
         }
 
         function init(newOption) {
-            if (!self.deepQuery([newOption], 'legend.data')) {
+            if (!self.query(newOption, 'legend.data')) {
                 return;
             }
 
@@ -487,8 +487,8 @@ define(function (require) {
                     _selectedMap[itemName] = false;
                 } 
                 else {
-                    color = self.deepQuery(
-                        [serie], 'itemStyle.normal.color'
+                    color = self.query(
+                        serie, 'itemStyle.normal.color'
                     );
                     if (color && serie.type != ecConfig.CHART_TYPE_K) {
                         setColor(itemName, color);

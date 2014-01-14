@@ -126,20 +126,20 @@ define(function(require) {
                     
                     forceSerie = serie;
 
-                    var minRadius = self.deepQuery([serie], 'minRadius');
-                    var maxRadius = self.deepQuery([serie], 'maxRadius');
+                    var minRadius = self.query(serie, 'minRadius');
+                    var maxRadius = self.query(serie, 'maxRadius');
 
                     // ----------获取外部参数
-                    attractiveness = self.deepQuery(
-                        [serie], 'attractiveness'
+                    attractiveness = self.query(
+                        serie, 'attractiveness'
                     );
-                    density = self.deepQuery([serie], 'density');
-                    initSize = self.deepQuery([serie], 'initSize');
-                    centripetal = self.deepQuery([serie], 'centripetal');
-                    coolDown = self.deepQuery([serie], 'coolDown');
+                    density = self.query(serie, 'density');
+                    initSize = self.query(serie, 'initSize');
+                    centripetal = self.query(serie, 'centripetal');
+                    coolDown = self.query(serie, 'coolDown');
                     // ----------
 
-                    categories = self.deepQuery([serie], 'categories');
+                    categories = self.query(serie, 'categories');
                     
                     // 同步selected状态
                     for (var j = 0, len = categories.length; j < len; j++) {
@@ -153,21 +153,21 @@ define(function(require) {
                         }
                     }
 
-                    linkStyle = self.deepQuery(
-                        [serie], 'itemStyle.normal.linkStyle'
+                    linkStyle = self.query(
+                        serie, 'itemStyle.normal.linkStyle'
                     );
-                    linkEmphasisStyle = self.deepQuery(
-                        [serie], 'itemStyle.emphasis.linkStyle'
+                    linkEmphasisStyle = self.query(
+                        serie, 'itemStyle.emphasis.linkStyle'
                     );
-                    nodeStyle = self.deepQuery(
-                        [serie], 'itemStyle.normal.nodeStyle'
+                    nodeStyle = self.query(
+                        serie, 'itemStyle.normal.nodeStyle'
                     );
-                    nodeEmphasisStyle = self.deepQuery(
-                        [serie], 'itemStyle.emphasis.nodeStyle'
+                    nodeEmphasisStyle = self.query(
+                        serie, 'itemStyle.emphasis.nodeStyle'
                     );
                     
-                    rawNodes = self.deepQuery([serie], 'nodes');
-                    rawLinks = zrUtil.clone(self.deepQuery([serie], 'links'));
+                    rawNodes = self.query(serie, 'nodes');
+                    rawLinks = zrUtil.clone(self.query(serie, 'links'));
                     _preProcessData(rawNodes, rawLinks);
                     // Reset data
                     nodePositions = [];
@@ -285,12 +285,12 @@ define(function(require) {
 
                 // Label 
                 var labelStyle;
-                if (self.deepQuery([forceSerie], 'itemStyle.normal.label.show')
+                if (self.query(forceSerie, 'itemStyle.normal.label.show')
                 ) {
                     shape.style.text = node.name;
                     shape.style.textPosition = 'inside';
-                    labelStyle = self.deepQuery(
-                        [forceSerie], 'itemStyle.normal.label.textStyle'
+                    labelStyle = self.query(
+                        forceSerie, 'itemStyle.normal.label.textStyle'
                     ) || {};
                     shape.style.textColor = labelStyle.color || '#fff';
                     shape.style.textAlign = labelStyle.align || 'center';
@@ -298,14 +298,11 @@ define(function(require) {
                     shape.style.textFont = self.getFont(labelStyle);
                 }
 
-                if (self.deepQuery(
-                        [forceSerie], 'itemStyle.emphasis.label.show'
-                    )
-                ) {
+                if (self.query(forceSerie, 'itemStyle.emphasis.label.show')) {
                     shape.highlightStyle.text = node.name;
                     shape.highlightStyle.textPosition = 'inside';
-                    labelStyle = self.deepQuery(
-                        [forceSerie], 'itemStyle.emphasis.label.textStyle'
+                    labelStyle = self.query(
+                        forceSerie, 'itemStyle.emphasis.label.textStyle'
                     ) || {};
                     shape.highlightStyle.textColor = labelStyle.color || '#fff';
                     shape.highlightStyle.textAlign = labelStyle.align 

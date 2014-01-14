@@ -305,11 +305,11 @@ define(function(require) {
 
             var timeout;
 
-            var showLabel = self.deepQuery(
-                [chordSerieSample], 'itemStyle.normal.label.show'
+            var showLabel = self.query(
+                chordSerieSample, 'itemStyle.normal.label.show'
             );
-            var labelColor = self.deepQuery(
-                [chordSerieSample], 'itemStyle.normal.label.color'
+            var labelColor = self.query(
+                chordSerieSample, 'itemStyle.normal.label.color'
             );
 
             function createMouseOver(idx) {
@@ -697,8 +697,8 @@ define(function(require) {
                     // key is serie name
                     for (var i = 0; i < chordSeries.length; i++) {
                         if (chordSeries[i].name === key) {
-                            colorMap[key] = self.deepQuery(
-                                [chordSeries[i]],
+                            colorMap[key] = self.query(
+                                chordSeries[i],
                                 'itemStyle.normal.color'
                             );
                             break;
@@ -709,8 +709,8 @@ define(function(require) {
                         // key is group name
                         for (var i = 0; i < len; i++) {
                             if (groups[i].name === key) {
-                                colorMap[key] = self.deepQuery(
-                                    [groups[i]],
+                                colorMap[key] = self.query(
+                                    groups[i],
                                     'itemStyle.normal.color'
                                 );
                                 break;

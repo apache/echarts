@@ -967,8 +967,8 @@ define(function (require) {
             // 自己show 或者 toolbox启用且dataZoom有效
             if (option.dataZoom.show
                 || (
-                    self.deepQuery([option], 'toolbox.show')
-                    && self.deepQuery([option], 'toolbox.feature.dataZoom')
+                    self.query(option, 'toolbox.show')
+                    && self.query(option, 'toolbox.feature.dataZoom')
                 )
             ) {
                 _location = _getLocation();
@@ -990,8 +990,8 @@ define(function (require) {
             // 自己show 或者 toolbox启用且dataZoom有效
             if (option.dataZoom.show
                 || (
-                    self.deepQuery([option], 'toolbox.show')
-                    && self.deepQuery([option], 'toolbox.feature.dataZoom')
+                    self.query(option, 'toolbox.show')
+                    && self.query(option, 'toolbox.feature.dataZoom')
                 )
             ) {
                 _location = _getLocation();

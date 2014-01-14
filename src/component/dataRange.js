@@ -1087,9 +1087,9 @@ define(function (require) {
         }
 
         function init(newOption) {
-            if (typeof self.deepQuery([newOption], 'dataRange.min') 
+            if (typeof self.query(newOption, 'dataRange.min') 
                 == 'undefined'
-                || typeof self.deepQuery([newOption], 'dataRange.max') 
+                || typeof self.query(newOption, 'dataRange.max') 
                 == 'undefined'
             ) {
                 return;

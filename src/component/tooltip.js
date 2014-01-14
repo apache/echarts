@@ -483,16 +483,16 @@ define(function (require) {
                                [series[i], option], 'tooltip.trigger'
                            ) == 'axis'
                     ) {
-                        showContent = self.deepQuery(
-                            [series[i]],
+                        showContent = self.query(
+                            series[i],
                             'tooltip.showContent'
                         ) || showContent;
-                        formatter = self.deepQuery(
-                            [series[i]],
+                        formatter = self.query(
+                            series[i],
                             'tooltip.formatter'
                         ) || formatter;
-                        specialCssText += _style(self.deepQuery(
-                                              [series[i]], 'tooltip'
+                        specialCssText += _style(self.query(
+                                              series[i], 'tooltip'
                                           ));
                         seriesArray.push(series[i]);
                         seriesIndex.push(i);
@@ -532,16 +532,16 @@ define(function (require) {
                                [series[i], option], 'tooltip.trigger'
                            ) == 'axis'
                     ) {
-                        showContent = self.deepQuery(
-                            [series[i]],
+                        showContent = self.query(
+                            series[i],
                             'tooltip.showContent'
                         ) || showContent;
-                        formatter = self.deepQuery(
-                            [series[i]],
+                        formatter = self.query(
+                            series[i],
                             'tooltip.formatter'
                         ) || formatter;
-                        specialCssText += _style(self.deepQuery(
-                                              [series[i]], 'tooltip'
+                        specialCssText += _style(self.query(
+                                              series[i], 'tooltip'
                                           ));
                         seriesArray.push(series[i]);
                         seriesIndex.push(i);
@@ -689,16 +689,16 @@ define(function (require) {
                            [series[i], option], 'tooltip.trigger'
                        ) == 'axis'
                 ) {
-                    showContent = self.deepQuery(
-                        [series[i]],
+                    showContent = self.query(
+                        series[i],
                         'tooltip.showContent'
                     ) || showContent;
-                    formatter = self.deepQuery(
-                        [series[i]],
+                    formatter = self.query(
+                        series[i],
                         'tooltip.formatter'
                     ) || formatter;
-                    specialCssText += _style(self.deepQuery(
-                                          [series[i]], 'tooltip'
+                    specialCssText += _style(self.query(
+                                          series[i], 'tooltip'
                                       ));
                     seriesArray.push(series[i]);
                 }
@@ -813,25 +813,25 @@ define(function (require) {
                     formatter = option.tooltip.formatter;
                 }
                 // 系列
-                if (self.deepQuery([serie], 'tooltip.trigger') == 'item') {
-                    showContent = self.deepQuery(
-                                      [serie], 'tooltip.showContent'
+                if (self.query(serie, 'tooltip.trigger') == 'item') {
+                    showContent = self.query(
+                                      serie, 'tooltip.showContent'
                                   ) || showContent;
-                    formatter = self.deepQuery(
-                                    [serie], 'tooltip.formatter'
+                    formatter = self.query(
+                                    serie, 'tooltip.formatter'
                                 ) || formatter;
-                    specialCssText += _style(self.deepQuery(
-                                          [serie], 'tooltip'
+                    specialCssText += _style(self.query(
+                                          serie, 'tooltip'
                                       ));
                 }
                 // 数据项
-                showContent = self.deepQuery(
-                                  [data], 'tooltip.showContent'
+                showContent = self.query(
+                                  data, 'tooltip.showContent'
                               ) || showContent;
-                formatter = self.deepQuery(
-                                [data], 'tooltip.formatter'
+                formatter = self.query(
+                                data, 'tooltip.formatter'
                             ) || formatter;
-                specialCssText += _style(self.deepQuery([data], 'tooltip'));
+                specialCssText += _style(self.query(data, 'tooltip'));
             }
             else {
                 showContent = self.deepQuery(
@@ -980,32 +980,32 @@ define(function (require) {
                            [seriesArray[i], option], 'tooltip.trigger'
                        ) == 'axis'
                     ) {
-                        queryTarget = [seriesArray[i]];
-                        curType = self.deepQuery(
+                        queryTarget = seriesArray[i];
+                        curType = self.query(
                             queryTarget,
                             'tooltip.axisPointer.type'
                         );
                         pointType = curType || pointType; 
                         if (curType == 'line') {
-                            lineColor = self.deepQuery(
+                            lineColor = self.query(
                                 queryTarget,
                                 'tooltip.axisPointer.lineStyle.color'
                             ) || lineColor;
-                            lineWidth = self.deepQuery(
+                            lineWidth = self.query(
                                 queryTarget,
                                 'tooltip.axisPointer.lineStyle.width'
                             ) || lineWidth;
-                            lineType = self.deepQuery(
+                            lineType = self.query(
                                 queryTarget,
                                 'tooltip.axisPointer.lineStyle.type'
                             ) || lineType;
                         }
                         else if (curType == 'shadow') {
-                            areaSize = self.deepQuery(
+                            areaSize = self.query(
                                 queryTarget,
                                 'tooltip.axisPointer.areaStyle.size'
                             ) || areaSize;
-                            areaColor = self.deepQuery(
+                            areaColor = self.query(
                                 queryTarget,
                                 'tooltip.axisPointer.areaStyle.color'
                             ) || areaColor;
@@ -1270,9 +1270,7 @@ define(function (require) {
 
             var series = option.series;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (self.deepQuery([series[i]], 'tooltip.trigger')
-                    == 'axis'
-                ) {
+                if (self.query(series[i], 'tooltip.trigger') == 'axis') {
                     _needAxisTrigger = true;
                     break;
                 }

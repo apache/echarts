@@ -403,8 +403,8 @@
         }
 
         function animation() {
-            var duration = self.deepQuery([option], 'animationDuration');
-            var easing = self.deepQuery([option], 'animationEasing');
+            var duration = self.query(option, 'animationDuration');
+            var easing = self.query(option, 'animationEasing');
             var dataIndex;
             var seriesIndex;
             var data;
@@ -440,13 +440,13 @@
                     
                     zr.animate(item.id, '')
                         .when(
-                            (self.deepQuery([serie],'animationDuration')
+                            (self.query(serie,'animationDuration')
                             || duration)
                             + dataIndex * 100,
                             {scale : [1, 1, x, y]}
                         )
                         .start(
-                            self.deepQuery([serie], 'animationEasing') || easing
+                            self.query(serie, 'animationEasing') || easing
                         );
                 }
                 else {

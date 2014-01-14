@@ -494,16 +494,16 @@ define(function (require) {
                         yStart : y,
                         xEnd : x,
                         yEnd : y,
-                        lineWidth : self.deepQuery(
-                                        [option],
+                        lineWidth : self.query(
+                                        option,
                                         'toolbox.feature.mark.lineStyle.width'
                                     ) || 2,
-                        strokeColor : self.deepQuery(
-                                          [option],
+                        strokeColor : self.query(
+                                          option,
                                           'toolbox.feature.mark.lineStyle.color'
                                       ) || _markColor,
-                        lineType : self.deepQuery(
-                                       [option],
+                        lineType : self.query(
+                                       option,
                                        'toolbox.feature.mark.lineStyle.type'
                                    ) || 'dashed'
                     }

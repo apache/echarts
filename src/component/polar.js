@@ -201,8 +201,10 @@ define(
                     if (!name.show) {
                         continue;
                     } 
-                    textStyle = self.deepQuery([name, item, option], 
-                        'textStyle');
+                    textStyle = self.deepQuery(
+                        [name, item, option], 
+                        'textStyle'
+                    );
 
                     style = {};
 

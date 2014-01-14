@@ -54,7 +54,7 @@ define(function(require) {
                 serieName = serie.name;
                 if (serie.type == ecConfig.CHART_TYPE_SCATTER) {
                     series[i] = self.reformOption(series[i]);
-                    _sIndex2ShapeMap[i] = self.deepQuery([serie], 'symbol')
+                    _sIndex2ShapeMap[i] = self.query(serie, 'symbol')
                                           || _symbol[i % _symbol.length];
                     if (legend){
                         self.selectedMap[serieName] = 
@@ -319,8 +319,8 @@ define(function(require) {
          * 动画设定
          */
         function animation() {
-            var duration = self.deepQuery([option], 'animationDuration');
-            var easing = self.deepQuery([option], 'animationEasing');
+            var duration = self.query(option, 'animationDuration');
+            var easing = self.query(option, 'animationEasing');
             var x;
             var y;
             var serie;
@@ -338,12 +338,12 @@ define(function(require) {
                 );
                 zr.animate(self.shapeList[i].id, '')
                     .when(
-                        (self.deepQuery([serie],'animationDuration')
+                        (self.query(serie,'animationDuration')
                         || duration),
                         {scale : [1, 1, x, y]}
                     )
                     .start(
-                        self.deepQuery([serie], 'animationEasing') || easing
+                        self.query(serie, 'animationEasing') || easing
                     );
             }
         }
