@@ -944,7 +944,7 @@ define(function(require) {
                             self.query(serie, 'animationEasing') || easing
                         );
                 }
-                else {
+                else if (!self.shapeList[i]._mark){
                     dataIndex = self.shapeList[i]._dataIndex;
                     zr.modShape(
                         self.shapeList[i].id, 
@@ -961,6 +961,8 @@ define(function(require) {
                         .start('QuinticOut');
                 }
             }
+            
+            self.animationMark(duration, easing);
         }
 
         function onclick(param) {
@@ -1157,12 +1159,12 @@ define(function(require) {
         };
 
         self.reformOption = reformOption;   // 重载基类方法
+        self.animation = animation;
         
         // 接口方法
         self.init = init;
         self.refresh = refresh;
         self.addDataAnimation = addDataAnimation;
-        self.animation = animation;
         self.onclick = onclick;
         self.ondrop = ondrop;
         self.ondragend = ondragend;

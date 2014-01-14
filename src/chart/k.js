@@ -504,15 +504,17 @@ define(function(require) {
                         );
                 }
             }
+            
+            self.animationMark(duration, easing);
         }
 
         // 重载基类方法
         self.getMarkCoord = getMarkCoord;
+        self.animation = animation;
         
         self.init = init;
         self.refresh = refresh;
         self.addDataAnimation = addDataAnimation;
-        self.animation = animation;
 
         init(option, component);
     }

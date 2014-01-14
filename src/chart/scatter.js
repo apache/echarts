@@ -245,6 +245,8 @@ define(function(require) {
                 'vertical'
             );
             itemShape.zlevel = _zlevelBase;
+            itemShape._mark = false; // 非mark
+            itemShape._main = true;
             return itemShape;
         }
         
@@ -252,6 +254,7 @@ define(function(require) {
             return {
                 shape : 'symbol',
                 zlevel : _zlevelBase,
+                _main : true,
                 hoverable: false,
                 style : {
                     pointList : symbolList,
@@ -326,35 +329,42 @@ define(function(require) {
             var serie;
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                serie = series[self.shapeList[i]._seriesIndex];
-                x = self.shapeList[i]._x || 0;
-                y = self.shapeList[i]._y || 0;
-                zr.modShape(
-                    self.shapeList[i].id, 
-                    {
-                        scale : [0, 0, x, y]
-                    },
-                    true
-                );
-                zr.animate(self.shapeList[i].id, '')
-                    .when(
-                        (self.query(serie,'animationDuration')
-                        || duration),
-                        {scale : [1, 1, x, y]}
-                    )
-                    .start(
-                        self.query(serie, 'animationEasing') || easing
+                if (self.shapeList[i]._main) {
+                    if (self.shapeList[i].shape == 'symbol') {
+                        continue;
+                    }
+                    serie = series[self.shapeList[i]._seriesIndex];
+                    x = self.shapeList[i]._x || 0;
+                    y = self.shapeList[i]._y || 0;
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {
+                            scale : [0, 0, x, y]
+                        },
+                        true
                     );
+                    zr.animate(self.shapeList[i].id, '')
+                        .when(
+                            (self.query(serie,'animationDuration')
+                            || duration),
+                            {scale : [1, 1, x, y]}
+                        )
+                        .start(
+                            self.query(serie, 'animationEasing') || easing
+                        );
+                }
             }
+            
+            self.animationMark(duration, easing);
         }
 
         // 重载基类方法
         self.getMarkCoord = getMarkCoord;
+        self.animation = animation;
         
         self.init = init;
         self.refresh = refresh;
         self.ondataRange = ondataRange;
-        self.animation = animation;
 
         init(option, component);
     }

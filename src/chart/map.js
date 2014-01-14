@@ -56,6 +56,8 @@ define(function(require) {
         var _mousedown;
         var _justMove;   // 避免移动响应点击
         var _curMapType; // 当前移动的地图类型
+        
+        var _markAnimation = false;
 
         function _buildShape() {
             self.selectedMap = {};
@@ -210,6 +212,12 @@ define(function(require) {
                         zr.addShape(self.shapeList[i]);
                     }
                     zr.refresh();
+                    if (!_markAnimation) {
+                        _markAnimation = true;
+                        self.animationMark(
+                            self.query(option, 'animationDuration')
+                        );
+                    }
                 }
             };
         }
@@ -1101,6 +1109,7 @@ define(function(require) {
             _nameMap = {};
             _roamMap = {};
             _specialArea = {};
+            _markAnimation = false;
 
             refresh(newOption);
             

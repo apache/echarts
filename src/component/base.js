@@ -301,10 +301,13 @@ define(function(require) {
             
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 shapeList[i].zlevel = _zlevelBase + 1;
+                /*
+                shapeList[i]._mark = 'point';
                 shapeList[i]._x = shapeList[i].style.x 
                                   + shapeList[i].style.width / 2;
                 shapeList[i]._y = shapeList[i].style.y 
                                   + shapeList[i].style.height / 2;
+                */
                 for (var key in attachStyle) {
                     shapeList[i][key] = attachStyle[key];
                 }
@@ -680,8 +683,10 @@ define(function(require) {
                 name
             );
 
+            itemShape._mark = 'point'; // 复用animationMark
             itemShape._x = x;
             itemShape._y = y;
+            
             itemShape._dataIndex = dataIndex;
             itemShape._seriesIndex = seriesIndex;
 
@@ -813,6 +818,10 @@ define(function(require) {
                 data[0].name + ' : ' + data[1].name
             );
             
+           itemShape._mark = 'line';
+           itemShape._x = xEnd;
+           itemShape._y = yEnd;
+            
             return itemShape;
         }
         
@@ -867,6 +876,61 @@ define(function(require) {
             }
             return position;
         }
+        
+        /**
+         * 动画设定
+         */
+        function animation() {
+            self.animationMark(ecConfig.animationDuration);
+        }
+        
+        function animationMark(duration /*, easing*/) {
+            var x;
+            var y;
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                if (!self.shapeList[i]._mark) {
+                    continue;
+                }
+                x = self.shapeList[i]._x || 0;
+                y = self.shapeList[i]._y || 0;
+                if (self.shapeList[i]._mark == 'point') {
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {
+                            scale : [0, 0, x, y]
+                        },
+                        true
+                    );
+                    zr.animate(self.shapeList[i].id, '')
+                        .when(
+                            duration,
+                            {scale : [1, 1, x, y]}
+                        )
+                        .start('QuinticOut');
+                }
+                else if (self.shapeList[i]._mark == 'line') {
+                    zr.modShape(
+                        self.shapeList[i].id, 
+                        {
+                            style : {
+                                xEnd : self.shapeList[i].style.xStart,
+                                yEnd : self.shapeList[i].style.yStart
+                            }
+                        },
+                        true
+                    );
+                    zr.animate(self.shapeList[i].id, 'style')
+                        .when(
+                            duration,
+                            {
+                                xEnd : x,
+                                yEnd : y
+                            }
+                        )
+                        .start('QuinticOut');
+                }
+            }
+        }
 
         function resize() {
             self.refresh && self.refresh();
@@ -911,9 +975,11 @@ define(function(require) {
         self.parseCenter = parseCenter;
         self.parseRadius = parseRadius;
         self.subPixelOptimize = subPixelOptimize;
+        self.animation = animation;
+        self.animationMark = animationMark;
+        self.resize = resize;
         self.clear = clear;
         self.dispose = dispose;
-        self.resize = resize;
     }
 
     return Base;
