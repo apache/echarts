@@ -586,35 +586,35 @@ require(['echarts'], function(ec){
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td>{self} setOption</td>
-                            <td>{Object} option, <br/>{boolean=} notMerge</td>
+                            <td><b>{self}</b> setOption</td>
+                            <td><b>{Object}</b> option, <br/>{boolean=} notMerge</td>
                             <td>万能接口，配置图表实例任何可配置选项（详见<a href="#Option" title="">option</a>），多次调用时option选项是默认是合并（merge）的，<br/>如果不需求，可以通过notMerger参数为true阻止与上次option的合并。 </td>
                         </tr>
                         <tr>
-                            <td>{Object} getOption</td>
-                            <td>{void}</td>
+                            <td><b>{Object}</b> getOption</td>
+                            <td><b>{void}</b></td>
                             <td>返回内部持有的当前显示option克隆  </td>
                         </tr>
                         <tr>
-                            <td>{self} setSeries</td>
-                            <td>{Array} series, <br/>{boolean=} notMerge</td>
+                            <td><b>{self}</b> setSeries</td>
+                            <td><b>{Array}</b> series, <br/>{boolean=} notMerge</td>
                             <td>数据接口，驱动图表生成的数据内容（详见<a href="#Series" title="">series</a>），效果等同调用setOption({series:{...}}) </td>
                         </tr>
                         <tr>
-                            <td>{Object} getSeries</td>
-                            <td>{void}</td>
+                            <td><b>{Object}</b> getSeries</td>
+                            <td><b>{void}</b></td>
                             <td>返回内部持有的当前显示series克隆，效果同return getOption().series</td>
                         </tr>
                         <tr>
-                            <td>{self} addData</td>
+                            <td><b>{self}</b> addData</td>
                             <td>单组数据：
-                                <br/>{number} seriesIdx
+                                <br/><b>{number}</b> seriesIdx
                                 <br/>{number | Object} data
                                 <br/>{boolean=} isHead
                                 <br/>{boolean=} dataGrow
                                 <br/>{string=} additionData
                                 <br/>多组数据添加：
-                                <br/>{Array} params
+                                <br/><b>{Array}</b> params
                             </td>
                             <td>动态数据接口，<a href="example/dynamicLineBar.html" target="_blank">try this (Line & Bar) »</a> <a href="example/dynamicScatterK.html" target="_blank">try this (Scatter & K) »</a> <a href="example/dynamicPieRadar.html" target="_blank">try this (Pie & Radar) »</a>
                                 <br/>seriesIdx 系列索引
@@ -627,63 +627,63 @@ require(['echarts'], function(ec){
                             </td>
                         </tr>
                         <tr>
-                            <td>{self} on</td>
-                            <td>{string} eventName, <br/>{Function} eventListener</td>
+                            <td><b>{self}</b> on</td>
+                            <td><b>{string}</b> eventName, <br/><b>{Function}</b> eventListener</td>
                             <td>事件绑定，支持事件有：<br/>REFRESH，RESTORE，CLICK，HOVER，<br/>DATA_CHANGED，MAGIC_TYPE_CHANGED，DATA_VIEW_CHANGED，<br/>DATA_ZOOM，DATA_RANGE，LEGEND_SELECTED，MAP_SELECTED</td>
                         </tr>
                         <tr>
-                            <td>{self} un</td>
-                            <td>{string} eventName, <br/>{Function} eventListener</td>
+                            <td><b>{self}</b> un</td>
+                            <td><b>{string}</b> eventName, <br/><b>{Function}</b> eventListener</td>
                             <td>事件解绑定 </td>
                         </tr>
                         <tr>
-                            <td>{self} showLoading</td>
-                            <td>{Object} loadingOption</td>
+                            <td><b>{self}</b> showLoading</td>
+                            <td><b>{Object}</b> loadingOption</td>
                             <td> 过渡控制（详见<a href="#Loadingoption" title="">loadingOption</a>），显示loading（读取中） </td>
                         </tr>
                         <tr>
-                            <td>{self} hideLoading</td>
-                            <td>{void}</td>
+                            <td><b>{self}</b> hideLoading</td>
+                            <td><b>{void}</b></td>
                             <td>过渡控制，隐藏loading（读取中） </td>
                         </tr>
                         <tr>
                             <td>{ZRender} getZrender</td>
-                            <td>{void}</td>
+                            <td><b>{void}</b></td>
                             <td>获取当前图表所用ZRender实例，可用于添加额外图形或进行深度定制，zrender接口详见<a href="http://ecomfe.github.io/zrender/doc/doc.html#zrenderInstance" target="_blank">ZRender</a> </td>
                         </tr>
                         <tr>
-                            <td>{string} getDataURL</td>
+                            <td><b>{string}</b> getDataURL</td>
                             <td>{string=} imgType</td>
                             <td>获取当前图表的Base64图片dataURL，imgType 图片类型，支持png|jpeg，默认为png</td>
                         </tr>
                         <tr>
-                            <td>{Dom} getImage</td>
+                            <td><b>{Dom}</b> getImage</td>
                             <td>{string=} imgType</td>
                             <td>获取一个当前图表的img，imgType 图片类型，支持png|jpeg，默认为png</td>
                         </tr>
                         <tr>
-                            <td>{self} resize</td>
-                            <td>{void}</td>
+                            <td><b>{self}</b> resize</td>
+                            <td><b>{void}</b></td>
                             <td>ECharts没有绑定resize事件，显示区域大小发生改变内部并不知道，<br/>使用方可以根据自己的需求绑定关心的事件，主动调用resize达到区域更新的效果。</td>
                         </tr>
                         <tr>
-                            <td>{self} refresh</td>
-                            <td>{void}</td>
+                            <td><b>{self}</b> refresh</td>
+                            <td><b>{void}</b></td>
                             <td>刷新图表，图例选择、数据区域缩放，拖拽状态均保持。</td>
                         </tr>
                         <tr>
-                            <td>{self} restore</td>
-                            <td>{void}</td>
+                            <td><b>{self}</b> restore</td>
+                            <td><b>{void}</b></td>
                             <td>还原图表，各种状态均被清除，还原为最初展现时的状态。</td>
                         </tr>
                         <tr>
-                            <td>{self} clear</td>
-                            <td>{void}</td>
+                            <td><b>{self}</b> clear</td>
+                            <td><b>{void}</b></td>
                             <td>清空绘画内容，清空后实例可用 </td>
                         </tr>
                         <tr>
-                            <td>{void} dispose</td>
-                            <td>{void}</td>
+                            <td><b>{void}</b> dispose</td>
+                            <td><b>{void}</b></td>
                             <td>释放图表实例，释放后实例不再可用 </td>
                         </tr>
                     </table>
@@ -697,47 +697,47 @@ require(['echarts'], function(ec){
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {Array} color </td>
+                            <td> <b>{Array}</b> color </td>
                             <td> 数值系列的颜色列表，默认为null则采用内置颜色，可配数组，eg：['#87cefa', 'rgba(123,123,123,0.5)','...']，当系列数量个数比颜色列表长度大时将循环选取 </td>
                         </tr>
                          <tr>
-                            <td> {Object} title </td>
+                            <td> <b>{Object}</b> title </td>
                             <td> 标题（详见<a href="#Title" title="">title</a>），每个图表最多仅有一个标题控件 </td>
                         </tr>
                         <tr>
-                            <td> {Object} legend </td>
+                            <td> <b>{Object}</b> legend </td>
                             <td> 图例（详见<a href="#Legend" title="">legend</a>），每个图表最多仅有一个图例，混搭图表共享 </td>
                         </tr>
                         <tr>
-                            <td> {Object} dataRange </td>
+                            <td> <b>{Object}</b> dataRange </td>
                             <td> 值域选择（详见<a href="#DataRange" title="">dataRange</a>）,值域范围 </td>
                         </tr>
                         <tr>
-                            <td> {Object} toolbox </td>
+                            <td> <b>{Object}</b> toolbox </td>
                             <td> 工具箱（详见<a href="#Toolbox" title="">toolbox</a>），每个图表最多仅有一个工具箱 </td>
                         </tr>
                         <tr>
-                            <td> {Object} tooltip </td>
+                            <td> <b>{Object}</b> tooltip </td>
                             <td> 提示框（详见<a href="#Tooltip" title="">tooltip</a>），鼠标悬浮交互时的信息提示 </td>
                         </tr>
                         <tr>
-                            <td> {Object} dataZoom </td>
+                            <td> <b>{Object}</b> dataZoom </td>
                             <td> 数据区域缩放（详见<a href="#DataZoom" title="">dataZoom</a>）,数据展现范围选择 </td>
                         </tr>
                         <tr>
-                            <td> {Object} grid </td>
+                            <td> <b>{Object}</b> grid </td>
                             <td> 直角坐标系内绘图网格（详见<a href="#Grid" title="">grid</a>） </td>
                         </tr>
                         <tr>
-                            <td> {Array | Object} xAxis </td>
+                            <td> <b>{Array | Object}</b> xAxis </td>
                             <td> 直角坐标系中横轴数组（详见<a href="#Xaxis" title="">xAxis</a>），数组中每一项代表一条横轴坐标轴，标准（1.0）中规定最多同时存在2条横轴 </td>
                         </tr>
                         <tr>
-                            <td> {Array | Object} yAxis </td>
+                            <td> <b>{Array | Object}</b> yAxis </td>
                             <td> 直角坐标系中纵轴数组（详见<a href="#Yaxis" title="">yAxis</a>），数组中每一项代表一条纵轴坐标轴，标准（1.0）中规定最多同时存在2条纵轴 </td>
                         </tr>
                         <tr>
-                            <td> {Array} series </td>
+                            <td> <b>{Array}</b> series </td>
                             <td> 驱动图表生成的数据内容（详见<a href="#Series" title="">series</a>），数组中每一项代表一个系列的特殊选项及数据 </td>
                         </tr>
                     </table>
@@ -751,74 +751,74 @@ require(['echarts'], function(ec){
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string} text </td>
+                            <td> <b>{string}</b> text </td>
                             <td> '' </td>
                             <td> 主标题文本，'\n'指定换行 </td>
                         </tr>
                         <tr>
-                            <td> {string} link </td>
+                            <td> <b>{string}</b> link </td>
                             <td> '' </td>
                             <td> 主标题文本超链接 </td>
                         </tr>
                         <tr>
-                            <td> {string} subtext </td>
+                            <td> <b>{string}</b> subtext </td>
                             <td> '' </td>
                             <td> 副标题文本，'\n'指定换行 </td>
                         </tr>
                         <tr>
-                            <td> {string} sublink </td>
+                            <td> <b>{string}</b> sublink </td>
                             <td> '' </td>
                             <td> 副标题文本超链接 </td>
                         </tr>
                         <tr>
-                            <td> {string | number} x </td>
+                            <td> <b>{string | number}</b> x </td>
                             <td> 'left' </td>
-                            <td> 水平安放位置，默认为左侧，可选为：'center' | 'left' | 'right' | {number}（x坐标，单位px） </td>
+                            <td> 水平安放位置，默认为左侧，可选为：'center' | 'left' | 'right' | <b>{number}</b>（x坐标，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {string | number} y </td>
+                            <td> <b>{string | number}</b> y </td>
                             <td> 'top' </td>
-                            <td> 垂直安放位置，默认为全图顶端，可选为：'top' | 'bottom' | 'center' | {number}（y坐标，单位px） </td>
+                            <td> 垂直安放位置，默认为全图顶端，可选为：'top' | 'bottom' | 'center' | <b>{number}</b>（y坐标，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {string} textAlign </td>
+                            <td> <b>{string}</b> textAlign </td>
                             <td> null </td>
                             <td> 水平对齐方式，默认根据x设置自动调整，可选为： left' | 'right' | 'center</td>
                         </tr>
                         
                         <tr>
-                            <td> {color} backgroundColor </td>
+                            <td> <b>{color}</b> backgroundColor </td>
                             <td> 'rgba(0,0,0,0)' </td>
                             <td> 标题背景颜色，默认透明 </td>
                         </tr>
                         <tr>
-                            <td> {string} borderColor </td>
+                            <td> <b>{string}</b> borderColor </td>
                             <td> '#ccc' </td>
                             <td> 标题边框颜色 </td>
                         </tr>
                         <tr>
-                            <td> {number} borderWidth </td>
+                            <td> <b>{number}</b> borderWidth </td>
                             <td> 0 </td>
                             <td> 标题边框线宽，单位px，默认为0（无边框） </td>
                         </tr>
                         <tr>
-                            <td> {number | Array} padding </td>
+                            <td> <b>{number | Array}</b> padding </td>
                             <td> 5 </td>
                             <td> 标题内边距，单位px，默认各方向内边距为5，接受数组分别设定上右下左边距，同css，见下图 </td>
                         </tr>
                         <tr>
-                            <td> {number} itemGap </td>
+                            <td> <b>{number}</b> itemGap </td>
                             <td> 10 </td>
                             <td> 主副标题纵向间隔，单位px，默认为10</td>
                         </tr>
                         
                         <tr>
-                            <td> {Object} textStyle </td>
+                            <td> <b>{Object}</b> textStyle </td>
                             <td> {<br/>fontSize: 18, <br/>fontWeight: 'bolder', <br/>color: '#333'<br/>} </td>
                             <td> 主标题文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
                         <tr>
-                            <td> {Object} subtextStyle </td>
+                            <td> <b>{Object}</b> subtextStyle </td>
                             <td> {color: '#aaa'} </td>
                             <td> 副标题文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
@@ -836,76 +836,76 @@ require(['echarts'], function(ec){
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string} orient </td>
+                            <td> <b>{string}</b> orient </td>
                             <td> 'horizontal' </td>
                             <td> 布局方式，默认为水平布局，可选为：'horizontal' | 'vertical' </td>
                         </tr>
                         <tr>
-                            <td> {string | number} x </td>
+                            <td> <b>{string | number}</b> x </td>
                             <td> 'center' </td>
-                            <td> 水平安放位置，默认为全图居中，可选为：'center' | 'left' | 'right' | {number}（x坐标，单位px） </td>
+                            <td> 水平安放位置，默认为全图居中，可选为：'center' | 'left' | 'right' | <b>{number}</b>（x坐标，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {string | number} y </td>
+                            <td> <b>{string | number}</b> y </td>
                             <td> 'top' </td>
-                            <td> 垂直安放位置，默认为全图顶端，可选为：'top' | 'bottom' | 'center' | {number}（y坐标，单位px） </td>
+                            <td> 垂直安放位置，默认为全图顶端，可选为：'top' | 'bottom' | 'center' | <b>{number}</b>（y坐标，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {color} backgroundColor </td>
+                            <td> <b>{color}</b> backgroundColor </td>
                             <td> 'rgba(0,0,0,0)' </td>
                             <td> 图例背景颜色，默认透明 </td>
                         </tr>
                         <tr>
-                            <td> {string} borderColor </td>
+                            <td> <b>{string}</b> borderColor </td>
                             <td> '#ccc' </td>
                             <td> 图例边框颜色 </td>
                         </tr>
                         <tr>
-                            <td> {number} borderWidth </td>
+                            <td> <b>{number}</b> borderWidth </td>
                             <td> 0 </td>
                             <td> 图例边框线宽，单位px，默认为0（无边框） </td>
                         </tr>
                         <tr>
-                            <td> {number | Array} padding </td>
+                            <td> <b>{number | Array}</b> padding </td>
                             <td> 5 </td>
                             <td> 图例内边距，单位px，默认各方向内边距为5，接受数组分别设定上右下左边距，同css，见下图 </td>
                         </tr>
                         <tr>
-                            <td> {number} itemGap </td>
+                            <td> <b>{number}</b> itemGap </td>
                             <td> 10 </td>
                             <td> 各个item之间的间隔，单位px，默认为10，横向布局时为水平间隔，纵向布局时为纵向间隔，见下图 </td>
                         </tr>
                         <!--
                         <tr>
-                            <td> {number} itemWidth </td>
+                            <td> <b>{number}</b> itemWidth </td>
                             <td> 20 </td>
                             <td> 图例图形宽度 </td>
                         </tr>
                         <tr>
-                            <td> {number} itemHeight </td>
+                            <td> <b>{number}</b> itemHeight </td>
                             <td> 14 </td>
                             <td> 图例图形高度 </td>
                         </tr>
                         -->
                         <tr>
-                            <td> {Object} textStyle </td>
+                            <td> <b>{Object}</b> textStyle </td>
                             <td> {color: '#333'} </td>
                             <td> 默认只设定了图例文字颜色（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
                         <tr>
-                            <td> {boolean} selectedMode </td>
+                            <td> <b>{Boolean}</b> selectedMode </td>
                             <td> true </td>
                             <td> 选择模式，默认开启图例开关 </td>
                         </tr>
                         <tr>
-                            <td> {Object} selected </td>
+                            <td> <b>{Object}</b> selected </td>
                             <td> null </td>
                             <td> 配置默认选中状态，可配合LEGEND.SELECTED事件做动态数据载入，<a href="example/legend.html" target="_blank">try this »</a> </td>
                         </tr>
                         <tr>
                             <td> {Array &lt;string&gt;} data </td>
                             <td> [ ] </td>
-                            <td> 图例内容数组，数组项为{string}，每一项代表一个系列的name。<br/>使用根据该值索引<a href="#Series" title="">series</a>中同名系列所用的图表类型和itemStyle，如果索引不到，该item将默认为没启用状态。</td>
+                            <td> 图例内容数组，数组项为<b>{string}</b>，每一项代表一个系列的name。<br/>使用根据该值索引<a href="#Series" title="">series</a>中同名系列所用的图表类型和itemStyle，如果索引不到，该item将默认为没启用状态。</td>
                         </tr>
                     </table>
                     <p><img src="./asset/img/doc/legend.png" title="" alt="图例"/></P>
@@ -919,99 +919,99 @@ require(['echarts'], function(ec){
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string} orient </td>
+                            <td> <b>{string}</b> orient </td>
                             <td> 'vertical' </td>
                             <td> 布局方式，默认为垂直布局，可选为：'horizontal' | 'vertical' </td>
                         </tr>
                         <tr>
-                            <td> {string | number} x </td>
+                            <td> <b>{string | number}</b> x </td>
                             <td> 'left' </td>
-                            <td> 水平安放位置，默认为全图左对齐，可选为：'center' | 'left' | 'right' | {number}（x坐标，单位px） </td>
+                            <td> 水平安放位置，默认为全图左对齐，可选为：'center' | 'left' | 'right' | <b>{number}</b>（x坐标，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {string | number} y </td>
+                            <td> <b>{string | number}</b> y </td>
                             <td> 'bottom' </td>
-                            <td> 垂直安放位置，默认为全图底部，可选为：'top' | 'bottom' | 'center' | {number}（y坐标，单位px） </td>
+                            <td> 垂直安放位置，默认为全图底部，可选为：'top' | 'bottom' | 'center' | <b>{number}</b>（y坐标，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {color} backgroundColor </td>
+                            <td> <b>{color}</b> backgroundColor </td>
                             <td> 'rgba(0,0,0,0)' </td>
                             <td> 值域控件背景颜色，默认透明 </td>
                         </tr>
                         <tr>
-                            <td> {string} borderColor </td>
+                            <td> <b>{string}</b> borderColor </td>
                             <td> '#ccc' </td>
                             <td> 值域控件边框颜色 </td>
                         </tr>
                         <tr>
-                            <td> {number} borderWidth </td>
+                            <td> <b>{number}</b> borderWidth </td>
                             <td> 0 </td>
                             <td> 值域控件边框线宽，单位px，默认为0（无边框） </td>
                         </tr>
                         <tr>
-                            <td> {number | Array} padding </td>
+                            <td> <b>{number | Array}</b> padding </td>
                             <td> 5 </td>
                             <td> 值域控件内边距，单位px，默认各方向内边距为5，接受数组分别设定上右下左边距，同css，见下图 </td>
                         </tr>
                         <tr>
-                            <td> {number} itemGap </td>
+                            <td> <b>{number}</b> itemGap </td>
                             <td> 10 </td>
                             <td> 各个item之间的间隔，单位px，默认为10，横向布局时为水平间隔，纵向布局时为纵向间隔，见下图 </td>
                         </tr>
                         <!--
                         <tr>
-                            <td> {number} itemWidth </td>
+                            <td> <b>{number}</b> itemWidth </td>
                             <td> 20 </td>
                             <td> 值域控件图形宽度 </td>
                         </tr>
                         <tr>
-                            <td> {number} itemHeight </td>
+                            <td> <b>{number}</b> itemHeight </td>
                             <td> 14 </td>
                             <td> 值域控件图形高度 </td>
                         </tr>
                         -->
                         <tr>
-                            <td> {number} min </td>
+                            <td> <b>{number}</b> min </td>
                             <td> null </td>
                             <td> 指定的最小值，eg: 0，默认无，必须参数</td>
                         </tr>
                         <tr>
-                            <td> {number} max </td>
+                            <td> <b>{number}</b> max </td>
                             <td> null </td>
                             <td> 指定的最大值，eg: 100，默认无，必须参数</td>
                         </tr>
                         <tr>
-                            <td> {number} precision </td>
+                            <td> <b>{number}</b> precision </td>
                             <td> 0 </td>
                             <td> 小数精度，默认为0，无小数点 </td>
                         </tr>
                         <tr>
-                            <td> {number} splitNumber </td>
+                            <td> <b>{number}</b> splitNumber </td>
                             <td> 5 </td>
                             <td> 分割段数，默认为5，为0时为线性渐变 </td>
                         </tr>
                         <tr>
-                            <td> {boolean} calculable </td>
+                            <td> <b>{Boolean}</b> calculable </td>
                             <td> false </td>
                             <td> 是否启用值域漫游，启用后无视splitNumber，值域显示为线性渐变 </td>
                         </tr>
                         <tr>
-                            <td> {boolean} realtime </td>
+                            <td> <b>{Boolean}</b> realtime </td>
                             <td> true </td>
                             <td> 值域漫游是否实时显示 </td>
                         </tr>
                         <tr>
-                            <td> {Array} color </td>
+                            <td> <b>{Array}</b> color </td>
                             <td> ['#1e90ff','#f0ffff'] </td>
                             <td> 值域颜色标识，颜色数组长度必须>=2，颜色代表从数值高到低的变化，即颜色数组低位代表数值高的颜色标识 </td>
                         </tr>
                         <tr>
-                            <td> {Array} text </td>
+                            <td> <b>{Array}</b> text </td>
                             <td> null </td>
                             <td> 值域文字显示，splitNumber生效时默认以计算所得数值作为值域文字显示，可指定长度为2的文本数组显示简介的值域文本，如['高', '低']，'\n'指定换行</td>
                         </tr>
                         <tr>
-                            <td> {Object} textStyle </td>
+                            <td> <b>{Object}</b> textStyle </td>
                             <td> {color: '#333'} </td>
                             <td> 默认只设定了值域控件文字颜色（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
@@ -1027,72 +1027,72 @@ require(['echarts'], function(ec){
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {boolean} show </td>
+                            <td> <b>{Boolean}</b> show </td>
                             <td> false </td>
                             <td> 显示策略，可选为：true（显示） | false（隐藏） </td>
                         </tr>
                         <tr>
-                            <td> {string} orient </td>
+                            <td> <b>{string}</b> orient </td>
                             <td> 'horizontal' </td>
                             <td> 布局方式，默认为水平布局，可选为：'horizontal' | 'vertical' </td>
                         </tr>
                         <tr>
-                            <td> {string | number} x </td>
+                            <td> <b>{string | number}</b> x </td>
                             <td> 'center' </td>
-                            <td> 水平安放位置，默认为全图居中，可选为：'center' | 'left' | 'right' | {number}（x坐标，单位px） </td>
+                            <td> 水平安放位置，默认为全图居中，可选为：'center' | 'left' | 'right' | <b>{number}</b>（x坐标，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {string | number} y </td>
+                            <td> <b>{string | number}</b> y </td>
                             <td> 'top' </td>
-                            <td> 垂直安放位置，默认为全图顶端，可选为：'top' | 'bottom' | 'center' | {number}（y坐标，单位px） </td>
+                            <td> 垂直安放位置，默认为全图顶端，可选为：'top' | 'bottom' | 'center' | <b>{number}</b>（y坐标，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {color} backgroundColor </td>
+                            <td> <b>{color}</b> backgroundColor </td>
                             <td> 'rgba(0,0,0,0)' </td>
                             <td> 工具箱背景颜色，默认透明 </td>
                         </tr>
                         <tr>
-                            <td> {string} borderColor </td>
+                            <td> <b>{string}</b> borderColor </td>
                             <td> '#ccc' </td>
                             <td> 工具箱边框颜色 </td>
                         </tr>
                         <tr>
-                            <td> {number} borderWidth </td>
+                            <td> <b>{number}</b> borderWidth </td>
                             <td> 0 </td>
                             <td> 工具箱边框线宽，单位px，默认为0（无边框） </td>
                         </tr>
                         <tr>
-                            <td> {number | Array} padding </td>
+                            <td> <b>{number | Array}</b> padding </td>
                             <td> 5 </td>
                             <td> 工具箱内边距，单位px，默认各方向内边距为5，接受数组分别设定上右下左边距，同css，见下图 </td>
                         </tr>
                         <tr>
-                            <td> {number} itemGap </td>
+                            <td> <b>{number}</b> itemGap </td>
                             <td> 10 </td>
                             <td> 各个item之间的间隔，单位px，默认为10，横向布局时为水平间隔，纵向布局时为纵向间隔，见下图 </td>
                         </tr>
                         <tr>
-                            <td> {number} itemSize </td>
+                            <td> <b>{number}</b> itemSize </td>
                             <td> 16 </td>
                             <td> 工具箱icon大小，单位（px）</td>
                         </tr>
                         <tr>
-                            <td> {Array &lt;color&gt;} color </td>
+                            <td> <b>{Array &lt;color&gt;}</b> color </td>
                             <td> ['#1e90ff','#22bb22','#4b0082','#d2691e'] </td>
                             <td> 工具箱icon颜色序列，循环使用 </td>
                         </tr>
                         <tr>
-                            <td> {Object} feature </td>
+                            <td> <b>{Object}</b> feature </td>
                             <td> {} </td>
                             <td> 启用功能，目前支持feature见下</td>
                         </tr>
                         <tr>
-                            <td> {boolean} showTitle </td>
+                            <td> <b>{Boolean}</b> showTitle </td>
                             <td> true </td>
                             <td> 是否显示工具箱文字提示，默认启用</td>
                         </tr>
                         <tr>
-                            <td> {Object} featureTitle </td>
+                            <td> <b>{Object}</b> featureTitle </td>
                             <td> {<br/>
                                     mark : '辅助线开关',<br/>
                                     markUndo : '删除辅助线',<br/>
@@ -1135,7 +1135,7 @@ feature : {
                             dataView，数据视图
                             <ul>
                                 <li>简单传入true启动数据视图</li>
-                                <li>传入{Object}设置更多属性</li>
+                                <li>传入<b>{Object}</b>设置更多属性</li>
                                 <ul>
                                     <li>{boolean=} readOnly 默认数据视图为只读，可指定readOnly为false打开编辑功能</li>
                                     <li>{Function=} optionToContent 自主编排数据视图的显示内容</li>
@@ -1154,7 +1154,7 @@ feature : {
                             saveAsImage，保存图片（IE8-不支持）
                             <ul>
                                 <li>简单传入true启动保存功能</li>
-                                <li>传入{Object}设置更多属性</li>
+                                <li>传入<b>{Object}</b>设置更多属性</li>
                                 <ul>
                                     <li>{string=} type 默认保存图片类型为'png'，需改为'jpeg'</li>
                                     <li>{string=} name 指定图片名称，如不指定，则用图表title标题，如无title标题则图片名称默认为“ECharts”</li>
@@ -1173,72 +1173,72 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {boolean} show </td>
+                            <td> <b>{Boolean}</b> show </td>
                             <td> true </td>
                             <td> 显示策略，可选为：true（显示） | false（隐藏） </td>
                         </tr>
                         <tr>
-                            <td> {boolean} showContent </td>
+                            <td> <b>{Boolean}</b> showContent </td>
                             <td> true </td>
                             <td> tooltip主体内容显示策略，只需tooltip触发事件或显示axisPointer而不需要显示内容时可配置该项为falase，<br/>可选为：true（显示） | false（隐藏） </td>
                         </tr>
                         <tr>
-                            <td> {string} trigger </td>
+                            <td> <b>{string}</b> trigger </td>
                             <td> 'item' </td>
                             <td> 触发类型，默认数据触发，见下图，可选为：'item' | 'axis' </td>
                         </tr>
                         <tr>
-                            <td> {string | Function} formatter </td>
+                            <td> <b>{string | Function}</b> formatter </td>
                             <td> null </td>
-                            <td> 内容格式器：{string}（Template） | {Function}，支持异步回调见表格下方</td>
+                            <td> 内容格式器：<b>{string}</b>（Template） | <b>{Function}</b>，支持异步回调见表格下方</td>
                         </tr>
                         <tr>
-                            <td> {string | Function} islandFormatter </td>
+                            <td> <b>{string | Function}</b> islandFormatter </td>
                             <td> '{a} &lt; br/&gt;{b} : {c}' </td>
-                            <td> 拖拽重计算独有，数据孤岛内容格式器：{string}（Template） | {Function}，见表格下方</td>
+                            <td> 拖拽重计算独有，数据孤岛内容格式器：<b>{string}</b>（Template） | <b>{Function}</b>，见表格下方</td>
                         </tr>
                         <tr>
-                            <td> {number} showDelay </td>
+                            <td> <b>{number}</b> showDelay </td>
                             <td> 20 </td>
                             <td> 显示延迟，添加显示延迟可以避免频繁切换，单位ms </td>
                         </tr>
                         <tr>
-                            <td> {number} hideDelay </td>
+                            <td> <b>{number}</b> hideDelay </td>
                             <td> 100 </td>
                             <td> 隐藏延迟，单位ms</td>
                         </tr>
                         <tr>
-                            <td> {number} transitionDuration </td>
+                            <td> <b>{number}</b> transitionDuration </td>
                             <td> 0.4 </td>
                             <td> 动画变换时长，单位s </td>
                         </tr>
                         <tr>
-                            <td> {color} backgroundColor </td>
+                            <td> <b>{color}</b> backgroundColor </td>
                             <td> 'rgba(0,0,0,0.7)' </td>
                             <td> 提示背景颜色，默认为透明度为0.7的黑色 </td>
                         </tr>
                         <tr>
-                            <td> {string} borderColor </td>
+                            <td> <b>{string}</b> borderColor </td>
                             <td> '#333' </td>
                             <td> 提示边框颜色 </td>
                         </tr>
                         <tr>
-                            <td> {number} borderRadius </td>
+                            <td> <b>{number}</b> borderRadius </td>
                             <td> 4 </td>
                             <td> 提示边框圆角，单位px，默认为4 </td>
                         </tr>
                         <tr>
-                            <td> {number} borderWidth </td>
+                            <td> <b>{number}</b> borderWidth </td>
                             <td> 0 </td>
                             <td> 提示边框线宽，单位px，默认为0（无边框） </td>
                         </tr>
                         <tr>
-                            <td> {number | Array} padding </td>
+                            <td> <b>{number | Array}</b> padding </td>
                             <td> 5 </td>
                             <td> 提示内边距，单位px，默认各方向内边距为5，接受数组分别设定上右下左边距，同css </td>
                         </tr>
                         <tr>
-                            <td> {Object} axisPointer </td>
+                            <td> <b>{Object}</b> axisPointer </td>
                             <td> {<br/>
                                 type : 'line',<br/>
                                 lineStyle : {<br/>&nbsp;&nbsp;color: '#48b',<br/>&nbsp;&nbsp;width: 2,<br/>&nbsp;&nbsp;type: 'solid'<br/>},<br/>
@@ -1248,7 +1248,7 @@ feature : {
                             <td> 坐标轴指示器，坐标轴触发有效，默认type为line，可选为：'line' | 'shadow' | 'none'(无)，<br/>lineStyle设置直线指示器（详见<a href="#LineStyle" title="">lineStyle</a>）,<br/>areaStyle设置阴影指示器（详见<a href="#AreaStyle" title="">areaStyle</a>），areaStyle.size默认为'auto'自动计算，可指定具体宽度</td>
                         </tr>
                         <tr>
-                            <td> {Object} textStyle </td>
+                            <td> <b>{Object}</b> textStyle </td>
                             <td> { color:'#fff' } </td>
                             <td> 文本样式，默认为白色字体（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
@@ -1256,7 +1256,7 @@ feature : {
                     <P> 内容格式器formatter：</P>
                     <ul>
                         <li>
-                            {string}，模板（Template），其变量为：
+                            <b>{string}</b>，模板（Template），其变量为：
                             <ul>
                                 <li>{a} | {a0}</li>
                                 <li>{b} | {b0}</li>
@@ -1284,7 +1284,7 @@ feature : {
                             </ul>
                         </li>
                         <li>
-                            {Function}，传递参数列表如下：
+                            <b>{Function}</b>，传递参数列表如下：
                             <ul>
                                 <li>&lt;Array&gt; params : 数组内容同模板变量，[[a, b, c, d], [a1, b1, c1, d1], ...]</li>
                                 <li>&lt;String&gt; ticket : 异步回调标识</li>
@@ -1313,82 +1313,82 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {boolean} show </td>
+                            <td> <b>{Boolean}</b> show </td>
                             <td> false </td>
                             <td> 是否显示，当show为true时则接管使用指定类目轴的全部系列数据，如不指定则接管全部直角坐标系数据。 </td>
                         </tr>
                         <tr>
-                            <td> {string} orient </td>
+                            <td> <b>{string}</b> orient </td>
                             <td> 'horizontal' </td>
                             <td> 布局方式，默认为水平布局，可选为：'horizontal' | 'vertical' </td>
                         </tr>
                         <tr>
-                            <td> {number} x </td>
+                            <td> <b>{number}</b> x </td>
                             <td> 自适应 </td>
-                            <td> 水平安放位置，默认为根据grid参数适配，纵向布局默认左侧，可指定 {number}（左上角x坐标，单位px） </td>
+                            <td> 水平安放位置，默认为根据grid参数适配，纵向布局默认左侧，可指定 <b>{number}</b>（左上角x坐标，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {number} y </td>
+                            <td> <b>{number}</b> y </td>
                             <td> 自适应 </td>
-                            <td> 垂直安放位置，默认为根据grid参数适配，纵向布局默认下方，可指定 {number}（左上角y坐标，单位px） </td>
+                            <td> 垂直安放位置，默认为根据grid参数适配，纵向布局默认下方，可指定 <b>{number}</b>（左上角y坐标，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {number} width </td>
+                            <td> <b>{number}</b> width </td>
                             <td> 自适应 | 30</td>
-                            <td> 指定宽度，横向布局时默认为根据grid参数适配，纵向布局是默认为30，可指定 {number}（宽度，单位px） </td>
+                            <td> 指定宽度，横向布局时默认为根据grid参数适配，纵向布局是默认为30，可指定 <b>{number}</b>（宽度，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {number} height </td>
+                            <td> <b>{number}</b> height </td>
                             <td> 自适应  | 30</td>
-                            <td> 指定高度，纵向布局时默认为根据grid参数适配，横向布局是默认为30，可指定 {number}（高度，单位px） </td>
+                            <td> 指定高度，纵向布局时默认为根据grid参数适配，横向布局是默认为30，可指定 <b>{number}</b>（高度，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {color} backgroundColor </td>
+                            <td> <b>{color}</b> backgroundColor </td>
                             <td> '#eee' </td>
                             <td> 背景颜色 </td>
                         </tr>
                         <tr>
-                            <td> {color} dataBackgroundColor </td>
+                            <td> <b>{color}</b> dataBackgroundColor </td>
                             <td> '#ccc' </td>
                             <td> 数据缩略背景颜色 </td>
                         </tr>
                         <tr>
-                            <td> {color} fillerColor </td>
+                            <td> <b>{color}</b> fillerColor </td>
                             <td> 'rgba(50,205,50,0.4)' </td>
                             <td> 选择区域填充颜色 </td>
                         </tr>
                         <tr>
-                            <td> {color} handleColor </td>
+                            <td> <b>{color}</b> handleColor </td>
                             <td> 'rgba(70,130,180,0.8)' </td>
                             <td> 控制手柄颜色  </td>
                         </tr>
                         <tr>
-                            <td> {(Array | number)} xAxisIndex </td>
+                            <td> <b>{Array | number}</b> xAxisIndex </td>
                             <td> null </td>
                             <td> 当不指定时默认控制所有横向类目，可通过数组指定多个需要控制的横向类目坐标轴Index，仅一个时可直接为数字 </td>
                         </tr>
                         <tr>
-                            <td> {(Array | number)} yAxisIndex </td>
+                            <td> <b>{Array | number}</b> yAxisIndex </td>
                             <td> null </td>
                             <td> 当不指定时默认控制所有纵向类目，可通过数组指定多个需要控制的纵向类目坐标轴Index，仅一个时可直接为数字 </td>
                         </tr>
                         <tr>
-                            <td> {number} start </td>
+                            <td> <b>{number}</b> start </td>
                             <td> 0 </td>
                             <td> 数据缩放，选择起始比例，默认为0，从首个数据起选择。</td>
                         </tr>
                         <tr>
-                            <td> {number} end </td>
+                            <td> <b>{number}</b> end </td>
                             <td> 100 </td>
                             <td> 数据缩放，选择结束比例，默认为100（%），到最后一个数据选择结束。 </td>
                         </tr>
                         <tr>
-                            <td> {boolean} realtime </td>
+                            <td> <b>{Boolean}</b> realtime </td>
                             <td> false </td>
                             <td> 缩放变化是否实时显示，建议性能较低的浏览器或数据量巨大时不启动实时效果。 </td>
                         </tr>
                         <tr>
-                            <td> {boolean} zoomLock </td>
+                            <td> <b>{Boolean}</b> zoomLock </td>
                             <td> false </td>
                             <td> 数据缩放锁，默认为false，当设置为true时选择区域不能伸缩，即(end - start)值保持不变，仅能做数据漫游。</td>
                         </tr>
@@ -1404,47 +1404,47 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {number} x </td>
+                            <td> <b>{number}</b> x </td>
                             <td> 80 </td>
                             <td> 直角坐标系内绘图网格左上角横坐标，数值单位px </td>
                         </tr>
                         <tr>
-                            <td> {number} y </td>
+                            <td> <b>{number}</b> y </td>
                             <td> 60 </td>
                             <td> 直角坐标系内绘图网格左上角纵坐标，数值单位px </td>
                         </tr>
                         <tr>
-                            <td> {number} x2 </td>
+                            <td> <b>{number}</b> x2 </td>
                             <td> 80 </td>
                             <td> 直角坐标系内绘图网格右下角横坐标，数值单位px </td>
                         </tr>
                         <tr>
-                            <td> {number} y2 </td>
+                            <td> <b>{number}</b> y2 </td>
                             <td> 60 </td>
                             <td> 直角坐标系内绘图网格右下角纵坐标，数值单位px </td>
                         </tr>
                         <tr>
-                            <td> {number} width </td>
+                            <td> <b>{number}</b> width </td>
                             <td> 自适应 </td>
                             <td> 直角坐标系内绘图网格（不含坐标轴）宽度，默认为总宽度 - x - x2，数值单位px，指定width后将忽略x2，见下图。 </td>
                         </tr>
                         <tr>
-                            <td> {number} height </td>
+                            <td> <b>{number}</b> height </td>
                             <td> 自适应 </td>
                             <td> 直角坐标系内绘图网格（不含坐标轴）高度，默认为总宽度 - y - y2，数值单位px，指定height后将忽略y2，见下图。 </td>
                         </tr>
                         <tr>
-                            <td> {color} backgroundColor </td>
+                            <td> <b>{color}</b> backgroundColor </td>
                             <td> '#fff' </td>
                             <td> 背景颜色。 </td>
                         </tr>
                         <tr>
-                            <td> {number} borderWidth </td>
+                            <td> <b>{number}</b> borderWidth </td>
                             <td> 1 </td>
                             <td> 边框线宽 </td
                         </tr>
                         <tr>
-                            <td> {color} borderColor </td>
+                            <td> <b>{color}</b> borderColor </td>
                             <td> '#ccc' </td>
                             <td> 边框颜色。 </td>
                         </tr>
@@ -1474,109 +1474,109 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string} type </td>
+                            <td> <b>{string}</b> type </td>
                             <td> 'category' | 'value' </td>
                             <td> 通用 </td>
                             <td> 坐标轴类型，横轴默认为类目型'category'，纵轴默认为数值型'value' </td>
                         </tr>
                         <tr>
-                            <td> {string} position </td>
+                            <td> <b>{string}</b> position </td>
                             <td> 'bottom' | 'left' </td>
                             <td> 通用 </td>
                             <td> 坐标轴类型，横轴默认为类目型'bottom'，纵轴默认为数值型'left'，可选为：'bottom' | 'top' | 'left' | 'right' </td>
                         </tr>
                         <tr>
-                            <td> {string} name </td>
+                            <td> <b>{string}</b> name </td>
                             <td> '' </td>
                             <td> 数值型 </td>
                             <td> 坐标轴名称，默认为空</td>
                         </tr>
                         <tr>
-                            <td> {string} nameLocation </td>
+                            <td> <b>{string}</b> nameLocation </td>
                             <td> 'end' </td>
                             <td> 数值型 </td>
                             <td> 坐标轴名称位置，默认为'end'，可选为：'start' | 'end'</td>
                         </tr>
                         <tr>
-                            <td> {boolean} boundaryGap </td>
+                            <td> <b>{Boolean}</b> boundaryGap </td>
                             <td> true </td>
                             <td> 类目型 </td>
                             <td> 类目起始和结束两端空白策略，见下图，默认为true留空，false则顶头 </td>
                         </tr>
                         <tr>
-                            <td> {Array} boundaryGap </td>
+                            <td> <b>{Array}</b> boundaryGap </td>
                             <td> [0, 0] </td>
                             <td> 数值型 </td>
                             <td> 数值轴两端空白策略，数组内数值代表百分比，[原始数据最小值与最终最小值之间的差额，原始数据最大值与最终最大值之间的差额] </td>
                         </tr>
                         <tr>
-                            <td> {number} min </td>
+                            <td> <b>{number}</b> min </td>
                             <td> null </td>
                             <td> 数值型 </td>
                             <td> 指定的最小值，eg: 0，默认无，会自动根据具体数值调整，指定后将忽略boundaryGap[0] </td>
                         </tr>
                         <tr>
-                            <td> {number} max </td>
+                            <td> <b>{number}</b> max </td>
                             <td> null </td>
                             <td> 数值型 </td>
                             <td> 指定的最大值，eg: 100，默认无，会自动根据具体数值调整，指定后将忽略boundaryGap[1] </td>
                         </tr>
                         <tr>
-                            <td> {boolean} scale </td>
+                            <td> <b>{Boolean}</b> scale </td>
                             <td> false </td>
                             <td> 数值型 </td>
                             <td> 脱离0值比例，放大聚焦到最终_min，_max区间 </td>
                         </tr>
                         <tr>
-                            <td> {number} precision </td>
+                            <td> <b>{number}</b> precision </td>
                             <td> 0 </td>
                             <td> 数值型 </td>
                             <td> 小数精度，默认为0，无小数点 </td>
                         </tr>
                         <tr>
-                            <td> {number} power </td>
+                            <td> <b>{number}</b> power </td>
                             <td> 100 </td>
                             <td> 数值型 </td>
                             <td> 整数精度，默认为100，个位和百位为0 </td>
                         </tr>
                         <tr>
-                            <td> {number} splitNumber </td>
+                            <td> <b>{number}</b> splitNumber </td>
                             <td> 5 </td>
                             <td> 数值型 </td>
                             <td> 分割段数，默认为5 </td>
                         </tr>
                         <tr>
-                            <td> {Object} axisLine </td>
+                            <td> <b>{Object}</b> axisLine </td>
                             <td> {show : true} </td>
                             <td> 通用 </td>
                             <td> 坐标轴线，默认显示，属性show控制显示与否，属性lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式 </td>
                         </tr>
                         <tr>
-                            <td> {Object} axisTick </td>
+                            <td> <b>{Object}</b> axisTick </td>
                             <td> {show : false} </td>
                             <td> 通用 </td>
                             <td> 坐标轴小标记，默认不显示，属性show控制显示与否，属性length控制线长，属性lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式 </td>
                         </tr>
                         <tr>
-                            <td> {Object} axisLabel </td>
+                            <td> <b>{Object}</b> axisLabel </td>
                             <td> {show : true} </td>
                             <td> 通用 </td>
                             <td> 坐标轴文本标签，详见<a href="#AxisAxislabel" title="">axis.axisLabel</a></td>
                         </tr>
                         <tr>
-                            <td> {Object} splitLine </td>
+                            <td> <b>{Object}</b> splitLine </td>
                             <td> {show : true} </td>
                             <td> 通用 </td>
                             <td> 分隔线，默认显示，属性show控制显示与否，属性lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式 </td>
                         </tr>
                         <tr>
-                            <td> {Object} splitArea </td>
+                            <td> <b>{Object}</b> splitArea </td>
                             <td> {show : false} </td>
                             <td> 通用 </td>
                             <td> 分隔区域，默认不显示，属性show控制显示与否，属性areaStyle（详见<a href="#AreaStyle" title="">areaStyle</a>）控制区域样式 </td>
                         </tr>
                         <tr>
-                            <td> {Array} data </td>
+                            <td> <b>{Array}</b> data </td>
                             <td> [] </td>
                             <td> 类目型 </td>
                             <td> 类目列表，同时也是label内容，详见<a href="#AxisData" title="">axis.data</a></td>
@@ -1623,13 +1623,13 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {boolean} show </td>
+                            <td> <b>{Boolean}</b> show </td>
                             <td> true </td>
                             <td> 通用 </td>
                             <td> 是否显示，默认为true，设为false后下面都没意义了 </td>
                         </tr>
                         <tr>
-                            <td> {Object} lineStyle </td>
+                            <td> <b>{Object}</b> lineStyle </td>
                             <td> {color: '#48b', width: 2, type: 'solid'} </td>
                             <td> 通用 </td>
                             <td> 属性lineStyle控制线条样式，（详见<a href="#LineStyle" title="">lineStyle</a>） </td>
@@ -1646,19 +1646,19 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {boolean} show </td>
+                            <td> <b>{Boolean}</b> show </td>
                             <td> false </td>
                             <td> 通用 </td>
                             <td> 是否显示，默认为false，设为true后下面为默认样式 </td>
                         </tr>
                         <tr>
-                            <td> {number} length </td>
+                            <td> <b>{number}</b> length </td>
                             <td> 4 </td>
                             <td> 通用 </td>
                             <td> 属性length控制线长 </td>
                         </tr>
                         <tr>
-                            <td> {Object} lineStyle </td>
+                            <td> <b>{Object}</b> lineStyle </td>
                             <td> {color: '#ccc', width: 1, type: 'solid'} </td>
                             <td> 通用 </td>
                             <td> 属性lineStyle控制线条样式，（详见<a href="#LineStyle" title="">lineStyle</a>） </td>
@@ -1675,37 +1675,37 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {boolean} show </td>
+                            <td> <b>{Boolean}</b> show </td>
                             <td> true </td>
                             <td> 通用 </td>
                             <td> 是否显示，默认为true，设为false后下面都没意义了 </td>
                         </tr>
                         <tr>
-                            <td> {string | number} interval </td>
+                            <td> <b>{string | number}</b> interval </td>
                             <td> 'auto' </td>
                             <td> 类目型 </td>
-                            <td> 标签显示挑选间隔，默认为'auto'，可选为：'auto'（自动隐藏显示不下的） | 0（全部显示） | {number}（用户指定选择间隔） </td>
+                            <td> 标签显示挑选间隔，默认为'auto'，可选为：'auto'（自动隐藏显示不下的） | 0（全部显示） | <b>{number}</b>（用户指定选择间隔） </td>
                         </tr>
                         <tr>
-                            <td> {number} rotate </td>
+                            <td> <b>{number}</b> rotate </td>
                             <td> 0 </td>
                             <td> 通用 </td>
                             <td> 标签旋转角度，默认为0，不旋转，正直为逆时针，负值为顺时针，可选为：-90 ~ 90 </td>
                         </tr>
                         <tr>
-                            <td> {number} margin </td>
+                            <td> <b>{number}</b> margin </td>
                             <td> 8 </td>
                             <td> 通用 </td>
                             <td> 坐标轴文本标签与坐标轴的间距，默认为8，单位px </td>
                         </tr>
                         <tr>
-                            <td> {string | Function} formatter </td>
+                            <td> <b>{string | Function}</b> formatter </td>
                             <td> null </td>
                             <td> 通用 </td>
-                            <td> 间隔名称格式器：{string}（Template） | {Function} </td>
+                            <td> 间隔名称格式器：<b>{string}</b>（Template） | <b>{Function}</b> </td>
                         </tr>
                         <tr>
-                            <td> {Object} textStyle </td>
+                            <td> <b>{Object}</b> textStyle </td>
                             <td> {color: '#333'} </td>
                             <td> 通用 </td>
                             <td> 文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
@@ -1714,7 +1714,7 @@ feature : {
                     <P> 间隔名称格式器formatter：</P>
                     <ul>
                         <li>
-                            {string}，模板（Template），其变量为：
+                            <b>{string}</b>，模板（Template），其变量为：
                             <ul>
                                 <li>
                                     {value}: 内容或值
@@ -1724,7 +1724,7 @@ feature : {
                         </li>
 
                         <li>
-                            {Function}，传递参数同模板变量：
+                            <b>{Function}</b>，传递参数同模板变量：
                             <ul>
                                 <li>
                                     eg：function(value){return "星期" + "日一二三四五六".charAt(value);'}
@@ -1744,13 +1744,13 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {boolean} show </td>
+                            <td> <b>{Boolean}</b> show </td>
                             <td> true </td>
                             <td> 通用 </td>
                             <td> 是否显示，默认为true，设为false后下面都没意义了 </td>
                         </tr>
                         <tr>
-                            <td> {Object} lineStyle </td>
+                            <td> <b>{Object}</b> lineStyle </td>
                             <td> {color: ['#ccc'], width: 1, type: 'solid'} </td>
                             <td> 通用 </td>
                             <td> 属性lineStyle控制线条样式，（详见<a href="#LineStyle" title="">lineStyle</a>） </td>
@@ -1767,13 +1767,13 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {boolean} show </td>
+                            <td> <b>{Boolean}</b> show </td>
                             <td> false </td>
                             <td> 通用 </td>
                             <td> 是否显示，默认为false，设为true后带如下默认样式 </td>
                         </tr>
                         <tr>
-                            <td> {Object} areaStyle </td>
+                            <td> <b>{Object}</b> areaStyle </td>
                             <td> {color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']} </td>
                             <td> 通用 </td>
                             <td> 属性areaStyle（详见<a href="#AreaStyle" title="">areaStyle</a>）控制区域样式，颜色数组实现间隔变换。 </td>
@@ -1810,73 +1810,73 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {Array} center </td>
+                            <td> <b>{Array}</b> center </td>
                             <td> ['50%', '50%'] </td>
                             <td> 圆心坐标，支持绝对值（px）和百分比，百分比计算min(width, height) * 50% </td>
                         </tr>
                         <tr>
-                            <td> {number} radius </td>
+                            <td> <b>{number}</b> radius </td>
                             <td> '75%' </td>
                             <td> 半径，支持绝对值（px）和百分比，百分比计算min(width, height) / 2 * 75%, </td>
                         </tr>
                         <tr>
-                            <td> {number} startAngle </td>
+                            <td> <b>{number}</b> startAngle </td>
                             <td> 90 </td>
                             <td> 开始角度, 有效输入范围：[-180,180]</td>
                         </tr>
                         <tr>
-                            <td> {number} splitNumber </td>
+                            <td> <b>{number}</b> splitNumber </td>
                             <td> 5 </td>
                             <td> 分割段数，默认为5 </td>
                         </tr>
                         <tr>
-                            <td> {object} name </td>
+                            <td> <b>{Object}</b> name </td>
                             <td> {<br/> show:true, <br/>formatter:null,<br/>textStyle:{color:#333}<br/>}
                             </td>
                             <td> 坐标轴名称</td>
                         </tr>
                         <tr>
-                            <td> {Array} boundaryGap </td>
+                            <td> <b>{Array}</b> boundaryGap </td>
                             <td> [0, 0] </td>
                             <td> 数值轴两端空白策略，数组内数值代表百分比，[原始数据最小值与最终最小值之间的差额，原始数据最大值与最终最大值之间的差额] </td>
                         </tr>
                         <tr>
-                            <td> {boolean} scale </td>
+                            <td> <b>{Boolean}</b> scale </td>
                             <td> false </td>
                             <td> 脱离0值比例，放大聚焦到最终_min，_max区间 </td>
                         </tr>
                         <tr>
-                            <td> {number} precision </td>
+                            <td> <b>{number}</b> precision </td>
                             <td> 0 </td>
                             <td> 小数精度，默认为0，无小数点 </td>
                         </tr>
                         <tr>
-                            <td> {number} power </td>
+                            <td> <b>{number}</b> power </td>
                             <td> 100 </td>
                             <td> 整数精度，默认为100，个位和百位为0 </td>
                         </tr>
                         <tr>
-                            <td> {Object} axisLine </td>
+                            <td> <b>{Object}</b> axisLine </td>
                             <td> {show : true} </td>
                             <td> 坐标轴线，默认显示，属性show控制显示与否，属性lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式 </td>
                         </tr>
                         <tr>
-                            <td> {Object} axisLabel </td>
+                            <td> <b>{Object}</b> axisLabel </td>
                             <td> {show : false} </td>
                             <td> 坐标轴文本标签，详见<a href="#AxisAxislabel" title="">axis.axisLabel</a></td>
                         </tr>
                         <tr>
-                            <td> {Object} splitLine </td>
+                            <td> <b>{Object}</b> splitLine </td>
                             <td> {show : true} </td>
                             <td> 分隔线，默认显示，属性show控制显示与否，属性lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式 </td>
                         </tr>
                         <tr>
-                            <td> {Object} splitArea </td>
+                            <td> <b>{Object}</b> splitArea </td>
                             <td> {show : true} </td>
                             <td> 分隔区域，默认不显示，属性show控制显示与否，属性areaStyle（详见<a href="#AreaStyle" title="">areaStyle</a>）控制区域样式 </td>
                         </tr>
                         <tr>
-                            <td> {Array} indicator </td>
+                            <td> <b>{Array}</b> indicator </td>
                             <td> [] </td>
                             <td> 雷达指标列表，同时也是label内容，例子见下</td>
                         </tr>
@@ -1903,19 +1903,19 @@ indicator : [
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string} name </td>
+                            <td> <b>{string}</b> name </td>
                             <td> null </td>
                             <td> 通用 </td>
                             <td> 系列名称，如启用legend，该值将被legend.data索引相关 </td>
                         </tr>
                         <tr>
-                            <td> {Object} tooltip </td>
+                            <td> <b>{Object}</b> tooltip </td>
                             <td> null </td>
                             <td> 通用 </td>
                             <td> 提示框样式，仅对本系列有效，如不设则用option.tooltip（详见<a href="#Tooltip" title="">tooltip</a>）,鼠标悬浮交互时的信息提示 </td>
                         </tr>
                         <tr>
-                            <td> {string} type </td>
+                            <td> <b>{string}</b> type </td>
                             <td> null </td>
                             <td> 通用 </td>
                             <td> 图表类型，必要参数！如为空或不支持类型，则该系列数据不被显示。可选为：
@@ -1924,61 +1924,61 @@ indicator : [
                             </td>
                         </tr>
                         <tr>
-                            <td> {Object} itemStyle </td>
+                            <td> <b>{Object}</b> itemStyle </td>
                             <td> null </td>
                             <td> 通用 </td>
                             <td> 图形样式（详见<a href="#ItemStyle" title="">itemStyle</a>） </td>
                         </tr>
                         <tr>
-                            <td> {string} stack </td>
+                            <td> <b>{string}</b> stack </td>
                             <td> null </td>
                             <td> 折线图，柱状图 </td>
                             <td> 组合名称，多组数据的堆积图时使用，eg：stack:'group1'，则series数组中stack值等于'group1'的数据做堆积计算 </td>
                         </tr>
                         <tr>
-                            <td> {number} xAxisIndex </td>
+                            <td> <b>{number}</b> xAxisIndex </td>
                             <td> 0 </td>
                             <td> 折线图，柱状图，散点图 ，K线图</td>
                             <td><a href="#Xaxis" title="">xAxis</a>坐标轴数组的索引，指定该系列数据所用的横坐标轴 </td>
                         </tr>
                         <tr>
-                            <td> {number} yAxisIndex </td>
+                            <td> <b>{number}</b> yAxisIndex </td>
                             <td> 0 </td>
                             <td> 折线图，柱状图，散点图，K线图 </td>
                             <td><a href="#Yaxis" title="">yAxis</a>坐标轴数组的索引，指定该系列数据所用的纵坐标轴 </td>
                         </tr>
                         <tr>
-                            <td> {number | string} barGap </td>
+                            <td> <b>{number | string} </b>barGap </td>
                             <td> '30%' </td>
                             <td> 柱状图 </td>
                             <td> 柱间距离，默认为柱形宽度的30%，可设固定值 </td>
                         </tr>
                         <tr>
-                            <td> {number | string} barCategoryGap </td>
+                            <td> <b>{number | string} </b>barCategoryGap </td>
                             <td> '20%' </td>
                             <td> 柱状图 </td>
                             <td> 类目间柱形距离，默认为类目间距的20%，可设固定值 </td>
                         </tr>
                         <tr>
-                            <td> {number} barMinHeight </td>
+                            <td> <b>{number}</b> barMinHeight </td>
                             <td> 0 </td>
                             <td> 柱状图 </td>
                             <td> 柱条最小高度，可用于防止某item的值过小而影响交互 </td>
                         </tr>
                         <tr>
-                            <td> {number} barWidth </td>
+                            <td> <b>{number}</b> barWidth </td>
                             <td> 自适应 </td>
                             <td> 柱状图 ，K线图</td>
                             <td> 柱条（K线蜡烛）宽度，不设时自适应 </td>
                         </tr>
                         <tr>
-                            <td> {number} barMaxWidth </td>
+                            <td> <b>{number}</b> barMaxWidth </td>
                             <td> 自适应 </td>
                             <td> K线图</td>
                             <td> K线蜡烛最大宽度，不设时自适应 </td>
                         </tr>
                         <tr>
-                            <td> {string} symbol </td>
+                            <td> <b>{string}</b> symbol </td>
                             <td> null </td>
                             <td> 折线图，散点图 </td>
                             <td> 标志图形类型，默认自动选择（8种类型循环使用，不显示标志图形可设为'none'），默认循环选择类型有：<br/>
@@ -1990,79 +1990,79 @@ indicator : [
                             </td>
                         </tr>
                         <tr>
-                            <td> {number | Function} symbolSize </td>
+                            <td> <b>{number | Function} </b>symbolSize </td>
                             <td> 2 | 4</td>
                             <td> 折线图 (2)，散点图(4) </td>
                             <td> 标志图形大小，可计算特性启用情况建议增大以提高交互体验。实现气泡图时symbolSize需为Function，气泡大小取决于该方法返回值，传入参数为当前数据项（value数组）</td>
                         </tr>
                         <tr>
-                            <td> {number} symbolRotate </td>
+                            <td> <b>{number}</b> symbolRotate </td>
                             <td> null </td>
                             <td> 折线图 ，散点图 </td>
                             <td> 标志图形旋转角度[-180,180]</td>
                         </tr>
                         <tr>
-                            <td> {boolean} showAllSymbol </td>
+                            <td> <b>{Boolean}</b> showAllSymbol </td>
                             <td> false </td>
                             <td> 折线图  </td>
                             <td> 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略），如需全部显示可把showAllSymbol设为true</td>
                         </tr>
                         <tr>
-                            <td> {boolean} smooth </td>
+                            <td> <b>{Boolean}</b> smooth </td>
                             <td> false </td>
                             <td> 折线图  </td>
                             <td> 平滑曲线显示</td>
                         </tr>
                         <tr>
-                            <td> {number} largeThreshold </td>
+                            <td> <b>{number}</b> largeThreshold </td>
                             <td> 2000 </td>
                             <td> 散点图  </td>
                             <td> 大规模散点图自动切换阀值</td>
                         </tr>
                         <tr>
-                            <td> {Array} center </td>
+                            <td> <b>{Array}</b> center </td>
                             <td> ['50%', '50%'] </td>
                             <td> 饼图 </td>
                             <td> 圆心坐标，支持绝对值（px）和百分比，百分比计算min(width, height) * 50% </td>
                         </tr>
                         <tr>
-                            <td> {number | Array} radius </td>
+                            <td> <b>{number | Array}</b> radius </td>
                             <td> [0, '75%'] </td>
                             <td> 饼图 </td>
                             <td> 半径，支持绝对值（px）和百分比，百分比计算比，min(width, height) / 2 * 75%， 传数组实现环形图，[内半径，外半径] </td>
                         </tr>
                         <tr>
-                            <td> {number} startAngle </td>
+                            <td> <b>{number}</b> startAngle </td>
                             <td> 90 </td>
                             <td> 饼图 </td>
                             <td> 开始角度, 有效输入范围：[-180,180]</td>
                         </tr>
                         <tr>
-                            <td> {number} minAngle </td>
+                            <td> <b>{number}</b> minAngle </td>
                             <td> 0 </td>
                             <td> 饼图 </td>
                             <td> 最小角度，可用于防止某item的值过小而影响交互 </td>
                         </tr>
                         <tr>
-                            <td> {string} roseType </td>
+                            <td> <b>{string}</b> roseType </td>
                             <td> null </td>
                             <td> 饼图 </td>
                             <td> 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）</td>
                         </tr>
                         <tr>
-                            <td> {number} selectedOffset </td>
+                            <td> <b>{number}</b> selectedOffset </td>
                             <td> 10 </td>
                             <td> 饼图 </td>
                             <td> 选中是扇区偏移量 </td>
                         </tr>
                         <tr>
-                            <td> {string} selectedMode </td>
+                            <td> <b>{string}</b> selectedMode </td>
                             <td> null </td>
                             <td> 饼图，地图 </td>
                             <td> 选中模式，默认关闭，可选single，multiple </td>
                         </tr>
                         <tr>
-                            <td> {string} mapType </td>
+                            <td> <b>{string}</b> mapType </td>
                             <td> 'china' </td>
                             <td> 地图 </td>
                             <td> 地图类型，支持world，china及全国34个省市自治区。省市自治区的mapType直接使用简体中文：
@@ -2074,133 +2074,133 @@ indicator : [
                             </td>
                         </tr>
                         <tr>
-                            <td> {boolean} hoverable </td>
+                            <td> <b>{Boolean}</b> hoverable </td>
                             <td> true </td>
                             <td> 地图 </td>
                             <td> 非数值显示（如仅用于显示标注标线时），可以通过hoverable:false关闭区域悬浮高亮 </td>
                         </tr>
                         <tr>
-                            <td> {Object} mapLocation </td>
+                            <td> <b>{Object}</b> mapLocation </td>
                             <td> {x:'center',y:'center'} </td>
                             <td> 地图 </td>
                             <td> 地图位置设置，默认只适应上下左右居中可配x，y，width，height，任意参数为空都将根据其他参数自适应 </td>
                         </tr>
                         <tr>
-                            <td> {string} mapValueCalculation </td>
+                            <td> <b>{string}</b> mapValueCalculation </td>
                             <td> 'sum' </td>
                             <td> 地图 </td>
                             <td> 地图数值计算方式，默认为加和，可选为：'sum'（总数） | 'average'（均值）</td>
                         </tr>
                         <tr>
-                            <td> {Object} roam </td>
+                            <td> <b>{Object}</b> roam </td>
                             <td> false </td>
                             <td> 地图 </td>
                             <td> 是否开启滚轮缩放和拖拽漫游</td>
                         </tr>
                         <tr>
-                            <td> {Object} nameMap </td>
+                            <td> <b>{Object}</b> nameMap </td>
                             <td> null </td>
                             <td> 地图 </td>
                             <td> 自定义地区的名称映射，如{'China' : '中国'}</td>
                         </tr>
                         <tr>
-                            <td> {Object} textFixed </td>
+                            <td> <b>{Object}</b> textFixed </td>
                             <td> null </td>
                             <td> 地图 </td>
                             <td> 地区的名称文本位置修正，数值单位为px，正直为左下偏移，负值为右上偏移，如{'China' : [10, -10]}</td>
                         </tr>
                         <tr>
-                            <td> {Object} geoCoord </td>
+                            <td> <b>{Object}</b> geoCoord </td>
                             <td> null </td>
                             <td> 地图 </td>
                             <td> 通过绝对经纬度指定地区的名称文本位置，如{'Islands':[113.95, 22.26]}，香港离岛区名称显示定位到东经113.95，北纬22.26上</td>
                         </tr>
                         <tr>
-                            <td> {Array} categories </td>
+                            <td> <b>{Array}</b> categories </td>
                             <td> [] </td>
                             <td> 力导向 </td>
                             <td> 力导向图中节点的分类, 每一项有name和itemStyle两个属性，itemStyle配置详见<a href="#ItemStyle">itemStyle</a></td>
                         </tr>
                         <tr>
-                            <td> {Array} nodes </td>
+                            <td> <b>{Array}</b> nodes </td>
                             <td> [] </td>
                             <td> 力导向 </td>
                             <td> 力导向图的顶点数据, 每一项都有 name, value, category三个属性，分别表示节点的名称， 节点的值和节点的分类</td>
                         </tr>
                         <tr>
-                            <td> {Array} links </td>
+                            <td> <b>{Array}</b> links </td>
                             <td> [] </td>
                             <td> 力导向 </td>
                             <td> 力导向图的边数据, 每一项都有 source, target, weight三个属性, source和target是顶点的索引值， 边的权重(weight)越大则两个顶点之间的联系越大(最后稳定之后的距离越小)</td>
                         </tr>
                         <tr>
-                            <td> {number} minRadius </td>
+                            <td> <b>{number}</b> minRadius </td>
                             <td> 10 </td>
                             <td> 力导向 </td>
                             <td> 顶点数据映射成圆半径后的最小半径 </td>
                         </tr>
                         <tr>
-                            <td> {number} maxRadius </td>
+                            <td> <b>{number}</b> maxRadius </td>
                             <td> 20 </td>
                             <td> 力导向 </td>
                             <td> 顶点数据映射成圆半径后的最大半径 </td>
                         </tr>
                         <tr>
-                            <td> {number} density </td>
+                            <td> <b>{number}</b> density </td>
                             <td> 1 </td>
                             <td> 力导向 </td>
                             <td> 顶点的密度，影响布局时顶点运动的速度，值越大速度越慢 </td>
                         </tr>
                         <tr>
-                            <td> {number} attractiveness </td>
+                            <td> <b>{number}</b> attractiveness </td>
                             <td> 1 </td>
                             <td> 力导向 </td>
                             <td> 顶点之间的引力系数，影响到布局稳定之后的大小，值越大则稳定之后顶点之间的距离越小 </td>
                         </tr>
                         <tr>
-                            <td> {number} padding </td>
+                            <td> <b>{number}</b> padding </td>
                             <td> 2 </td>
                             <td> 弦图 </td>
                             <td> 每个sector之间的间距(用角度表示) </td>
                         </tr>
                         <tr>
-                            <td> {string} sort </td>
+                            <td> <b>{string}</b> sort </td>
                             <td> 'none' </td>
                             <td> 弦图 </td>
                             <td> 数据排序， 可以取none, ascending, descending</td>
                         </tr>
                         <tr>
-                            <td> {string} sortSub </td>
+                            <td> <b>{string}</b> sortSub </td>
                             <td> 'none' </td>
                             <td> 弦图 </td>
                             <td> 数据排序（弦）， 可以取none, ascending, descending</td>
                         </tr>
                         <tr>
-                            <td> {boolean} showScale </td>
+                            <td> <b>{Boolean}</b> showScale </td>
                             <td> false </td>
                             <td> 弦图 </td>
                             <td> 是否显示刻度 </td>
                         </tr>
                         <tr>
-                            <td> {boolean} showScaleText </td>
+                            <td> <b>{Boolean}</b> showScaleText </td>
                             <td> false </td>
                             <td> 弦图 </td>
                             <td> 是否显示刻度文字 </td>
                         </tr>
                         <tr>
-                            <td> {boolean} clockWise </td>
+                            <td> <b>{Boolean}</b> clockWise </td>
                             <td> false </td>
                             <td> 弦图 </td>
                             <td> 显示是否顺时针 </td>
                         </tr>
                         <tr>
-                            <td> {Array} matrix </td>
+                            <td> <b>{Array}</b> matrix </td>
                             <td>[[]]</td>
                             <td> 弦图 </td>
                             <td> 关系数据，用二维数组表示，项 [i][j] 的数值表示 i 到 j 的关系数据 </td>
                         </tr>
                         <tr>
-                            <td> {Array} data </td>
+                            <td> <b>{Array}</b> data </td>
                             <td> [] </td>
                             <td> 通用 </td>
                             <td> 数据（详见<a href="#SeriesData" title="">series.data</a>） </td>
@@ -2287,32 +2287,32 @@ indicator : [
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string} symbol </td>
+                            <td> <b>{string}</b> symbol </td>
                             <td> 'pin' </td>
                             <td> 标注类型，同series中的<a href="#Series">symbol</a> </td>
                         </tr>
                         <tr>
-                            <td> {number|function} symbolSize </td>
+                            <td> <b>{number | Function} </b> symbolSize </td>
                             <td> 10 </td>
                             <td> 标注大小，同series中的<a href="#Series">symbolSize</a> </td>
                         </tr>
                         <tr>
-                            <td> {number} symbolRotate </td>
+                            <td> <b>{number}</b> symbolRotate </td>
                             <td> null </td>
                             <td> 标注图形旋转角度，同series中的<a href="#Series">symbolRotate</a> </td>
                         </tr>
                         <tr>
-                            <td> {number} itemStyle </td>
+                            <td> <b>{number}</b> itemStyle </td>
                             <td> {...} </td>
                             <td> 标注图形样式属性，同series中的<a href="#Series">itemStyle</a> </td>
                         </tr>
                         <tr>
-                            <td> {Object} geoCoord </td>
+                            <td> <b>{Object}</b> geoCoord </td>
                             <td> {} </td>
                             <td> 地图特有，标注图形定位坐标，同series中的<a href="#Series">geoCoord</a> </td>
                         </tr>
                         <tr>
-                            <td> {Array} data </td>
+                            <td> <b>{Array}</b> data </td>
                             <td> [] </td>
                             <td> 标注图形数据，见下 </td>
                         </tr>
@@ -2360,32 +2360,32 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {Array | string} symbol </td>
+                            <td> <b>{Array | string}</b> symbol </td>
                             <td> ['circle', 'arrow'] </td>
                             <td> 标线起始和结束的symbol介绍类型，如果都一样，可以直接传string，同series中的<a href="#Series">symbol</a></td>
                         </tr>
                         <tr>
-                            <td> {Array | number | Function} symbolSize </td>
+                            <td> <b>{Array | number | Function}</b> symbolSize </td>
                             <td> [2, 4] </td>
                             <td> 标线起始和结束的symbol大小，半宽（半径）参数，如果都一样，可以直接传number或function，同series中的<a href="#Series">symbolSize</a> </td>
                         </tr>
                         <tr>
-                            <td> {Array | number} symbolRotate </td>
+                            <td> <b>{Array | number} </b>symbolRotate </td>
                             <td> null </td>
                             <td> 标线起始和结束的symbol旋转控制，同series中的<a href="#Series">symbolRotate</a> </td>
                         </tr>
                         <tr>
-                            <td> {number} itemStyle </td>
+                            <td> <b>{number}</b> itemStyle </td>
                             <td> {...} </td>
                             <td> 标线图形样式属性，同series中的<a href="#Series">itemStyle</a> </td>
                         </tr>
                         <tr>
-                            <td> {Object} geoCoord </td>
+                            <td> <b>{Object}</b> geoCoord </td>
                             <td> {} </td>
                             <td> 地图特有，标线图形定位坐标，同series中的<a href="#Series">geoCoord</a> </td>
                         </tr>
                         <tr>
-                            <td> {Array} data </td>
+                            <td> <b>{Array}</b> data </td>
                             <td> [] </td>
                             <td> 标线图形数据，见下 </td>
                         </tr>
@@ -2464,49 +2464,49 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {color} color </td>
+                            <td> <b>{color}</b> color </td>
                             <td> 图表各异 </td>
                             <td> 通用 </td>
                             <td> 颜色 </td>
                         </tr>
                         <tr>
-                            <td> {Object} lineStyle </td>
+                            <td> <b>{Object}</b> lineStyle </td>
                             <td> 图表各异 </td>
                             <td> 折线图，K线图 ，地图</td>
                             <td> 线条样式，详见<a href="#LineStyle" title="">lineStyle</a></td>
                         </tr>
                         <tr>
-                            <td> {Object} areaStyle </td>
+                            <td> <b>{Object}</b> areaStyle </td>
                             <td> 图表各异 </td>
                             <td> 堆积折线图，地图</td>
                             <td> 区域样式，详见<a href="#AreaStyle" title="">areaStyle</a></td>
                         </tr>
                         <tr>
-                            <td> {Object} chordStyle </td>
+                            <td> <b>{Object}</b> chordStyle </td>
                             <td> 图表各异 </td>
                             <td> 和弦图</td>
                             <td> 弦样式，详见<a href="#ChordStyle" title="">chordStyle</a></td>
                         </tr>
                         <tr>
-                            <td> {string} borderColor </td>
+                            <td> <b>{string}</b> borderColor </td>
                             <td> '#fff' </td>
                             <td> 柱形图</td>
                             <td> 柱形边框颜色 </td>
                         </tr>
                         <tr>
-                            <td> {number} borderRadius </td>
+                            <td> <b>{number}</b> borderRadius </td>
                             <td> 0 </td>
                             <td> 柱形图</td>
                             <td> 柱形边框圆角，单位px，默认为0 </td>
                         </tr>
                         <tr>
-                            <td> {number} borderWidth </td>
+                            <td> <b>{number}</b> borderWidth </td>
                             <td> 1 </td>
                             <td> 柱形图</td>
                             <td> 柱形边框线宽，单位px，默认为1 </td>
                         </tr>
                         <tr>
-                            <td> {Object} label </td>
+                            <td> <b>{Object}</b> label </td>
                             <td> {show: true,  position:'outer'} </td>
                             <td> 折线图，柱形图，K线图，散点图，饼图 ，地图，力导向</td>
                             <td> 标签，饼图默认显示在外部，离饼图距离由labelLine.length决定，地图标签不可指定位置
@@ -2514,7 +2514,7 @@ geoCoord : {
                             </td>
                         </tr>
                         <tr>
-                            <td> {Object} labelLine </td>
+                            <td> <b>{Object}</b> labelLine </td>
                             <td> {show: true} </td>
                             <td> 饼图 </td>
                             <td> 饼图标签视觉引导线，默认显示 </td>
@@ -2528,12 +2528,12 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {boolean} show </td>
+                            <td> <b>{Boolean}</b> show </td>
                             <td> true </td>
                             <td> 标签显示策略，可选为：true（显示） | false（隐藏） </td>
                         </tr>
                         <tr>
-                            <td> {string} position </td>
+                            <td> <b>{string}</b> position </td>
                             <td> 'outer' | null</td>
                             <td> 标签显示位置，地图标签不可指定位置
                                  <br/>饼图可选为：'outer'（外部） | 'inner'（内部），
@@ -2541,12 +2541,12 @@ geoCoord : {
                             </td>
                         </tr>
                         <tr>
-                            <td> {string | Function} formatter </td>
+                            <td> <b>{string | Function}</b> formatter </td>
                             <td> null </td>
                             <td> 标签文本格式器，仅饼图支持，同<a href="#Tooltip" title="">Tooltip.formatter</a>，不支持回调</td>
                         </tr>
                         <tr>
-                            <td> {Object} textStyle </td>
+                            <td> <b>{Object}</b> textStyle </td>
                             <td> null </td>
                             <td> 标签的文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
@@ -2559,17 +2559,17 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {boolean} show </td>
+                            <td> <b>{Boolean}</b> show </td>
                             <td> true </td>
                             <td> 饼图标签视觉引导线显示策略，可选为：true（显示） | false（隐藏） </td>
                         </tr>
                         <tr>
-                            <td> {number} length </td>
+                            <td> <b>{number}</b> length </td>
                             <td> 40 </td>
                             <td> 线长 ，从外圆边缘起计算，可为负值</td>
                         </tr>
                         <tr>
-                            <td> {Object} lineStyle </td>
+                            <td> <b>{Object}</b> lineStyle </td>
                             <td> 各异 </td>
                             <td> 线条样式，详见<a href="#LineStyle" title="">lineStyle</a></td>
                         </tr>
@@ -2621,37 +2621,37 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {color} color</td>
+                            <td> <b>{color}</b> color</td>
                             <td> 各异 </td>
                             <td> 颜色 </td>
                         </tr>
                         <tr>
-                            <td> {string} type </td>
+                            <td> <b>{string}</b> type </td>
                             <td> 'solid' </td>
                             <td> 线条样式，可选为：'solid' | 'dotted' | 'dashed' </td>
                         </tr>
                         <tr>
-                            <td> {number} width </td>
+                            <td> <b>{number}</b> width </td>
                             <td> 各异 </td>
                             <td> 线宽 </td>
                         </tr>
                         <tr>
-                            <td> {color=} shadowColor </td>
+                            <td> <b>{color=}</b> shadowColor </td>
                             <td> rgba(0,0,0,0) </td>
                             <td> 折线主线(IE8+)有效，阴影色彩，支持rgba </td>
                         </tr>
                         <tr>
-                            <td> {number=} shadowBlur </td>
+                            <td> <b>{number=}</b> shadowBlur </td>
                             <td> 5 </td>
                             <td> 折线主线(IE8+)有效，阴影模糊度，大于0有效 </td>
                         </tr>
                         <tr>
-                            <td> {number=} shadowOffsetX </td>
+                            <td> <b>{number=}</b> shadowOffsetX </td>
                             <td> 3 </td>
                             <td> 折线主线(IE8+)有效，阴影横向偏移，正值往右，负值往左 </td>
                         </tr>
                         <tr>
-                            <td> {number=} shadowOffsetY </td>
+                            <td> <b>{number=}</b> shadowOffsetY </td>
                             <td> 3 </td>
                             <td> 折线主线(IE8+)有效，阴影纵向偏移，正值往下，负值往上 </td>
                         </tr>
@@ -2666,12 +2666,12 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {color} color</td>
+                            <td> <b>{color}</b> color</td>
                             <td> 各异 </td>
                             <td> 颜色 </td>
                         </tr>
                         <tr>
-                            <td> {string} type </td>
+                            <td> <b>{string}</b> type </td>
                             <td> 'default' </td>
                             <td> 填充样式，目前仅支持'default'(实填充) </td>
                         </tr>
@@ -2686,42 +2686,42 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {color} color</td>
+                            <td> <b>{color}</b> color</td>
                             <td> 各异 </td>
                             <td> 颜色 </td>
                         </tr>
                         <tr>
-                            <td> {string} decoration </td>
+                            <td> <b>{string}</b> decoration </td>
                             <td> 'none' </td>
                             <td> 修饰，仅对tooltip.textStyle生效 </td>
                         </tr>
                         <tr>
-                            <td> {string} align </td>
+                            <td> <b>{string}</b> align </td>
                             <td> 各异 </td>
                             <td> 水平对齐方式，可选为：'left' | 'right' | 'center' </td>
                         </tr>
                         <tr>
-                            <td> {string} baseline </td>
+                            <td> <b>{string}</b> baseline </td>
                             <td> 各异 </td>
                             <td> 垂直对齐方式，可选为：'top' | 'bottom' | 'middle' </td>
                         </tr>
                         <tr>
-                            <td> {string} fontFamily </td>
+                            <td> <b>{string}</b> fontFamily </td>
                             <td> 'Arial, Verdana, sans-serif'</td>
                             <td> 字体系列 </td>
                         </tr>
                         <tr>
-                            <td> {number} fontSize </td>
+                            <td> <b>{number}</b> fontSize </td>
                             <td> 12</td>
                             <td> 字号 ，单位px</td>
                         </tr>
                         <tr>
-                            <td> {string} fontStyle </td>
+                            <td> <b>{string}</b> fontStyle </td>
                             <td> 'normal'</td>
                             <td> 样式，可选为：'normal' | 'italic' | 'oblique' </td>
                         </tr>
                         <tr>
-                            <td> {string | number} fontWeight </td>
+                            <td> <b>{string | number}</b> fontWeight </td>
                             <td> 'normal'</td>
                             <td> 粗细，可选为：'normal' | 'bold' | 'bolder' | 'lighter' | 100 | 200 |... | 900 </td>
                         </tr>
@@ -2736,44 +2736,44 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string} text </td>
+                            <td> <b>{string}</b> text </td>
                             <td> 'Loading...' </td>
                             <td> 显示话术 ，'\n'指定换行</td>
                         </tr>
                         <tr>
-                            <td> {string | number} x </td>
+                            <td> <b>{string | number}</b> x </td>
                             <td> 'center' </td>
-                            <td> 水平安放位置，默认为全图居中，可选为：'center' | 'left' | 'right' | {number}（x坐标，单位px） </td>
+                            <td> 水平安放位置，默认为全图居中，可选为：'center' | 'left' | 'right' | <b>{number}</b>（x坐标，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {string | number} y </td>
+                            <td> <b>{string | number}</b> y </td>
                             <td> 'center' </td>
-                            <td> 垂直安放位置，默认为全图居中，可选为：'center' | 'bottom' | 'top' | {number}（y坐标，单位px） </td>
+                            <td> 垂直安放位置，默认为全图居中，可选为：'center' | 'bottom' | 'top' | <b>{number}</b>（y坐标，单位px） </td>
                         </tr>
                         <tr>
-                            <td> {Object} textStyle </td>
+                            <td> <b>{Object}</b> textStyle </td>
                             <td> null </td>
                             <td> 显示话术的文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
                         <tr>
-                            <td> {string} effect </td>
+                            <td> <b>{string}</b> effect </td>
                             <td> 'spin' </td>
                             <td> loading效果，可选为：'spin' | 'bar' | 'ring' | 'whirling' | 'dynamicLine' | 'bubble'</td>
                         </tr>
                         <tr>
-                            <td> {object} effectOption </td>
+                            <td> <b>{Object}</b> effectOption </td>
                             <td> null </td>
                             <td> loading效果选项，详见zrender</td>
                         </tr>
                         <tr>
-                            <td> {number} progress </td>
+                            <td> <b>{number}</b> progress </td>
                             <td> null </td>
                             <td> 指定当前进度[0~1]，个别效果有效。</td>
                         </tr>
                     </table>
 
                     <h4>color<a name="Color"> </a></h4>
-                    <P> {Array}<br/>
+                    <P> <b>{Array}</b><br/>
                         ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed','#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',<br/>
                         '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700','#6b8e23','#ff00ff','#3cb371','#b8860b','#30e0e0']
                         <br/>，默认颜色序列</P>
@@ -2782,28 +2782,28 @@ geoCoord : {
                     <P> {boolean | string} false，非IE8-支持渲染为图片，可设为true或指定图片格式（png | jpeg），渲染为图片后实例依然可用（如setOption，resize等），但各种交互失效</P>
                     
                     <h4>calculable<a name="Calculable"> </a></h4>
-                    <P> {boolean} false，是否启用拖拽重计算特性，默认关闭</P>
+                    <P> <b>{Boolean}</b> false，是否启用拖拽重计算特性，默认关闭</P>
 
                     <h4>calculableColor<a name="CalculableColor"> </a></h4>
-                    <P> {color} 'rgba(255,165,0,0.6)'，拖拽重计算提示边框颜色</P>
+                    <P> <b>{color}</b> 'rgba(255,165,0,0.6)'，拖拽重计算提示边框颜色</P>
 
                     <h4>calculableHolderColor<a name="CalculableHolderColor"> </a></h4>
-                    <P> {color} '#ccc'，可计算占位提示颜色</P>
+                    <P> <b>{color}</b> '#ccc'，可计算占位提示颜色</P>
 
                     <h4>nameConnector<a name="NameConnector"> </a></h4>
-                    <P> {string} ' &amp; '，数据合并名字间连接符</P>
+                    <P> <b>{string}</b> ' &amp; '，数据合并名字间连接符</P>
 
                     <h4>valueConnector<a name="ValueConnector"> </a></h4>
-                    <P> {string} ' : '，数据合并名字与数值间连接符</P>
+                    <P> <b>{string}</b> ' : '，数据合并名字与数值间连接符</P>
 
                     <h4>animation<a name="Animation"> </a></h4>
-                    <P> {boolean} true，是否启用图表初始化动画，默认开启，建议IE8-关闭</P>
+                    <P> <b>{Boolean}</b> true，是否启用图表初始化动画，默认开启，建议IE8-关闭</P>
 
                     <h4>animationDuration<a name="AnimationDuration"> </a></h4>
-                    <P> {number} 2000，动画时长，单位ms，支持多级控制</P>
+                    <P> <b>{number}</b> 2000，动画时长，单位ms，支持多级控制</P>
 
                     <h4>animationEasing<a name="AnimationEasing"> </a></h4>
-                    <P> {string} 'BounceOut'，主元素的缓动效果，支持多级控制，详见<a href="http://ecomfe.github.io/zrender/doc/doc.html#animation.easing" target="_blank">zrender.animation.easing</a>，可选有：<br/>
+                    <P> <b>{string}</b> 'BounceOut'，主元素的缓动效果，支持多级控制，详见<a href="http://ecomfe.github.io/zrender/doc/doc.html#animation.easing" target="_blank">zrender.animation.easing</a>，可选有：<br/>
                         'Linear',<br/>
                         'QuadraticIn', 'QuadraticOut', 'QuadraticInOut',<br/>
                         'CubicIn', 'CubicOut', 'CubicInOut',<br/>
@@ -2894,24 +2894,24 @@ option.series = [
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string}</td>
+                            <td> <b>{string}</b></td>
                             <td> type </td>
                             <td> 组件类型，等于config.COMPONENT_TYPE_LEGEND </td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> isSelected</td>
-                            <td> 图例开关相关，判断传入的名称当前是否处于开启状态。<br/>参数：{string} name （名称）<br/> 返回：{boolean} true为开启，false为关闭</td>
+                            <td> 图例开关相关，判断传入的名称当前是否处于开启状态。<br/>参数：<b>{string}</b> name （名称）<br/> 返回：<b>{Boolean}</b> true为开启，false为关闭</td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getSelectedMap</td>
-                            <td> 图例开关相关，获取当前的全部图例开关状态图。<br/>参数：无<br/> 返回：{Object} {name:value}的键值表，name为名称，value为状态值，true为开启，false为关闭</td>
+                            <td> 图例开关相关，获取当前的全部图例开关状态图。<br/>参数：无<br/> 返回：<b>{Object}</b> {name:value}的键值表，name为名称，value为状态值，true为开启，false为关闭</td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getColor</td>
-                            <td> 图例颜色相关，获取传入的名称所对应的颜色，如果传入名称未出现在已有的图例数据项中，将生成一个新的颜色与传入名称匹配并返回该颜色<br/>参数：{string} name （名称）<br/> 返回：{color} 匹配颜色</td>
+                            <td> 图例颜色相关，获取传入的名称所对应的颜色，如果传入名称未出现在已有的图例数据项中，将生成一个新的颜色与传入名称匹配并返回该颜色<br/>参数：<b>{string}</b> name （名称）<br/> 返回：<b>{color}</b> 匹配颜色</td>
                         </tr>
                     </table>
                     
@@ -2924,14 +2924,14 @@ option.series = [
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string}</td>
+                            <td> <b>{string}</b></td>
                             <td> type </td>
                             <td> 组件类型，等于config.COMPONENT_TYPE_DATARANGE </td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getColor</td>
-                            <td> 值域控件颜色相关，获取传入的值所对应的颜色<br/>参数：{number} value （值）<br/> 返回：{color} 匹配颜色</td>
+                            <td> 值域控件颜色相关，获取传入的值所对应的颜色<br/>参数：<b>{number}</b> value （值）<br/> 返回：<b>{color}</b> 匹配颜色</td>
                         </tr>
                     </table>
                     <p><img src="./asset/img/doc/dataRange.png" title="" alt="值域"/></P>
@@ -2945,14 +2945,14 @@ option.series = [
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string}</td>
+                            <td> <b>{string}</b></td>
                             <td> type </td>
                             <td> 组件类型，等于config.COMPONENT_TYPE_DATAZOOM </td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> absoluteZoom</td>
-                            <td> 数据区域缩放控制<br/>参数：{Object} {start : value, end : value, start2 : value, end2 : value} （缩放参数）<br/> 返回：无，作用：根据传入的value改变数据显示区域，value有效值为[0,100]，一般仅指定主区域控制start、end即可，在散点图中可以同时做两个维度的区域缩放，可通过额外指定start2、end2实现。</td>
+                            <td> 数据区域缩放控制<br/>参数：<b>{Object}</b> {start : value, end : value, start2 : value, end2 : value} （缩放参数）<br/> 返回：无，作用：根据传入的value改变数据显示区域，value有效值为[0,100]，一般仅指定主区域控制start、end即可，在散点图中可以同时做两个维度的区域缩放，可通过额外指定start2、end2实现。</td>
                         </tr>
                     </table>
                     <p><img src="./asset/img/doc/dataZoom.png" title="" alt="数据区域缩放"/></P>
@@ -2966,44 +2966,44 @@ option.series = [
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string}</td>
+                            <td> <b>{string}</b></td>
                             <td> type </td>
                             <td> 组件类型，等于config.COMPONENT_TYPE_GRID </td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getX</td>
-                            <td> 网格左上角在图形显示中的横坐标，单位px。<br/>参数：无 <br/> 返回：{number} 坐标值</td>
+                            <td> 网格左上角在图形显示中的横坐标，单位px。<br/>参数：无 <br/> 返回：<b>{number}</b> 坐标值</td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getXend</td>
-                            <td> 网格右下角在图形显示中的横坐标，单位px。<br/>参数：无 <br/> 返回：{number} 坐标值</td>
+                            <td> 网格右下角在图形显示中的横坐标，单位px。<br/>参数：无 <br/> 返回：<b>{number}</b> 坐标值</td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getY</td>
-                            <td> 网格左上角在图形显示中的纵坐标，单位px。<br/>参数：无 <br/> 返回：{number} 坐标值</td>
+                            <td> 网格左上角在图形显示中的纵坐标，单位px。<br/>参数：无 <br/> 返回：<b>{number}</b> 坐标值</td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getYend</td>
-                            <td> 网格右上角在图形显示中的纵坐标，单位px。<br/>参数：无 <br/> 返回：{number} 坐标值</td>
+                            <td> 网格右上角在图形显示中的纵坐标，单位px。<br/>参数：无 <br/> 返回：<b>{number}</b> 坐标值</td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getWidth</td>
-                            <td> 网格在图形显示中的实际宽度，单位px。<br/>参数：无 <br/> 返回：{number} 宽度值</td>
+                            <td> 网格在图形显示中的实际宽度，单位px。<br/>参数：无 <br/> 返回：<b>{number}</b> 宽度值</td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getHeight</td>
-                            <td> 网格在图形显示中的实际高度，单位px。<br/>参数：无 <br/> 返回：{number} 高度值</td>
+                            <td> 网格在图形显示中的实际高度，单位px。<br/>参数：无 <br/> 返回：<b>{number}</b> 高度值</td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getArea</td>
-                            <td> 网格实际区域数据，等同一次返回getX，getY，getWidth，getHeight。<br/>参数：无 <br/> 返回：{Object} {x : value, y : value, width : value, height : value}</td>
+                            <td> 网格实际区域数据，等同一次返回getX，getY，getWidth，getHeight。<br/>参数：无 <br/> 返回：<b>{Object}</b> {x : value, y : value, width : value, height : value}</td>
                         </tr>
                     </table>
                     <p><img src="./asset/img/doc/grid.jpg" title="" alt="绘图网格"/></P>
@@ -3017,9 +3017,9 @@ option.series = [
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getAxis</td>
-                            <td> 获取传入index的坐标轴实例，存在最多上下左右4条坐标轴，坐标轴可以为类目轴或数值轴，获取坐标轴实例和可用的坐标轴方法见下节<br/>参数：{number} 0/1 （坐标轴index）<br/> 返回：{categoryAxis | valueAxis} 指定index的坐标轴实例，可以是类目轴或数值轴</td>
+                            <td> 获取传入index的坐标轴实例，存在最多上下左右4条坐标轴，坐标轴可以为类目轴或数值轴，获取坐标轴实例和可用的坐标轴方法见下节<br/>参数：<b>{number}</b> 0/1 （坐标轴index）<br/> 返回：{categoryAxis | valueAxis} 指定index的坐标轴实例，可以是类目轴或数值轴</td>
                         </tr>
                     </table>
                     
@@ -3032,29 +3032,29 @@ option.series = [
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string}</td>
+                            <td> <b>{string}</b></td>
                             <td> type </td>
                             <td> 组件类型，等于config.COMPONENT_TYPE_AXIS_CATEGORY </td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getCoord</td>
-                            <td> 根据类目名字值换算绘图位置，单位px<br/>参数：{string} name （名字）<br/> 返回：{number} 坐标值，重名类目值返回第一个匹配的</td>
+                            <td> 根据类目名字值换算绘图位置，单位px<br/>参数：<b>{string}</b> name （名字）<br/> 返回：<b>{number}</b> 坐标值，重名类目值返回第一个匹配的</td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getCoordByIndex</td>
-                            <td> 根据类目轴数据索引换算绘图位置，单位px<br/>参数：{number} index （索引）<br/> 返回：{number} 坐标值，index小于0返回坐标起点，大于类目长度返回重点</td>
+                            <td> 根据类目轴数据索引换算绘图位置，单位px<br/>参数：<b>{number}</b> index （索引）<br/> 返回：<b>{number}</b> 坐标值，index小于0返回坐标起点，大于类目长度返回重点</td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getNameByIndex</td>
-                            <td> 根据类目轴数据索引换算类目轴名称<br/>参数：{number} index （索引）<br/> 返回：{string} 名字</td>
+                            <td> 根据类目轴数据索引换算类目轴名称<br/>参数：<b>{number}</b> index （索引）<br/> 返回：<b>{string}</b> 名字</td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getIndexByName</td>
-                            <td> 根据类目轴名称换算类目轴数据索引<br/>参数：{string} name （名字）<br/> 返回：{number} 索引，重名类目值返回第一个匹配的</td>
+                            <td> 根据类目轴名称换算类目轴数据索引<br/>参数：<b>{string}</b> name （名字）<br/> 返回：<b>{number}</b> 索引，重名类目值返回第一个匹配的</td>
                         </tr>
                     </table>
                     
@@ -3067,14 +3067,14 @@ option.series = [
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string}</td>
+                            <td> <b>{string}</b></td>
                             <td> type </td>
                             <td> 组件类型，等于config.COMPONENT_TYPE_AXIS_VALUE </td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getCoord</td>
-                            <td> 根据数值换算绘图位置，单位px<br/>参数：{number} value （数值）<br/> 返回：{number} 坐标值</td>
+                            <td> 根据数值换算绘图位置，单位px<br/>参数：<b>{number}</b> value （数值）<br/> 返回：<b>{number}</b> 坐标值</td>
                         </tr>
                     </table>
                     
@@ -3087,14 +3087,14 @@ option.series = [
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string}</td>
+                            <td> <b>{string}</b></td>
                             <td> type </td>
                             <td> 组件类型，等于config.COMPONENT_TYPE_POLAR </td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getVector</td>
-                            <td> 获取每个指标上某个value对应的坐标，单位px<br/>参数：{number} polarIndex （极坐标索引）, {number} indicatorIndex （指标索引）, {number} value （数值）<br/> 返回：{Array} [x, y] 坐标值</td>
+                            <td> 获取每个指标上某个value对应的坐标，单位px<br/>参数：<b>{number}</b> polarIndex （极坐标索引）, <b>{number}</b> indicatorIndex （指标索引）, <b>{number}</b> value （数值）<br/> 返回：<b>{Array}</b> [x, y] 坐标值</td>
                         </tr>
                     </table>
                     
@@ -3110,19 +3110,19 @@ option.series = [
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> {string}</td>
+                            <td> <b>{string}</b></td>
                             <td> type </td>
                             <td> 图表类型，等于config.CHART_TYPE_MAP </td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getPosByGeo</td>
-                            <td> 经纬度转平面坐标，单位px<br/>参数：{string} mapType （地图类型）, {Array} [ew,ns] （经纬度）<br/> 返回：{Array} [x, y] 坐标值</td>
+                            <td> 经纬度转平面坐标，单位px<br/>参数：<b>{string}</b> mapType （地图类型）, <b>{Array}</b> [ew,ns] （经纬度）<br/> 返回：<b>{Array}</b> [x, y] 坐标值</td>
                         </tr>
                         <tr>
-                            <td> {Function}</td>
+                            <td> <b>{Function}</b></td>
                             <td> getGeoByPos</td>
-                            <td> 平面坐标转经纬度，单位px<br/>参数：{string} mapType （地图类型）, {Array} [x, y] （坐标值 ）<br/> 返回：{Array} [ew,ns] 经纬度</td>
+                            <td> 平面坐标转经纬度，单位px<br/>参数：<b>{string}</b> mapType （地图类型）, <b>{Array}</b> [x, y] （坐标值 ）<br/> 返回：<b>{Array}</b> [ew,ns] 经纬度</td>
                         </tr>
                     </table>
                     

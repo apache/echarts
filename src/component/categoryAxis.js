@@ -234,7 +234,7 @@ define(function (require) {
         // 小标记
         function _buildAxisTick() {
             var axShape;
-            var data       = option.data;
+            //var data       = option.data;
             var dataLength = option.data.length;
             var length     = option.axisTick.length;
             var color      = option.axisTick.lineStyle.color;
@@ -310,7 +310,7 @@ define(function (require) {
                 }
 
                 for (var i = 0; i < dataLength; i += _interval) {
-                    if ((_labelData[i].value || _labelData[i]) == '') {
+                    if ((_labelData[i].value || _labelData[i]) === '') {
                         // 空文本优化
                         continue;
                     }
@@ -362,7 +362,7 @@ define(function (require) {
                 }
 
                 for (var i = 0; i < dataLength; i += _interval) {
-                    if ((_labelData[i].value || _labelData[i]) == '') {
+                    if ((_labelData[i].value || _labelData[i]) === '') {
                         // 空文本优化
                         continue;
                     }
@@ -399,7 +399,7 @@ define(function (require) {
 
         function _buildSplitLine() {
             var axShape;
-            var data       = option.data;
+            //var data       = option.data;
             var dataLength = option.data.length;
             var lineType = option.splitLine.lineStyle.type;
             var lineWidth = option.splitLine.lineStyle.width;
@@ -471,7 +471,7 @@ define(function (require) {
             var color = option.splitArea.areaStyle.color;
             color = color instanceof Array ? color : [color];
             var colorLength = color.length;
-            var data        = option.data;
+            //var data        = option.data;
             var dataLength  = option.data.length;
 
             if (option.position == 'bottom' || option.position == 'top') {
@@ -676,7 +676,7 @@ define(function (require) {
             }
         }
         
-        // 根据类目轴数据索引换算类目轴名称
+        // 根据类目轴名称换算类目轴数据索引
         function getIndexByName(name) {
             var data = option.data;
             var dataLength = data.length;

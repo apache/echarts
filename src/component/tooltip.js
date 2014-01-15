@@ -1235,7 +1235,7 @@ define(function (require) {
         /**
          * 图例选择
          */
-        function onlegendSelected(param, status) {
+        function onlegendSelected(param) {
             _selectedMap = param.selected;
         }
         function _setSelectedMap() {

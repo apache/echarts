@@ -79,7 +79,8 @@ require(
                 showTabContent(3, rCurTabIdx);
                 myChart0.on(ecConfig.EVENT.MAP_ROAM, extMark);
                 
-                myChart1.on(ecConfig.EVENT.LEGEND_SELECTED, legendShare)
+                myChart1.on(ecConfig.EVENT.LEGEND_SELECTED, legendShare);
+                myChart1.on(ecConfig.EVENT.RESTORE, legendShare);
             }
         );
     }
@@ -228,12 +229,13 @@ function legendShare() {
     var selected = legend.getSelectedMap();
     for (var city in selected) {
         if (selected[city]) {
+           // console.log(city)
             PG[city].color = zrColor.alpha(legend.getColor(city), 0.6);
         }
     }
-    myChart20.setOption(option2(0, selected));
-    myChart21.setOption(option2(1, selected));
-    myChart22.setOption(option2(2, selected));
+    myChart20.setOption(option2(0, selected), true);
+    myChart21.setOption(option2(1, selected), true);
+    myChart22.setOption(option2(2, selected), true);
 }
 
 functionMap.chart3 = function (type) {

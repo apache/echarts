@@ -122,8 +122,8 @@ define(
                 }
                 
                 // symbolRotate
-                var x = idx == 0 ? style.xStart : style.xEnd;
-                var y = idx == 0 ? style.yStart : style.yEnd;
+                var x = idx === 0 ? style.xStart : style.xEnd;
+                var y = idx === 0 ? style.yStart : style.yEnd;
                 var rotate = typeof style.symbolRotate[idx] != 'undefined'
                              ? (style.symbolRotate[idx] - 0) : 0;
                 var transform;
@@ -173,7 +173,7 @@ define(
                 var rotate = Math.atan(
                         Math.abs((yEnd - yStart) / (xStart - xEnd)
                     ));
-                if (idx == 0) {
+                if (idx === 0) {
                     if (xEnd > xStart) {
                         if (yEnd > yStart) {
                             rotate =  Math.PI * 2 - rotate;
@@ -205,8 +205,8 @@ define(
                 }
                 
                 var halfRotate = Math.PI / 8; // 夹角
-                var x = idx == 0 ? xStart : xEnd;
-                var y = idx == 0 ? yStart : yEnd;
+                var x = idx === 0 ? xStart : xEnd;
+                var y = idx === 0 ? yStart : yEnd;
                 var point= [
                     [
                         x + symbolSize * Math.cos(rotate - halfRotate),

@@ -785,8 +785,8 @@ define(function() {
                         show: true
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
                         // formatter : null,
-                        // position: 'inside' // 可选为'left'|'right'|'top'|'bottom'
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                        // position: 'inside'  // 'left'|'right'|'top'|'bottom'
+                        // textStyle: null     // 默认使用全局文本样式，详见TEXTSTYLE
                     }
                 }
             }
@@ -808,13 +808,14 @@ define(function() {
                         show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
                         // formatter : null,
-                        position: 'inside',  // 可选为 'start'|'end'|'left'|'right'|'top'|'bottom'
+                        // 可选为 'start'|'end'|'left'|'right'|'top'|'bottom'
+                        position: 'inside',  
                         textStyle: {         // 默认使用全局文本样式，详见TEXTSTYLE
                             color: '#333'
                         }
                     },
                     lineStyle: {
-                        // color: 随borderColor, // 标线主色，线色，优先级高于borderColor和color
+                        // color: 随borderColor, // 主色，线色，优先级高于borderColor和color
                         // width: 随borderWidth, // 优先于borderWidth
                         type: 'solid',
                         shadowColor : 'rgba(0,0,0,0)', //默认透明
@@ -828,8 +829,8 @@ define(function() {
                         show: false
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
                         // formatter : null,
-                        // position: 'inside' // 可选为'left'|'right'|'top'|'bottom'
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                        // position: 'inside' // 'left'|'right'|'top'|'bottom'
+                        // textStyle: null    // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     lineStyle : {}
                 }

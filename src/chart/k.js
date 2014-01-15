@@ -24,8 +24,6 @@ define(function(require) {
         var ecConfig = require('../config');
         var ecData = require('../util/ecData');
         
-        var zrUtil = require('zrender/tool/util');
-
         var self = this;
         self.type = ecConfig.CHART_TYPE_K;
 

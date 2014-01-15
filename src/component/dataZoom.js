@@ -957,6 +957,9 @@ define(function (require) {
         }
         
         function getRealDataIndex(sIdx, dIdx) {
+            if (!_originalData) {
+                return dIdx;
+            }
             var sreies = _originalData.series;
             if (sreies[sIdx]) {
                 return Math.floor(_zoom.start / 100 * sreies[sIdx].length) 

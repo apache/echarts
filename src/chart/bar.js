@@ -25,7 +25,6 @@ define(function(require) {
         var ecData = require('../util/ecData');
         
         var zrColor = require('zrender/tool/color');
-        var zrUtil = require('zrender/tool/util');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_BAR;

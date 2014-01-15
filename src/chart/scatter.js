@@ -24,7 +24,6 @@ define(function(require) {
         var ecConfig = require('../config');
 
         var zrColor = require('zrender/tool/color');
-        var zrUtil = require('zrender/tool/util');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_SCATTER;
@@ -180,7 +179,7 @@ define(function(require) {
             var shape;
             for (var seriesIndex in pointList) {
                 serie = series[seriesIndex];
-                seriesPL = pointList[seriesIndex];
+                seriesPL = pointList[seriesIndex];                
                 if (serie.large && serie.data.length > serie.largeThreshold) {
                     self.shapeList.push(_getLargeSymbol(
                         seriesPL, 

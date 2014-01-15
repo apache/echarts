@@ -126,7 +126,7 @@ define(function(require) {
             _zr.on(zrConfig.EVENT.DRAGLEAVE, _ondragleave);
             _zr.on(zrConfig.EVENT.DROP, _ondrop);
 
-            // 动态扩展zrender shape：icon
+            // 动态扩展zrender shape：icon、markLine
             require('./util/shape/icon');
             require('./util/shape/markLine');
 
@@ -493,7 +493,7 @@ define(function(require) {
                                 seriesIndex,
                                 dataIndex
                               )
-                            : dataIndex
+                            : dataIndex;
                 return {
                     seriesIndex : seriesIndex,
                     dataIndex : dataIndex,
@@ -676,7 +676,8 @@ define(function(require) {
                     if (chart 
                         && chart.animation 
                         && chart.shapeList 
-                        && chart.shapeList.length < ecConfig.animationThreshold
+                        && chart.shapeList.length 
+                           < magicOption.animationThreshold
                     ) {
                         chart.animation();
                     }
@@ -837,6 +838,9 @@ define(function(require) {
             }
             if (typeof _option.animation == 'undefined') {
                 _option.animation = ecConfig.animation;
+            }
+            if (typeof _option.animationThreshold == 'undefined') {
+                _option.animationThreshold = ecConfig.animationThreshold;
             }
             if (typeof _option.animationDuration == 'undefined') {
                 _option.animationDuration = ecConfig.animationDuration;

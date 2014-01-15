@@ -241,7 +241,7 @@ define(function(require) {
                 formatter = self.deepQuery(
                     [data, serie],
                     'itemStyle.normal.label.formatter'
-                )
+                );
             }
             
             var value = typeof data != 'undefined'

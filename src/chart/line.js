@@ -24,7 +24,6 @@ define(function(require) {
         var ecConfig = require('../config');
 
         var zrColor = require('zrender/tool/color');
-        var zrUtil = require('zrender/tool/util');
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_LINE;

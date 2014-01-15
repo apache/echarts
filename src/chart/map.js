@@ -214,9 +214,9 @@ define(function(require) {
                     zr.refresh();
                     if (!_markAnimation) {
                         _markAnimation = true;
-                        self.animationMark(
-                            self.query(option, 'animationDuration')
-                        );
+                        if (option.animation && !option.renderAsImage) {
+                            self.animationMark(option.animationDuration);
+                        }
                     }
                 }
             };
@@ -1206,7 +1206,7 @@ define(function(require) {
         }
         
         /**
-         * 公开接口 : 经纬度转平面坐标
+         * 公开接口 : 地图参考坐标
          */
         function getMapPosition(mapType) {
             if (!_mapDataMap[mapType].transform) {

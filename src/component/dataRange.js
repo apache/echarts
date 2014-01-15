@@ -722,7 +722,7 @@ define(function (require) {
                     y = Math.floor((zrHeight - totalHeight) / 2);
                     break;
                 default :
-                    y = self.parsePercent(dataRangeOption.y, zrHeight)
+                    y = self.parsePercent(dataRangeOption.y, zrHeight);
                     y = isNaN(y) ? 0 : y;
                     break;
             }
