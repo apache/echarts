@@ -81,27 +81,37 @@
         <span>[+]新增 [-]删除 [^]升级 [#]修复 【】重要</span>
         <div class="row-fluid">
             <div>
-                <h3>latest<small>（2013-12-25）</small></h3>
+                <h3>1.3.6<small>（2014-01-15）</small></h3>
                 <ul>
-                    <li>【^】 全面开放chart、component实例对象，实现更深度个性化，更多新奇玩法，try <a href="./example/mix7.html" target="_blank">this 》</a></li>
+                    <li>【^】 全图表支持标注（markPoint）、标线（markLine），try <a href="./example/map9.html" target="_blank">markPoine »</a> <a href="./example/map10.html" target="_blank">markLine »</a></li>
+                    <li>【^】 全面开放chart、component实例对象，实现更深度个性化，更多新奇玩法，try <a href="./example/mix7.html" target="_blank">this »</a></li>
+                    <li>[+] [sactter][line][map]symbol代码优化，新增三类symbol：heart、droplet、pin</li>
+                    <li>[^] [categoryAxis]类目轴重复项支持，support <a href="https://github.com/ecomfe/echarts/issues/165" target="_blank">this »</a></li>
+                    <li>[^] [map]非数值显示时支持关闭悬浮高亮，hoverable:false</li>
+                    <li>[^] [tooltip]支持图例开关过滤</li>
+                    <li>[^] [grid][dataRange]x，y，width，height支持百分比</li>
+                    <li>[^] 通用文本分行支持，'\n' 指定</li>
                     <li>[#] [sactter]大规模散点图像素偏移</li>
+                    <li>[#] 修复script标签式引入文件构建错误，fix <a href="https://github.com/ecomfe/echarts/issues/174" target="_blank">this »</a></li>
+                    <li>[+] 新增专题 <a href="example/topic/aqi-china/index.html" target="_blank">中国主要城市空气质量实况</a>
+                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.8+</li>
                 </ul>
             </div>
             <div>
                 <h3>1.3.5<small>（2013-12-19）</small></h3>
                 <ul>
-                    <li>【+】 srcipt标签式引入，兼容非模块化或基于CMD模块化（如seajs）项目引入ECharts，详见 <a href="doc.html#引入ECharts3" target="_blank">this 》</a></li>
+                    <li>【+】 srcipt标签式引入，兼容非模块化或基于CMD模块化（如seajs）项目引入ECharts，详见 <a href="doc.html#引入ECharts3" target="_blank">this »</a></li>
                     <li>【^】 [map]支持滚轮缩放和拖拽漫游，roam:true开启</li>
-                    <li>【^】 [map]支持标准GeoJson动态扩展地图类型，try <a href="./example/map6.html" target="_blank">HK 》</a> <a href="./example/map7.html" target="_blank">USA 》</a></li>
-                    <li>【+】 [map]内置地图类型新增世界地图类型world， try <a href="./example/map4.html" target="_blank">this 》</a></li>
-                    <li>【^】 [map]mapType支持子区域模式，内置支持从wold、china以及中国32个省市自治区地图中扩展出176个国家地区和600多个省市区域简图， try <a href="./example/map8.html" target="_blank">this 》</a></li>
+                    <li>【^】 [map]支持标准GeoJson动态扩展地图类型，try <a href="./example/map6.html" target="_blank">HK »</a> <a href="./example/map7.html" target="_blank">USA »</a></li>
+                    <li>【+】 [map]内置地图类型新增世界地图类型world， try <a href="./example/map4.html" target="_blank">this »</a></li>
+                    <li>【^】 [map]mapType支持子区域模式，内置支持从wold、china以及中国32个省市自治区地图中扩展出176个国家地区和600多个省市区域简图， try <a href="./example/map8.html" target="_blank">this »</a></li>
                     <li>[^] [map]中国地图加入南海诸岛区域</li>
                     <li>[^] [map]mapLocation支持百分比</li>
                     <li>[^] [force]tooltip完善，支持边的提示</li>
                     <li>[^] [force]支持了CLICK等鼠标事件，小幅度的性能优化和数据过滤后动画的改进</li>
                     <li>[^] [line][scatter]折线图、散点图支持symbol为image</li>
                     <li>[^] mobile交互优化（拖拽，点击）</li>
-                    <li>[+] 新增专题<a href="example/topic/10-me-china/index.html" target="_blank">中国经济十年时空漫游（2002-2011）</a> <a href="example/topic/24-population-china/index.html" target="_blank">中国人口流动大潮（1987-2011）</a></li>
+                    <li>[+] 新增专题 <a href="example/topic/10-me-china/index.html" target="_blank">中国经济十年时空漫游（2002-2011）</a> <a href="example/topic/24-population-china/index.html" target="_blank">中国人口流动大潮（1987-2011）</a></li>
                     <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.7+</li>
                 </ul>
             </div>
@@ -114,11 +124,11 @@
                     <li>【^】 [pie]minAngle默认值从5改为0</li>
                     <li>[^] [bar]柱形支持borderColor/borderWidth/borderRadius(圆角)</li>
                     <li>[^] [bar]柱间距离可配，支持百分比，barGap/barCategoryGap</li>
-                    <li>[#] [pie][radar]center无设置时resize报错，fix <a href="https://github.com/ecomfe/echarts/issues/133" target="_blank">this 》</a></li>
+                    <li>[#] [pie][radar]center无设置时resize报错，fix <a href="https://github.com/ecomfe/echarts/issues/133" target="_blank">this »</a></li>
                     <li>[^] [pie][polar]半径支持百分比格式</li>
-                    <li>[#] [island]孤岛数据小数精度bug，fix <a href="https://github.com/ecomfe/echarts/issues/126" target="_blank">this 》</a></li>
-                    <li>[#] [bar]dom极小情况下递归死循环bug，fix <a href="https://github.com/ecomfe/echarts/issues/138" target="_blank">this 》</a></li>
-                    <li>[+] [toolbox]文字提示，support <a href="https://github.com/ecomfe/echarts/issues/136" target="_blank">this 》</a></li>
+                    <li>[#] [island]孤岛数据小数精度bug，fix <a href="https://github.com/ecomfe/echarts/issues/126" target="_blank">this »</a></li>
+                    <li>[#] [bar]dom极小情况下递归死循环bug，fix <a href="https://github.com/ecomfe/echarts/issues/138" target="_blank">this »</a></li>
+                    <li>[+] [toolbox]文字提示，support <a href="https://github.com/ecomfe/echarts/issues/136" target="_blank">this »</a></li>
                     <li>[^] [grid][axis]背景透明，直角系亚像素优化</li>
                     <li>[#] [pie]拖拽重计算legend依赖修复</li>
                     <li>[#] [chord][radar]文字样式修复</li>
@@ -130,11 +140,11 @@
                     <li>【+】 [chord]新增和弦图，支持多维选择</li>
                     <li>【^】 [pie]升级支持南丁格尔玫瑰图（半径/面积）模式</li>
                     <li>[#] [tooltip]雷达图空数据bug fix</li>
-                    <li>[#] [categoryAxis]修复类目轴大数据小数精度问题，fix <a href="https://github.com/ecomfe/echarts/issues/110" target="_blank">this 》</a></li>
+                    <li>[#] [categoryAxis]修复类目轴大数据小数精度问题，fix <a href="https://github.com/ecomfe/echarts/issues/110" target="_blank">this »</a></li>
                     <li>[^] [tooltip][line][bar]优化高亮指示样式</li>
                     <li>[#] [tooltip]encodeHTML修复</li>
-                    <li>[#] [k]修复阴阳线颜色错误，fix <a href="https://github.com/ecomfe/echarts/issues/112" target="_blank">this 》</a></li>
-                    <li>[^] symbol增加箭头arrow，support <a href="http://www.oschina.net/question/1182177_128527" target="_blank">this 》</a></li>
+                    <li>[#] [k]修复阴阳线颜色错误，fix <a href="https://github.com/ecomfe/echarts/issues/112" target="_blank">this »</a></li>
+                    <li>[^] symbol增加箭头arrow，support <a href="http://www.oschina.net/question/1182177_128527" target="_blank">this »</a></li>
                     <li>[^] [title]支持超链接跳转</li>
                     <li>[^] [pie][polar]中心坐标支持百分比格式</li>
                     <li>[^] [legend]多维选择和多行控制</li>
@@ -149,12 +159,12 @@
                     <li>[^] refresh后清除残留animation</li>
                     <li>[^] 增加版本信息和依赖判断</li>
                     <li>[^] [k]barWidth，barMaxWidth支持</li>
-                    <li>[^] [tooltip]内容主体显示策略配置，support <a href="https://github.com/ecomfe/echarts/issues/102" target="_blank">this 》</a></li>
+                    <li>[^] [tooltip]内容主体显示策略配置，support <a href="https://github.com/ecomfe/echarts/issues/102" target="_blank">this »</a></li>
                     <li>[+] [ndarray]加入多维数组模块</li>
                     <li>[#] [legend]修复散点图个性化symbol图例不对</li>
-                    <li>[#] [pie][polar][title]修复resize响应 fix <a href="https://github.com/ecomfe/echarts/issues/83" target="_blank">this 》</a></li>
-                    <li>[#] [categoryAxis]splitLine颜色数组中取值问题 fix <a href="https://github.com/ecomfe/echarts/issues/90" target="_blank">this 》</a></li>
-                    <li>[#] [valueAxis]修复全系列0值无显示问题、 fix <a href="https://github.com/ecomfe/echarts/issues/101" target="_blank">this 》</a></li>
+                    <li>[#] [pie][polar][title]修复resize响应 fix <a href="https://github.com/ecomfe/echarts/issues/83" target="_blank">this »</a></li>
+                    <li>[#] [categoryAxis]splitLine颜色数组中取值问题 fix <a href="https://github.com/ecomfe/echarts/issues/90" target="_blank">this »</a></li>
+                    <li>[#] [valueAxis]修复全系列0值无显示问题、 fix <a href="https://github.com/ecomfe/echarts/issues/101" target="_blank">this »</a></li>
                     <li>[#] [tooltip]同步异步混搭时回调ticket匹配错误，代码优化</li>
                     <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.4+</li>
                 </ul>
@@ -163,17 +173,17 @@
                 <h3>1.2.0<small>（2013-09-13）</small></h3>
                 <ul>
                     <li>【+】 [radar] 雷达图</li>
-                    <li>【+】 动态数据添加接口及动画支持 support <a href="https://github.com/ecomfe/echarts/issues/45" target="_blank">this 》</a></li>
+                    <li>【+】 动态数据添加接口及动画支持 support <a href="https://github.com/ecomfe/echarts/issues/45" target="_blank">this »</a></li>
                     <li>【+】 [map] 数据压缩算法（1.65M > 350K）、动态加载</li>
                     <li>[+] [polar] 极坐标</li>
-                    <li>[^] [grid] 直角坐标系网格自适应配置优化, support <a href="http://www.oschina.net/question/1255841_123578" target="_blank">this 》</a></li>
+                    <li>[^] [grid] 直角坐标系网格自适应配置优化, support <a href="http://www.oschina.net/question/1255841_123578" target="_blank">this »</a></li>
                     <li>[^] [dataZoom] zoomLock下手柄拖拽转移以提高用户体验</li>
                     <li>[^] [tooltip] 全局mouseout、层级优化</li>
                     <li>[+] [line] showAllSymbol控制显示所有拐点标识</li>
                     <li>[^] refresh接口优化</li>
-                    <li>[#] 修复组件resize响应 fix <a href="https://github.com/ecomfe/echarts/issues/68" target="_blank">this 》</a></li>
-                    <li>[#] [legend] 饼图个性化颜色取值错误，fix <a href="http://www.oschina.net/question/209138_125256" target="_blank">this 》</a></li>
-                    <li>[#] [tooltip] 数组类型数值类型打包错误，fix <a href="https://github.com/ecomfe/echarts/issues/82" target="_blank">this 》</a></li>
+                    <li>[#] 修复组件resize响应 fix <a href="https://github.com/ecomfe/echarts/issues/68" target="_blank">this »</a></li>
+                    <li>[#] [legend] 饼图个性化颜色取值错误，fix <a href="http://www.oschina.net/question/209138_125256" target="_blank">this »</a></li>
+                    <li>[#] [tooltip] 数组类型数值类型打包错误，fix <a href="https://github.com/ecomfe/echarts/issues/82" target="_blank">this »</a></li>
                     <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.3+</li>
                 </ul>
             </div>
