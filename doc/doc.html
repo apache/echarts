@@ -145,6 +145,24 @@
                             </ul>
                             <li><a href="#多级控制设计">多级控制设计</a></li>
                             <li><a href="#附录地图扩展">附录：地图扩展</a></li>
+                            <li><a href="#附录组件图表实例接口">附录：组件和图表的实例接口</a></li>
+                            <ul>
+                                <li><a href="#附录组件实例接口">组件实例接口</a></li>
+                                <ul>
+                                    <li><a href="#LegendInterface">legend</a></li>
+                                    <li><a href="#DataRangeInterface">dataRange</a></li>
+                                    <li><a href="#DataZoomInterface">dataZoom</a></li>
+                                    <li><a href="#GridInterface">grid</a></li>
+                                    <li><a href="#AxisInterface">xAxis/yAxis</a></li>
+                                    <li><a href="#CategoryAxisInterface">categoryAxis</a></li>
+                                    <li><a href="#ValueAxisInterface">valueAxis</a></li>
+                                    <li><a href="#PolarInterface">polar</a></li>
+                                </ul>
+                                <li><a href="#附录图表实例接口">图表实例接口</a></li>
+                                <ul>
+                                    <li><a href="#MapInterface">map</a></li>
+                                </ul>
+                            </ul>
                             <li><a href="#附录一个直观的事例">附录：一个直观的事例</a></li>
                         </ul>
                         </div>
@@ -1375,7 +1393,7 @@ feature : {
                             <td> 数据缩放锁，默认为false，当设置为true时选择区域不能伸缩，即(end - start)值保持不变，仅能做数据漫游。</td>
                         </tr>
                     </table>
-                    <p><img src="./asset/img/doc/dataZoom.png" title="" alt="工具箱"/></P>
+                    <p><img src="./asset/img/doc/dataZoom.png" title="" alt="数据区域缩放"/></P>
 
                     <h4>grid<a name="Grid"> </a></h4>
                     <P> 直角坐标系内绘图网格</P>
@@ -2859,6 +2877,254 @@ option.series = [
  ]
 </pre>
                     </div>
+                    
+                    <h3>附录：组件和图表的实例接口<a name="附录组件图表实例接口"> </a></h3>
+                    <p>为了实现更高级的功能和需求定制，ECharts团队做了个艰难的决定，开放组件和图表实例接口。这些组件和图表实例都被挂载到init所得到的实例上（如myChart），分别存放在chart和component下，如可以通过myChart.chart.map得到当前地图实例并可以读取并调用里面的各种属性和方法。</p>
+                    <p><b style="color:red">【重要】</b>请注意，ECharts接口基于数据驱动设计，这些实例并不为开放准备，虽然你可以无限制的访问，甚至动态的覆盖重写，但这可能会导致图表无法正常工作或随着版本升级无法得到兼容，所以我们仅列出如下部分方法和属性作为使用上的参考（或者说限制），我们会尽最大的努力去保证这些方法或属性的稳定和向下兼容，并且保证在出现无法兼容的更新时在changelog上通告。如果你使用了并不出现在下述文档中的方法或属性将得不到这份保证，请谅解。</p>
+                    
+                    <h4>组件实例接口<a name="附录组件实例接口"> </a></h3>
+                    <p>ECharts包含组件有：title、legend、dataRange、toolbox、tooltip、dataZoom、grid、xAxis、yAxis、polar</p>
+                    
+                    <h4>legend<a name="LegendInterface"> </a></h4>
+                    <P>图例，每个图表最多仅有一个图例。可使用的属性和方法有：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 类型 </th>
+                            <th> 名称 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {string}</td>
+                            <td> type </td>
+                            <td> 组件类型，等于config.COMPONENT_TYPE_LEGEND </td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> isSelected</td>
+                            <td> 图例开关相关，判断传入的名称当前是否处于开启状态。<br/>参数：{string} name （名称）<br/> 返回：{boolean} true为开启，false为关闭</td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getSelectedMap</td>
+                            <td> 图例开关相关，获取当前的全部图例开关状态图。<br/>参数：无<br/> 返回：{Object} {name:value}的键值表，name为名称，value为状态值，true为开启，false为关闭</td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getColor</td>
+                            <td> 图例颜色相关，获取传入的名称所对应的颜色，如果传入名称未出现在已有的图例数据项中，将生成一个新的颜色与传入名称匹配并返回该颜色<br/>参数：{string} name （名称）<br/> 返回：{color} 匹配颜色</td>
+                        </tr>
+                    </table>
+                    
+                    <h4>dataRange<a name="DataRangeInterface"> </a></h4>
+                    <P>值域选择，每个图表最多仅有一个值域控件。可使用的属性和方法有：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 类型 </th>
+                            <th> 名称 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {string}</td>
+                            <td> type </td>
+                            <td> 组件类型，等于config.COMPONENT_TYPE_DATARANGE </td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getColor</td>
+                            <td> 值域控件颜色相关，获取传入的值所对应的颜色<br/>参数：{number} value （值）<br/> 返回：{color} 匹配颜色</td>
+                        </tr>
+                    </table>
+                    <p><img src="./asset/img/doc/dataRange.png" title="" alt="值域"/></P>
+
+                    <h4>dataZoom<a name="DataZoomInterface"> </a></h4>
+                    <P>数据区域缩放。与toolbox.feature.dataZoom同步，仅对直角坐标系图表有效。可使用的属性和方法有：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 类型 </th>
+                            <th> 名称 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {string}</td>
+                            <td> type </td>
+                            <td> 组件类型，等于config.COMPONENT_TYPE_DATAZOOM </td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> absoluteZoom</td>
+                            <td> 数据区域缩放控制<br/>参数：{Object} {start : value, end : value, start2 : value, end2 : value} （缩放参数）<br/> 返回：无，作用：根据传入的value改变数据显示区域，value有效值为[0,100]，一般仅指定主区域控制start、end即可，在散点图中可以同时做两个维度的区域缩放，可通过额外指定start2、end2实现。</td>
+                        </tr>
+                    </table>
+                    <p><img src="./asset/img/doc/dataZoom.png" title="" alt="数据区域缩放"/></P>
+                    
+                    <h4>grid<a name="GridInterface"> </a></h4>
+                    <P>直角坐标系内绘图网格。可使用的属性和方法有：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 类型 </th>
+                            <th> 名称 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {string}</td>
+                            <td> type </td>
+                            <td> 组件类型，等于config.COMPONENT_TYPE_GRID </td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getX</td>
+                            <td> 网格左上角在图形显示中的横坐标，单位px。<br/>参数：无 <br/> 返回：{number} 坐标值</td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getXend</td>
+                            <td> 网格右下角在图形显示中的横坐标，单位px。<br/>参数：无 <br/> 返回：{number} 坐标值</td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getY</td>
+                            <td> 网格左上角在图形显示中的纵坐标，单位px。<br/>参数：无 <br/> 返回：{number} 坐标值</td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getYend</td>
+                            <td> 网格右上角在图形显示中的纵坐标，单位px。<br/>参数：无 <br/> 返回：{number} 坐标值</td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getWidth</td>
+                            <td> 网格在图形显示中的实际宽度，单位px。<br/>参数：无 <br/> 返回：{number} 宽度值</td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getHeight</td>
+                            <td> 网格在图形显示中的实际高度，单位px。<br/>参数：无 <br/> 返回：{number} 高度值</td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getArea</td>
+                            <td> 网格实际区域数据，等同一次返回getX，getY，getWidth，getHeight。<br/>参数：无 <br/> 返回：{Object} {x : value, y : value, width : value, height : value}</td>
+                        </tr>
+                    </table>
+                    <p><img src="./asset/img/doc/grid.jpg" title="" alt="绘图网格"/></P>
+                    
+                    <h4>xAxis/yAxis<a name="AxisInterface"> </a></h4>
+                    <P>横纵坐标轴。可使用的属性和方法有：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 类型 </th>
+                            <th> 名称 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getAxis</td>
+                            <td> 获取传入index的坐标轴实例，存在最多上下左右4条坐标轴，坐标轴可以为类目轴或数值轴，获取坐标轴实例和可用的坐标轴方法见下节<br/>参数：{number} 0/1 （坐标轴index）<br/> 返回：{categoryAxis | valueAxis} 指定index的坐标轴实例，可以是类目轴或数值轴</td>
+                        </tr>
+                    </table>
+                    
+                    <h4>categoryAxis<a name="CategoryAxisInterface"> </a></h4>
+                    <P>类目轴。可使用的属性和方法有：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 类型 </th>
+                            <th> 名称 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {string}</td>
+                            <td> type </td>
+                            <td> 组件类型，等于config.COMPONENT_TYPE_AXIS_CATEGORY </td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getCoord</td>
+                            <td> 根据类目名字值换算绘图位置，单位px<br/>参数：{string} name （名字）<br/> 返回：{number} 坐标值，重名类目值返回第一个匹配的</td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getCoordByIndex</td>
+                            <td> 根据类目轴数据索引换算绘图位置，单位px<br/>参数：{number} index （索引）<br/> 返回：{number} 坐标值，index小于0返回坐标起点，大于类目长度返回重点</td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getNameByIndex</td>
+                            <td> 根据类目轴数据索引换算类目轴名称<br/>参数：{number} index （索引）<br/> 返回：{string} 名字</td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getIndexByName</td>
+                            <td> 根据类目轴名称换算类目轴数据索引<br/>参数：{string} name （名字）<br/> 返回：{number} 索引，重名类目值返回第一个匹配的</td>
+                        </tr>
+                    </table>
+                    
+                    <h4>valueAxis<a name="ValueAxisInterface"> </a></h4>
+                    <P>数值轴。可使用的属性和方法有：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 类型 </th>
+                            <th> 名称 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {string}</td>
+                            <td> type </td>
+                            <td> 组件类型，等于config.COMPONENT_TYPE_AXIS_VALUE </td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getCoord</td>
+                            <td> 根据数值换算绘图位置，单位px<br/>参数：{number} value （数值）<br/> 返回：{number} 坐标值</td>
+                        </tr>
+                    </table>
+                    
+                    <h4>polar<a name="PolarInterface"> </a></h4>
+                    <P>极坐标。可使用的属性和方法有：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 类型 </th>
+                            <th> 名称 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {string}</td>
+                            <td> type </td>
+                            <td> 组件类型，等于config.COMPONENT_TYPE_POLAR </td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getVector</td>
+                            <td> 获取每个指标上某个value对应的坐标，单位px<br/>参数：{number} polarIndex （极坐标索引）, {number} indicatorIndex （指标索引）, {number} value （数值）<br/> 返回：{Array} [x, y] 坐标值</td>
+                        </tr>
+                    </table>
+                    
+                    <h4>图表实例接口<a name="附录图表实例接口"> </a></h3>
+                    <p>ECharts支持的图表有：line、bar、scatter、k、pie、radar、chord、force、map</p>
+                    
+                    <h4>map<a name="MapInterface"> </a></h4>
+                    <P>地图。可使用的属性和方法有：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 类型 </th>
+                            <th> 名称 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> {string}</td>
+                            <td> type </td>
+                            <td> 图表类型，等于config.CHART_TYPE_MAP </td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getPosByGeo</td>
+                            <td> 经纬度转平面坐标，单位px<br/>参数：{string} mapType （地图类型）, {Array} [ew,ns] （经纬度）<br/> 返回：{Array} [x, y] 坐标值</td>
+                        </tr>
+                        <tr>
+                            <td> {Function}</td>
+                            <td> getGeoByPos</td>
+                            <td> 平面坐标转经纬度，单位px<br/>参数：{string} mapType （地图类型）, {Array} [x, y] （坐标值 ）<br/> 返回：{Array} [ew,ns] 经纬度</td>
+                        </tr>
+                    </table>
                     
                     <h3>附录：一个直观的事例<a name="附录一个直观的事例"> </a></h3>
                     <p>查看更多实例 <a href="example.html" target="_blank">example</a>，或者使用这个<a href="example/demo.html" target="_blank">demo</a> 或 <a href="example/www/index.html" target="_blank">ECharts单一文件引入</a>作为你的模板</p>
