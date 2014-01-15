@@ -84,7 +84,7 @@ function refreshAll() {
     }
 }
 
-var developMode = true;
+var developMode = false;
 if (developMode) {
     // for develop
     require.config({
@@ -105,7 +105,7 @@ if (developMode) {
 }
 else {
     // for echarts online home page
-    var fileLocation = './www/js/echarts-map';
+    var fileLocation = '../../build/echarts-map';
     require.config({
         paths:{ 
             echarts: fileLocation,

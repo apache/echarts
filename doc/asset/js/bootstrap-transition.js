@@ -64,6 +64,6 @@ document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3
 
 var lrl = document.getElementById('last-release-link');
 if (lrl) {
-    lrl.href = 'https://github.com/ecomfe/echarts/archive/1.3.5.zip';
-    lrl.innerHTML = 'ZIP (1.3.5)';
+    lrl.href = 'https://github.com/ecomfe/echarts/archive/1.3.6.zip';
+    lrl.innerHTML = 'ZIP (1.3.6)';
 }

@@ -376,7 +376,7 @@ define(function(require) {
                     // data
                     node,
                     // data index
-                    rawNodes.indexOf(node),
+                    zrUtil.indexOf(rawNodes, node),
                     // name
                     node.name || '',
                     // value

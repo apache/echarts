@@ -18,9 +18,9 @@
 define(function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
-    self.version = '1.3.5';
+    self.version = '1.3.6';
     self.dependencies = {
-        zrender : '1.0.7'
+        zrender : '1.0.8'
     };
     /**
      * 入口方法 
