@@ -319,7 +319,9 @@ define(function(require) {
                 if (typeof(node.category) !== 'undefined') {
                     var category = categories[node.category];
                     if (category) {
-                        shape.style.color = legend.getColor(category.name);
+                        if (legend) {
+                            shape.style.color = legend.getColor(category.name);
+                        }
                         var style = category.itemStyle;
                         if (style) {
                             if (style.normal) {
