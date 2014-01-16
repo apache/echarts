@@ -116,12 +116,12 @@
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
             itemSize: 16,             // 工具箱图形宽度，非标准参数
             feature : {
-                //mark : true,
-                //dataZoom : true,
-                //dataView : {readOnly: false},
-                //magicType: ['line', 'bar'],
-                //restore : true,
-                //saveAsImage : true
+                mark : null,
+                dataZoom : null,
+                dataView : null,
+                magicType: null,
+                restore : null,
+                saveAsImage : null
             },
             showTitle : true,
             featureTitle : {
@@ -363,6 +363,7 @@
             barCategoryGap : '20%',   // 类目间柱形距离，默认为类目间距的20%，可设固定值
             itemStyle: {
                 normal: {
+                    color: null,
                     borderColor: '#fff',       // 柱条边线
                     borderRadius: 0,           // 柱条边线圆角，单位px，默认为0
                     borderWidth: 1,            // 柱条边线线宽，单位px，默认为1
@@ -375,6 +376,7 @@
                     }
                 },
                 emphasis: {
+                    color: null,
                     borderColor: 'rgba(0,0,0,0)',   // 柱条边线
                     borderRadius: 0,                // 柱条边线圆角，单位px，默认为0
                     borderWidth: 1,                 // 柱条边线线宽，单位px，默认为1
@@ -396,7 +398,7 @@
             yAxisIndex: 0,
             itemStyle: {
                 normal: {
-                        // color: 各异,
+                    color: null,
                     label: {
                         show: false,
                         formatter: '标签文本格式器，同Tooltip.formatter，不支持回调',
@@ -414,6 +416,7 @@
                     }
                 },
                 emphasis: {
+                    color: null,
                     label: {
                         show: false,
                         formatter: '标签文本格式器，同Tooltip.formatter，不支持回调',
@@ -421,12 +424,12 @@
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
-                    // color: 各异,
                 }
             },
 			smooth : false,
             symbol: null,     		// 拐点图形类型，非标准参数
             symbolSize: 2,    		// 可计算特性参数，空数据拖拽提示图形大小
+            symbolRotate : null,    // 拐点图形旋转控制
 			showAllSymbol: false	// 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
         },
 
@@ -447,7 +450,8 @@
                     }
                 },
                 emphasis: {
-                    // color: 各异,
+                    color: null,
+                    color0: null
                 }
             }
         },
@@ -458,10 +462,12 @@
             yAxisIndex: 0,
             symbol: null,    // 图形类型，非标准参数
             symbolSize: 4,       // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            symbolRotate : null,  // 图形旋转控制
             large: false,        // 大规模散点图
             largeThreshold: 2000,// 大规模阀值，large为true且数据量>largeThreshold才启用大规模模式
             itemStyle: {
                 normal: {
+                    color: null,
                     label: {
                         show: false,
                         formatter : function(a, b, c) {
@@ -478,6 +484,7 @@
                     }
                 },
                 emphasis: {
+                    color: null,
                     label: {
                         show: false,
                         formatter : function(a, b, c) {
@@ -501,18 +508,25 @@
             polarIndex: 0,
             itemStyle: {
                 normal: {
-                    // color: 各异,
+                    color: null,
+                    label: {
+                        show: false
+                    },
                     lineStyle: {
                         width: 2,
                         type: 'solid'
                     }
                 },
                 emphasis: {
-                    // color: 各异,
+                    color: null,
+                    label: {
+                        show: false
+                    }
                 }
             },
-            //symbol: null,         // 拐点图形类型，非标准参数
-            symbolSize: 2           // 可计算特性参数，空数据拖拽提示图形大小
+            symbol: null,            // 拐点图形类型，非标准参数
+            symbolSize: 2,           // 可计算特性参数，空数据拖拽提示图形大小
+			symbolRotate : null,     // 图形旋转控制
         },
 
         // 饼图默认参数
@@ -526,6 +540,7 @@
 			roseType : null,     // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
             itemStyle: {
                 normal: {
+                    color: null,
                     label: {
                         show: true,
                         position: 'outer',
@@ -536,13 +551,14 @@
                         show: true,
                         length: 30,
                         lineStyle: {
-                            // color: 各异,
+                            color: null,
                             width: 1,
                             type: 'solid'
                         }
                     }
                 },
                 emphasis: {
+                    color: null,
                     label: {
                         show: false,
                         position: 'outer',
@@ -551,9 +567,9 @@
                     },
                     labelLine: {
                         show: false,
-                        length: 40,
+                        length: 30,
                         lineStyle: {
-                            // color: 各异,
+                            color: null,
                             width: 1,
                             type: 'solid'
                         }
@@ -572,9 +588,11 @@
             },
             mapValueCalculation: 'sum',    // 数值合并方式，默认加和，可选为：'sum' | 'average'
             selectedMode: false,           // 选择模式，默认关闭，可选single，multiple
+			hoverable: true,
+            roam : false,               // 是否开启缩放及漫游模式
             itemStyle: {
                 normal: {
-                    // color: 各异,
+                    color: null,
                     lineStyle: {
                         width: 2,
                         color: '#fff'
@@ -590,7 +608,7 @@
                     }
                 },
                 emphasis: {                 // 也是选中样式
-                    // color: 各异,
+                    color: null,
                     lineStyle: {
                         width: 2,
                         color: '#fff'
@@ -624,7 +642,7 @@
             categories : [],
             itemStyle: {
                 normal: {
-                    // color: 各异,
+                    color: null,
                     label: {
                         show: false,
                         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -639,7 +657,7 @@
                     }
                 },
                 emphasis: {
-                    // color: 各异,
+                    color: null,
                     label: {
                         show: false,
                         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -713,6 +731,82 @@
             calculateStep: 0.1  // 滚轮可计算步长 0.1 = 10%
         },
 
+        markPoint : {
+            symbol: 'pin',         // 标注类型
+            symbolSize: 10,       // 标注大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            symbolRotate : null,// 标注旋转控制
+            itemStyle: {
+                normal: {
+                    color: null,
+                    borderColor: null,     // 标注边线颜色，优先于color 
+                    borderWidth: 2,            // 标注边线线宽，单位px，默认为1
+                    label: {
+                        show: true,
+                        // 标签文本格式器，同Tooltip.formatter，不支持回调
+                        formatter : null,
+                        position: 'inside', // 可选为'left'|'right'|'top'|'bottom'
+                        textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                },
+                emphasis: {
+                    color: null,
+                    label: {
+                        show: true,
+                        // 标签文本格式器，同Tooltip.formatter，不支持回调
+                        formatter : null,
+                        position: 'inside',  // 'left'|'right'|'top'|'bottom'
+                        textStyle: null     // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                }
+            }
+        },
+        
+        markLine : {
+            // 标线起始和结束的symbol介绍类型，如果都一样，可以直接传string
+            symbol: ['circle', 'arrow'],  
+            // 标线起始和结束的symbol大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            symbolSize: [2, 4],
+            // 标线起始和结束的symbol旋转控制
+            symbolRotate : null,
+            itemStyle: {
+                normal: {
+                    color: null,           // 标线主色，线色，symbol主色
+                    borderColor: null,     // 标线symbol边框颜色，优先于color 
+                    borderWidth: 2,          // 标线symbol边框线宽，单位px，默认为2
+                    label: {
+                        show: false,
+                        // 标签文本格式器，同Tooltip.formatter，不支持回调
+                        formatter : null,
+                        // 可选为 'start'|'end'|'left'|'right'|'top'|'bottom'
+                        position: 'inside',  
+                        textStyle: {         // 默认使用全局文本样式，详见TEXTSTYLE
+                            color: '#333'
+                        }
+                    },
+                    lineStyle: {
+                        color: null, // 主色，线色，优先级高于borderColor和color
+                        width: null, // 优先于borderWidth
+                        type: 'solid',
+                        shadowColor : 'rgba(0,0,0,0)', //默认透明
+                        shadowBlur: 5,
+                        shadowOffsetX: 3,
+                        shadowOffsetY: 3
+                    }
+                },
+                emphasis: {
+                    color: null,
+                    label: {
+                        show: false,
+                        // 标签文本格式器，同Tooltip.formatter，不支持回调
+                        formatter : null,
+                        position: 'inside', // 'left'|'right'|'top'|'bottom'
+                        textStyle: null    // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
+                    lineStyle : {}
+                }
+            }
+        },
+
         textStyle: {
             decoration: 'none',
             fontFamily: 'Arial, Verdana, sans-serif',
@@ -721,39 +815,11 @@
             fontWeight: 'normal'
         },
 
-        // 默认色板
-        color: ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
-                '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
-                '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
-                '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'],
-        renderAsImage: false,
-		// 可计算特性配置，孤岛，提示颜色
-        calculable: false,              // 默认开启可计算特性
-        calculableColor: 'rgba(255,165,0,0.6)',       // 拖拽提示边框颜色
-        calculableHolderColor: '#ccc', // 可计算占位提示颜色
-        nameConnector: ' & ',
-        valueConnector: ' : ',
-        animation: true,
-        animationDuration: 2000,
-        animationEasing: 'ExponentialOut',
-
-		// 图表类型
-        CHART_TYPE_LINE: 'line',
-        CHART_TYPE_BAR: 'bar',
-        CHART_TYPE_SCATTER: 'scatter',
-        CHART_TYPE_PIE: 'pie',
-        CHART_TYPE_RADAR: 'radar',
-        CHART_TYPE_MAP: 'map',
-        CHART_TYPE_K: 'k',
-        //CHART_TYPE_ISLAND: 'island',
-        CHART_TYPE_FORCE : 'force',
-        CHART_TYPE_CHORD : 'chord',
-
-        // 事件类型
         EVENT: {
             // -------全局通用
             REFRESH: 'refresh',
             RESTORE: 'restore',
+            RESIZE: 'resize',
             CLICK: 'click',
             HOVER: 'hover',
             MOUSEWHEEL: 'mousewheel',
@@ -766,6 +832,7 @@
             PIE_SELECTED: 'pieSelected',
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',
             DATA_VIEW_CHANGED: 'dataViewChanged',
+            MAP_ROAM : 'mapRoam',
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover'
         }

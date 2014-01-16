@@ -398,6 +398,7 @@ define(function() {
             barCategoryGap : '20%',   // 类目间柱形距离，默认为类目间距的20%，可设固定值
             itemStyle: {
                 normal: {
+                    // color: '各异',
                     borderColor: '#fff',       // 柱条边线
                     borderRadius: 0,           // 柱条边线圆角，单位px，默认为0
                     borderWidth: 1,            // 柱条边线线宽，单位px，默认为1
@@ -410,6 +411,7 @@ define(function() {
                     }
                 },
                 emphasis: {
+                    // color: '各异',
                     borderColor: 'rgba(0,0,0,0)',   // 柱条边线
                     borderRadius: 0,                // 柱条边线圆角，单位px，默认为0
                     borderWidth: 1,                 // 柱条边线线宽，单位px，默认为1
@@ -449,6 +451,7 @@ define(function() {
                     }
                 },
                 emphasis: {
+                    // color: 各异,
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -456,7 +459,6 @@ define(function() {
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
-                    // color: 各异,
                 }
             },
             //smooth : false,
@@ -484,6 +486,7 @@ define(function() {
                 },
                 emphasis: {
                     // color: 各异,
+                    // color0: 各异
                 }
             }
         },
@@ -494,7 +497,7 @@ define(function() {
             yAxisIndex: 0,
             //symbol: null,      // 图形类型
             symbolSize: 4,       // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
-            //symbolRotate : null,  // 拐点图形旋转控制
+            //symbolRotate : null,  // 图形旋转控制
             large: false,        // 大规模散点图
             largeThreshold: 2000,// 大规模阀值，large为true且数据量>largeThreshold才启用大规模模式
             itemStyle: {
@@ -517,6 +520,7 @@ define(function() {
                     }
                 },
                 emphasis: {
+                    // color: '各异'
                     label: {
                         show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -551,14 +555,15 @@ define(function() {
                     }
                 },
                 emphasis: {
+                    // color: 各异,
                     label: {
                         show: false
                     }
-                    // color: 各异,
                 }
             },
             //symbol: null,         // 拐点图形类型
             symbolSize: 2           // 可计算特性参数，空数据拖拽提示图形大小
+		    //symbolRotate : null,  // 图形旋转控制
         },
 
         // 饼图默认参数
@@ -590,6 +595,7 @@ define(function() {
                     }
                 },
                 emphasis: {
+                    // color: 各异,
                     label: {
                         show: false
                         // position: 'outer'
@@ -781,6 +787,7 @@ define(function() {
                     }
                 },
                 emphasis: {
+                    // color: 各异
                     label: {
                         show: true
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -825,6 +832,7 @@ define(function() {
                     }
                 },
                 emphasis: {
+                    // color: 各异
                     label: {
                         show: false
                         // 标签文本格式器，同Tooltip.formatter，不支持回调

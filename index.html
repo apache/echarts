@@ -100,20 +100,24 @@
     <div class="container">
       <div class="featurette">
         <h2 class="featurette-heading">Architecture</h2>
-        <div class="span6 pull-right">
+        <div class="span7 pull-right" style="margin-top:0">
             <img src="doc/asset/img/architecture.png" alt="ECharts Architecture"/>
         </div>
         <p class="lead">ECharts (Enterprise Charts 商业产品图表库)</p>
-        <p>提供商业产品常用图表库，底层基于<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>，创建了坐标系，图例，提示，工具箱等基础组件，并在此上构建出折线图（区域图）、柱状图（条状图）、散点图（气泡图）、K线图、饼图（环形图）、地图、力导向布局图，同时支持任意维度的堆积和多图表混合展现。</p>
-        <div style="float:left;margin:10px 10px 30px 10px;"><img src="doc/asset/img/device.png" alt="Echarts device"/></div>
+        <p>提供商业产品常用图表，底层基于<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>（一个全新的轻量级canvas类库），创建了坐标系，图例，提示，工具箱等基础组件，并在此上构建出折线图（区域图）、柱状图（条状图）、散点图（气泡图）、饼图（环形图）、K线图、地图、力导向布局图以及和弦图，同时支持任意维度的堆积和多图表混合展现。</p>
+        <div style="float:left;margin:20px 10px 30px 10px;"><img src="doc/asset/img/device.png" alt="Echarts device"/></div>
         <div>
             <img src="doc/asset/img/explorer.png"  alt="Echarts explorer"/>
-            <p>&nbsp;&nbsp;<i>(IE8- supported by <a href="https://code.google.com/p/explorercanvas/" target="_blank">excanvas</a> )</i></p>
+            <div>
+                <small>&nbsp;&nbsp;支持IE6/7/8/9+，chrome、firefox、safari、opera <i>(IE8- power by <a href="https://code.google.com/p/explorercanvas/" target="_blank">excanvas</a> )</i></small>
+            <p style="float:right;"><strong>———— 开源来自百度商业前端数据可视化团队</strong></p>
+            </div>
         </div>
+        
       </div>
       <h2 class="featurette-heading">特色</h2>
       <p>我们诚挚邀请你翻阅这份在线文档 《 <a href="doc/slide/whyEcharts.html" target="_blank">Why ECharts ?</a> 》 你可以从中更直观的体验到ECharts的特性以及快速浏览到所有图表类型。<br/>
-          <small>*文档中展现的个别特性在IE8-中并没有得到支持，所以建议使用IE9+、chrome、safari、firefox或opear等高级浏览器阅读这份文档。</small>
+          <small>*文档中展现的个别特性在IE8-中并没有得到支持，所以建议使用IE9+、chrome、safari、firefox或opear等现代浏览器阅读这份文档。</small>
       </p>
       <hr class="featurette-divider">
       <div class="featurette">
@@ -234,9 +238,20 @@
       <hr class="featurette-divider">
       <div class="featurette">
         <div class="pull-right">
-            <img src="doc/asset/img/doc/multiControl.jpg" alt="Echarts 多级控制" style="height:145px"/>
+            <img src="doc/asset/img/example/line1.png" alt="Echarts 全系列图表支持标注、标线" style="height:150px"/>
         </div>
         <div class="pull-right">
+            <img src="doc/asset/img/example/map9.png" alt="Echarts 全系列图表支持标注、标线" style="height:150px"/>
+        </div>
+        <h2 class="featurette-heading">标注 &amp; 标线</h2>
+        <p>添加额为的标注内容是常用的功能，如地图上标注某些特定位置，折线图上标注极值点或者柱形图里标线出变化趋势，ECharts全系列图表支持标注标线功能，并且与生俱来的可以响应图例开关、值域漫游等组件的交互功能。</p>
+      </div>
+      <hr class="featurette-divider">
+      <div class="featurette">
+        <div class="pull-left">
+            <img src="doc/asset/img/doc/multiControl.jpg" alt="Echarts 多级控制" style="height:145px"/>
+        </div>
+        <div class="pull-left">
             <img src="doc/asset/img/custom.png" alt="Echarts 高度个性化"/>
         </div>
         <h2 class="featurette-heading">个性化定制</h2>
@@ -245,7 +260,7 @@
       </div>
       <hr class="featurette-divider">
       <div class="featurette">
-        <div class="span6 pull-left">
+        <div class="span6 pull-right">
             <img src="doc/asset/img/example/mix3.png" alt="Echarts 事件交互"/>
         </div>
         <h2 class="featurette-heading">事件交互</h2>
