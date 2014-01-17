@@ -668,11 +668,13 @@ define(function (require) {
 
         // 根据类目轴数据索引换算类目轴名称
         function getNameByIndex(dataIndex) {
-            if (typeof option.data[dataIndex].value != 'undefined') {
-                return option.data[dataIndex].value;
+            var data = option.data[dataIndex];
+            if (typeof data != 'undefined' && typeof data.value != 'undefined')
+            {
+                return data.value;
             }
             else {
-                return option.data[dataIndex];
+                return data;
             }
         }
         
