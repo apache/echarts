@@ -757,7 +757,8 @@ define(function (require) {
                 _min = (_min / power).toFixed(precision) - 0;
                 _max = (_max / power).toFixed(precision) - 0;
                 for (var i = 0; i <= splitNumber; i++) {
-                    _valueList[i] = (_valueList[i] / power).toFixed(precision);
+                    _valueList[i] = 
+                        (_valueList[i] / power).toFixed(precision) - 0;
                 }
             }
             
@@ -780,7 +781,10 @@ define(function (require) {
                 }
             }
             else {
-                _valueLabel = _valueList;
+                // 每三位默认加,格式化
+                for (var i = 0, l = _valueList.length; i < l; i++) {
+                    _valueLabel.push(self.numAddCommas(_valueList[i]));
+                }
             }
 
         }

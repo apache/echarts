@@ -157,7 +157,7 @@ define(
                             if (precision) {
                                 text  = text.toFixed(precision);
                             }
-                            newStyle.text = text;
+                            newStyle.text = self.numAddCommas(text);
                             newStyle.x = j * vector[0] / splitNumber 
                                          + Math.cos(theta) * offset + center[0];
                             newStyle.y = j * vector[1] / splitNumber

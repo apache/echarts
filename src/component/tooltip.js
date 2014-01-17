@@ -622,7 +622,8 @@ define(function (require) {
                                : '-';
                         formatter = formatter.replace(
                             '{c' + i + '}',
-                            data
+                            data instanceof Array 
+                            ? data : self.numAddCommas(data)
                         );
                     }
                     _tDom.innerHTML = formatter;
@@ -643,7 +644,8 @@ define(function (require) {
                                    ? data.value
                                    : data)
                                : '-';
-                        formatter += data;
+                        formatter += data instanceof Array 
+                                     ? data : self.numAddCommas(data);
                     }
                     _tDom.innerHTML = formatter;
                 }
@@ -762,7 +764,7 @@ define(function (require) {
                         );
                         formatter = formatter.replace(
                             '{c' + i + '}',
-                            params[i][2]
+                            self.numAddCommas(params[i][2])
                         );
                         formatter = formatter.replace(
                             '{d' + i + '}',
@@ -774,12 +776,12 @@ define(function (require) {
                 else {
                     formatter = _encodeHTML(params[0][1]) + '<br/>' 
                                 + _encodeHTML(params[0][3]) + ' : ' 
-                                + params[0][2];
+                                + self.numAddCommas(params[0][2]);
                     for (var i = 1, l = params.length; i < l; i++) {
                         formatter += '<br/>' + _encodeHTML(params[i][1]) 
                                      + '<br/>';
                         formatter += _encodeHTML(params[i][3]) + ' : ' 
-                                     + params[i][2];
+                                     + self.numAddCommas(params[i][2]);
                     }
                     _tDom.innerHTML = formatter;
                 }
@@ -879,7 +881,11 @@ define(function (require) {
                                           '{a0}', _encodeHTML(serie.name || '')
                                       )
                                      .replace('{b0}', _encodeHTML(name))
-                                     .replace('{c0}', value);
+                                     .replace(
+                                         '{c0}', 
+                                         value instanceof Array
+                                         ? value : self.numAddCommas(value)
+                                     );
 
                 formatter = formatter.replace('{d}','{d0}')
                                      .replace('{d0}', special || '');
@@ -911,14 +917,15 @@ define(function (require) {
                     html += html === '' ? '' : '<br />';
                     for (var i = 0 ; i < indicator.length; i ++) {
                         html += _encodeHTML(indicator[i].text) + ' : ' 
-                                + value[i] + '<br />';
+                                + self.numAddCommas(value[i]) + '<br />';
                     }
                     _tDom.innerHTML = html;
                 }
                 else if (serie.type == ecConfig.CHART_TYPE_CHORD) {
                     if (typeof special2 == 'undefined') {
                         // 外环上
-                        _tDom.innerHTML = _encodeHTML(name)+' (' + value + ')';
+                        _tDom.innerHTML = _encodeHTML(name) + ' (' 
+                                          + self.numAddCommas(value) + ')';
                     }
                     else {
                         var name1 = _encodeHTML(name);
@@ -927,19 +934,23 @@ define(function (require) {
                         _tDom.innerHTML = (typeof serie.name != 'undefined'
                                           ? (_encodeHTML(serie.name) + '<br/>')
                                           : '')
-                              + name1 + ' -> ' + name2 + ' (' + value + ')'
+                              + name1 + ' -> ' + name2 
+                              + ' (' + self.numAddCommas(value) + ')'
                               + '<br />'
-                              + name2 + ' -> ' + name1+ ' (' + special2 + ')';
+                              + name2 + ' -> ' + name1
+                              + ' (' + self.numAddCommas(special2) + ')';
                     }
                 }
                 else {
                     _tDom.innerHTML = (typeof serie.name != 'undefined'
                                       ? (_encodeHTML(serie.name) + '<br/>')
                                       : '')
-                                      + _encodeHTML(name) + ' : ' + value +
+                                      + _encodeHTML(name) + ' : ' 
+                                      + self.numAddCommas(value) +
                                       (typeof special == 'undefined'
                                       ? ''
-                                      : (' (' + special + ')'));
+                                      : (' ('+ self.numAddCommas(special) +')')
+                                      );
                 }
             }
 
