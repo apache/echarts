@@ -2098,6 +2098,24 @@ indicator : [
                             <td> 地图数值计算方式，默认为加和，可选为：'sum'（总数） | 'average'（均值）</td>
                         </tr>
                         <tr>
+                            <td> <b>{string}</b> mapValueCalculation </td>
+                            <td> 'sum' </td>
+                            <td> 地图 </td>
+                            <td> 地图数值计算方式，默认为加和，可选为：'sum'（总数） | 'average'（均值）</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> mapValuePrecision </td>
+                            <td> 0 </td>
+                            <td> 地图 </td>
+                            <td> 地图数值计算结果小数精度，mapValueCalculation为average时有效，默认为取整，需要小数精度时设置大于0的整数</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> showLegendSymbol </td>
+                            <td> true </td>
+                            <td> 地图 </td>
+                            <td> 显示图例颜色标识（系列标识的小圆点），存在legend时生效</td>
+                        </tr>
+                        <tr>
                             <td> <b>{Object}</b> roam </td>
                             <td> false </td>
                             <td> 地图 </td>

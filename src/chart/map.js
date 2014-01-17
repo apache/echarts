@@ -36,6 +36,7 @@ define(function(require) {
         var _zlevelBase = self.getZlevelBase();
         var _selectedMode;      // 选择模式
         var _hoverable;         // 悬浮高亮模式
+        var _showLegendSymbol;  // 显示图例颜色标识
         var _selected = {};     // 地图选择状态
         var _mapTypeMap = {};   // 图例类型索引
         var _mapDataMap = {};   // 根据地图类型索引bbox,transform,path
@@ -69,8 +70,10 @@ define(function(require) {
             var data;
             var name;
             var mapSeries = {};
+            var mapValuePrecision = {};
             _selectedMode = {};
             _hoverable = {};
+            _showLegendSymbol = {};
             var valueCalculation = {};
             _needRoam = false;
             for (var i = 0, l = series.length; i < l; i++) {
@@ -79,6 +82,8 @@ define(function(require) {
                     mapType = series[i].mapType;
                     mapSeries[mapType] = mapSeries[mapType] || {};
                     mapSeries[mapType][i] = true;
+                    mapValuePrecision[mapType] = mapValuePrecision[mapType]
+                                                 || series[i].mapValuePrecision;
                     _roamMap[mapType] = series[i].roam || _roamMap[mapType];
                     _needRoam = _needRoam || _roamMap[mapType];
                     _nameMap[mapType] = series[i].nameMap 
@@ -99,10 +104,14 @@ define(function(require) {
                     _selectedMode[mapType] = _selectedMode[mapType] 
                                              || series[i].selectedMode;
                     if (typeof _hoverable[mapType] == 'undefined'
-                        || _hoverable[mapType]
+                        || _hoverable[mapType]                  // false 1票否决
                     ) {
-                        _hoverable[mapType] = !series[i].hoverable
-                                              ? false : true; // 1票否决
+                        _hoverable[mapType] = series[i].hoverable; 
+                    }
+                    if (typeof _showLegendSymbol[mapType] == 'undefined'
+                        || _showLegendSymbol[mapType]           // false 1票否决
+                    ) {
+                        _showLegendSymbol[mapType] = series[i].showLegendSymbol;
                     }
                     
                     valueCalculation[mapType] = valueCalculation[mapType] 
@@ -148,18 +157,11 @@ define(function(require) {
                 if (valueCalculation[mt] && valueCalculation[mt] == 'average') {
                     for (var k in valueData[mt]) {
                         valueData[mt][k].value = 
-                            valueData[mt][k].value 
-                            / valueData[mt][k].seriesIndex.length;
-                        // TODO:小数点精度可配
-                        if (valueData[mt][k].value > 10) {
-                            valueData[mt][k].value = Math.round(
-                                valueData[mt][k].value
-                            );
-                        }
-                        else {
-                            valueData[mt][k].value = 
-                                valueData[mt][k].value.toFixed(2) - 0;
-                        }
+                            (valueData[mt][k].value 
+                             / valueData[mt][k].seriesIndex.length)
+                            .toFixed(
+                                mapValuePrecision[mt]
+                            ) - 0;
                     }
                 }
                 
@@ -612,7 +614,8 @@ define(function(require) {
                         // level 2
                         queryTarget.push(series[data.seriesIndex[j]]);
                         seriesName += series[data.seriesIndex[j]].name + ' ';
-                        if (legend 
+                        if (legend
+                            && _showLegendSymbol[mapType] 
                             && legend.hasColor(series[data.seriesIndex[j]].name)
                         ) {
                             self.shapeList.push({

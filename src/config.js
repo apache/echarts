@@ -625,6 +625,8 @@ define(function() {
             },
             // mapValueCalculation: 'sum', // 数值合并方式，默认加和，可选为：
                                            // 'sum' | 'average' | 'max' | 'min' 
+            mapValuePrecision : 0,         // 地图数值计算结果小数精度
+            showLegendSymbol : true,       // 显示图例颜色标识（系列标识的小圆点），存在legend时生效
             // selectedMode: false,        // 选择模式，默认关闭，可选single，multiple
             hoverable: true,
             // roam : false,               // 是否开启缩放及漫游模式
