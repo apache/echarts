@@ -169,6 +169,14 @@ define(function (require) {
                     clickable : true
                 };
                 
+                if (toolboxOption.featureImageIcon[_iconList[i]]) {
+                    itemShape.style.image = 
+                        toolboxOption.featureImageIcon[_iconList[i]];
+                    itemShape.style.opacity = 0.8;
+                    itemShape.highlightStyle.opacity = 1;
+                    itemShape.shape = 'image';
+                }
+                
                 if (toolboxOption.orient == 'horizontal') {
                     // 修正左对齐第一个或右对齐最后一个
                     if (i === 0 && textAlign == 'left') {
@@ -618,23 +626,45 @@ define(function (require) {
         }
 
         function _iconDisable(target) {
-            zr.modShape(target.id, {
-                hoverable : false,
-                clickable : false,
-                style : {
-                    strokeColor : _disableColor
-                }
-            });
+            if (target.shape != 'image') {
+                zr.modShape(target.id, {
+                    hoverable : false,
+                    clickable : false,
+                    style : {
+                        strokeColor : _disableColor
+                    }
+                });
+            }
+            else {
+                zr.modShape(target.id, {
+                    hoverable : false,
+                    clickable : false,
+                    style : {
+                        opacity : 0.3
+                    }
+                });
+            }
         }
 
         function _iconEnable(target) {
-            zr.modShape(target.id, {
-                hoverable : true,
-                clickable : true,
-                style : {
-                    strokeColor : target.highlightStyle.strokeColor
-                }
-            });
+            if (target.shape != 'image') {
+                zr.modShape(target.id, {
+                    hoverable : true,
+                    clickable : true,
+                    style : {
+                        strokeColor : target.highlightStyle.strokeColor
+                    }
+                });
+            }
+            else {
+                zr.modShape(target.id, {
+                    hoverable : true,
+                    clickable : true,
+                    style : {
+                        opacity : 0.8
+                    }
+                });
+            }
         }
 
         function _onDataView() {
