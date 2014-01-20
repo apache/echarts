@@ -625,7 +625,7 @@ define(function (require) {
 
         // 根据类目轴数据索引换算位置
         function getCoordByIndex(dataIndex) {
-            if (dataIndex <= 0) {
+            if (dataIndex < 0) {
                 if (option.position == 'bottom' || option.position == 'top') {
                     return grid.getX();
                 }
@@ -633,7 +633,7 @@ define(function (require) {
                     return grid.getYend();
                 }
             }
-            else if (dataIndex >= option.data.length - 1) {
+            else if (dataIndex > option.data.length - 1) {
                 if (option.position == 'bottom' || option.position == 'top') {
                     return grid.getXend();
                 }
@@ -656,7 +656,9 @@ define(function (require) {
                     // 纵向
                     position = grid.getYend() - position;
                 }
-                return Math.floor(position);
+                return (dataIndex === 0 || dataIndex == option.data.length - 1)
+                       ? position
+                       : Math.floor(position);
             }
         }
 
