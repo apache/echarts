@@ -183,6 +183,58 @@ define(function (require) {
                     lastY += itemHeight + itemGap;
                 }
             }
+        
+            if (legendOption.orient == 'horizontal'
+                && legendOption.x == 'center'
+                && lastY != _itemGroupLocation.y
+            ) {
+                // 多行橫排居中优化
+                var lineOffsetArray = []; // 每行宽度
+                lastX = _itemGroupLocation.x;
+                for (var i = 2, l = self.shapeList.length; i < l; i++) {
+                    if (self.shapeList[i].style.x == lastX) {
+                        lineOffsetArray.push(
+                            (
+                                _itemGroupLocation.width 
+                                - (
+                                    self.shapeList[i - 1].style.x
+                                    + zrArea.getTextWidth(
+                                          self.shapeList[i - 1].style.text, font
+                                      )
+                                    - lastX
+                                )
+                            ) / 2
+                        );
+                    }
+                    else if (i == l - 1) {
+                        lineOffsetArray.push(
+                            (
+                                _itemGroupLocation.width 
+                                - (
+                                    self.shapeList[i].style.x
+                                    + zrArea.getTextWidth(
+                                          self.shapeList[i].style.text, font
+                                      )
+                                    - lastX
+                                )
+                            ) / 2
+                        );
+                    }
+                }
+                var curLineIndex = -1;
+                for (var i = 1, l = self.shapeList.length; i < l; i++) {
+                    if (self.shapeList[i].style.x == lastX) {
+                        curLineIndex++;
+                    }
+                    if (lineOffsetArray[curLineIndex] === 0) {
+                        continue;
+                    }
+                    else {
+                        self.shapeList[i].style.x += 
+                            lineOffsetArray[curLineIndex];
+                    }
+                }
+            }
         }
 
         function _buildBackground() {
