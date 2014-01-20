@@ -889,7 +889,11 @@ define(function(require) {
         // 亚像素优化
         function subPixelOptimize(position, lineWidth) {
             if (lineWidth % 2 == 1) {
-                position += position == Math.ceil(position) ? 0.5 : 0;
+                //position += position == Math.ceil(position) ? 0.5 : 0;
+                position = Math.floor(position) + 0.5;
+            }
+            else {
+                position = Math.round(position);
             }
             return position;
         }

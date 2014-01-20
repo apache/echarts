@@ -66,6 +66,7 @@ define(function (require) {
         var _zrWidth = zr.getWidth();
 
         var _lastTipShape = false;
+        var _axisLineWidth = 0;
         var _axisLineShape = {
             shape : 'line',
             id : zr.newShapeId('tooltip'),
@@ -513,7 +514,10 @@ define(function (require) {
                     }
                 );
                 y = zrEvent.getY(_event) + 10;
-                x = categoryAxis.getCoordByIndex(dataIndex);
+                x = self.subPixelOptimize(
+                    categoryAxis.getCoordByIndex(dataIndex),
+                    _axisLineWidth
+                );
                 _styleAxisPointer(
                     seriesArray,
                     x, grid.getY(), 
@@ -567,7 +571,10 @@ define(function (require) {
                     }
                 );
                 x = zrEvent.getX(_event) + 10;
-                y = categoryAxis.getCoordByIndex(dataIndex);
+                y = self.subPixelOptimize(
+                    categoryAxis.getCoordByIndex(dataIndex),
+                    _axisLineWidth
+                );
                 _styleAxisPointer(
                     seriesArray,
                     grid.getX(), y, 
@@ -1303,6 +1310,8 @@ define(function (require) {
             _tDom.style.position = 'absolute';  // 不是多余的，别删！
             self.hasAppend = false;
             _setSelectedMap();
+            
+            _axisLineWidth = option.tooltip.axisPointer.lineStyle.width;
         }
         
         /**
@@ -1325,6 +1334,7 @@ define(function (require) {
                     option.tooltip.padding
                 );
                 _setSelectedMap();
+                _axisLineWidth = option.tooltip.axisPointer.lineStyle.width;
             }
         }
 
