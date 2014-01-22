@@ -236,7 +236,11 @@ define(function(require) {
             var l = nodes.length;
             for (var i = 0; i < l; i++) {
                 var node = nodes[i];
-                radius.push(node.value);
+                if (node.value !== undefined) {
+                    radius.push(node.value);
+                } else {
+                    radius.push(1);
+                }
             }
 
             var narr = new NDArray(radius);
