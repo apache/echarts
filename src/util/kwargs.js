@@ -1,6 +1,5 @@
 define(function(){
-    function kwargs(defaults) {
-        var func = this;
+    function kwargs(func, defaults) {
         /*jshint maxlen : 200*/
         var removeComments = new RegExp('(\\/\\*[\\w\\\'\\,\\(\\)\\s\\r\\n\\*]*\\*\\/)|(\\/\\/[\\w\\s\\\'][^\\n\\r]*$)|(<![\\-\\-\\s\\w\\>\\/]*>)', 'gim');
         var removeWhitespc = new RegExp('\\s+', 'gim');
@@ -42,5 +41,6 @@ define(function(){
         };
     }
     // As function prototype
-    Function.prototype.kwargs = kwargs;
+    // Function.prototype.kwargs = kwargs;
+    return kwargs;
 });

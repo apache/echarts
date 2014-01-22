@@ -399,10 +399,13 @@ define(function(require) {
 
             for (var i = 0; i < l; i++) {
                 var link = links[i];
-                //var source = nodes[link.source];
+                // var source = nodes[link.source];
                 // var target = nodes[link.target];
-                var weight = link.weight || 1;
-                linkWeights.push(weight);
+                if (link.weight !== undefined) {
+                    linkWeights.push(link.weight);
+                } else {
+                    linkWeights.push(1);
+                }
 
                 var linkShape = {
                     id : zr.newShapeId(self.type),
@@ -453,14 +456,14 @@ define(function(require) {
                     {
                         source : link.source,
                         target : link.target,
-                        value : link.value || 0
+                        weight : link.weight || 0
                     },
                     // link data index
                     link.rawIndex,
                     // source name - target name
                     source.name + ' - ' + target.name,
-                    // link value
-                    link.value || 0,
+                    // link weight
+                    link.weight || 0,
                     // special
                     // 这一项只是为了表明这是条边
                     true
