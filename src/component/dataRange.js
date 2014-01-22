@@ -835,19 +835,9 @@ define(function (require) {
             }
 
             if (e._type == 'filler') {
-                _fillerShae.style.x = e.style.x;
-                _fillerShae.style.y = e.style.y;
                 _syncHandleShape();
             }
             else {
-                if (e.id == _startShape.id) {
-                    _startShape.style.x = e.style.x;
-                    _startShape.style.y = e.style.y;
-                }
-                else {
-                    _endShape.style.x = e.style.x;
-                    _endShape.style.y = e.style.y;
-                }
                 _syncFillerShape(e);
             }
             
@@ -1133,11 +1123,24 @@ define(function (require) {
                               : dataRangeOption.splitNumber;
             _colorList = zrColor.getGradientColors(
                 dataRangeOption.color,
-                (splitNumber - dataRangeOption.color.length)
-                / (dataRangeOption.color.length - 1) + 1
+                Math.max(
+                    (splitNumber - dataRangeOption.color.length)
+                    / (dataRangeOption.color.length - 1),
+                    0
+                ) + 1
             );
-            _colorList = _colorList.slice(0, splitNumber);
-            //console.log(_colorList.length)
+            
+            if (_colorList.length > splitNumber) {
+                var len = _colorList.length;
+                var newColorList = [_colorList[0]];
+                var step = len / (splitNumber - 1);
+                for (var i = 1; i < splitNumber - 1; i++) {
+                    newColorList.push(_colorList[Math.floor(i * step)])
+                }
+                newColorList.push(_colorList[len - 1]);
+                _colorList = newColorList;
+            }
+            // console.log(_colorList.length)
             
             if (dataRangeOption.precision === 0) {
                 _gap = Math.round(
