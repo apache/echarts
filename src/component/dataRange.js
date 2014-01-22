@@ -835,10 +835,19 @@ define(function (require) {
             }
 
             if (e._type == 'filler') {
+                _fillerShae.style.x = e.style.x;
+                _fillerShae.style.y = e.style.y;
                 _syncHandleShape();
             }
             else {
-                //e.position = [e.style.x - e.style._x, e.style.y - e.style._y];
+                if (e.id == _startShape.id) {
+                    _startShape.style.x = e.style.x;
+                    _startShape.style.y = e.style.y;
+                }
+                else {
+                    _endShape.style.x = e.style.x;
+                    _endShape.style.y = e.style.y;
+                }
                 _syncFillerShape(e);
             }
             
