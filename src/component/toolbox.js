@@ -770,6 +770,7 @@ define(function (require) {
             return true;
         }
 
+        // 重置备份还原状态等
         function reset(newOption) {
             if (newOption.toolbox
                 && newOption.toolbox.show
@@ -815,6 +816,7 @@ define(function (require) {
             }
             _magicType = false;
             
+            // 框选缩放
             var zoomOption = newOption.dataZoom;
             if (zoomOption && zoomOption.show) {
                 var start = typeof zoomOption.start != 'undefined'
@@ -844,83 +846,47 @@ define(function (require) {
         }
 
         function getMagicOption(){
+            var axis;
             if (_magicType) {
                 // 启动
+                var boundaryGap = _magicType == ecConfig.CHART_TYPE_LINE
+                                  ? false : true;
                 for (var i = 0, l = option.series.length; i < l; i++) {
                     if (_magicMap[option.series[i].type]) {
                         option.series[i].type = _magicType;
-                    }
-                }
-                var boundaryGap = _magicType == ecConfig.CHART_TYPE_LINE
-                                  ? false : true;
-                var len;
-                if (option.xAxis instanceof Array) {
-                    len = option.xAxis.length;
-                    while (len--) {
-                        // 横纵默认为类目
-                        if ((option.xAxis[len].type || 'category')
-                             == 'category'
-                         ) {
-                            option.xAxis[len].boundaryGap = boundaryGap;
+                        axis = option.xAxis instanceof Array
+                               ? option.xAxis[option.series[i].xAxisIndex || 0]
+                               : option.xAxis;
+                        if (axis && axis.type == 'category') {
+                            axis.boundaryGap = 
+                                boundaryGap ? true : axis.__boundaryGap;
                         }
-                    }
-                }
-                else {
-                    if (option.xAxis
-                        && (option.xAxis.type || 'category') == 'category'
-                    ) {
-                        option.xAxis.boundaryGap = boundaryGap;
-                    }
-                }
-
-                if (option.yAxis instanceof Array) {
-                    len = option.yAxis.length;
-                    while (len--) {
-                        if ((option.yAxis[len].type) == 'category') {
-                            option.yAxis[len].boundaryGap = boundaryGap;
+                        axis = option.yAxis instanceof Array
+                               ? option.yAxis[option.series[i].yAxisIndex || 0]
+                               : option.yAxis;
+                        if (axis && axis.type == 'category') {
+                            axis.boundaryGap = 
+                                boundaryGap ? true : axis.__boundaryGap;
                         }
-                    }
-                }
-                else {
-                    if (option.yAxis && option.yAxis.type == 'category') {
-                        option.yAxis.boundaryGap = boundaryGap;
                     }
                 }
             }
             else {
                 // 还原
-                var axis;
                 for (var i = 0, l = option.series.length; i < l; i++) {
                     if (_magicMap[option.series[i].type]) {
                         option.series[i].type = option.series[i].__type;
-                        if (option.xAxis instanceof Array) {
-                            axis = option.xAxis[
-                                       option.series[i].xAxisIndex || 0
-                                   ];
-                            if (axis.type == 'category') {
-                                axis.boundaryGap = axis.__boundaryGap;
-                            }
+                        axis = option.xAxis instanceof Array
+                               ? option.xAxis[option.series[i].xAxisIndex || 0]
+                               : option.xAxis;
+                        if (axis && axis.type == 'category') {
+                            axis.boundaryGap = axis.__boundaryGap;
                         }
-                        else {
-                            axis = option.xAxis;
-                            if (axis && axis.type == 'category') {
-                                axis.boundaryGap = axis.__boundaryGap;
-                            }
-                        }
-
-                        if (option.yAxis instanceof Array) {
-                            axis = option.yAxis[
-                                       option.series[i].yAxisIndex || 0
-                                   ];
-                            if (axis.type == 'category') {
-                                axis.boundaryGap = axis.__boundaryGap;
-                            }
-                        }
-                        else {
-                            axis = option.yAxis;
-                            if (axis && axis.type == 'category') {
-                                axis.boundaryGap = axis.__boundaryGap;
-                            }
+                        axis = option.yAxis instanceof Array
+                               ? option.yAxis[option.series[i].yAxisIndex || 0]
+                               : option.yAxis;
+                        if (axis && axis.type == 'category') {
+                            axis.boundaryGap = axis.__boundaryGap;
                         }
                     }
                 }
