@@ -257,10 +257,12 @@ define(function() {
                 }
             },
             axisTick: {            // 坐标轴小标记
-                show: false,       // 属性show控制显示与否，默认不显示
-                length :4,         // 属性length控制线长
+                show: true,       // 属性show控制显示与否，默认不显示
+                interval: 'auto',
+                // onGap: null,
+                length :5,         // 属性length控制线长
                 lineStyle: {       // 属性lineStyle控制线条样式
-                    color: '#ccc',
+                    color: '#333',
                     width: 1
                 }
             },
@@ -276,6 +278,7 @@ define(function() {
             },
             splitLine: {           // 分隔线
                 show: true,        // 默认显示，属性show控制显示与否
+                // onGap: null,
                 lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
                     color: ['#ccc'],
                     width: 1,
@@ -284,6 +287,7 @@ define(function() {
             },
             splitArea: {           // 分隔区域
                 show: false,       // 默认不显示，属性show控制显示与否
+                // onGap: null,
                 areaStyle: {       // 属性areaStyle（详见areaStyle）控制区域样式
                     color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)'],
                     type: 'default'
@@ -313,9 +317,9 @@ define(function() {
             },
             axisTick: {            // 坐标轴小标记
                 show: false,       // 属性show控制显示与否，默认不显示
-                length :4,         // 属性length控制线长
+                length :5,         // 属性length控制线长
                 lineStyle: {       // 属性lineStyle控制线条样式
-                    color: '#ccc',
+                    color: '#333',
                     width: 1
                 }
             },
@@ -588,7 +592,7 @@ define(function() {
                     },
                     labelLine: {
                         show: true,
-                        length: 30,
+                        length: 20,
                         lineStyle: {
                             // color: 各异,
                             width: 1,
@@ -879,7 +883,7 @@ define(function() {
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover'
         },
-
+        loadingText : 'Loading...',
         // 可计算特性配置，孤岛，提示颜色
         calculable: false,              // 默认关闭可计算特性
         calculableColor: 'rgba(255,165,0,0.6)',       // 拖拽提示边框颜色

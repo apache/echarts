@@ -236,24 +236,38 @@ define(function (require) {
             var axShape;
             //var data       = option.data;
             var dataLength = option.data.length;
-            var length     = option.axisTick.length;
-            var color      = option.axisTick.lineStyle.color;
-            var lineWidth  = option.axisTick.lineStyle.width;
-
+            var tickOption = option.axisTick;
+            var length     = tickOption.length;
+            var color      = tickOption.lineStyle.color;
+            var lineWidth  = tickOption.lineStyle.width;
+            var interval   = tickOption.interval == 'auto' 
+                             ? _interval : (tickOption.interval - 0 + 1);
+            var onGap      = tickOption.onGap;
+            var optGap     = onGap 
+                             ? (getGap() / 2) 
+                             : typeof onGap == 'undefined'
+                                   ? (option.boundaryGap ? (getGap() / 2) : 0)
+                                   : 0;
+                                   
             if (option.position == 'bottom' || option.position == 'top') {
                 // 横向
                 var yPosition = option.position == 'bottom'
                                 ? grid.getYend()
                                 : (grid.getY() - length);
-                for (var i = 0; i < dataLength; i++) {
+                var x;
+                for (var i = 0; i < dataLength; i += interval) {
+                    // 亚像素优化
+                    x = self.subPixelOptimize(
+                        getCoordByIndex(i) + optGap, lineWidth
+                    );
                     axShape = {
                         shape : 'line',
                         zlevel : _zlevelBase,
                         hoverable : false,
                         style : {
-                            xStart : getCoordByIndex(i),
+                            xStart : x,
                             yStart : yPosition,
-                            xEnd : getCoordByIndex(i),
+                            xEnd : x,
                             yEnd : yPosition + length,
                             strokeColor : color,
                             lineWidth : lineWidth
@@ -267,16 +281,21 @@ define(function (require) {
                 var xPosition = option.position == 'left'
                                 ? (grid.getX() - length)
                                 : grid.getXend();
-                for (var i = 0; i < dataLength; i++) {
+                var y;
+                for (var i = 0; i < dataLength; i += interval) {
+                    // 亚像素优化
+                    y = self.subPixelOptimize(
+                        getCoordByIndex(i) - optGap, lineWidth
+                    );
                     axShape = {
                         shape : 'line',
                         zlevel : _zlevelBase,
                         hoverable : false,
                         style : {
                             xStart : xPosition,
-                            yStart : getCoordByIndex(i),
+                            yStart : y,
                             xEnd : xPosition + length,
-                            yEnd : getCoordByIndex(i),
+                            yEnd : y,
                             strokeColor : color,
                             lineWidth : lineWidth
                         }
@@ -400,12 +419,20 @@ define(function (require) {
         function _buildSplitLine() {
             var axShape;
             //var data       = option.data;
-            var dataLength = option.data.length;
-            var lineType = option.splitLine.lineStyle.type;
-            var lineWidth = option.splitLine.lineStyle.width;
-            var color = option.splitLine.lineStyle.color;
+            var dataLength  = option.data.length;
+            var sLineOption = option.splitLine;
+            var lineType    = sLineOption.lineStyle.type;
+            var lineWidth   = sLineOption.lineStyle.width;
+            var color       = sLineOption.lineStyle.color;
             color = color instanceof Array ? color : [color];
             var colorLength = color.length;
+            
+            var onGap      = sLineOption.onGap;
+            var optGap     = onGap 
+                             ? (getGap() / 2) 
+                             : typeof onGap == 'undefined'
+                                   ? (option.boundaryGap ? (getGap() / 2) : 0)
+                                   : 0;
 
             if (option.position == 'bottom' || option.position == 'top') {
                 // 横向
@@ -416,7 +443,7 @@ define(function (require) {
                 for (var i = 0; i < dataLength; i += _interval) {
                     // 亚像素优化
                     x = self.subPixelOptimize(
-                        getCoordByIndex(i), lineWidth
+                        getCoordByIndex(i) + optGap, lineWidth
                     );
                     axShape = {
                         shape : 'line',
@@ -445,7 +472,7 @@ define(function (require) {
                 for (var i = 0; i < dataLength; i += _interval) {
                     // 亚像素优化
                     y = self.subPixelOptimize(
-                        getCoordByIndex(i), lineWidth
+                        getCoordByIndex(i) - optGap, lineWidth
                     );
                     axShape = {
                         shape : 'line',
@@ -468,12 +495,19 @@ define(function (require) {
 
         function _buildSplitArea() {
             var axShape;
-            var color = option.splitArea.areaStyle.color;
+            var sAreaOption = option.splitArea;
+            var color = sAreaOption.areaStyle.color;
             color = color instanceof Array ? color : [color];
             var colorLength = color.length;
             //var data        = option.data;
             var dataLength  = option.data.length;
-
+    
+            var onGap      = sAreaOption.onGap;
+            var optGap     = onGap 
+                             ? (getGap() / 2) 
+                             : typeof onGap == 'undefined'
+                                   ? (option.boundaryGap ? (getGap() / 2) : 0)
+                                   : 0;
             if (option.position == 'bottom' || option.position == 'top') {
                 // 横向
                 var y = grid.getY();
@@ -483,7 +517,7 @@ define(function (require) {
 
                 for (var i = 0; i <= dataLength; i += _interval) {
                     curX = i < dataLength
-                           ? getCoordByIndex(i)
+                           ? (getCoordByIndex(i) + optGap)
                            : grid.getXend();
                     axShape = {
                         shape : 'rectangle',
@@ -511,7 +545,7 @@ define(function (require) {
 
                 for (var i = 0; i <= dataLength; i += _interval) {
                     curY = i < dataLength
-                           ? getCoordByIndex(i)
+                           ? (getCoordByIndex(i) - optGap)
                            : grid.getY();
                     axShape = {
                         shape : 'rectangle',
@@ -585,7 +619,7 @@ define(function (require) {
                         ? grid.getWidth()
                         : grid.getHeight();
             if (option.boundaryGap) {               // 留空
-                return total / (dataLength + 1);
+                return total / dataLength;
             }
             else {                                  // 顶头
                 return total / (dataLength > 1 ? (dataLength - 1) : 1);
@@ -597,7 +631,7 @@ define(function (require) {
             var data = option.data;
             var dataLength = data.length;
             var gap = getGap();
-            var position = option.boundaryGap ? gap : 0;
+            var position = option.boundaryGap ? (gap / 2) : 0;
 
             // Math.floor可能引起一些偏差，但性能会更好
             for (var i = 0; i < dataLength; i++) {
@@ -643,7 +677,7 @@ define(function (require) {
             }
             else {
                 var gap = getGap();
-                var position = option.boundaryGap ? gap : 0;
+                var position = option.boundaryGap ? (gap / 2) : 0;
                 position += dataIndex * gap;
                 
                 if (option.position == 'bottom'
