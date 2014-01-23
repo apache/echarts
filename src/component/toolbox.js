@@ -18,6 +18,7 @@ define(function (require) {
 
         var ecConfig = require('../config');
         var zrConfig = require('zrender/config');
+        var zrUtil = require('zrender/tool/util');
         var zrEvent = require('zrender/tool/event');
 
         var option;
@@ -811,6 +812,13 @@ define(function (require) {
                                 ? axis.boundaryGap : true;
                         }
                         newOption.series[len].__type = oriType;
+                        // 避免不同类型图表类型的样式污染
+                        newOption.series[len].__itemStyle = 
+                            newOption.series[len].itemStyle
+                            ? zrUtil.clone(
+                                  newOption.series[len].itemStyle
+                              )
+                            : {};
                     }
                 }
             }
@@ -854,6 +862,11 @@ define(function (require) {
                 for (var i = 0, l = option.series.length; i < l; i++) {
                     if (_magicMap[option.series[i].type]) {
                         option.series[i].type = _magicType;
+                        // 避免不同类型图表类型的样式污染
+                        option.series[i].itemStyle = zrUtil.clone(
+                            option.series[i].__itemStyle
+                        );
+                        
                         axis = option.xAxis instanceof Array
                                ? option.xAxis[option.series[i].xAxisIndex || 0]
                                : option.xAxis;
@@ -876,6 +889,10 @@ define(function (require) {
                 for (var i = 0, l = option.series.length; i < l; i++) {
                     if (_magicMap[option.series[i].type]) {
                         option.series[i].type = option.series[i].__type;
+                        // 避免不同类型图表类型的样式污染
+                        option.series[i].itemStyle = 
+                            option.series[i].__itemStyle;
+                        
                         axis = option.xAxis instanceof Array
                                ? option.xAxis[option.series[i].xAxisIndex || 0]
                                : option.xAxis;
