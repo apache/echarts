@@ -1108,6 +1108,12 @@ require(['echarts'], function(ec){
                             </td>
                             <td> 工具箱文字提示默认话术</td>
                         </tr>
+                        <tr>
+                            <td> <b>{Object}</b> featureImageIcon </td>
+                            <td> {} 
+                            </td>
+                            <td> 工具箱自定义图标，格式同featureTitle，传入图片地址（路径）</td>
+                        </tr>
                     </table>
                     <p><img src="./asset/img/doc/toolbox.png" title="" alt="工具箱"/></P>
                     <div class="code">
@@ -2098,12 +2104,6 @@ indicator : [
                             <td> 地图数值计算方式，默认为加和，可选为：'sum'（总数） | 'average'（均值）</td>
                         </tr>
                         <tr>
-                            <td> <b>{string}</b> mapValueCalculation </td>
-                            <td> 'sum' </td>
-                            <td> 地图 </td>
-                            <td> 地图数值计算方式，默认为加和，可选为：'sum'（总数） | 'average'（均值）</td>
-                        </tr>
-                        <tr>
                             <td> <b>{number}</b> mapValuePrecision </td>
                             <td> 0 </td>
                             <td> 地图 </td>
@@ -2504,12 +2504,12 @@ geoCoord : {
                             <td> <b>{color}</b> color </td>
                             <td> 图表各异 </td>
                             <td> 通用 </td>
-                            <td> 颜色 </td>
+                            <td> 颜色，主色 </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>
                             <td> 图表各异 </td>
-                            <td> 折线图，K线图 ，地图</td>
+                            <td> 折线图，K线图 ，地图，markLine</td>
                             <td> 线条样式，详见<a href="#LineStyle" title="">lineStyle</a></td>
                         </tr>
                         <tr>
@@ -2527,7 +2527,7 @@ geoCoord : {
                         <tr>
                             <td> <b>{string}</b> borderColor </td>
                             <td> '#fff' </td>
-                            <td> 柱形图</td>
+                            <td> 柱形图，折线图，markPoint</td>
                             <td> 柱形边框颜色 </td>
                         </tr>
                         <tr>
@@ -2539,13 +2539,13 @@ geoCoord : {
                         <tr>
                             <td> <b>{number}</b> borderWidth </td>
                             <td> 1 </td>
-                            <td> 柱形图</td>
+                            <td> 柱形图，折线图，markPoint</td>
                             <td> 柱形边框线宽，单位px，默认为1 </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> label </td>
                             <td> {show: true,  position:'outer'} </td>
-                            <td> 折线图，柱形图，K线图，散点图，饼图 ，地图，力导向</td>
+                            <td> 折线图，柱形图，K线图，散点图，饼图 ，地图，力导向，markPoint，markLine</td>
                             <td> 标签，饼图默认显示在外部，离饼图距离由labelLine.length决定，地图标签不可指定位置
                                  <br/> 折线图，柱形图，K线图，散点图可指定position见下
                             </td>
