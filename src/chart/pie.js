@@ -75,6 +75,7 @@ define(function(require) {
                                 r0 : radius[0] <= 10 ? 0 : radius[0] - 10,
                                 r : radius[1] + 10,
                                 brushType : 'stroke',
+                                lineWidth: 1,
                                 strokeColor : series[i].calculableHolderColor
                                               || ecConfig.calculableHolderColor
                             }
@@ -128,6 +129,7 @@ define(function(require) {
             }
 
             var percent;
+            var clockWise = serie.clockWise;
             var startAngle = serie.startAngle.toFixed(2) - 0;
             var endAngle;
             var minAngle = serie.minAngle || 0.01; // #bugfixed
@@ -155,13 +157,16 @@ define(function(require) {
 
                 percent = data[i].value / totalValue;
                 if (roseType != 'area') {
-                    endAngle = (percent * totalAngle + startAngle + minAngle)
-                               .toFixed(2) - 0;
+                    endAngle = clockWise
+                        ? (startAngle - percent * totalAngle - minAngle)
+                        : (percent * totalAngle + startAngle + minAngle);
                 }
                 else {
-                    endAngle = (totalAngle / l + startAngle + minAngle)
-                               .toFixed(2) - 0;
+                    endAngle = clockWise
+                        ? (startAngle - totalAngle / l - minAngle)
+                        : (totalAngle / l + startAngle + minAngle);
                 }
+                endAngle = endAngle.toFixed(2) - 0;
                 percent = (percent * 100).toFixed(2);
                 
                 radius = self.parseRadius(serie.radius);
@@ -177,12 +182,20 @@ define(function(require) {
                     r1 = Math.sqrt(data[i].value / maxValue) * (r1 - r0) + r0;
                 }
                 
+                if (clockWise) {
+                    var temp;
+                    temp = startAngle;
+                    startAngle = endAngle;
+                    endAngle = temp; 
+                }
                 _buildItem(
                     seriesIndex, i, percent, data[i].selected,
                     r0, r1,
                     startAngle, endAngle, defaultColor
                 );
-                startAngle = endAngle;
+                if (!clockWise) {
+                    startAngle = endAngle;
+                }
             }
         }
 
@@ -430,7 +443,7 @@ define(function(require) {
                 var center = self.parseCenter(serie.center);
                 var centerX = center[0];                      // 圆心横坐标
                 var centerY = center[1];                      // 圆心纵坐标
-                var midAngle = ((endAngle + startAngle) / 2) % 360; // 角度中值
+                var midAngle = ((endAngle + startAngle) / 2 + 360) % 360; // 中值
                 var radius = self.parseRadius(serie.radius);  // 标签位置半径
                 var textAlign;
                 if (labelControl.position == 'outer') {
