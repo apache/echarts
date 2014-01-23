@@ -148,6 +148,7 @@ define(function (require) {
                         width : itemSize,
                         height : itemSize,
                         iconType : _iconList[i],
+                        lineWidth : 1,
                         strokeColor : color[i % color.length],
                         shadowColor: '#ccc',
                         shadowBlur : 2,

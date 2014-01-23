@@ -78,7 +78,7 @@ define(function(require) {
         function reformOption(opt) {
             return zrUtil.merge(
                        opt || {},
-                       ecConfig[self.type] || {},
+                       zrUtil.clone(ecConfig[self.type] || {}),
                        {
                            'overwrite': false,
                            'recursive': true

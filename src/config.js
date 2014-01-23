@@ -158,6 +158,7 @@ define(function() {
                 //saveAsImage : true
             },
             showTitle : true,
+            featureImageIcon : {},   // 自定义图片icon
             featureTitle : {
                 mark : '辅助线开关',
                 markUndo : '删除辅助线',
@@ -570,10 +571,11 @@ define(function() {
         pie: {
             center : ['50%', '50%'],    // 默认全局居中
             radius : [0, '75%'],
+            clockWise : false,          // 默认逆时针
             startAngle: 90,
-            minAngle: 0,                    // 最小角度改为0
-            selectedOffset: 10,             // 选中是扇区偏移量
-            // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
+            minAngle: 0,                // 最小角度改为0
+            selectedOffset: 10,         // 选中是扇区偏移量
+            // selectedMode: false,     // 选择模式，默认关闭，可选single，multiple
             // roseType : null,     // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
             itemStyle: {
                 normal: {
@@ -850,6 +852,7 @@ define(function() {
         textStyle: {
             decoration: 'none',
             fontFamily: 'Arial, Verdana, sans-serif',
+            fontFamily2: '微软雅黑',    // IE8- 字体模糊并且，不支持不同字体混排，额外指定一份
             fontSize: 12,
             fontStyle: 'normal',
             fontWeight: 'normal'
