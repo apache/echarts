@@ -97,34 +97,25 @@ option = {
                 normal : {
                     label : {
                         position : 'inner',
-                        formatter : function(a,b,c,d) {return (d - 0).toFixed(0) + ' %'},
+                        formatter : function(a,b,c,d) {return (d - 0).toFixed(0) + '%'},
                     },
                     labelLine : {
                         show : false
                     }
+                },
+                emphasis : {
+                    label : {
+                        show : true,
+                        formatter : "{b}\n{d}%",
+                        position : 'inner'
+                    }
                 }
+                
             },
             data:[
                 {value:335, name:'直达'},
                 {value:679, name:'营销广告'},
-                {
-                    value:1548,
-                    name:'搜索引擎',
-                    itemStyle : {
-                        normal : {
-                            label : {
-                                show : false
-                            }
-                        },
-                        emphasis : {
-                            label : {
-                                show : true,
-                                formatter : "{b} : {d}%",
-                                position : 'inner'
-                            }
-                        }
-                    }
-                }
+                {value:1548, name:'搜索引擎'}
             ]
         },
         {
@@ -200,7 +191,8 @@ option = {
         {
             name:'访问来源',
             type:'pie',
-            startAngle: 90,
+            clockWise:true,
+            startAngle: 135,
             center : ['75%', 200],
             radius : [80, 120],
             itemStyle :　{
