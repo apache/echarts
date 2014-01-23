@@ -327,82 +327,6 @@ define(function(require) {
                 sector.draggable = true;
             }
 
-            if (_needLabel(serie, data, false)
-                && self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.label.position'
-                ) == 'inner'
-            ) {
-                sector.style.text = _getLabelText(
-                    seriesIndex, dataIndex, percent, 'normal'
-                );
-                sector.style.textPosition = 'specific';
-                sector.style.textColor = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.label.textStyle.color'
-                ) || '#fff';
-                sector.style.textAlign = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.label.textStyle.align'
-                ) || 'center';
-                sector.style.textBaseline = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.label.textStyle.baseline'
-                ) || 'middle';
-                sector.style.textX = Math.round(
-                    center[0]
-                    + (r1 + r0) / 2
-                      * zrMath.cos((startAngle + endAngle) / 2, true)
-                );
-                sector.style.textY = Math.round(
-                    center[1]
-                    - (r1 + r0) / 2
-                       * zrMath.sin((startAngle + endAngle) / 2, true)
-                );
-                sector.style.textFont = self.getFont(self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.label.textStyle'
-                ));
-            }
-
-            if (_needLabel(serie, data, true)
-                && self.deepQuery(
-                    queryTarget,
-                    'itemStyle.emphasis.label.position'
-                ) == 'inner'
-            ) {
-                sector.highlightStyle.text = _getLabelText(
-                    seriesIndex, dataIndex, percent, 'emphasis'
-                );
-                sector.highlightStyle.textPosition = 'specific';
-                sector.highlightStyle.textColor = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.emphasis.label.textStyle.color'
-                ) || '#fff';
-                sector.highlightStyle.textAlign = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.emphasis.label.textStyle.align'
-                ) || 'center';
-                sector.highlightStyle.textBaseline = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.label.textStyle.baseline'
-                ) || 'middle';
-                sector.highlightStyle.textX = Math.round(
-                    center[0]
-                    + (r1 + r0) / 2
-                      * zrMath.cos((startAngle + endAngle) / 2, true)
-                );
-                sector.highlightStyle.textY = Math.round(
-                    center[1]
-                    - (r1 + r0) / 2
-                      * zrMath.sin((startAngle + endAngle) / 2, true)
-                );
-                sector.highlightStyle.textFont = self.getFont(self.deepQuery(
-                    queryTarget,
-                    'itemStyle.emphasis.label.textStyle'
-                ));
-            }
-
             // “normal下不显示，emphasis显示”添加事件响应
             if (_needLabel(serie, data, true)          // emphasis下显示文本
                 || _needLabelLine(serie, data, true)   // emphasis下显示引导线
@@ -424,94 +348,109 @@ define(function(require) {
             var data = serie.data[dataIndex];
             
             // 特定状态下是否需要显示文本标签
-            if (_needLabel(serie, data, isEmphasis)) {
-                var status = isEmphasis ? 'emphasis' : 'normal';
-
-                // serie里有默认配置，放心大胆的用！
-                var itemStyle = zrUtil.merge(
-                        zrUtil.clone(data.itemStyle) || {},
-                        serie.itemStyle,
-                        {
-                            'overwrite' : false,
-                            'recursive' : true
-                        }
-                    );
-                // label配置
-                var labelControl = itemStyle[status].label;
-                var textStyle = labelControl.textStyle || {};
-
-                var center = self.parseCenter(serie.center);
-                var centerX = center[0];                      // 圆心横坐标
-                var centerY = center[1];                      // 圆心纵坐标
-                var midAngle = ((endAngle + startAngle) / 2 + 360) % 360; // 中值
-                var radius = self.parseRadius(serie.radius);  // 标签位置半径
-                var textAlign;
-                if (labelControl.position == 'outer') {
-                    // 外部显示，默认
-                    radius = radius[1]
-                             - (-itemStyle[status].labelLine.length)
-                             - (-textStyle.fontSize);
-                    textAlign = (midAngle >= 150 && midAngle <= 210)
-                                ? 'right'
-                                : ((midAngle <= 30 || midAngle >= 330)
-                                       ? 'left'
-                                       : 'center'
-                                   );
-                    return {
-                        shape : 'text',
-                        zlevel : _zlevelBase + 1,
-                        hoverable : false,
-                        style : {
-                            x : centerX + radius * zrMath.cos(midAngle, true),
-                            y : centerY - radius * zrMath.sin(midAngle, true),
-                            color : textStyle.color || defaultColor,
-                            text : _getLabelText(
-                                seriesIndex, dataIndex, percent, status
-                            ),
-                            textAlign : textStyle.align
-                                        || textAlign,
-                            textBaseline : textStyle.baseline || 'middle',
-                            textFont : self.getFont(textStyle)
-                        },
-                        highlightStyle : {
-                            brushType : 'fill'
-                        },
-                        _seriesIndex : seriesIndex, 
-                        _dataIndex : dataIndex
-                    };
-                }
-                else if (labelControl.position == 'center') {
-                    return {
-                        shape : 'text',
-                        zlevel : _zlevelBase + 1,
-                        hoverable : false,
-                        style : {
-                            x : centerX,
-                            y : centerY,
-                            color : textStyle.color || defaultColor,
-                            text : _getLabelText(
-                                seriesIndex, dataIndex, percent, status
-                            ),
-                            textAlign : textStyle.align
-                                        || 'center',
-                            textBaseline : textStyle.baseline || 'middle',
-                            textFont : self.getFont(textStyle)
-                        },
-                        highlightStyle : {
-                            brushType : 'fill'
-                        },
-                        _seriesIndex : seriesIndex, 
-                        _dataIndex : dataIndex
-                    };
-                }
-                else {
-                    // 内部显示由sector自带，不返回即可
-                    return;
-                }
-            }
-            else {
+            if (!_needLabel(serie, data, isEmphasis)) {
                 return;
             }
+            
+            var status = isEmphasis ? 'emphasis' : 'normal';
+
+            // serie里有默认配置，放心大胆的用！
+            var itemStyle = zrUtil.merge(
+                    zrUtil.clone(data.itemStyle) || {},
+                    serie.itemStyle,
+                    {
+                        'overwrite' : false,
+                        'recursive' : true
+                    }
+                );
+            // label配置
+            var labelControl = itemStyle[status].label;
+            var textStyle = labelControl.textStyle || {};
+
+            var center = self.parseCenter(serie.center);
+            var centerX = center[0];                      // 圆心横坐标
+            var centerY = center[1];                      // 圆心纵坐标
+            var x;
+            var y;
+            var midAngle = ((endAngle + startAngle) / 2 + 360) % 360; // 中值
+            var radius = self.parseRadius(serie.radius);  // 标签位置半径
+            var textAlign;
+            var textBaseline = 'middle';
+            if (labelControl.position == 'center') {
+                // center显示
+                radius = radius[1];
+                x = centerX;
+                y = centerY;
+                textAlign = 'center';
+            }
+            else if (labelControl.position == 'inner'){
+                // 内部显示
+                radius = (radius[0] + radius[1]) / 2;
+                x = Math.round(
+                    centerX + radius * zrMath.cos(midAngle, true)
+                );
+                y = Math.round(
+                    centerY - radius * zrMath.sin(midAngle, true)
+                );
+                defaultColor = '#fff';
+                textAlign = 'center';
+                
+            }
+            else {
+                // 外部显示，默认 labelControl.position == 'outer')
+                radius = radius[1]
+                         - (-itemStyle[status].labelLine.length)
+                         - (-textStyle.fontSize);
+                x = centerX + radius * zrMath.cos(midAngle, true);
+                y = centerY - radius * zrMath.sin(midAngle, true);
+                textAlign = (midAngle >= 90 && midAngle <= 270)
+                            ? 'right' : 'left';
+            }
+            
+            //检查前个是否也是小角度，如果是得调整长度，不能完全避免，但能大大降低覆盖概率
+            if (labelControl.position != 'center' 
+                && dataIndex > 0 
+                && percent < 30
+            ) {
+                var preData = serie.data[dataIndex - 1];
+                var prePercent = preData.value * percent / data.value;
+                if (prePercent < 4) {
+                    // 都小就延长，前小后大就缩短
+                    radius = preData.__labelRadius + (percent < 4 ? 20 : -20)
+                    x = centerX + radius * zrMath.cos(midAngle, true);
+                    y = centerY - radius * zrMath.sin(midAngle, true);
+                }
+            }
+            if (labelControl.position != 'center'
+                && labelControl.position != 'inner'
+            ) {
+                x += textAlign == 'left' ? 20 : -20;
+            }
+            data.__labelRadius = radius;
+            data.__labelX = x - (textAlign == 'left' ? 5 : -5);
+            data.__labelY = y;
+            
+            return {
+                shape : 'text',
+                zlevel : _zlevelBase + 1,
+                hoverable : false,
+                style : {
+                    x : x,
+                    y : y,
+                    color : textStyle.color || defaultColor,
+                    text : _getLabelText(
+                        seriesIndex, dataIndex, percent, status
+                    ),
+                    textAlign : textStyle.align || textAlign,
+                    textBaseline : textStyle.baseline || textBaseline,
+                    textFont : self.getFont(textStyle)
+                },
+                highlightStyle : {
+                    brushType : 'fill'
+                },
+                _seriesIndex : seriesIndex, 
+                _dataIndex : dataIndex
+            };
         }
 
         /**
@@ -587,21 +526,37 @@ define(function(require) {
                 // 视觉引导线起点半径
                 var midRadius = r1;
                 // 视觉引导线终点半径
-                var maxRadius = self.parseRadius(serie.radius)[1]
-                                - (-labelLineControl.length);
+                var maxRadius = data.__labelRadius 
+                    ? data.__labelRadius
+                    : self.parseRadius(serie.radius)[1] 
+                      - (-labelLineControl.length);
                 var midAngle = ((endAngle + startAngle) / 2) % 360; // 角度中值
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
                 // 三角函数缓存已在zrender/tool/math中做了
                 return {
-                    shape : 'line',
+                    shape : 'brokenLine',
                     zlevel : _zlevelBase + 1,
                     hoverable : false,
                     style : {
-                        xStart : centerX + midRadius * cosValue,
-                        yStart : centerY - midRadius * sinValue,
-                        xEnd : centerX + maxRadius * cosValue,
-                        yEnd : centerY - maxRadius * sinValue,
+                        pointList : [
+                            [
+                                centerX + midRadius * cosValue,
+                                centerY - midRadius * sinValue
+                            ],
+                            [
+                                centerX + maxRadius * cosValue,
+                                centerY - maxRadius * sinValue
+                            ],
+                            [
+                                data.__labelX,
+                                data.__labelY
+                            ]
+                        ],
+                        //xStart : centerX + midRadius * cosValue,
+                        //yStart : centerY - midRadius * sinValue,
+                        //xEnd : centerX + maxRadius * cosValue,
+                        //yEnd : centerY - maxRadius * sinValue,
                         strokeColor : lineStyle.color || defaultColor,
                         lineType : lineStyle.type,
                         lineWidth : lineStyle.width
