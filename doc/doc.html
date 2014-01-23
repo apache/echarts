@@ -1658,6 +1658,18 @@ feature : {
                             <td> 是否显示，默认为false，设为true后下面为默认样式 </td>
                         </tr>
                         <tr>
+                            <td> <b>{string | number}</b> interval </td>
+                            <td> 'auto' </td>
+                            <td> 类目型 </td>
+                            <td> 小标记显示挑选间隔，默认为'auto'，可选为：'auto'（自动隐藏显示不下的） | 0（全部显示） | <b>{number}</b>（用户指定选择间隔） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> onGap </td>
+                            <td> null </td>
+                            <td> 类目型 </td>
+                            <td> 小标记是否显示为间隔，默认等于boundaryGap</td>
+                        </tr>
+                        <tr>
                             <td> <b>{number}</b> length </td>
                             <td> 4 </td>
                             <td> 通用 </td>
@@ -1756,6 +1768,12 @@ feature : {
                             <td> 是否显示，默认为true，设为false后下面都没意义了 </td>
                         </tr>
                         <tr>
+                            <td> <b>{boolean}</b> onGap </td>
+                            <td> null </td>
+                            <td> 类目型 </td>
+                            <td> 小标记是否显示为间隔，默认等于boundaryGap</td>
+                        </tr>
+                        <tr>
                             <td> <b>{Object}</b> lineStyle </td>
                             <td> {color: ['#ccc'], width: 1, type: 'solid'} </td>
                             <td> 通用 </td>
@@ -1777,6 +1795,12 @@ feature : {
                             <td> false </td>
                             <td> 通用 </td>
                             <td> 是否显示，默认为false，设为true后带如下默认样式 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> onGap </td>
+                            <td> null </td>
+                            <td> 类目型 </td>
+                            <td> 小标记是否显示为间隔，默认等于boundaryGap</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> areaStyle </td>
