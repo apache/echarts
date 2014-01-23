@@ -125,24 +125,28 @@ define(function (require) {
             var axShape;
             var data       = _valueList;
             var dataLength = _valueList.length;
-            var length     = option.axisTick.length;
-            var color      = option.axisTick.lineStyle.color;
-            var lineWidth  = option.axisTick.lineStyle.width;
+            var tickOption = option.axisTick;
+            var length     = tickOption.length;
+            var color      = tickOption.lineStyle.color;
+            var lineWidth  = tickOption.lineStyle.width;
 
             if (option.position == 'bottom' || option.position == 'top') {
                 // 横向
                 var yPosition = option.position == 'bottom'
                                 ? grid.getYend()
                                 : (grid.getY() - length);
+                var x;
                 for (var i = 0; i < dataLength; i++) {
+                    // 亚像素优化
+                    x = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
                         shape : 'line',
                         zlevel : _zlevelBase,
                         hoverable : false,
                         style : {
-                            xStart : getCoord(data[i]),
+                            xStart : x,
                             yStart : yPosition,
-                            xEnd : getCoord(data[i]),
+                            xEnd : x,
                             yEnd : yPosition + length,
                             strokeColor : color,
                             lineWidth : lineWidth
@@ -156,16 +160,19 @@ define(function (require) {
                 var xPosition = option.position == 'left'
                                 ? (grid.getX() - length)
                                 : grid.getXend();
+                var y;
                 for (var i = 0; i < dataLength; i++) {
+                    // 亚像素优化
+                    y = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
                         shape : 'line',
                         zlevel : _zlevelBase,
                         hoverable : false,
                         style : {
                             xStart : xPosition,
-                            yStart : getCoord(data[i]),
+                            yStart : y,
                             xEnd : xPosition + length,
-                            yEnd : getCoord(data[i]),
+                            yEnd : y,
                             strokeColor : color,
                             lineWidth : lineWidth
                         }
@@ -280,11 +287,12 @@ define(function (require) {
 
         function _buildSplitLine() {
             var axShape;
-            var data       = _valueList;
-            var dataLength = _valueList.length;
-            var lineType = option.splitLine.lineStyle.type;
-            var lineWidth = option.splitLine.lineStyle.width;
-            var color = option.splitLine.lineStyle.color;
+            var data        = _valueList;
+            var dataLength  = _valueList.length;
+            var sLineOption = option.splitLine;
+            var lineType    = sLineOption.lineStyle.type;
+            var lineWidth   = sLineOption.lineStyle.width;
+            var color       = sLineOption.lineStyle.color;
             color = color instanceof Array ? color : [color];
             var colorLength = color.length;
 
