@@ -13,6 +13,10 @@ define(function(require) {
                                 || window.mozRequestAnimationFrame
                                 || window.webkitRequestAnimationFrame
                                 || function(func){setTimeout(func, 16);};
+
+    // 保存节点的位置，改变数据时能够有更好的动画效果
+    var nodeInitialPos = {};
+
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -199,6 +203,9 @@ define(function(require) {
                 if (!node) {
                     return;
                 }
+                if (node.ignore) {
+                    return;
+                }
                 if (self.selectedMap[node.category]) {
                     filteredNodeMap[idx] = cursor++;
                     return true;
@@ -256,15 +263,18 @@ define(function(require) {
                 var x, y;
                 var r = radius[i];
 
-                var random = _randomInSquare(
-                    viewportWidth/2, viewportHeight/2, initSize
-                );
-                x = typeof(node.initial) === 'undefined' 
-                    ? random.x
-                    : node.initial[0];
-                y = typeof(node.initial) === 'undefined'
-                    ? random.y
-                    : node.initial[1];
+                var initPos;
+                if (node.initial !== undefined) {
+                    initPos = node.initial;
+                } else if (nodeInitialPos[node.name] !== undefined) {
+                    initPos = nodeInitialPos[node.name];
+                } else {
+                    initPos = _randomInSquare(
+                        viewportWidth/2, viewportHeight/2, initSize
+                    );
+                }
+                var x = initPos[0];
+                var y = initPos[1];
                 // 初始化位置
                 nodePositions[i] = vec2.create(x, y);
                 nodePrePositions[i] = vec2.create(x, y);
@@ -572,12 +582,18 @@ define(function(require) {
             var velocity = [];
             // 计算位置(verlet积分)
             for (var i = 0, l = nodePositions.length; i < l; i++) {
+                var name = filteredNodes[i].name;
                 if (filteredNodes[i].fixed) {
                     // 拖拽同步
                     vec2.set(nodePositions[i], mouseX, mouseY);
                     vec2.set(nodePrePositions[i], mouseX, mouseY);
                     vec2.set(nodeShapes[i].position, mouseX, mouseY);
-                    vec2.set(filteredNodes[i].initial, mouseX, mouseY);
+                    if (filteredNodes[i].initial !== undefined) {
+                        vec2.set(filteredNodes[i].initial, mouseX, mouseY);
+                    }
+                    if (nodeInitialPos[name] !== undefined) {
+                        vec2.set(nodeInitialPos[name], mouseX, mouseY);
+                    }
                     continue;
                 }
                 var p = nodePositions[i];
@@ -599,10 +615,17 @@ define(function(require) {
                 vec2.add(p, p, velocity);
                 vec2.copy(nodeShapes[i].position, p);
 
-                if (filteredNodes[i].initial === undefined) {
-                    filteredNodes[i].initial = vec2.create();
+                if (name) {
+                    if (nodeInitialPos[name] === undefined) {
+                        nodeInitialPos[name] = vec2.create();
+                    }
+                    vec2.copy(nodeInitialPos[name], p);
+                } else {
+                    if (filteredNodes[i].initial === undefined) {
+                        filteredNodes[i].initial = vec2.create();
+                    }
+                    vec2.copy(filteredNodes[i].initial, p);
                 }
-                vec2.copy(filteredNodes[i].initial, p);
 
                 // if(isNaN(p[0]) || isNaN(p[1])){
                 //     throw new Error('NaN');
@@ -744,18 +767,18 @@ define(function(require) {
     function _randomInCircle(x, y, radius) {
         var theta = Math.random() * Math.PI * 2;
         var r = radius * Math.random();
-        return {
-            x : Math.cos(theta) * r + x,
-            y : Math.sin(theta) * r + y
-        };
+        return [
+            Math.cos(theta) * r + x,
+            Math.sin(theta) * r + y
+        ];
     }
     */
    
     function _randomInSquare(x, y, size) {
-        return {
-            x : (Math.random() - 0.5) * size + x,
-            y : (Math.random() - 0.5) * size + y
-        };
+        return [
+            (Math.random() - 0.5) * size + x,
+            (Math.random() - 0.5) * size + y
+        ];
     }
 
     function _filter(array, callback){
