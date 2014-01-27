@@ -18,22 +18,21 @@
 define(function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
-    self.version = '1.3.6';
+    self.version = '1.3.7';
     self.dependencies = {
-        zrender : '1.0.8'
+        zrender : '1.0.9'
     };
     /**
      * 入口方法 
      */
-    self.init = function(dom, libOption) {
-        libOption = libOption || {type : 'canvas'};
-        if (libOption.type == 'canvas') {
-            dom = dom instanceof Array ? dom[0] : dom;
-            return new Echarts(dom);
+    self.init = function(dom/*, theme*/) {
+        dom = dom instanceof Array ? dom[0] : dom;
+        if (G_vmlCanvasManager) {
+            // IE8-
+            var ecConfig = require('./config');
+            ecConfig.textStyle.fontFamily = ecConfig.textStyle.fontFamily2;
         }
-        else if (libOption.type == 'flash') {
-            alert('未配置');
-        }
+        return new Echarts(dom);
     };
 
     /**
@@ -1080,7 +1079,7 @@ define(function(require) {
                 }
             }
             magicOption.legend && (magicOption.legend.selected = _selectedMap);
-            // dataZoom同步一下数据
+            // dataZoom同步数据
             for (var i = 0, l = _chartList.length; i < l; i++) {
                 if (magicOption.addDataAnimation 
                     && _chartList[i].addDataAnimation
@@ -1192,7 +1191,8 @@ define(function(require) {
                                             + finalTextStyle.fontSize + 'px '
                                             + finalTextStyle.fontFamily;
 
-            loadingOption.textStyle.text = loadingOption.text || 'Loading...';
+            loadingOption.textStyle.text = loadingOption.text 
+                                           || ecConfig.loadingText;
 
             if (typeof loadingOption.x != 'undefined') {
                 loadingOption.textStyle.x = loadingOption.x;
@@ -1220,7 +1220,7 @@ define(function(require) {
         function resize() {
             _zr.resize();
             if (_option.renderAsImage && !G_vmlCanvasManager) {
-                // 渲染为图片从走render模式
+                // 渲染为图片重走render模式
                 _render(_option);
                 return self;
             }
