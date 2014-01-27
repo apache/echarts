@@ -300,6 +300,7 @@ define(function() {
             position: 'left',      // 位置
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
+            nameTextStyle: {},     // 坐标轴文字样式，默认取全局样式
             boundaryGap: [0, 0],   // 数值起始和结束两端空白策略
             // min: null,          // 最小值
             // max: null,          // 最大值

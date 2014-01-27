@@ -96,6 +96,16 @@ define(function (require) {
             if (option.name !== '') {
                 axShape.style.text = option.name;
                 axShape.style.textPosition = option.nameLocation;
+                axShape.style.textFont = self.getFont(option.nameTextStyle);
+                if (option.nameTextStyle.align) {
+                    axShape.style.textAlign = option.nameTextStyle.align;
+                }
+                if (option.nameTextStyle.baseline) {
+                    axShape.style.textBaseline = option.nameTextStyle.baseline;
+                }
+                if (option.nameTextStyle.color) {
+                    axShape.style.textColor = option.nameTextStyle.color;
+                }
             }
             axShape.style.strokeColor = option.axisLine.lineStyle.color;
             
