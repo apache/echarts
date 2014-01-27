@@ -1135,7 +1135,7 @@ define(function (require) {
                 var newColorList = [_colorList[0]];
                 var step = len / (splitNumber - 1);
                 for (var i = 1; i < splitNumber - 1; i++) {
-                    newColorList.push(_colorList[Math.floor(i * step)])
+                    newColorList.push(_colorList[Math.floor(i * step)]);
                 }
                 newColorList.push(_colorList[len - 1]);
                 _colorList = newColorList;

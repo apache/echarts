@@ -2,14 +2,16 @@ require.config({
     paths:{ 
         echarts:'example/www/js/echarts',
         'echarts/chart/bar' : 'example/www/js/echarts',
-        'echarts/chart/line': 'example/www/js/echarts'
+        'echarts/chart/line': 'example/www/js/echarts',
+        'echarts/chart/scatter': 'example/www/js/echarts'
     }
 });
 require(
     [
         'echarts',
         'echarts/chart/bar',
-        'echarts/chart/line'
+        'echarts/chart/line',
+        'echarts/chart/scatter'
     ],
     function(ec) {
         myChart = ec.init(document.getElementById('main'));
@@ -33,7 +35,7 @@ require(
             xAxis : [
                 {
                     type : 'category',
-                    axisLabel:{formatter:' '},
+                    axisLabel:{show:false},
                     data : (function() {
                         var res = [];
                         for (var i = 0; i < 30; i++) {
@@ -50,6 +52,8 @@ require(
                     min:-30,
                     max:30,
                     power:1,
+                    axisLine:{show:false},
+                    axisLabel:{show:false},
                     splitArea : {show : true}
                 }
             ],

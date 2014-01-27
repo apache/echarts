@@ -569,7 +569,7 @@ define(function() {
             },
             //symbol: null,         // 拐点图形类型
             symbolSize: 2           // 可计算特性参数，空数据拖拽提示图形大小
-		    //symbolRotate : null,  // 图形旋转控制
+            //symbolRotate : null,  // 图形旋转控制
         },
 
         // 饼图默认参数

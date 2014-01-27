@@ -416,7 +416,7 @@ define(function(require) {
                 var prePercent = preData.value * percent / data.value;
                 if (prePercent < 4) {
                     // 都小就延长，前小后大就缩短
-                    radius = preData.__labelRadius + (percent < 4 ? 20 : -20)
+                    radius = preData.__labelRadius + (percent < 4 ? 20 : -20);
                     x = centerX + radius * zrMath.cos(midAngle, true);
                     y = centerY - radius * zrMath.sin(midAngle, true);
                 }
