@@ -25132,8 +25132,8 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                 var seriesIndex = ecData.get(target, 'seriesIndex');
                 var dataIndex = ecData.get(target, 'dataIndex');
                 
-                dataIndex = self.compoent.dataZoom
-                            ? self.compoent.dataZoom.getRealDataIndex(
+                dataIndex = self.component.dataZoom
+                            ? self.component.dataZoom.getRealDataIndex(
                                 seriesIndex,
                                 dataIndex
                               )
@@ -25167,7 +25167,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                     _messageCenter, _zr, magicOption
                 );
                 _chartList.push(title);
-                self.compoent.title = title;
+                self.component.title = title;
             }
 
             // 提示
@@ -25176,7 +25176,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                 var Tooltip = componentLibrary.get('tooltip');
                 tooltip = new Tooltip(_messageCenter, _zr, magicOption, dom);
                 _chartList.push(tooltip);
-                self.compoent.tooltip = tooltip;
+                self.component.tooltip = tooltip;
             }
 
             // 图例
@@ -25187,7 +25187,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                     _messageCenter, _zr, magicOption, _selectedMap
                 );
                 _chartList.push(legend);
-                self.compoent.legend = legend;
+                self.component.legend = legend;
             }
 
             // 值域控件
@@ -25198,7 +25198,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                     _messageCenter, _zr, magicOption
                 );
                 _chartList.push(dataRange);
-                self.compoent.dataRange = dataRange;
+                self.component.dataRange = dataRange;
             }
 
             // 直角坐标系
@@ -25210,7 +25210,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                 var Grid = componentLibrary.get('grid');
                 grid = new Grid(_messageCenter, _zr, magicOption);
                 _chartList.push(grid);
-                self.compoent.grid = grid;
+                self.component.grid = grid;
 
                 var DataZoom = componentLibrary.get('dataZoom');
                 dataZoom = new DataZoom(
@@ -25223,7 +25223,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                     }
                 );
                 _chartList.push(dataZoom);
-                self.compoent.dataZoom = dataZoom;
+                self.component.dataZoom = dataZoom;
 
                 var Axis = componentLibrary.get('axis');
                 xAxis = new Axis(
@@ -25237,7 +25237,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                     'xAxis'
                 );
                 _chartList.push(xAxis);
-                self.compoent.xAxis = xAxis;
+                self.component.xAxis = xAxis;
 
                 yAxis = new Axis(
                     _messageCenter,
@@ -25250,7 +25250,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                     'yAxis'
                 );
                 _chartList.push(yAxis);
-                self.compoent.yAxis = yAxis;
+                self.component.yAxis = yAxis;
             }
 
             // 极坐标系
@@ -25266,7 +25266,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                     }
                 );
                 _chartList.push(polar);
-                self.compoent.polar = polar;
+                self.component.polar = polar;
             }
             
             tooltip && tooltip.setComponent({
@@ -25439,7 +25439,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             self.chart = {
                 island : _island
             };
-            self.compoent = {
+            self.component = {
                 toolbox : _toolbox
             };
         }
