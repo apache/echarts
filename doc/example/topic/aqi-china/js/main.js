@@ -225,7 +225,7 @@ function legendShare() {
         );
     }
     */
-    var legend = myChart1.compoent.legend;
+    var legend = myChart1.component.legend;
     var selected = legend.getSelectedMap();
     for (var city in selected) {
         if (selected[city]) {
