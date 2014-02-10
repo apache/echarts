@@ -325,18 +325,14 @@ define(function (require) {
             var textHeight = zrArea.getTextHeight('国', font);
             var textWidth = Math.max(
                     zrArea.getTextWidth(
-                        dataRangeOption.precision === 0
-                        ? dataRangeOption.max
-                        : dataRangeOption.max.toFixed(
+                        dataRangeOption.max.toFixed(
                             dataRangeOption.precision
-                          ),
+                        ),
                         font),
                     zrArea.getTextWidth(
-                        dataRangeOption.precision === 0
-                        ? dataRangeOption.min
-                        : dataRangeOption.min.toFixed(
+                        dataRangeOption.min.toFixed(
                             dataRangeOption.precision
-                          ), 
+                        ), 
                         font
                     )
                 ) + 2;
@@ -461,7 +457,9 @@ define(function (require) {
                 zlevel : _zlevelBase + 1,
                 style : {
                     pointList : pointListStart,
-                    text : dataRangeOption.max + '',
+                    text : dataRangeOption.max.toFixed(
+                               dataRangeOption.precision
+                           ),
                     textX : textXStart,
                     textY : textYStart,
                     textPosition : 'specific',
@@ -486,7 +484,9 @@ define(function (require) {
                 zlevel : _zlevelBase + 1,
                 style : {
                     pointList : pointListEnd,
-                    text : dataRangeOption.min + '',
+                    text : dataRangeOption.min.toFixed(
+                               dataRangeOption.precision
+                           ),
                     textX : textXEnd,
                     textY : textYEnd,
                     textPosition : 'specific',
