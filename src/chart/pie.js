@@ -109,7 +109,8 @@ define(function(require) {
             var data = serie.data;
             var legend = component.legend;
             var itemName;
-            var totalSelected = 0;               // 迭代累计
+            var totalSelected = 0;               // 迭代累计选中且非0个数
+            var totalSelectedValue0 = 0;         // 迭代累计选中0只个数
             var totalValue = 0;                  // 迭代累计
             var maxValue = Number.NEGATIVE_INFINITY;
 
@@ -122,18 +123,26 @@ define(function(require) {
                     self.selectedMap[itemName] = true;
                 }
                 if (self.selectedMap[itemName]) {
-                    totalSelected++;
+                    if (+data[i].value !== 0) {
+                        totalSelected++;
+                    }
+                    else {
+                        totalSelectedValue0++;
+                    }
                     totalValue += +data[i].value;
                     maxValue = Math.max(maxValue, +data[i].value);
                 }
             }
 
-            var percent;
+            var percent = 100;
+            var lastPercent;    // 相邻细角度优化
+            var lastAddRadius = 0;
             var clockWise = serie.clockWise;
             var startAngle = serie.startAngle.toFixed(2) - 0;
             var endAngle;
             var minAngle = serie.minAngle || 0.01; // #bugfixed
-            var totalAngle = 360 - (minAngle * totalSelected);
+            var totalAngle = 360 - (minAngle * totalSelected) 
+                                 - 0.01 * totalSelectedValue0;
             var defaultColor;
             var roseType = serie.roseType;
             var radius;
@@ -155,16 +164,17 @@ define(function(require) {
                     defaultColor = zr.getColor(i);
                 }
 
+                lastPercent = percent;
                 percent = data[i].value / totalValue;
                 if (roseType != 'area') {
                     endAngle = clockWise
-                        ? (startAngle - percent * totalAngle - minAngle)
-                        : (percent * totalAngle + startAngle + minAngle);
+                        ? (startAngle - percent * totalAngle - (percent !== 0 ? minAngle : 0.01))
+                        : (percent * totalAngle + startAngle + (percent !== 0 ? minAngle : 0.01));
                 }
                 else {
                     endAngle = clockWise
-                        ? (startAngle - totalAngle / l - minAngle)
-                        : (totalAngle / l + startAngle + minAngle);
+                        ? (startAngle - 360 / l)
+                        : (360 / l + startAngle);
                 }
                 endAngle = endAngle.toFixed(2) - 0;
                 percent = (percent * 100).toFixed(2);
@@ -188,8 +198,26 @@ define(function(require) {
                     startAngle = endAngle;
                     endAngle = temp; 
                 }
+                
+                // 当前小角度需要检查前一个是否也是小角度，如果是得调整长度，不能完全避免，但能大大降低覆盖概率
+                if (i > 0 
+                    && percent < 4       // 约15度
+                    && lastPercent < 4
+                    && _needLabel(serie, data[i], false)
+                    && self.deepQuery(
+                           [data[i], serie], 'itemStyle.normal.label.position'
+                       ) != 'center'
+                ) {
+                    // 都小就延长，前小后大就缩短
+                    lastAddRadius += (percent < 4 ? 20 : -20);
+                }
+                else {
+                    lastAddRadius = 0;
+                }
+                
                 _buildItem(
-                    seriesIndex, i, percent, data[i].selected,
+                    seriesIndex, i, percent, lastAddRadius, // 相邻最小角度优化
+                    data[i].selected,
                     r0, r1,
                     startAngle, endAngle, defaultColor
                 );
@@ -203,7 +231,8 @@ define(function(require) {
          * 构建单个扇形及指标
          */
         function _buildItem(
-            seriesIndex, dataIndex, percent, isSelected,
+            seriesIndex, dataIndex, percent, lastAddRadius,
+            isSelected,
             r0, r1,
             startAngle, endAngle, defaultColor
         ) {
@@ -221,11 +250,12 @@ define(function(require) {
                 series[seriesIndex].data[dataIndex].name,
                 percent
             );
+            sector._lastAddRadius = lastAddRadius;
             self.shapeList.push(sector);
 
             // 文本标签，需要显示则会有返回
             var label = _getLabel(
-                    seriesIndex, dataIndex, percent,
+                    seriesIndex, dataIndex, percent, lastAddRadius,
                     startAngle, endAngle, defaultColor,
                     false
                 );
@@ -236,7 +266,7 @@ define(function(require) {
 
             // 文本标签视觉引导线，需要显示则会有返回
             var labelLine = _getLabelLine(
-                    seriesIndex, dataIndex,
+                    seriesIndex, dataIndex, lastAddRadius,
                     r0, r1,
                     startAngle, endAngle, defaultColor,
                     false
@@ -340,7 +370,7 @@ define(function(require) {
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
         function _getLabel(
-            seriesIndex, dataIndex, percent,
+            seriesIndex, dataIndex, percent, lastAddRadius,
             startAngle, endAngle, defaultColor,
             isEmphasis
         ) {
@@ -385,7 +415,7 @@ define(function(require) {
             }
             else if (labelControl.position == 'inner'){
                 // 内部显示
-                radius = (radius[0] + radius[1]) / 2;
+                radius = (radius[0] + radius[1]) / 2 + lastAddRadius;
                 x = Math.round(
                     centerX + radius * zrMath.cos(midAngle, true)
                 );
@@ -400,33 +430,19 @@ define(function(require) {
                 // 外部显示，默认 labelControl.position == 'outer')
                 radius = radius[1]
                          - (-itemStyle[status].labelLine.length)
-                         - (-textStyle.fontSize);
+                         //- (-textStyle.fontSize)
+                         + lastAddRadius;
                 x = centerX + radius * zrMath.cos(midAngle, true);
                 y = centerY - radius * zrMath.sin(midAngle, true);
                 textAlign = (midAngle >= 90 && midAngle <= 270)
                             ? 'right' : 'left';
             }
             
-            //检查前个是否也是小角度，如果是得调整长度，不能完全避免，但能大大降低覆盖概率
-            if (labelControl.position != 'center' 
-                && dataIndex > 0 
-                && percent < 30
-            ) {
-                var preData = serie.data[dataIndex - 1];
-                var prePercent = preData.value * percent / data.value;
-                if (prePercent < 4) {
-                    // 都小就延长，前小后大就缩短
-                    radius = preData.__labelRadius + (percent < 4 ? 20 : -20);
-                    x = centerX + radius * zrMath.cos(midAngle, true);
-                    y = centerY - radius * zrMath.sin(midAngle, true);
-                }
-            }
             if (labelControl.position != 'center'
                 && labelControl.position != 'inner'
             ) {
                 x += textAlign == 'left' ? 20 : -20;
             }
-            data.__labelRadius = radius;
             data.__labelX = x - (textAlign == 'left' ? 5 : -5);
             data.__labelY = y;
             
@@ -495,7 +511,7 @@ define(function(require) {
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
         function _getLabelLine(
-            seriesIndex, dataIndex,
+            seriesIndex, dataIndex, lastAddRadius,
             r0, r1,
             startAngle, endAngle, defaultColor,
             isEmphasis
@@ -526,10 +542,9 @@ define(function(require) {
                 // 视觉引导线起点半径
                 var midRadius = r1;
                 // 视觉引导线终点半径
-                var maxRadius = data.__labelRadius 
-                    ? data.__labelRadius
-                    : self.parseRadius(serie.radius)[1] 
-                      - (-labelLineControl.length);
+                var maxRadius = self.parseRadius(serie.radius)[1] 
+                                - (-labelLineControl.length)
+                                + lastAddRadius;
                 var midAngle = ((endAngle + startAngle) / 2) % 360; // 角度中值
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
@@ -1100,6 +1115,7 @@ define(function(require) {
             var seriesIndex = ecData.get(shape, 'seriesIndex');
             var dataIndex = ecData.get(shape, 'dataIndex');
             var percent = ecData.get(shape, 'special');
+            var lastAddRadius = shape._lastAddRadius;
 
             var startAngle = shape.style.startAngle;
             var endAngle = shape.style.endAngle;
@@ -1107,16 +1123,17 @@ define(function(require) {
             
             // 文本标签，需要显示则会有返回
             var label = _getLabel(
-                    seriesIndex, dataIndex, percent,
+                    seriesIndex, dataIndex, percent, lastAddRadius,
                     startAngle, endAngle, defaultColor,
                     true
                 );
             if (label) {
                 zr.addHoverShape(label);
             }
+            
             // 文本标签视觉引导线，需要显示则会有返回
             var labelLine = _getLabelLine(
-                    seriesIndex, dataIndex,
+                    seriesIndex, dataIndex, lastAddRadius,
                     shape.style.r0, shape.style.r,
                     startAngle, endAngle, defaultColor,
                     true
