@@ -13,16 +13,15 @@ define(function(require) {
 
     var _devicePixelRatio = window.devicePixelRatio || 1;
     
-    function Chord(messageCenter, zr, option, component) {
+    function Chord(ecConfig, messageCenter, zr, option, component) {
         var self = this;
 
-        var CompomentBase = require('../component/base');
-        CompomentBase.call(this, zr);
+        var ComponentBase = require('../component/base');
+        ComponentBase.call(this, ecConfig, zr);
 
         var CalculableBase = require('./calculableBase');
         CalculableBase.call(this, zr, option);
 
-        var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
         var zrUtil = require('zrender/tool/util');

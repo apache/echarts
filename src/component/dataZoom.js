@@ -13,11 +13,9 @@ define(function (require) {
      * @param {Object} option 图表参数
      * @param {Object} component 组件
      */
-    function DataZoom(messageCenter, zr, option, component) {
+    function DataZoom(ecConfig, messageCenter, zr, option, component) {
         var Base = require('./base');
-        Base.call(this, zr);
-
-        var ecConfig = require('../config');
+        Base.call(this, ecConfig, zr);
 
         var self = this;
         self.type = ecConfig.COMPONENT_TYPE_DATAZOOM;

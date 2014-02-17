@@ -29,13 +29,8 @@ define(function(require) {
     /**
      * 入口方法 
      */
-    self.init = function(dom/*, theme*/) {
+    self.init = function(dom, theme) {
         dom = dom instanceof Array ? dom[0] : dom;
-        if (G_vmlCanvasManager) {
-            // IE8-
-            var ecConfig = require('./config');
-            ecConfig.textStyle.fontFamily = ecConfig.textStyle.fontFamily2;
-        }
         // dom与echarts实例映射索引
         var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
         if (!key) {
@@ -44,6 +39,8 @@ define(function(require) {
         }
         _instances[key] = _instances[key] || new Echarts(dom);
         _instances[key].id = key;
+        _instances[key].setTheme(theme);
+        
         return  _instances[key];
     };
     
@@ -60,6 +57,7 @@ define(function(require) {
      */
     function Echarts(dom) {
         var ecConfig = require('./config');
+        var _themeConfig = require('zrender/tool/util').clone(ecConfig);
 
         var self = this;
         var _id = '__ECharts__' + new Date() - 0;
@@ -151,7 +149,7 @@ define(function(require) {
             require('./chart/island');
             // 孤岛
             var Island = chartLibrary.get('island');
-            _island = new Island(_messageCenter, _zr);
+            _island = new Island(_themeConfig, _messageCenter, _zr);
             
             // 内置组件注册
             var componentLibrary = require('./component');
@@ -169,7 +167,7 @@ define(function(require) {
             require('./component/polar');
             // 工具箱
             var Toolbox = componentLibrary.get('toolbox');
-            _toolbox = new Toolbox(_messageCenter, _zr, dom);
+            _toolbox = new Toolbox(_themeConfig, _messageCenter, _zr, dom);
             
             _disposeChartList();
         }
@@ -534,9 +532,9 @@ define(function(require) {
             // 标题
             var title;
             if (magicOption.title) {
-                var Title = new componentLibrary.get('title');
+                var Title = componentLibrary.get('title');
                 title = new Title(
-                    _messageCenter, _zr, magicOption
+                    _themeConfig, _messageCenter, _zr, magicOption
                 );
                 _chartList.push(title);
                 self.component.title = title;
@@ -546,7 +544,9 @@ define(function(require) {
             var tooltip;
             if (magicOption.tooltip) {
                 var Tooltip = componentLibrary.get('tooltip');
-                tooltip = new Tooltip(_messageCenter, _zr, magicOption, dom);
+                tooltip = new Tooltip(
+                    _themeConfig, _messageCenter, _zr, magicOption, dom
+                );
                 _chartList.push(tooltip);
                 self.component.tooltip = tooltip;
             }
@@ -554,9 +554,9 @@ define(function(require) {
             // 图例
             var legend;
             if (magicOption.legend) {
-                var Legend = new componentLibrary.get('legend');
+                var Legend = componentLibrary.get('legend');
                 legend = new Legend(
-                    _messageCenter, _zr, magicOption, _selectedMap
+                    _themeConfig, _messageCenter, _zr, magicOption, _selectedMap
                 );
                 _chartList.push(legend);
                 self.component.legend = legend;
@@ -565,9 +565,9 @@ define(function(require) {
             // 值域控件
             var dataRange;
             if (magicOption.dataRange) {
-                var DataRange = new componentLibrary.get('dataRange');
+                var DataRange = componentLibrary.get('dataRange');
                 dataRange = new DataRange(
-                    _messageCenter, _zr, magicOption
+                    _themeConfig, _messageCenter, _zr, magicOption
                 );
                 _chartList.push(dataRange);
                 self.component.dataRange = dataRange;
@@ -580,12 +580,13 @@ define(function(require) {
             var yAxis;
             if (magicOption.grid || magicOption.xAxis || magicOption.yAxis) {
                 var Grid = componentLibrary.get('grid');
-                grid = new Grid(_messageCenter, _zr, magicOption);
+                grid = new Grid(_themeConfig, _messageCenter, _zr, magicOption);
                 _chartList.push(grid);
                 self.component.grid = grid;
 
                 var DataZoom = componentLibrary.get('dataZoom');
                 dataZoom = new DataZoom(
+                    _themeConfig, 
                     _messageCenter,
                     _zr,
                     magicOption,
@@ -599,6 +600,7 @@ define(function(require) {
 
                 var Axis = componentLibrary.get('axis');
                 xAxis = new Axis(
+                    _themeConfig,
                     _messageCenter,
                     _zr,
                     magicOption,
@@ -612,6 +614,7 @@ define(function(require) {
                 self.component.xAxis = xAxis;
 
                 yAxis = new Axis(
+                    _themeConfig,
                     _messageCenter,
                     _zr,
                     magicOption,
@@ -630,6 +633,7 @@ define(function(require) {
             if (magicOption.polar) {
                 var Polar = componentLibrary.get('polar');
                 polar = new Polar(
+                    _themeConfig,
                     _messageCenter,
                     _zr,
                     magicOption,
@@ -662,6 +666,7 @@ define(function(require) {
                     ChartClass = chartLibrary.get(chartType);
                     if (ChartClass) {
                         chart = new ChartClass(
+                            _themeConfig,
                             _messageCenter,
                             _zr,
                             magicOption,
@@ -844,28 +849,28 @@ define(function(require) {
 
             // 非图表全局属性merge~~
             if (typeof _option.calculable == 'undefined') {
-                _option.calculable = ecConfig.calculable;
+                _option.calculable = _themeConfig.calculable;
             }
             if (typeof _option.nameConnector == 'undefined') {
-                _option.nameConnector = ecConfig.nameConnector;
+                _option.nameConnector = _themeConfig.nameConnector;
             }
             if (typeof _option.valueConnector == 'undefined') {
-                _option.valueConnector = ecConfig.valueConnector;
+                _option.valueConnector = _themeConfig.valueConnector;
             }
             if (typeof _option.animation == 'undefined') {
-                _option.animation = ecConfig.animation;
+                _option.animation = _themeConfig.animation;
             }
             if (typeof _option.animationThreshold == 'undefined') {
-                _option.animationThreshold = ecConfig.animationThreshold;
+                _option.animationThreshold = _themeConfig.animationThreshold;
             }
             if (typeof _option.animationDuration == 'undefined') {
-                _option.animationDuration = ecConfig.animationDuration;
+                _option.animationDuration = _themeConfig.animationDuration;
             }
             if (typeof _option.animationEasing == 'undefined') {
-                _option.animationEasing = ecConfig.animationEasing;
+                _option.animationEasing = _themeConfig.animationEasing;
             }
             if (typeof _option.addDataAnimation == 'undefined') {
-                _option.addDataAnimation = ecConfig.addDataAnimation;
+                _option.addDataAnimation = _themeConfig.addDataAnimation;
             }
 
             var zrColor = require('zrender/tool/color');
@@ -877,12 +882,12 @@ define(function(require) {
             }
             else {
                 _zr.getColor = function(idx) {
-                    return zrColor.getColor(idx, ecConfig.color);
+                    return zrColor.getColor(idx, _themeConfig.color);
                 };
             }
             // calculable可计算颜色提示
             _zr.getCalculableColor = function () {
-                return _option.calculableColor || ecConfig.calculableColor;
+                return _option.calculableColor || _themeConfig.calculableColor;
             };
 
             _optionBackup = zrUtil.clone(_option);
@@ -1186,7 +1191,7 @@ define(function(require) {
             _messageCenter.unbind(eventName, eventListener);
             return self;
         }
-
+        
         /**
          * 显示loading过渡 
          * @param {Object} loadingOption
@@ -1200,7 +1205,7 @@ define(function(require) {
 
             var finalTextStyle = zrUtil.merge(
                 zrUtil.clone(loadingOption.textStyle),
-                ecConfig.textStyle,
+                _themeConfig.textStyle,
                 { 'overwrite': false}
             );
             loadingOption.textStyle.textFont = finalTextStyle.fontStyle + ' '
@@ -1209,7 +1214,7 @@ define(function(require) {
                                             + finalTextStyle.fontFamily;
 
             loadingOption.textStyle.text = loadingOption.text 
-                                           || ecConfig.loadingText;
+                                           || _themeConfig.loadingText;
 
             if (typeof loadingOption.x != 'undefined') {
                 loadingOption.textStyle.x = loadingOption.x;
@@ -1229,6 +1234,47 @@ define(function(require) {
         function hideLoading() {
             _zr.hideLoading();
             return self;
+        }
+        
+        /**
+         * 主题设置 
+         */
+        function setTheme(theme) {
+            var zrUtil = require('zrender/tool/util');
+            if (theme) {
+               if (typeof theme === 'string') {
+                    // 默认主题
+                    switch (theme) {
+                        case 'default':
+                            theme = require('./theme/default');
+                            break;
+                        default:
+                            theme = require('./theme/default');
+                    }
+                }
+                else {
+                    theme = theme || {};
+                }
+                
+                // 复位默认配置，别好心帮我改成_themeConfig = {};
+                for (var key in _themeConfig) {
+                    delete _themeConfig[key];
+                }
+                for (var key in ecConfig) {
+                    _themeConfig[key] = zrUtil.clone(ecConfig[key]);
+                }
+                // 应用新主题
+                zrUtil.merge(
+                    _themeConfig, zrUtil.clone(theme),
+                    { 'overwrite': true, 'recursive': true }
+                );
+            }
+            
+            if (G_vmlCanvasManager) {   // IE8-
+                _themeConfig.textStyle.fontFamily = 
+                    _themeConfig.textStyle.fontFamily2;
+            }
+            _optionRestore && self.restore();
         }
 
         /**
@@ -1254,7 +1300,7 @@ define(function(require) {
             );
             return self;
         }
-
+        
         /**
          * 清楚已渲染内容 ，clear后echarts实例可用
          */
@@ -1277,7 +1323,7 @@ define(function(require) {
             _island.dispose();
             _toolbox.dispose();
             _messageCenter.unbind();
-            clear();
+            self.clear();
             _zr.dispose();
             self = null;
             return;
@@ -1296,6 +1342,7 @@ define(function(require) {
         self.un = un;
         self.showLoading = showLoading;
         self.hideLoading = hideLoading;
+        self.setTheme = setTheme;
         self.resize = resize;
         self.refresh = refresh;
         self.restore = restore;

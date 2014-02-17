@@ -12,11 +12,10 @@ define(function (require) {
      * @param {ZRender} zr zrender实例
      * @param {HtmlElement} dom 目标对象
      */
-    function Toolbox(messageCenter, zr, dom) {
+    function Toolbox(ecConfig, messageCenter, zr, dom) {
         var Base = require('./base');
-        Base.call(this, zr);
+        Base.call(this, ecConfig, zr);
 
-        var ecConfig = require('../config');
         var zrConfig = require('zrender/config');
         var zrUtil = require('zrender/tool/util');
         var zrEvent = require('zrender/tool/event');
@@ -223,7 +222,7 @@ define(function (require) {
                             var componentLibrary = require('../component');
                             var DataView = componentLibrary.get('dataView');
                             _dataView = new DataView(
-                                messageCenter, zr, option, dom
+                                ecConfig, messageCenter, zr, option, dom
                             );
                         }
                         itemShape.onclick = _onDataView;

@@ -611,7 +611,7 @@ define(function() {
                     },
                     labelLine: {
                         show: false,
-                        length: 30,
+                        length: 20,
                         lineStyle: {
                             // color: 各异,
                             width: 1,

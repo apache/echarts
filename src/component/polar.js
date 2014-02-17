@@ -9,11 +9,10 @@ define(
 
     function(require) {
 
-        function Polar(messageCenter, zr, option, component) {
+        function Polar(ecConfig, messageCenter, zr, option, component) {
             var Base = require('./base');
-            Base.call(this, zr);
+            Base.call(this, ecConfig, zr);
 
-            var ecConfig = require('../config');
             var ecCoordinates = require('../util/coordinates');
             var zrUtil = require('zrender/tool/util');
 

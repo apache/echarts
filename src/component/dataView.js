@@ -13,11 +13,9 @@ define(function (require) {
      * @param {Object} option 提示框参数
      * @param {HtmlElement} dom 目标对象
      */
-    function DataView(messageCenter, zr, option, dom) {
+    function DataView(ecConfig, messageCenter, zr, option, dom) {
         var Base = require('./base');
-        Base.call(this, zr);
-
-        var ecConfig = require('../config');
+        Base.call(this, ecConfig, zr);
 
         var self = this;
         self.type = ecConfig.COMPONENT_TYPE_DATAVIEW;

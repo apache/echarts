@@ -6,8 +6,7 @@
  *
  */
 define(function(require) {
-    function Base(zr){
-        var ecConfig = require('../config');
+    function Base(ecConfig, zr){
         var ecData = require('../util/ecData');
         var zrUtil = require('zrender/tool/util');
         var self = this;

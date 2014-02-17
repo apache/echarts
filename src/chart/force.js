@@ -24,15 +24,14 @@ define(function(require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Force(messageCenter, zr, option, component) {
+    function Force(ecConfig, messageCenter, zr, option, component) {
         // 基类装饰
         var ComponentBase = require('../component/base');
-        ComponentBase.call(this, zr);
+        ComponentBase.call(this, ecConfig, zr);
         // 可计算特性装饰
         var CalculableBase = require('./calculableBase');
         CalculableBase.call(this, zr, option);
 
-        var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
         var zrConfig = require('zrender/config');

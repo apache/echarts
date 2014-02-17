@@ -13,11 +13,10 @@ define(function (require) {
      * @param {Object} option 提示框参数
      * @param {HtmlElement} dom 目标对象
      */
-    function Tooltip(messageCenter, zr, option, dom) {
+    function Tooltip(ecConfig, messageCenter, zr, option, dom) {
         var Base = require('./base');
-        Base.call(this, zr);
+        Base.call(this, ecConfig, zr);
 
-        var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
         var zrConfig = require('zrender/config');

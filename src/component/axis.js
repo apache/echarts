@@ -24,11 +24,9 @@ define(function (require) {
      * @param {Object} component 组件
      * @param {string} axisType 横走or纵轴
      */
-    function Axis(messageCenter, zr, option, component, axisType) {
+    function Axis(ecConfig, messageCenter, zr, option, component, axisType) {
         var Base = require('./base');
-        Base.call(this, zr);
-
-        var ecConfig = require('../config');
+        Base.call(this, ecConfig, zr);
 
         var self = this;
         self.type = ecConfig.COMPONENT_TYPE_AXIS;
@@ -133,10 +131,12 @@ define(function (require) {
                 _axisList.push(
                     axisOption[i].type == 'category'
                     ? new CategoryAxis(
+                          ecConfig, 
                           messageCenter, zr,
                           axisOption[i], component
                       )
                     : new ValueAxis(
+                          ecConfig, 
                           messageCenter, zr,
                           axisOption[i], component,
                           option.series

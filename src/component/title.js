@@ -12,11 +12,10 @@ define(function (require) {
      * @param {ZRender} zr zrender实例
      * @param {Object} option 图表参数
      */
-    function Title(messageCenter, zr, option) {
+    function Title(ecConfig, messageCenter, zr, option) {
         var Base = require('./base');
-        Base.call(this, zr);
+        Base.call(this, ecConfig, zr);
 
-        var ecConfig = require('../config');
         var zrArea = require('zrender/tool/area');
         var zrUtil = require('zrender/tool/util');
 

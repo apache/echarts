@@ -13,11 +13,10 @@ define(function (require) {
      * @param {Object} option 图表参数
      * @param {Object=} selected 用于状态保持
      */
-    function Legend(messageCenter, zr, option, selected) {
+    function Legend(ecConfig, messageCenter, zr, option, selected) {
         var Base = require('./base');
-        Base.call(this, zr);
+        Base.call(this, ecConfig, zr);
 
-        var ecConfig = require('../config');
         var zrArea = require('zrender/tool/area');
 
         var self = this;

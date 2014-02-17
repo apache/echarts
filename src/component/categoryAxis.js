@@ -13,11 +13,9 @@ define(function (require) {
      * @param {Object} option 类目轴参数
      * @param {Grid} grid 网格对象
      */
-    function CategoryAxis(messageCenter, zr, option, component) {
+    function CategoryAxis(ecConfig, messageCenter, zr, option, component) {
         var Base = require('./base');
-        Base.call(this, zr);
-
-        var ecConfig = require('../config');
+        Base.call(this, ecConfig, zr);
 
         var zrUtil = require('zrender/tool/util');
         var zrArea = require('zrender/tool/area');

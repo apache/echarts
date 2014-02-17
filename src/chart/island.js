@@ -12,15 +12,14 @@ define(function (require) {
      * @param {ZRender} zr zrender实例
      * @param {Object} option 图表选项
      */
-    function Island(messageCenter, zr) {
+    function Island(ecConfig, messageCenter, zr) {
         // 基类装饰
         var ComponentBase = require('../component/base');
-        ComponentBase.call(this, zr);
+        ComponentBase.call(this, ecConfig, zr);
         // 可计算特性装饰
         var CalculableBase = require('./calculableBase');
         CalculableBase.call(this, zr);
 
-        var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
         var zrEvent = require('zrender/tool/event');

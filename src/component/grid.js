@@ -16,11 +16,9 @@ define(function (require) {
      *      @param {number=} option.grid.width 直角坐标系内绘图网格宽度，数值单位px
      *      @param {number=} option.grid.height 直角坐标系内绘图网格高度，数值单位px
      */
-    function Grid(messageCenter, zr, option) {
+    function Grid(ecConfig, messageCenter, zr, option) {
         var Base = require('./base');
-        Base.call(this, zr);
-
-        var ecConfig = require('../config');
+        Base.call(this, ecConfig, zr);
 
         var self = this;
         self.type = ecConfig.COMPONENT_TYPE_GRID;

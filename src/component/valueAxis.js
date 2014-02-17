@@ -14,11 +14,9 @@ define(function (require) {
      * @param {Grid} grid 网格对象
      * @param {Array} series 数据对象
      */
-    function ValueAxis(messageCenter, zr, option, component, series) {
+    function ValueAxis(ecConfig, messageCenter, zr, option, component, series) {
         var Base = require('./base');
-        Base.call(this, zr);
-
-        var ecConfig = require('../config');
+        Base.call(this, ecConfig, zr);
 
         var zrUtil = require('zrender/tool/util');
 
