@@ -38,9 +38,8 @@ define(function(require) {
     /**
      * 基于zrender实现Echarts接口层
      * @param {HtmlElement} dom 必要
-     * @param {Object} option 可选参数，同setOption
      */
-    function Echarts(dom, option) {
+    function Echarts(dom) {
         var ecConfig = require('./config');
 
         var self = this;
@@ -80,8 +79,7 @@ define(function(require) {
             }
             _zr = zrender.init(dom);
 
-            var zrUtil = require('zrender/tool/util');
-            _option = zrUtil.clone(option || {});
+            _option = {};
 
             _chartList = [];            // 图表实例
 
@@ -1242,7 +1240,11 @@ define(function(require) {
          * 清楚已渲染内容 ，clear后echarts实例可用
          */
         function clear() {
+            _disposeChartList();
             _zr.clear();
+            _option = {};
+            _optionBackup = {};
+            _optionRestore = {};
             return self;
         }
 
@@ -1252,8 +1254,8 @@ define(function(require) {
         function dispose() {
             _island.dispose();
             _toolbox.dispose();
-            _disposeChartList();
             _messageCenter.unbind();
+            clear();
             _zr.dispose();
             self = null;
             return;
