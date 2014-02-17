@@ -262,6 +262,7 @@ define(function (require) {
                 axisOption.type = 'value';
             }
             var vAxis = new Axis(
+                ecConfig,
                 null,   // messageCenter
                 false,  // zr
                 {
@@ -286,6 +287,7 @@ define(function (require) {
                 axisOption.type = 'value';
             }
             vAxis = new Axis(
+                ecConfig,
                 null,   // messageCenter
                 false,  // zr
                 {

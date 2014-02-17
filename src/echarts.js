@@ -1263,6 +1263,10 @@ define(function(require) {
                 for (var key in ecConfig) {
                     _themeConfig[key] = zrUtil.clone(ecConfig[key]);
                 }
+                if (theme.color) {
+                    // 颜色数组随theme
+                    _themeConfig.color = [];
+                }
                 // 应用新主题
                 zrUtil.merge(
                     _themeConfig, zrUtil.clone(theme),
