@@ -18,6 +18,10 @@
 define(function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
+    
+    var _instances = {};    // ECharts实例map索引
+    var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
+    
     self.version = '1.3.7';
     self.dependencies = {
         zrender : '1.0.9'
@@ -32,8 +36,23 @@ define(function(require) {
             var ecConfig = require('./config');
             ecConfig.textStyle.fontFamily = ecConfig.textStyle.fontFamily2;
         }
-        return new Echarts(dom);
+        // dom与echarts实例映射索引
+        var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
+        if (!key) {
+            key = new Date() - 0;
+            dom.setAttribute(DOM_ATTRIBUTE_KEY, key);
+        }
+        _instances[key] = _instances[key] || new Echarts(dom);
+        _instances[key].id = key;
+        return  _instances[key];
     };
+    
+    /**
+     * 通过id获得ECharts实例，id可在实例化后读取 
+     */
+    self.getInstanceById = function(key) {
+        return _instances[key];
+    }
 
     /**
      * 基于zrender实现Echarts接口层
@@ -1252,6 +1271,9 @@ define(function(require) {
          * 释放，dispose后echarts实例不可用
          */
         function dispose() {
+            var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
+            key && delete _instances[key];
+        
             _island.dispose();
             _toolbox.dispose();
             _messageCenter.unbind();
