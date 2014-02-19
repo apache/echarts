@@ -42,16 +42,14 @@ define(function (require) {
         function _buildShape() {
             _buildBackground();
             _buildFiller();
-            _bulidHandle();
-            _bulidFrame();
+            _buildHandle();
+            _buildFrame();
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
             _syncFrameShape();
-
-            _syncData();
         }
 
         /**
@@ -324,22 +322,23 @@ define(function (require) {
             
             // 数据阴影
             var maxLength = 0;
-            var xAxis = option.xAxis;
+            var xAxis = _originalData.xAxis;
             var xAxisIndex = _zoom.xAxisIndex;
             for (var i = 0, l = xAxisIndex.length; i < l; i++) {
                 maxLength = Math.max(
-                    maxLength, xAxis[xAxisIndex[i]].data.length
+                    maxLength, xAxis[xAxisIndex[i]].length
                 );
             }
-            var yAxis = option.yAxis;
+            var yAxis = _originalData.yAxis;
             var yAxisIndex = _zoom.yAxisIndex;
             for (var i = 0, l = yAxisIndex.length; i < l; i++) {
                 maxLength = Math.max(
-                    maxLength, yAxis[yAxisIndex[i]].data.length
+                    maxLength, yAxis[yAxisIndex[i]].length
                 );
             }
 
-            var data = option.series[_zoom.seriesIndex[0]].data;
+            var seriesIndex = _zoom.seriesIndex[0];
+            var data = _originalData.series[seriesIndex];
             var maxValue = Number.MIN_VALUE;
             var minValue = Number.MAX_VALUE;
             var value;
@@ -348,9 +347,7 @@ define(function (require) {
                         ? (typeof data[i].value != 'undefined'
                           ? data[i].value : data[i])
                         : 0;
-                if (option.series[_zoom.seriesIndex[0]].type 
-                    == ecConfig.CHART_TYPE_K
-                ) {
+                if (option.series[seriesIndex].type == ecConfig.CHART_TYPE_K) {
                     value = value[1];   // 收盘价
                 }
                 if (isNaN(value)) {
@@ -368,9 +365,7 @@ define(function (require) {
                         ? (typeof data[i].value != 'undefined'
                           ? data[i].value : data[i])
                         : 0;
-                if (option.series[_zoom.seriesIndex[0]].type 
-                    == ecConfig.CHART_TYPE_K
-                ) {
+                if (option.series[seriesIndex].type == ecConfig.CHART_TYPE_K) {
                     value = value[1];   // 收盘价
                 }
                 if (isNaN(value)) {
@@ -488,7 +483,7 @@ define(function (require) {
         /**
          * 构建拖拽手柄
          */
-        function _bulidHandle() {
+        function _buildHandle() {
             var zrUtil = require('zrender/tool/util');
             _startShape = {
                 shape : 'icon',
@@ -534,7 +529,7 @@ define(function (require) {
         /**
          * 构建特效边框
          */
-        function _bulidFrame() {
+        function _buildFrame() {
             var zrUtil = require('zrender/tool/util');
             // 特效框线，亚像素优化
             var x = self.subPixelOptimize(_location.x, 1);
@@ -701,7 +696,7 @@ define(function (require) {
                 _endFrameShape.style.x = 
                     _fillerShae.style.x + _fillerShae.style.width;
                 _endFrameShape.style.width = 
-                    _location.x + _location.width - _endShape.style.x;
+                    _location.x + _location.width - _endFrameShape.style.x;
             }
             else {
                 _startFrameShape.style.height = 
@@ -709,7 +704,7 @@ define(function (require) {
                 _endFrameShape.style.y = 
                     _fillerShae.style.y + _fillerShae.style.height;
                 _endFrameShape.style.height = 
-                    _location.y + _location.height - _endShape.style.y;
+                    _location.y + _location.height - _endFrameShape.style.y;
             }
                     
             zr.modShape(_startFrameShape.id, _startFrameShape);
@@ -749,6 +744,8 @@ define(function (require) {
             zr.modShape(_startShape.id, _startShape);
             zr.modShape(_endShape.id, _endShape);
             zr.modShape(_fillerShae.id, _fillerShae);
+            // 同步边框
+            _syncFrameShape();
             zr.refresh();
         }
 
@@ -1032,6 +1029,7 @@ define(function (require) {
             
             if (option.dataZoom.show) {
                 _buildShape();
+                _syncData();
             }
         }
 
@@ -1053,16 +1051,7 @@ define(function (require) {
             }
             
             if (option.dataZoom.show) {
-                _buildBackground();
-                _buildFiller();
-                _bulidHandle();
-                _bulidFrame();
-    
-                for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                    self.shapeList[i].id = zr.newShapeId(self.type);
-                    zr.addShape(self.shapeList[i]);
-                }
-                _syncFrameShape();
+                _buildShape();
             }
         }
         
