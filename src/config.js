@@ -217,10 +217,10 @@ define(function() {
                                        // {number}（y坐标，单位px）
             // width: {number},        // 指定宽度，横向布局时默认为根据grid参数适配
             // height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
-            backgroundColor: '#eee',       // 背景颜色
-            dataBackgroundColor: '#ccc',   // 数据背景颜色
-            fillerColor: 'rgba(50,205,50,0.4)',        // 填充颜色
-            handleColor: 'rgba(70,130,180,0.8)',         // 手柄颜色
+            backgroundColor: 'rgba(0,0,0,0)',       // 背景颜色
+            dataBackgroundColor: '#eee',            // 数据背景颜色
+            fillerColor: 'rgba(144,197,237,0.2)',   // 填充颜色
+            handleColor: 'rgba(70,130,180,0.8)',    // 手柄颜色
             // xAxisIndex: [],         // 默认控制所有横向类目
             // yAxisIndex: [],         // 默认控制所有横向类目
             // start: 0,               // 默认为0

@@ -24,13 +24,15 @@ define(function (require) {
 
         var zoomOption;
 
-        var _fillerSize = 30;       // 填充大小
-        var _handleSize = 10;       // 手柄大小
+        var _fillerSize = 28;       // 控件大小，水平布局为高，纵向布局为宽
+        var _handleSize = 8;        // 手柄大小
         var _location;              // 位置参数，通过计算所得x, y, width, height
         var _zoom;                  // 缩放参数
-        var _fillerShae;
-        var _startShape;
-        var _endShape;
+        var _fillerShae;            // 填充
+        var _startShape;            // 起始手柄
+        var _endShape;              // 结束手柄
+        var _startFrameShape;       // 起始特效边框
+        var _endFrameShape;         // 结束特效边框
 
         var _syncTicket;
         var _isSilence = false;
@@ -39,14 +41,15 @@ define(function (require) {
 
         function _buildShape() {
             _buildBackground();
-            _buildDataBackground();
             _buildFiller();
             _bulidHandle();
+            _bulidFrame();
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
+            _syncFrameShape();
 
             _syncData();
         }
@@ -69,14 +72,14 @@ define(function (require) {
                 x = typeof zoomOption.x != 'undefined'
                     ? zoomOption.x : grid.getX();
                 y = typeof zoomOption.y != 'undefined'
-                    ? zoomOption.y : (zr.getHeight() - height);
+                    ? zoomOption.y : (zr.getHeight() - height - 2);
             }
             else {
                 // 垂直布局
                 width = zoomOption.width || _fillerSize;
                 height = zoomOption.height || grid.getHeight();
                 x = typeof zoomOption.x != 'undefined'
-                    ? zoomOption.x : 0;
+                    ? zoomOption.x : 2;
                 y = typeof zoomOption.y != 'undefined'
                     ? zoomOption.y : grid.getY();
             }
@@ -305,6 +308,7 @@ define(function (require) {
         }
 
         function _buildBackground() {
+            // 背景
             self.shapeList.push({
                 shape : 'rectangle',
                 zlevel : _zlevelBase,
@@ -317,22 +321,8 @@ define(function (require) {
                     color : zoomOption.backgroundColor
                 }
             });
-        }
-
-        function _buildDataBackground() {
-            self.shapeList.push({
-                shape : 'rectangle',
-                zlevel : _zlevelBase,
-                hoverable :false,
-                style : {
-                    x : _location.x,
-                    y : _location.y,
-                    width : _location.width,
-                    height : _location.height,
-                    color : zoomOption.backgroundColor
-                }
-            });
-
+            
+            // 数据阴影
             var maxLength = 0;
             var xAxis = option.xAxis;
             var xAxisIndex = _zoom.xAxisIndex;
@@ -455,27 +445,42 @@ define(function (require) {
                     x : _location.x
                         + Math.round(_zoom.start / 100 * _location.width)
                         + _handleSize,
-                    y : _location.y + 3,
+                    y : _location.y,
                     width : _zoom.size - _handleSize * 2,
-                    height : _location.height - 6,
+                    height : _location.height,
                     color : zoomOption.fillerColor,
+                    // strokeColor : '#fff', // zoomOption.handleColor,
+                    // lineWidth: 2,
                     text : ':::',
                     textPosition : 'inside'
                 };
             }
             else {
+                // 纵向
                 _fillerShae.style ={
-                    x : _location.x + 3,
+                    x : _location.x,
                     y : _location.y
                         + Math.round(_zoom.start / 100 * _location.height)
                         + _handleSize,
-                    width :  _location.width - 6,
+                    width :  _location.width,
                     height : _zoom.size - _handleSize * 2,
                     color : zoomOption.fillerColor,
-                    text : '=',
+                    // strokeColor : '#fff', // zoomOption.handleColor,
+                    // lineWidth: 2,
+                    text : '::',
                     textPosition : 'inside'
                 };
             }
+            
+            _fillerShae.highlightStyle = {
+                brushType: 'fill',
+                color : 'rgba(0,0,0,0)'
+                /*
+                color : require('zrender/tool/color').alpha(
+                            _fillerShae.style.color, 0
+                        )
+                */
+            };
 
             self.shapeList.push(_fillerShae);
         }
@@ -484,71 +489,76 @@ define(function (require) {
          * 构建拖拽手柄
          */
         function _bulidHandle() {
+            var zrUtil = require('zrender/tool/util');
             _startShape = {
-                shape : 'rectangle',
-                zlevel : _zlevelBase
+                shape : 'icon',
+                zlevel : _zlevelBase,
+                draggable : true,
+                style : {
+                    iconType: 'rectangle',
+                    x : _location.x,
+                    y : _location.y,
+                    width : _handleSize,
+                    height : _handleSize,
+                    color : zoomOption.handleColor,
+                    text : '=',
+                    textPosition : 'inside'
+                },
+                highlightStyle : {
+                    brushType: 'fill'
+                },
+                ondrift : _ondrift,
+                ondragend : _ondragend
             };
-            _endShape = {
-                shape : 'rectangle',
-                zlevel : _zlevelBase
-            };
-
-            _startShape.draggable = true;
-            _startShape.ondrift = _ondrift;
-            _startShape.ondragend = _ondragend;
-            _endShape.draggable = true;
-            _endShape.ondrift = _ondrift;
-            _endShape.ondragend = _ondragend;
-
+            
             if (zoomOption.orient == 'horizontal') {
-                // 头
-                _startShape.style = {
-                    x : _fillerShae.style.x - _handleSize,
-                    y : _location.y,
-                    width : _handleSize,
-                    height : _location.height,
-                    color : zoomOption.handleColor,
-                    text : '|',
-                    textPosition : 'inside'
-                };
-                // 尾
-                _endShape.style = {
-                    x : _fillerShae.style.x + _fillerShae.style.width,
-                    y : _location.y,
-                    width : _handleSize,
-                    height : _location.height,
-                    color : zoomOption.handleColor,
-                    text : '|',
-                    textPosition : 'inside'
-                };
+                _startShape.style.height = _location.height;
+                _endShape = zrUtil.clone(_startShape);
+                
+                _startShape.style.x = _fillerShae.style.x - _handleSize,
+                _endShape.style.x = _fillerShae.style.x  
+                                    + _fillerShae.style.width;
             }
             else {
-                // 头
-                _startShape.style = {
-                    x : _location.x,
-                    y : _fillerShae.style.y - _handleSize,
-                    width : _location.width,
-                    height : _handleSize,
-                    color : zoomOption.handleColor,
-                    text : '—',
-                    textPosition : 'inside'
-                };
-                // 尾
-                _endShape.style = {
-                    x : _location.x,
-                    y : _fillerShae.style.y + _fillerShae.style.height,
-                    width : _location.width,
-                    height : _handleSize,
-                    color : zoomOption.handleColor,
-                    text : '—',
-                    textPosition : 'inside'
-                };
+                _startShape.style.width = _location.width;
+                _endShape = zrUtil.clone(_startShape);
+                
+                _startShape.style.y = _fillerShae.style.y - _handleSize;
+                _endShape.style.y = _fillerShae.style.y 
+                                    + _fillerShae.style.height;
             }
-
             self.shapeList.push(_startShape);
             self.shapeList.push(_endShape);
         }
 
+        /**
+         * 构建特效边框
+         */
+        function _bulidFrame() {
+            var zrUtil = require('zrender/tool/util');
+            // 特效框线，亚像素优化
+            var x = self.subPixelOptimize(_location.x, 1);
+            var y = self.subPixelOptimize(_location.y, 1);
+            _startFrameShape = {
+                shape : 'rectangle',
+                zlevel : _zlevelBase,
+                hoverable :false,
+                style : {
+                    x : x,
+                    y : y,
+                    width : _location.width - (x > _location.x ? 1 : 0),
+                    height : _location.height - (y > _location.y ? 1 : 0),
+                    lineWidth: 1,
+                    brushType: 'stroke',
+                    strokeColor : zoomOption.handleColor
+                }
+            };
+            _endFrameShape = zrUtil.clone(_startFrameShape);
+            self.shapeList.push(_startFrameShape);
+            self.shapeList.push(_endFrameShape);
+            return;
+        }
+        
         /**
          * 拖拽范围控制
          */
@@ -611,6 +621,7 @@ define(function (require) {
                 _startShape.style.x = _fillerShae.style.x - _handleSize;
                 _endShape.style.x = _fillerShae.style.x
                                     + _fillerShae.style.width;
+                
                 _zoom.start = Math.floor(
                     (_startShape.style.x - _location.x)
                     / _location.width * 100
@@ -636,6 +647,10 @@ define(function (require) {
 
             zr.modShape(_startShape.id, _startShape);
             zr.modShape(_endShape.id, _endShape);
+            
+            // 同步边框
+            _syncFrameShape();
+            
             zr.refresh();
         }
 
@@ -672,7 +687,33 @@ define(function (require) {
             }
 
             zr.modShape(_fillerShae.id, _fillerShae);
+            
+            // 同步边框
+            _syncFrameShape();
+            
             zr.refresh();
+        }
+        
+        function _syncFrameShape() {
+            if (zoomOption.orient == 'horizontal') {
+                _startFrameShape.style.width = 
+                    _fillerShae.style.x - _location.x;
+                _endFrameShape.style.x = 
+                    _fillerShae.style.x + _fillerShae.style.width;
+                _endFrameShape.style.width = 
+                    _location.x + _location.width - _endShape.style.x;
+            }
+            else {
+                _startFrameShape.style.height = 
+                    _fillerShae.style.y - _location.y;
+                _endFrameShape.style.y = 
+                    _fillerShae.style.y + _fillerShae.style.height;
+                _endFrameShape.style.height = 
+                    _location.y + _location.height - _endShape.style.y;
+            }
+                    
+            zr.modShape(_startFrameShape.id, _startFrameShape);
+            zr.modShape(_endFrameShape.id, _endFrameShape);
         }
         
         function _syncShape() {
@@ -1013,14 +1054,15 @@ define(function (require) {
             
             if (option.dataZoom.show) {
                 _buildBackground();
-                _buildDataBackground();
                 _buildFiller();
                 _bulidHandle();
+                _bulidFrame();
     
                 for (var i = 0, l = self.shapeList.length; i < l; i++) {
                     self.shapeList[i].id = zr.newShapeId(self.type);
                     zr.addShape(self.shapeList[i]);
                 }
+                _syncFrameShape();
             }
         }
         
