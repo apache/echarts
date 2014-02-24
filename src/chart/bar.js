@@ -762,10 +762,10 @@ define(function(require) {
             }
             else {
                 // 纵向
-                dataIndex = typeof mpData.xAxis == 'string'
-                            && xAxis.getIndexByName
-                            ? xAxis.getIndexByName(mpData.xAxis)
-                            : (mpData.xAxis || 0);
+                dataIndex = typeof mpData.yAxis == 'string'
+                            && yAxis.getIndexByName
+                            ? yAxis.getIndexByName(mpData.yAxis)
+                            : (mpData.yAxis || 0);
                 pos = [
                     xAxis.getCoord(mpData.xAxis || 0),
                     markCoordParams.xMarkMap[seriesIndex][dataIndex]
