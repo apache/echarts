@@ -130,7 +130,7 @@ var theme;
 var option = {
     0 : {
         title : {
-            text: 'ECharts主题定制',
+            text: 'ECharts折柱混搭',
             subtext: '纯属虚构'
         },
         tooltip : {
@@ -139,15 +139,14 @@ var option = {
         toolbox: {
             show : true,
             feature : {
-                mark : true,
-                dataView : {readOnly: false},
                 magicType:['line', 'bar'],
+                dataView : {readOnly: false},
                 restore : true,
                 saveAsImage : true
             }
         },
         legend: {
-            data:['蒸发量','降水量','最高温度','最低温度']
+            data:['降水量（日）','降水量（夜）','蒸发量','最高温度','最低温度']
         },
         xAxis : [
             {
@@ -174,14 +173,21 @@ var option = {
         ],
         series : [
             {
-                name:'蒸发量',
+                name:'降水量（日）',
                 type:'bar',
-                data:[2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6, 162.2, 32.6, 20.0, 6.4, 3.3]
+                stack:'1',
+                data:[12.0, 14.9, 17.0, 23.2, 35.6, 76.7, 105.6, 112.2, 52.6, 30.0, 19.4, 13.3]
             },
             {
-                name:'降水量',
+                name:'降水量（夜）',
                 type:'bar',
-                data:[2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3]
+                stack:'1',
+                data:[10.6, 10.9, 13.0, 12.4, 16.7, 20.7, 35.6, 22.2, 18.7, 18.8, 12.0, 10.3]
+            },
+            {
+                name:'蒸发量',
+                type:'bar',
+                data:[22.2, 25.9, 29.0, 36.4, 58.7, 90.7, 145.6, 122.2, 78.7, 48.8, 26.0, 22.3]
             },
             {
                 name:'最高温度',
@@ -198,7 +204,11 @@ var option = {
         ]
     },
     1 : {
+        title : {
+            text: '条形图'
+        },
         legend: {
+            x:'right',
             data:['直接','邮件','联盟','视频','搜索']
         },
         toolbox: {
@@ -224,49 +234,49 @@ var option = {
         },
         xAxis : [
             {
-                type : 'category',
-                data : ['周一','周二','周三','周四','周五','周六','周日']
+                type : 'value'
             }
         ],
         yAxis : [
             {
-                type : 'value'
+                type : 'category',
+                data : ['周一','周二','周三','周四','周五','周六','周日']
             }
         ],
         series : [
             {
                 name:'直接',
                 type:'bar',
-                stack: '直接',
-                data:[320, 332, 301, 334, 390, 330, 320]
+                stack: '广告',
+                data:[220, 232, 301, 334, 390, 330, 320]
             },
             {
                 name:'邮件',
                 type:'bar',
-                stack: '直接',
-                data:[120, 132, 101, 134, 90, 230, 210]
+                stack: '广告',
+                data:[80, 102, 101, 134, 90, 230, 210]
             },
             {
                 name:'联盟',
                 type:'bar',
                 stack: '广告',
-                data:[220, 182, 191, 234, 290, 330, 310]
+                data:[180, 182, 191, 234, 290, 330, 310]
             },
             {
                 name:'视频',
                 type:'bar',
                 stack: '广告',
-                data:[150, 232, 201, 154, 190, 330, 410]
+                data:[110, 132, 201, 154, 190, 330, 510]
             },
             {
                 name:'搜索',
                 type:'bar',
-                data:[562, 618, 664, 726, 862, 800, 970],
+                data:[662, 748, 864, 1026, 1162, 1100, 1430],
                 markLine : {
                     data : [
                         [
-                            {name : '周最低', xAxis: '周一', yAxis: 590,value:50},
-                            {name : '周最高', xAxis: '周五', yAxis: 890}
+                            {name : '周最低', yAxis: '周一', xAxis: 690, value:50},
+                            {name : '周最高', yAxis: '周五', xAxis: 1190}
                         ]
                     ]
                 }
@@ -274,10 +284,14 @@ var option = {
         ]
     },
     2 : {
+        title : {
+            text: '折线区域图'
+        },
         tooltip : {
             trigger: 'axis'
         },
         legend: {
+            x:'right',
             data:['意向','预购','成交']
         },
         toolbox: {
@@ -343,7 +357,7 @@ var option = {
     },
     3 : {
         title : {
-            text: '2013年上半年上证指数'
+            text: 'K线图'
         },
         tooltip : {
             trigger: 'axis',
@@ -365,10 +379,9 @@ var option = {
             feature : {
                 mark : true,
                 dataZoom : true,
-                dataView : {readOnly: false},
                 magicType:['line', 'bar'],
-                restore : true,
-                saveAsImage : true
+                dataView : {readOnly: false},
+                restore : true
             }
         },
         dataZoom : {
@@ -407,6 +420,7 @@ var option = {
         yAxis : [
             {
                 type : 'value',
+                name : '指数',
                 scale:true,
                 precision: 2,
                 splitNumber: 7,
@@ -414,6 +428,7 @@ var option = {
             },
             {
                 type : 'value',
+                name : '成交量',
                 scale:true,
                 splitNumber: 7,
                 boundaryGap: [0.05, 0.05]
@@ -544,6 +559,9 @@ var option = {
         animation: false
     },
     4 : {
+        title : {
+            text: '散点图'
+        },
         tooltip : {
             trigger: 'item',
             formatter : function(value) {
@@ -553,6 +571,7 @@ var option = {
             }
         },
         legend: {
+            x:'right',
             data:['女性','男性']
         },
         toolbox: {
@@ -709,10 +728,14 @@ var option = {
         animation: false
     },
     5 : {
+        title : {
+            text: '气泡图'
+        },
         tooltip : {
             trigger: 'item'
         },
         legend: {
+            x:'right',
             data:['scatter1','scatter2']
         },
         toolbox: {
@@ -741,8 +764,7 @@ var option = {
             {
                 type : 'value',
                 power: 1,
-                scale: true,
-                splitArea : {show : true}
+                scale: true
             }
         ],
         series : [
@@ -789,7 +811,7 @@ var option = {
     },
     6 : {
         title : {
-            text: 'iphone销量',
+            text: '地图',
             subtext: '纯属虚构',
             x:'center'
         },
@@ -798,7 +820,7 @@ var option = {
         },
         dataRange: {
             min: 0,
-            max: 2500,
+            max: 1000,
             text:['高','低'],           // 文本，默认为数值文本
             calculable : true
         },
@@ -810,13 +832,12 @@ var option = {
             feature : {
                 mark : true,
                 dataView : {readOnly: false},
-                restore : true,
-                saveAsImage : true
+                restore : true
             }
         },
         series : [
             {
-                name: 'iphone3',
+                name: '地图',
                 type: 'map',
                 mapType: 'china',
                 data:[
@@ -861,6 +882,9 @@ var option = {
         animation: false
     },
     7 : {
+        title : {
+            text: '饼图'
+        },
         tooltip : {
             trigger: 'item',
             formatter: "{a} <br/>{b} : {c} ({d}%)"
@@ -870,17 +894,11 @@ var option = {
             x : 'right',
             data:['直接访问','邮件营销','联盟广告','视频广告','搜索引擎']
         },
-        toolbox: {
-            show : true,
-            x: 'left',
-            feature : {
-                restore : true
-            }
-        },
         series : [
             {
                 name:'访问来源',
                 type:'pie',
+                selectedMode: 'single',
                 data:[
                     {value:335, name:'直接访问'},
                     {value:310, name:'邮件营销'},
@@ -893,6 +911,9 @@ var option = {
         animation: false
     },
     8 : {
+        title : {
+            text: '雷达图'
+        },
         tooltip : {
             trigger: 'axis'
         },
@@ -900,13 +921,6 @@ var option = {
             orient : 'vertical',
             x : 'right',
             data:['预算分配','实际开销']
-        },
-        toolbox: {
-            show : true,
-            x: 'left',
-            feature : {
-                restore : true
-            }
         },
         polar : [
            {
@@ -939,6 +953,9 @@ var option = {
         animation: false
     },
     9 : {
+        title : {
+            text: '和弦图'
+        },
         tooltip : {
             trigger: 'item'
         },
@@ -946,13 +963,6 @@ var option = {
             orient : 'vertical',
             x : 'right',
             data:['group1','group2', 'group3', 'group4']
-        },
-        toolbox: {
-            show : true,
-            x: 'left',
-            feature : {
-                restore : true
-            }
         },
         series : [
             {
@@ -1033,6 +1043,9 @@ var option = {
         forceMockThreeData();
         
         return {
+            title : {
+                text: '力导向布局图'
+            },
             tooltip : {
                 trigger: 'item',
                 formatter: '{a} : {b}'
@@ -1041,13 +1054,6 @@ var option = {
                 orient : 'vertical',
                 x : 'right',
                 data:['叶子节点','非叶子节点', '根节点']
-            },
-            toolbox: {
-                show : true,
-                x: 'left',
-                feature : {
-                    restore : true
-                }
             },
             series : [
                 {
