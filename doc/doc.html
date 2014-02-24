@@ -629,7 +629,12 @@ require(['echarts'], function(ec){
                         <tr>
                             <td><b>{self}</b> on</td>
                             <td><b>{string}</b> eventName, <br/><b>{Function}</b> eventListener</td>
-                            <td>事件绑定，支持事件有：<br/>REFRESH，RESTORE，CLICK，HOVER，<br/>DATA_CHANGED，MAGIC_TYPE_CHANGED，DATA_VIEW_CHANGED，<br/>DATA_ZOOM，DATA_RANGE，LEGEND_SELECTED，MAP_SELECTED</td>
+                            <td>事件绑定，支持事件有：
+                                <br/>REFRESH，RESTORE，CLICK，HOVER，
+                                <br/>DATA_CHANGED，MAGIC_TYPE_CHANGED，DATA_VIEW_CHANGED，
+                                <br/>DATA_ZOOM，DATA_RANGE，LEGEND_SELECTED，MAP_SELECTED
+                                <br/>事件命名统一挂载到require('echarts/config').EVENT（非模块化为echarts.config.EVENT）命名空间下，建议使用此命名空间作为事件名引用。
+                            </td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> un</td>
