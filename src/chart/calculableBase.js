@@ -26,7 +26,7 @@ define(function(require) {
                     text : '',
                     r : calculableShape.style.r + 5,
                     brushType : 'stroke',
-                    strokeColor : self.zr.getCalculableColor(),
+                    strokeColor : option.calculableColor,//self.zr.getCalculableColor(),
                     lineWidth : (calculableShape.style.lineWidth || 1) + 12
                 };
                 self.zr.addHoverShape(calculableShape);
