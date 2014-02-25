@@ -523,6 +523,7 @@ define(function(require) {
          * 图表渲染 
          */
         function _render(magicOption) {
+            dom.style.backgroundColor = magicOption.backgroundColor;
             _disposeChartList();
             _zr.clear();
 
@@ -822,6 +823,70 @@ define(function(require) {
         }
 
         /**
+         * 非图表全局属性merge~~ 
+         */
+        function _mergeGlobalConifg() {
+            // 背景
+            if (typeof _option.backgroundColor == 'undefined') {
+                _option.backgroundColor = _themeConfig.backgroundColor;
+            }
+            
+            // 拖拽重计算相关
+            if (typeof _option.calculable == 'undefined') {
+                _option.calculable = _themeConfig.calculable;
+            }
+            if (typeof _option.calculableColor == 'undefined') {
+                _option.calculableColor = _themeConfig.calculableColor;
+            }
+            if (typeof _option.calculableHolderColor == 'undefined') {
+                _option.calculableHolderColor = _themeConfig.calculableHolderColor;
+            }
+            
+            // 孤岛显示连接符
+            if (typeof _option.nameConnector == 'undefined') {
+                _option.nameConnector = _themeConfig.nameConnector;
+            }
+            if (typeof _option.valueConnector == 'undefined') {
+                _option.valueConnector = _themeConfig.valueConnector;
+            }
+            
+            // 动画相关
+            if (typeof _option.animation == 'undefined') {
+                _option.animation = _themeConfig.animation;
+            }
+            if (typeof _option.animationThreshold == 'undefined') {
+                _option.animationThreshold = _themeConfig.animationThreshold;
+            }
+            if (typeof _option.animationDuration == 'undefined') {
+                _option.animationDuration = _themeConfig.animationDuration;
+            }
+            if (typeof _option.animationEasing == 'undefined') {
+                _option.animationEasing = _themeConfig.animationEasing;
+            }
+            if (typeof _option.addDataAnimation == 'undefined') {
+                _option.addDataAnimation = _themeConfig.addDataAnimation;
+            }
+            
+            // 默认标志图形类型列表
+            if (typeof _option.symbolList == 'undefined') {
+                _option.symbolList = _themeConfig.symbolList;
+            }
+
+            var zrColor = require('zrender/tool/color');
+            // 数值系列的颜色列表，不传则采用内置颜色，可配数组，借用zrender实例注入，会有冲突风险，先这样
+            if (_option.color && _option.color.length > 0) {
+                _zr.getColor = function(idx) {
+                    return zrColor.getColor(idx, _option.color);
+                };
+            }
+            else {
+                _zr.getColor = function(idx) {
+                    return zrColor.getColor(idx, _themeConfig.color);
+                };
+            }
+        }
+        
+        /**
          * 万能接口，配置图表实例任何可配置选项，多次调用时option选项做merge处理
          * @param {Object} option
          * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
@@ -847,48 +912,7 @@ define(function(require) {
                 return;
             }
 
-            // 非图表全局属性merge~~
-            if (typeof _option.calculable == 'undefined') {
-                _option.calculable = _themeConfig.calculable;
-            }
-            if (typeof _option.nameConnector == 'undefined') {
-                _option.nameConnector = _themeConfig.nameConnector;
-            }
-            if (typeof _option.valueConnector == 'undefined') {
-                _option.valueConnector = _themeConfig.valueConnector;
-            }
-            if (typeof _option.animation == 'undefined') {
-                _option.animation = _themeConfig.animation;
-            }
-            if (typeof _option.animationThreshold == 'undefined') {
-                _option.animationThreshold = _themeConfig.animationThreshold;
-            }
-            if (typeof _option.animationDuration == 'undefined') {
-                _option.animationDuration = _themeConfig.animationDuration;
-            }
-            if (typeof _option.animationEasing == 'undefined') {
-                _option.animationEasing = _themeConfig.animationEasing;
-            }
-            if (typeof _option.addDataAnimation == 'undefined') {
-                _option.addDataAnimation = _themeConfig.addDataAnimation;
-            }
-
-            var zrColor = require('zrender/tool/color');
-            // 数值系列的颜色列表，不传则采用内置颜色，可配数组
-            if (_option.color && _option.color.length > 0) {
-                _zr.getColor = function(idx) {
-                    return zrColor.getColor(idx, _option.color);
-                };
-            }
-            else {
-                _zr.getColor = function(idx) {
-                    return zrColor.getColor(idx, _themeConfig.color);
-                };
-            }
-            // calculable可计算颜色提示
-            _zr.getCalculableColor = function () {
-                return _option.calculableColor || _themeConfig.calculableColor;
-            };
+            _mergeGlobalConifg();
 
             _optionBackup = zrUtil.clone(_option);
             _optionRestore = zrUtil.clone(_option);
@@ -1264,9 +1288,15 @@ define(function(require) {
                     _themeConfig[key] = zrUtil.clone(ecConfig[key]);
                 }
                 if (theme.color) {
-                    // 颜色数组随theme
+                    // 颜色数组随theme，不merge
                     _themeConfig.color = [];
                 }
+                
+                if (theme.symbolList) {
+                    // 默认标志图形类型列表，不merge
+                    _themeConfig.symbolList = [];
+                }
+                
                 // 应用新主题
                 zrUtil.merge(
                     _themeConfig, zrUtil.clone(theme),
