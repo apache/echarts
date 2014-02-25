@@ -26,8 +26,11 @@ function focusGraphic() {
     domGraphic.className = 'span8 ani';
     if (needRefresh) {
         myChart[0].showLoading();
-        window.scrollTo(0)
-        setTimeout(refresh, 1000);
+        myChart[1].showLoading();
+        myChart[2].showLoading();
+        myChart[3].showLoading();
+        window.location = '#refresh';
+        setTimeout(refresh, 500);
     }
 }
 
@@ -111,6 +114,7 @@ require(
     requireCallback
 );
 
+
 var echarts;
 function requireCallback (ec) {
     (new Function(editor.doc.getValue()))();
@@ -119,18 +123,104 @@ function requireCallback (ec) {
         myChart[i] = echarts.init(domMain[i], theme);
         myChart[i].setOption(option[i]);
     }
+    
     window.onresize = function(){
         for (var i = 0, l = myChart.length; i < l; i++) {
             myChart[i].resize && myChart[i].resize();
         }
     };
+    
+    window.saveAsImage = function(){
+        var domG = document.getElementById('graphic');
+        var domGWidth = domG.clientWidth;
+        var domGHeight = domG.clientHeight;
+    
+        var zrDom = document.createElement('div');
+        zrDom.style.position = 'absolute';
+        zrDom.style.left = '-4000px';
+        zrDom.style.width = domGWidth * 2 + 'px';
+        zrDom.style.height = (domGHeight / 2)+ 'px';
+        document.body.appendChild(zrDom);
+        
+        var _zr = require('zrender').init(zrDom);
+        _zr.addShape({
+            shape:'rectangle',
+            style : {
+                x : 0,
+                y : 0,
+                width : domGWidth * 2,
+                height : domGHeight / 2,
+                color: '#fff'
+            }
+        });
+        var domGLeft = domG.offsetLeft;
+        var domGTop = domG.offsetTop;
+        for (var i = 0, l = domMain.length; i < l; i++) {
+            _zr.addShape({
+                shape:'image',
+                style : {
+                    x : domMain[i].offsetLeft - domGLeft + (i < 6 ? 0: domGWidth),
+                    y : domMain[i].offsetTop - domGTop - (i < 6 ? 0: 1200),
+                    image : myChart[i].getImage()
+                }
+            });
+        }
+        _zr.render();
+        
+        setTimeout(function() {
+            var image = _zr.toDataURL('image/png');
+            _zr.dispose();
+            zrDom.parentNode.removeChild(zrDom);
+            zrDom = null;
+            
+            var downloadDiv = document.createElement('div');
+            downloadDiv.id = '__saveAsImage_download_wrap__';
+            downloadDiv.style.cssText = 'position:fixed;'
+                + 'z-index:99999;'
+                + 'display:block;'
+                + 'top:0;left:0;'
+                + 'background-color:rgba(33,33,33,0.5);'
+                + 'text-align:center;'
+                + 'width:100%;'
+                + 'height:100%;'
+                + 'line-height:' 
+                + document.documentElement.clientHeight + 'px;';
+        
+            var downloadLink = document.createElement('a');
+            downloadLink.href = image
+            downloadLink.setAttribute('download', 'EChartsTheme.png');
+            downloadLink.innerHTML = '<img style="height:80%" src="' + image 
+                + '" title="'
+                + (!!(window.attachEvent && navigator.userAgent.indexOf('Opera') === -1)
+                   ? '右键->图片另存为'
+                   : '点击保存')
+                + '"/>';
+            
+            downloadDiv.appendChild(downloadLink);
+            document.body.appendChild(downloadDiv);
+            
+            downloadDiv.onclick = function () {
+                var d = document.getElementById(
+                    '__saveAsImage_download_wrap__'
+                );
+                d.onclick = null;
+                d.innerHTML = '';
+                document.body.removeChild(d);
+                d = null;
+            };
+                
+            downloadLink = null;
+            downloadDiv = null;
+        }, 100);
+    }
+
 }
 
 var theme;
 var option = {
     0 : {
         title : {
-            text: 'ECharts折柱混搭',
+            text: '【ECharts主题定制】折柱混搭',
             subtext: '纯属虚构'
         },
         tooltip : {
@@ -141,8 +231,7 @@ var option = {
             feature : {
                 magicType:['line', 'bar'],
                 dataView : {readOnly: false},
-                restore : true,
-                saveAsImage : true
+                restore : true
             }
         },
         legend: {
@@ -229,7 +318,7 @@ var option = {
         },
         grid : {
             x : 45,
-            y : 35,
+            y : 40,
             x2 : 35,
         },
         xAxis : [
@@ -306,7 +395,7 @@ var option = {
         },
         grid : {
             x : 45,
-            y : 35,
+            y : 40,
             x2 : 35,
         },
         xAxis : [
@@ -585,9 +674,10 @@ var option = {
             }
         },
         grid : {
-            x : 45,
-            y : 35,
+            x : 55,
+            y : 40,
             x2 : 35,
+            y2 : 30
         },
         xAxis : [
             {
@@ -749,9 +839,10 @@ var option = {
             }
         },
         grid : {
-            x : 45,
-            y : 35,
+            x : 55,
+            y : 40,
             x2 : 35,
+            y2 : 30
         },
         xAxis : [
             {
@@ -1073,4 +1164,28 @@ var option = {
             animation: false
         } 
     })()
+};
+
+var curSwitch = true;
+var docSwidth = document.getElementById('doc-switch');
+var docContiner = document.getElementById('doc-continer');
+var docConHeight = docContiner.offsetHeight;
+docContiner.style.height = docConHeight + 'px';
+function docSwitch(){
+    curSwitch = !curSwitch;
+    if (curSwitch) {
+        docContiner.style.height = docConHeight + 'px';
+        docSwidth.innerHTML = '- 文档图示';
+    }
+    else {
+        docContiner.style.height = '30px';
+        docSwidth.innerHTML = '+ 文档图示';
+    }
+    return false;
+}
+window.onload = function(){
+    setTimeout(function(){
+        curSwitch = true;
+        docSwitch();
+    }, 1000);
 };
