@@ -36,6 +36,9 @@ define(function() {
         COMPONENT_TYPE_AXIS_CATEGORY: 'categoryAxis',
         COMPONENT_TYPE_AXIS_VALUE: 'valueAxis',
 
+        // 全图默认背景
+        backgroundColor: 'rgba(0,0,0,0)',
+        
         // 默认色板
         color: ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
                 '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
@@ -884,6 +887,11 @@ define(function() {
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover'
         },
+        // 默认标志图形类型列表
+        symbolList : [
+          'circle', 'rectangle', 'triangle', 'diamond',
+          'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
+        ],
         loadingText : 'Loading...',
         // 可计算特性配置，孤岛，提示颜色
         calculable: false,              // 默认关闭可计算特性

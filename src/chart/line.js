@@ -32,10 +32,7 @@ define(function(require) {
 
         var finalPLMap = {}; // 完成的point list(PL)
         var _sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
-        var _symbol = [
-              'circle', 'rectangle', 'triangle', 'diamond',
-              'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
-            ];
+        var _symbol = ecConfig.symbolList;
         var _sIndex2ShapeMap = {};  // series拐点图形类型，seriesIndex索引到shape type
 
         require('zrender/shape').get('icon').define(

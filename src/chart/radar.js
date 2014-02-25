@@ -38,10 +38,7 @@
 
         var _dropBoxList;
 
-        var _symbol = [
-              'circle', 'rectangle', 'triangle', 'diamond',
-              'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
-            ];
+        var _symbol = ecConfig.symbolList;
         var _radarDataCounter;
         
         /**
