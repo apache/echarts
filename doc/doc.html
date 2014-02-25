@@ -133,7 +133,9 @@
                                 <li><a href="#AreaStyle">areaStyle</a></li>
                                 <li><a href="#TextStyle">textStyle</a></li>
                                 <li><a href="#Loadingoption">loadingOption</a></li>
+                                <li><a href="#BackgroundColor">backgroundColor</a></li>
                                 <li><a href="#Color">color</a></li>
+                                <li><a href="#SymbolList">symbolList</a></li>
                                 <li><a href="#Calculable">calculable</a></li>
                                 <li><a href="#CalculableColor">calculableColor</a></li>
                                 <li><a href="#CalculableHolderColor">calculableHolderColor</a></li>
@@ -2844,12 +2846,29 @@ geoCoord : {
                         </tr>
                     </table>
 
+                    <h4>backgroundColor<a name="BackgroundColor"> </a></h4>
+                    <P>
+                        <b>{color}</b> 'rgba(0,0,0,0)'，全图默认背景
+                    </P>
+                    
                     <h4>color<a name="Color"> </a></h4>
-                    <P> <b>{Array}</b><br/>
-                        ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed','#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',<br/>
-                        '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700','#6b8e23','#ff00ff','#3cb371','#b8860b','#30e0e0']
-                        <br/>，默认颜色序列</P>
-
+                    <P>
+                        <b>{Array}</b> [
+                        '#ff7f50', '#87cefa', '#da70d6', '#32cd32', '#6495ed', 
+                        '#ff69b4', '#ba55d3', '#cd5c5c', '#ffa500', '#40e0d0', 
+                        '#1e90ff', '#ff6347', '#7b68ee', '#00fa9a', '#ffd700', 
+                        '#6b8e23', '#ff00ff', '#3cb371', '#b8860b', '#30e0e0'
+                        ]，默认颜色序列
+                    </P>
+                    
+                    <h4>symbolList<a name="SymbolList"> </a></h4>
+                    <P>
+                        <b>{Array}</b> [
+                        'circle', 'rectangle', 'triangle', 'diamond', 
+                        'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
+                        ]，默认标志图形类型列表，循环使用
+                    </P>
+                                
                     <h4>renderAsImage<a name="RenderAsImage"> </a></h4>
                     <P> {boolean | string} false，非IE8-支持渲染为图片，可设为true或指定图片格式（png | jpeg），渲染为图片后实例依然可用（如setOption，resize等），但各种交互失效</P>
                     
