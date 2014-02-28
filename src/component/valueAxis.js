@@ -141,8 +141,8 @@ define(function (require) {
             if (option.position == 'bottom' || option.position == 'top') {
                 // 横向
                 var yPosition = option.position == 'bottom'
-                                ? grid.getYend()
-                                : (grid.getY() - length);
+                        ? (tickOption.inside ? (grid.getYend() - length) : grid.getYend())
+                        : (tickOption.inside ? grid.getY() : (grid.getY() - length));
                 var x;
                 for (var i = 0; i < dataLength; i++) {
                     // 亚像素优化
@@ -166,8 +166,9 @@ define(function (require) {
             else {
                 // 纵向
                 var xPosition = option.position == 'left'
-                                ? (grid.getX() - length)
-                                : grid.getXend();
+                        ? (tickOption.inside ? grid.getX() : (grid.getX() - length))
+                        : (tickOption.inside ? (grid.getXend() - length) : grid.getXend());
+
                 var y;
                 for (var i = 0; i < dataLength; i++) {
                     // 亚像素优化
