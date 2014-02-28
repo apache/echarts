@@ -236,6 +236,7 @@ define(function (require) {
                         {option : option}
                     );
                 },
+                // 有动画，所以高级浏览器时间更长点
                 !G_vmlCanvasManager ? 800 : 100
             );
         }
