@@ -649,12 +649,12 @@ define(function() {
                         color: '#fff'
                     },
                     areaStyle: {
-                        color: '#ccc'//rgba(135,206,250,0.8)
+                        color: '#ccc'
                     },
                     label: {
                         show: false,
                         textStyle: {
-                            color: 'rgba(139,69,19,1)'
+                            color: 'rgb(139,69,19)'
                         }
                     }
                 },
@@ -670,7 +670,7 @@ define(function() {
                     label: {
                         show: false,
                         textStyle: {
-                            color: 'rgba(139,69,19,1)'
+                            color: 'rgb(100,0,0)'
                         }
                     }
                 }

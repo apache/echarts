@@ -39,6 +39,7 @@ define(function(require) {
         var _selected = {};     // 地图选择状态
         var _mapTypeMap = {};   // 图例类型索引
         var _mapDataMap = {};   // 根据地图类型索引bbox,transform,path
+        var _shapeListMap = {}; // 名字到shapeList关联映射
         var _nameMap = {};      // 个性化地名
         var _specialArea = {};  // 特殊
 
@@ -208,9 +209,16 @@ define(function(require) {
                 );
                 _buildMark(mt, ms);
                 if (--_mapDataRequireCounter <= 0) {
+                    _shapeListMap = {};
                     for (var i = 0, l = self.shapeList.length; i < l; i++) {
                         self.shapeList[i].id = zr.newShapeId(self.type);
                         zr.addShape(self.shapeList[i]);
+                        // 通过name关联shape，用于onmouseover
+                        if (self.shapeList[i].shape == 'path' 
+                            && typeof self.shapeList[i].style._text != 'undefined'
+                        ) {
+                            _shapeListMap[self.shapeList[i].style._text] = self.shapeList[i];
+                        }
                     }
                     zr.refresh();
                     if (!_markAnimation) {
@@ -600,7 +608,7 @@ define(function(require) {
             var highlightStyle;
             
             var shape;
-            var tooSmall;
+            var textShape; 
             for (var i = 0, l = mapData.length; i < l; i++) {
                 style = zrUtil.clone(mapData[i]);
                 highlightStyle = zrUtil.clone(style);
@@ -648,12 +656,6 @@ define(function(require) {
                     value = '-';
                 }
                 
-                if (style.text == '香港' || style.text == '澳门') {
-                    tooSmall = true;
-                }
-                else {
-                    tooSmall = false;
-                }
                 // 值域控件控制
                 color = (dataRange && !isNaN(value))
                         ? dataRange.getColor(value)
@@ -692,12 +694,11 @@ define(function(require) {
                     style.textColor = 'rgba(0,0,0,0)';  // 默认不呈现文字
                 }
                 
-                var textShape; // 文字标签避免覆盖单独一个shape
+                // 文字标签避免覆盖单独一个shape
                 textShape = {
                     shape : 'text',
                     zlevel : _zlevelBase + 1,
-                    hoverable: tooSmall ? _hoverable[mapType] : tooSmall,
-                    clickable : tooSmall,
+                    hoverable: _hoverable[mapType],
                     position : style.position,
                     _mapType : mapType,
                     style : {
@@ -712,11 +713,12 @@ define(function(require) {
                         color : style.textColor,
                         strokeColor : 'rgba(0,0,0,0)',
                         textFont : style.textFont
-                    }
+                    },
+                    onmouseover : self.shapeHandler.onmouseover
                 };
                 textShape._style = zrUtil.clone(textShape.style);
                 textShape.highlightStyle = zrUtil.clone(textShape.style);
-                tooSmall && (textShape.highlightStyle.strokeColor = 'yellow');
+                // labelInteractive && (textShape.highlightStyle.strokeColor = 'yellow');
                 style.textColor = 'rgba(0,0,0,0)';  // 把图形的text隐藏
                 
                 // 高亮
@@ -733,6 +735,7 @@ define(function(require) {
                     queryTarget,
                     'itemStyle.emphasis.lineStyle.width'
                 ) || style.lineWidth;
+                highlightStyle._text = name;
                 if (self.deepQuery(
                     queryTarget,
                     'itemStyle.emphasis.label.show'
@@ -740,7 +743,6 @@ define(function(require) {
                     highlightStyle.text = _getLabelText(
                         name, value, queryTarget, 'emphasis'
                     );
-                    highlightStyle._text = name;
                     highlightStyle.textAlign = 'center';
                     highlightStyle.textColor = self.deepQuery(
                         queryTarget,
@@ -758,20 +760,41 @@ define(function(require) {
                 else {
                     highlightStyle.textColor = 'rgba(0,0,0,0)'; // 把图形的text隐藏
                 }
+
+                shape = {
+                    shape : 'path',
+                    zlevel : _zlevelBase,
+                    hoverable: _hoverable[mapType],
+                    position : style.position,
+                    style : style,
+                    highlightStyle : highlightStyle,
+                    _style: zrUtil.clone(style),
+                    _mapType: mapType
+                };
                 
                 if (_selectedMode[mapType] &&
-                    _selected[name]
-                    || (data && data.selected && _selected[name] !== false)
+                     _selected[name]
+                     || (data && data.selected && _selected[name] !== false) 
                 ) {
                     textShape.style = zrUtil.clone(
                         textShape.highlightStyle
                     );
+                    shape.style = zrUtil.clone(shape.highlightStyle);
                 }
-                if (_selectedMode[mapType] && textShape.clickable) {
+                
+                if (_selectedMode[mapType]) {
+                    _selected[name] = typeof _selected[name] != 'undefined'
+                                      ? _selected[name]
+                                      : (data && data.selected);
+                    _mapTypeMap[name] = mapType;
+                    textShape.clickable = true;
                     textShape.onclick = self.shapeHandler.onclick;
+                    
+                    shape.clickable = true;
+                    shape.onclick = self.shapeHandler.onclick;
                 }
-                textShape._mapType= mapType;
-
+                // console.log(name,shape);
+                
                 ecData.pack(
                     textShape,
                     {
@@ -783,33 +806,6 @@ define(function(require) {
                     name
                 );
                 self.shapeList.push(textShape);
-
-                shape = {
-                    shape : 'path',
-                    zlevel : _zlevelBase,
-                    clickable : true,
-                    position : style.position,
-                    style : style,
-                    highlightStyle : highlightStyle,
-                    _style: zrUtil.clone(style),
-                    _mapType: mapType
-                };
-                if (_selectedMode[mapType] &&
-                     _selected[name]
-                     || (data && data.selected && _selected[name] !== false) 
-                ) {
-                    shape.style = zrUtil.clone(shape.highlightStyle);
-                }
-                
-                if (_selectedMode[mapType]) {
-                    _selected[name] = typeof _selected[name] != 'undefined'
-                                      ? _selected[name]
-                                      : (data && data.selected);
-                    _mapTypeMap[name] = mapType;
-                    shape.onclick = self.shapeHandler.onclick;
-                }
-                shape.hoverable = _hoverable[mapType];
-                // console.log(name,shape);
                 
                 ecData.pack(
                     shape,
@@ -1251,6 +1247,17 @@ define(function(require) {
                 zr.un(zrConfig.EVENT.MOUSEDOWN, _onmousedown);
             }
         }
+        
+        /**
+         * 输出关联区域
+         */
+        self.shapeHandler.onmouseover = function(param) {
+            var target = param.target;
+            var name = target.style._text;
+            if (_shapeListMap[name]) {
+                zr.addHoverShape(_shapeListMap[name]);
+            }
+        };
 
         // 重载基类方法
         self.getMarkCoord = getMarkCoord;
