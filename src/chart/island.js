@@ -18,8 +18,8 @@ define(function (require) {
         ComponentBase.call(this, ecConfig, zr);
         // 可计算特性装饰
         var CalculableBase = require('./calculableBase');
-        CalculableBase.call(this, zr);
-
+        CalculableBase.call(this, zr, ecConfig);
+                
         var ecData = require('../util/ecData');
 
         var zrEvent = require('zrender/tool/event');
