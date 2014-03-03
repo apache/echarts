@@ -602,7 +602,9 @@ define(function() {
                             width: 1,
                             type: 'solid'
                         }
-                    }
+                    },
+                    borderWidth: 1,
+                    borderColor: '#fff'
                 },
                 emphasis: {
                     // color: 各异,
@@ -620,7 +622,8 @@ define(function() {
                             width: 1,
                             type: 'solid'
                         }
-                    }
+                    },
+                    borderWidth: 0
                 }
             }
         },

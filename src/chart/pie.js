@@ -290,14 +290,19 @@ define(function(require) {
             var center = self.parseCenter(serie.center);
 
             // 多级控制
-            var normalColor = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.color'
-                ) || defaultColor;
-
-            var emphasisColor = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.emphasis.color'
+            var normal = self.deepMerge(
+                queryTarget,
+                'itemStyle.normal'
+            ) || {};
+            var emphasis = self.deepMerge(
+                queryTarget,
+                'itemStyle.emphasis'
+            ) || {};
+            var normalColor = normal.color || defaultColor;
+            var emphasisColor = emphasis.color 
+                || (typeof normalColor == 'string'
+                    ? zrColor.lift(normalColor, -0.2)
+                    : normalColor
                 );
 
             var sector = {
@@ -313,17 +318,16 @@ define(function(require) {
                     endAngle : endAngle,
                     brushType : 'both',
                     color : normalColor,
-                    strokeColor : '#fff',
-                    lineWidth: 1
+                    lineWidth : normal.borderWidth,
+                    strokeColor : normal.borderColor,
+                    lineJoin: 'round'
                 },
                 highlightStyle : {
-                    //color : emphasisColor || normalColor
-                    color : emphasisColor 
-                            || (typeof normalColor == 'string'
-                                ? zrColor.lift(normalColor, -0.2)
-                                : normalColor
-                               ),
-                    strokeColor : 'rgba(0,0,0,0)'
+                    color : emphasisColor,
+                    strokeColor : 'rgba(0,0,0,0)',
+                    lineWidth : emphasis.borderWidth,
+                    strokeColor : emphasis.borderColor,
+                    lineJoin: 'round'
                 },
                 _seriesIndex : seriesIndex, 
                 _dataIndex : dataIndex
