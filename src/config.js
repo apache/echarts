@@ -588,6 +588,8 @@ define(function() {
             // roseType : null,     // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
             itemStyle: {
                 normal: {
+                    borderColor: '#fff',
+                    borderWidth: 1,
                     // color: 各异,
                     label: {
                         show: true,
@@ -603,11 +605,11 @@ define(function() {
                             width: 1,
                             type: 'solid'
                         }
-                    },
-                    borderWidth: 1,
-                    borderColor: '#fff'
+                    }
                 },
                 emphasis: {
+                    borderColor: 'rgba(0,0,0,0)',
+                    borderWidth: 1,
                     // color: 各异,
                     label: {
                         show: false
@@ -623,8 +625,7 @@ define(function() {
                             width: 1,
                             type: 'solid'
                         }
-                    },
-                    borderWidth: 0
+                    }
                 }
             }
         },
@@ -647,10 +648,8 @@ define(function() {
             itemStyle: {
                 normal: {
                     // color: 各异,
-                    lineStyle: {
-                        width: 2,
-                        color: '#fff'
-                    },
+                    borderColor: '#fff',
+                    borderWidth: 1,
                     areaStyle: {
                         color: '#ccc'
                     },
@@ -663,10 +662,8 @@ define(function() {
                 },
                 emphasis: {                 // 也是选中样式
                     // color: 各异,
-                    lineStyle: {
-                        width: 2,
-                        color: '#fff'
-                    },
+                    borderColor: 'rgba(0,0,0,0)',
+                    borderWidth: 1,
                     areaStyle: {
                         color: 'rgba(255,215,0,0.8)'
                     },

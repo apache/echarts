@@ -669,11 +669,11 @@ define(function(require) {
                               );
                 style.strokeColor = self.deepQuery(
                     queryTarget,
-                    'itemStyle.normal.lineStyle.color'
+                    'itemStyle.normal.borderColor'
                 );
                 style.lineWidth = self.deepQuery(
                     queryTarget,
-                    'itemStyle.normal.lineStyle.width'
+                    'itemStyle.normal.borderWidth'
                 );
                 style.text = _getLabelText(name, value, queryTarget, 'normal');
                 style._text = name;
@@ -729,11 +729,11 @@ define(function(require) {
                 ) || style.color;
                 highlightStyle.strokeColor = self.deepQuery(
                     queryTarget,
-                    'itemStyle.emphasis.lineStyle.color'
+                    'itemStyle.emphasis.borderColor'
                 ) || style.strokeColor;
                 highlightStyle.lineWidth = self.deepQuery(
                     queryTarget,
-                    'itemStyle.emphasis.lineStyle.width'
+                    'itemStyle.emphasis.borderWidth'
                 ) || style.lineWidth;
                 highlightStyle._text = name;
                 if (self.deepQuery(
