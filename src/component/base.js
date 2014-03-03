@@ -876,6 +876,9 @@ define(function(require) {
         
         // 每三位默认加,格式化
         function numAddCommas(x){
+            if (isNaN(x)) {
+                return '-';
+            }
             x = (x + '').split('.');
             return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g,'$1,') 
                    + (x.length > 1 ? ('.' + x[1]) : '');

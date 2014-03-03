@@ -19,6 +19,7 @@ define(function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
     
+    var _canvasSupported = !!document.createElement('canvas').getContext;
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
@@ -523,7 +524,24 @@ define(function(require) {
          * 图表渲染 
          */
         function _render(magicOption) {
-            dom.style.backgroundColor = magicOption.backgroundColor;
+            if (magicOption.backgroundColor) {
+                if (!_canvasSupported 
+                    && magicOption.backgroundColor.indexOf('rgba') != -1
+                ) {
+                    // IE6~8对RGBA的处理，filter会带来其他颜色的影响
+                    var cList = magicOption.backgroundColor.split(',');
+                    dom.style.filter = 'alpha(opacity=' +
+                        cList[3].substring(0, cList[3].lastIndexOf(')')) * 100
+                        + ')';
+                    cList.length = 3;
+                    cList[0] = cList[0].replace('a', '');
+                    dom.style.backgroundColor = cList.join(',') + ')';
+                }
+                else {
+                    dom.style.backgroundColor = magicOption.backgroundColor;
+                }
+            }
+            
             _disposeChartList();
             _zr.clear();
 
@@ -710,7 +728,7 @@ define(function(require) {
             
             var imgId = 'IMG' + _id;
             var img = document.getElementById(imgId);
-            if (magicOption.renderAsImage && !G_vmlCanvasManager) {
+            if (magicOption.renderAsImage && _canvasSupported) {
                 // IE8- 不支持图片渲染形式
                 if (img) {
                     // 已经渲染过则更新显示
@@ -1165,7 +1183,7 @@ define(function(require) {
          * @return imgDataURL
          */
         function getDataURL(imgType) {
-            if (G_vmlCanvasManager) {
+            if (!_canvasSupported) {
                 return '';
             }
             if (_chartList.length === 0) {
@@ -1304,7 +1322,7 @@ define(function(require) {
                 );
             }
             
-            if (G_vmlCanvasManager) {   // IE8-
+            if (!_canvasSupported) {   // IE8-
                 _themeConfig.textStyle.fontFamily = 
                     _themeConfig.textStyle.fontFamily2;
             }
@@ -1316,7 +1334,7 @@ define(function(require) {
          */
         function resize() {
             _zr.resize();
-            if (_option.renderAsImage && !G_vmlCanvasManager) {
+            if (_option.renderAsImage && _canvasSupported) {
                 // 渲染为图片重走render模式
                 _render(_option);
                 return self;

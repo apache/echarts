@@ -531,6 +531,7 @@ define(function(require) {
                             shape : 'brokenLine',
                             zlevel : _zlevelBase,
                             style : {
+                                miterLimit: lineWidth,
                                 pointList : singlePL,
                                 strokeColor : lineColor
                                               || normalColor 
@@ -566,6 +567,7 @@ define(function(require) {
                                 shape : 'halfSmoothPolygon',
                                 zlevel : _zlevelBase,
                                 style : {
+                                    miterLimit: lineWidth,
                                     pointList : singlePL.concat([
                                         [
                                             singlePL[singlePL.length - 1][4],
