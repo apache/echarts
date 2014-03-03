@@ -34,7 +34,7 @@ define(function(require) {
 
         var _zlevelBase = self.getZlevelBase();
         var _selectedMode;      // 选择模式
-        var _hoverable;         // 悬浮高亮模式
+        var _hoverable;         // 悬浮高亮模式，索引到图表
         var _showLegendSymbol;  // 显示图例颜色标识
         var _selected = {};     // 地图选择状态
         var _mapTypeMap = {};   // 图例类型索引
@@ -774,7 +774,7 @@ define(function(require) {
                 
                 if (_selectedMode[mapType] &&
                      _selected[name]
-                     || (data && data.selected && _selected[name] !== false) 
+                     || (data.selected && _selected[name] !== false) 
                 ) {
                     textShape.style = zrUtil.clone(
                         textShape.highlightStyle
@@ -785,14 +785,23 @@ define(function(require) {
                 if (_selectedMode[mapType]) {
                     _selected[name] = typeof _selected[name] != 'undefined'
                                       ? _selected[name]
-                                      : (data && data.selected);
+                                      : data.selected;
                     _mapTypeMap[name] = mapType;
-                    textShape.clickable = true;
-                    textShape.onclick = self.shapeHandler.onclick;
                     
-                    shape.clickable = true;
-                    shape.onclick = self.shapeHandler.onclick;
+                    if (typeof data.selectable == 'undefined' || data.selectable) {
+                        textShape.clickable = true;
+                        textShape.onclick = self.shapeHandler.onclick;
+                        
+                        shape.clickable = true;
+                        shape.onclick = self.shapeHandler.onclick;
+                    }
                 }
+                
+                if (typeof data.hoverable != 'undefined') {
+                    textShape.onmouseover = null;
+                    textShape.hoverable = shape.hoverable = data.hoverable;
+                }
+                
                 // console.log(name,shape);
                 
                 ecData.pack(
