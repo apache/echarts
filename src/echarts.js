@@ -902,6 +902,11 @@ define(function(require) {
                     return zrColor.getColor(idx, _themeConfig.color);
                 };
             }
+            
+            // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
+            if (typeof _option.DRAG_ENABLE_TIME == 'undefined') {
+                _option.DRAG_ENABLE_TIME = _themeConfig.DRAG_ENABLE_TIME;
+            }
         }
         
         /**

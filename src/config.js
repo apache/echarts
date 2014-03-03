@@ -891,6 +891,7 @@ define(function() {
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover'
         },
+        DRAG_ENABLE_TIME : 150,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
         // 默认标志图形类型列表
         symbolList : [
           'circle', 'rectangle', 'triangle', 'diamond',

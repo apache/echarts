@@ -139,6 +139,7 @@ define(function (require) {
                 islandShape.style.color = shape.style.strokeColor;
             }
             self.setCalculable(islandShape);
+            islandShape.dragEnableTime = 0;
             ecData.pack(
                 islandShape,
                 {name:seriesName}, -1,

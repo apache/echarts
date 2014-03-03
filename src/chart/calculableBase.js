@@ -45,6 +45,7 @@ define(function(require) {
         };
 
         function setCalculable(shape) {
+            shape.dragEnableTime = option.DRAG_ENABLE_TIME;
             shape.ondragover = self.shapeHandler.ondragover;
             shape.ondragend = self.shapeHandler.ondragend;
             shape.ondrop = self.shapeHandler.ondrop;
