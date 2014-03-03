@@ -364,7 +364,7 @@ define(function(require) {
             if (_needLabel(serie, data, true)          // emphasis下显示文本
                 || _needLabelLine(serie, data, true)   // emphasis下显示引导线
             ) {
-                sector.onmouseover = self.shapeHandler.onmouserover;
+                sector.onmouseover = self.shapeHandler.onmouseover;
             }
             return sector;
         }
@@ -1113,7 +1113,7 @@ define(function(require) {
         /**
          * 输出动态视觉引导线
          */
-        self.shapeHandler.onmouserover = function(param) {
+        self.shapeHandler.onmouseover = function(param) {
             var shape = param.target;
             var seriesIndex = ecData.get(shape, 'seriesIndex');
             var dataIndex = ecData.get(shape, 'dataIndex');
