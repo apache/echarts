@@ -221,7 +221,8 @@ define(function (require) {
                         style : {
                             x : getCoord(data[i]),
                             y : yPosition,
-                            color : textStyle.color,
+                            color : typeof textStyle.color == 'function'
+                                    ? textStyle.color(data[i]) : textStyle.color,
                             text : _valueLabel[i],
                             textFont : self.getFont(textStyle),
                             textAlign : (i === 0 && option.name !== '')
@@ -269,7 +270,8 @@ define(function (require) {
                         style : {
                             x : xPosition,
                             y : getCoord(data[i]),
-                            color : textStyle.color,
+                            color : typeof textStyle.color == 'function'
+                                    ? textStyle.color(data[i]) : textStyle.color,
                             text : _valueLabel[i],
                             textFont : self.getFont(textStyle),
                             textAlign : align,
