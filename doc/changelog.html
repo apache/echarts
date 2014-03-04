@@ -81,6 +81,28 @@
         <span>[+]新增 [-]删除 [^]升级 [#]修复 【】重要</span>
         <div class="row-fluid">
             <div>
+                <h3>1.3.8<small>（2014-03-04）</small></h3>
+                <ul>
+                    <li>【+】 theme主题支持，try <a href='./example/themeDesigner.html' target="_blank">ECharts Theme Designer</a></li>
+                    <li>[+] symbolList 折线图、散点图、雷达图默认symbol顺序可控</li>
+                    <li>[+] 全图背景色可控，backgroundColor</li>
+                    <li>[^] 拖拽重计算交互优化，避免短click变drag</li>
+                    <li>[^] 优化同一个dom上多次init图表，返回已有实例</li>
+                    <li>[^] clear后清除组件及内存释放</li>
+                    <li>[#] IE8-文本hover问题</li>
+                    <li>[^] [dataZoom]数据区域缩放控件样式优化，fix <a href="http://www.oschina.net/question/1431801_143036" target="_blank">this »</a></li>
+                    <li>[^] [dataRange]数据精度格式</li>
+                    <li>[^] [axis]axisTick 显示位置可控，支持inside，support <a href="https://github.com/ecomfe/echarts/issues/220" target="_blank">#220 »</a></li>
+                    <li>[^] [valueAxis] axisLabel.textStyle.color可接受方法，support <a href="https://github.com/ecomfe/echarts/issues/226" target="_blank">#226 »</a></li>
+                    <li>[^] [map]小区域交互优化，点击文字选中，支持数据级selectable、hoverable</li>
+                    <li>[^] [map]显示样式参数规范，区域图形边框由borderWidth、borderColor控制</li>
+                    <li>[^] [pie]扇区边框可控，borderWidth、borderColor，support  <a href="https://github.com/ecomfe/echarts/issues/223" target="_blank">#223 »</a></li>
+                    <li>[^] [pie]360度扇区问题 ，fix <a href="https://github.com/ecomfe/echarts/issues/203" target="_blank">#203 »</a> </li>
+                    <li>[^] [pie]优化0值数据不受minAngle控制</li>
+                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.1.0+</li>
+                </ul>
+            </div>
+            <div>
                 <h3>1.3.7<small>（2014-01-27）</small></h3>
                 <ul>
                     <li>[^] [categoryAxis]boundaryGap留空样式优化，前后一个类目空间调整为半个类目空间</li>

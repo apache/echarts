@@ -588,9 +588,9 @@ define(function() {
             // roseType : null,     // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
             itemStyle: {
                 normal: {
+                    // color: 各异,
                     borderColor: '#fff',
                     borderWidth: 1,
-                    // color: 各异,
                     label: {
                         show: true,
                         position: 'outer'
@@ -608,9 +608,9 @@ define(function() {
                     }
                 },
                 emphasis: {
+                    // color: 各异,
                     borderColor: 'rgba(0,0,0,0)',
                     borderWidth: 1,
-                    // color: 各异,
                     label: {
                         show: false
                         // position: 'outer'

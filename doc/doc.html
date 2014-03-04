@@ -187,7 +187,7 @@
             </div>
             <div class="span9">
                 <p style="margin:10px 0 -30px 0">
-                    <a href="mailto:kener.linfeng@gmail.com">Any feedback or question ? »</a>
+                    <a href="mailto:echarts@baidu.com">Any feedback or question ? »</a>
                 </p>
                 <div id="doc">
                     <h3>简介<a name="简介"> </a></h3>
@@ -543,7 +543,20 @@ require(
                     <p>更详细的配置在build/config-tpl.js目录下，具体的配置项使用可以参考requirejs optimizer的<a href="https://github.com/jrburke/r.js/blob/master/build/example.build.js">example build file</a>，要注意的的是optimize, include, wrap三个配置项会在build过程中根据输入的参数被改掉，所以不建议直接修改这三个配置项，修改config-tpl.js最常见的场景是zrender和echarts不在同一个目录下从而需要修改zrender的package路径。</p>
 
                     <h3>初始化<a name="初始化"> </a></h3>
-                    <p>通过require获得echarts接口后可实例化图表，echarts接口仅有一个方法init，执行init时传入一个具备大小的dom节点（width、height可被计算得到即可，不一定可见）后即可实例化出图表对象，图表库实现为多实例的，同一页面可多次init出多个图表。图表实例可用方法见<a href="#方法">方法</a>，</p>
+                    <p>通过require获得echarts接口后可实例化图表，echarts接口仅有一个方法init，执行init时传入一个具备大小的dom节点（width、height可被计算得到即可，不一定可见）后即可实例化出图表对象，图表库实现为多实例的，同一页面可在多个dom上init出多个图表，同一个dom上多次init均返回同一个实例（1.3.8+）。init方法说明如下：</p>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 参数 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{ECharts}</b> init </td>
+                            <td> <b>{dom}</b> dom, <br/><b>{string | Object =}</b> theme </td>
+                            <td> 初始化接口，返回ECharts实例，其中dom为图表所在节点，theme为可选的主题，内置主题（暂无）直接传入名称，自定义扩展主题可传入主题对象</td>
+                        </tr>
+                    </table>
+                    <p>图表实例可用方法见<a href="#方法">方法</a></p>
                     <p>引入ECharts后的的初始化代码如下：</p>
                     <div class="code">
                         <pre>
@@ -589,7 +602,7 @@ require(['echarts'], function(ec){
                         </tr>
                         <tr>
                             <td><b>{self}</b> setOption</td>
-                            <td><b>{Object}</b> option, <br/>{boolean=} notMerge</td>
+                            <td><b>{Object}</b> option, <br/><b>{boolean=}</b> notMerge</td>
                             <td>万能接口，配置图表实例任何可配置选项（详见<a href="#Option" title="">option</a>），多次调用时option选项是默认是合并（merge）的，<br/>如果不需求，可以通过notMerger参数为true阻止与上次option的合并。 </td>
                         </tr>
                         <tr>
@@ -599,7 +612,7 @@ require(['echarts'], function(ec){
                         </tr>
                         <tr>
                             <td><b>{self}</b> setSeries</td>
-                            <td><b>{Array}</b> series, <br/>{boolean=} notMerge</td>
+                            <td><b>{Array}</b> series, <br/><b>{boolean=}</b> notMerge</td>
                             <td>数据接口，驱动图表生成的数据内容（详见<a href="#Series" title="">series</a>），效果等同调用setOption({series:{...}}) </td>
                         </tr>
                         <tr>
@@ -611,10 +624,10 @@ require(['echarts'], function(ec){
                             <td><b>{self}</b> addData</td>
                             <td>单组数据：
                                 <br/><b>{number}</b> seriesIdx
-                                <br/>{number | Object} data
-                                <br/>{boolean=} isHead
-                                <br/>{boolean=} dataGrow
-                                <br/>{string=} additionData
+                                <br/><b>{number | Object}</b> data
+                                <br/><b>{boolean=}</b> isHead
+                                <br/><b>{boolean=}</b> dataGrow
+                                <br/><b>{string=}</b> additionData
                                 <br/>多组数据添加：
                                 <br/><b>{Array}</b> params
                             </td>
@@ -660,12 +673,12 @@ require(['echarts'], function(ec){
                         </tr>
                         <tr>
                             <td><b>{string}</b> getDataURL</td>
-                            <td>{string=} imgType</td>
+                            <td><b>{string=}</b> imgType</td>
                             <td>获取当前图表的Base64图片dataURL，imgType 图片类型，支持png|jpeg，默认为png</td>
                         </tr>
                         <tr>
                             <td><b>{Dom}</b> getImage</td>
-                            <td>{string=} imgType</td>
+                            <td><b>{string=}</b> imgType</td>
                             <td>获取一个当前图表的img，imgType 图片类型，支持png|jpeg，默认为png</td>
                         </tr>
                         <tr>
@@ -1150,10 +1163,10 @@ feature : {
                                 <li>简单传入true启动数据视图</li>
                                 <li>传入<b>{Object}</b>设置更多属性</li>
                                 <ul>
-                                    <li>{boolean=} readOnly 默认数据视图为只读，可指定readOnly为false打开编辑功能</li>
-                                    <li>{Function=} optionToContent 自主编排数据视图的显示内容</li>
-                                    <li>{Function=} contentToOption 当数据视图readOnly为false时，会出现刷新按钮，如果是自主编排的显示内容，如何翻转也请自理</li>
-                                    <li>{Array=} lang 数据视图上有三个话术，默认是['Data View', 'close', 'refresh']，如需改写，可自定义</li>
+                                    <li><b>{boolean=}</b> readOnly 默认数据视图为只读，可指定readOnly为false打开编辑功能</li>
+                                    <li><b>{Function=}</b> optionToContent 自主编排数据视图的显示内容</li>
+                                    <li><b>{Function=}</b> contentToOption 当数据视图readOnly为false时，会出现刷新按钮，如果是自主编排的显示内容，如何翻转也请自理</li>
+                                    <li><b>{Array=}</b> lang 数据视图上有三个话术，默认是['Data View', 'close', 'refresh']，如需改写，可自定义</li>
                                 </ul>
                             </ul>
                         </li>
@@ -1683,6 +1696,12 @@ feature : {
                             <td> 小标记是否显示为间隔，默认等于boundaryGap</td>
                         </tr>
                         <tr>
+                            <td> <b>{boolean}</b> inside </td>
+                            <td> false </td>
+                            <td> 通用 </td>
+                            <td> 小标记是否显示为在grid内部，默认在外部</td>
+                        </tr>
+                        <tr>
                             <td> <b>{number}</b> length </td>
                             <td> 4 </td>
                             <td> 通用 </td>
@@ -1739,7 +1758,7 @@ feature : {
                             <td> <b>{Object}</b> textStyle </td>
                             <td> {color: '#333'} </td>
                             <td> 通用 </td>
-                            <td> 文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
+                            <td> 文本样式（详见<a href="#TextStyle" title="">textStyle</a>），其中当坐标轴为数值型时，color接受方法回调，实现个性化的颜色定义，support <a href="https://github.com/ecomfe/echarts/issues/226" target="_blank">#226 »</a> </td>
                         </tr>
                     </table>
                     <P> 间隔名称格式器formatter：</P>
@@ -2251,7 +2270,7 @@ indicator : [
                         <tr>
                             <td> <b>{Boolean}</b> clockWise </td>
                             <td> false </td>
-                            <td> 弦图 </td>
+                            <td> 饼图，弦图 </td>
                             <td> 显示是否顺时针 </td>
                         </tr>
                         <tr>

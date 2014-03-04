@@ -444,6 +444,9 @@ define('echarts/config',[],function() {
         COMPONENT_TYPE_AXIS_CATEGORY: 'categoryAxis',
         COMPONENT_TYPE_AXIS_VALUE: 'valueAxis',
 
+        // 全图默认背景
+        // backgroundColor: 'rgba(0,0,0,0)',
+        
         // 默认色板
         color: ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
                 '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
@@ -625,10 +628,10 @@ define('echarts/config',[],function() {
                                        // {number}（y坐标，单位px）
             // width: {number},        // 指定宽度，横向布局时默认为根据grid参数适配
             // height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
-            backgroundColor: '#eee',       // 背景颜色
-            dataBackgroundColor: '#ccc',   // 数据背景颜色
-            fillerColor: 'rgba(50,205,50,0.4)',        // 填充颜色
-            handleColor: 'rgba(70,130,180,0.8)',         // 手柄颜色
+            backgroundColor: 'rgba(0,0,0,0)',       // 背景颜色
+            dataBackgroundColor: '#eee',            // 数据背景颜色
+            fillerColor: 'rgba(144,197,237,0.2)',   // 填充颜色
+            handleColor: 'rgba(70,130,180,0.8)',    // 手柄颜色
             // xAxisIndex: [],         // 默认控制所有横向类目
             // yAxisIndex: [],         // 默认控制所有横向类目
             // start: 0,               // 默认为0
@@ -655,6 +658,7 @@ define('echarts/config',[],function() {
             position: 'bottom',    // 位置
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
+            nameTextStyle: {},     // 坐标轴文字样式，默认取全局样式
             boundaryGap: true,     // 类目起始和结束两端空白策略
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
@@ -665,8 +669,9 @@ define('echarts/config',[],function() {
                 }
             },
             axisTick: {            // 坐标轴小标记
-                show: true,       // 属性show控制显示与否，默认不显示
+                show: true,        // 属性show控制显示与否，默认不显示
                 interval: 'auto',
+                inside : false,    // 控制小标记是否在grid里 
                 // onGap: null,
                 length :5,         // 属性length控制线长
                 lineStyle: {       // 属性lineStyle控制线条样式
@@ -697,8 +702,7 @@ define('echarts/config',[],function() {
                 show: false,       // 默认不显示，属性show控制显示与否
                 // onGap: null,
                 areaStyle: {       // 属性areaStyle（详见areaStyle）控制区域样式
-                    color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)'],
-                    type: 'default'
+                    color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']
                 }
             }
         },
@@ -726,6 +730,7 @@ define('echarts/config',[],function() {
             },
             axisTick: {            // 坐标轴小标记
                 show: false,       // 属性show控制显示与否，默认不显示
+                inside : false,    // 控制小标记是否在grid里 
                 length :5,         // 属性length控制线长
                 lineStyle: {       // 属性lineStyle控制线条样式
                     color: '#333',
@@ -752,8 +757,7 @@ define('echarts/config',[],function() {
             splitArea: {           // 分隔区域
                 show: false,       // 默认不显示，属性show控制显示与否
                 areaStyle: {       // 属性areaStyle（详见areaStyle）控制区域样式
-                    color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)'],
-                    type: 'default'
+                    color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']
                 }
             }
         },
@@ -993,6 +997,8 @@ define('echarts/config',[],function() {
             itemStyle: {
                 normal: {
                     // color: 各异,
+                    borderColor: '#fff',
+                    borderWidth: 1,
                     label: {
                         show: true,
                         position: 'outer'
@@ -1011,6 +1017,8 @@ define('echarts/config',[],function() {
                 },
                 emphasis: {
                     // color: 各异,
+                    borderColor: 'rgba(0,0,0,0)',
+                    borderWidth: 1,
                     label: {
                         show: false
                         // position: 'outer'
@@ -1019,7 +1027,7 @@ define('echarts/config',[],function() {
                     },
                     labelLine: {
                         show: false,
-                        length: 30,
+                        length: 20,
                         lineStyle: {
                             // color: 各异,
                             width: 1,
@@ -1048,33 +1056,29 @@ define('echarts/config',[],function() {
             itemStyle: {
                 normal: {
                     // color: 各异,
-                    lineStyle: {
-                        width: 2,
-                        color: '#fff'
-                    },
+                    borderColor: '#fff',
+                    borderWidth: 1,
                     areaStyle: {
-                        color: '#ccc'//rgba(135,206,250,0.8)
+                        color: '#ccc'
                     },
                     label: {
                         show: false,
                         textStyle: {
-                            color: 'rgba(139,69,19,1)'
+                            color: 'rgb(139,69,19)'
                         }
                     }
                 },
                 emphasis: {                 // 也是选中样式
                     // color: 各异,
-                    lineStyle: {
-                        width: 2,
-                        color: '#fff'
-                    },
+                    borderColor: 'rgba(0,0,0,0)',
+                    borderWidth: 1,
                     areaStyle: {
                         color: 'rgba(255,215,0,0.8)'
                     },
                     label: {
                         show: false,
                         textStyle: {
-                            color: 'rgba(139,69,19,1)'
+                            color: 'rgb(100,0,0)'
                         }
                     }
                 }
@@ -1292,6 +1296,12 @@ define('echarts/config',[],function() {
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover'
         },
+        DRAG_ENABLE_TIME : 150,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
+        // 默认标志图形类型列表
+        symbolList : [
+          'circle', 'rectangle', 'triangle', 'diamond',
+          'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
+        ],
         loadingText : 'Loading...',
         // 可计算特性配置，孤岛，提示颜色
         calculable: false,              // 默认关闭可计算特性
@@ -1308,6 +1318,97 @@ define('echarts/config',[],function() {
 
     return config;
 });
+/**
+ * zrender: 向量操作类
+ *
+ * author : lang(shenyi01@baidu.com)
+ */
+define(
+    'zrender/tool/vector',[],function() {
+        var ArrayCtor
+            = typeof Float32Array === 'undefined'
+            ? Array
+            : Float32Array;
+        var vector = {
+            create : function(x, y) {
+                var out = new ArrayCtor(2);
+                out[0] = x || 0;
+                out[1] = y || 0;
+                return out;
+            },
+            copy : function(out, v) {
+                out[0] = v[0];
+                out[1] = v[1];
+            },
+            set : function(out, a, b) {
+                out[0] = a;
+                out[1] = b;
+            },
+            add : function(out, v1, v2) {
+                out[0] = v1[0] + v2[0];
+                out[1] = v1[1] + v2[1];
+                return out;
+            },
+            scaleAndAdd : function(out, v1, v2, a) {
+                out[0] = v1[0] + v2[0] * a;
+                out[1] = v1[1] + v2[1] * a;
+                return out;
+            },
+            sub : function(out, v1, v2) {
+                out[0] = v1[0] - v2[0];
+                out[1] = v1[1] - v2[1];
+                return out;
+            },
+            length : function(v) {
+                return Math.sqrt(this.lengthSquare(v));
+            },
+            lengthSquare : function(v) {
+                return v[0] * v[0] + v[1] * v[1];
+            },
+            mul : function(out, v1, v2) {
+                out[0] = v1[0] * v2[0];
+                out[1] = v1[1] * v2[1];
+                return out;
+            },
+            dot : function(v1, v2) {
+                return v1[0] * v2[0] + v1[1] * v2[1];
+            },
+            scale : function(out, v, s) {
+                out[0] = v[0] * s;
+                out[1] = v[1] * s;
+                return out;
+            },
+            normalize : function(out, v) {
+                var d = vector.length(v);
+                if(d === 0){
+                    out[0] = 0;
+                    out[1] = 0;
+                }else{
+                    out[0] = v[0]/d;
+                    out[1] = v[1]/d;
+                }
+                return out;
+            },
+            distance : function(v1, v2) {
+                return Math.sqrt(
+                    (v1[0] - v2[0]) * (v1[0] - v2[0]) +
+                    (v1[1] - v2[1]) * (v1[1] - v2[1])
+                );
+            },
+            negate : function(out, v) {
+                out[0] = -v[0];
+                out[1] = -v[1];
+            },
+            middle : function(out, v1, v2) {
+                out[0] = (v1[0] + v2[0])/2;
+                out[1] = (v1[1] + v2[1])/2;
+                return out;
+            }
+        };
+
+        return vector;
+    }
+);
 // Copyright 2006 Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -1911,7 +2012,7 @@ if (!document.createElement('canvas').getContext) {
 
     var overlayEl = el.cloneNode(false);
     // Use a non transparent background.
-    // overlayEl.style.backgroundColor = 'red'; // I don't know why, it work!
+    overlayEl.style.backgroundColor = '#fff'; //red, I don't know why, it work! 
     overlayEl.style.filter = 'alpha(opacity=0)';
     canvasElement.appendChild(overlayEl);
 
@@ -2759,211 +2860,6 @@ else { // make the canvas test simple by kener.linfeng@gmail.com
 return G_vmlCanvasManager;
 }); // define;
 /**
- * echarts设备环境识别
- *
- * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author firede[firede@firede.us]
- * @desc thanks zepto.
- */
-define('zrender/tool/env',[],function() {
-    // Zepto.js
-    // (c) 2010-2013 Thomas Fuchs
-    // Zepto.js may be freely distributed under the MIT license.
-
-    function detect( ua ) {
-        var os = this.os = {};
-        var browser = this.browser = {};
-        var webkit = ua.match(/Web[kK]it[\/]{0,1}([\d.]+)/);
-        var android = ua.match(/(Android);?[\s\/]+([\d.]+)?/);
-        var ipad = ua.match(/(iPad).*OS\s([\d_]+)/);
-        var ipod = ua.match(/(iPod)(.*OS\s([\d_]+))?/);
-        var iphone = !ipad && ua.match(/(iPhone\sOS)\s([\d_]+)/);
-        var webos = ua.match(/(webOS|hpwOS)[\s\/]([\d.]+)/);
-        var touchpad = webos && ua.match(/TouchPad/);
-        var kindle = ua.match(/Kindle\/([\d.]+)/);
-        var silk = ua.match(/Silk\/([\d._]+)/);
-        var blackberry = ua.match(/(BlackBerry).*Version\/([\d.]+)/);
-        var bb10 = ua.match(/(BB10).*Version\/([\d.]+)/);
-        var rimtabletos = ua.match(/(RIM\sTablet\sOS)\s([\d.]+)/);
-        var playbook = ua.match(/PlayBook/);
-        var chrome = ua.match(/Chrome\/([\d.]+)/) || ua.match(/CriOS\/([\d.]+)/);
-        var firefox = ua.match(/Firefox\/([\d.]+)/);
-        var ie = ua.match(/MSIE ([\d.]+)/);
-        var safari = webkit && ua.match(/Mobile\//) && !chrome;
-        var webview = ua.match(/(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/) && !chrome;
-        var ie = ua.match(/MSIE\s([\d.]+)/);
-
-        // Todo: clean this up with a better OS/browser seperation:
-        // - discern (more) between multiple browsers on android
-        // - decide if kindle fire in silk mode is android or not
-        // - Firefox on Android doesn't specify the Android version
-        // - possibly devide in os, device and browser hashes
-
-        if (browser.webkit = !!webkit) browser.version = webkit[1];
-
-        if (android) os.android = true, os.version = android[2];
-        if (iphone && !ipod) os.ios = os.iphone = true, os.version = iphone[2].replace(/_/g, '.');
-        if (ipad) os.ios = os.ipad = true, os.version = ipad[2].replace(/_/g, '.');
-        if (ipod) os.ios = os.ipod = true, os.version = ipod[3] ? ipod[3].replace(/_/g, '.') : null;
-        if (webos) os.webos = true, os.version = webos[2];
-        if (touchpad) os.touchpad = true;
-        if (blackberry) os.blackberry = true, os.version = blackberry[2];
-        if (bb10) os.bb10 = true, os.version = bb10[2];
-        if (rimtabletos) os.rimtabletos = true, os.version = rimtabletos[2];
-        if (playbook) browser.playbook = true;
-        if (kindle) os.kindle = true, os.version = kindle[1];
-        if (silk) browser.silk = true, browser.version = silk[1];
-        if (!silk && os.android && ua.match(/Kindle Fire/)) browser.silk = true;
-        if (chrome) browser.chrome = true, browser.version = chrome[1];
-        if (firefox) browser.firefox = true, browser.version = firefox[1];
-        if (ie) browser.ie = true, browser.version = ie[1];
-        if (safari && (ua.match(/Safari/) || !!os.ios)) browser.safari = true;
-        if (webview) browser.webview = true;
-        if (ie) browser.ie = true, browser.version = ie[1];
-
-        os.tablet = !!(ipad || playbook || (android && !ua.match(/Mobile/)) ||
-            (firefox && ua.match(/Tablet/)) || (ie && !ua.match(/Phone/) && ua.match(/Touch/)));
-        os.phone  = !!(!os.tablet && !os.ipod && (android || iphone || webos || blackberry || bb10 ||
-            (chrome && ua.match(/Android/)) || (chrome && ua.match(/CriOS\/([\d.]+)/)) ||
-            (firefox && ua.match(/Mobile/)) || (ie && ua.match(/Touch/))));
-
-        return {
-            browser: browser,
-            os: os,
-            // 原生canvas支持
-            canvasSupported : document.createElement('canvas').getContext 
-                              ? true : false 
-        }
-    }
-
-    return detect( navigator.userAgent );
-});
-/**
- * zrender: shape仓库
- *
- * @desc zrender是一个轻量级的Canvas类库，MVC封装，数据驱动，提供类Dom事件模型。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *
- */
-define(
-    'zrender/shape',[],function(/*require*/) {
-        var self = {};
-
-        var _shapeLibrary = {};     //shape库
-
-        /**
-         * 定义图形实现
-         * @param {Object} name
-         * @param {Object} clazz 图形实现
-         */
-        self.define = function(name, clazz) {
-            _shapeLibrary[name] = clazz;
-            return self;
-        };
-
-        /**
-         * 获取图形实现
-         * @param {Object} name
-         */
-        self.get = function(name) {
-            return _shapeLibrary[name];
-        };
-
-        return self;
-    }
-);
-/**
- * zrender: 向量操作类
- *
- * author : lang(shenyi01@baidu.com)
- */
-define(
-    'zrender/tool/vector',[],function() {
-        var ArrayCtor
-            = typeof Float32Array === 'undefined'
-            ? Array
-            : Float32Array;
-        var vector = {
-            create : function(x, y) {
-                var out = new ArrayCtor(2);
-                out[0] = x || 0;
-                out[1] = y || 0;
-                return out;
-            },
-            copy : function(out, v) {
-                out[0] = v[0];
-                out[1] = v[1];
-            },
-            set : function(out, a, b) {
-                out[0] = a;
-                out[1] = b;
-            },
-            add : function(out, v1, v2) {
-                out[0] = v1[0] + v2[0];
-                out[1] = v1[1] + v2[1];
-                return out;
-            },
-            scaleAndAdd : function(out, v1, v2, a) {
-                out[0] = v1[0] + v2[0] * a;
-                out[1] = v1[1] + v2[1] * a;
-                return out;
-            },
-            sub : function(out, v1, v2) {
-                out[0] = v1[0] - v2[0];
-                out[1] = v1[1] - v2[1];
-                return out;
-            },
-            length : function(v) {
-                return Math.sqrt(this.lengthSquare(v));
-            },
-            lengthSquare : function(v) {
-                return v[0] * v[0] + v[1] * v[1];
-            },
-            mul : function(out, v1, v2) {
-                out[0] = v1[0] * v2[0];
-                out[1] = v1[1] * v2[1];
-                return out;
-            },
-            dot : function(v1, v2) {
-                return v1[0] * v2[0] + v1[1] * v2[1];
-            },
-            scale : function(out, v, s) {
-                out[0] = v[0] * s;
-                out[1] = v[1] * s;
-                return out;
-            },
-            normalize : function(out, v) {
-                var d = vector.length(v);
-                if(d === 0){
-                    out[0] = 0;
-                    out[1] = 0;
-                }else{
-                    out[0] = v[0]/d;
-                    out[1] = v[1]/d;
-                }
-                return out;
-            },
-            distance : function(v1, v2) {
-                return Math.sqrt(
-                    (v1[0] - v2[0]) * (v1[0] - v2[0]) +
-                    (v1[1] - v2[1]) * (v1[1] - v2[1])
-                );
-            },
-            negate : function(out, v) {
-                out[0] = -v[0];
-                out[1] = -v[1];
-            },
-            middle : function(out, v1, v2) {
-                out[0] = (v1[0] + v2[0])/2;
-                out[1] = (v1[1] + v2[1])/2;
-                return out;
-            }
-        };
-
-        return vector;
-    }
-);
-/**
  * zrender: 公共辅助函数
  *
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
@@ -3457,6 +3353,120 @@ define(
     }
 );
 /**
+ * echarts设备环境识别
+ *
+ * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
+ * @author firede[firede@firede.us]
+ * @desc thanks zepto.
+ */
+define('zrender/tool/env',[],function() {
+    // Zepto.js
+    // (c) 2010-2013 Thomas Fuchs
+    // Zepto.js may be freely distributed under the MIT license.
+
+    function detect( ua ) {
+        var os = this.os = {};
+        var browser = this.browser = {};
+        var webkit = ua.match(/Web[kK]it[\/]{0,1}([\d.]+)/);
+        var android = ua.match(/(Android);?[\s\/]+([\d.]+)?/);
+        var ipad = ua.match(/(iPad).*OS\s([\d_]+)/);
+        var ipod = ua.match(/(iPod)(.*OS\s([\d_]+))?/);
+        var iphone = !ipad && ua.match(/(iPhone\sOS)\s([\d_]+)/);
+        var webos = ua.match(/(webOS|hpwOS)[\s\/]([\d.]+)/);
+        var touchpad = webos && ua.match(/TouchPad/);
+        var kindle = ua.match(/Kindle\/([\d.]+)/);
+        var silk = ua.match(/Silk\/([\d._]+)/);
+        var blackberry = ua.match(/(BlackBerry).*Version\/([\d.]+)/);
+        var bb10 = ua.match(/(BB10).*Version\/([\d.]+)/);
+        var rimtabletos = ua.match(/(RIM\sTablet\sOS)\s([\d.]+)/);
+        var playbook = ua.match(/PlayBook/);
+        var chrome = ua.match(/Chrome\/([\d.]+)/) || ua.match(/CriOS\/([\d.]+)/);
+        var firefox = ua.match(/Firefox\/([\d.]+)/);
+        var ie = ua.match(/MSIE ([\d.]+)/);
+        var safari = webkit && ua.match(/Mobile\//) && !chrome;
+        var webview = ua.match(/(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/) && !chrome;
+        var ie = ua.match(/MSIE\s([\d.]+)/);
+
+        // Todo: clean this up with a better OS/browser seperation:
+        // - discern (more) between multiple browsers on android
+        // - decide if kindle fire in silk mode is android or not
+        // - Firefox on Android doesn't specify the Android version
+        // - possibly devide in os, device and browser hashes
+
+        if (browser.webkit = !!webkit) browser.version = webkit[1];
+
+        if (android) os.android = true, os.version = android[2];
+        if (iphone && !ipod) os.ios = os.iphone = true, os.version = iphone[2].replace(/_/g, '.');
+        if (ipad) os.ios = os.ipad = true, os.version = ipad[2].replace(/_/g, '.');
+        if (ipod) os.ios = os.ipod = true, os.version = ipod[3] ? ipod[3].replace(/_/g, '.') : null;
+        if (webos) os.webos = true, os.version = webos[2];
+        if (touchpad) os.touchpad = true;
+        if (blackberry) os.blackberry = true, os.version = blackberry[2];
+        if (bb10) os.bb10 = true, os.version = bb10[2];
+        if (rimtabletos) os.rimtabletos = true, os.version = rimtabletos[2];
+        if (playbook) browser.playbook = true;
+        if (kindle) os.kindle = true, os.version = kindle[1];
+        if (silk) browser.silk = true, browser.version = silk[1];
+        if (!silk && os.android && ua.match(/Kindle Fire/)) browser.silk = true;
+        if (chrome) browser.chrome = true, browser.version = chrome[1];
+        if (firefox) browser.firefox = true, browser.version = firefox[1];
+        if (ie) browser.ie = true, browser.version = ie[1];
+        if (safari && (ua.match(/Safari/) || !!os.ios)) browser.safari = true;
+        if (webview) browser.webview = true;
+        if (ie) browser.ie = true, browser.version = ie[1];
+
+        os.tablet = !!(ipad || playbook || (android && !ua.match(/Mobile/)) ||
+            (firefox && ua.match(/Tablet/)) || (ie && !ua.match(/Phone/) && ua.match(/Touch/)));
+        os.phone  = !!(!os.tablet && !os.ipod && (android || iphone || webos || blackberry || bb10 ||
+            (chrome && ua.match(/Android/)) || (chrome && ua.match(/CriOS\/([\d.]+)/)) ||
+            (firefox && ua.match(/Mobile/)) || (ie && ua.match(/Touch/))));
+
+        return {
+            browser: browser,
+            os: os,
+            // 原生canvas支持
+            canvasSupported : document.createElement('canvas').getContext 
+                              ? true : false 
+        }
+    }
+
+    return detect( navigator.userAgent );
+});
+/**
+ * zrender: shape仓库
+ *
+ * @desc zrender是一个轻量级的Canvas类库，MVC封装，数据驱动，提供类Dom事件模型。
+ * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ *
+ */
+define(
+    'zrender/shape',[],function(/*require*/) {
+        var self = {};
+
+        var _shapeLibrary = {};     //shape库
+
+        /**
+         * 定义图形实现
+         * @param {Object} name
+         * @param {Object} clazz 图形实现
+         */
+        self.define = function(name, clazz) {
+            _shapeLibrary[name] = clazz;
+            return self;
+        };
+
+        /**
+         * 获取图形实现
+         * @param {Object} name
+         */
+        self.get = function(name) {
+            return _shapeLibrary[name];
+        };
+
+        return self;
+    }
+);
+/**
  * zrender: 图形空间辅助类
  *
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
@@ -3789,6 +3799,11 @@ define(
             }
             else {
                 // 判断夹角
+                if (Math.abs(area.endAngle - area.startAngle) >= 360) {
+                    // 大于360度的扇形，在环内就为true
+                    return true;
+                }
+                
                 var angle = (360
                              - Math.atan2(y - area.y, x - area.x)
                              / Math.PI
@@ -5294,8 +5309,8 @@ define(
                     style.lineWidth > 0 && ctx.stroke();
                     break;
                 case 'both':
-                    style.lineWidth > 0 && ctx.stroke();
                     ctx.fill();
+                    style.lineWidth > 0 && ctx.stroke();
                     break;
                 default:
                     ctx.fill();
@@ -6392,23 +6407,18 @@ define(
                 if (e.__needTransform) {
                     ctx.transform.apply(ctx,this.updateTransform(e));
                 }
-                ctx.beginPath();
-                this.buildPath(ctx, style);
-                ctx.closePath();
-
-                if (style.brushType == 'stroke' || style.brushType == 'both') {
-                    style.lineWidth > 0 && ctx.stroke();
-                }
                 
+                // 先fill再stroke
+                var hasPath = false;
                 if (style.brushType == 'fill' 
                     || style.brushType == 'both'
                     || typeof style.brushType == 'undefined' // 默认为fill
                 ) {
+                    ctx.beginPath();
                     if (style.lineType == 'dashed' 
                         || style.lineType == 'dotted'
                     ) {
                         // 特殊处理，虚线围不成path，实线再build一次
-                        ctx.beginPath();
                         this.buildPath(
                             ctx, 
                             {
@@ -6417,9 +6427,25 @@ define(
                                 pointList: style.pointList
                             }
                         );
+                        hasPath = false; // 这个path不能用
+                    }
+                    else {
+                        this.buildPath(ctx, style);
+                        hasPath = true; // 这个path能用
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                if (style.lineWidth > 0 
+                    && (style.brushType == 'stroke' || style.brushType == 'both')
+                ) {
+                    if (!hasPath) {
+                        ctx.beginPath();
+                        this.buildPath(ctx, style);
                         ctx.closePath();
                     }
-                    ctx.fill();
+                    ctx.stroke();
                 }
     
                 if (style.text) {
@@ -7214,20 +7240,31 @@ define(
                 var r = style.r;                            // 扇形外半径(0,r]
                 var startAngle = style.startAngle;          // 起始角度[0,360)
                 var endAngle = style.endAngle;              // 结束角度(0,360]
-                var PI2 = Math.PI * 2;
 
+                if (Math.abs(endAngle - startAngle) >= 360) {
+                    // 大于360度的扇形简化为圆环画法
+                    ctx.arc(x, y, r, 0, Math.PI * 2, false);
+                    if (r0 !== 0) {
+                        ctx.moveTo(x + r0, y);
+                        ctx.arc(x, y, r0, 0, Math.PI * 2, true);
+                    }
+                    return;
+                }
+                
                 startAngle = math.degreeToRadian(startAngle);
                 endAngle = math.degreeToRadian(endAngle);
 
-                //sin&cos已经在tool.math中缓存了，放心大胆的重复调用
+                var PI2 = Math.PI * 2;
+                var cosStartAngle = math.cos(startAngle);
+                var sinStartAngle = math.sin(startAngle);
                 ctx.moveTo(
-                    math.cos(startAngle) * r0 + x,
-                    y - math.sin(startAngle) * r0
+                    cosStartAngle * r0 + x,
+                    y - sinStartAngle * r0
                 );
 
                 ctx.lineTo(
-                    math.cos(startAngle) * r + x,
-                    y - math.sin(startAngle) * r
+                    cosStartAngle * r + x,
+                    y - sinStartAngle * r
                 );
 
                 ctx.arc(x, y, r, PI2 - startAngle, PI2 - endAngle, true);
@@ -7249,6 +7286,7 @@ define(
              * @param {Object} style
              */
             getRect : function(style) {
+                var shape = require('../shape');
                 var x = style.x;   // 圆心x
                 var y = style.y;   // 圆心y
                 var r0 = typeof style.r0 == 'undefined'     // 形内半径[0,r)
@@ -7256,28 +7294,34 @@ define(
                 var r = style.r;                            // 扇形外半径(0,r]
                 var startAngle = style.startAngle;          // 起始角度[0,360)
                 var endAngle = style.endAngle;              // 结束角度(0,360]
+                
+                if (Math.abs(endAngle - startAngle) >= 360) {
+                    // 大于360度的扇形简化为圆环bbox
+                    return shape.get('ring').getRect(style);;
+                }
+                
                 startAngle = (720 + startAngle) % 360;
                 endAngle = (720 + endAngle) % 360;
-                if (endAngle < startAngle) {
+                if (endAngle <= startAngle) {
                     endAngle += 360;
                 }
                 var pointList = [];
-                if (startAngle < 90 && endAngle > 90) {
+                if (startAngle <= 90 && endAngle >= 90) {
                     pointList.push([
                         x, y - r
                     ]);
                 }
-                if (startAngle < 180 && endAngle > 180) {
+                if (startAngle <= 180 && endAngle >= 180) {
                     pointList.push([
                         x - r, y
                     ]);
                 }
-                if (startAngle < 270 && endAngle > 270) {
+                if (startAngle <= 270 && endAngle >= 270) {
                     pointList.push([
                         x, y + r
                     ]);
                 }
-                if (startAngle < 360 && endAngle > 360) {
+                if (startAngle <= 360 && endAngle >= 360) {
                     pointList.push([
                         x + r, y
                     ]);
@@ -7307,7 +7351,6 @@ define(
                     y - math.sin(endAngle) * r0
                 ]);
 
-                var shape = require('../shape');
                 return shape.get('polygon').getRect({
                     brushType : style.brushType,
                     lineWidth : style.lineWidth,
@@ -7466,11 +7509,11 @@ define(
                                 );
                                 break;
                             case 'both':
-                                ctx.strokeText(
+                                ctx.fillText(
                                     text[i],
                                     x, y, style.maxWidth
                                 );
-                                ctx.fillText(
+                                ctx.strokeText(
                                     text[i],
                                     x, y, style.maxWidth
                                 );
@@ -7491,8 +7534,8 @@ define(
                                 ctx.strokeText(text[i], x, y);
                                 break;
                             case 'both':
-                                ctx.strokeText(text[i], x, y);
                                 ctx.fillText(text[i], x, y);
+                                ctx.strokeText(text[i], x, y);
                                 break;
                             default:
                                 ctx.fillText(text[i], x, y);
@@ -7511,10 +7554,8 @@ define(
              */
             getRect : function(style) {
                 var width = area.getTextWidth(style.text, style.textFont);
-                var lineHeight = area.getTextHeight('国', style.textFont);
+                var height = area.getTextHeight(style.text, style.textFont);
                 
-                var text = (style.text + '').split('\n');
-
                 var textX = style.x;                 //默认start == left
                 if (style.textAlign == 'end' || style.textAlign == 'right') {
                     textX -= width;
@@ -7528,18 +7569,18 @@ define(
                     textY = style.y;
                 }
                 else if (style.textBaseline == 'bottom') {
-                    textY = style.y - lineHeight * text.length;
+                    textY = style.y - height;
                 }
                 else {
                     // middle
-                    textY = style.y - lineHeight * text.length / 2;
+                    textY = style.y - height / 2;
                 }
 
                 return {
                     x : textX,
                     y : textY,
                     width : width,
-                    height : lineHeight * text.length
+                    height : height
                 };
             }
         };
@@ -9567,12 +9608,12 @@ function _interpolateArray(p0, p1, percent, out, arrDim) {
 }
 
 function _isArrayLike(data) {
-    if (data === undefined) {
+    if (typeof(data) === 'undefined') {
         return false;
     } else if (typeof(data) == 'string') {
         return false;
     } else {
-        return data.length !== undefined;
+        return typeof(data.length) !== 'undefined';
     }
 }
 
@@ -10827,7 +10868,7 @@ define(
  *
  */
 define(
-    'zrender/zrender',['require','./lib/excanvas','./tool/env','./shape','./shape/circle','./shape/ellipse','./shape/line','./shape/polygon','./shape/brokenLine','./shape/rectangle','./shape/ring','./shape/sector','./shape/text','./shape/heart','./shape/droplet','./shape/path','./shape/image','./shape/beziercurve','./shape/star','./shape/isogon','./animation/animation','./tool/util','./tool/util','./config','./tool/loadingEffect','./tool/loadingEffect','./config','./tool/env','./tool/event'],function(require) {
+    'zrender/zrender',['require','./lib/excanvas','./tool/util','./tool/env','./shape','./shape/circle','./shape/ellipse','./shape/line','./shape/polygon','./shape/brokenLine','./shape/rectangle','./shape/ring','./shape/sector','./shape/text','./shape/heart','./shape/droplet','./shape/path','./shape/image','./shape/beziercurve','./shape/star','./shape/isogon','./animation/animation','./config','./tool/loadingEffect','./tool/loadingEffect','./config','./tool/env','./tool/event'],function(require) {
         /*
          * HTML5 Canvas for Internet Explorer!
          * Modern browsers like Firefox, Safari, Chrome and Opera support
@@ -10842,13 +10883,15 @@ define(
         // 核心代码会生成一个全局变量 G_vmlCanvasManager，模块改造后借用于快速判断canvas支持
         require('./lib/excanvas');
 
+        var util = require('./tool/util');
+
         var self = {};
         var zrender = self;     // 提供MVC内部反向使用静态方法；
 
         var _idx = 0;           //ZRender instance's id
         var _instances = {};    //ZRender实例map索引
 
-        self.version = '1.0.9';
+        self.version = '1.1.0';
 
         /**
          * zrender初始化
@@ -11052,6 +11095,15 @@ define(
             };
 
             /**
+             * 修改指定zlevel的绘制配置项，例如clearColor
+             * @param {string} zLevel
+             * @param {Object} config 配置对象, 目前支持clearColor 
+             */
+            self.modLayer = function(zLevel, config) {
+                painter.modLayer(zLevel, config);
+            }
+
+            /**
              * 添加额外高亮层显示，仅提供添加方法，每次刷新后高亮层图形均被清空
              * @param {Object} shape 形状对象
              */
@@ -11116,7 +11168,6 @@ define(
              *   .start()
              */
             self.animate = function(shapeId, path, loop) {
-                var util = require('./tool/util');
                 var shape = storage.get(shapeId);
                 if (shape) {
                     var target;
@@ -11237,6 +11288,15 @@ define(
             self.toDataURL = function(type, args) {
                 return painter.toDataURL(type, args);
             };
+
+            /**
+             * 将常规shape转成image shape
+             */
+            self.shapeToImage = function(e, width, height) {
+                var id = self.newShapeId('image');
+                return painter.shapeToImage(id, e, width, height);
+            };
+
             /**
              * 事件绑定
              * @param {string} eventName 事件名称
@@ -11298,7 +11358,6 @@ define(
          * @param {Object} shape 图形库
          */
         function Storage(shape) {
-            var util = require('./tool/util');
             var self = this;
 
             var _idBase = 0;            //图形数据id自增基础
@@ -11693,6 +11752,10 @@ define(
             var _domList = {};              //canvas dom元素
             var _ctxList = {};              //canvas 2D context对象，与domList对应
 
+            // 每个zLevel 的配置
+            // @config clearColor
+            var _zLevelConfig = {};
+
             var _maxZlevel = 0;             //最大zlevel，缓存记录
             var _loadingTimer;
 
@@ -11745,6 +11808,9 @@ define(
 
                 _domList = {};
                 _ctxList = {};
+
+                _domListBack = {};
+                _ctxListBack = {};
 
                 _maxZlevel = storage.getMaxZlevel();
 
@@ -11938,11 +12004,7 @@ define(
                 else {
                     for (var k in changedZlevel) {
                         if (_ctxList[k]) {
-                            _ctxList[k].clearRect(
-                                0, 0, 
-                                _width * _devicePixelRatio, 
-                                _height * _devicePixelRatio
-                            );
+                            clearLayer(k);
                         }
                     }
                 }
@@ -11986,13 +12048,94 @@ define(
                     if (k == 'hover') {
                         continue;
                     }
+
+                    clearLayer(k);
+                }
+                return self;
+            }
+
+            /**
+             * 清除单独的一个层
+             */
+            function clearLayer(k) {
+                if (_zLevelConfig[k]) {
+                    var haveClearColor = typeof(_zLevelConfig[k].clearColor) !== 'undefined';
+                    var haveMotionBLur = _zLevelConfig[k].motionBlur;
+                    var lastFrameAlpha = _zLevelConfig[k].lastFrameAlpha;
+                    if (typeof(lastFrameAlpha) == 'undefined') {
+                        lastFrameAlpha = 0.7;
+                    }
+                    if (haveMotionBLur) {
+                        if (typeof(_domListBack[k]) === 'undefined') {
+                            var backDom = _createDom('back-' + k, 'canvas');
+                            backDom.width = _domList[k].width;
+                            backDom.height = _domList[k].height;
+                            backDom.style.width = _domList[k].style.width;
+                            backDom.style.height = _domList[k].style.height;
+                            _domListBack[k] = backDom;
+                            _ctxListBack[k] = backDom.getContext('2d');
+                            _devicePixelRatio != 1
+                                && _ctxListBack[k].scale(
+                                       _devicePixelRatio, _devicePixelRatio
+                                   );
+                        }
+                        _ctxListBack[k].globalCompositeOperation = 'copy';
+                        _ctxListBack[k].drawImage(
+                            _domList[k], 0, 0,
+                            _domList[k].width / _devicePixelRatio,
+                            _domList[k].height / _devicePixelRatio
+                        );
+                    }
+                    if (haveClearColor) {
+                        _ctxList[k].save();
+                        _ctxList[k].fillStyle = _zLevelConfig[k].clearColor;
+                        _ctxList[k].fillRect(
+                            0, 0,
+                            _width * _devicePixelRatio, 
+                            _height * _devicePixelRatio
+                        );
+                        _ctxList[k].restore();
+                    } else {
+                        _ctxList[k].clearRect(
+                            0, 0, 
+                            _width * _devicePixelRatio, 
+                            _height * _devicePixelRatio
+                        );
+                    }
+                    if (haveMotionBLur) {
+                        var backDom = _domListBack[k];
+                        var ctx = _ctxList[k];
+                        ctx.save();
+                        ctx.globalAlpha = lastFrameAlpha;
+                        ctx.drawImage(
+                            backDom, 0, 0,
+                            backDom.width / _devicePixelRatio,
+                            backDom.height / _devicePixelRatio
+                        );
+                        ctx.restore();
+                    }
+                } else {
                     _ctxList[k].clearRect(
                         0, 0, 
                         _width * _devicePixelRatio, 
                         _height * _devicePixelRatio
                     );
                 }
-                return self;
+            }
+
+            /**
+             * 修改指定zlevel的绘制参数
+             * @return {[type]} [description]
+             */
+            function modLayer(zLevel, config) {
+                if (config) {
+                    if (typeof(_zLevelConfig[zLevel]) === 'undefined' ) {
+                        _zLevelConfig[zLevel] = {};
+                    }
+                    util.merge(_zLevelConfig[zLevel], config, {
+                        recursive : true
+                    });
+                }
             }
 
             /**
@@ -12143,6 +12286,9 @@ define(
                 _domList = null;
                 _ctxList = null;
 
+                _ctxListBack = null;
+                _domListBack = null;
+
                 self = null;
 
                 return;
@@ -12207,10 +12353,65 @@ define(
                 return image;
             }
             
+            var shapeToImage = (function() {
+                if (G_vmlCanvasManager) {
+                    return function(){};
+                }
+                var canvas = document.createElement('canvas');
+                var ctx = canvas.getContext('2d');
+                var devicePixelRatio = window.devicePixelRatio || 1;
+                
+                return function(id, e, width, height) {
+                    canvas.style.width = width + 'px';
+                    canvas.style.height = height + 'px';
+                    canvas.setAttribute('width', width * devicePixelRatio);
+                    canvas.setAttribute('height', height * devicePixelRatio);
+
+                    ctx.clearRect(0, 0, width * devicePixelRatio, height * devicePixelRatio);
+
+                    var brush = shape.get(e.shape);
+                    var shapeTransform = {
+                        position : e.position,
+                        rotation : e.rotation,
+                        scale : e.scale
+                    };
+                    e.position = [0, 0, 0];
+                    e.rotation = 0;
+                    e.scale = [1, 1];
+                    if (brush) {
+                        brush.brush(ctx, e, false);
+                    }
+
+                    var imgShape = {
+                        shape : 'image',
+                        id : id,
+                        style : {
+                            x : 0,
+                            y : 0,
+                            // TODO 直接使用canvas而不是通过base64
+                            image : canvas.toDataURL()
+                        }
+                    }
+
+                    if (typeof(shapeTransform.position) !== 'undefined') {
+                        imgShape.position = e.position = shapeTransform.position;
+                    }
+                    if (typeof(shapeTransform.rotation) !== 'undefined') {
+                        imgShape.rotation = e.rotation = shapeTransform.rotation;
+                    }
+                    if (typeof(shapeTransform.scale) !== 'undefined') {
+                        imgShape.scale = e.scale = shapeTransform.scale;
+                    }
+
+                    return imgShape;
+                }
+            })();
+
             self.render = render;
             self.refresh = refresh;
             self.update = update;
             self.clear = clear;
+            self.modLayer = modLayer;
             self.refreshHover = refreshHover;
             self.clearHover = clearHover;
             self.showLoading = showLoading;
@@ -12222,6 +12423,8 @@ define(
             self.dispose = dispose;
             self.getDomHover = getDomHover;
             self.toDataURL = toDataURL;
+            self.shapeToImage = shapeToImage;
+
             _init();
         }
 
@@ -12255,6 +12458,7 @@ define(
             var _draggingTarget = null;         //当前被拖拽的图形元素
             var _isMouseDown = false;
             var _isDragging = false;
+            var _lastMouseDownMoment;
             var _lastTouchMoment;
             var _lastDownButton;
 
@@ -12468,6 +12672,7 @@ define(
                     // 仅作为关闭右键菜单使用
                     return;
                 }
+                _lastMouseDownMoment = new Date();
                 _event = _zrenderEventFixed(event);
                 _isMouseDown = true;
                 //分发config.EVENT.MOUSEDOWN事件
@@ -12545,6 +12750,12 @@ define(
                     && !_draggingTarget
                     && _mouseDownTarget == _lastHover
                 ) {
+                    // 拖拽点击生效时长阀门，某些场景需要降低拖拽敏感度
+                    if (_lastHover.dragEnableTime && 
+                        new Date() - _lastMouseDownMoment < _lastHover.dragEnableTime
+                    ) {
+                        return;
+                    }
                     _draggingTarget = _lastHover;
                     _isDragging = true;
 
@@ -13429,7 +13640,7 @@ define(
                     e.style.__rect = rect;
                 }
                 // 提高交互体验，太小的图形包围盒四向扩大4px
-                var delta = rect.height < 10 ? 4 : 0;
+                var delta = (rect.height < 10 || rect.width < 10 ) ? 4 : 0;
                 if (x >= rect.x - delta
                     && x <= (rect.x + rect.width + 2 * delta)
                     && y >= rect.y - delta
@@ -13873,9 +14084,8 @@ define('echarts/util/ecData',[],function() {
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/base',['require','../config','../util/ecData','zrender/tool/util'],function(require) {
-    function Base(zr){
-        var ecConfig = require('../config');
+define('echarts/component/base',['require','../util/ecData','zrender/tool/util'],function(require) {
+    function Base(ecConfig, zr){
         var ecData = require('../util/ecData');
         var zrUtil = require('zrender/tool/util');
         var self = this;
@@ -14745,6 +14955,9 @@ define('echarts/component/base',['require','../config','../util/ecData','zrender
         
         // 每三位默认加,格式化
         function numAddCommas(x){
+            if (isNaN(x)) {
+                return '-';
+            }
             x = (x + '').split('.');
             return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g,'$1,') 
                    + (x.length > 1 ? ('.' + x[1]) : '');
@@ -14981,7 +15194,7 @@ define('echarts/chart/calculableBase',['require','../util/ecData','../util/accMa
                     text : '',
                     r : calculableShape.style.r + 5,
                     brushType : 'stroke',
-                    strokeColor : self.zr.getCalculableColor(),
+                    strokeColor : option.calculableColor,//self.zr.getCalculableColor(),
                     lineWidth : (calculableShape.style.lineWidth || 1) + 12
                 };
                 self.zr.addHoverShape(calculableShape);
@@ -15000,6 +15213,7 @@ define('echarts/chart/calculableBase',['require','../util/ecData','../util/accMa
         };
 
         function setCalculable(shape) {
+            shape.dragEnableTime = option.DRAG_ENABLE_TIME;
             shape.ondragover = self.shapeHandler.ondragover;
             shape.ondragend = self.shapeHandler.ondragend;
             shape.ondrop = self.shapeHandler.ondrop;
@@ -15118,22 +15332,21 @@ define('echarts/chart/calculableBase',['require','../util/ecData','../util/accMa
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/island',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/event','zrender/tool/color','../util/accMath','../chart'],function (require) {
+define('echarts/chart/island',['require','../component/base','./calculableBase','../util/ecData','zrender/tool/event','zrender/tool/color','../util/accMath','../chart'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
      * @param {ZRender} zr zrender实例
      * @param {Object} option 图表选项
      */
-    function Island(messageCenter, zr) {
+    function Island(ecConfig, messageCenter, zr) {
         // 基类装饰
         var ComponentBase = require('../component/base');
-        ComponentBase.call(this, zr);
+        ComponentBase.call(this, ecConfig, zr);
         // 可计算特性装饰
         var CalculableBase = require('./calculableBase');
-        CalculableBase.call(this, zr);
-
-        var ecConfig = require('../config');
+        CalculableBase.call(this, zr, ecConfig);
+                
         var ecData = require('../util/ecData');
 
         var zrEvent = require('zrender/tool/event');
@@ -15253,6 +15466,7 @@ define('echarts/chart/island',['require','../component/base','./calculableBase',
                 islandShape.style.color = shape.style.strokeColor;
             }
             self.setCalculable(islandShape);
+            islandShape.dragEnableTime = 0;
             ecData.pack(
                 islandShape,
                 {name:seriesName}, -1,
@@ -15411,18 +15625,17 @@ define('echarts/component',[],function(/*require*/) {    //component
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/title',['require','./base','../config','zrender/tool/area','zrender/tool/util','../component'],function (require) {
+define('echarts/component/title',['require','./base','zrender/tool/area','zrender/tool/util','../component'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
      * @param {ZRender} zr zrender实例
      * @param {Object} option 图表参数
      */
-    function Title(messageCenter, zr, option) {
+    function Title(ecConfig, messageCenter, zr, option) {
         var Base = require('./base');
-        Base.call(this, zr);
+        Base.call(this, ecConfig, zr);
 
-        var ecConfig = require('../config');
         var zrArea = require('zrender/tool/area');
         var zrUtil = require('zrender/tool/util');
 
@@ -15696,7 +15909,7 @@ define('echarts/component/title',['require','./base','../config','zrender/tool/a
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/categoryAxis',['require','./base','../config','zrender/tool/util','zrender/tool/area','../component'],function (require) {
+define('echarts/component/categoryAxis',['require','./base','zrender/tool/util','zrender/tool/area','../component'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -15704,11 +15917,9 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
      * @param {Object} option 类目轴参数
      * @param {Grid} grid 网格对象
      */
-    function CategoryAxis(messageCenter, zr, option, component) {
+    function CategoryAxis(ecConfig, messageCenter, zr, option, component) {
         var Base = require('./base');
-        Base.call(this, zr);
-
-        var ecConfig = require('../config');
+        Base.call(this, ecConfig, zr);
 
         var zrUtil = require('zrender/tool/util');
         var zrArea = require('zrender/tool/area');
@@ -15943,8 +16154,8 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
             if (option.position == 'bottom' || option.position == 'top') {
                 // 横向
                 var yPosition = option.position == 'bottom'
-                                ? grid.getYend()
-                                : (grid.getY() - length);
+                        ? (tickOption.inside ? (grid.getYend() - length) : grid.getYend())
+                        : (tickOption.inside ? grid.getY() : (grid.getY() - length));
                 var x;
                 for (var i = 0; i < dataLength; i += interval) {
                     // 亚像素优化
@@ -15968,10 +16179,11 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
                 }
             }
             else {
-                // 纵向
+                // 纵向                        
                 var xPosition = option.position == 'left'
-                                ? (grid.getX() - length)
-                                : grid.getXend();
+                        ? (tickOption.inside ? grid.getX() : (grid.getX() - length))
+                        : (tickOption.inside ? (grid.getXend() - length) : grid.getXend());
+                        
                 var y;
                 for (var i = 0; i < dataLength; i += interval) {
                     // 亚像素优化
@@ -16451,7 +16663,7 @@ define('echarts/component/categoryAxis',['require','./base','../config','zrender
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/valueAxis',['require','./base','../config','zrender/tool/util','../component'],function (require) {
+define('echarts/component/valueAxis',['require','./base','zrender/tool/util','../component'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -16460,11 +16672,9 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
      * @param {Grid} grid 网格对象
      * @param {Array} series 数据对象
      */
-    function ValueAxis(messageCenter, zr, option, component, series) {
+    function ValueAxis(ecConfig, messageCenter, zr, option, component, series) {
         var Base = require('./base');
-        Base.call(this, zr);
-
-        var ecConfig = require('../config');
+        Base.call(this, ecConfig, zr);
 
         var zrUtil = require('zrender/tool/util');
 
@@ -16589,8 +16799,8 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
             if (option.position == 'bottom' || option.position == 'top') {
                 // 横向
                 var yPosition = option.position == 'bottom'
-                                ? grid.getYend()
-                                : (grid.getY() - length);
+                        ? (tickOption.inside ? (grid.getYend() - length) : grid.getYend())
+                        : (tickOption.inside ? grid.getY() : (grid.getY() - length));
                 var x;
                 for (var i = 0; i < dataLength; i++) {
                     // 亚像素优化
@@ -16614,8 +16824,9 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
             else {
                 // 纵向
                 var xPosition = option.position == 'left'
-                                ? (grid.getX() - length)
-                                : grid.getXend();
+                        ? (tickOption.inside ? grid.getX() : (grid.getX() - length))
+                        : (tickOption.inside ? (grid.getXend() - length) : grid.getXend());
+
                 var y;
                 for (var i = 0; i < dataLength; i++) {
                     // 亚像素优化
@@ -16668,7 +16879,8 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
                         style : {
                             x : getCoord(data[i]),
                             y : yPosition,
-                            color : textStyle.color,
+                            color : typeof textStyle.color == 'function'
+                                    ? textStyle.color(data[i]) : textStyle.color,
                             text : _valueLabel[i],
                             textFont : self.getFont(textStyle),
                             textAlign : (i === 0 && option.name !== '')
@@ -16716,7 +16928,8 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
                         style : {
                             x : xPosition,
                             y : getCoord(data[i]),
-                            color : textStyle.color,
+                            color : typeof textStyle.color == 'function'
+                                    ? textStyle.color(data[i]) : textStyle.color,
                             text : _valueLabel[i],
                             textFont : self.getFont(textStyle),
                             textAlign : align,
@@ -17366,7 +17579,7 @@ define('echarts/component/valueAxis',['require','./base','../config','zrender/to
  *    纵轴通常为数值型，但条形图时则纵轴为类目型。
  *
  */
-define('echarts/component/axis',['require','./base','../config','./categoryAxis','./valueAxis','../component'],function (require) {
+define('echarts/component/axis',['require','./base','./categoryAxis','./valueAxis','../component'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -17377,11 +17590,9 @@ define('echarts/component/axis',['require','./base','../config','./categoryAxis'
      * @param {Object} component 组件
      * @param {string} axisType 横走or纵轴
      */
-    function Axis(messageCenter, zr, option, component, axisType) {
+    function Axis(ecConfig, messageCenter, zr, option, component, axisType) {
         var Base = require('./base');
-        Base.call(this, zr);
-
-        var ecConfig = require('../config');
+        Base.call(this, ecConfig, zr);
 
         var self = this;
         self.type = ecConfig.COMPONENT_TYPE_AXIS;
@@ -17486,10 +17697,12 @@ define('echarts/component/axis',['require','./base','../config','./categoryAxis'
                 _axisList.push(
                     axisOption[i].type == 'category'
                     ? new CategoryAxis(
+                          ecConfig, 
                           messageCenter, zr,
                           axisOption[i], component
                       )
                     : new ValueAxis(
+                          ecConfig, 
                           messageCenter, zr,
                           axisOption[i], component,
                           option.series
@@ -17563,7 +17776,7 @@ define('echarts/component/axis',['require','./base','../config','./categoryAxis'
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/grid',['require','./base','../config','../component'],function (require) {
+define('echarts/component/grid',['require','./base','../component'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -17574,11 +17787,9 @@ define('echarts/component/grid',['require','./base','../config','../component'],
      *      @param {number=} option.grid.width 直角坐标系内绘图网格宽度，数值单位px
      *      @param {number=} option.grid.height 直角坐标系内绘图网格高度，数值单位px
      */
-    function Grid(messageCenter, zr, option) {
+    function Grid(ecConfig, messageCenter, zr, option) {
         var Base = require('./base');
-        Base.call(this, zr);
-
-        var ecConfig = require('../config');
+        Base.call(this, ecConfig, zr);
 
         var self = this;
         self.type = ecConfig.COMPONENT_TYPE_GRID;
@@ -17715,7 +17926,7 @@ define('echarts/component/grid',['require','./base','../config','../component'],
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/dataZoom',['require','./base','../config','../component','zrender/tool/util','../component'],function (require) {
+define('echarts/component/dataZoom',['require','./base','../component','zrender/tool/util','zrender/tool/util','zrender/tool/util','../component'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -17723,11 +17934,9 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
      * @param {Object} option 图表参数
      * @param {Object} component 组件
      */
-    function DataZoom(messageCenter, zr, option, component) {
+    function DataZoom(ecConfig, messageCenter, zr, option, component) {
         var Base = require('./base');
-        Base.call(this, zr);
-
-        var ecConfig = require('../config');
+        Base.call(this, ecConfig, zr);
 
         var self = this;
         self.type = ecConfig.COMPONENT_TYPE_DATAZOOM;
@@ -17736,13 +17945,15 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
 
         var zoomOption;
 
-        var _fillerSize = 30;       // 填充大小
-        var _handleSize = 10;       // 手柄大小
+        var _fillerSize = 28;       // 控件大小，水平布局为高，纵向布局为宽
+        var _handleSize = 8;        // 手柄大小
         var _location;              // 位置参数，通过计算所得x, y, width, height
         var _zoom;                  // 缩放参数
-        var _fillerShae;
-        var _startShape;
-        var _endShape;
+        var _fillerShae;            // 填充
+        var _startShape;            // 起始手柄
+        var _endShape;              // 结束手柄
+        var _startFrameShape;       // 起始特效边框
+        var _endFrameShape;         // 结束特效边框
 
         var _syncTicket;
         var _isSilence = false;
@@ -17751,16 +17962,15 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
 
         function _buildShape() {
             _buildBackground();
-            _buildDataBackground();
             _buildFiller();
-            _bulidHandle();
+            _buildHandle();
+            _buildFrame();
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
-
-            _syncData();
+            _syncFrameShape();
         }
 
         /**
@@ -17781,14 +17991,14 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
                 x = typeof zoomOption.x != 'undefined'
                     ? zoomOption.x : grid.getX();
                 y = typeof zoomOption.y != 'undefined'
-                    ? zoomOption.y : (zr.getHeight() - height);
+                    ? zoomOption.y : (zr.getHeight() - height - 2);
             }
             else {
                 // 垂直布局
                 width = zoomOption.width || _fillerSize;
                 height = zoomOption.height || grid.getHeight();
                 x = typeof zoomOption.x != 'undefined'
-                    ? zoomOption.x : 0;
+                    ? zoomOption.x : 2;
                 y = typeof zoomOption.y != 'undefined'
                     ? zoomOption.y : grid.getY();
             }
@@ -17974,6 +18184,7 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
                 axisOption.type = 'value';
             }
             var vAxis = new Axis(
+                ecConfig,
                 null,   // messageCenter
                 false,  // zr
                 {
@@ -17998,6 +18209,7 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
                 axisOption.type = 'value';
             }
             vAxis = new Axis(
+                ecConfig,
                 null,   // messageCenter
                 false,  // zr
                 {
@@ -18015,6 +18227,7 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
         }
 
         function _buildBackground() {
+            // 背景
             self.shapeList.push({
                 shape : 'rectangle',
                 zlevel : _zlevelBase,
@@ -18027,39 +18240,26 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
                     color : zoomOption.backgroundColor
                 }
             });
-        }
-
-        function _buildDataBackground() {
-            self.shapeList.push({
-                shape : 'rectangle',
-                zlevel : _zlevelBase,
-                hoverable :false,
-                style : {
-                    x : _location.x,
-                    y : _location.y,
-                    width : _location.width,
-                    height : _location.height,
-                    color : zoomOption.backgroundColor
-                }
-            });
-
+            
+            // 数据阴影
             var maxLength = 0;
-            var xAxis = option.xAxis;
+            var xAxis = _originalData.xAxis;
             var xAxisIndex = _zoom.xAxisIndex;
             for (var i = 0, l = xAxisIndex.length; i < l; i++) {
                 maxLength = Math.max(
-                    maxLength, xAxis[xAxisIndex[i]].data.length
+                    maxLength, xAxis[xAxisIndex[i]].length
                 );
             }
-            var yAxis = option.yAxis;
+            var yAxis = _originalData.yAxis;
             var yAxisIndex = _zoom.yAxisIndex;
             for (var i = 0, l = yAxisIndex.length; i < l; i++) {
                 maxLength = Math.max(
-                    maxLength, yAxis[yAxisIndex[i]].data.length
+                    maxLength, yAxis[yAxisIndex[i]].length
                 );
             }
 
-            var data = option.series[_zoom.seriesIndex[0]].data;
+            var seriesIndex = _zoom.seriesIndex[0];
+            var data = _originalData.series[seriesIndex];
             var maxValue = Number.MIN_VALUE;
             var minValue = Number.MAX_VALUE;
             var value;
@@ -18068,9 +18268,7 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
                         ? (typeof data[i].value != 'undefined'
                           ? data[i].value : data[i])
                         : 0;
-                if (option.series[_zoom.seriesIndex[0]].type 
-                    == ecConfig.CHART_TYPE_K
-                ) {
+                if (option.series[seriesIndex].type == ecConfig.CHART_TYPE_K) {
                     value = value[1];   // 收盘价
                 }
                 if (isNaN(value)) {
@@ -18088,9 +18286,7 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
                         ? (typeof data[i].value != 'undefined'
                           ? data[i].value : data[i])
                         : 0;
-                if (option.series[_zoom.seriesIndex[0]].type 
-                    == ecConfig.CHART_TYPE_K
-                ) {
+                if (option.series[seriesIndex].type == ecConfig.CHART_TYPE_K) {
                     value = value[1];   // 收盘价
                 }
                 if (isNaN(value)) {
@@ -18165,27 +18361,42 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
                     x : _location.x
                         + Math.round(_zoom.start / 100 * _location.width)
                         + _handleSize,
-                    y : _location.y + 3,
+                    y : _location.y,
                     width : _zoom.size - _handleSize * 2,
-                    height : _location.height - 6,
+                    height : _location.height,
                     color : zoomOption.fillerColor,
+                    // strokeColor : '#fff', // zoomOption.handleColor,
+                    // lineWidth: 2,
                     text : ':::',
                     textPosition : 'inside'
                 };
             }
             else {
+                // 纵向
                 _fillerShae.style ={
-                    x : _location.x + 3,
+                    x : _location.x,
                     y : _location.y
                         + Math.round(_zoom.start / 100 * _location.height)
                         + _handleSize,
-                    width :  _location.width - 6,
+                    width :  _location.width,
                     height : _zoom.size - _handleSize * 2,
                     color : zoomOption.fillerColor,
-                    text : '=',
+                    // strokeColor : '#fff', // zoomOption.handleColor,
+                    // lineWidth: 2,
+                    text : '::',
                     textPosition : 'inside'
                 };
             }
+            
+            _fillerShae.highlightStyle = {
+                brushType: 'fill',
+                color : 'rgba(0,0,0,0)'
+                /*
+                color : require('zrender/tool/color').alpha(
+                            _fillerShae.style.color, 0
+                        )
+                */
+            };
 
             self.shapeList.push(_fillerShae);
         }
@@ -18193,72 +18404,77 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
         /**
          * 构建拖拽手柄
          */
-        function _bulidHandle() {
+        function _buildHandle() {
+            var zrUtil = require('zrender/tool/util');
             _startShape = {
-                shape : 'rectangle',
-                zlevel : _zlevelBase
+                shape : 'icon',
+                zlevel : _zlevelBase,
+                draggable : true,
+                style : {
+                    iconType: 'rectangle',
+                    x : _location.x,
+                    y : _location.y,
+                    width : _handleSize,
+                    height : _handleSize,
+                    color : zoomOption.handleColor,
+                    text : '=',
+                    textPosition : 'inside'
+                },
+                highlightStyle : {
+                    brushType: 'fill'
+                },
+                ondrift : _ondrift,
+                ondragend : _ondragend
             };
-            _endShape = {
-                shape : 'rectangle',
-                zlevel : _zlevelBase
-            };
-
-            _startShape.draggable = true;
-            _startShape.ondrift = _ondrift;
-            _startShape.ondragend = _ondragend;
-            _endShape.draggable = true;
-            _endShape.ondrift = _ondrift;
-            _endShape.ondragend = _ondragend;
-
+            
             if (zoomOption.orient == 'horizontal') {
-                // 头
-                _startShape.style = {
-                    x : _fillerShae.style.x - _handleSize,
-                    y : _location.y,
-                    width : _handleSize,
-                    height : _location.height,
-                    color : zoomOption.handleColor,
-                    text : '|',
-                    textPosition : 'inside'
-                };
-                // 尾
-                _endShape.style = {
-                    x : _fillerShae.style.x + _fillerShae.style.width,
-                    y : _location.y,
-                    width : _handleSize,
-                    height : _location.height,
-                    color : zoomOption.handleColor,
-                    text : '|',
-                    textPosition : 'inside'
-                };
+                _startShape.style.height = _location.height;
+                _endShape = zrUtil.clone(_startShape);
+                
+                _startShape.style.x = _fillerShae.style.x - _handleSize,
+                _endShape.style.x = _fillerShae.style.x  
+                                    + _fillerShae.style.width;
             }
             else {
-                // 头
-                _startShape.style = {
-                    x : _location.x,
-                    y : _fillerShae.style.y - _handleSize,
-                    width : _location.width,
-                    height : _handleSize,
-                    color : zoomOption.handleColor,
-                    text : '—',
-                    textPosition : 'inside'
-                };
-                // 尾
-                _endShape.style = {
-                    x : _location.x,
-                    y : _fillerShae.style.y + _fillerShae.style.height,
-                    width : _location.width,
-                    height : _handleSize,
-                    color : zoomOption.handleColor,
-                    text : '—',
-                    textPosition : 'inside'
-                };
+                _startShape.style.width = _location.width;
+                _endShape = zrUtil.clone(_startShape);
+                
+                _startShape.style.y = _fillerShae.style.y - _handleSize;
+                _endShape.style.y = _fillerShae.style.y 
+                                    + _fillerShae.style.height;
             }
-
             self.shapeList.push(_startShape);
             self.shapeList.push(_endShape);
         }
 
+        /**
+         * 构建特效边框
+         */
+        function _buildFrame() {
+            var zrUtil = require('zrender/tool/util');
+            // 特效框线，亚像素优化
+            var x = self.subPixelOptimize(_location.x, 1);
+            var y = self.subPixelOptimize(_location.y, 1);
+            _startFrameShape = {
+                shape : 'rectangle',
+                zlevel : _zlevelBase,
+                hoverable :false,
+                style : {
+                    x : x,
+                    y : y,
+                    width : _location.width - (x > _location.x ? 1 : 0),
+                    height : _location.height - (y > _location.y ? 1 : 0),
+                    lineWidth: 1,
+                    brushType: 'stroke',
+                    strokeColor : zoomOption.handleColor
+                }
+            };
+            _endFrameShape = zrUtil.clone(_startFrameShape);
+            self.shapeList.push(_startFrameShape);
+            self.shapeList.push(_endFrameShape);
+            return;
+        }
+        
         /**
          * 拖拽范围控制
          */
@@ -18321,6 +18537,7 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
                 _startShape.style.x = _fillerShae.style.x - _handleSize;
                 _endShape.style.x = _fillerShae.style.x
                                     + _fillerShae.style.width;
+                
                 _zoom.start = Math.floor(
                     (_startShape.style.x - _location.x)
                     / _location.width * 100
@@ -18346,6 +18563,10 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
 
             zr.modShape(_startShape.id, _startShape);
             zr.modShape(_endShape.id, _endShape);
+            
+            // 同步边框
+            _syncFrameShape();
+            
             zr.refresh();
         }
 
@@ -18382,7 +18603,33 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
             }
 
             zr.modShape(_fillerShae.id, _fillerShae);
+            
+            // 同步边框
+            _syncFrameShape();
+            
             zr.refresh();
+        }
+        
+        function _syncFrameShape() {
+            if (zoomOption.orient == 'horizontal') {
+                _startFrameShape.style.width = 
+                    _fillerShae.style.x - _location.x;
+                _endFrameShape.style.x = 
+                    _fillerShae.style.x + _fillerShae.style.width;
+                _endFrameShape.style.width = 
+                    _location.x + _location.width - _endFrameShape.style.x;
+            }
+            else {
+                _startFrameShape.style.height = 
+                    _fillerShae.style.y - _location.y;
+                _endFrameShape.style.y = 
+                    _fillerShae.style.y + _fillerShae.style.height;
+                _endFrameShape.style.height = 
+                    _location.y + _location.height - _endFrameShape.style.y;
+            }
+                    
+            zr.modShape(_startFrameShape.id, _startFrameShape);
+            zr.modShape(_endFrameShape.id, _endFrameShape);
         }
         
         function _syncShape() {
@@ -18418,6 +18665,8 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
             zr.modShape(_startShape.id, _startShape);
             zr.modShape(_endShape.id, _endShape);
             zr.modShape(_fillerShae.id, _fillerShae);
+            // 同步边框
+            _syncFrameShape();
             zr.refresh();
         }
 
@@ -18701,6 +18950,7 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
             
             if (option.dataZoom.show) {
                 _buildShape();
+                _syncData();
             }
         }
 
@@ -18722,15 +18972,7 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
             }
             
             if (option.dataZoom.show) {
-                _buildBackground();
-                _buildDataBackground();
-                _buildFiller();
-                _bulidHandle();
-    
-                for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                    self.shapeList[i].id = zr.newShapeId(self.type);
-                    zr.addShape(self.shapeList[i]);
-                }
+                _buildShape();
             }
         }
         
@@ -18758,7 +19000,7 @@ define('echarts/component/dataZoom',['require','./base','../config','../componen
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/legend',['require','./base','../config','zrender/tool/area','zrender/shape','zrender/shape','zrender/shape','zrender/shape','zrender/shape','../component'],function (require) {
+define('echarts/component/legend',['require','./base','zrender/tool/area','zrender/shape','zrender/shape','zrender/shape','zrender/shape','zrender/shape','../component'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -18766,11 +19008,10 @@ define('echarts/component/legend',['require','./base','../config','zrender/tool/
      * @param {Object} option 图表参数
      * @param {Object=} selected 用于状态保持
      */
-    function Legend(messageCenter, zr, option, selected) {
+    function Legend(ecConfig, messageCenter, zr, option, selected) {
         var Base = require('./base');
-        Base.call(this, zr);
+        Base.call(this, ecConfig, zr);
 
-        var ecConfig = require('../config');
         var zrArea = require('zrender/tool/area');
 
         var self = this;
@@ -19579,7 +19820,7 @@ define('echarts/component/legend',['require','./base','../config','zrender/tool/
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/dataRange',['require','./base','../config','zrender/tool/area','zrender/tool/color','zrender/tool/color','../component'],function (require) {
+define('echarts/component/dataRange',['require','./base','zrender/tool/area','zrender/tool/color','zrender/tool/color','../component'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -19587,11 +19828,10 @@ define('echarts/component/dataRange',['require','./base','../config','zrender/to
      * @param {Object} option 图表参数
      * @param {Object=} selected 用于状态保持
      */
-    function DataRange(messageCenter, zr, option) {
+    function DataRange(ecConfig, messageCenter, zr, option) {
         var Base = require('./base');
-        Base.call(this, zr);
+        Base.call(this, ecConfig, zr);
 
-        var ecConfig = require('../config');
         var zrArea = require('zrender/tool/area');
 
         var self = this;
@@ -19899,18 +20139,14 @@ define('echarts/component/dataRange',['require','./base','../config','zrender/to
             var textHeight = zrArea.getTextHeight('国', font);
             var textWidth = Math.max(
                     zrArea.getTextWidth(
-                        dataRangeOption.precision === 0
-                        ? dataRangeOption.max
-                        : dataRangeOption.max.toFixed(
+                        dataRangeOption.max.toFixed(
                             dataRangeOption.precision
-                          ),
+                        ),
                         font),
                     zrArea.getTextWidth(
-                        dataRangeOption.precision === 0
-                        ? dataRangeOption.min
-                        : dataRangeOption.min.toFixed(
+                        dataRangeOption.min.toFixed(
                             dataRangeOption.precision
-                          ), 
+                        ), 
                         font
                     )
                 ) + 2;
@@ -20035,7 +20271,9 @@ define('echarts/component/dataRange',['require','./base','../config','zrender/to
                 zlevel : _zlevelBase + 1,
                 style : {
                     pointList : pointListStart,
-                    text : dataRangeOption.max + '',
+                    text : dataRangeOption.max.toFixed(
+                               dataRangeOption.precision
+                           ),
                     textX : textXStart,
                     textY : textYStart,
                     textPosition : 'specific',
@@ -20060,7 +20298,9 @@ define('echarts/component/dataRange',['require','./base','../config','zrender/to
                 zlevel : _zlevelBase + 1,
                 style : {
                     pointList : pointListEnd,
-                    text : dataRangeOption.min + '',
+                    text : dataRangeOption.min.toFixed(
+                               dataRangeOption.precision
+                           ),
                     textX : textXEnd,
                     textY : textYEnd,
                     textPosition : 'specific',
@@ -20836,7 +21076,7 @@ define('echarts/component/dataRange',['require','./base','../config','zrender/to
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/tooltip',['require','./base','../config','../util/ecData','zrender/config','zrender/shape','zrender/tool/event','zrender/tool/area','zrender/tool/color','zrender/tool/util','zrender/shape/base','../component'],function (require) {
+define('echarts/component/tooltip',['require','./base','../util/ecData','zrender/config','zrender/shape','zrender/tool/event','zrender/tool/area','zrender/tool/color','zrender/tool/util','zrender/shape/base','../component'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -20844,11 +21084,10 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
      * @param {Object} option 提示框参数
      * @param {HtmlElement} dom 目标对象
      */
-    function Tooltip(messageCenter, zr, option, dom) {
+    function Tooltip(ecConfig, messageCenter, zr, option, dom) {
         var Base = require('./base');
-        Base.call(this, zr);
+        Base.call(this, ecConfig, zr);
 
-        var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
         var zrConfig = require('zrender/config');
@@ -22235,18 +22474,17 @@ define('echarts/component/tooltip',['require','./base','../config','../util/ecDa
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/toolbox',['require','./base','../config','zrender/config','zrender/tool/util','zrender/tool/event','../component','../component'],function (require) {
+define('echarts/component/toolbox',['require','./base','zrender/config','zrender/tool/util','zrender/tool/event','../component','../component'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
      * @param {ZRender} zr zrender实例
      * @param {HtmlElement} dom 目标对象
      */
-    function Toolbox(messageCenter, zr, dom) {
+    function Toolbox(ecConfig, messageCenter, zr, dom) {
         var Base = require('./base');
-        Base.call(this, zr);
+        Base.call(this, ecConfig, zr);
 
-        var ecConfig = require('../config');
         var zrConfig = require('zrender/config');
         var zrUtil = require('zrender/tool/util');
         var zrEvent = require('zrender/tool/event');
@@ -22453,7 +22691,7 @@ define('echarts/component/toolbox',['require','./base','../config','zrender/conf
                             var componentLibrary = require('../component');
                             var DataView = componentLibrary.get('dataView');
                             _dataView = new DataView(
-                                messageCenter, zr, option, dom
+                                ecConfig, messageCenter, zr, option, dom
                             );
                         }
                         itemShape.onclick = _onDataView;
@@ -23229,7 +23467,7 @@ define('echarts/component/toolbox',['require','./base','../config','zrender/conf
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/dataView',['require','./base','../config','../component'],function (require) {
+define('echarts/component/dataView',['require','./base','../component'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -23237,11 +23475,9 @@ define('echarts/component/dataView',['require','./base','../config','../componen
      * @param {Object} option 提示框参数
      * @param {HtmlElement} dom 目标对象
      */
-    function DataView(messageCenter, zr, option, dom) {
+    function DataView(ecConfig, messageCenter, zr, option, dom) {
         var Base = require('./base');
-        Base.call(this, zr);
-
-        var ecConfig = require('../config');
+        Base.call(this, ecConfig, zr);
 
         var self = this;
         self.type = ecConfig.COMPONENT_TYPE_DATAVIEW;
@@ -23462,6 +23698,7 @@ define('echarts/component/dataView',['require','./base','../config','../componen
                         {option : option}
                     );
                 },
+                // 有动画，所以高级浏览器时间更长点
                 !G_vmlCanvasManager ? 800 : 100
             );
         }
@@ -23737,13 +23974,12 @@ define(
  */
 define(
 
-    'echarts/component/polar',['require','./base','../config','../util/coordinates','zrender/tool/util','../component'],function(require) {
+    'echarts/component/polar',['require','./base','../util/coordinates','zrender/tool/util','../component'],function(require) {
 
-        function Polar(messageCenter, zr, option, component) {
+        function Polar(ecConfig, messageCenter, zr, option, component) {
             var Base = require('./base');
-            Base.call(this, zr);
+            Base.call(this, ecConfig, zr);
 
-            var ecConfig = require('../config');
             var ecCoordinates = require('../util/coordinates');
             var zrUtil = require('zrender/tool/util');
 
@@ -24643,6 +24879,19 @@ define(
         return Polar;
     }
 );
+/**
+ * echarts默认主题，开发中
+ *
+ * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
+ * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ *
+ */
+define('echarts/theme/default',[],function() {
+    var config = {
+    };
+
+    return config;
+});
 /*!
  * ECharts, a javascript interactive chart library.
  *  
@@ -24660,33 +24909,50 @@ define(
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/echarts',['require','./config','./config','zrender','zrender/tool/util','zrender/tool/event','zrender/config','./util/shape/icon','./util/shape/markLine','./chart','./chart/island','./component','./component/title','./component/axis','./component/categoryAxis','./component/valueAxis','./component/grid','./component/dataZoom','./component/legend','./component/dataRange','./component/tooltip','./component/toolbox','./component/dataView','./component/polar','./util/ecData','./chart','./component','zrender/tool/util','zrender/tool/util','zrender/tool/util','zrender/tool/color','zrender/tool/util','zrender/tool/util','zrender/tool/util'],function(require) {
+define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zrender/tool/event','zrender/config','./util/shape/icon','./util/shape/markLine','./chart','./chart/island','./component','./component/title','./component/axis','./component/categoryAxis','./component/valueAxis','./component/grid','./component/dataZoom','./component/legend','./component/dataRange','./component/tooltip','./component/toolbox','./component/dataView','./component/polar','./util/ecData','./chart','./component','zrender/tool/util','zrender/tool/util','zrender/tool/color','zrender/tool/util','zrender/tool/util','zrender/tool/util','zrender/tool/util','zrender/tool/util','./theme/default','./theme/default'],function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
-    self.version = '1.3.7';
+    
+    var _canvasSupported = !!document.createElement('canvas').getContext;
+    var _instances = {};    // ECharts实例map索引
+    var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
+    
+    self.version = '1.3.8';
     self.dependencies = {
-        zrender : '1.0.9'
+        zrender : '1.1.0'
     };
     /**
      * 入口方法 
      */
-    self.init = function(dom/*, theme*/) {
+    self.init = function(dom, theme) {
         dom = dom instanceof Array ? dom[0] : dom;
-        if (G_vmlCanvasManager) {
-            // IE8-
-            var ecConfig = require('./config');
-            ecConfig.textStyle.fontFamily = ecConfig.textStyle.fontFamily2;
+        // dom与echarts实例映射索引
+        var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
+        if (!key) {
+            key = new Date() - 0;
+            dom.setAttribute(DOM_ATTRIBUTE_KEY, key);
         }
-        return new Echarts(dom);
+        _instances[key] = _instances[key] || new Echarts(dom);
+        _instances[key].id = key;
+        _instances[key].setTheme(theme);
+        
+        return  _instances[key];
     };
+    
+    /**
+     * 通过id获得ECharts实例，id可在实例化后读取 
+     */
+    self.getInstanceById = function(key) {
+        return _instances[key];
+    }
 
     /**
      * 基于zrender实现Echarts接口层
      * @param {HtmlElement} dom 必要
-     * @param {Object} option 可选参数，同setOption
      */
-    function Echarts(dom, option) {
+    function Echarts(dom) {
         var ecConfig = require('./config');
+        var _themeConfig = require('zrender/tool/util').clone(ecConfig);
 
         var self = this;
         var _id = '__ECharts__' + new Date() - 0;
@@ -24725,8 +24991,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             }
             _zr = zrender.init(dom);
 
-            var zrUtil = require('zrender/tool/util');
-            _option = zrUtil.clone(option || {});
+            _option = {};
 
             _chartList = [];            // 图表实例
 
@@ -24779,7 +25044,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             require('./chart/island');
             // 孤岛
             var Island = chartLibrary.get('island');
-            _island = new Island(_messageCenter, _zr);
+            _island = new Island(_themeConfig, _messageCenter, _zr);
             
             // 内置组件注册
             var componentLibrary = require('./component');
@@ -24797,7 +25062,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             require('./component/polar');
             // 工具箱
             var Toolbox = componentLibrary.get('toolbox');
-            _toolbox = new Toolbox(_messageCenter, _zr, dom);
+            _toolbox = new Toolbox(_themeConfig, _messageCenter, _zr, dom);
             
             _disposeChartList();
         }
@@ -25153,6 +25418,24 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
          * 图表渲染 
          */
         function _render(magicOption) {
+            if (magicOption.backgroundColor) {
+                if (!_canvasSupported 
+                    && magicOption.backgroundColor.indexOf('rgba') != -1
+                ) {
+                    // IE6~8对RGBA的处理，filter会带来其他颜色的影响
+                    var cList = magicOption.backgroundColor.split(',');
+                    dom.style.filter = 'alpha(opacity=' +
+                        cList[3].substring(0, cList[3].lastIndexOf(')')) * 100
+                        + ')';
+                    cList.length = 3;
+                    cList[0] = cList[0].replace('a', '');
+                    dom.style.backgroundColor = cList.join(',') + ')';
+                }
+                else {
+                    dom.style.backgroundColor = magicOption.backgroundColor;
+                }
+            }
+            
             _disposeChartList();
             _zr.clear();
 
@@ -25162,9 +25445,9 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             // 标题
             var title;
             if (magicOption.title) {
-                var Title = new componentLibrary.get('title');
+                var Title = componentLibrary.get('title');
                 title = new Title(
-                    _messageCenter, _zr, magicOption
+                    _themeConfig, _messageCenter, _zr, magicOption
                 );
                 _chartList.push(title);
                 self.component.title = title;
@@ -25174,7 +25457,9 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             var tooltip;
             if (magicOption.tooltip) {
                 var Tooltip = componentLibrary.get('tooltip');
-                tooltip = new Tooltip(_messageCenter, _zr, magicOption, dom);
+                tooltip = new Tooltip(
+                    _themeConfig, _messageCenter, _zr, magicOption, dom
+                );
                 _chartList.push(tooltip);
                 self.component.tooltip = tooltip;
             }
@@ -25182,9 +25467,9 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             // 图例
             var legend;
             if (magicOption.legend) {
-                var Legend = new componentLibrary.get('legend');
+                var Legend = componentLibrary.get('legend');
                 legend = new Legend(
-                    _messageCenter, _zr, magicOption, _selectedMap
+                    _themeConfig, _messageCenter, _zr, magicOption, _selectedMap
                 );
                 _chartList.push(legend);
                 self.component.legend = legend;
@@ -25193,9 +25478,9 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             // 值域控件
             var dataRange;
             if (magicOption.dataRange) {
-                var DataRange = new componentLibrary.get('dataRange');
+                var DataRange = componentLibrary.get('dataRange');
                 dataRange = new DataRange(
-                    _messageCenter, _zr, magicOption
+                    _themeConfig, _messageCenter, _zr, magicOption
                 );
                 _chartList.push(dataRange);
                 self.component.dataRange = dataRange;
@@ -25208,12 +25493,13 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             var yAxis;
             if (magicOption.grid || magicOption.xAxis || magicOption.yAxis) {
                 var Grid = componentLibrary.get('grid');
-                grid = new Grid(_messageCenter, _zr, magicOption);
+                grid = new Grid(_themeConfig, _messageCenter, _zr, magicOption);
                 _chartList.push(grid);
                 self.component.grid = grid;
 
                 var DataZoom = componentLibrary.get('dataZoom');
                 dataZoom = new DataZoom(
+                    _themeConfig, 
                     _messageCenter,
                     _zr,
                     magicOption,
@@ -25227,6 +25513,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
 
                 var Axis = componentLibrary.get('axis');
                 xAxis = new Axis(
+                    _themeConfig,
                     _messageCenter,
                     _zr,
                     magicOption,
@@ -25240,6 +25527,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                 self.component.xAxis = xAxis;
 
                 yAxis = new Axis(
+                    _themeConfig,
                     _messageCenter,
                     _zr,
                     magicOption,
@@ -25258,6 +25546,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             if (magicOption.polar) {
                 var Polar = componentLibrary.get('polar');
                 polar = new Polar(
+                    _themeConfig,
                     _messageCenter,
                     _zr,
                     magicOption,
@@ -25290,6 +25579,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                     ChartClass = chartLibrary.get(chartType);
                     if (ChartClass) {
                         chart = new ChartClass(
+                            _themeConfig,
                             _messageCenter,
                             _zr,
                             magicOption,
@@ -25332,7 +25622,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             
             var imgId = 'IMG' + _id;
             var img = document.getElementById(imgId);
-            if (magicOption.renderAsImage && !G_vmlCanvasManager) {
+            if (magicOption.renderAsImage && _canvasSupported) {
                 // IE8- 不支持图片渲染形式
                 if (img) {
                     // 已经渲染过则更新显示
@@ -25445,6 +25735,75 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
         }
 
         /**
+         * 非图表全局属性merge~~ 
+         */
+        function _mergeGlobalConifg() {
+            // 背景
+            if (typeof _option.backgroundColor == 'undefined') {
+                _option.backgroundColor = _themeConfig.backgroundColor;
+            }
+            
+            // 拖拽重计算相关
+            if (typeof _option.calculable == 'undefined') {
+                _option.calculable = _themeConfig.calculable;
+            }
+            if (typeof _option.calculableColor == 'undefined') {
+                _option.calculableColor = _themeConfig.calculableColor;
+            }
+            if (typeof _option.calculableHolderColor == 'undefined') {
+                _option.calculableHolderColor = _themeConfig.calculableHolderColor;
+            }
+            
+            // 孤岛显示连接符
+            if (typeof _option.nameConnector == 'undefined') {
+                _option.nameConnector = _themeConfig.nameConnector;
+            }
+            if (typeof _option.valueConnector == 'undefined') {
+                _option.valueConnector = _themeConfig.valueConnector;
+            }
+            
+            // 动画相关
+            if (typeof _option.animation == 'undefined') {
+                _option.animation = _themeConfig.animation;
+            }
+            if (typeof _option.animationThreshold == 'undefined') {
+                _option.animationThreshold = _themeConfig.animationThreshold;
+            }
+            if (typeof _option.animationDuration == 'undefined') {
+                _option.animationDuration = _themeConfig.animationDuration;
+            }
+            if (typeof _option.animationEasing == 'undefined') {
+                _option.animationEasing = _themeConfig.animationEasing;
+            }
+            if (typeof _option.addDataAnimation == 'undefined') {
+                _option.addDataAnimation = _themeConfig.addDataAnimation;
+            }
+            
+            // 默认标志图形类型列表
+            if (typeof _option.symbolList == 'undefined') {
+                _option.symbolList = _themeConfig.symbolList;
+            }
+
+            var zrColor = require('zrender/tool/color');
+            // 数值系列的颜色列表，不传则采用内置颜色，可配数组，借用zrender实例注入，会有冲突风险，先这样
+            if (_option.color && _option.color.length > 0) {
+                _zr.getColor = function(idx) {
+                    return zrColor.getColor(idx, _option.color);
+                };
+            }
+            else {
+                _zr.getColor = function(idx) {
+                    return zrColor.getColor(idx, _themeConfig.color);
+                };
+            }
+            
+            // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
+            if (typeof _option.DRAG_ENABLE_TIME == 'undefined') {
+                _option.DRAG_ENABLE_TIME = _themeConfig.DRAG_ENABLE_TIME;
+            }
+        }
+        
+        /**
          * 万能接口，配置图表实例任何可配置选项，多次调用时option选项做merge处理
          * @param {Object} option
          * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
@@ -25470,48 +25829,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                 return;
             }
 
-            // 非图表全局属性merge~~
-            if (typeof _option.calculable == 'undefined') {
-                _option.calculable = ecConfig.calculable;
-            }
-            if (typeof _option.nameConnector == 'undefined') {
-                _option.nameConnector = ecConfig.nameConnector;
-            }
-            if (typeof _option.valueConnector == 'undefined') {
-                _option.valueConnector = ecConfig.valueConnector;
-            }
-            if (typeof _option.animation == 'undefined') {
-                _option.animation = ecConfig.animation;
-            }
-            if (typeof _option.animationThreshold == 'undefined') {
-                _option.animationThreshold = ecConfig.animationThreshold;
-            }
-            if (typeof _option.animationDuration == 'undefined') {
-                _option.animationDuration = ecConfig.animationDuration;
-            }
-            if (typeof _option.animationEasing == 'undefined') {
-                _option.animationEasing = ecConfig.animationEasing;
-            }
-            if (typeof _option.addDataAnimation == 'undefined') {
-                _option.addDataAnimation = ecConfig.addDataAnimation;
-            }
-
-            var zrColor = require('zrender/tool/color');
-            // 数值系列的颜色列表，不传则采用内置颜色，可配数组
-            if (_option.color && _option.color.length > 0) {
-                _zr.getColor = function(idx) {
-                    return zrColor.getColor(idx, _option.color);
-                };
-            }
-            else {
-                _zr.getColor = function(idx) {
-                    return zrColor.getColor(idx, ecConfig.color);
-                };
-            }
-            // calculable可计算颜色提示
-            _zr.getCalculableColor = function () {
-                return _option.calculableColor || ecConfig.calculableColor;
-            };
+            _mergeGlobalConifg();
 
             _optionBackup = zrUtil.clone(_option);
             _optionRestore = zrUtil.clone(_option);
@@ -25764,7 +26082,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
          * @return imgDataURL
          */
         function getDataURL(imgType) {
-            if (G_vmlCanvasManager) {
+            if (!_canvasSupported) {
                 return '';
             }
             if (_chartList.length === 0) {
@@ -25814,7 +26132,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             _messageCenter.unbind(eventName, eventListener);
             return self;
         }
-
+        
         /**
          * 显示loading过渡 
          * @param {Object} loadingOption
@@ -25828,7 +26146,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
 
             var finalTextStyle = zrUtil.merge(
                 zrUtil.clone(loadingOption.textStyle),
-                ecConfig.textStyle,
+                _themeConfig.textStyle,
                 { 'overwrite': false}
             );
             loadingOption.textStyle.textFont = finalTextStyle.fontStyle + ' '
@@ -25837,7 +26155,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
                                             + finalTextStyle.fontFamily;
 
             loadingOption.textStyle.text = loadingOption.text 
-                                           || ecConfig.loadingText;
+                                           || _themeConfig.loadingText;
 
             if (typeof loadingOption.x != 'undefined') {
                 loadingOption.textStyle.x = loadingOption.x;
@@ -25858,13 +26176,64 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             _zr.hideLoading();
             return self;
         }
+        
+        /**
+         * 主题设置 
+         */
+        function setTheme(theme) {
+            var zrUtil = require('zrender/tool/util');
+            if (theme) {
+               if (typeof theme === 'string') {
+                    // 默认主题
+                    switch (theme) {
+                        case 'default':
+                            theme = require('./theme/default');
+                            break;
+                        default:
+                            theme = require('./theme/default');
+                    }
+                }
+                else {
+                    theme = theme || {};
+                }
+                
+                // 复位默认配置，别好心帮我改成_themeConfig = {};
+                for (var key in _themeConfig) {
+                    delete _themeConfig[key];
+                }
+                for (var key in ecConfig) {
+                    _themeConfig[key] = zrUtil.clone(ecConfig[key]);
+                }
+                if (theme.color) {
+                    // 颜色数组随theme，不merge
+                    _themeConfig.color = [];
+                }
+                
+                if (theme.symbolList) {
+                    // 默认标志图形类型列表，不merge
+                    _themeConfig.symbolList = [];
+                }
+                
+                // 应用新主题
+                zrUtil.merge(
+                    _themeConfig, zrUtil.clone(theme),
+                    { 'overwrite': true, 'recursive': true }
+                );
+            }
+            
+            if (!_canvasSupported) {   // IE8-
+                _themeConfig.textStyle.fontFamily = 
+                    _themeConfig.textStyle.fontFamily2;
+            }
+            _optionRestore && self.restore();
+        }
 
         /**
          * 视图区域大小变化更新，不默认绑定，供使用方按需调用 
          */
         function resize() {
             _zr.resize();
-            if (_option.renderAsImage && !G_vmlCanvasManager) {
+            if (_option.renderAsImage && _canvasSupported) {
                 // 渲染为图片重走render模式
                 _render(_option);
                 return self;
@@ -25882,12 +26251,16 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
             );
             return self;
         }
-
+        
         /**
          * 清楚已渲染内容 ，clear后echarts实例可用
          */
         function clear() {
+            _disposeChartList();
             _zr.clear();
+            _option = {};
+            _optionBackup = {};
+            _optionRestore = {};
             return self;
         }
 
@@ -25895,10 +26268,13 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
          * 释放，dispose后echarts实例不可用
          */
         function dispose() {
+            var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
+            key && delete _instances[key];
+        
             _island.dispose();
             _toolbox.dispose();
-            _disposeChartList();
             _messageCenter.unbind();
+            self.clear();
             _zr.dispose();
             self = null;
             return;
@@ -25917,6 +26293,7 @@ define('echarts/echarts',['require','./config','./config','zrender','zrender/too
         self.un = un;
         self.showLoading = showLoading;
         self.hideLoading = hideLoading;
+        self.setTheme = setTheme;
         self.resize = resize;
         self.refresh = refresh;
         self.restore = restore;
@@ -26157,7 +26534,7 @@ define(
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/scatter',['require','../component/base','./calculableBase','../config','zrender/tool/color','../util/shape/symbol','../chart'],function(require) {
+define('echarts/chart/scatter',['require','../component/base','./calculableBase','zrender/tool/color','../util/shape/symbol','../chart'],function(require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -26165,15 +26542,13 @@ define('echarts/chart/scatter',['require','../component/base','./calculableBase'
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Scatter(messageCenter, zr, option, component){
+    function Scatter(ecConfig, messageCenter, zr, option, component){
         // 基类装饰
         var ComponentBase = require('../component/base');
-        ComponentBase.call(this, zr);
+        ComponentBase.call(this, ecConfig, zr);
         // 可计算特性装饰
         var CalculableBase = require('./calculableBase');
         CalculableBase.call(this, zr, option);
-
-        var ecConfig = require('../config');
 
         var zrColor = require('zrender/tool/color');
 
@@ -26185,10 +26560,7 @@ define('echarts/chart/scatter',['require','../component/base','./calculableBase'
         var _zlevelBase = self.getZlevelBase();
         
         var _sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
-        var _symbol = [
-              'circle', 'rectangle', 'triangle', 'diamond',
-              'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
-            ];
+        var _symbol = ecConfig.symbolList;
         var _sIndex2ShapeMap = {};  // series图形类型，seriesIndex索引到_symbol
 
         function _buildShape() {
@@ -26725,7 +27097,7 @@ define(
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/k',['require','../component/base','./calculableBase','../config','../util/ecData','../util/shape/candle','../chart'],function(require) {
+define('echarts/chart/k',['require','../component/base','./calculableBase','../util/ecData','../util/shape/candle','../chart'],function(require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -26733,15 +27105,14 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function K(messageCenter, zr, option, component){
+    function K(ecConfig, messageCenter, zr, option, component){
         // 基类装饰
         var ComponentBase = require('../component/base');
-        ComponentBase.call(this, zr);
+        ComponentBase.call(this, ecConfig, zr);
         // 可计算特性装饰
         var CalculableBase = require('./calculableBase');
         CalculableBase.call(this, zr, option);
 
-        var ecConfig = require('../config');
         var ecData = require('../util/ecData');
         
         var self = this;
@@ -27253,7 +27624,7 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
  *
  */
 
- define('echarts/chart/radar',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/color','../util/accMath','../chart'],function(require) {
+ define('echarts/chart/radar',['require','../component/base','./calculableBase','../util/ecData','zrender/tool/color','../util/accMath','../chart'],function(require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -27261,15 +27632,14 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Radar(messageCenter, zr, option, component) {
+    function Radar(ecConfig, messageCenter, zr, option, component) {
         // 基类装饰
         var ComponentBase = require('../component/base');
-        ComponentBase.call(this, zr);
+        ComponentBase.call(this, ecConfig, zr);
         // 可计算特性装饰
         var CalculableBase = require('./calculableBase');
         CalculableBase.call(this, zr, option);
 
-        var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
         var zrColor = require('zrender/tool/color');
@@ -27286,10 +27656,7 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../c
 
         var _dropBoxList;
 
-        var _symbol = [
-              'circle', 'rectangle', 'triangle', 'diamond',
-              'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
-            ];
+        var _symbol = ecConfig.symbolList;
         var _radarDataCounter;
         
         /**
@@ -30256,7 +30623,7 @@ return NDArray;
  *
  */
 
-define('echarts/chart/chord',['require','../util/shape/chord','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/util','zrender/tool/vector','../util/ndarray','../chart'],function(require) {
+define('echarts/chart/chord',['require','../util/shape/chord','../component/base','./calculableBase','../util/ecData','zrender/tool/util','zrender/tool/vector','../util/ndarray','../chart'],function(require) {
 
     require('../util/shape/chord');
 
@@ -30264,16 +30631,15 @@ define('echarts/chart/chord',['require','../util/shape/chord','../component/base
 
     var _devicePixelRatio = window.devicePixelRatio || 1;
     
-    function Chord(messageCenter, zr, option, component) {
+    function Chord(ecConfig, messageCenter, zr, option, component) {
         var self = this;
 
-        var CompomentBase = require('../component/base');
-        CompomentBase.call(this, zr);
+        var ComponentBase = require('../component/base');
+        ComponentBase.call(this, ecConfig, zr);
 
         var CalculableBase = require('./calculableBase');
         CalculableBase.call(this, zr, option);
 
-        var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
         var zrUtil = require('zrender/tool/util');
@@ -31019,7 +31385,7 @@ define('echarts/chart/chord',['require','../util/shape/chord','../component/base
  *
  */
 
-define('echarts/chart/force',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/config','zrender/tool/event','zrender/tool/util','zrender/tool/vector','../util/ndarray','../chart'],function(require) {
+define('echarts/chart/force',['require','../component/base','./calculableBase','../util/ecData','zrender/config','zrender/tool/event','zrender/tool/util','zrender/tool/vector','../util/ndarray','../chart'],function(require) {
     
 
     var requestAnimationFrame = window.requestAnimationFrame
@@ -31038,15 +31404,14 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Force(messageCenter, zr, option, component) {
+    function Force(ecConfig, messageCenter, zr, option, component) {
         // 基类装饰
         var ComponentBase = require('../component/base');
-        ComponentBase.call(this, zr);
+        ComponentBase.call(this, ecConfig, zr);
         // 可计算特性装饰
         var CalculableBase = require('./calculableBase');
         CalculableBase.call(this, zr, option);
 
-        var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
         var zrConfig = require('zrender/config');
@@ -31383,6 +31748,7 @@ define('echarts/chart/force',['require','../component/base','./calculableBase','
                 
                 // 拖拽特性
                 self.setCalculable(shape);
+                shape.dragEnableTime = 0;
                 shape.ondragstart = self.shapeHandler.ondragstart;
                 shape.draggable = true;
                 
@@ -32532,7 +32898,7 @@ define('echarts/util/projection/normal',[],function() {
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/map',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/config','zrender/tool/util','zrender/tool/event','../util/mapData/params','../util/mapData/textFixed','../util/mapData/geoCoord','../util/projection/normal','../util/projection/normal','../util/projection/normal','../util/projection/normal','../chart'],function(require) {
+define('echarts/chart/map',['require','../component/base','./calculableBase','../util/ecData','zrender/config','zrender/tool/util','zrender/tool/event','../util/mapData/params','../util/mapData/textFixed','../util/mapData/geoCoord','../util/projection/normal','../util/projection/normal','../util/projection/normal','../util/projection/normal','../chart'],function(require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -32540,15 +32906,14 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Map(messageCenter, zr, option, component){
+    function Map(ecConfig, messageCenter, zr, option, component){
         // 基类装饰
         var ComponentBase = require('../component/base');
-        ComponentBase.call(this, zr);
+        ComponentBase.call(this, ecConfig, zr);
         // 可计算特性装饰
         var CalculableBase = require('./calculableBase');
         CalculableBase.call(this, zr, option);
 
-        var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
         var zrConfig = require('zrender/config');
@@ -32562,11 +32927,12 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
 
         var _zlevelBase = self.getZlevelBase();
         var _selectedMode;      // 选择模式
-        var _hoverable;         // 悬浮高亮模式
+        var _hoverable;         // 悬浮高亮模式，索引到图表
         var _showLegendSymbol;  // 显示图例颜色标识
         var _selected = {};     // 地图选择状态
         var _mapTypeMap = {};   // 图例类型索引
         var _mapDataMap = {};   // 根据地图类型索引bbox,transform,path
+        var _shapeListMap = {}; // 名字到shapeList关联映射
         var _nameMap = {};      // 个性化地名
         var _specialArea = {};  // 特殊
 
@@ -32736,9 +33102,16 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                 );
                 _buildMark(mt, ms);
                 if (--_mapDataRequireCounter <= 0) {
+                    _shapeListMap = {};
                     for (var i = 0, l = self.shapeList.length; i < l; i++) {
                         self.shapeList[i].id = zr.newShapeId(self.type);
                         zr.addShape(self.shapeList[i]);
+                        // 通过name关联shape，用于onmouseover
+                        if (self.shapeList[i].shape == 'path' 
+                            && typeof self.shapeList[i].style._text != 'undefined'
+                        ) {
+                            _shapeListMap[self.shapeList[i].style._text] = self.shapeList[i];
+                        }
                     }
                     zr.refresh();
                     if (!_markAnimation) {
@@ -33128,7 +33501,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
             var highlightStyle;
             
             var shape;
-            var tooSmall;
+            var textShape; 
             for (var i = 0, l = mapData.length; i < l; i++) {
                 style = zrUtil.clone(mapData[i]);
                 highlightStyle = zrUtil.clone(style);
@@ -33176,12 +33549,6 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                     value = '-';
                 }
                 
-                if (style.text == '香港' || style.text == '澳门') {
-                    tooSmall = true;
-                }
-                else {
-                    tooSmall = false;
-                }
                 // 值域控件控制
                 color = (dataRange && !isNaN(value))
                         ? dataRange.getColor(value)
@@ -33195,11 +33562,11 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                               );
                 style.strokeColor = self.deepQuery(
                     queryTarget,
-                    'itemStyle.normal.lineStyle.color'
+                    'itemStyle.normal.borderColor'
                 );
                 style.lineWidth = self.deepQuery(
                     queryTarget,
-                    'itemStyle.normal.lineStyle.width'
+                    'itemStyle.normal.borderWidth'
                 );
                 style.text = _getLabelText(name, value, queryTarget, 'normal');
                 style._text = name;
@@ -33220,12 +33587,11 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                     style.textColor = 'rgba(0,0,0,0)';  // 默认不呈现文字
                 }
                 
-                var textShape; // 文字标签避免覆盖单独一个shape
+                // 文字标签避免覆盖单独一个shape
                 textShape = {
                     shape : 'text',
                     zlevel : _zlevelBase + 1,
-                    hoverable: tooSmall ? _hoverable[mapType] : tooSmall,
-                    clickable : tooSmall,
+                    hoverable: _hoverable[mapType],
                     position : style.position,
                     _mapType : mapType,
                     style : {
@@ -33240,11 +33606,12 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                         color : style.textColor,
                         strokeColor : 'rgba(0,0,0,0)',
                         textFont : style.textFont
-                    }
+                    },
+                    onmouseover : self.shapeHandler.onmouseover
                 };
                 textShape._style = zrUtil.clone(textShape.style);
                 textShape.highlightStyle = zrUtil.clone(textShape.style);
-                tooSmall && (textShape.highlightStyle.strokeColor = 'yellow');
+                // labelInteractive && (textShape.highlightStyle.strokeColor = 'yellow');
                 style.textColor = 'rgba(0,0,0,0)';  // 把图形的text隐藏
                 
                 // 高亮
@@ -33255,12 +33622,13 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                 ) || style.color;
                 highlightStyle.strokeColor = self.deepQuery(
                     queryTarget,
-                    'itemStyle.emphasis.lineStyle.color'
+                    'itemStyle.emphasis.borderColor'
                 ) || style.strokeColor;
                 highlightStyle.lineWidth = self.deepQuery(
                     queryTarget,
-                    'itemStyle.emphasis.lineStyle.width'
+                    'itemStyle.emphasis.borderWidth'
                 ) || style.lineWidth;
+                highlightStyle._text = name;
                 if (self.deepQuery(
                     queryTarget,
                     'itemStyle.emphasis.label.show'
@@ -33268,7 +33636,6 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                     highlightStyle.text = _getLabelText(
                         name, value, queryTarget, 'emphasis'
                     );
-                    highlightStyle._text = name;
                     highlightStyle.textAlign = 'center';
                     highlightStyle.textColor = self.deepQuery(
                         queryTarget,
@@ -33286,20 +33653,50 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                 else {
                     highlightStyle.textColor = 'rgba(0,0,0,0)'; // 把图形的text隐藏
                 }
+
+                shape = {
+                    shape : 'path',
+                    zlevel : _zlevelBase,
+                    hoverable: _hoverable[mapType],
+                    position : style.position,
+                    style : style,
+                    highlightStyle : highlightStyle,
+                    _style: zrUtil.clone(style),
+                    _mapType: mapType
+                };
                 
                 if (_selectedMode[mapType] &&
-                    _selected[name]
-                    || (data && data.selected && _selected[name] !== false)
+                     _selected[name]
+                     || (data.selected && _selected[name] !== false) 
                 ) {
                     textShape.style = zrUtil.clone(
                         textShape.highlightStyle
                     );
+                    shape.style = zrUtil.clone(shape.highlightStyle);
                 }
-                if (_selectedMode[mapType] && textShape.clickable) {
-                    textShape.onclick = self.shapeHandler.onclick;
+                
+                if (_selectedMode[mapType]) {
+                    _selected[name] = typeof _selected[name] != 'undefined'
+                                      ? _selected[name]
+                                      : data.selected;
+                    _mapTypeMap[name] = mapType;
+                    
+                    if (typeof data.selectable == 'undefined' || data.selectable) {
+                        textShape.clickable = true;
+                        textShape.onclick = self.shapeHandler.onclick;
+                        
+                        shape.clickable = true;
+                        shape.onclick = self.shapeHandler.onclick;
+                    }
                 }
-                textShape._mapType= mapType;
-
+                
+                if (typeof data.hoverable != 'undefined') {
+                    textShape.onmouseover = null;
+                    textShape.hoverable = shape.hoverable = data.hoverable;
+                }
+                
+                // console.log(name,shape);
+                
                 ecData.pack(
                     textShape,
                     {
@@ -33311,33 +33708,6 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                     name
                 );
                 self.shapeList.push(textShape);
-
-                shape = {
-                    shape : 'path',
-                    zlevel : _zlevelBase,
-                    clickable : true,
-                    position : style.position,
-                    style : style,
-                    highlightStyle : highlightStyle,
-                    _style: zrUtil.clone(style),
-                    _mapType: mapType
-                };
-                if (_selectedMode[mapType] &&
-                     _selected[name]
-                     || (data && data.selected && _selected[name] !== false) 
-                ) {
-                    shape.style = zrUtil.clone(shape.highlightStyle);
-                }
-                
-                if (_selectedMode[mapType]) {
-                    _selected[name] = typeof _selected[name] != 'undefined'
-                                      ? _selected[name]
-                                      : (data && data.selected);
-                    _mapTypeMap[name] = mapType;
-                    shape.onclick = self.shapeHandler.onclick;
-                }
-                shape.hoverable = _hoverable[mapType];
-                // console.log(name,shape);
                 
                 ecData.pack(
                     shape,
@@ -33779,6 +34149,17 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                 zr.un(zrConfig.EVENT.MOUSEDOWN, _onmousedown);
             }
         }
+        
+        /**
+         * 输出关联区域
+         */
+        self.shapeHandler.onmouseover = function(param) {
+            var target = param.target;
+            var name = target.style._text;
+            if (_shapeListMap[name]) {
+                zr.addHoverShape(_shapeListMap[name]);
+            }
+        };
 
         // 重载基类方法
         self.getMarkCoord = getMarkCoord;
@@ -34046,7 +34427,7 @@ define(
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/line',['require','../component/base','./calculableBase','../config','zrender/tool/color','zrender/shape','zrender/shape','../util/shape/halfSmoothPolygon','../chart'],function(require) {
+define('echarts/chart/line',['require','../component/base','./calculableBase','zrender/tool/color','zrender/shape','zrender/shape','../util/shape/halfSmoothPolygon','../chart'],function(require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -34054,15 +34435,13 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Line(messageCenter, zr, option, component){
+    function Line(ecConfig, messageCenter, zr, option, component){
         // 基类装饰
         var ComponentBase = require('../component/base');
-        ComponentBase.call(this, zr);
+        ComponentBase.call(this, ecConfig, zr);
         // 可计算特性装饰
         var CalculableBase = require('./calculableBase');
         CalculableBase.call(this, zr, option);
-
-        var ecConfig = require('../config');
 
         var zrColor = require('zrender/tool/color');
 
@@ -34075,10 +34454,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
 
         var finalPLMap = {}; // 完成的point list(PL)
         var _sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
-        var _symbol = [
-              'circle', 'rectangle', 'triangle', 'diamond',
-              'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
-            ];
+        var _symbol = ecConfig.symbolList;
         var _sIndex2ShapeMap = {};  // series拐点图形类型，seriesIndex索引到shape type
 
         require('zrender/shape').get('icon').define(
@@ -34577,6 +34953,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                             shape : 'brokenLine',
                             zlevel : _zlevelBase,
                             style : {
+                                miterLimit: lineWidth,
                                 pointList : singlePL,
                                 strokeColor : lineColor
                                               || normalColor 
@@ -34612,6 +34989,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
                                 shape : 'halfSmoothPolygon',
                                 zlevel : _zlevelBase,
                                 style : {
+                                    miterLimit: lineWidth,
                                     pointList : singlePL.concat([
                                         [
                                             singlePL[singlePL.length - 1][4],
@@ -35002,7 +35380,7 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','.
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/bar',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/color','../chart'],function(require) {
+define('echarts/chart/bar',['require','../component/base','./calculableBase','../util/ecData','zrender/tool/color','../chart'],function(require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -35010,15 +35388,14 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Bar(messageCenter, zr, option, component){
+    function Bar(ecConfig, messageCenter, zr, option, component){
         // 基类装饰
         var ComponentBase = require('../component/base');
-        ComponentBase.call(this, zr);
+        ComponentBase.call(this, ecConfig, zr);
         // 可计算特性装饰
         var CalculableBase = require('./calculableBase');
         CalculableBase.call(this, zr, option);
 
-        var ecConfig = require('../config');
         var ecData = require('../util/ecData');
         
         var zrColor = require('zrender/tool/color');
@@ -35760,10 +36137,10 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
             }
             else {
                 // 纵向
-                dataIndex = typeof mpData.xAxis == 'string'
-                            && xAxis.getIndexByName
-                            ? xAxis.getIndexByName(mpData.xAxis)
-                            : (mpData.xAxis || 0);
+                dataIndex = typeof mpData.yAxis == 'string'
+                            && yAxis.getIndexByName
+                            ? yAxis.getIndexByName(mpData.yAxis)
+                            : (mpData.yAxis || 0);
                 pos = [
                     xAxis.getCoord(mpData.xAxis || 0),
                     markCoordParams.xMarkMap[seriesIndex][dataIndex]
@@ -36000,7 +36377,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/pie',['require','../component/base','./calculableBase','../config','../util/ecData','zrender/tool/math','zrender/tool/util','zrender/tool/color','../util/accMath','../chart'],function(require) {
+define('echarts/chart/pie',['require','../component/base','./calculableBase','../util/ecData','zrender/tool/math','zrender/tool/util','zrender/tool/color','../util/accMath','../chart'],function(require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -36008,15 +36385,14 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Pie(messageCenter, zr, option, component){
+    function Pie(ecConfig, messageCenter, zr, option, component){
         // 基类装饰
         var ComponentBase = require('../component/base');
-        ComponentBase.call(this, zr);
+        ComponentBase.call(this, ecConfig, zr);
         // 可计算特性装饰
         var CalculableBase = require('./calculableBase');
         CalculableBase.call(this, zr, option);
 
-        var ecConfig = require('../config');
         var ecData = require('../util/ecData');
 
         var zrMath = require('zrender/tool/math');
@@ -36104,7 +36480,8 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
             var data = serie.data;
             var legend = component.legend;
             var itemName;
-            var totalSelected = 0;               // 迭代累计
+            var totalSelected = 0;               // 迭代累计选中且非0个数
+            var totalSelectedValue0 = 0;         // 迭代累计选中0只个数
             var totalValue = 0;                  // 迭代累计
             var maxValue = Number.NEGATIVE_INFINITY;
 
@@ -36117,18 +36494,26 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                     self.selectedMap[itemName] = true;
                 }
                 if (self.selectedMap[itemName]) {
-                    totalSelected++;
+                    if (+data[i].value !== 0) {
+                        totalSelected++;
+                    }
+                    else {
+                        totalSelectedValue0++;
+                    }
                     totalValue += +data[i].value;
                     maxValue = Math.max(maxValue, +data[i].value);
                 }
             }
 
-            var percent;
+            var percent = 100;
+            var lastPercent;    // 相邻细角度优化
+            var lastAddRadius = 0;
             var clockWise = serie.clockWise;
             var startAngle = serie.startAngle.toFixed(2) - 0;
             var endAngle;
             var minAngle = serie.minAngle || 0.01; // #bugfixed
-            var totalAngle = 360 - (minAngle * totalSelected);
+            var totalAngle = 360 - (minAngle * totalSelected) 
+                                 - 0.01 * totalSelectedValue0;
             var defaultColor;
             var roseType = serie.roseType;
             var radius;
@@ -36150,16 +36535,17 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                     defaultColor = zr.getColor(i);
                 }
 
+                lastPercent = percent;
                 percent = data[i].value / totalValue;
                 if (roseType != 'area') {
                     endAngle = clockWise
-                        ? (startAngle - percent * totalAngle - minAngle)
-                        : (percent * totalAngle + startAngle + minAngle);
+                        ? (startAngle - percent * totalAngle - (percent !== 0 ? minAngle : 0.01))
+                        : (percent * totalAngle + startAngle + (percent !== 0 ? minAngle : 0.01));
                 }
                 else {
                     endAngle = clockWise
-                        ? (startAngle - totalAngle / l - minAngle)
-                        : (totalAngle / l + startAngle + minAngle);
+                        ? (startAngle - 360 / l)
+                        : (360 / l + startAngle);
                 }
                 endAngle = endAngle.toFixed(2) - 0;
                 percent = (percent * 100).toFixed(2);
@@ -36183,8 +36569,26 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                     startAngle = endAngle;
                     endAngle = temp; 
                 }
+                
+                // 当前小角度需要检查前一个是否也是小角度，如果是得调整长度，不能完全避免，但能大大降低覆盖概率
+                if (i > 0 
+                    && percent < 4       // 约15度
+                    && lastPercent < 4
+                    && _needLabel(serie, data[i], false)
+                    && self.deepQuery(
+                           [data[i], serie], 'itemStyle.normal.label.position'
+                       ) != 'center'
+                ) {
+                    // 都小就延长，前小后大就缩短
+                    lastAddRadius += (percent < 4 ? 20 : -20);
+                }
+                else {
+                    lastAddRadius = 0;
+                }
+                
                 _buildItem(
-                    seriesIndex, i, percent, data[i].selected,
+                    seriesIndex, i, percent, lastAddRadius, // 相邻最小角度优化
+                    data[i].selected,
                     r0, r1,
                     startAngle, endAngle, defaultColor
                 );
@@ -36198,7 +36602,8 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
          * 构建单个扇形及指标
          */
         function _buildItem(
-            seriesIndex, dataIndex, percent, isSelected,
+            seriesIndex, dataIndex, percent, lastAddRadius,
+            isSelected,
             r0, r1,
             startAngle, endAngle, defaultColor
         ) {
@@ -36216,11 +36621,12 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                 series[seriesIndex].data[dataIndex].name,
                 percent
             );
+            sector._lastAddRadius = lastAddRadius;
             self.shapeList.push(sector);
 
             // 文本标签，需要显示则会有返回
             var label = _getLabel(
-                    seriesIndex, dataIndex, percent,
+                    seriesIndex, dataIndex, percent, lastAddRadius,
                     startAngle, endAngle, defaultColor,
                     false
                 );
@@ -36231,7 +36637,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
 
             // 文本标签视觉引导线，需要显示则会有返回
             var labelLine = _getLabelLine(
-                    seriesIndex, dataIndex,
+                    seriesIndex, dataIndex, lastAddRadius,
                     r0, r1,
                     startAngle, endAngle, defaultColor,
                     false
@@ -36256,14 +36662,19 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
             var center = self.parseCenter(serie.center);
 
             // 多级控制
-            var normalColor = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.color'
-                ) || defaultColor;
-
-            var emphasisColor = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.emphasis.color'
+            var normal = self.deepMerge(
+                queryTarget,
+                'itemStyle.normal'
+            ) || {};
+            var emphasis = self.deepMerge(
+                queryTarget,
+                'itemStyle.emphasis'
+            ) || {};
+            var normalColor = normal.color || defaultColor;
+            var emphasisColor = emphasis.color 
+                || (typeof normalColor == 'string'
+                    ? zrColor.lift(normalColor, -0.2)
+                    : normalColor
                 );
 
             var sector = {
@@ -36279,17 +36690,16 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                     endAngle : endAngle,
                     brushType : 'both',
                     color : normalColor,
-                    strokeColor : '#fff',
-                    lineWidth: 1
+                    lineWidth : normal.borderWidth,
+                    strokeColor : normal.borderColor,
+                    lineJoin: 'round'
                 },
                 highlightStyle : {
-                    //color : emphasisColor || normalColor
-                    color : emphasisColor 
-                            || (typeof normalColor == 'string'
-                                ? zrColor.lift(normalColor, -0.2)
-                                : normalColor
-                               ),
-                    strokeColor : 'rgba(0,0,0,0)'
+                    color : emphasisColor,
+                    strokeColor : 'rgba(0,0,0,0)',
+                    lineWidth : emphasis.borderWidth,
+                    strokeColor : emphasis.borderColor,
+                    lineJoin: 'round'
                 },
                 _seriesIndex : seriesIndex, 
                 _dataIndex : dataIndex
@@ -36326,7 +36736,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
             if (_needLabel(serie, data, true)          // emphasis下显示文本
                 || _needLabelLine(serie, data, true)   // emphasis下显示引导线
             ) {
-                sector.onmouseover = self.shapeHandler.onmouserover;
+                sector.onmouseover = self.shapeHandler.onmouseover;
             }
             return sector;
         }
@@ -36335,7 +36745,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
         function _getLabel(
-            seriesIndex, dataIndex, percent,
+            seriesIndex, dataIndex, percent, lastAddRadius,
             startAngle, endAngle, defaultColor,
             isEmphasis
         ) {
@@ -36380,7 +36790,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
             }
             else if (labelControl.position == 'inner'){
                 // 内部显示
-                radius = (radius[0] + radius[1]) / 2;
+                radius = (radius[0] + radius[1]) / 2 + lastAddRadius;
                 x = Math.round(
                     centerX + radius * zrMath.cos(midAngle, true)
                 );
@@ -36395,33 +36805,19 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                 // 外部显示，默认 labelControl.position == 'outer')
                 radius = radius[1]
                          - (-itemStyle[status].labelLine.length)
-                         - (-textStyle.fontSize);
+                         //- (-textStyle.fontSize)
+                         + lastAddRadius;
                 x = centerX + radius * zrMath.cos(midAngle, true);
                 y = centerY - radius * zrMath.sin(midAngle, true);
                 textAlign = (midAngle >= 90 && midAngle <= 270)
                             ? 'right' : 'left';
             }
             
-            //检查前个是否也是小角度，如果是得调整长度，不能完全避免，但能大大降低覆盖概率
-            if (labelControl.position != 'center' 
-                && dataIndex > 0 
-                && percent < 30
-            ) {
-                var preData = serie.data[dataIndex - 1];
-                var prePercent = preData.value * percent / data.value;
-                if (prePercent < 4) {
-                    // 都小就延长，前小后大就缩短
-                    radius = preData.__labelRadius + (percent < 4 ? 20 : -20);
-                    x = centerX + radius * zrMath.cos(midAngle, true);
-                    y = centerY - radius * zrMath.sin(midAngle, true);
-                }
-            }
             if (labelControl.position != 'center'
                 && labelControl.position != 'inner'
             ) {
                 x += textAlign == 'left' ? 20 : -20;
             }
-            data.__labelRadius = radius;
             data.__labelX = x - (textAlign == 'left' ? 5 : -5);
             data.__labelY = y;
             
@@ -36490,7 +36886,7 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
         function _getLabelLine(
-            seriesIndex, dataIndex,
+            seriesIndex, dataIndex, lastAddRadius,
             r0, r1,
             startAngle, endAngle, defaultColor,
             isEmphasis
@@ -36521,10 +36917,9 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                 // 视觉引导线起点半径
                 var midRadius = r1;
                 // 视觉引导线终点半径
-                var maxRadius = data.__labelRadius 
-                    ? data.__labelRadius
-                    : self.parseRadius(serie.radius)[1] 
-                      - (-labelLineControl.length);
+                var maxRadius = self.parseRadius(serie.radius)[1] 
+                                - (-labelLineControl.length)
+                                + lastAddRadius;
                 var midAngle = ((endAngle + startAngle) / 2) % 360; // 角度中值
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
@@ -37090,11 +37485,12 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
         /**
          * 输出动态视觉引导线
          */
-        self.shapeHandler.onmouserover = function(param) {
+        self.shapeHandler.onmouseover = function(param) {
             var shape = param.target;
             var seriesIndex = ecData.get(shape, 'seriesIndex');
             var dataIndex = ecData.get(shape, 'dataIndex');
             var percent = ecData.get(shape, 'special');
+            var lastAddRadius = shape._lastAddRadius;
 
             var startAngle = shape.style.startAngle;
             var endAngle = shape.style.endAngle;
@@ -37102,16 +37498,17 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
             
             // 文本标签，需要显示则会有返回
             var label = _getLabel(
-                    seriesIndex, dataIndex, percent,
+                    seriesIndex, dataIndex, percent, lastAddRadius,
                     startAngle, endAngle, defaultColor,
                     true
                 );
             if (label) {
                 zr.addHoverShape(label);
             }
+            
             // 文本标签视觉引导线，需要显示则会有返回
             var labelLine = _getLabelLine(
-                    seriesIndex, dataIndex,
+                    seriesIndex, dataIndex, lastAddRadius,
                     shape.style.r0, shape.style.r,
                     startAngle, endAngle, defaultColor,
                     true

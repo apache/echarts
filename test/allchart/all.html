@@ -1461,28 +1461,18 @@ option = {
             selectedMode: 'multiple',
             itemStyle: {
                 normal: {
-                    lineStyle: {
-                        width: 2,
-                        color: '#b88608'
-                    },
+                    borderWidth:2,
+                    borderColor:'lightgreen',
                     areaStyle: {
-                        color: (function(){
-                            var zrColor = require('zrender/tool/color');
-                            return zrColor.getLinearGradient(
-                                0, 0, 500, 500,
-                                [[0, '#32cd32'],[0.5, '#afdd00'],[1, '#ffff77']]
-                            )
-                        })()
+                        color: 'orange'
                     },
                     label: {
                         show: false
                     }
                 },
                 emphasis: {                 // 也是选中样式
-                    lineStyle: {
-                        width: 2,
-                        color: '#fff'
-                    },
+                    borderWidth:2,
+                    borderColor:'#fff',
                     areaStyle: {
                         color: '#32cd32'
                     },
@@ -1496,16 +1486,12 @@ option = {
             },
             data:[
                  {
-                     name: '内蒙古',
+                     name: '广东',
                      value: Math.round(Math.random()*1000),
                      itemStyle: {
                         normal: {
-                            lineStyle: {
-                                width: 2,
-                                color: 'blue'
-                            },
                             areaStyle: {
-                                color: '#ff7d00'
+                                color: '#32cd32'
                             },
                             label: {
                                 show: true,
@@ -1516,10 +1502,8 @@ option = {
                             }
                         },
                         emphasis: {                 // 也是选中样式
-                            lineStyle: {
-                                width: 2,
-                                color: '#fff'
-                            },
+                            borderWidth:5,
+                            borderColor:'yellow',
                             areaStyle: {
                                 color: '#cd5c5c'
                             },
@@ -1531,40 +1515,7 @@ option = {
                             }
                         }
                     },
-                },
-                {name: '北京',value: Math.round(Math.random()*1000)},
-                {name: '天津',value: Math.round(Math.random()*1000)},
-                {name: '上海',value: Math.round(Math.random()*1000)},
-                {name: '重庆',value: Math.round(Math.random()*1000)},
-                {name: '河北',value: Math.round(Math.random()*1000)},
-                {name: '河南',value: Math.round(Math.random()*1000)},
-                {name: '云南',value: Math.round(Math.random()*1000)},
-                {name: '辽宁',value: Math.round(Math.random()*1000)},
-                {name: '黑龙江',value: Math.round(Math.random()*1000)},
-                {name: '湖南',value: Math.round(Math.random()*1000)},
-                {name: '安徽',value: Math.round(Math.random()*1000)},
-                {name: '山东',value: Math.round(Math.random()*1000)},
-                {name: '江苏',value: Math.round(Math.random()*1000)},
-                {name: '浙江',value: Math.round(Math.random()*1000)},
-                {name: '江西',value: Math.round(Math.random()*1000)},
-                {name: '湖北',value: Math.round(Math.random()*1000)},
-                {name: '广西',value: Math.round(Math.random()*1000)},
-                {name: '甘肃',value: Math.round(Math.random()*1000)},
-                {name: '山西',value: Math.round(Math.random()*1000)},
-                {name: '新疆',value: Math.round(Math.random()*1000)},
-                {name: '陕西',value: Math.round(Math.random()*1000)},
-                {name: '吉林',value: Math.round(Math.random()*1000)},
-                {name: '福建',value: Math.round(Math.random()*1000)},
-                {name: '贵州',value: Math.round(Math.random()*1000)},
-                {name: '广东',value: Math.round(Math.random()*1000)},
-                {name: '青海',value: Math.round(Math.random()*1000)},
-                {name: '西藏',value: Math.round(Math.random()*1000)},
-                {name: '四川',value: Math.round(Math.random()*1000)},
-                {name: '宁夏',value: Math.round(Math.random()*1000)},
-                {name: '海南',value: Math.round(Math.random()*1000)},
-                {name: '台湾',value: Math.round(Math.random()*1000)},
-                {name: '香港',value: Math.round(Math.random()*1000)},
-                {name: '澳门',value: Math.round(Math.random()*1000)}
+                }
             ],
             markPoint : {
                 itemStyle : {
@@ -1574,21 +1525,11 @@ option = {
                 },
                 data : [
                     {name : '北京', value : 350},
-                    {name : '天津', value : 123},
-                    {name : '上海', value : 103},
-                    {name : '东莞', value : 83},
-                    {name : '东营', value : 13},
-                    {name : '中山', value : 153},
-                    {name : '临汾', value : 303}
+                    {name : '上海', value : 103}
                 ]
             },
             geoCoord: {
                 '上海': [121.4648,31.2891],
-                '东莞': [113.8953,22.901],
-                '东营': [118.7073,37.5513],
-                '中山': [113.4229,22.478],
-                '临汾': [111.4783,36.1615],
-                '北京': [116.4551,40.2539],
                 '天津': [117.4219,39.4189]
             }
         }
