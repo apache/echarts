@@ -143,6 +143,7 @@ function requireCallback (ec) {
         document.body.appendChild(zrDom);
         
         var _zr = require('zrender').init(zrDom);
+        /*
         _zr.addShape({
             shape:'rectangle',
             style : {
@@ -150,9 +151,10 @@ function requireCallback (ec) {
                 y : 0,
                 width : domGWidth * 2,
                 height : domGHeight / 2,
-                color: '#fff'
+                color: theme.backgroundColor || '#fff'
             }
         });
+        */
         var domGLeft = domG.offsetLeft;
         var domGTop = domG.offsetTop;
         for (var i = 0, l = domMain.length; i < l; i++) {
@@ -168,7 +170,10 @@ function requireCallback (ec) {
         _zr.render();
         
         setTimeout(function() {
-            var image = _zr.toDataURL('image/png');
+            var bgColor = theme.backgroundColor
+                          && theme.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
+                              ? '#fff' : theme.backgroundColor;
+            var image = _zr.toDataURL('image/png', bgColor);
             _zr.dispose();
             zrDom.parentNode.removeChild(zrDom);
             zrDom = null;

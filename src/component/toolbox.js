@@ -686,7 +686,12 @@ define(function (require) {
             if (imgType != 'png' && imgType != 'jpeg') {
                 imgType = 'png';
             }
-            var image = zr.toDataURL('image/' + imgType); 
+            var bgColor = option.backgroundColor 
+                          && option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
+                              ? '#fff' : option.backgroundColor;
+            var image = zr.toDataURL(
+                'image/' + imgType, bgColor
+            ); 
             var downloadDiv = document.createElement('div');
             downloadDiv.id = '__echarts_download_wrap__';
             downloadDiv.style.cssText = 'position:fixed;'
