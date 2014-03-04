@@ -146,15 +146,47 @@
                 </div>
             </div>
             <div class="row-fluid">
-            <div class='doc-image span6'>
-                <h3><a href="../example/line.html" target="_blank">line（折线图）</a></h3>
-                <p><img src="../asset/img/doc/lineTheme.png" title="" alt="折线图"/></P>
+                <div class='doc-image span4'>
+                    <h3><a href="../example/line.html" target="_blank">line（折线图）</a></h3>
+                    <p><img src="../asset/img/doc/lineTheme.png" title="" alt="折线图"/></P>
+                </div>
+                <div class='doc-image span4'>
+                    <h3><a href="../example/bar.html" target="_blank">bar（柱形图）</a></h3>
+                    <p><img src="../asset/img/doc/barTheme.png" title="" alt="柱形图"/></P>
+                </div>
+                <div class='doc-image span4'>
+                    <h3><a href="../example/scatter.html" target="_blank">scatter（散点图）</a></h3>
+                    <p><img src="../asset/img/doc/scatterTheme.png" title="" alt="散点图"/></P>
+                </div>
             </div>
-            <div class='doc-image span6'>
-                <h3><a href="../example/bar.html" target="_blank">bar（柱形图）</a></h3>
-                <p><img src="../asset/img/doc/barTheme.png" title="" alt="柱形图"/></P>
+            <div class="row-fluid">
+                <div class='doc-image span4'>
+                    <h3><a href="../example/k.html" target="_blank">k（K线图）</a></h3>
+                    <p><img src="../asset/img/doc/kTheme.png" title="" alt="K线图"/></P>
+                </div>
+                <div class='doc-image span4'>
+                    <h3><a href="../example/pie.html" target="_blank">pie（饼图）</a></h3>
+                    <p><img src="../asset/img/doc/pieTheme.png" title="" alt="饼图"/></P>
+                </div>
+                <div class='doc-image span4'>
+                    <h3><a href="../example/radar.html" target="_blank">k（雷达图）</a></h3>
+                    <p><img src="../asset/img/doc/radarTheme.png" title="" alt="雷达图"/></P>
+                </div>
             </div>
-        </div>
+            <div class="row-fluid">
+                <div class='doc-image span4'>
+                    <h3><a href="../example/chord.html" target="_blank">chord（和弦图）</a></h3>
+                    <p><img src="../asset/img/doc/chordTheme.png" title="" alt="和弦图"/></P>
+                </div>
+                <div class='doc-image span4'>
+                    <h3><a href="../example/force.html" target="_blank">force（力导向布局图）</a></h3>
+                    <p><img src="../asset/img/doc/forceTheme.png" title="" alt="力导向布局图"/></P>
+                </div>
+                <div class='doc-image span4'>
+                    <h3><a href="../example/map.html" target="_blank">map（地图）</a></h3>
+                    <p><img src="../asset/img/doc/mapTheme.png" title="" alt="地图"/></P>
+                </div>
+            </div>
         </div>
         <a name='refresh' href="#" style="display:inline-block;padding-top: 50px;"> </a>
         <div class="row-fluid">
@@ -167,7 +199,7 @@
                 <textarea id="code" name="code">
 theme = {
     // 全图默认背景
-    backgroundColor: 'rgba(0,0,0,0)',
+    // backgroundColor: 'rgba(0,0,0,0)',
     
     // 默认色板
     color: ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
@@ -359,6 +391,7 @@ theme = {
             show: true,       // 属性show控制显示与否，默认不显示
             interval: 'auto',
             // onGap: null,
+            inside : false,    // 控制小标记是否在grid里 
             length :5,         // 属性length控制线长
             lineStyle: {       // 属性lineStyle控制线条样式
                 color: '#333',
@@ -410,6 +443,7 @@ theme = {
         },
         axisTick: {            // 坐标轴小标记
             show: false,       // 属性show控制显示与否，默认不显示
+            inside : false,    // 控制小标记是否在grid里 
             length :5,         // 属性length控制线长
             lineStyle: {       // 属性lineStyle控制线条样式
                 color: '#333',
@@ -638,6 +672,8 @@ theme = {
         itemStyle: {
             normal: {
                 // color: 各异,
+                borderColor: '#fff',
+                borderWidth: 1,
                 label: {
                     show: true,
                     position: 'outer'
@@ -655,6 +691,8 @@ theme = {
             },
             emphasis: {
                 // color: 各异,
+                borderColor: 'rgba(0,0,0,0)',
+                borderWidth: 1,
                 label: {
                     show: false
                     // position: 'outer'
@@ -685,10 +723,8 @@ theme = {
         itemStyle: {
             normal: {
                 // color: 各异,
-                lineStyle: {
-                    width: 2,
-                    color: '#fff'
-                },
+                borderColor: '#fff',
+                borderWidth: 1,
                 areaStyle: {
                     color: '#ccc'//rgba(135,206,250,0.8)
                 },
@@ -701,10 +737,8 @@ theme = {
             },
             emphasis: {                 // 也是选中样式
                 // color: 各异,
-                lineStyle: {
-                    width: 2,
-                    color: '#fff'
-                },
+                borderColor: 'rgba(0,0,0,0)',
+                borderWidth: 1,
                 areaStyle: {
                     color: 'rgba(255,215,0,0.8)'
                 },
