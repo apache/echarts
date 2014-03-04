@@ -38,7 +38,7 @@ define('echarts/config',[],function() {
         COMPONENT_TYPE_AXIS_VALUE: 'valueAxis',
 
         // 全图默认背景
-        backgroundColor: 'rgba(0,0,0,0)',
+        // backgroundColor: 'rgba(0,0,0,0)',
         
         // 默认色板
         color: ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
@@ -10878,8 +10878,8 @@ define(
             /**
              * 图像导出 
              */
-            self.toDataURL = function(type, args) {
-                return painter.toDataURL(type, args);
+            self.toDataURL = function(type, backgroundColor, args) {
+                return painter.toDataURL(type, backgroundColor, args);
             };
 
             /**
@@ -11891,7 +11891,7 @@ define(
                 return _domList['hover'];
             }
 
-            function toDataURL(type, args) {
+            function toDataURL(type, backgroundColor, args) {
                 if (G_vmlCanvasManager) {
                     return null;
                 }
@@ -11901,13 +11901,14 @@ define(
                 _devicePixelRatio != 1 
                 && ctx.scale(_devicePixelRatio, _devicePixelRatio);
                 
-                ctx.fillStyle = '#fff';
+                ctx.fillStyle = backgroundColor || '#fff';
                 ctx.rect(
                     0, 0, 
                     _width * _devicePixelRatio,
                     _height * _devicePixelRatio
                 );
                 ctx.fill();
+                
                 //升序遍历，shape上的zlevel指定绘画图层的z轴层叠
                 storage.iterShape(
                     function (e) {
@@ -22748,7 +22749,12 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
             if (imgType != 'png' && imgType != 'jpeg') {
                 imgType = 'png';
             }
-            var image = zr.toDataURL('image/' + imgType); 
+            var bgColor = option.backgroundColor 
+                          && option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
+                              ? '#fff' : option.backgroundColor;
+            var image = zr.toDataURL(
+                'image/' + imgType, bgColor
+            ); 
             var downloadDiv = document.createElement('div');
             downloadDiv.id = '__echarts_download_wrap__';
             downloadDiv.style.cssText = 'position:fixed;'
@@ -25011,6 +25017,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
          * 图表渲染 
          */
         function _render(magicOption) {
+            _mergeGlobalConifg(magicOption);
             if (magicOption.backgroundColor) {
                 if (!_canvasSupported 
                     && magicOption.backgroundColor.indexOf('rgba') != -1
@@ -25330,58 +25337,58 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
         /**
          * 非图表全局属性merge~~ 
          */
-        function _mergeGlobalConifg() {
+        function _mergeGlobalConifg(magicOption) {
             // 背景
-            if (typeof _option.backgroundColor == 'undefined') {
-                _option.backgroundColor = _themeConfig.backgroundColor;
+            if (typeof magicOption.backgroundColor == 'undefined') {
+                magicOption.backgroundColor = _themeConfig.backgroundColor;
             }
             
             // 拖拽重计算相关
-            if (typeof _option.calculable == 'undefined') {
-                _option.calculable = _themeConfig.calculable;
+            if (typeof magicOption.calculable == 'undefined') {
+                magicOption.calculable = _themeConfig.calculable;
             }
-            if (typeof _option.calculableColor == 'undefined') {
-                _option.calculableColor = _themeConfig.calculableColor;
+            if (typeof magicOption.calculableColor == 'undefined') {
+                magicOption.calculableColor = _themeConfig.calculableColor;
             }
-            if (typeof _option.calculableHolderColor == 'undefined') {
-                _option.calculableHolderColor = _themeConfig.calculableHolderColor;
+            if (typeof magicOption.calculableHolderColor == 'undefined') {
+                magicOption.calculableHolderColor = _themeConfig.calculableHolderColor;
             }
             
             // 孤岛显示连接符
-            if (typeof _option.nameConnector == 'undefined') {
-                _option.nameConnector = _themeConfig.nameConnector;
+            if (typeof magicOption.nameConnector == 'undefined') {
+                magicOption.nameConnector = _themeConfig.nameConnector;
             }
-            if (typeof _option.valueConnector == 'undefined') {
-                _option.valueConnector = _themeConfig.valueConnector;
+            if (typeof magicOption.valueConnector == 'undefined') {
+                magicOption.valueConnector = _themeConfig.valueConnector;
             }
             
             // 动画相关
-            if (typeof _option.animation == 'undefined') {
-                _option.animation = _themeConfig.animation;
+            if (typeof magicOption.animation == 'undefined') {
+                magicOption.animation = _themeConfig.animation;
             }
-            if (typeof _option.animationThreshold == 'undefined') {
-                _option.animationThreshold = _themeConfig.animationThreshold;
+            if (typeof magicOption.animationThreshold == 'undefined') {
+                magicOption.animationThreshold = _themeConfig.animationThreshold;
             }
-            if (typeof _option.animationDuration == 'undefined') {
-                _option.animationDuration = _themeConfig.animationDuration;
+            if (typeof magicOption.animationDuration == 'undefined') {
+                magicOption.animationDuration = _themeConfig.animationDuration;
             }
-            if (typeof _option.animationEasing == 'undefined') {
-                _option.animationEasing = _themeConfig.animationEasing;
+            if (typeof magicOption.animationEasing == 'undefined') {
+                magicOption.animationEasing = _themeConfig.animationEasing;
             }
-            if (typeof _option.addDataAnimation == 'undefined') {
-                _option.addDataAnimation = _themeConfig.addDataAnimation;
+            if (typeof magicOption.addDataAnimation == 'undefined') {
+                magicOption.addDataAnimation = _themeConfig.addDataAnimation;
             }
             
             // 默认标志图形类型列表
-            if (typeof _option.symbolList == 'undefined') {
-                _option.symbolList = _themeConfig.symbolList;
+            if (typeof magicOption.symbolList == 'undefined') {
+                magicOption.symbolList = _themeConfig.symbolList;
             }
 
             var zrColor = require('zrender/tool/color');
             // 数值系列的颜色列表，不传则采用内置颜色，可配数组，借用zrender实例注入，会有冲突风险，先这样
-            if (_option.color && _option.color.length > 0) {
+            if (magicOption.color && magicOption.color.length > 0) {
                 _zr.getColor = function(idx) {
-                    return zrColor.getColor(idx, _option.color);
+                    return zrColor.getColor(idx, magicOption.color);
                 };
             }
             else {
@@ -25391,8 +25398,8 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
             }
             
             // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
-            if (typeof _option.DRAG_ENABLE_TIME == 'undefined') {
-                _option.DRAG_ENABLE_TIME = _themeConfig.DRAG_ENABLE_TIME;
+            if (typeof magicOption.DRAG_ENABLE_TIME == 'undefined') {
+                magicOption.DRAG_ENABLE_TIME = _themeConfig.DRAG_ENABLE_TIME;
             }
         }
         
@@ -25421,8 +25428,6 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
             if (!_option.series || _option.series.length === 0) {
                 return;
             }
-
-            _mergeGlobalConifg();
 
             _optionBackup = zrUtil.clone(_option);
             _optionRestore = zrUtil.clone(_option);
@@ -25690,7 +25695,10 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
             if (imgType != 'png' && imgType != 'jpeg') {
                 imgType = 'png';
             }
-            return _zr.toDataURL('image/' + imgType); 
+            var bgColor = _option.backgroundColor
+                          && _option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
+                              ? '#fff' : _option.backgroundColor;
+            return _zr.toDataURL('image/' + imgType, bgColor); 
         }
 
         /**
@@ -25818,6 +25826,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
                 _themeConfig.textStyle.fontFamily = 
                     _themeConfig.textStyle.fontFamily2;
             }
+            
             _optionRestore && self.restore();
         }
 
