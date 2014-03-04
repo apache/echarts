@@ -368,6 +368,7 @@ define(function(require) {
                 
                 // 拖拽特性
                 self.setCalculable(shape);
+                shape.dragEnableTime = 0;
                 shape.ondragstart = self.shapeHandler.ondragstart;
                 shape.draggable = true;
                 
