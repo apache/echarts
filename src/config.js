@@ -37,7 +37,7 @@ define(function() {
         COMPONENT_TYPE_AXIS_VALUE: 'valueAxis',
 
         // 全图默认背景
-        // backgroundColor: 'rgba(0,0,0,0)',
+        backgroundColor: 'rgba(0,0,0,0)',
         
         // 默认色板
         color: ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
