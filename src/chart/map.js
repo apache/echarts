@@ -191,6 +191,10 @@ define(function(require) {
          */
         function _mapDataCallback(mt, vd, ms) {
             return function(md) {
+                if (!self) {
+                    // 异步地图数据回调时有可能实例已经被释放
+                    return;
+                }
                 // 缓存这份数据
                 if (mt.indexOf('|') != -1) {
                     // 子地图，加工一份新的mapData
