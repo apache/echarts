@@ -14682,13 +14682,13 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
             );
             var nBorderWidth = typeof normal.borderWidth != 'undefined'
                        ? normal.borderWidth
-                       : (normal.lineStyle && normal.lineStyle.width * 2);
+                       : (normal.lineStyle && normal.lineStyle.width);
             if (typeof nBorderWidth == 'undefined') {
                 nBorderWidth = 0;
             }
             var eBorderWidth = typeof emphasis.borderWidth != 'undefined'
                        ? emphasis.borderWidth
-                       : (emphasis.lineStyle && emphasis.lineStyle.width * 2);
+                       : (emphasis.lineStyle && emphasis.lineStyle.width);
             if (typeof eBorderWidth == 'undefined') {
                 eBorderWidth = nBorderWidth + 2;
             }
