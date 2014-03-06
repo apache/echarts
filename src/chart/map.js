@@ -229,7 +229,13 @@ define(function(require) {
                         _markAnimation = true;
                         if (option.animation && !option.renderAsImage) {
                             self.animationMark(option.animationDuration);
+                            setTimeout(function(){
+                                self.animationEffect()
+                            }, option.animationDuration)
                         }
+                    }
+                    else {
+                        self.animationEffect();
                     }
                 }
             };

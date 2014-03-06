@@ -14,6 +14,7 @@ define(function(require) {
         self.zr =zr;
 
         self.shapeList = [];
+        self.effectList = [];
         
         var _aniMap = {};
         _aniMap[ecConfig.CHART_TYPE_LINE] = true;
@@ -503,6 +504,7 @@ define(function(require) {
             var queryTarget;
             var nColor;
             var eColor;
+            var effect;
             var zrWidth = self.zr.getWidth();
             var zrHeight = self.zr.getHeight();
             for (var i = 0, l = data.length; i < l; i++) {
@@ -551,6 +553,15 @@ define(function(require) {
                     parsePercent(data[i][1].y, zrHeight),  // 坐标
                     color               // 默认symbol和color
                 );
+                
+                effect = self.deepMerge(
+                    [data[i][0], mlOption],
+                    'effect'
+                );
+                if (effect.show) {
+                    itemShape.effect = effect;
+                }
+                
                 
                 // 重新pack一下数据
                 ecData.pack(
@@ -957,6 +968,67 @@ define(function(require) {
             }
         }
 
+        function animationEffect() {
+            var zlevel =  getZlevelBase(ecConfig.CHART_TYPE_ISLAND);
+            console.log(zlevel)
+            self.effectList = [];
+            zr.modLayer(zlevel, {
+                motionBlur : true,
+                lastFrameAlpha : 0.93
+            });
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                shape = self.shapeList[i];
+                if (!shape._mark || !shape.effect || !shape.effect.show) {
+                    continue;
+                }
+                //console.log(shape)
+                var effectShape = {
+                    shape : 'circle',
+                    style : {
+                        x : 8,
+                        y : 8,
+                        r : 4,
+                        shadowColor : 'rgb(52,179,242)',
+                        color : shape.effect.color,
+                        shadowBlur : 3,
+                        shadowOffsetX : 0,
+                        shadowOffsetY : 0
+                    }
+                };
+                var imageShape;
+                switch (shape._mark) {
+                    case 'line':
+                        imageShape = zr.shapeToImage(effectShape, 16, 16);
+                        break;
+                }
+                effectShape = {
+                    shape : 'image',
+                    id : zr.newShapeId(),
+                    scale : [1, 1],
+                    position : shape.position, 
+                    zlevel : zlevel,
+                    style : {
+                        x : shape.style.xStart - 8,
+                        y : shape.style.yStart - 8,
+                        image : imageShape.style.image
+                    },
+                    draggable : false,
+                    hoverable : false,
+                }
+                self.effectList.push(effectShape);
+                zr.addShape(effectShape);
+                zr.animate(effectShape.id, 'style', true)
+                    .when(
+                        1000,
+                        {
+                            x : shape._x - 8,
+                            y : shape._y - 8
+                        }
+                    )
+                    .start();
+                //console.log(effectShape)
+            }
+        }
         function resize() {
             self.refresh && self.refresh();
         }
@@ -966,11 +1038,13 @@ define(function(require) {
          */
         function clear() {
             if (self.zr) {
-                self.zr.delShape(self.shapeList);
                 self.zr.clearAnimation 
                     && self.zr.clearAnimation();
+                self.zr.delShape(self.shapeList);
+                self.zr.delShape(self.effectList);
             }
             self.shapeList = [];
+            self.effectList = [];
         }
 
         /**
@@ -979,6 +1053,7 @@ define(function(require) {
         function dispose() {
             self.clear();
             self.shapeList = null;
+            self.effectList = null;
             self = null;
         }
 
@@ -1003,6 +1078,7 @@ define(function(require) {
         self.subPixelOptimize = subPixelOptimize;
         self.animation = animation;
         self.animationMark = animationMark;
+        self.animationEffect = animationEffect;
         self.resize = resize;
         self.clear = clear;
         self.dispose = dispose;

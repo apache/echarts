@@ -819,6 +819,10 @@ define(function() {
             symbolSize: [2, 4],
             // 标线起始和结束的symbol旋转控制
             //symbolRotate : null,
+            effect : {
+                show: false,
+                color : 'gold'
+            },
             itemStyle: {
                 normal: {
                     // color: 各异,           // 标线主色，线色，symbol主色
