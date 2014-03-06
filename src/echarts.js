@@ -61,7 +61,7 @@ define(function(require) {
         var _themeConfig = require('zrender/tool/util').clone(ecConfig);
 
         var self = this;
-        var _id = '__ECharts__' + new Date() - 0;
+        var _id = '__ECharts__' + (new Date() - 0);
         var _zr;
         var _option;
         var _optionBackup;          // for各种change和zoom
