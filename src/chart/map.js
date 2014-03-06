@@ -717,8 +717,7 @@ define(function(require) {
                         color : style.textColor,
                         strokeColor : 'rgba(0,0,0,0)',
                         textFont : style.textFont
-                    },
-                    onmouseover : self.shapeHandler.onmouseover
+                    }
                 };
                 textShape._style = zrUtil.clone(textShape.style);
                 textShape.highlightStyle = zrUtil.clone(textShape.style);
@@ -802,8 +801,15 @@ define(function(require) {
                 }
                 
                 if (typeof data.hoverable != 'undefined') {
-                    textShape.onmouseover = null;
+                    // 数据级优先
                     textShape.hoverable = shape.hoverable = data.hoverable;
+                    if (data.hoverable) {
+                        textShape.onmouseover = self.shapeHandler.onmouseover;
+                    }
+                }
+                else if (_hoverable[mapType]){
+                    // 系列级，补充一个关联响应
+                    textShape.onmouseover = self.shapeHandler.onmouseover;
                 }
                 
                 // console.log(name,shape);
