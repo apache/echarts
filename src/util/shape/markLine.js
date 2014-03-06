@@ -109,6 +109,9 @@ define(
              * 标线始末标注 
              */
             brushSymbol : function(e, ctx, style, idx) {
+                if (style.symbol[idx] == 'none') {
+                    return;
+                }
                 ctx.save();
                 ctx.beginPath();
                 
