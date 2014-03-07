@@ -86,6 +86,40 @@ define(
                     yEnd -= symbolSize[1];
                 }
                 */
+                
+                var pointList = [
+                    [xStart, yStart],
+                    [xEnd, yEnd]
+                ];
+                if (style.smooth === 'spline') {
+                    pointList[2] = [pointList[1][0], pointList[1][1]];
+                    pointList[1] = this.getOffetPoint(pointList[0], pointList[2]);
+                    pointList = this.smoothSpline(pointList, false);
+                }
+                
+                if (!style.lineType || style.lineType == 'solid') {
+                    //默认为实线
+                    ctx.moveTo(pointList[0][0],pointList[0][1]);
+                    for (var i = 1, l = pointList.length; i < l; i++) {
+                        ctx.lineTo(pointList[i][0],pointList[i][1]);
+                    }
+                }
+                else if (style.lineType == 'dashed'
+                        || style.lineType == 'dotted'
+                ) {
+                    var dashLength = (style.lineWidth || 1) 
+                                     * (style.lineType == 'dashed' ? 5 : 1);
+                    ctx.moveTo(pointList[0][0],pointList[0][1]);
+                    for (var i = 1, l = pointList.length; i < l; i++) {
+                        this.dashedLineTo(
+                            ctx,
+                            pointList[i - 1][0], pointList[i - 1][1],
+                            pointList[i][0], pointList[i][1],
+                            dashLength
+                        );
+                    }
+                }
+                /*
                 if (!style.lineType || style.lineType == 'solid') {
                     //默认为实线
                     ctx.moveTo(xStart, yStart);
@@ -103,6 +137,7 @@ define(
                         dashLength
                     );
                 }
+                */
             },
 
             /**
@@ -172,6 +207,10 @@ define(
                 var xEnd = style.xEnd;
                 var yStart = style.yStart;
                 var yEnd = style.yEnd;
+                var delta = 0;
+                if (style.smooth === 'spline') {
+                    delta = 0.2;
+                }
                 // 原谅我吧，这三角函数实在没想明白，只能这么笨了
                 var rotate = Math.atan(
                         Math.abs((yEnd - yStart) / (xStart - xEnd)
@@ -179,30 +218,36 @@ define(
                 if (idx === 0) {
                     if (xEnd > xStart) {
                         if (yEnd > yStart) {
-                            rotate =  Math.PI * 2 - rotate;
+                            rotate =  Math.PI * 2 - rotate + delta;
+                        }
+                        else {
+                            rotate += delta;
                         }
                     }
                     else {
                         if (yEnd > yStart) {
-                            rotate += Math.PI;
+                            rotate += Math.PI - delta;
                         }
                         else {
-                            rotate = Math.PI - rotate;
+                            rotate = Math.PI - rotate - delta;
                         }
                     }
                 }
                 else {
                     if (xStart > xEnd) {
                         if (yStart > yEnd) {
-                            rotate =  Math.PI * 2 - rotate;
+                            rotate =  Math.PI * 2 - rotate + delta;
+                        }
+                        else {
+                            rotate += delta;
                         }
                     }
                     else {
                         if (yStart > yEnd) {
-                            rotate += Math.PI;
+                            rotate += Math.PI - delta;
                         }
                         else {
-                            rotate = Math.PI - rotate;
+                            rotate = Math.PI - rotate - delta;
                         }
                     }
                 }
@@ -229,6 +274,90 @@ define(
                     ctx.lineTo(point[i][0], point[i][1]);
                 }
                 ctx.lineTo(x, y);
+            },
+            /*
+            getOffetPoint2 : function(sp, ep) {
+                var distance = ((sp[0] - ep[0]) * (sp[0] - ep[0]) + (sp[1] - ep[1]) * (sp[1] - ep[1]));
+                var delta = Math.round(Math.sqrt(distance) / 5);
+                //console.log(distance , delta);
+                var mp = [(sp[0] + ep[0]) / 2, (sp[1] + ep[1]) / 2];
+                var k; // 斜率
+                var angle;
+                if (sp[0] != ep[0] && sp[1] != ep[1]) {
+                    // 斜率存在
+                    k = (ep[1] - sp[1]) / (ep[0] - sp[0]);
+                    k = -1 / k; // 垂线斜率
+                    angle = Math.atan(k);
+                    //var HalfPI = Math.PI / 2;
+                    var dX = Math.abs(Math.cos(angle) * delta);
+                    var dY = Math.abs(Math.sin(angle) * delta);
+                    if (sp[0] <= ep[0] && sp[1] >= ep[1]) {
+                        // 1
+                        mp[0] -= dX;
+                        mp[1] -= dY;
+                    }
+                    else if (sp[0] >= ep[0] && sp[1] >= ep[1]){
+                        // 2
+                        mp[0] += dX;
+                        mp[1] -= dY;
+                    }
+                    else if (sp[0] >= ep[0] && sp[1] <= ep[1]){
+                        // 3
+                        mp[0] -= dX;
+                        mp[1] -= dY;
+                    }
+                    else if (sp[0] <= ep[0] && sp[1] <= ep[1]){
+                        // 4
+                        mp[0] += dX;
+                        mp[1] -= dY;
+                    }
+                    //console.log(angle,Math.cos(angle),Math.sin(angle))
+                    
+                }
+                return mp;
+            },
+            */
+            getOffetPoint : function(sp, ep) {
+                var distance = Math.ceil(
+                    Math.sqrt(
+                        ((sp[0] - ep[0]) * (sp[0] - ep[0]) + (sp[1] - ep[1]) * (sp[1] - ep[1]))
+                    ) 
+                    / 2
+                );
+                //console.log(delta);
+                var mp = [sp[0], sp[1]];
+                var angle;
+                var deltaAngle = 0.2; // 便宜0.2弧度
+                if (sp[0] != ep[0] && sp[1] != ep[1]) {
+                    // 斜率存在
+                    var k = (ep[1] - sp[1]) / (ep[0] - sp[0]);
+                    angle = Math.atan(k);
+                }
+                else if (sp[0] == ep[0]){
+                    // 垂直线
+                    angle = (sp[1] <= ep[1] ? 1 : -1) * Math.PI / 2;
+                }
+                else {
+                    // 水平线
+                    angle = 0;
+                }
+                var dX;
+                var dY;
+                if (sp[0] <= ep[0]) {
+                    angle -= deltaAngle;
+                    dX = Math.cos(angle) * distance;
+                    dY = Math.sin(angle) * distance;
+                    mp[0] += dX;
+                    mp[1] += dY;
+                }
+                else {
+                    angle += deltaAngle;
+                    dX = Math.cos(angle) * distance;
+                    dY = Math.sin(angle) * distance;
+                    mp[0] -= dX;
+                    mp[1] -= dY;
+                }
+                return mp;
             },
             
             /**
