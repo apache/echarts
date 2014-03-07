@@ -819,9 +819,12 @@ define(function() {
             symbolSize: [2, 4],
             // 标线起始和结束的symbol旋转控制
             //symbolRotate : null,
+            //smooth : false,
             effect : {
                 show: false,
-                color : 'gold'
+                period: 15             // 运动周期，无单位，值越大越慢
+                // color : 'gold'
+                // shadowColor : 'rgba(255,215,0,0.8)'
             },
             itemStyle: {
                 normal: {

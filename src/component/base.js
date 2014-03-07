@@ -9,12 +9,16 @@ define(function(require) {
     function Base(ecConfig, zr){
         var ecData = require('../util/ecData');
         var zrUtil = require('zrender/tool/util');
+        //var zrColor = require('zrender/tool/color');
         var self = this;
 
         self.zr =zr;
 
         self.shapeList = [];
         self.effectList = [];
+        
+        var EFFECT_ZLEVEL = 7;
+        var canvasSupported = !G_vmlCanvasManager;
         
         var _aniMap = {};
         _aniMap[ecConfig.CHART_TYPE_LINE] = true;
@@ -61,8 +65,10 @@ define(function(require) {
                 case ecConfig.COMPONENT_TYPE_TITLE :
                     return 6;
 
+                // EFFECT_ZLEVEL = 7;
+                
                 case ecConfig.COMPONENT_TYPE_TOOLTIP :
-                    return 7;
+                    return 8;
 
                 default :
                     return 0;
@@ -714,7 +720,7 @@ define(function(require) {
         }
         
         function getLineMarkShape(
-            mlOption,                  // 系列 
+            mlOption,               // 系列 
             data,                   // 数据
             xStart, yStart,         // 坐标
             xEnd, yEnd,             // 坐标
@@ -780,6 +786,7 @@ define(function(require) {
             var itemShape = {
                 shape : 'markLine',
                 style : {
+                    smooth : mlOption.smooth ? 'spline' : false,
                     symbol : symbol, 
                     symbolSize : symbolSize,
                     symbolRotate : symbolRotate,
@@ -944,7 +951,7 @@ define(function(require) {
                         )
                         .start('QuinticOut');
                 }
-                else if (self.shapeList[i]._mark == 'line') {
+                else if (self.shapeList[i]._mark == 'line' && !self.shapeList[i].style.smooth) {
                     zr.modShape(
                         self.shapeList[i].id, 
                         {
@@ -969,66 +976,90 @@ define(function(require) {
         }
 
         function animationEffect() {
-            var zlevel =  getZlevelBase(ecConfig.CHART_TYPE_ISLAND);
-            console.log(zlevel)
+            return;
+            var zlevel =  EFFECT_ZLEVEL;
+            if (canvasSupported) {
+                zr.modLayer(
+                    zlevel,
+                    {
+                        motionBlur : true,
+                        lastFrameAlpha : 0.95
+                    }
+                );
+            }
+            
             self.effectList = [];
-            zr.modLayer(zlevel, {
-                motionBlur : true,
-                lastFrameAlpha : 0.93
-            });
+            var color;
+            var shadowColo;
+            var size;
+            var effect;
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 shape = self.shapeList[i];
                 if (!shape._mark || !shape.effect || !shape.effect.show) {
                     continue;
                 }
                 //console.log(shape)
-                var effectShape = {
-                    shape : 'circle',
-                    style : {
-                        x : 8,
-                        y : 8,
-                        r : 4,
-                        shadowColor : 'rgb(52,179,242)',
-                        color : shape.effect.color,
-                        shadowBlur : 3,
-                        shadowOffsetX : 0,
-                        shadowOffsetY : 0
-                    }
-                };
-                var imageShape;
+                effect = shape.effect;
+                var effectShape;
                 switch (shape._mark) {
                     case 'line':
-                        imageShape = zr.shapeToImage(effectShape, 16, 16);
+                        color = effect.color || shape.style.strokeColor || shape.style.color;
+                        shadowColor = effect.shadowColor || color;
+                        size = effect.size || (shape.style.lineWidth * 2);
+                        effectShape = {
+                            shape : 'circle',
+                            id : zr.newShapeId(),
+                            zlevel : zlevel,
+                            style : {
+                                x : size * 2,
+                                y : size * 2,
+                                r : size,
+                                color : color,
+                                shadowColor : shadowColor,
+                                shadowBlur : size * 2,
+                                shadowOffsetX : 0,
+                                shadowOffsetY : 0
+                            },
+                            draggable : false,
+                            hoverable : false
+                        }
                         break;
                 }
-                effectShape = {
-                    shape : 'image',
-                    id : zr.newShapeId(),
-                    scale : [1, 1],
-                    position : shape.position, 
-                    zlevel : zlevel,
-                    style : {
-                        x : shape.style.xStart - 8,
-                        y : shape.style.yStart - 8,
-                        image : imageShape.style.image
-                    },
-                    draggable : false,
-                    hoverable : false,
+                var Offset;
+                if (canvasSupported) {
+                    // 提高性能，换成image
+                    effectShape.style.image = zr.shapeToImage(effectShape, size * 4, size * 4)
+                                              .style.image;
+                    effectShape.shape = 'image';
+                    Offset = size * 2;
                 }
+                else {
+                    Offset = 0;
+                }
+                // 改变坐标
+                effectShape.position = shape.position;
+                effectShape.style.x = shape.style.xStart - Offset;
+                effectShape.style.y = shape.style.yStart - Offset;
+                
                 self.effectList.push(effectShape);
                 zr.addShape(effectShape);
+                
+                var distance = (shape.style.xStart - shape._x) * (shape.style.xStart - shape._x)
+                                +
+                               (shape.style.yStart - shape._y) * (shape.style.yStart - shape._y);
                 zr.animate(effectShape.id, 'style', true)
                     .when(
-                        1000,
+                        Math.round(Math.sqrt(Math.round(distance * effect.period * effect.period))),
                         {
-                            x : shape._x - 8,
-                            y : shape._y - 8
+                            x : shape._x - Offset,
+                            y : shape._y - Offset
                         }
                     )
                     .start();
                 //console.log(effectShape)
             }
         }
+        
         function resize() {
             self.refresh && self.refresh();
         }
@@ -1041,6 +1072,10 @@ define(function(require) {
                 self.zr.clearAnimation 
                     && self.zr.clearAnimation();
                 self.zr.delShape(self.shapeList);
+                self.zr.modLayer(
+                    EFFECT_ZLEVEL, 
+                    { motionBlur : false}
+                );
                 self.zr.delShape(self.effectList);
             }
             self.shapeList = [];
