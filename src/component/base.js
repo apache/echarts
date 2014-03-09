@@ -928,6 +928,7 @@ define(function(require) {
         }
         
         function animationMark(duration /*, easing*/) {
+            var mlShape = require('zrender/shape').get('markLine');
             var x;
             var y;
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
@@ -951,33 +952,71 @@ define(function(require) {
                         )
                         .start('QuinticOut');
                 }
-                else if (self.shapeList[i]._mark == 'line' && !self.shapeList[i].style.smooth) {
-                    zr.modShape(
-                        self.shapeList[i].id, 
-                        {
-                            style : {
-                                xEnd : self.shapeList[i].style.xStart,
-                                yEnd : self.shapeList[i].style.yStart
-                            }
-                        },
-                        true
-                    );
-                    zr.animate(self.shapeList[i].id, 'style')
-                        .when(
-                            duration,
+                else if (self.shapeList[i]._mark == 'line') {
+                    if (!self.shapeList[i].style.smooth) {
+                        zr.modShape(
+                            self.shapeList[i].id, 
                             {
-                                xEnd : x,
-                                yEnd : y
-                            }
-                        )
-                        .start('QuinticOut');
+                                style : {
+                                    pointList : [
+                                        [
+                                            self.shapeList[i].style.xStart,
+                                            self.shapeList[i].style.yStart
+                                        ],
+                                        [
+                                            self.shapeList[i].style.xStart,
+                                            self.shapeList[i].style.yStart
+                                        ]
+                                    ]
+                                }
+                            },
+                            true
+                        );
+                        zr.animate(self.shapeList[i].id, 'style')
+                            .when(
+                                duration,
+                                {
+                                    pointList : [
+                                        [
+                                            self.shapeList[i].style.xStart,
+                                            self.shapeList[i].style.yStart
+                                        ],
+                                        [
+                                            x, y
+                                        ]
+                                    ]
+                                }
+                            )
+                            .start('QuinticOut');
+                    }
+                    else {
+                        // 曲线动画
+                        zr.modShape(
+                            self.shapeList[i].id, 
+                            {
+                                style : {
+                                    pointListLength : 1
+                                }
+                            },
+                            true
+                        );
+                        zr.animate(self.shapeList[i].id, 'style')
+                            .when(
+                                duration,
+                                {
+                                    pointListLength : self.shapeList[i].style.pointList.length
+                                }
+                            )
+                            .start('QuinticOut');
+                    }
                 }
             }
+            zr.refresh();
         }
 
         function animationEffect() {
-            return;
-            var zlevel =  EFFECT_ZLEVEL;
+            clearAnimation();
+            var zlevel = EFFECT_ZLEVEL;
             if (canvasSupported) {
                 zr.modLayer(
                     zlevel,
@@ -988,7 +1027,7 @@ define(function(require) {
                 );
             }
             
-            self.effectList = [];
+            //self.effectList = [];
             var color;
             var shadowColo;
             var size;
@@ -1047,15 +1086,48 @@ define(function(require) {
                 var distance = (shape.style.xStart - shape._x) * (shape.style.xStart - shape._x)
                                 +
                                (shape.style.yStart - shape._y) * (shape.style.yStart - shape._y);
-                zr.animate(effectShape.id, 'style', true)
-                    .when(
-                        Math.round(Math.sqrt(Math.round(distance * effect.period * effect.period))),
-                        {
-                            x : shape._x - Offset,
-                            y : shape._y - Offset
+                var duration = Math.round(Math.sqrt(Math.round(
+                                   distance * effect.period * effect.period
+                               )));
+                if (shape._mark === 'line') {
+                    if (!shape.style.smooth) {
+                        // 直线
+                        zr.animate(effectShape.id, 'style', true)
+                            .when(
+                                duration,
+                                {
+                                    x : shape._x - Offset,
+                                    y : shape._y - Offset
+                                }
+                            )
+                            .when(
+                                duration + 200,
+                                {
+                                    r : size * 8,
+                                    width : size * 8,
+                                    height : size * 8
+                                }
+                            )
+                            .start();
+                    }
+                    else {
+                        // 曲线
+                        var pointList = shape.style.pointList;
+                        var len = pointList.length;
+                        duration = Math.round(duration / len);
+                        var deferred = zr.animate(effectShape.id, 'style', true);
+                        for (var j = 0; j < len; j++) {
+                            deferred.when(
+                                duration * (j + 1),
+                                {
+                                    x : pointList[j][0] - Offset,
+                                    y : pointList[j][1] - Offset
+                                }
+                            );
                         }
-                    )
-                    .start();
+                        deferred.start();
+                    }
+                }
                 //console.log(effectShape)
             }
         }
@@ -1064,22 +1136,27 @@ define(function(require) {
             self.refresh && self.refresh();
         }
 
-        /**
-         * 清除图形数据，实例仍可用
-         */
-        function clear() {
+        function clearAnimation() {
             if (self.zr) {
-                self.zr.clearAnimation 
-                    && self.zr.clearAnimation();
-                self.zr.delShape(self.shapeList);
+                //self.zr.clearAnimation();
                 self.zr.modLayer(
                     EFFECT_ZLEVEL, 
                     { motionBlur : false}
                 );
                 self.zr.delShape(self.effectList);
             }
-            self.shapeList = [];
             self.effectList = [];
+        }
+        
+        /**
+         * 清除图形数据，实例仍可用
+         */
+        function clear() {
+            clearAnimation();
+            if (self.zr) {
+                self.zr.delShape(self.shapeList);
+            }
+            self.shapeList = [];
         }
 
         /**
@@ -1115,6 +1192,7 @@ define(function(require) {
         self.animationMark = animationMark;
         self.animationEffect = animationEffect;
         self.resize = resize;
+        self.clearAnimation = clearAnimation;
         self.clear = clear;
         self.dispose = dispose;
     }

@@ -63,81 +63,45 @@ define(
              * @param {Object} style 样式
              */
             buildLinePath : function(ctx, style) {
-                //var symbolSize = style.symbolSize;
-                var xStart = style.xStart;
-                var xEnd = style.xEnd;
-                var yStart = style.yStart;
-                var yEnd = style.yEnd;
-                /*
-                if (xStart > xEnd) {
-                    xStart -= symbolSize[0];
-                    xEnd += symbolSize[1];
-                }
-                else {
-                    xStart += symbolSize[0];
-                    xEnd -= symbolSize[1];
-                }
-                if (yStart > yEnd) {
-                    yStart -= symbolSize[0];
-                    yEnd += symbolSize[1];
-                }
-                else {
-                    yStart += symbolSize[0];
-                    yEnd -= symbolSize[1];
-                }
-                */
+                var pointList = style.pointList || this.getPointList(style);
+                style.pointList = pointList;
                 
-                var pointList = [
-                    [xStart, yStart],
-                    [xEnd, yEnd]
-                ];
-                if (style.smooth === 'spline') {
-                    pointList[2] = [pointList[1][0], pointList[1][1]];
-                    pointList[1] = this.getOffetPoint(pointList[0], pointList[2]);
-                    pointList = this.smoothSpline(pointList, false);
+                if (typeof style.pointListLength == 'undefined') {
+                    style.pointListLength = pointList.length;
                 }
-                
+                var len = Math.round(style.pointListLength);
                 if (!style.lineType || style.lineType == 'solid') {
                     //默认为实线
                     ctx.moveTo(pointList[0][0],pointList[0][1]);
-                    for (var i = 1, l = pointList.length; i < l; i++) {
+                    for (var i = 1; i < len; i++) {
                         ctx.lineTo(pointList[i][0],pointList[i][1]);
                     }
                 }
                 else if (style.lineType == 'dashed'
                         || style.lineType == 'dotted'
                 ) {
-                    var dashLength = (style.lineWidth || 1) 
+                    if (style.smooth !== 'spline') {
+                        // 直线
+                        var dashLength = (style.lineWidth || 1) 
                                      * (style.lineType == 'dashed' ? 5 : 1);
-                    ctx.moveTo(pointList[0][0],pointList[0][1]);
-                    for (var i = 1, l = pointList.length; i < l; i++) {
-                        this.dashedLineTo(
-                            ctx,
-                            pointList[i - 1][0], pointList[i - 1][1],
-                            pointList[i][0], pointList[i][1],
-                            dashLength
-                        );
+                        ctx.moveTo(pointList[0][0],pointList[0][1]);
+                        for (var i = 1; i < len; i++) {
+                            this.dashedLineTo(
+                                ctx,
+                                pointList[i - 1][0], pointList[i - 1][1],
+                                pointList[i][0], pointList[i][1],
+                                dashLength
+                            );
+                        }
+                    }
+                    else {
+                        // 曲线
+                        for (var i = 0; i < len - 1; i += 2) {
+                            ctx.moveTo(pointList[i][0],pointList[i][1]);
+                            ctx.lineTo(pointList[i + 1][0],pointList[i + 1][1]);
+                        }
                     }
                 }
-                /*
-                if (!style.lineType || style.lineType == 'solid') {
-                    //默认为实线
-                    ctx.moveTo(xStart, yStart);
-                    ctx.lineTo(xEnd, yEnd);
-                }
-                else if (style.lineType == 'dashed'
-                        || style.lineType == 'dotted'
-                ) {
-                    var dashLength =(style.lineWidth || 1)  
-                                     * (style.lineType == 'dashed' ? 5 : 1);
-                    this.dashedLineTo(
-                        ctx,
-                        xStart, yStart,
-                        xEnd, yEnd,
-                        dashLength
-                    );
-                }
-                */
             },
 
             /**
@@ -154,14 +118,15 @@ define(
                 ctx.strokeStyle = style.symbolBorderColor;
                 // symbol
                 style.iconType = style.symbol[idx].replace('empty', '')
-                                                .toLowerCase();
+                                                  .toLowerCase();
                 if (style.symbol[idx].match('empty')) {
                     ctx.fillStyle = 'rgba(0, 0, 0, 0)';
                 }
                 
                 // symbolRotate
-                var x = idx === 0 ? style.xStart : style.xEnd;
-                var y = idx === 0 ? style.yStart : style.yEnd;
+                var len = Math.round(style.pointListLength || style.pointList.length);
+                var x = idx === 0 ? style.pointList[0][0] : style.pointList[len - 1][0];
+                var y = idx === 0 ? style.pointList[0][1] : style.pointList[len - 1][1];
                 var rotate = typeof style.symbolRotate[idx] != 'undefined'
                              ? (style.symbolRotate[idx] - 0) : 0;
                 var transform;
@@ -202,14 +167,15 @@ define(
             },
             
             buildArrawPath : function (ctx, style, idx) {
+                var len = Math.round(style.pointListLength || style.pointList.length);
                 var symbolSize = style.symbolSize[idx];
-                var xStart = style.xStart;
-                var xEnd = style.xEnd;
-                var yStart = style.yStart;
-                var yEnd = style.yEnd;
+                var xStart = style.pointList[0][0];
+                var xEnd = style.pointList[len - 1][0];
+                var yStart = style.pointList[0][1];
+                var yEnd = style.pointList[len - 1][1];
                 var delta = 0;
                 if (style.smooth === 'spline') {
-                    delta = 0.2;
+                    delta = 0.15;
                 }
                 // 原谅我吧，这三角函数实在没想明白，只能这么笨了
                 var rotate = Math.atan(
@@ -275,6 +241,20 @@ define(
                 }
                 ctx.lineTo(x, y);
             },
+            
+            getPointList : function(style) {
+                var pointList = [
+                    [style.xStart, style.yStart],
+                    [style.xEnd, style.yEnd]
+                ];
+                if (style.smooth === 'spline') {
+                    pointList[2] = [pointList[1][0], pointList[1][1]];
+                    pointList[1] = this.getOffetPoint(pointList[0], pointList[2]);
+                    pointList = this.smoothSpline(pointList, false);
+                }
+                return pointList;
+            },
+            
             /*
             getOffetPoint2 : function(sp, ep) {
                 var distance = ((sp[0] - ep[0]) * (sp[0] - ep[0]) + (sp[1] - ep[1]) * (sp[1] - ep[1]));
@@ -318,16 +298,13 @@ define(
             },
             */
             getOffetPoint : function(sp, ep) {
-                var distance = Math.ceil(
-                    Math.sqrt(
-                        ((sp[0] - ep[0]) * (sp[0] - ep[0]) + (sp[1] - ep[1]) * (sp[1] - ep[1]))
-                    ) 
-                    / 2
-                );
+                var distance = Math.sqrt(Math.round(
+                        (sp[0] - ep[0]) * (sp[0] - ep[0]) + (sp[1] - ep[1]) * (sp[1] - ep[1])
+                    )) / 2;
                 //console.log(delta);
                 var mp = [sp[0], sp[1]];
                 var angle;
-                var deltaAngle = 0.2; // 便宜0.2弧度
+                var deltaAngle = 0.15; // 偏移0.15弧度
                 if (sp[0] != ep[0] && sp[1] != ep[1]) {
                     // 斜率存在
                     var k = (ep[1] - sp[1]) / (ep[0] - sp[0]);
@@ -345,15 +322,15 @@ define(
                 var dY;
                 if (sp[0] <= ep[0]) {
                     angle -= deltaAngle;
-                    dX = Math.cos(angle) * distance;
-                    dY = Math.sin(angle) * distance;
+                    dX = Math.round(Math.cos(angle) * distance);
+                    dY = Math.round(Math.sin(angle) * distance);
                     mp[0] += dX;
                     mp[1] += dY;
                 }
                 else {
                     angle += deltaAngle;
-                    dX = Math.cos(angle) * distance;
-                    dY = Math.sin(angle) * distance;
+                    dX = Math.round(Math.cos(angle) * distance);
+                    dY = Math.round(Math.sin(angle) * distance);
                     mp[0] -= dX;
                     mp[1] -= dY;
                 }
@@ -377,7 +354,9 @@ define(
             },
             
             isCover : function(e, x, y) {
-                return require('zrender/shape').get('line').isCover(e,x,y);
+                return require('zrender/shape').get(
+                    e.style.smooth !== 'spline' ? 'line' : 'brokenLine'
+                ).isCover(e,x,y);
             }
         };
 

@@ -229,9 +229,12 @@ define(function(require) {
                         _markAnimation = true;
                         if (option.animation && !option.renderAsImage) {
                             self.animationMark(option.animationDuration);
-                            setTimeout(function(){
-                                self.animationEffect()
-                            }, option.animationDuration)
+                            setTimeout(
+                                function(){
+                                    self && self.animationEffect();
+                                }, 
+                                option.animationDuration
+                            );
                         }
                     }
                     else {
@@ -1035,12 +1038,16 @@ define(function(require) {
                     zr.modShape(self.shapeList[i].id, mod, true);
                 }
             }
+            
             messageCenter.dispatch(
                 ecConfig.EVENT.MAP_ROAM,
                 param.event,
                 {type : 'move'}
             );
+            
+            self.clearAnimation();
             zr.refresh();
+            
             _justMove = true;
             zrEvent.stop(event);
         }
@@ -1051,6 +1058,7 @@ define(function(require) {
             _my = zrEvent.getY(event);
             _mousedown = false;
             setTimeout(function(){
+                _justMove && self.animationEffect();
                 _justMove = false;
                 zr.un(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
                 zr.un(zrConfig.EVENT.MOUSEUP, _onmouseup);
