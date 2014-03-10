@@ -233,7 +233,7 @@ define(function(require) {
                                 function(){
                                     self && self.animationEffect();
                                 }, 
-                                option.animationDuration
+                                100
                             );
                         }
                     }
@@ -1045,7 +1045,7 @@ define(function(require) {
                 {type : 'move'}
             );
             
-            self.clearAnimation();
+            self.clearAnimationShape();
             zr.refresh();
             
             _justMove = true;

@@ -814,6 +814,8 @@ define(function(require) {
                 _toolbox.refresh(magicOption);
             }
             
+            // 停止动画
+            _zr.clearAnimation();
             // 先来后到，安顺序刷新各种图表，图表内部refresh优化检查magicOption，无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
                 _chartList[i].refresh && _chartList[i].refresh(magicOption);
@@ -825,6 +827,8 @@ define(function(require) {
          * 释放图表实例
          */
         function _disposeChartList() {
+            // 停止动画
+            _zr.clearAnimation();
             var len = _chartList.length;
             while (len--) {
                 _chartList[len]
@@ -1347,13 +1351,15 @@ define(function(require) {
                 _render(_option);
                 return self;
             }
+            // 停止动画
+            _zr.clearAnimation();
+            _island.resize();
+            _toolbox.resize();
             // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
             // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
                 _chartList[i].resize && _chartList[i].resize();
             }
-            _island.resize();
-            _toolbox.resize();
             _zr.refresh();
             _messageCenter.dispatch(
                 ecConfig.EVENT.RESIZE
@@ -1385,6 +1391,7 @@ define(function(require) {
             _messageCenter.unbind();
             self.clear();
             _zr.dispose();
+            _zr = null;
             self = null;
             return;
         }
