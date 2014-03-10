@@ -411,6 +411,7 @@ define(function(require) {
             var queryTarget;
             var nColor;
             var eColor;
+            var effect;
             var zrWidth = self.zr.getWidth();
             var zrHeight = self.zr.getHeight();
             for (var i = 0, l = data.length; i < l; i++) {
@@ -457,6 +458,14 @@ define(function(require) {
                     'rgba(0,0,0,0)',
                     'horizontal'                // 走向，用于默认文字定位
                 );
+                
+                effect = self.deepMerge(
+                    [data[i], mpOption],
+                    'effect'
+                );
+                if (effect.show) {
+                    itemShape.effect = effect;
+                }
                 
                 // 重新pack一下数据
                 ecData.pack(
@@ -567,7 +576,6 @@ define(function(require) {
                 if (effect.show) {
                     itemShape.effect = effect;
                 }
-                
                 
                 // 重新pack一下数据
                 ecData.pack(
@@ -810,7 +818,7 @@ define(function(require) {
                     symbolBorderColor: normal.borderColor
                                        || color
                                        || normal.color,
-                    symbolBorder: normal.borderWidth * 2
+                    symbolBorder: normal.borderWidth
                 },
                 highlightStyle : {
                     shadowColor : elineStyle.shadowColor,
@@ -832,8 +840,8 @@ define(function(require) {
                                        || emphasis.color
                                        || normal.color,
                     symbolBorder: typeof emphasis.borderWidth == 'undefined'
-                                  ? (normal.borderWidth * 2 + 2)
-                                  : (emphasis.borderWidth * 2)
+                                  ? (normal.borderWidth + 2)
+                                  : (emphasis.borderWidth)
                 },
                 clickable : true
             };
@@ -1015,7 +1023,7 @@ define(function(require) {
         }
 
         function animationEffect() {
-            clearAnimation();
+            clearAnimationShape();
             var zlevel = EFFECT_ZLEVEL;
             if (canvasSupported) {
                 zr.modLayer(
@@ -1027,7 +1035,6 @@ define(function(require) {
                 );
             }
             
-            //self.effectList = [];
             var color;
             var shadowColo;
             var size;
@@ -1041,6 +1048,24 @@ define(function(require) {
                 effect = shape.effect;
                 var effectShape;
                 switch (shape._mark) {
+                    case 'point':
+                        color = effect.color || shape.style.strokeColor || shape.style.color;
+                        shadowColor = effect.shadowColor || color;
+                        size = effect.scaleSize;
+                        effectShape = {
+                            shape : shape.shape,
+                            id : zr.newShapeId(),
+                            zlevel : zlevel,
+                            scale:[1, 1, shape.style.x, shape.style.y],
+                            style : zrUtil.clone(shape.style),
+                            draggable : false,
+                            hoverable : false
+                        }
+                        effectShape.style.x = 5;
+                        effectShape.style.y = 5;
+                        effectShape.style.shadowColor = shadowColor;
+                        effectShape.style.shadowBlur = 5;
+                        break; 
                     case 'line':
                         color = effect.color || shape.style.strokeColor || shape.style.color;
                         shadowColor = effect.shadowColor || color;
@@ -1067,29 +1092,80 @@ define(function(require) {
                 var Offset;
                 if (canvasSupported) {
                     // 提高性能，换成image
-                    effectShape.style.image = zr.shapeToImage(effectShape, size * 4, size * 4)
-                                              .style.image;
+                    if (shape._mark === 'point') {
+                        effectShape.style.image = zr.shapeToImage(
+                            effectShape, 
+                            effectShape.style.width + 10, 
+                            effectShape.style.height + 10
+                        ).style.image;
+                        Offset = 5;
+                    }
+                    else if (shape._mark === 'line') {
+                        effectShape.style.image = zr.shapeToImage(effectShape, size * 4, size * 4)
+                                                  .style.image;
+                        Offset = size * 2;
+                    }
                     effectShape.shape = 'image';
-                    Offset = size * 2;
+                    
                 }
                 else {
                     Offset = 0;
                 }
+                
+                var duration;
                 // 改变坐标
                 effectShape.position = shape.position;
-                effectShape.style.x = shape.style.xStart - Offset;
-                effectShape.style.y = shape.style.yStart - Offset;
+                if (shape._mark === 'point') {
+                    effectShape.style.x = shape.style.x;
+                    effectShape.style.y = shape.style.y;
+                    duration = (effect.period + Math.random()) * 100;
+                    size += Math.random().toFixed(1) - 0;
+                }
+                else if (shape._mark === 'line') {
+                    effectShape.style.x = shape.style.xStart - Offset;
+                    effectShape.style.y = shape.style.yStart - Offset;
+                    var distance = (shape.style.xStart - shape._x) * (shape.style.xStart - shape._x)
+                                    +
+                                   (shape.style.yStart - shape._y) * (shape.style.yStart - shape._y);
+                    duration = Math.round(Math.sqrt(Math.round(
+                                   distance * effect.period * effect.period
+                               )));
+                }
                 
                 self.effectList.push(effectShape);
                 zr.addShape(effectShape);
                 
-                var distance = (shape.style.xStart - shape._x) * (shape.style.xStart - shape._x)
-                                +
-                               (shape.style.yStart - shape._y) * (shape.style.yStart - shape._y);
-                var duration = Math.round(Math.sqrt(Math.round(
-                                   distance * effect.period * effect.period
-                               )));
-                if (shape._mark === 'line') {
+                if (shape._mark === 'point') {
+                    zr.modShape(
+                        shape.id, 
+                        { invisible : true},
+                        true
+                    );
+                    zr.modShape(
+                        effectShape.id, 
+                        {
+                            scale : [
+                                0.1, 0.1,
+                                effectShape.style.x + (effectShape.style.width) /2,
+                                effectShape.style.y + (effectShape.style.height) / 2
+                            ]
+                        },
+                        true
+                    );
+                    zr.animate(effectShape.id, '', true)
+                        .when(
+                            duration,
+                            {
+                                scale : [
+                                    size, size,
+                                    effectShape.style.x + (effectShape.style.width) /2,
+                                    effectShape.style.y + (effectShape.style.height) / 2
+                                ]
+                            }
+                        )
+                        .start();
+                }
+                else if (shape._mark === 'line') {
                     if (!shape.style.smooth) {
                         // 直线
                         zr.animate(effectShape.id, 'style', true)
@@ -1098,14 +1174,6 @@ define(function(require) {
                                 {
                                     x : shape._x - Offset,
                                     y : shape._y - Offset
-                                }
-                            )
-                            .when(
-                                duration + 200,
-                                {
-                                    r : size * 8,
-                                    width : size * 8,
-                                    height : size * 8
                                 }
                             )
                             .start();
@@ -1136,9 +1204,8 @@ define(function(require) {
             self.refresh && self.refresh();
         }
 
-        function clearAnimation() {
-            if (self.zr) {
-                //self.zr.clearAnimation();
+        function clearAnimationShape() {
+            if (self.zr && self.effectList.length > 0) {
                 self.zr.modLayer(
                     EFFECT_ZLEVEL, 
                     { motionBlur : false}
@@ -1152,7 +1219,7 @@ define(function(require) {
          * 清除图形数据，实例仍可用
          */
         function clear() {
-            clearAnimation();
+            clearAnimationShape();
             if (self.zr) {
                 self.zr.delShape(self.shapeList);
             }
@@ -1192,7 +1259,7 @@ define(function(require) {
         self.animationMark = animationMark;
         self.animationEffect = animationEffect;
         self.resize = resize;
-        self.clearAnimation = clearAnimation;
+        self.clearAnimationShape = clearAnimationShape;
         self.clear = clear;
         self.dispose = dispose;
     }

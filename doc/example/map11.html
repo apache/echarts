@@ -73,7 +73,7 @@
                     <textarea id="code" name="code">
 option = {
     backgroundColor: '#1b1b1b',
-    color: ['#32cd32','#32cd32','#32cd32','rgba(30,144,255,0.5)'],
+    color: ['gold','aqua','lime'],
     title : {
         text: '模拟迁徙',
         subtext:'数据纯属虚构',
@@ -112,6 +112,15 @@ option = {
             saveAsImage : true
         }
     },
+    dataRange: {
+        min : 0,
+        max : 100,
+        calculable : true,
+        color: ['red','orange','yellow','lightgreen'],
+        textStyle:{
+            color:'#fff'
+        }
+    },
     series : [
         {
             name: '全国',
@@ -134,7 +143,8 @@ option = {
                 symbol: ['none', 'none'],  
                 itemStyle : {
                     normal: {
-                        borderWidth:1
+                        borderWidth:1,
+                        borderColor:'rgba(30,144,255,0.5)'
                     }
                 },
                 data : [
@@ -414,9 +424,10 @@ option = {
             data:[],
             markLine : {
                 smooth:true,
-                symbol: ['arrow', 'arrow'],  
                 effect : {
-                    show: true
+                    show: true,
+                    size: 3,
+                    shadowColor: 'yellow'
                 },
                 itemStyle : {
                     normal: {
@@ -424,16 +435,40 @@ option = {
                     }
                 },
                 data : [
-                    [{name:'北京'},{name:'北海'}],
-                    [{name:'北京'},{name:'广州'}],
-                    [{name:'北京'},{name:'郑州'}],
-                    [{name:'北京'},{name:'上海'}],
-                    [{name:'北京'},{name:'长沙'}],
-                    [{name:'北京'},{name:'成都'}],
-                    [{name:'北京'},{name:'长春'}],
-                    [{name:'北京'},{name:'包头'}],
-                    [{name:'北京'},{name:'重庆'}],
-                    [{name:'北京'},{name:'常州'}]
+                    [{name:'北京',value:95},{name:'南宁'}],
+                    [{name:'北京',value:90},{name:'广州'}],
+                    [{name:'北京',value:80},{name:'大连'}],
+                    [{name:'北京',value:70},{name:'上海'}],
+                    [{name:'北京',value:60},{name:'南昌'}],
+                    [{name:'北京',value:50},{name:'拉萨'}],
+                    [{name:'北京',value:40},{name:'长春'}],
+                    [{name:'北京',value:30},{name:'包头'}],
+                    [{name:'北京',value:20},{name:'重庆'}],
+                    [{name:'北京',value:10},{name:'常州'}]
+                ]
+            },
+            markPoint : {
+                symbol:'emptyCircle',
+                effect : {
+                    show: true,
+                    shadowColor: 'yellow'
+                },
+                itemStyle:{
+                    normal:{
+                        label:{show:false}
+                    }
+                },
+                data : [
+                    {name:'南宁',value:95},
+                    {name:'广州',value:90},
+                    {name:'大连',value:80},
+                    {name:'上海',value:70},
+                    {name:'南昌',value:60},
+                    {name:'拉萨',value:50},
+                    {name:'长春',value:40},
+                    {name:'包头',value:30},
+                    {name:'重庆',value:20},
+                    {name:'常州',value:10}
                 ]
             }
         },
@@ -446,7 +481,8 @@ option = {
                 smooth:true,
                 effect : {
                     show: true,
-                    shadowColor : 'rgba(30,144,255,0.8)'
+                    size: 3,
+                    shadowColor: 'aqua'
                 },
                 itemStyle : {
                     normal: {
@@ -454,16 +490,16 @@ option = {
                     }
                 },
                 data : [
-                    [{name:'上海'},{name:'包头'}],
-                    [{name:'上海'},{name:'北海'}],
-                    [{name:'上海'},{name:'广州'}],
-                    [{name:'上海'},{name:'郑州'}],
-                    [{name:'上海'},{name:'长春'}],
-                    [{name:'上海'},{name:'重庆'}],
-                    [{name:'上海'},{name:'长沙'}],
-                    [{name:'上海'},{name:'北京'}],
-                    [{name:'上海'},{name:'丹东'}],
-                    [{name:'上海'},{name:'大连'}]
+                    [{name:'上海',value:95},{name:'包头'}],
+                    [{name:'上海',value:90},{name:'北海'}],
+                    [{name:'上海',value:80},{name:'广州'}],
+                    [{name:'上海',value:70},{name:'郑州'}],
+                    [{name:'上海',value:60},{name:'长春'}],
+                    [{name:'上海',value:50},{name:'重庆'}],
+                    [{name:'上海',value:40},{name:'长沙'}],
+                    [{name:'上海',value:30},{name:'北京'}],
+                    [{name:'上海',value:20},{name:'丹东'}],
+                    [{name:'上海',value:10},{name:'大连'}]
                 ]
             }
         },
@@ -476,7 +512,8 @@ option = {
                 smooth:true,
                 effect : {
                     show: true,
-                    shadowColor : 'rgba(0,255,0,0.8)'
+                    size: 3,
+                    shadowColor: 'lime'
                 },
                 itemStyle : {
                     normal: {
@@ -484,16 +521,16 @@ option = {
                     }
                 },
                 data : [
-                    [{name:'广州'},{name:'北海'}],
-                    [{name:'广州'},{name:'郑州'}],
-                    [{name:'广州'},{name:'长春'}],
-                    [{name:'广州'},{name:'重庆'}],
-                    [{name:'广州'},{name:'长沙'}],
-                    [{name:'广州'},{name:'成都'}],
-                    [{name:'广州'},{name:'常州'}],
-                    [{name:'广州'},{name:'大连'}],
-                    [{name:'广州'},{name:'福州'}],
-                    [{name:'广州'},{name:'海口'}]
+                    [{name:'广州',value:95},{name:'北海'}],
+                    [{name:'广州',value:90},{name:'太原'}],
+                    [{name:'广州',value:80},{name:'长春'}],
+                    [{name:'广州',value:70},{name:'重庆'}],
+                    [{name:'广州',value:60},{name:'西安'}],
+                    [{name:'广州',value:50},{name:'成都'}],
+                    [{name:'广州',value:40},{name:'常州'}],
+                    [{name:'广州',value:30},{name:'北京'}],
+                    [{name:'广州',value:20},{name:'福州'}],
+                    [{name:'广州',value:10},{name:'海口'}]
                 ]
             }
         }

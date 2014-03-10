@@ -786,6 +786,13 @@ define(function() {
             symbol: 'pin',         // 标注类型
             symbolSize: 10,       // 标注大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             //symbolRotate : null,// 标注旋转控制
+            effect : {
+                show: false,
+                period: 15,             // 运动周期，无单位，值越大越慢
+                scaleSize : 2           // 放大倍速 
+                // color : 'gold'
+                // shadowColor : 'rgba(255,215,0,0.8)'
+            },
             itemStyle: {
                 normal: {
                     // color: 各异，
@@ -823,6 +830,7 @@ define(function() {
             effect : {
                 show: false,
                 period: 15             // 运动周期，无单位，值越大越慢
+                // size : lineWidth * 2
                 // color : 'gold'
                 // shadowColor : 'rgba(255,215,0,0.8)'
             },

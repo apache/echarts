@@ -168,7 +168,7 @@ define(
             
             buildArrawPath : function (ctx, style, idx) {
                 var len = Math.round(style.pointListLength || style.pointList.length);
-                var symbolSize = style.symbolSize[idx];
+                var symbolSize = style.symbolSize[idx] * 2;
                 var xStart = style.pointList[0][0];
                 var xEnd = style.pointList[len - 1][0];
                 var yStart = style.pointList[0][1];
