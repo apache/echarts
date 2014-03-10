@@ -959,6 +959,7 @@ define(function (require) {
         function dispose() {
             if (_dataView) {
                 _dataView.dispose();
+                _dataView = null;
             }
 
             self.clear();
