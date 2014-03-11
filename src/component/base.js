@@ -522,21 +522,24 @@ define(function(require) {
             var effect;
             var zrWidth = self.zr.getWidth();
             var zrHeight = self.zr.getHeight();
+            var mergeData;
             for (var i = 0, l = data.length; i < l; i++) {
                 // 图例
                 if (legend) {
                     color = legend.getColor(serie.name);
                 }
+                // 组装一个mergeData
+                mergeData = self.deepMerge(data[i]);
                 // 值域
                 if (dataRange) {
-                    value = typeof data[i][0] != 'undefined'
-                            ? (typeof data[i][0].value != 'undefined'
-                              ? data[i][0].value
-                              : data[i][0])
+                    value = typeof mergeData != 'undefined'
+                            ? (typeof mergeData.value != 'undefined'
+                              ? mergeData.value
+                              : mergeData)
                             : '-';
                     color = isNaN(value) ? color : dataRange.getColor(value);
                     
-                    queryTarget = [data[i][0], mlOption];
+                    queryTarget = [mergeData, mlOption];
                     nColor = self.deepQuery(
                         queryTarget, 'itemStyle.normal.color'
                     ) || color;
@@ -558,7 +561,6 @@ define(function(require) {
                 data[i][0].value = typeof data[i][0].value != 'undefined'
                                    ? data[i][0].value : '';
                 
-                // 复用getSymbolShape
                 itemShape = getLineMarkShape(
                     mlOption,                   // markLine 
                     data[i],                    // 数据
@@ -570,7 +572,7 @@ define(function(require) {
                 );
                 
                 effect = self.deepMerge(
-                    [data[i][0], mlOption],
+                    [mergeData, mlOption],
                     'effect'
                 );
                 if (effect.show) {
@@ -1046,43 +1048,49 @@ define(function(require) {
                 }
                 //console.log(shape)
                 effect = shape.effect;
+                color = effect.color || shape.style.strokeColor || shape.style.color;
+                shadowColor = effect.shadowColor || color;
                 var effectShape;
                 switch (shape._mark) {
                     case 'point':
-                        color = effect.color || shape.style.strokeColor || shape.style.color;
-                        shadowColor = effect.shadowColor || color;
                         size = effect.scaleSize;
+                        shadowBlur = typeof effect.shadowBlur != 'undefined'
+                                     ? effect.shadowBlur : size;
                         effectShape = {
                             shape : shape.shape,
                             id : zr.newShapeId(),
                             zlevel : zlevel,
-                            scale:[1, 1, shape.style.x, shape.style.y],
-                            style : zrUtil.clone(shape.style),
+                            style : {
+                                brushType : 'stroke',
+                                iconType : shape.style.iconType,
+                                x : shadowBlur + 1, // 线宽
+                                y : shadowBlur + 1,
+                                width : shape.style.width * size,
+                                height : shape.style.height * size,
+                                lineWidth : 1,
+                                strokeColor : color,
+                                shadowColor : shadowColor,
+                                shadowBlur : shadowBlur
+                            },
                             draggable : false,
                             hoverable : false
                         }
-                        effectShape.style.x = 5;
-                        effectShape.style.y = 5;
-                        effectShape.style.shadowColor = shadowColor;
-                        effectShape.style.shadowBlur = 5;
                         break; 
                     case 'line':
-                        color = effect.color || shape.style.strokeColor || shape.style.color;
-                        shadowColor = effect.shadowColor || color;
-                        size = effect.size || (shape.style.lineWidth * 2);
+                        size = shape.style.lineWidth * effect.scaleSize;
+                        shadowBlur = typeof effect.shadowBlur != 'undefined'
+                                     ? effect.shadowBlur : size;
                         effectShape = {
                             shape : 'circle',
                             id : zr.newShapeId(),
                             zlevel : zlevel,
                             style : {
-                                x : size * 2,
-                                y : size * 2,
+                                x : shadowBlur,
+                                y : shadowBlur,
                                 r : size,
                                 color : color,
                                 shadowColor : shadowColor,
-                                shadowBlur : size * 2,
-                                shadowOffsetX : 0,
-                                shadowOffsetY : 0
+                                shadowBlur : shadowBlur
                             },
                             draggable : false,
                             hoverable : false
@@ -1090,36 +1098,43 @@ define(function(require) {
                         break;
                 }
                 var Offset;
-                if (canvasSupported) {
+                if (!canvasSupported) {
                     // 提高性能，换成image
                     if (shape._mark === 'point') {
                         effectShape.style.image = zr.shapeToImage(
                             effectShape, 
-                            effectShape.style.width + 10, 
-                            effectShape.style.height + 10
+                            effectShape.style.width + shadowBlur * 2 + 2, 
+                            effectShape.style.height + shadowBlur * 2 + 2
                         ).style.image;
-                        Offset = 5;
+                        Offset = (effectShape.style.width - shape.style.width) / 2;
                     }
                     else if (shape._mark === 'line') {
-                        effectShape.style.image = zr.shapeToImage(effectShape, size * 4, size * 4)
-                                                  .style.image;
-                        Offset = size * 2;
+                        effectShape.style.image = zr.shapeToImage(
+                            effectShape, 
+                            (size + shadowBlur) * 2,
+                            (size + shadowBlur) * 2
+                        ).style.image;
+                        Offset = shadowBlur;
                     }
                     effectShape.shape = 'image';
                     
                 }
                 else {
-                    Offset = 0;
+                    if (shape._mark === 'point') {
+                        Offset = (effectShape.style.width - shape.style.width) / 2;
+                    }
+                    else if (shape._mark === 'line') {
+                        Offset = 0;
+                    } 
                 }
                 
                 var duration;
                 // 改变坐标
                 effectShape.position = shape.position;
                 if (shape._mark === 'point') {
-                    effectShape.style.x = shape.style.x;
-                    effectShape.style.y = shape.style.y;
-                    duration = (effect.period + Math.random()) * 100;
-                    size += Math.random().toFixed(1) - 0;
+                    effectShape.style.x = shape.style.x - Offset;
+                    effectShape.style.y = shape.style.y - Offset;
+                    duration = (effect.period + Math.random() * 10) * 100;
                 }
                 else if (shape._mark === 'line') {
                     effectShape.style.x = shape.style.xStart - Offset;
@@ -1141,6 +1156,7 @@ define(function(require) {
                         { invisible : true},
                         true
                     );
+                    
                     zr.modShape(
                         effectShape.id, 
                         {
@@ -1157,7 +1173,7 @@ define(function(require) {
                             duration,
                             {
                                 scale : [
-                                    size, size,
+                                    1, 1,
                                     effectShape.style.x + (effectShape.style.width) /2,
                                     effectShape.style.y + (effectShape.style.height) / 2
                                 ]
