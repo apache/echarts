@@ -142,6 +142,8 @@
                                 <li><a href="#NameConnector">nameConnector</a></li>
                                 <li><a href="#ValueConnector">valueConnector</a></li>
                                 <li><a href="#Animation">animation</a></li>
+                                <li><a href="#AddDataAnimation">addDataAnimation</a></li>
+                                <li><a href="#AnimationThreshold">animationThreshold</a></li>
                                 <li><a href="#AnimationDuration">animationDuration</a></li>
                                 <li><a href="#AnimationEasing">animationEasing</a></li>
                             </ul>
@@ -913,7 +915,7 @@ require(['echarts'], function(ec){
                             <td> 默认只设定了图例文字颜色（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> selectedMode </td>
+                            <td> <b>{boolean}</b> selectedMode </td>
                             <td> true </td>
                             <td> 选择模式，默认开启图例开关 </td>
                         </tr>
@@ -1011,12 +1013,12 @@ require(['echarts'], function(ec){
                             <td> 分割段数，默认为5，为0时为线性渐变 </td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> calculable </td>
+                            <td> <b>{boolean}</b> calculable </td>
                             <td> false </td>
                             <td> 是否启用值域漫游，启用后无视splitNumber，值域显示为线性渐变 </td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> realtime </td>
+                            <td> <b>{boolean}</b> realtime </td>
                             <td> true </td>
                             <td> 值域漫游是否实时显示 </td>
                         </tr>
@@ -1047,7 +1049,7 @@ require(['echarts'], function(ec){
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> show </td>
+                            <td> <b>{boolean}</b> show </td>
                             <td> false </td>
                             <td> 显示策略，可选为：true（显示） | false（隐藏） </td>
                         </tr>
@@ -1107,7 +1109,7 @@ require(['echarts'], function(ec){
                             <td> 启用功能，目前支持feature见下</td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> showTitle </td>
+                            <td> <b>{boolean}</b> showTitle </td>
                             <td> true </td>
                             <td> 是否显示工具箱文字提示，默认启用</td>
                         </tr>
@@ -1199,12 +1201,12 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> show </td>
+                            <td> <b>{boolean}</b> show </td>
                             <td> true </td>
                             <td> 显示策略，可选为：true（显示） | false（隐藏） </td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> showContent </td>
+                            <td> <b>{boolean}</b> showContent </td>
                             <td> true </td>
                             <td> tooltip主体内容显示策略，只需tooltip触发事件或显示axisPointer而不需要显示内容时可配置该项为falase，<br/>可选为：true（显示） | false（隐藏） </td>
                         </tr>
@@ -1339,7 +1341,7 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> show </td>
+                            <td> <b>{boolean}</b> show </td>
                             <td> false </td>
                             <td> 是否显示，当show为true时则接管使用指定类目轴的全部系列数据，如不指定则接管全部直角坐标系数据。 </td>
                         </tr>
@@ -1409,12 +1411,12 @@ feature : {
                             <td> 数据缩放，选择结束比例，默认为100（%），到最后一个数据选择结束。 </td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> realtime </td>
+                            <td> <b>{boolean}</b> realtime </td>
                             <td> false </td>
                             <td> 缩放变化是否实时显示，建议性能较低的浏览器或数据量巨大时不启动实时效果。 </td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> zoomLock </td>
+                            <td> <b>{boolean}</b> zoomLock </td>
                             <td> false </td>
                             <td> 数据缩放锁，默认为false，当设置为true时选择区域不能伸缩，即(end - start)值保持不变，仅能做数据漫游。</td>
                         </tr>
@@ -1530,7 +1532,7 @@ feature : {
                             <td> 坐标轴名称文字样式，默认取全局配置，颜色跟随axisLine主色，可设</td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> boundaryGap </td>
+                            <td> <b>{boolean}</b> boundaryGap </td>
                             <td> true </td>
                             <td> 类目型 </td>
                             <td> 类目起始和结束两端空白策略，见下图，默认为true留空，false则顶头 </td>
@@ -1554,7 +1556,7 @@ feature : {
                             <td> 指定的最大值，eg: 100，默认无，会自动根据具体数值调整，指定后将忽略boundaryGap[1] </td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> scale </td>
+                            <td> <b>{boolean}</b> scale </td>
                             <td> false </td>
                             <td> 数值型 </td>
                             <td> 脱离0值比例，放大聚焦到最终_min，_max区间 </td>
@@ -1655,7 +1657,7 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> show </td>
+                            <td> <b>{boolean}</b> show </td>
                             <td> true </td>
                             <td> 通用 </td>
                             <td> 是否显示，默认为true，设为false后下面都没意义了 </td>
@@ -1678,7 +1680,7 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> show </td>
+                            <td> <b>{boolean}</b> show </td>
                             <td> false </td>
                             <td> 通用 </td>
                             <td> 是否显示，默认为false，设为true后下面为默认样式 </td>
@@ -1725,7 +1727,7 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> show </td>
+                            <td> <b>{boolean}</b> show </td>
                             <td> true </td>
                             <td> 通用 </td>
                             <td> 是否显示，默认为true，设为false后下面都没意义了 </td>
@@ -1794,7 +1796,7 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> show </td>
+                            <td> <b>{boolean}</b> show </td>
                             <td> true </td>
                             <td> 通用 </td>
                             <td> 是否显示，默认为true，设为false后下面都没意义了 </td>
@@ -1823,7 +1825,7 @@ feature : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> show </td>
+                            <td> <b>{boolean}</b> show </td>
                             <td> false </td>
                             <td> 通用 </td>
                             <td> 是否显示，默认为false，设为true后带如下默认样式 </td>
@@ -1903,7 +1905,7 @@ feature : {
                             <td> 数值轴两端空白策略，数组内数值代表百分比，[原始数据最小值与最终最小值之间的差额，原始数据最大值与最终最大值之间的差额] </td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> scale </td>
+                            <td> <b>{boolean}</b> scale </td>
                             <td> false </td>
                             <td> 脱离0值比例，放大聚焦到最终_min，_max区间 </td>
                         </tr>
@@ -2064,13 +2066,13 @@ indicator : [
                             <td> 标志图形旋转角度[-180,180]</td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> showAllSymbol </td>
+                            <td> <b>{boolean}</b> showAllSymbol </td>
                             <td> false </td>
                             <td> 折线图  </td>
                             <td> 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略），如需全部显示可把showAllSymbol设为true</td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> smooth </td>
+                            <td> <b>{boolean}</b> smooth </td>
                             <td> false </td>
                             <td> 折线图  </td>
                             <td> 平滑曲线显示</td>
@@ -2142,7 +2144,7 @@ indicator : [
                             </td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> hoverable </td>
+                            <td> <b>{boolean}</b> hoverable </td>
                             <td> true </td>
                             <td> 地图 </td>
                             <td> 非数值显示（如仅用于显示标注标线时），可以通过hoverable:false关闭区域悬浮高亮 </td>
@@ -2256,19 +2258,19 @@ indicator : [
                             <td> 数据排序（弦）， 可以取none, ascending, descending</td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> showScale </td>
+                            <td> <b>{boolean}</b> showScale </td>
                             <td> false </td>
                             <td> 弦图 </td>
                             <td> 是否显示刻度 </td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> showScaleText </td>
+                            <td> <b>{boolean}</b> showScaleText </td>
                             <td> false </td>
                             <td> 弦图 </td>
                             <td> 是否显示刻度文字 </td>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> clockWise </td>
+                            <td> <b>{boolean}</b> clockWise </td>
                             <td> false </td>
                             <td> 饼图，弦图 </td>
                             <td> 显示是否顺时针 </td>
@@ -2621,7 +2623,7 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> show </td>
+                            <td> <b>{boolean}</b> show </td>
                             <td> true </td>
                             <td> 标签显示策略，可选为：true（显示） | false（隐藏） </td>
                         </tr>
@@ -2652,7 +2654,7 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> <b>{Boolean}</b> show </td>
+                            <td> <b>{boolean}</b> show </td>
                             <td> true </td>
                             <td> 饼图标签视觉引导线显示策略，可选为：true（显示） | false（隐藏） </td>
                         </tr>
@@ -2892,7 +2894,7 @@ geoCoord : {
                     <P> {boolean | string} false，非IE8-支持渲染为图片，可设为true或指定图片格式（png | jpeg），渲染为图片后实例依然可用（如setOption，resize等），但各种交互失效</P>
                     
                     <h4>calculable<a name="Calculable"> </a></h4>
-                    <P> <b>{Boolean}</b> false，是否启用拖拽重计算特性，默认关闭</P>
+                    <P> <b>{boolean}</b> false，是否启用拖拽重计算特性，默认关闭</P>
 
                     <h4>calculableColor<a name="CalculableColor"> </a></h4>
                     <P> <b>{color}</b> 'rgba(255,165,0,0.6)'，拖拽重计算提示边框颜色</P>
@@ -2907,7 +2909,13 @@ geoCoord : {
                     <P> <b>{string}</b> ' : '，数据合并名字与数值间连接符</P>
 
                     <h4>animation<a name="Animation"> </a></h4>
-                    <P> <b>{Boolean}</b> true，是否启用图表初始化动画，默认开启，建议IE8-关闭</P>
+                    <P> <b>{boolean}</b> true，是否启用图表初始化动画，默认开启，建议IE8-关闭</P>
+
+                    <h4>addDataAnimation<a name="AddDataAnimation"> </a></h4>
+                    <P> <b>{boolean}</b> true，是否启用动态数据接口动画效果，默认开启，建议IE8-关闭</P>
+                    
+                    <h4>animationThreshold<a name="AnimationThreshold"> </a></h4>
+                    <P> <b>{number}</b> 2500，动画元素阀值，产生的图形原素超过2500不出动画，建议IE8-关闭</P>
 
                     <h4>animationDuration<a name="AnimationDuration"> </a></h4>
                     <P> <b>{number}</b> 2000，动画时长，单位ms，支持多级控制</P>
@@ -3011,7 +3019,7 @@ option.series = [
                         <tr>
                             <td> <b>{Function}</b></td>
                             <td> isSelected</td>
-                            <td> 图例开关相关，判断传入的名称当前是否处于开启状态。<br/>参数：<b>{string}</b> name （名称）<br/> 返回：<b>{Boolean}</b> true为开启，false为关闭</td>
+                            <td> 图例开关相关，判断传入的名称当前是否处于开启状态。<br/>参数：<b>{string}</b> name （名称）<br/> 返回：<b>{boolean}</b> true为开启，false为关闭</td>
                         </tr>
                         <tr>
                             <td> <b>{Function}</b></td>
