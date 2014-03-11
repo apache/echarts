@@ -156,8 +156,8 @@ define(function (require) {
                         textFont: font,
                         textBaseline: 'top'
                     },
-                    hoverable : legendOption.selectedMode,
-                    clickable : legendOption.selectedMode
+                    hoverable : !!legendOption.selectedMode,
+                    clickable : !!legendOption.selectedMode
                 };
 
                 if (legendOption.orient == 'vertical'
@@ -503,11 +503,19 @@ define(function (require) {
 
         function _legendSelected(param) {
             var itemName = param.target._name;
+            if (legendOption.selectedMode === 'single') {
+                for (var k in _selectedMap) {
+                    _selectedMap[k] = false;
+                }
+            }
             _selectedMap[itemName] = !_selectedMap[itemName];
             messageCenter.dispatch(
                 ecConfig.EVENT.LEGEND_SELECTED,
                 param.event,
-                {selected : _selectedMap}
+                {
+                    selected : _selectedMap,
+                    target : itemName
+                }
             );
         }
 

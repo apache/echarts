@@ -915,9 +915,9 @@ require(['echarts'], function(ec){
                             <td> 默认只设定了图例文字颜色（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
                         <tr>
-                            <td> <b>{boolean}</b> selectedMode </td>
+                            <td> <b>{boolean | string}</b> selectedMode </td>
                             <td> true </td>
-                            <td> 选择模式，默认开启图例开关 </td>
+                            <td> 选择模式，默认开启图例开关，可选single，multiple </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> selected </td>
@@ -2126,7 +2126,7 @@ indicator : [
                             <td> 选中是扇区偏移量 </td>
                         </tr>
                         <tr>
-                            <td> <b>{string}</b> selectedMode </td>
+                            <td> <b>{boolean | string}</b> selectedMode </td>
                             <td> null </td>
                             <td> 饼图，地图 </td>
                             <td> 选中模式，默认关闭，可选single，multiple </td>
