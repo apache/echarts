@@ -38,7 +38,11 @@ define(function(require) {
             key = new Date() - 0;
             dom.setAttribute(DOM_ATTRIBUTE_KEY, key);
         }
-        _instances[key] = _instances[key] || new Echarts(dom);
+        if (_instances[key]) {
+            // 同一个dom上多次init，自动释放已有实例
+            _instances[key].dispose();
+        }
+        _instances[key] = new Echarts(dom);
         _instances[key].id = key;
         _instances[key].setTheme(theme);
         
