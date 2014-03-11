@@ -175,7 +175,7 @@ define(
                 var yEnd = style.pointList[len - 1][1];
                 var delta = 0;
                 if (style.smooth === 'spline') {
-                    delta = 0.15;
+                    delta = 0.2; // 偏移0.2弧度
                 }
                 // 原谅我吧，这三角函数实在没想明白，只能这么笨了
                 var rotate = Math.atan(
@@ -248,63 +248,30 @@ define(
                     [style.xEnd, style.yEnd]
                 ];
                 if (style.smooth === 'spline') {
-                    pointList[2] = [pointList[1][0], pointList[1][1]];
-                    pointList[1] = this.getOffetPoint(pointList[0], pointList[2]);
+                    var lastPointX = pointList[1][0];
+                    var lastPointY = pointList[1][1];
+                    pointList[3] = [lastPointX, lastPointY];
+                    pointList[1] = this.getOffetPoint(pointList[0], pointList[3]);
+                    pointList[2] = this.getOffetPoint(pointList[3], pointList[0]);
                     pointList = this.smoothSpline(pointList, false);
+                    // 修正最后一点在插值产生的偏移
+                    pointList[pointList.length - 1] = [lastPointX, lastPointY];
                 }
                 return pointList;
             },
             
-            /*
-            getOffetPoint2 : function(sp, ep) {
-                var distance = ((sp[0] - ep[0]) * (sp[0] - ep[0]) + (sp[1] - ep[1]) * (sp[1] - ep[1]));
-                var delta = Math.round(Math.sqrt(distance) / 5);
-                //console.log(distance , delta);
-                var mp = [(sp[0] + ep[0]) / 2, (sp[1] + ep[1]) / 2];
-                var k; // 斜率
-                var angle;
-                if (sp[0] != ep[0] && sp[1] != ep[1]) {
-                    // 斜率存在
-                    k = (ep[1] - sp[1]) / (ep[0] - sp[0]);
-                    k = -1 / k; // 垂线斜率
-                    angle = Math.atan(k);
-                    //var HalfPI = Math.PI / 2;
-                    var dX = Math.abs(Math.cos(angle) * delta);
-                    var dY = Math.abs(Math.sin(angle) * delta);
-                    if (sp[0] <= ep[0] && sp[1] >= ep[1]) {
-                        // 1
-                        mp[0] -= dX;
-                        mp[1] -= dY;
-                    }
-                    else if (sp[0] >= ep[0] && sp[1] >= ep[1]){
-                        // 2
-                        mp[0] += dX;
-                        mp[1] -= dY;
-                    }
-                    else if (sp[0] >= ep[0] && sp[1] <= ep[1]){
-                        // 3
-                        mp[0] -= dX;
-                        mp[1] -= dY;
-                    }
-                    else if (sp[0] <= ep[0] && sp[1] <= ep[1]){
-                        // 4
-                        mp[0] += dX;
-                        mp[1] -= dY;
-                    }
-                    //console.log(angle,Math.cos(angle),Math.sin(angle))
-                    
-                }
-                return mp;
-            },
-            */
+            /**
+             * {Array} start point
+             * {Array} end point
+             */
             getOffetPoint : function(sp, ep) {
                 var distance = Math.sqrt(Math.round(
                         (sp[0] - ep[0]) * (sp[0] - ep[0]) + (sp[1] - ep[1]) * (sp[1] - ep[1])
-                    )) / 2;
+                    )) / 3;
                 //console.log(delta);
                 var mp = [sp[0], sp[1]];
                 var angle;
-                var deltaAngle = 0.15; // 偏移0.15弧度
+                var deltaAngle = 0.2; // 偏移0.2弧度
                 if (sp[0] != ep[0] && sp[1] != ep[1]) {
                     // 斜率存在
                     var k = (ep[1] - sp[1]) / (ep[0] - sp[0]);
