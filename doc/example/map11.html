@@ -140,9 +140,11 @@ option = {
             data:[],
             markLine : {
                 smooth:true,
-                symbol: ['none', 'none'],  
+                symbol: ['none', 'circle'],  
+                symbolSize : 1,
                 itemStyle : {
                     normal: {
+                        color:'#fff',
                         borderWidth:1,
                         borderColor:'rgba(30,144,255,0.5)'
                     }
@@ -448,7 +450,7 @@ option = {
                 ]
             },
             markPoint : {
-                symbol:'circle',
+                symbol:'emptyCircle',
                 symbolSize : function(v){
                     return 10 + v/10
                 },
@@ -506,7 +508,7 @@ option = {
                 ]
             },
             markPoint : {
-                symbol:'circle',
+                symbol:'emptyCircle',
                 symbolSize : function(v){
                     return 10 + v/10
                 },
@@ -564,7 +566,7 @@ option = {
                 ]
             },
             markPoint : {
-                symbol:'circle',
+                symbol:'emptyCircle',
                 symbolSize : function(v){
                     return 10 + v/10
                 },

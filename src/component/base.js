@@ -935,9 +935,12 @@ define(function(require) {
             if (_aniMap[self.type]) {
                 self.animationMark(ecConfig.animationDuration);
             }
+            else {
+                self.animationEffect();
+            }
         }
         
-        function animationMark(duration /*, easing*/) {
+        function animationMark(duration , easing) {
             var mlShape = require('zrender/shape').get('markLine');
             var x;
             var y;
@@ -960,7 +963,7 @@ define(function(require) {
                             duration,
                             {scale : [1, 1, x, y]}
                         )
-                        .start('QuinticOut');
+                        .start(easing || 'QuinticOut');
                 }
                 else if (self.shapeList[i]._mark == 'line') {
                     if (!self.shapeList[i].style.smooth) {
@@ -997,7 +1000,7 @@ define(function(require) {
                                     ]
                                 }
                             )
-                            .start('QuinticOut');
+                            .start(easing || 'QuinticOut');
                     }
                     else {
                         // 曲线动画
@@ -1017,11 +1020,12 @@ define(function(require) {
                                     pointListLength : self.shapeList[i].style.pointList.length
                                 }
                             )
-                            .start('QuinticOut');
+                            .start(easing || 'QuinticOut');
                     }
                 }
             }
             zr.refresh();
+            self.animationEffect();
         }
 
         function animationEffect() {
@@ -1051,6 +1055,7 @@ define(function(require) {
                 color = effect.color || shape.style.strokeColor || shape.style.color;
                 shadowColor = effect.shadowColor || color;
                 var effectShape;
+                var Offset;
                 switch (shape._mark) {
                     case 'point':
                         size = effect.scaleSize;
@@ -1062,7 +1067,10 @@ define(function(require) {
                             zlevel : zlevel,
                             style : {
                                 brushType : 'stroke',
-                                iconType : shape.style.iconType,
+                                iconType : (shape.style.iconType != 'pin' 
+                                            && shape.style.iconType != 'droplet')
+                                           ? shape.style.iconType
+                                           : 'circle',
                                 x : shadowBlur + 1, // 线宽
                                 y : shadowBlur + 1,
                                 width : shape.style.width * size,
@@ -1074,7 +1082,16 @@ define(function(require) {
                             },
                             draggable : false,
                             hoverable : false
+                        };
+                        if (canvasSupported) {  // 提高性能，换成image
+                            effectShape.style.image = zr.shapeToImage(
+                                effectShape, 
+                                effectShape.style.width + shadowBlur * 2 + 2, 
+                                effectShape.style.height + shadowBlur * 2 + 2
+                            ).style.image;
+                            effectShape.shape = 'image';
                         }
+                        Offset = (effectShape.style.width - shape.style.width) / 2;
                         break; 
                     case 'line':
                         size = shape.style.lineWidth * effect.scaleSize;
@@ -1094,38 +1111,20 @@ define(function(require) {
                             },
                             draggable : false,
                             hoverable : false
+                        };
+                        if (canvasSupported) {  // 提高性能，换成image
+                            effectShape.style.image = zr.shapeToImage(
+                                effectShape, 
+                                (size + shadowBlur) * 2,
+                                (size + shadowBlur) * 2
+                            ).style.image;
+                            effectShape.shape = 'image';
+                            Offset = shadowBlur;
+                        }
+                        else {
+                             Offset = 0;
                         }
                         break;
-                }
-                var Offset;
-                if (!canvasSupported) {
-                    // 提高性能，换成image
-                    if (shape._mark === 'point') {
-                        effectShape.style.image = zr.shapeToImage(
-                            effectShape, 
-                            effectShape.style.width + shadowBlur * 2 + 2, 
-                            effectShape.style.height + shadowBlur * 2 + 2
-                        ).style.image;
-                        Offset = (effectShape.style.width - shape.style.width) / 2;
-                    }
-                    else if (shape._mark === 'line') {
-                        effectShape.style.image = zr.shapeToImage(
-                            effectShape, 
-                            (size + shadowBlur) * 2,
-                            (size + shadowBlur) * 2
-                        ).style.image;
-                        Offset = shadowBlur;
-                    }
-                    effectShape.shape = 'image';
-                    
-                }
-                else {
-                    if (shape._mark === 'point') {
-                        Offset = (effectShape.style.width - shape.style.width) / 2;
-                    }
-                    else if (shape._mark === 'line') {
-                        Offset = 0;
-                    } 
                 }
                 
                 var duration;
@@ -1156,27 +1155,21 @@ define(function(require) {
                         { invisible : true},
                         true
                     );
-                    
+                    var centerX = effectShape.style.x + (effectShape.style.width) /2;
+                    var centerY = effectShape.style.y + (effectShape.style.height) / 2;
                     zr.modShape(
                         effectShape.id, 
                         {
-                            scale : [
-                                0.1, 0.1,
-                                effectShape.style.x + (effectShape.style.width) /2,
-                                effectShape.style.y + (effectShape.style.height) / 2
-                            ]
+                            scale : [0.1, 0.1, centerX, centerY]
                         },
                         true
                     );
+                    
                     zr.animate(effectShape.id, '', true)
                         .when(
                             duration,
                             {
-                                scale : [
-                                    1, 1,
-                                    effectShape.style.x + (effectShape.style.width) /2,
-                                    effectShape.style.y + (effectShape.style.height) / 2
-                                ]
+                                scale : [1, 1, centerX, centerY]
                             }
                         )
                         .start();
@@ -1212,7 +1205,6 @@ define(function(require) {
                         deferred.start();
                     }
                 }
-                //console.log(effectShape)
             }
         }
         
