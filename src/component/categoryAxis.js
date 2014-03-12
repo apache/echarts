@@ -168,27 +168,27 @@ define(function (require) {
         function _buildAxisLine() {
             var axShape = {
                 shape : 'line',
-                zlevel: _zlevelBase + 1,
-                hoverable: false
+                zlevel : _zlevelBase + 1,
+                hoverable : false
             };
             switch (option.position) {
-                case 'left':
+                case 'left' :
                     axShape.style = {
                         xStart : grid.getX(),
-                        yStart : grid.getY(),
+                        yStart : grid.getYend(),
                         xEnd : grid.getX(),
-                        yEnd : grid.getYend()
+                        yEnd : grid.getY()
                     };
                     break;
-                case 'right':
+                case 'right' :
                     axShape.style = {
                         xStart : grid.getXend(),
-                        yStart : grid.getY(),
+                        yStart : grid.getYend(),
                         xEnd : grid.getXend(),
-                        yEnd : grid.getYend()
+                        yEnd : grid.getY()
                     };
                     break;
-                case 'bottom':
+                case 'bottom' :
                     axShape.style = {
                         xStart : grid.getX(),
                         yStart : grid.getYend(),
@@ -196,7 +196,7 @@ define(function (require) {
                         yEnd : grid.getYend()
                     };
                     break;
-                case 'top':
+                case 'top' :
                     axShape.style = {
                         xStart : grid.getX(),
                         yStart : grid.getY(),
@@ -205,7 +205,20 @@ define(function (require) {
                     };
                     break;
             }
-
+            if (option.name !== '') {
+                axShape.style.text = option.name;
+                axShape.style.textPosition = option.nameLocation;
+                axShape.style.textFont = self.getFont(option.nameTextStyle);
+                if (option.nameTextStyle.align) {
+                    axShape.style.textAlign = option.nameTextStyle.align;
+                }
+                if (option.nameTextStyle.baseline) {
+                    axShape.style.textBaseline = option.nameTextStyle.baseline;
+                }
+                if (option.nameTextStyle.color) {
+                    axShape.style.textColor = option.nameTextStyle.color;
+                }
+            }
             axShape.style.strokeColor = option.axisLine.lineStyle.color;
             
             var lineWidth = option.axisLine.lineStyle.width;
@@ -400,9 +413,15 @@ define(function (require) {
                             text : _labelData[i].value || _labelData[i],
                             textFont : self.getFont(dataTextStyle),
                             textAlign : align,
-                            textBaseline : 'middle'
+                            textBaseline : (i === 0 && option.name !== '')
+                                           ? 'bottom'
+                                           : (i == (dataLength - 1) 
+                                              && option.name !== '')
+                                             ? 'top'
+                                             : 'middle'
                         }
                     };
+                    
                     if (rotate) {
                         axShape.rotation = [
                             rotate * Math.PI / 180,
@@ -496,71 +515,89 @@ define(function (require) {
             var axShape;
             var sAreaOption = option.splitArea;
             var color = sAreaOption.areaStyle.color;
-            color = color instanceof Array ? color : [color];
-            var colorLength = color.length;
-            //var data        = option.data;
-            var dataLength  = option.data.length;
-    
-            var onGap      = sAreaOption.onGap;
-            var optGap     = onGap 
-                             ? (getGap() / 2) 
-                             : typeof onGap == 'undefined'
-                                   ? (option.boundaryGap ? (getGap() / 2) : 0)
-                                   : 0;
-            if (option.position == 'bottom' || option.position == 'top') {
-                // 横向
-                var y = grid.getY();
-                var height = grid.getHeight();
-                var lastX = grid.getX();
-                var curX;
-
-                for (var i = 0; i <= dataLength; i += _interval) {
-                    curX = i < dataLength
-                           ? (getCoordByIndex(i) + optGap)
-                           : grid.getXend();
-                    axShape = {
-                        shape : 'rectangle',
-                        zlevel : _zlevelBase,
-                        hoverable : false,
-                        style : {
-                            x : lastX,
-                            y : y,
-                            width : curX - lastX,
-                            height : height,
-                            color : color[(i / _interval) % colorLength]
-                            // type : option.splitArea.areaStyle.type,
-                        }
-                    };
-                    self.shapeList.push(axShape);
-                    lastX = curX;
-                }
+            if (!(color instanceof Array)) {
+                // 非数组一律认为是单一颜色的字符串，单一颜色则用一个背景，颜色错误不负责啊！！！
+                axShape = {
+                    shape : 'rectangle',
+                    zlevel : _zlevelBase,
+                    hoverable : false,
+                    style : {
+                        x : grid.getX(),
+                        y : grid.getY(),
+                        width : grid.getWidth(),
+                        height : grid.getHeight(),
+                        color : color
+                        // type : option.splitArea.areaStyle.type,
+                    }
+                };
+                self.shapeList.push(axShape);
             }
             else {
-                // 纵向
-                var x = grid.getX();
-                var width = grid.getWidth();
-                var lastYend = grid.getYend();
-                var curY;
-
-                for (var i = 0; i <= dataLength; i += _interval) {
-                    curY = i < dataLength
-                           ? (getCoordByIndex(i) - optGap)
-                           : grid.getY();
-                    axShape = {
-                        shape : 'rectangle',
-                        zlevel : _zlevelBase,
-                        hoverable : false,
-                        style : {
-                            x : x,
-                            y : curY,
-                            width : width,
-                            height : lastYend - curY,
-                            color : color[(i / _interval) % colorLength]
-                            // type : option.splitArea.areaStyle.type
-                        }
-                    };
-                    self.shapeList.push(axShape);
-                    lastYend = curY;
+                // 多颜色
+                var colorLength = color.length;
+                var dataLength  = option.data.length;
+        
+                var onGap      = sAreaOption.onGap;
+                var optGap     = onGap 
+                                 ? (getGap() / 2) 
+                                 : typeof onGap == 'undefined'
+                                       ? (option.boundaryGap ? (getGap() / 2) : 0)
+                                       : 0;
+                if (option.position == 'bottom' || option.position == 'top') {
+                    // 横向
+                    var y = grid.getY();
+                    var height = grid.getHeight();
+                    var lastX = grid.getX();
+                    var curX;
+    
+                    for (var i = 0; i <= dataLength; i += _interval) {
+                        curX = i < dataLength
+                               ? (getCoordByIndex(i) + optGap)
+                               : grid.getXend();
+                        axShape = {
+                            shape : 'rectangle',
+                            zlevel : _zlevelBase,
+                            hoverable : false,
+                            style : {
+                                x : lastX,
+                                y : y,
+                                width : curX - lastX,
+                                height : height,
+                                color : color[(i / _interval) % colorLength]
+                                // type : option.splitArea.areaStyle.type,
+                            }
+                        };
+                        self.shapeList.push(axShape);
+                        lastX = curX;
+                    }
+                }
+                else {
+                    // 纵向
+                    var x = grid.getX();
+                    var width = grid.getWidth();
+                    var lastYend = grid.getYend();
+                    var curY;
+    
+                    for (var i = 0; i <= dataLength; i += _interval) {
+                        curY = i < dataLength
+                               ? (getCoordByIndex(i) - optGap)
+                               : grid.getY();
+                        axShape = {
+                            shape : 'rectangle',
+                            zlevel : _zlevelBase,
+                            hoverable : false,
+                            style : {
+                                x : x,
+                                y : curY,
+                                width : width,
+                                height : lastYend - curY,
+                                color : color[(i / _interval) % colorLength]
+                                // type : option.splitArea.areaStyle.type
+                            }
+                        };
+                        self.shapeList.push(axShape);
+                        lastYend = curY;
+                    }
                 }
             }
         }

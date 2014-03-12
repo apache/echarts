@@ -225,12 +225,7 @@ define(function (require) {
                                     ? textStyle.color(data[i]) : textStyle.color,
                             text : _valueLabel[i],
                             textFont : self.getFont(textStyle),
-                            textAlign : (i === 0 && option.name !== '')
-                                        ? 'left'
-                                        : (i == (dataLength - 1) 
-                                           && option.name !== '')
-                                          ? 'right'
-                                          : 'center',
+                            textAlign : 'center',
                             textBaseline : baseLine
                         }
                     };
