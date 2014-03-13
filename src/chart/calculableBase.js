@@ -140,9 +140,10 @@ define(function(require) {
                 if (self.selectedMap[itemName] != legendSelected[itemName]) {
                     // 有一项不一致都需要重绘
                     status.needRefresh = true;
-                    return;
                 }
+                self.selectedMap[itemName] = legendSelected[itemName];
             }
+            return;
         }
 
         /**

@@ -891,7 +891,7 @@ define(function() {
             RESIZE: 'resize',
             CLICK: 'click',
             HOVER: 'hover',
-            MOUSEWHEEL: 'mousewheel',
+            //MOUSEWHEEL: 'mousewheel',
             // -------业务交互逻辑
             DATA_CHANGED: 'dataChanged',
             DATA_ZOOM: 'dataZoom',
@@ -903,7 +903,8 @@ define(function() {
             DATA_VIEW_CHANGED: 'dataViewChanged',
             MAP_ROAM : 'mapRoam',
             // -------内部通信
-            TOOLTIP_HOVER: 'tooltipHover'
+            TOOLTIP_HOVER: 'tooltipHover',
+            TOOLTIP_IN_GRID: 'tooltipInGrid'
         },
         DRAG_ENABLE_TIME : 150,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
         // 默认标志图形类型列表

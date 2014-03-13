@@ -1130,6 +1130,10 @@ define(function (require) {
                         my
                     )
                 ) {
+                    !_event.connectTrigger && messageCenter.dispatch(
+                        ecConfig.EVENT.TOOLTIP_IN_GRID,
+                        _event
+                    );
                     _showingTicket = setTimeout(_tryShow, _showDelay);
                 }
                 else if (_needAxisTrigger 

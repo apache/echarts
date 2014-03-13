@@ -20,6 +20,7 @@ define(function(require) {
     var echarts = self;     // 提供内部反向使用静态方法；
     
     var _canvasSupported = !!document.createElement('canvas').getContext;
+    var _idBase = new Date() - 0;
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
@@ -35,7 +36,7 @@ define(function(require) {
         // dom与echarts实例映射索引
         var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
         if (!key) {
-            key = new Date() - 0;
+            key = _idBase++;
             dom.setAttribute(DOM_ATTRIBUTE_KEY, key);
         }
         if (_instances[key]) {
@@ -65,13 +66,13 @@ define(function(require) {
         var _themeConfig = require('zrender/tool/util').clone(ecConfig);
 
         var self = this;
-        var _id = '__ECharts__' + (new Date() - 0);
         var _zr;
         var _option;
         var _optionBackup;          // for各种change和zoom
         var _optionRestore;         // for restore;
         var _chartList;             // 图表实例
         var _messageCenter;         // Echarts层的消息中心，做zrender原始事件转换
+        var _connected = false;
 
         var _status = {         // 用于图表间通信
             dragIn : false,
@@ -109,35 +110,17 @@ define(function(require) {
             // 添加消息中心的事件分发器特性
             var zrEvent = require('zrender/tool/event');
             zrEvent.Dispatcher.call(_messageCenter);
-            _messageCenter.bind(
-                ecConfig.EVENT.LEGEND_SELECTED, _onlegendSelected
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.DATA_ZOOM, _ondataZoom
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.DATA_RANGE, _ondataRange
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.MAGIC_TYPE_CHANGED, _onmagicTypeChanged
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.DATA_VIEW_CHANGED, _ondataViewChanged
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.TOOLTIP_HOVER, _tooltipHover
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.RESTORE, _onrestore
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.REFRESH, _onrefresh
-            );
+            for (var e in ecConfig.EVENT) {
+                if (e != 'CLICK' && e != 'HOVER' && e != 'MAP_ROAM') {
+                    _messageCenter.bind(ecConfig.EVENT[e], _onevent);
+                }
+            }
+            
 
             var zrConfig = require('zrender/config');
             _zr.on(zrConfig.EVENT.CLICK, _onclick);
             _zr.on(zrConfig.EVENT.MOUSEOVER, _onhover);
-            _zr.on(zrConfig.EVENT.MOUSEWHEEL, _onmousewheel);
+            //_zr.on(zrConfig.EVENT.MOUSEWHEEL, _onmousewheel);
             _zr.on(zrConfig.EVENT.DRAGSTART, _ondragstart);
             _zr.on(zrConfig.EVENT.DRAGEND, _ondragend);
             _zr.on(zrConfig.EVENT.DRAGENTER, _ondragenter);
@@ -178,6 +161,112 @@ define(function(require) {
         }
 
         /**
+         * ECharts事件处理中心 
+         */
+        var _curEventType = null;
+        function _onevent(param){
+            param.__echarts_id__ = param.__echarts_id__ || self.id;
+            var fromMyself = true;
+            if (param.__echarts_id__ != self.id) {
+                // 来自其他联动图表的事件
+                fromMyself = false;
+            }
+            
+            if (!_curEventType) {
+                _curEventType = param.type;
+            }
+            
+            switch(param.type) {
+                case ecConfig.EVENT.LEGEND_SELECTED :
+                    _onlegendSelected(param);
+                    break;
+                case ecConfig.EVENT.DATA_ZOOM :
+                    if (!fromMyself) {
+                        var dz = self.component.dataZoom;
+                        if (dz) {
+                            dz.silence(true);
+                            dz.absoluteZoom(param.zoom);
+                            dz.silence(false);
+                        }
+                    }
+                    _ondataZoom(param);
+                    break;        
+                case ecConfig.EVENT.DATA_RANGE :
+                    fromMyself && _ondataRange(param);
+                    break;        
+                case ecConfig.EVENT.MAGIC_TYPE_CHANGED :
+                    if (!fromMyself) {
+                        var tb = self.component.toolbox;
+                        if (tb) {
+                            tb.silence(true);
+                            tb.setMagicType(param.magicType);
+                            tb.silence(false);
+                        }
+                    }
+                    _onmagicTypeChanged(param);
+                    break;        
+                case ecConfig.EVENT.DATA_VIEW_CHANGED :
+                    fromMyself && _ondataViewChanged(param);
+                    break;        
+                case ecConfig.EVENT.TOOLTIP_HOVER :
+                    fromMyself && _tooltipHover(param);
+                    break;        
+                case ecConfig.EVENT.RESTORE :
+                    _onrestore();
+                    break;        
+                case ecConfig.EVENT.REFRESH :
+                    fromMyself && _onrefresh(param);
+                    break;
+                // 鼠标同步
+                case ecConfig.EVENT.TOOLTIP_IN_GRID :
+                    if (fromMyself && _connected) {
+                        // 存在多图联动，修改参数分发
+                        var grid = self.component.grid;
+                        if (grid) {
+                            param.x = (param.event.zrenderX - grid.getX()) / grid.getWidth();
+                            param.y = (param.event.zrenderY - grid.getY()) / grid.getHeight();
+                        }
+                    }
+                    else if (!fromMyself) {
+                        // 只处理来自外部的鼠标同步
+                        
+                        var grid = self.component.grid;
+                        if (grid) {
+                            _zr.trigger(
+                                'mousemove',
+                                {
+                                    connectTrigger : true,
+                                    zrenderX : grid.getX() + param.x * grid.getWidth(),
+                                    zrenderY : grid.getY() + param.y * grid.getHeight()
+                                }
+                            );
+                        }
+                    }
+                    break;
+                /*
+                case ecConfig.EVENT.RESIZE :
+                case ecConfig.EVENT.DATA_CHANGED :
+                case ecConfig.EVENT.PIE_SELECTED :
+                case ecConfig.EVENT.MAP_SELECTED :
+                    break;
+                */
+            }
+            
+            // 多图联动，只做自己的一级事件分发，避免级联事件循环
+            if (_connected && fromMyself && _curEventType == param.type) { 
+                for (var c in _connected) {
+                    _connected[c].connectEventHandler(param);
+                }
+                // 分发完毕后复位
+                _curEventType = null;
+            }
+            
+            if (!fromMyself) {
+                _curEventType = null;
+            }
+        }
+        
+        /**
          * 点击事件，响应zrender事件，包装后分发到Echarts层
          */
         function _onclick(param) {
@@ -217,7 +306,6 @@ define(function(require) {
 
         /**
          * 滚轮回调，孤岛可计算特性
-         */
         function _onmousewheel(param) {
             _messageCenter.dispatch(
                 ecConfig.EVENT.MOUSEWHEEL,
@@ -225,6 +313,7 @@ define(function(require) {
                 _eventPackage(param.target)
             );
         }
+        */
 
         /**
          * dragstart回调，可计算特性实现
@@ -422,7 +511,7 @@ define(function(require) {
             self.refresh(param);
             _refreshInside = false;
         }
-
+        
         /**
          * 当前正在使用的option，还原可能存在的dataZoom
          */
@@ -726,7 +815,7 @@ define(function(require) {
 
             _zr.render();
             
-            var imgId = 'IMG' + _id;
+            var imgId = 'IMG' + self.id;
             var img = document.getElementById(imgId);
             if (magicOption.renderAsImage && _canvasSupported) {
                 // IE8- 不支持图片渲染形式
@@ -1195,7 +1284,7 @@ define(function(require) {
             }
             if (_chartList.length === 0) {
                 // 渲染为图片
-                var imgId = 'IMG' + _id;
+                var imgId = 'IMG' + self.id;
                 var img = document.getElementById(imgId);
                 if (img) {
                     return img.src;
@@ -1242,6 +1331,68 @@ define(function(require) {
         function un(eventName, eventListener) {
             _messageCenter.unbind(eventName, eventListener);
             return self;
+        }
+        
+        /**
+         * 多图联动 
+         * @param connectTarget{ECharts | Array <ECharts>} connectTarget 联动目标
+         */
+        function connect(connectTarget) {
+            if (!connectTarget) {
+                return self;
+            }
+            
+            if (!_connected) {
+                _connected = {};
+            }
+            
+            if (connectTarget instanceof Array) {
+                for (var i = 0, l = connectTarget.length; i < l; i++) {
+                    _connected[connectTarget[i].id] = connectTarget[i];
+                }
+            }
+            else {
+                _connected[connectTarget.id] = connectTarget;
+            }
+            
+            return self;
+        }
+        
+        /**
+         * 解除多图联动 
+         * @param connectTarget{ECharts | Array <ECharts>} connectTarget 解除联动目标
+         */
+        function disConnect(connectTarget) {
+            if (!connectTarget || !_connected) {
+                return self;
+            }
+            
+            if (connectTarget instanceof Array) {
+                for (var i = 0, l = connectTarget.length; i < l; i++) {
+                    delete _connected[connectTarget[i].id];
+                }
+            }
+            else {
+                delete _connected[connectTarget.id];
+            }
+            
+            for (var k in _connected) {
+                return self; // 非空
+            }
+            
+            // 空，转为标志位
+            _connected = false;
+            return self;
+        }
+        
+        /**
+         * 联动事件响应 
+         */
+        function connectEventHandler(param) {
+            if (param.__echarts_id__ != self.id) {
+                // 来自其他联动图表的事件
+                _onevent(param);
+            }
         }
         
         /**
@@ -1406,6 +1557,9 @@ define(function(require) {
         self.getImage =  getImage;
         self.on = on;
         self.un = un;
+        self.connect = connect;
+        self.disConnect = disConnect;
+        self.connectEventHandler = connectEventHandler;
         self.showLoading = showLoading;
         self.hideLoading = hideLoading;
         self.setTheme = setTheme;

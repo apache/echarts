@@ -587,7 +587,6 @@ define(function (require) {
                 }
             }
             legendOption = option.legend;
-            
             self.clear();
             _buildShape();
         }
@@ -679,6 +678,21 @@ define(function (require) {
         function getSelectedMap() {
             return _selectedMap;
         }
+        
+        /**
+         * 图例选择
+         */
+        function onlegendSelected(param, status) {
+            var legendSelected = param.selected;
+            for (var itemName in _selectedMap) {
+                if (_selectedMap[itemName] != legendSelected[itemName]) {
+                    // 有一项不一致都需要重绘
+                    status.needRefresh = true;
+                }
+                _selectedMap[itemName] = legendSelected[itemName];
+            }
+            return;
+        }
 
         self.init = init;
         self.refresh = refresh;
@@ -691,6 +705,7 @@ define(function (require) {
         self.setItemShape = setItemShape;
         self.isSelected = isSelected;
         self.getSelectedMap = getSelectedMap;
+        self.onlegendSelected = onlegendSelected;
 
         init(option);
     }
