@@ -29,6 +29,8 @@ define(function (require) {
         var _zlevelBase = self.getZlevelBase();
         var _magicType;
         var _magicMap;
+        var _isSilence = false;
+        
         var _iconList;
         var _iconShapeMap = {};
         var _itemGroupLocation;
@@ -774,6 +776,17 @@ define(function (require) {
             );
             return true;
         }
+        
+        function setMagicType(magicType) {
+            _resetMark();
+            _magicType = magicType;
+            
+            !_isSilence && messageCenter.dispatch(
+                ecConfig.EVENT.MAGIC_TYPE_CHANGED,
+                null,
+                {magicType : _magicType}
+            );
+        }
 
         // 重置备份还原状态等
         function reset(newOption) {
@@ -916,6 +929,10 @@ define(function (require) {
             return option;
         }
 
+        function silence(s) {
+            _isSilence = s;
+        }
+        
         function render(newOption, newComponent){
             _resetMark();
             _resetZoom();
@@ -988,6 +1005,8 @@ define(function (require) {
         self.resize = resize;
         self.hideDataView = hideDataView;
         self.getMagicOption = getMagicOption;
+        self.silence = silence;
+        self.setMagicType = setMagicType;
         self.reset = reset;
         self.refresh = refresh;
     }
