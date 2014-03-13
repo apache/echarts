@@ -781,19 +781,30 @@ define(
                 var min = indicator.value.min;
                 var alpha;
 
-                if (typeof value != 'number') {
+                if (typeof value == 'undefined') {
                     return center;
                 }
-                else {
-                    if ( max != min) {
-                        alpha = (value - min) / (max - min);
-                    }
-                    else {
-                        alpha = 0.5;
-                    }
-                    
-                    return _mapVector(vector, center, alpha);
+                
+                switch (value) {
+                    case 'min' :
+                        value = min;
+                        break;
+                    case 'max' :
+                        value = max;
+                        break;
+                    case 'center' :
+                        value = (max + min) / 2;
+                        break;
                 }
+                
+                if (max != min) {
+                    alpha = (value - min) / (max - min);
+                }
+                else {
+                    alpha = 0.5;
+                }
+                
+                return _mapVector(vector, center, alpha);
             }
 
             /**
