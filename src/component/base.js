@@ -553,7 +553,7 @@ define(function(require) {
                 }
                 
                 // 标准化一些参数
-                data[i][0].tooltip = {trigger:'item'}; // tooltip.trigger指定为item
+                data[i][0].tooltip = mergeData.tooltip || {trigger:'item'}; // tooltip.trigger指定为item
                 data[i][0].name = typeof data[i][0].name != 'undefined'
                                   ? data[i][0].name : '';
                 data[i][1].name = typeof data[i][1].name != 'undefined'
