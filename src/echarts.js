@@ -569,7 +569,7 @@ define(function(require) {
             if (magicOption.tooltip) {
                 var Tooltip = componentLibrary.get('tooltip');
                 tooltip = new Tooltip(
-                    _themeConfig, _messageCenter, _zr, magicOption, dom
+                    _themeConfig, _messageCenter, _zr, magicOption, dom, self
                 );
                 _chartList.push(tooltip);
                 self.component.tooltip = tooltip;
@@ -669,12 +669,7 @@ define(function(require) {
                 self.component.polar = polar;
             }
             
-            tooltip && tooltip.setComponent({
-                'grid' : grid,
-                'xAxis' : xAxis,
-                'yAxis' : yAxis,
-                'polar' : polar
-            });
+            tooltip && tooltip.setComponent();
 
             var ChartClass;
             var chartType;
