@@ -1143,6 +1143,10 @@ define(function (require) {
                     _showingTicket = setTimeout(_tryShow, _showDelay);
                 }
                 else {
+                    !_event.connectTrigger && messageCenter.dispatch(
+                        ecConfig.EVENT.TOOLTIP_OUT_GRID,
+                        _event
+                    );
                     _hidingTicket = setTimeout(_hide, _hideDelay);
                 }
             }
