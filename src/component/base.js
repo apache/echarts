@@ -1024,7 +1024,6 @@ define(function(require) {
                     }
                 }
             }
-            zr.refresh();
             self.animationEffect();
         }
 
@@ -1042,7 +1041,7 @@ define(function(require) {
             }
             
             var color;
-            var shadowColo;
+            var shadowColor;
             var size;
             var effect;
             for (var i = 0, l = self.shapeList.length; i < l; i++) {

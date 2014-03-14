@@ -797,7 +797,9 @@ define(function(require) {
             _island.render(magicOption);
 
             _toolbox.render(magicOption, {dataZoom: dataZoom});
-
+            
+            _zr.render();
+            
             if (magicOption.animation && !magicOption.renderAsImage) {
                 var len = _chartList.length;
                 while (len--) {
@@ -812,8 +814,6 @@ define(function(require) {
                     }
                 }
             }
-
-            _zr.render();
             
             var imgId = 'IMG' + self.id;
             var img = document.getElementById(imgId);
