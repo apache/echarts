@@ -98,7 +98,16 @@ option = {
         text: '2013年上半年上证指数'
     },
     tooltip : {
-        trigger: 'axis'
+        trigger: 'axis',
+        showDelay: 0,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
+        hideDelay: 0,             // 隐藏延迟，单位ms
+        formatter: function(params) {
+            var res = params[0][1];
+            res += '<br/>' + params[0][0];
+            res += '<br/>  开盘 : ' + params[0][2][0] + '  最高 : ' + params[0][2][3];
+            res += '<br/>  收盘 : ' + params[0][2][1] + '  最低 : ' + params[0][2][2];
+            return res;
+        }
     },
     legend: {
         data:['上证指数','成交金额(万)','虚拟数据']
@@ -108,9 +117,9 @@ option = {
         feature : {
             mark : true,
             dataZoom : true,
-            dataView : {readOnly: false},
             magicType:['line', 'bar'],
-            restore : true
+            restore : true,
+            saveAsImage : true
         }
     },
     dataZoom : {
@@ -255,7 +264,9 @@ option = {
 
 option2 = {
     tooltip : {
-        trigger: 'axis'
+        trigger: 'axis',
+        showDelay: 0,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
+        hideDelay: 0              // 隐藏延迟，单位ms
     },
     legend: {
         y : -30,
@@ -300,6 +311,7 @@ option2 = {
         {
             type : 'value',
             scale:true,
+            splitNumber: 3,
             boundaryGap: [0.05, 0.05],
             splitArea : {show : true}
         }
@@ -337,7 +349,9 @@ myChart2.setOption(option2);
 
 option3 = {
     tooltip : {
-        trigger: 'axis'
+        trigger: 'axis',
+        showDelay: 0,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
+        hideDelay: 0              // 隐藏延迟，单位ms
     },
     legend: {
         y : -30,

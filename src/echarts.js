@@ -155,7 +155,7 @@ define(function(require) {
             require('./component/polar');
             // 工具箱
             var Toolbox = componentLibrary.get('toolbox');
-            _toolbox = new Toolbox(_themeConfig, _messageCenter, _zr, dom);
+            _toolbox = new Toolbox(_themeConfig, _messageCenter, _zr, dom, self);
             
             _disposeChartList();
         }
@@ -163,7 +163,7 @@ define(function(require) {
         /**
          * ECharts事件处理中心 
          */
-        var _curEventType = null;
+        var _curEventType = null; // 破循环信号灯
         function _onevent(param){
             param.__echarts_id__ = param.__echarts_id__ || self.id;
             var fromMyself = true;
@@ -219,17 +219,9 @@ define(function(require) {
                     break;
                 // 鼠标同步
                 case ecConfig.EVENT.TOOLTIP_IN_GRID :
-                    if (fromMyself && _connected) {
-                        // 存在多图联动，修改参数分发
-                        var grid = self.component.grid;
-                        if (grid) {
-                            param.x = (param.event.zrenderX - grid.getX()) / grid.getWidth();
-                            param.y = (param.event.zrenderY - grid.getY()) / grid.getHeight();
-                        }
-                    }
-                    else if (!fromMyself) {
+                case ecConfig.EVENT.TOOLTIP_OUT_GRID :
+                    if (!fromMyself) {
                         // 只处理来自外部的鼠标同步
-                        
                         var grid = self.component.grid;
                         if (grid) {
                             _zr.trigger(
@@ -240,6 +232,14 @@ define(function(require) {
                                     zrenderY : grid.getY() + param.y * grid.getHeight()
                                 }
                             );
+                        }
+                    } 
+                    else if (_connected) {
+                        // 来自自己，并且存在多图联动，空间坐标映射修改参数分发
+                        var grid = self.component.grid;
+                        if (grid) {
+                            param.x = (param.event.zrenderX - grid.getX()) / grid.getWidth();
+                            param.y = (param.event.zrenderY - grid.getY()) / grid.getHeight();
                         }
                     }
                     break;
@@ -255,13 +255,13 @@ define(function(require) {
             // 多图联动，只做自己的一级事件分发，避免级联事件循环
             if (_connected && fromMyself && _curEventType == param.type) { 
                 for (var c in _connected) {
-                    _connected[c].connectEventHandler(param);
+                    _connected[c].connectedEventHandler(param);
                 }
                 // 分发完毕后复位
                 _curEventType = null;
             }
             
-            if (!fromMyself) {
+            if (!fromMyself) {  // 处理了完联动事件复位
                 _curEventType = null;
             }
         }
@@ -1267,6 +1267,13 @@ define(function(require) {
         }
 
         /**
+         * 获取当前dom 
+         */
+        function getDom() {
+            return dom;
+        }
+        
+        /**
          * 获取当前zrender实例，可用于添加额为的shape和深度控制 
          */
         function getZrender() {
@@ -1290,6 +1297,9 @@ define(function(require) {
                     return img.src;
                 }
             }
+            // 清除可能存在的tooltip元素
+            self.component.tooltip && self.component.tooltip.hideTip();
+                
             imgType = imgType || 'png';
             if (imgType != 'png' && imgType != 'jpeg') {
                 imgType = 'png';
@@ -1308,6 +1318,102 @@ define(function(require) {
         function getImage(imgType) {
             var imgDom = document.createElement('img');
             imgDom.src = getDataURL(imgType);
+            imgDom.title = (_optionRestore.title && _optionRestore.title.text)
+                           || 'ECharts';
+            return imgDom;
+        }
+        
+        /**
+         * 获取多图联动的Base64图片dataURL
+         * @param {string} imgType 图片类型，支持png|jpeg，默认为png
+         * @return imgDataURL
+         */
+        function getConnectedDataURL(imgType) {
+            if (!isConnected()) {
+                return getDataURL(imgType);
+            }
+            
+            var tempDom;
+            var domSize = domSize = [
+                dom.offsetLeft, dom.offsetTop, 
+                dom.offsetWidth, dom.offsetHeight
+            ];
+            var imgList = {
+                'self' : {
+                    img : self.getDataURL(imgType),
+                    left : domSize[0],
+                    top : domSize[1],
+                    right : domSize[0] + domSize[2],
+                    bottom : domSize[1] + domSize[3],
+                }
+            };
+            var minLeft = imgList.self.left;
+            var minTop = imgList.self.top;
+            var maxRight = imgList.self.right;
+            var maxBottom = imgList.self.bottom;
+            for (var c in _connected) {
+                tempDom = _connected[c].getDom();
+                domSize = [
+                    tempDom.offsetLeft, tempDom.offsetTop, 
+                    tempDom.offsetWidth, tempDom.offsetHeight
+                ];
+                imgList[c] = {
+                    img : _connected[c].getDataURL(imgType),
+                    left : domSize[0],
+                    top : domSize[1],
+                    right : domSize[0] + domSize[2],
+                    bottom : domSize[1] + domSize[3],
+                }
+                minLeft = Math.min(minLeft, imgList[c].left);
+                minTop = Math.min(minTop, imgList[c].top);
+                maxRight = Math.max(maxRight, imgList[c].right);
+                maxBottom = Math.max(maxBottom, imgList[c].bottom);
+            }
+            
+            var zrDom = document.createElement('div');
+            zrDom.style.position = 'absolute';
+            zrDom.style.left = '-4000px';
+            zrDom.style.width = (maxRight - minLeft) + 'px';
+            zrDom.style.height = (maxBottom - minTop) + 'px';
+            document.body.appendChild(zrDom);
+            
+            var zrImg = require('zrender').init(zrDom);
+            
+            for (var c in imgList) {
+                zrImg.addShape({
+                    shape:'image',
+                    style : {
+                        x : imgList[c].left - minLeft,
+                        y : imgList[c].top - minTop,
+                        image : imgList[c].img
+                    }
+                });
+            }
+            
+            zrImg.render();
+            var bgColor = _option.backgroundColor 
+                          && _option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
+                          ? '#fff' : _option.backgroundColor;
+                          
+            var image = zrImg.toDataURL('image/png', bgColor);
+            
+            setTimeout(function(){
+                zrImg.dispose();
+                zrDom.parentNode.removeChild(zrDom);
+                zrDom = null;
+            },100);
+            
+            return image;
+        }
+        
+        /**
+         * 获取多图联动的img
+         * @param {string} imgType 图片类型，支持png|jpeg，默认为png
+         * @return img dom
+         */
+        function getConnectedImage(imgType) {
+            var imgDom = document.createElement('img');
+            imgDom.src = getConnectedDataURL(imgType);
             imgDom.title = (_optionRestore.title && _optionRestore.title.text)
                            || 'ECharts';
             return imgDom;
@@ -1388,11 +1494,18 @@ define(function(require) {
         /**
          * 联动事件响应 
          */
-        function connectEventHandler(param) {
+        function connectedEventHandler(param) {
             if (param.__echarts_id__ != self.id) {
                 // 来自其他联动图表的事件
                 _onevent(param);
             }
+        }
+        
+        /**
+         * 是否存在多图联动 
+         */
+        function isConnected() {
+            return !!_connected
         }
         
         /**
@@ -1552,14 +1665,18 @@ define(function(require) {
         self.addData = addData;
         self.getOption = getOption;
         self.getSeries = getSeries;
+        self.getDom = getDom;
         self.getZrender = getZrender;
         self.getDataURL = getDataURL;
         self.getImage =  getImage;
+        self.getConnectedDataURL = getConnectedDataURL;
+        self.getConnectedImage = getConnectedImage;
         self.on = on;
         self.un = un;
         self.connect = connect;
         self.disConnect = disConnect;
-        self.connectEventHandler = connectEventHandler;
+        self.connectedEventHandler = connectedEventHandler;
+        self.isConnected = isConnected;
         self.showLoading = showLoading;
         self.hideLoading = hideLoading;
         self.setTheme = setTheme;

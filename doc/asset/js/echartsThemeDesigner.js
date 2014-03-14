@@ -163,7 +163,7 @@ function requireCallback (ec) {
                 style : {
                     x : domMain[i].offsetLeft - domGLeft + (i < 6 ? 0: domGWidth),
                     y : domMain[i].offsetTop - domGTop - (i < 6 ? 0: 1200),
-                    image : myChart[i].getImage()
+                    image : myChart[i].getDataURL()
                 }
             });
         }
@@ -172,7 +172,7 @@ function requireCallback (ec) {
         setTimeout(function() {
             var bgColor = theme.backgroundColor
                           && theme.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
-                              ? '#fff' : theme.backgroundColor;
+                          ? '#fff' : theme.backgroundColor;
             var image = _zr.toDataURL('image/png', bgColor);
             _zr.dispose();
             zrDom.parentNode.removeChild(zrDom);

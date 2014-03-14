@@ -11,8 +11,9 @@ define(function (require) {
      * @param {Object} messageCenter echart消息中心
      * @param {ZRender} zr zrender实例
      * @param {HtmlElement} dom 目标对象
+     * @param {ECharts} myChart 当前图表实例
      */
-    function Toolbox(ecConfig, messageCenter, zr, dom) {
+    function Toolbox(ecConfig, messageCenter, zr, dom, myChart) {
         var Base = require('./base');
         Base.call(this, ecConfig, zr);
 
@@ -688,12 +689,20 @@ define(function (require) {
             if (imgType != 'png' && imgType != 'jpeg') {
                 imgType = 'png';
             }
-            var bgColor = option.backgroundColor 
-                          && option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
-                              ? '#fff' : option.backgroundColor;
-            var image = zr.toDataURL(
-                'image/' + imgType, bgColor
-            ); 
+            
+            var image;
+            if (!myChart.isConnected()) {
+                image = zr.toDataURL(
+                    'image/' + imgType,
+                    option.backgroundColor 
+                    && option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
+                        ? '#fff' : option.backgroundColor
+                );
+            }
+            else {
+                image = myChart.getConnectedDataURL(imgType);
+            }
+             
             var downloadDiv = document.createElement('div');
             downloadDiv.id = '__echarts_download_wrap__';
             downloadDiv.style.cssText = 'position:fixed;'
