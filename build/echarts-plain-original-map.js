@@ -1192,8 +1192,16 @@ define('echarts/config',[],function() {
         
         markPoint : {
             symbol: 'pin',         // 标注类型
-            symbolSize: 10,       // 标注大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
-            //symbolRotate : null,// 标注旋转控制
+            symbolSize: 10,        // 标注大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            //symbolRotate : null, // 标注旋转控制
+            effect : {
+                show: false,
+                period: 15,             // 运动周期，无单位，值越大越慢
+                scaleSize : 2         // 放大倍数，以markPoint点size为基准
+                // color : 'gold',
+                // shadowColor : 'rgba(255,215,0,0.8)'
+                // shadowBlur : 0          // 炫光模糊
+            },
             itemStyle: {
                 normal: {
                     // color: 各异，
@@ -1227,6 +1235,15 @@ define('echarts/config',[],function() {
             symbolSize: [2, 4],
             // 标线起始和结束的symbol旋转控制
             //symbolRotate : null,
+            //smooth : false,
+            effect : {
+                show: false,
+                period: 15,             // 运动周期，无单位，值越大越慢
+                scaleSize : 2           // 放大倍数，以markLine线lineWidth为基准
+                // color : 'gold'
+                // shadowColor : 'rgba(255,215,0,0.8)'
+                // shadowBlur : lineWidth * 2      // 炫光模糊，默认等于scaleSize计算所得
+            },
             itemStyle: {
                 normal: {
                     // color: 各异,           // 标线主色，线色，symbol主色
@@ -1310,8 +1327,8 @@ define('echarts/config',[],function() {
         nameConnector: ' & ',
         valueConnector: ' : ',
         animation: true,
-        animationThreshold: 2500,       // 动画元素阀值，产生的图形原素超过2500不出动画
         addDataAnimation: true,         // 动态数据接口是否开启动画效果
+        animationThreshold: 2500,       // 动画元素阀值，产生的图形原素超过2500不出动画
         animationDuration: 2000,
         animationEasing: 'ExponentialOut'    //BounceOut
     };
@@ -3686,7 +3703,7 @@ define(
             var _y1 = area.yStart;
             var _x2 = area.xEnd;
             var _y2 = area.yEnd;
-            var _l = Math.max(area.lineWidth, 3);
+            var _l = Math.max(area.lineWidth, 5);
             var _a = 0;
             var _b = _x1;
 
@@ -3712,7 +3729,7 @@ define(
                     yStart : pointList[i][1],
                     xEnd : pointList[i + 1][0],
                     yEnd : pointList[i + 1][1],
-                    lineWidth : area.lineWidth
+                    lineWidth : Math.max(area.lineWidth, 10)
                 };
                 if (!_isInsideRectangle(
                         {
@@ -11052,7 +11069,13 @@ define(
             var animation = new Animation({
                 stage : {
                     update : function(){
-                        self.update(animatingShapes);
+                        var shapes = animatingShapes;
+                        for (var i = 0, l = shapes.length; i < l; i++) {
+                            storage.mod(shapes[i].id);
+                        }
+                        if (shapes.length > 0) {
+                            painter.refresh();
+                        }
                     }
                 }
             });
@@ -11197,14 +11220,14 @@ define(
                         return;
                     }
 
-                    if( typeof(shape.__aniCount) === 'undefined'){
+                    if (typeof(shape.__aniCount) === 'undefined') {
                         // 正在进行的动画记数
                         shape.__aniCount = 0;
                     }
-                    if( shape.__aniCount === 0 ){
+                    if (shape.__aniCount === 0) {
                         animatingShapes.push(shape);
                     }
-                    shape.__aniCount ++;
+                    shape.__aniCount++;
 
                     return animation.animate(target, {loop : loop})
                         .done(function() {
@@ -11316,6 +11339,17 @@ define(
                 handler.un(eventName, eventHandler);
                 return self;
             };
+            
+            /**
+             * 事件触发
+             * @param {string} event 事件名称，resize，hover，drag，etc~
+             * @param {event=} event event dom事件对象
+             */
+            self.trigger = function(eventName, event) {
+                handler.trigger(eventName, event);
+                return self;
+            };
+            
 
             /**
              * 清除当前ZRender下所有类图的数据和显示，clear后MVC和已绑定事件均还存在在，ZRender可用
@@ -11528,22 +11562,24 @@ define(
                 var e = _elements[shapeId];
                 if (e) {
                     _changedZlevel[e.zlevel] = true;    // 可能修改前后不在一层
-                    if (fast) {
-                        util.mergeFast(
-                            e,
-                            params,
-                            true,
-                            true
-                        );
-                    } else {
-                        util.merge(
-                            e,
-                            params,
-                            {
-                                'overwrite': true,
-                                'recursive': true
-                            }
-                        );
+                    if (params) {
+                        if (fast) {
+                            util.mergeFast(
+                                e,
+                                params,
+                                true,
+                                true
+                            );
+                        } else {
+                            util.merge(
+                                e,
+                                params,
+                                {
+                                    'overwrite': true,
+                                    'recursive': true
+                                }
+                            );
+                        }   
                     }
                     _mark(e);
                     _changedZlevel[e.zlevel] = true;    // 可能修改前后不在一层
@@ -12133,7 +12169,8 @@ define(
                         _zLevelConfig[zLevel] = {};
                     }
                     util.merge(_zLevelConfig[zLevel], config, {
-                        recursive : true
+                        recursive : true,
+                        overwrite : true
                     });
                 }
             }
@@ -13016,10 +13053,10 @@ define(
             }
 
             /**
-             * 比较不可控，先不开放了~
-             * 触发原生dom事件，用于自定义元素在顶层截获事件后触发zrender行为
+             * 事件触发
              * @param {string} event 事件名称，resize，hover，drag，etc~
              * @param {event=} event event dom事件对象
+             */
             function trigger(eventName, event) {
                 switch (eventName) {
                     case config.EVENT.RESIZE :
@@ -13040,9 +13077,11 @@ define(
                     case config.EVENT.MOUSEUP :
                         _mouseUpHandleru(event);
                         break;
+                    case config.EVENT.MOUSEOUT :
+                        _mouseOutHandler(event);
+                        break;
                 }
             }
-             */
 
             /**
              * 释放
@@ -13114,7 +13153,7 @@ define(
 
             self.on = on;
             self.un = un;
-            // self.trigger = trigger;
+            self.trigger = trigger;
             self.dispose = dispose;
 
             _init();
@@ -13735,45 +13774,44 @@ define(
              * @param {Object} style 样式
              */
             buildLinePath : function(ctx, style) {
-                //var symbolSize = style.symbolSize;
-                var xStart = style.xStart;
-                var xEnd = style.xEnd;
-                var yStart = style.yStart;
-                var yEnd = style.yEnd;
-                /*
-                if (xStart > xEnd) {
-                    xStart -= symbolSize[0];
-                    xEnd += symbolSize[1];
+                var pointList = style.pointList || this.getPointList(style);
+                style.pointList = pointList;
+                
+                if (typeof style.pointListLength == 'undefined') {
+                    style.pointListLength = pointList.length;
                 }
-                else {
-                    xStart += symbolSize[0];
-                    xEnd -= symbolSize[1];
-                }
-                if (yStart > yEnd) {
-                    yStart -= symbolSize[0];
-                    yEnd += symbolSize[1];
-                }
-                else {
-                    yStart += symbolSize[0];
-                    yEnd -= symbolSize[1];
-                }
-                */
+                var len = Math.round(style.pointListLength);
                 if (!style.lineType || style.lineType == 'solid') {
                     //默认为实线
-                    ctx.moveTo(xStart, yStart);
-                    ctx.lineTo(xEnd, yEnd);
+                    ctx.moveTo(pointList[0][0],pointList[0][1]);
+                    for (var i = 1; i < len; i++) {
+                        ctx.lineTo(pointList[i][0],pointList[i][1]);
+                    }
                 }
                 else if (style.lineType == 'dashed'
                         || style.lineType == 'dotted'
                 ) {
-                    var dashLength =(style.lineWidth || 1)  
+                    if (style.smooth !== 'spline') {
+                        // 直线
+                        var dashLength = (style.lineWidth || 1) 
                                      * (style.lineType == 'dashed' ? 5 : 1);
-                    this.dashedLineTo(
-                        ctx,
-                        xStart, yStart,
-                        xEnd, yEnd,
-                        dashLength
-                    );
+                        ctx.moveTo(pointList[0][0],pointList[0][1]);
+                        for (var i = 1; i < len; i++) {
+                            this.dashedLineTo(
+                                ctx,
+                                pointList[i - 1][0], pointList[i - 1][1],
+                                pointList[i][0], pointList[i][1],
+                                dashLength
+                            );
+                        }
+                    }
+                    else {
+                        // 曲线
+                        for (var i = 0; i < len - 1; i += 2) {
+                            ctx.moveTo(pointList[i][0],pointList[i][1]);
+                            ctx.lineTo(pointList[i + 1][0],pointList[i + 1][1]);
+                        }
+                    }
                 }
             },
 
@@ -13781,6 +13819,9 @@ define(
              * 标线始末标注 
              */
             brushSymbol : function(e, ctx, style, idx) {
+                if (style.symbol[idx] == 'none') {
+                    return;
+                }
                 ctx.save();
                 ctx.beginPath();
                 
@@ -13788,14 +13829,15 @@ define(
                 ctx.strokeStyle = style.symbolBorderColor;
                 // symbol
                 style.iconType = style.symbol[idx].replace('empty', '')
-                                                .toLowerCase();
+                                                  .toLowerCase();
                 if (style.symbol[idx].match('empty')) {
                     ctx.fillStyle = 'rgba(0, 0, 0, 0)';
                 }
                 
                 // symbolRotate
-                var x = idx === 0 ? style.xStart : style.xEnd;
-                var y = idx === 0 ? style.yStart : style.yEnd;
+                var len = Math.round(style.pointListLength || style.pointList.length);
+                var x = idx === 0 ? style.pointList[0][0] : style.pointList[len - 1][0];
+                var y = idx === 0 ? style.pointList[0][1] : style.pointList[len - 1][1];
                 var rotate = typeof style.symbolRotate[idx] != 'undefined'
                              ? (style.symbolRotate[idx] - 0) : 0;
                 var transform;
@@ -13836,11 +13878,16 @@ define(
             },
             
             buildArrawPath : function (ctx, style, idx) {
-                var symbolSize = style.symbolSize[idx];
-                var xStart = style.xStart;
-                var xEnd = style.xEnd;
-                var yStart = style.yStart;
-                var yEnd = style.yEnd;
+                var len = Math.round(style.pointListLength || style.pointList.length);
+                var symbolSize = style.symbolSize[idx] * 2;
+                var xStart = style.pointList[0][0];
+                var xEnd = style.pointList[len - 1][0];
+                var yStart = style.pointList[0][1];
+                var yEnd = style.pointList[len - 1][1];
+                var delta = 0;
+                if (style.smooth === 'spline') {
+                    delta = 0.2; // 偏移0.2弧度
+                }
                 // 原谅我吧，这三角函数实在没想明白，只能这么笨了
                 var rotate = Math.atan(
                         Math.abs((yEnd - yStart) / (xStart - xEnd)
@@ -13848,30 +13895,36 @@ define(
                 if (idx === 0) {
                     if (xEnd > xStart) {
                         if (yEnd > yStart) {
-                            rotate =  Math.PI * 2 - rotate;
+                            rotate =  Math.PI * 2 - rotate + delta;
+                        }
+                        else {
+                            rotate += delta;
                         }
                     }
                     else {
                         if (yEnd > yStart) {
-                            rotate += Math.PI;
+                            rotate += Math.PI - delta;
                         }
                         else {
-                            rotate = Math.PI - rotate;
+                            rotate = Math.PI - rotate - delta;
                         }
                     }
                 }
                 else {
                     if (xStart > xEnd) {
                         if (yStart > yEnd) {
-                            rotate =  Math.PI * 2 - rotate;
+                            rotate =  Math.PI * 2 - rotate + delta;
+                        }
+                        else {
+                            rotate += delta;
                         }
                     }
                     else {
                         if (yStart > yEnd) {
-                            rotate += Math.PI;
+                            rotate += Math.PI - delta;
                         }
                         else {
-                            rotate = Math.PI - rotate;
+                            rotate = Math.PI - rotate - delta;
                         }
                     }
                 }
@@ -13900,6 +13953,68 @@ define(
                 ctx.lineTo(x, y);
             },
             
+            getPointList : function(style) {
+                var pointList = [
+                    [style.xStart, style.yStart],
+                    [style.xEnd, style.yEnd]
+                ];
+                if (style.smooth === 'spline') {
+                    var lastPointX = pointList[1][0];
+                    var lastPointY = pointList[1][1];
+                    pointList[3] = [lastPointX, lastPointY];
+                    pointList[1] = this.getOffetPoint(pointList[0], pointList[3]);
+                    pointList[2] = this.getOffetPoint(pointList[3], pointList[0]);
+                    pointList = this.smoothSpline(pointList, false);
+                    // 修正最后一点在插值产生的偏移
+                    pointList[pointList.length - 1] = [lastPointX, lastPointY];
+                }
+                return pointList;
+            },
+            
+            /**
+             * {Array} start point
+             * {Array} end point
+             */
+            getOffetPoint : function(sp, ep) {
+                var distance = Math.sqrt(Math.round(
+                        (sp[0] - ep[0]) * (sp[0] - ep[0]) + (sp[1] - ep[1]) * (sp[1] - ep[1])
+                    )) / 3;
+                //console.log(delta);
+                var mp = [sp[0], sp[1]];
+                var angle;
+                var deltaAngle = 0.2; // 偏移0.2弧度
+                if (sp[0] != ep[0] && sp[1] != ep[1]) {
+                    // 斜率存在
+                    var k = (ep[1] - sp[1]) / (ep[0] - sp[0]);
+                    angle = Math.atan(k);
+                }
+                else if (sp[0] == ep[0]){
+                    // 垂直线
+                    angle = (sp[1] <= ep[1] ? 1 : -1) * Math.PI / 2;
+                }
+                else {
+                    // 水平线
+                    angle = 0;
+                }
+                var dX;
+                var dY;
+                if (sp[0] <= ep[0]) {
+                    angle -= deltaAngle;
+                    dX = Math.round(Math.cos(angle) * distance);
+                    dY = Math.round(Math.sin(angle) * distance);
+                    mp[0] += dX;
+                    mp[1] += dY;
+                }
+                else {
+                    angle += deltaAngle;
+                    dX = Math.round(Math.cos(angle) * distance);
+                    dY = Math.round(Math.sin(angle) * distance);
+                    mp[0] -= dX;
+                    mp[1] -= dY;
+                }
+                return mp;
+            },
+            
             /**
              * 返回矩形区域，用于局部刷新和文字定位
              * @param {Object} style
@@ -13917,7 +14032,9 @@ define(
             },
             
             isCover : function(e, x, y) {
-                return require('zrender/shape').get('line').isCover(e,x,y);
+                return require('zrender/shape').get(
+                    e.style.smooth !== 'spline' ? 'line' : 'brokenLine'
+                ).isCover(e,x,y);
             }
         };
 
@@ -14085,15 +14202,20 @@ define('echarts/util/ecData',[],function() {
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/base',['require','../util/ecData','zrender/tool/util'],function(require) {
+define('echarts/component/base',['require','../util/ecData','zrender/tool/util','zrender/shape'],function(require) {
     function Base(ecConfig, zr){
         var ecData = require('../util/ecData');
         var zrUtil = require('zrender/tool/util');
+        //var zrColor = require('zrender/tool/color');
         var self = this;
 
         self.zr =zr;
 
         self.shapeList = [];
+        self.effectList = [];
+        
+        var EFFECT_ZLEVEL = 7;
+        var canvasSupported = !G_vmlCanvasManager;
         
         var _aniMap = {};
         _aniMap[ecConfig.CHART_TYPE_LINE] = true;
@@ -14140,8 +14262,10 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
                 case ecConfig.COMPONENT_TYPE_TITLE :
                     return 6;
 
+                // EFFECT_ZLEVEL = 7;
+                
                 case ecConfig.COMPONENT_TYPE_TOOLTIP :
-                    return 7;
+                    return 8;
 
                 default :
                     return 0;
@@ -14484,6 +14608,7 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
             var queryTarget;
             var nColor;
             var eColor;
+            var effect;
             var zrWidth = self.zr.getWidth();
             var zrHeight = self.zr.getHeight();
             for (var i = 0, l = data.length; i < l; i++) {
@@ -14530,6 +14655,14 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
                     'rgba(0,0,0,0)',
                     'horizontal'                // 走向，用于默认文字定位
                 );
+                
+                effect = self.deepMerge(
+                    [data[i], mpOption],
+                    'effect'
+                );
+                if (effect.show) {
+                    itemShape.effect = effect;
+                }
                 
                 // 重新pack一下数据
                 ecData.pack(
@@ -14583,23 +14716,27 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
             var queryTarget;
             var nColor;
             var eColor;
+            var effect;
             var zrWidth = self.zr.getWidth();
             var zrHeight = self.zr.getHeight();
+            var mergeData;
             for (var i = 0, l = data.length; i < l; i++) {
                 // 图例
                 if (legend) {
                     color = legend.getColor(serie.name);
                 }
+                // 组装一个mergeData
+                mergeData = self.deepMerge(data[i]);
                 // 值域
                 if (dataRange) {
-                    value = typeof data[i][0] != 'undefined'
-                            ? (typeof data[i][0].value != 'undefined'
-                              ? data[i][0].value
-                              : data[i][0])
+                    value = typeof mergeData != 'undefined'
+                            ? (typeof mergeData.value != 'undefined'
+                              ? mergeData.value
+                              : mergeData)
                             : '-';
                     color = isNaN(value) ? color : dataRange.getColor(value);
                     
-                    queryTarget = [data[i][0], mlOption];
+                    queryTarget = [mergeData, mlOption];
                     nColor = self.deepQuery(
                         queryTarget, 'itemStyle.normal.color'
                     ) || color;
@@ -14613,7 +14750,7 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
                 }
                 
                 // 标准化一些参数
-                data[i][0].tooltip = {trigger:'item'}; // tooltip.trigger指定为item
+                data[i][0].tooltip = mergeData.tooltip || {trigger:'item'}; // tooltip.trigger指定为item
                 data[i][0].name = typeof data[i][0].name != 'undefined'
                                   ? data[i][0].name : '';
                 data[i][1].name = typeof data[i][1].name != 'undefined'
@@ -14621,7 +14758,6 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
                 data[i][0].value = typeof data[i][0].value != 'undefined'
                                    ? data[i][0].value : '';
                 
-                // 复用getSymbolShape
                 itemShape = getLineMarkShape(
                     mlOption,                   // markLine 
                     data[i],                    // 数据
@@ -14631,6 +14767,14 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
                     parsePercent(data[i][1].y, zrHeight),  // 坐标
                     color               // 默认symbol和color
                 );
+                
+                effect = self.deepMerge(
+                    [mergeData, mlOption],
+                    'effect'
+                );
+                if (effect.show) {
+                    itemShape.effect = effect;
+                }
                 
                 // 重新pack一下数据
                 ecData.pack(
@@ -14783,7 +14927,7 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
         }
         
         function getLineMarkShape(
-            mlOption,                  // 系列 
+            mlOption,               // 系列 
             data,                   // 数据
             xStart, yStart,         // 坐标
             xEnd, yEnd,             // 坐标
@@ -14849,6 +14993,7 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
             var itemShape = {
                 shape : 'markLine',
                 style : {
+                    smooth : mlOption.smooth ? 'spline' : false,
                     symbol : symbol, 
                     symbolSize : symbolSize,
                     symbolRotate : symbolRotate,
@@ -14872,7 +15017,7 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
                     symbolBorderColor: normal.borderColor
                                        || color
                                        || normal.color,
-                    symbolBorder: normal.borderWidth * 2
+                    symbolBorder: normal.borderWidth
                 },
                 highlightStyle : {
                     shadowColor : elineStyle.shadowColor,
@@ -14894,8 +15039,8 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
                                        || emphasis.color
                                        || normal.color,
                     symbolBorder: typeof emphasis.borderWidth == 'undefined'
-                                  ? (normal.borderWidth * 2 + 2)
-                                  : (emphasis.borderWidth * 2)
+                                  ? (normal.borderWidth + 2)
+                                  : (emphasis.borderWidth)
                 },
                 clickable : true
             };
@@ -14987,9 +15132,13 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
             if (_aniMap[self.type]) {
                 self.animationMark(ecConfig.animationDuration);
             }
+            else {
+                self.animationEffect();
+            }
         }
         
-        function animationMark(duration /*, easing*/) {
+        function animationMark(duration , easing) {
+            var mlShape = require('zrender/shape').get('markLine');
             var x;
             var y;
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
@@ -15011,44 +15160,273 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
                             duration,
                             {scale : [1, 1, x, y]}
                         )
-                        .start('QuinticOut');
+                        .start(easing || 'QuinticOut');
                 }
                 else if (self.shapeList[i]._mark == 'line') {
-                    zr.modShape(
-                        self.shapeList[i].id, 
-                        {
+                    if (!self.shapeList[i].style.smooth) {
+                        zr.modShape(
+                            self.shapeList[i].id, 
+                            {
+                                style : {
+                                    pointList : [
+                                        [
+                                            self.shapeList[i].style.xStart,
+                                            self.shapeList[i].style.yStart
+                                        ],
+                                        [
+                                            self.shapeList[i].style.xStart,
+                                            self.shapeList[i].style.yStart
+                                        ]
+                                    ]
+                                }
+                            },
+                            true
+                        );
+                        zr.animate(self.shapeList[i].id, 'style')
+                            .when(
+                                duration,
+                                {
+                                    pointList : [
+                                        [
+                                            self.shapeList[i].style.xStart,
+                                            self.shapeList[i].style.yStart
+                                        ],
+                                        [
+                                            x, y
+                                        ]
+                                    ]
+                                }
+                            )
+                            .start(easing || 'QuinticOut');
+                    }
+                    else {
+                        // 曲线动画
+                        zr.modShape(
+                            self.shapeList[i].id, 
+                            {
+                                style : {
+                                    pointListLength : 1
+                                }
+                            },
+                            true
+                        );
+                        zr.animate(self.shapeList[i].id, 'style')
+                            .when(
+                                duration,
+                                {
+                                    pointListLength : self.shapeList[i].style.pointList.length
+                                }
+                            )
+                            .start(easing || 'QuinticOut');
+                    }
+                }
+            }
+            zr.refresh();
+            self.animationEffect();
+        }
+
+        function animationEffect() {
+            clearAnimationShape();
+            var zlevel = EFFECT_ZLEVEL;
+            if (canvasSupported) {
+                zr.modLayer(
+                    zlevel,
+                    {
+                        motionBlur : true,
+                        lastFrameAlpha : 0.95
+                    }
+                );
+            }
+            
+            var color;
+            var shadowColo;
+            var size;
+            var effect;
+            for (var i = 0, l = self.shapeList.length; i < l; i++) {
+                shape = self.shapeList[i];
+                if (!shape._mark || !shape.effect || !shape.effect.show) {
+                    continue;
+                }
+                //console.log(shape)
+                effect = shape.effect;
+                color = effect.color || shape.style.strokeColor || shape.style.color;
+                shadowColor = effect.shadowColor || color;
+                var effectShape;
+                var Offset;
+                switch (shape._mark) {
+                    case 'point':
+                        size = effect.scaleSize;
+                        shadowBlur = typeof effect.shadowBlur != 'undefined'
+                                     ? effect.shadowBlur : size;
+                        effectShape = {
+                            shape : shape.shape,
+                            id : zr.newShapeId(),
+                            zlevel : zlevel,
                             style : {
-                                xEnd : self.shapeList[i].style.xStart,
-                                yEnd : self.shapeList[i].style.yStart
-                            }
+                                brushType : 'stroke',
+                                iconType : (shape.style.iconType != 'pin' 
+                                            && shape.style.iconType != 'droplet')
+                                           ? shape.style.iconType
+                                           : 'circle',
+                                x : shadowBlur + 1, // 线宽
+                                y : shadowBlur + 1,
+                                width : shape.style.width * size,
+                                height : shape.style.height * size,
+                                lineWidth : 1,
+                                strokeColor : color,
+                                shadowColor : shadowColor,
+                                shadowBlur : shadowBlur
+                            },
+                            draggable : false,
+                            hoverable : false
+                        };
+                        if (canvasSupported) {  // 提高性能，换成image
+                            effectShape.style.image = zr.shapeToImage(
+                                effectShape, 
+                                effectShape.style.width + shadowBlur * 2 + 2, 
+                                effectShape.style.height + shadowBlur * 2 + 2
+                            ).style.image;
+                            effectShape.shape = 'image';
+                        }
+                        Offset = (effectShape.style.width - shape.style.width) / 2;
+                        break; 
+                    case 'line':
+                        size = shape.style.lineWidth * effect.scaleSize;
+                        shadowBlur = typeof effect.shadowBlur != 'undefined'
+                                     ? effect.shadowBlur : size;
+                        effectShape = {
+                            shape : 'circle',
+                            id : zr.newShapeId(),
+                            zlevel : zlevel,
+                            style : {
+                                x : shadowBlur,
+                                y : shadowBlur,
+                                r : size,
+                                color : color,
+                                shadowColor : shadowColor,
+                                shadowBlur : shadowBlur
+                            },
+                            draggable : false,
+                            hoverable : false
+                        };
+                        if (canvasSupported) {  // 提高性能，换成image
+                            effectShape.style.image = zr.shapeToImage(
+                                effectShape, 
+                                (size + shadowBlur) * 2,
+                                (size + shadowBlur) * 2
+                            ).style.image;
+                            effectShape.shape = 'image';
+                            Offset = shadowBlur;
+                        }
+                        else {
+                             Offset = 0;
+                        }
+                        break;
+                }
+                
+                var duration;
+                // 改变坐标
+                effectShape.position = shape.position;
+                if (shape._mark === 'point') {
+                    effectShape.style.x = shape.style.x - Offset;
+                    effectShape.style.y = shape.style.y - Offset;
+                    duration = (effect.period + Math.random() * 10) * 100;
+                }
+                else if (shape._mark === 'line') {
+                    effectShape.style.x = shape.style.xStart - Offset;
+                    effectShape.style.y = shape.style.yStart - Offset;
+                    var distance = (shape.style.xStart - shape._x) * (shape.style.xStart - shape._x)
+                                    +
+                                   (shape.style.yStart - shape._y) * (shape.style.yStart - shape._y);
+                    duration = Math.round(Math.sqrt(Math.round(
+                                   distance * effect.period * effect.period
+                               )));
+                }
+                
+                self.effectList.push(effectShape);
+                zr.addShape(effectShape);
+                
+                if (shape._mark === 'point') {
+                    zr.modShape(
+                        shape.id, 
+                        { invisible : true},
+                        true
+                    );
+                    var centerX = effectShape.style.x + (effectShape.style.width) /2;
+                    var centerY = effectShape.style.y + (effectShape.style.height) / 2;
+                    zr.modShape(
+                        effectShape.id, 
+                        {
+                            scale : [0.1, 0.1, centerX, centerY]
                         },
                         true
                     );
-                    zr.animate(self.shapeList[i].id, 'style')
+                    
+                    zr.animate(effectShape.id, '', true)
                         .when(
                             duration,
                             {
-                                xEnd : x,
-                                yEnd : y
+                                scale : [1, 1, centerX, centerY]
                             }
                         )
-                        .start('QuinticOut');
+                        .start();
+                }
+                else if (shape._mark === 'line') {
+                    if (!shape.style.smooth) {
+                        // 直线
+                        zr.animate(effectShape.id, 'style', true)
+                            .when(
+                                duration,
+                                {
+                                    x : shape._x - Offset,
+                                    y : shape._y - Offset
+                                }
+                            )
+                            .start();
+                    }
+                    else {
+                        // 曲线
+                        var pointList = shape.style.pointList;
+                        var len = pointList.length;
+                        duration = Math.round(duration / len);
+                        var deferred = zr.animate(effectShape.id, 'style', true);
+                        for (var j = 0; j < len; j++) {
+                            deferred.when(
+                                duration * (j + 1),
+                                {
+                                    x : pointList[j][0] - Offset,
+                                    y : pointList[j][1] - Offset
+                                }
+                            );
+                        }
+                        deferred.start();
+                    }
                 }
             }
         }
-
+        
         function resize() {
             self.refresh && self.refresh();
         }
 
+        function clearAnimationShape() {
+            if (self.zr && self.effectList.length > 0) {
+                self.zr.modLayer(
+                    EFFECT_ZLEVEL, 
+                    { motionBlur : false}
+                );
+                self.zr.delShape(self.effectList);
+            }
+            self.effectList = [];
+        }
+        
         /**
          * 清除图形数据，实例仍可用
          */
         function clear() {
+            clearAnimationShape();
             if (self.zr) {
                 self.zr.delShape(self.shapeList);
-                self.zr.clearAnimation 
-                    && self.zr.clearAnimation();
             }
             self.shapeList = [];
         }
@@ -15059,6 +15437,7 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
         function dispose() {
             self.clear();
             self.shapeList = null;
+            self.effectList = null;
             self = null;
         }
 
@@ -15083,7 +15462,9 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util']
         self.subPixelOptimize = subPixelOptimize;
         self.animation = animation;
         self.animationMark = animationMark;
+        self.animationEffect = animationEffect;
         self.resize = resize;
+        self.clearAnimationShape = clearAnimationShape;
         self.clear = clear;
         self.dispose = dispose;
     }
@@ -16073,27 +16454,27 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
         function _buildAxisLine() {
             var axShape = {
                 shape : 'line',
-                zlevel: _zlevelBase + 1,
-                hoverable: false
+                zlevel : _zlevelBase + 1,
+                hoverable : false
             };
             switch (option.position) {
-                case 'left':
+                case 'left' :
                     axShape.style = {
                         xStart : grid.getX(),
-                        yStart : grid.getY(),
+                        yStart : grid.getYend(),
                         xEnd : grid.getX(),
-                        yEnd : grid.getYend()
+                        yEnd : grid.getY()
                     };
                     break;
-                case 'right':
+                case 'right' :
                     axShape.style = {
                         xStart : grid.getXend(),
-                        yStart : grid.getY(),
+                        yStart : grid.getYend(),
                         xEnd : grid.getXend(),
-                        yEnd : grid.getYend()
+                        yEnd : grid.getY()
                     };
                     break;
-                case 'bottom':
+                case 'bottom' :
                     axShape.style = {
                         xStart : grid.getX(),
                         yStart : grid.getYend(),
@@ -16101,7 +16482,7 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
                         yEnd : grid.getYend()
                     };
                     break;
-                case 'top':
+                case 'top' :
                     axShape.style = {
                         xStart : grid.getX(),
                         yStart : grid.getY(),
@@ -16110,7 +16491,20 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
                     };
                     break;
             }
-
+            if (option.name !== '') {
+                axShape.style.text = option.name;
+                axShape.style.textPosition = option.nameLocation;
+                axShape.style.textFont = self.getFont(option.nameTextStyle);
+                if (option.nameTextStyle.align) {
+                    axShape.style.textAlign = option.nameTextStyle.align;
+                }
+                if (option.nameTextStyle.baseline) {
+                    axShape.style.textBaseline = option.nameTextStyle.baseline;
+                }
+                if (option.nameTextStyle.color) {
+                    axShape.style.textColor = option.nameTextStyle.color;
+                }
+            }
             axShape.style.strokeColor = option.axisLine.lineStyle.color;
             
             var lineWidth = option.axisLine.lineStyle.width;
@@ -16305,9 +16699,15 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
                             text : _labelData[i].value || _labelData[i],
                             textFont : self.getFont(dataTextStyle),
                             textAlign : align,
-                            textBaseline : 'middle'
+                            textBaseline : (i === 0 && option.name !== '')
+                                           ? 'bottom'
+                                           : (i == (dataLength - 1) 
+                                              && option.name !== '')
+                                             ? 'top'
+                                             : 'middle'
                         }
                     };
+                    
                     if (rotate) {
                         axShape.rotation = [
                             rotate * Math.PI / 180,
@@ -16401,71 +16801,89 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
             var axShape;
             var sAreaOption = option.splitArea;
             var color = sAreaOption.areaStyle.color;
-            color = color instanceof Array ? color : [color];
-            var colorLength = color.length;
-            //var data        = option.data;
-            var dataLength  = option.data.length;
-    
-            var onGap      = sAreaOption.onGap;
-            var optGap     = onGap 
-                             ? (getGap() / 2) 
-                             : typeof onGap == 'undefined'
-                                   ? (option.boundaryGap ? (getGap() / 2) : 0)
-                                   : 0;
-            if (option.position == 'bottom' || option.position == 'top') {
-                // 横向
-                var y = grid.getY();
-                var height = grid.getHeight();
-                var lastX = grid.getX();
-                var curX;
-
-                for (var i = 0; i <= dataLength; i += _interval) {
-                    curX = i < dataLength
-                           ? (getCoordByIndex(i) + optGap)
-                           : grid.getXend();
-                    axShape = {
-                        shape : 'rectangle',
-                        zlevel : _zlevelBase,
-                        hoverable : false,
-                        style : {
-                            x : lastX,
-                            y : y,
-                            width : curX - lastX,
-                            height : height,
-                            color : color[(i / _interval) % colorLength]
-                            // type : option.splitArea.areaStyle.type,
-                        }
-                    };
-                    self.shapeList.push(axShape);
-                    lastX = curX;
-                }
+            if (!(color instanceof Array)) {
+                // 非数组一律认为是单一颜色的字符串，单一颜色则用一个背景，颜色错误不负责啊！！！
+                axShape = {
+                    shape : 'rectangle',
+                    zlevel : _zlevelBase,
+                    hoverable : false,
+                    style : {
+                        x : grid.getX(),
+                        y : grid.getY(),
+                        width : grid.getWidth(),
+                        height : grid.getHeight(),
+                        color : color
+                        // type : option.splitArea.areaStyle.type,
+                    }
+                };
+                self.shapeList.push(axShape);
             }
             else {
-                // 纵向
-                var x = grid.getX();
-                var width = grid.getWidth();
-                var lastYend = grid.getYend();
-                var curY;
-
-                for (var i = 0; i <= dataLength; i += _interval) {
-                    curY = i < dataLength
-                           ? (getCoordByIndex(i) - optGap)
-                           : grid.getY();
-                    axShape = {
-                        shape : 'rectangle',
-                        zlevel : _zlevelBase,
-                        hoverable : false,
-                        style : {
-                            x : x,
-                            y : curY,
-                            width : width,
-                            height : lastYend - curY,
-                            color : color[(i / _interval) % colorLength]
-                            // type : option.splitArea.areaStyle.type
-                        }
-                    };
-                    self.shapeList.push(axShape);
-                    lastYend = curY;
+                // 多颜色
+                var colorLength = color.length;
+                var dataLength  = option.data.length;
+        
+                var onGap      = sAreaOption.onGap;
+                var optGap     = onGap 
+                                 ? (getGap() / 2) 
+                                 : typeof onGap == 'undefined'
+                                       ? (option.boundaryGap ? (getGap() / 2) : 0)
+                                       : 0;
+                if (option.position == 'bottom' || option.position == 'top') {
+                    // 横向
+                    var y = grid.getY();
+                    var height = grid.getHeight();
+                    var lastX = grid.getX();
+                    var curX;
+    
+                    for (var i = 0; i <= dataLength; i += _interval) {
+                        curX = i < dataLength
+                               ? (getCoordByIndex(i) + optGap)
+                               : grid.getXend();
+                        axShape = {
+                            shape : 'rectangle',
+                            zlevel : _zlevelBase,
+                            hoverable : false,
+                            style : {
+                                x : lastX,
+                                y : y,
+                                width : curX - lastX,
+                                height : height,
+                                color : color[(i / _interval) % colorLength]
+                                // type : option.splitArea.areaStyle.type,
+                            }
+                        };
+                        self.shapeList.push(axShape);
+                        lastX = curX;
+                    }
+                }
+                else {
+                    // 纵向
+                    var x = grid.getX();
+                    var width = grid.getWidth();
+                    var lastYend = grid.getYend();
+                    var curY;
+    
+                    for (var i = 0; i <= dataLength; i += _interval) {
+                        curY = i < dataLength
+                               ? (getCoordByIndex(i) - optGap)
+                               : grid.getY();
+                        axShape = {
+                            shape : 'rectangle',
+                            zlevel : _zlevelBase,
+                            hoverable : false,
+                            style : {
+                                x : x,
+                                y : curY,
+                                width : width,
+                                height : lastYend - curY,
+                                color : color[(i / _interval) % colorLength]
+                                // type : option.splitArea.areaStyle.type
+                            }
+                        };
+                        self.shapeList.push(axShape);
+                        lastYend = curY;
+                    }
                 }
             }
         }
@@ -16884,12 +17302,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/tool/util','..
                                     ? textStyle.color(data[i]) : textStyle.color,
                             text : _valueLabel[i],
                             textFont : self.getFont(textStyle),
-                            textAlign : (i === 0 && option.name !== '')
-                                        ? 'left'
-                                        : (i == (dataLength - 1) 
-                                           && option.name !== '')
-                                          ? 'right'
-                                          : 'center',
+                            textAlign : 'center',
                             textBaseline : baseLine
                         }
                     };
@@ -19152,8 +19565,8 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
                         textFont: font,
                         textBaseline: 'top'
                     },
-                    hoverable : legendOption.selectedMode,
-                    clickable : legendOption.selectedMode
+                    hoverable : !!legendOption.selectedMode,
+                    clickable : !!legendOption.selectedMode
                 };
 
                 if (legendOption.orient == 'vertical'
@@ -19499,11 +19912,19 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
 
         function _legendSelected(param) {
             var itemName = param.target._name;
+            if (legendOption.selectedMode === 'single') {
+                for (var k in _selectedMap) {
+                    _selectedMap[k] = false;
+                }
+            }
             _selectedMap[itemName] = !_selectedMap[itemName];
             messageCenter.dispatch(
                 ecConfig.EVENT.LEGEND_SELECTED,
                 param.event,
-                {selected : _selectedMap}
+                {
+                    selected : _selectedMap,
+                    target : itemName
+                }
             );
         }
 
@@ -21084,8 +21505,9 @@ define('echarts/component/tooltip',['require','./base','../util/ecData','zrender
      * @param {ZRender} zr zrender实例
      * @param {Object} option 提示框参数
      * @param {HtmlElement} dom 目标对象
+     * @param {ECharts} myChart 当前图表实例
      */
-    function Tooltip(ecConfig, messageCenter, zr, option, dom) {
+    function Tooltip(ecConfig, messageCenter, zr, option, dom, myChart) {
         var Base = require('./base');
         Base.call(this, ecConfig, zr);
 
@@ -21462,14 +21884,14 @@ define('echarts/component/tooltip',['require','./base','../util/ecData','zrender
                     right = curCoord;
                 }
                 if (x - left < right - x) {
-                    dataIndex -= 1;
+                    dataIndex -= dataIndex != 0 ? 1 : 0;
                 }
                 else {
                     // 离右边近，看是否为最后一个
                     if (typeof categoryAxis.getNameByIndex(dataIndex)
                         == 'undefined'
                     ) {
-                        dataIndex = -1;
+                        dataIndex -= 1;
                     }
                 }
                 return dataIndex;
@@ -21492,14 +21914,14 @@ define('echarts/component/tooltip',['require','./base','../util/ecData','zrender
                 }
 
                 if (y - top > bottom - y) {
-                    dataIndex -= 1;
+                    dataIndex -= dataIndex != 0 ? 1 : 0;
                 }
                 else {
                     // 离上方边近，看是否为最后一个
                     if (typeof categoryAxis.getNameByIndex(dataIndex)
                         == 'undefined'
                     ) {
-                        dataIndex = -1;
+                        dataIndex -= 1;
                     }
                 }
                 return dataIndex;
@@ -22280,8 +22702,8 @@ define('echarts/component/tooltip',['require','./base','../util/ecData','zrender
             }
         }
 
-        function setComponent(newComponent) {
-            component = newComponent;
+        function setComponent() {
+            component = myChart.component;
             grid = component.grid;
             xAxis = component.xAxis;
             yAxis = component.yAxis;
@@ -22327,6 +22749,7 @@ define('echarts/component/tooltip',['require','./base','../util/ecData','zrender
         function onlegendSelected(param) {
             _selectedMap = param.selected;
         }
+        
         function _setSelectedMap() {
             if (option.legend && option.legend.selected) {
                 _selectedMap = option.legend.selected;
@@ -22335,6 +22758,7 @@ define('echarts/component/tooltip',['require','./base','../util/ecData','zrender
                 _selectedMap = {};
             }
         }
+        
         function _isSelected(itemName) {
             if (typeof _selectedMap[itemName] != 'undefined') {
                 return _selectedMap[itemName];
@@ -22343,7 +22767,228 @@ define('echarts/component/tooltip',['require','./base','../util/ecData','zrender
                 return true; // 没在legend里定义的都为true啊~
             }
         }
-
+        
+        /**
+         * 模拟tooltip hover方法
+         * {object} params  参数
+         *          {seriesIndex: 0, seriesName:'', dataInex:0} line、bar、scatter、k、radar
+         *          {seriesIndex: 0, seriesName:'', name:''} map、pie、chord
+         */
+        function showTip(params) {
+            if (!params) {
+                return;
+            }
+            
+            var seriesIndex;
+            var series = option.series;
+            if (typeof params.seriesIndex != 'undefined') {
+                seriesIndex = params.seriesIndex;
+            }
+            else {
+                var seriesName = params.seriesName;
+                for (var i = 0, l = series.length; i < l; i++) {
+                    if (series[i].name == seriesName) {
+                        seriesIndex = i;
+                        break;
+                    }
+                }
+            }
+            
+            var serie = series[seriesIndex];
+            if (typeof serie == 'undefined') {
+                return;
+            }
+            var chart = myChart.chart[serie.type];
+            var isAxisTrigger = self.deepQuery(
+                                    [serie, option], 'tooltip.trigger'
+                                ) == 'axis';
+            
+            if (!chart) {
+                return;
+            }
+            
+            if (isAxisTrigger) {
+                // axis trigger
+                var dataIndex = params.dataIndex;
+                switch (chart.type) {
+                    case ecConfig.CHART_TYPE_LINE :
+                    case ecConfig.CHART_TYPE_BAR :
+                    case ecConfig.CHART_TYPE_K :
+                        if (typeof xAxis == 'undefined' 
+                            || typeof yAxis == 'undefined'
+                            || serie.data.length <= dataIndex
+                        ) {
+                            return;
+                        }
+                        var xAxisIndex = serie.xAxisIndex || 0;
+                        var yAxisIndex = serie.yAxisIndex || 0;
+                        if (xAxis.getAxis(xAxisIndex).type 
+                            == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                        ) {
+                            // 横轴是类目
+                            _event = {
+                                zrenderX : xAxis.getAxis(xAxisIndex).getCoordByIndex(dataIndex),
+                                zrenderY : grid.getY() + (grid.getYend() - grid.getY()) / 4
+                            };
+                        }
+                        else {
+                            // 纵轴是类目
+                            _event = {
+                                zrenderX : grid.getX() + (grid.getXend() - grid.getX()) / 4,
+                                zrenderY : yAxis.getAxis(yAxisIndex).getCoordByIndex(dataIndex)
+                            };
+                        }
+                        _showAxisTrigger(
+                            xAxisIndex, 
+                            yAxisIndex,
+                            dataIndex
+                        );
+                        break;
+                    case ecConfig.CHART_TYPE_RADAR :
+                        if (typeof polar == 'undefined' 
+                            || serie.data[0].value.length <= dataIndex
+                        ) {
+                            return;
+                        }
+                        var polarIndex = serie.polarIndex || 0;
+                        var vector = polar.getVector(polarIndex, dataIndex, 'max')
+                        _event = {
+                            zrenderX : vector[0],
+                            zrenderY : vector[1]
+                        };
+                        _showPolarTrigger(
+                            polarIndex, 
+                            dataIndex
+                        );
+                        break;
+                }
+            }
+            else {
+                // item trigger
+                var shapeList = chart.shapeList;
+                var x;
+                var y;
+                switch (chart.type) {
+                    case ecConfig.CHART_TYPE_LINE :
+                    case ecConfig.CHART_TYPE_BAR :
+                    case ecConfig.CHART_TYPE_K :
+                    case ecConfig.CHART_TYPE_SCATTER :
+                        var dataIndex = params.dataIndex;
+                        for (var i = 0, l = shapeList.length; i < l; i++) {
+                            if (ecData.get(shapeList[i], 'seriesIndex') == seriesIndex
+                                && ecData.get(shapeList[i], 'dataIndex') == dataIndex
+                            ) {
+                                _curTarget = shapeList[i];
+                                x = shapeList[i].style.x;
+                                y = chart.type != ecConfig.CHART_TYPE_K 
+                                    ? shapeList[i].style.y : shapeList[i].style.y[0];
+                                break;
+                            }
+                        }
+                        break;
+                    case ecConfig.CHART_TYPE_RADAR :
+                        var dataIndex = params.dataIndex;
+                        for (var i = 0, l = shapeList.length; i < l; i++) {
+                            if (shapeList[i].shape == 'polygon'
+                                && ecData.get(shapeList[i], 'seriesIndex') == seriesIndex
+                                && ecData.get(shapeList[i], 'dataIndex') == dataIndex
+                            ) {
+                                _curTarget = shapeList[i];
+                                var vector = polar.getCenter(serie.polarIndex || 0)
+                                x = vector[0];
+                                y = vector[1];
+                                break;
+                            }
+                        }
+                        break;
+                    case ecConfig.CHART_TYPE_PIE :
+                        var name = params.name;
+                        for (var i = 0, l = shapeList.length; i < l; i++) {
+                            if (shapeList[i].shape == 'sector'
+                                && ecData.get(shapeList[i], 'seriesIndex') == seriesIndex
+                                && ecData.get(shapeList[i], 'name') == name
+                            ) {
+                                _curTarget = shapeList[i];
+                                var style = _curTarget.style;
+                                var midAngle = (style.startAngle + style.endAngle) 
+                                                / 2 * Math.PI / 180;
+                                x = _curTarget.style.x + Math.cos(midAngle) * style.r / 1.5;
+                                y = _curTarget.style.y - Math.sin(midAngle) * style.r / 1.5;
+                                break;
+                            }
+                        }
+                        break;
+                    case ecConfig.CHART_TYPE_MAP :
+                        var name = params.name;
+                        var mapType = serie.mapType;
+                        for (var i = 0, l = shapeList.length; i < l; i++) {
+                            if (shapeList[i].shape == 'text'
+                                && shapeList[i]._mapType == mapType
+                                && shapeList[i].style._text == name
+                            ) {
+                                _curTarget = shapeList[i];
+                                x = _curTarget.style.x + _curTarget.position[0];
+                                y = _curTarget.style.y + _curTarget.position[1];
+                                break;
+                            }
+                        }
+                        break;
+                    case ecConfig.CHART_TYPE_CHORD:
+                        var name = params.name;
+                        for (var i = 0, l = shapeList.length; i < l; i++) {
+                            if (shapeList[i].shape == 'sector'
+                                && ecData.get(shapeList[i], 'name') == name
+                            ) {
+                                _curTarget = shapeList[i];
+                                var style = _curTarget.style;
+                                var midAngle = (style.startAngle + style.endAngle) 
+                                                / 2 * Math.PI / 180;
+                                x = _curTarget.style.x + Math.cos(midAngle) * (style.r - 2);
+                                y = _curTarget.style.y - Math.sin(midAngle) * (style.r - 2);
+                                zr.trigger(
+                                    zrConfig.EVENT.MOUSEMOVE,
+                                    {
+                                        zrenderX : x,
+                                        zrenderY : y
+                                    }
+                                );
+                                return;
+                            }
+                        }
+                        break;
+                    case ecConfig.CHART_TYPE_FORCE:
+                        var name = params.name;
+                        for (var i = 0, l = shapeList.length; i < l; i++) {
+                            if (shapeList[i].shape == 'circle'
+                                && ecData.get(shapeList[i], 'name') == name
+                            ) {
+                                _curTarget = shapeList[i];
+                                x = _curTarget.position[0];
+                                y = _curTarget.position[1];
+                                break;
+                            }
+                        }
+                        break;
+                }
+                if (typeof x != 'undefined' && typeof y != 'undefined') {
+                    _event = {
+                        zrenderX : x,
+                        zrenderY : y
+                    };
+                    zr.addHoverShape(_curTarget);
+                    zr.refreshHover();
+                    _showItemTrigger();
+                }
+            }
+        }
+        
+        /**
+         * 关闭，公开接口 
+         */
+        function hideTip() {
+            _hide();
+        }
+        
         function init(newOption, newDom) {
             option = newOption;
             dom = newDom;
@@ -22461,6 +23106,8 @@ define('echarts/component/tooltip',['require','./base','../util/ecData','zrender
         self.ontooltipHover = ontooltipHover;
         self.ondragend = ondragend;
         self.onlegendSelected = onlegendSelected;
+        self.showTip = showTip;
+        self.hideTip = hideTip;
         init(option, dom);
     }
 
@@ -23429,6 +24076,7 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
         function dispose() {
             if (_dataView) {
                 _dataView.dispose();
+                _dataView = null;
             }
 
             self.clear();
@@ -24754,19 +25402,30 @@ define(
                 var min = indicator.value.min;
                 var alpha;
 
-                if (typeof value != 'number') {
+                if (typeof value == 'undefined') {
                     return center;
                 }
-                else {
-                    if ( max != min) {
-                        alpha = (value - min) / (max - min);
-                    }
-                    else {
-                        alpha = 0.5;
-                    }
-                    
-                    return _mapVector(vector, center, alpha);
+                
+                switch (value) {
+                    case 'min' :
+                        value = min;
+                        break;
+                    case 'max' :
+                        value = max;
+                        break;
+                    case 'center' :
+                        value = (max + min) / 2;
+                        break;
                 }
+                
+                if (max != min) {
+                    alpha = (value - min) / (max - min);
+                }
+                else {
+                    alpha = 0.5;
+                }
+                
+                return _mapVector(vector, center, alpha);
             }
 
             /**
@@ -24938,7 +25597,11 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
             key = new Date() - 0;
             dom.setAttribute(DOM_ATTRIBUTE_KEY, key);
         }
-        _instances[key] = _instances[key] || new Echarts(dom);
+        if (_instances[key]) {
+            // 同一个dom上多次init，自动释放已有实例
+            _instances[key].dispose();
+        }
+        _instances[key] = new Echarts(dom);
         _instances[key].id = key;
         _instances[key].setTheme(theme);
         
@@ -24961,7 +25624,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
         var _themeConfig = require('zrender/tool/util').clone(ecConfig);
 
         var self = this;
-        var _id = '__ECharts__' + new Date() - 0;
+        var _id = '__ECharts__' + (new Date() - 0);
         var _zr;
         var _option;
         var _optionBackup;          // for各种change和zoom
@@ -25465,7 +26128,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
             if (magicOption.tooltip) {
                 var Tooltip = componentLibrary.get('tooltip');
                 tooltip = new Tooltip(
-                    _themeConfig, _messageCenter, _zr, magicOption, dom
+                    _themeConfig, _messageCenter, _zr, magicOption, dom, self
                 );
                 _chartList.push(tooltip);
                 self.component.tooltip = tooltip;
@@ -25565,12 +26228,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
                 self.component.polar = polar;
             }
             
-            tooltip && tooltip.setComponent({
-                'grid' : grid,
-                'xAxis' : xAxis,
-                'yAxis' : yAxis,
-                'polar' : polar
-            });
+            tooltip && tooltip.setComponent();
 
             var ChartClass;
             var chartType;
@@ -25714,6 +26372,8 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
                 _toolbox.refresh(magicOption);
             }
             
+            // 停止动画
+            _zr.clearAnimation();
             // 先来后到，安顺序刷新各种图表，图表内部refresh优化检查magicOption，无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
                 _chartList[i].refresh && _chartList[i].refresh(magicOption);
@@ -25725,6 +26385,8 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
          * 释放图表实例
          */
         function _disposeChartList() {
+            // 停止动画
+            _zr.clearAnimation();
             var len = _chartList.length;
             while (len--) {
                 _chartList[len]
@@ -26247,13 +26909,15 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
                 _render(_option);
                 return self;
             }
+            // 停止动画
+            _zr.clearAnimation();
+            _island.resize();
+            _toolbox.resize();
             // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
             // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
             for (var i = 0, l = _chartList.length; i < l; i++) {
                 _chartList[i].resize && _chartList[i].resize();
             }
-            _island.resize();
-            _toolbox.resize();
             _zr.refresh();
             _messageCenter.dispatch(
                 ecConfig.EVENT.RESIZE
@@ -26285,6 +26949,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
             _messageCenter.unbind();
             self.clear();
             _zr.dispose();
+            _zr = null;
             self = null;
             return;
         }
@@ -33093,6 +33758,10 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
          */
         function _mapDataCallback(mt, vd, ms) {
             return function(md) {
+                if (!self) {
+                    // 异步地图数据回调时有可能实例已经被释放
+                    return;
+                }
                 // 缓存这份数据
                 if (mt.indexOf('|') != -1) {
                     // 子地图，加工一份新的mapData
@@ -33128,6 +33797,9 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                         if (option.animation && !option.renderAsImage) {
                             self.animationMark(option.animationDuration);
                         }
+                    }
+                    else {
+                        self.animationEffect();
                     }
                 }
             };
@@ -33615,8 +34287,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                         color : style.textColor,
                         strokeColor : 'rgba(0,0,0,0)',
                         textFont : style.textFont
-                    },
-                    onmouseover : self.shapeHandler.onmouseover
+                    }
                 };
                 textShape._style = zrUtil.clone(textShape.style);
                 textShape.highlightStyle = zrUtil.clone(textShape.style);
@@ -33700,8 +34371,15 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                 }
                 
                 if (typeof data.hoverable != 'undefined') {
-                    textShape.onmouseover = null;
+                    // 数据级优先
                     textShape.hoverable = shape.hoverable = data.hoverable;
+                    if (data.hoverable) {
+                        textShape.onmouseover = self.shapeHandler.onmouseover;
+                    }
+                }
+                else if (_hoverable[mapType]){
+                    // 系列级，补充一个关联响应
+                    textShape.onmouseover = self.shapeHandler.onmouseover;
                 }
                 
                 // console.log(name,shape);
@@ -33921,12 +34599,16 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                     zr.modShape(self.shapeList[i].id, mod, true);
                 }
             }
+            
             messageCenter.dispatch(
                 ecConfig.EVENT.MAP_ROAM,
                 param.event,
                 {type : 'move'}
             );
+            
+            self.clearAnimationShape();
             zr.refresh();
+            
             _justMove = true;
             zrEvent.stop(event);
         }
@@ -33937,6 +34619,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
             _my = zrEvent.getY(event);
             _mousedown = false;
             setTimeout(function(){
+                _justMove && self.animationEffect();
                 _justMove = false;
                 zr.un(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
                 zr.un(zrConfig.EVENT.MOUSEUP, _onmouseup);

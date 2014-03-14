@@ -84,7 +84,7 @@ function refreshAll() {
     }
 }
 
-var developMode = false;
+var developMode = true;
 if (developMode) {
     // for develop
     require.config({
