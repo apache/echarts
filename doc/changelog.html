@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="background-color:#000">
   <head>
     <meta charset="utf-8">
     <title>ECharts</title>
@@ -7,246 +7,37 @@
     <meta name="description" content="ECharts">
     <meta name="author" content="linzhifeng@baidu.com">
 
-    <!-- Le styles -->
-    <link href="asset/css/bootstrap.css" rel="stylesheet">
-    <link href="asset/css/bootstrap-responsive.css" rel="stylesheet">
-    <link href="asset/css/echartsHome.css" rel="stylesheet">
-
     <!-- Fav and touch icons -->
     <link rel="shortcut icon" href="asset/ico/favicon.png">
-    <style type="text/css">
-        .ddhide {
-            height:0;
-            overflow:hidden;
-        }
-        .ddshow {
-            height:400px;
-            overflow:hidden;
-            transition:height 2s;
-            -moz-transition:height 2s;
-            -webkit-transition:height 2s;
-            -o-transition:height 2s;
+    <style>
+        a, a:visited {
+            color:#A6E22E
         }
     </style>
   </head>
 
   <body>
-    <!-- NAVBAR
-    ================================================== -->
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="brand" href="../index.html">ECharts</a>
-          <div class="nav-collapse collapse">
-              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
-              <ul class="nav">
-                <li><a href="../index.html"><i class="icon-home icon-white"></i> Home</a></li>
-                <li class="active"><a href="example.html" class="active">Example</a></li>
-                <li><a href="doc.html" >API &amp; Doc</a></li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a id="last-release-link" href=""> </a></li>
-                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
-                  </ul>
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
-                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
-                    <li class="divider"></li>
-                    <!--li class="nav-header">Library</li-->
-                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
-                    
-                  </ul>
-                </li>
-              </ul>
-           </div><!--/.nav-collapse -->
-        </div><!-- /.container -->
-      </div><!-- /.navbar-inner -->
-    </div><!-- /.navbar-wrapper -->
+      <img src="asset/img/slide-02.png" alt="ECharts" width="98%">
+      <div style="color:#fff;position:absolute;top:50px;left:5%;width:40%;font-family:'微软雅黑'">
+          <h1>ECharts</h1>
+          <p>基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据可视化图表。创新的拖拽重计算、数据视图、值域漫游等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。</p>
+          <p style="text-align: right;"><strong>———— 大数据时代，重新定义数据图表的时候到了</strong></p>
+          <p>全新官网域名 <a href="http://echarts.baidu.com">echarts.baidu.com</a> 已经启用，<span id="t"><strong>5</strong></span>秒后跳转</p>
+            </div>
+            </div>
 
-    <div class="container">
-        <div id="main-wrap" class="ddhide">
-            <div id="main" style="height:400px;"></div>
-        </div>
-        <audio id="audioV3"></audio>
-        <h2>修改记录</h2>
-        <span>[+]新增 [-]删除 [^]升级 [#]修复 【】重要</span>
-        <div class="row-fluid">
-            <div>
-                <h3>1.3.0<small>（2013-11-05）</small></h3>
-                <ul>
-                    <li>【+】 [chord]新增和弦图，支持多维选择</li>
-                    <li>【^】 [pie]升级支持南丁格尔玫瑰图（半径/面积）模式</li>
-                    <li>[#] [tooltip]雷达图空数据bug fix</li>
-                    <li>[#] [categoryAxis]修复类目轴大数据小数精度问题，fix <a href="https://github.com/ecomfe/echarts/issues/110" target="_blank">this 》</a></li>
-                    <li>[^] [tooltip][line][bar]优化高亮指示样式</li>
-                    <li>[#] [tooltip]encodeHTML修复</li>
-                    <li>[#] [k]修复阴阳线颜色错误，fix <a href="https://github.com/ecomfe/echarts/issues/112" target="_blank">this 》</a></li>
-                    <li>[^] symbol增加箭头arrow，support <a href="http://www.oschina.net/question/1182177_128527" target="_blank">this 》</a></li>
-                    <li>[^] [title]支持超链接跳转</li>
-                    <li>[^] [pie][polar]支持中心坐标百分比格式</li>
-                    <li>[^] [legend]多维选择和多行控制</li>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.5+</li>
-                </ul>
-            </div>
-            <div>
-                <h3>1.2.1<small>（2013-09-29）</small></h3>
-                <ul>
-                    <li>【^】 [line]平滑曲线支持，icon shape交互易用性优化</li>
-                    <li>【^】 [line][bar][scatter]文本标签支持</li>
-                    <li>[^] refresh后清除残留animation</li>
-                    <li>[^] 增加版本信息和依赖判断</li>
-                    <li>[^] [k]barWidth，barMaxWidth支持</li>
-                    <li>[^] [tooltip]内容主体显示策略配置，support <a href="https://github.com/ecomfe/echarts/issues/102" target="_blank">this 》</a></li>
-                    <li>[+] [ndarray]加入多维数组模块</li>
-                    <li>[#] [legend]修复散点图个性化symbol图例不对</li>
-                    <li>[#] [pie][polar][title]修复resize响应 fix <a href="https://github.com/ecomfe/echarts/issues/83" target="_blank">this 》</a></li>
-                    <li>[#] [categoryAxis]splitLine颜色数组中取值问题 fix <a href="https://github.com/ecomfe/echarts/issues/90" target="_blank">this 》</a></li>
-                    <li>[#] [valueAxis]修复全系列0值无显示问题、 fix <a href="https://github.com/ecomfe/echarts/issues/101" target="_blank">this 》</a></li>
-                    <li>[#] [tooltip]同步异步混搭时回调ticket匹配错误，代码优化</li>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.4+</li>
-                </ul>
-            </div>
-            <div>
-                <h3>1.2.0<small>（2013-09-13）</small></h3>
-                <ul>
-                    <li>【+】 [radar] 雷达图</li>
-                    <li>【+】 动态数据添加接口及动画支持 support <a href="https://github.com/ecomfe/echarts/issues/45" target="_blank">this 》</a></li>
-                    <li>【+】 [map] 数据压缩算法（1.65M > 350K）、动态加载</li>
-                    <li>[+] [polar] 极坐标</li>
-                    <li>[^] [grid] 直角坐标系网格自适应配置优化, support <a href="http://www.oschina.net/question/1255841_123578" target="_blank">this 》</a></li>
-                    <li>[^] [dataZoom] zoomLock下手柄拖拽转移以提高用户体验</li>
-                    <li>[^] [tooltip] 全局mouseout、层级优化</li>
-                    <li>[+] [line] showAllSymbol控制显示所有拐点标识</li>
-                    <li>[^] refresh接口优化</li>
-                    <li>[#] 修复组件resize响应 fix <a href="https://github.com/ecomfe/echarts/issues/68" target="_blank">this 》</a></li>
-                    <li>[#] [legend] 饼图个性化颜色取值错误，fix <a href="http://www.oschina.net/question/209138_125256" target="_blank">this 》</a></li>
-                    <li>[#] [tooltip] 数组类型数值类型打包错误，fix <a href="https://github.com/ecomfe/echarts/issues/82" target="_blank">this 》</a></li>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.3+</li>
-                </ul>
-            </div>
-            <div>
-                <h3>1.1.2<small>（2013-08-21）</small></h3>
-                <ul>
-                    <li>【+】 [map] 新增全国34个省市自治区地图支持</li>
-                    <li>[^] [tooltip] 坐标轴指示器样式可配，新增shadow样式，见tooltip.axisPointer</li>
-                    <li>[^] [tooltip] 显示延迟（showDelay）、隐藏延迟（hideDelay）、缓动时长（transitionDuration）开放可配置</li>
-                    <li>[^] [legend] 可配置默认选中状态</li>
-                    <li>[^] [pie] 饼图默认起始角改为90度（12点钟方向）</li>
-                    <li>[^] [line] symbolRotate图形标志支持旋转</li>
-                    <li>[+] 单文件构建工具</li>
-                    <li>[#] [dataRange] 修正值域控件颜色拾取</li>
-                    <li>[#] [toolbox] 保存图片显示位置居中修正</li>
-                </ul>
-            </div>
-            <div>
-                <h3>1.1.1<small>（2013-07-30）</small></h3>
-                <ul>
-                    <li>[+] [compoent] 新增Title组件，图表标题支持</li>
-                    <li>【+】 图片导出支持（IE8-不支持）</li>
-                    <li>[^] [line] 折线图主线支持阴影（IE8-不支持），调整symbo描边与主线等宽</li>
-                    <li>[^] [valueAxis] 支持数值坐标轴上显示项目文字，边界值线条显示优化</li>
-                    <li>[^] [map] 数值计算方式支持均值和求和</li>
-                    <li>[^] Retina视网屏优化</li>
-                    <li>[^] [legend] 图例选择增加可控开关</li>
-                    <li>[#] [axis] 修正福建省hover</li>
-                    <li>[#] [tooltip] 修正气泡边界自动折行</li>
-                    <li>[#] [island] 修正拖拽折线图的empty symbo生成白色孤岛数据</li>
-                    <li>[#] [dataRange] 修正小数状态下的取整显示</li>
-                    <li>[#] [line] 折线堆积图描边修正</li>
-                    <li>【#】 数据修改后（拖拽，数据视图）的反向同步及restore还原修复</li>
-                </ul>
-            </div>
-            <div>
-                <h3>1.1.0<small>（2013-07-08）</small></h3>
-                <ul>
-                    <li>新增图表</li>
-                    <ul>
-                        <li>散点图（气泡图）</li>
-                        <li>K线图</li>
-                        <li>地图（地图类型支持：中国）</li>
-                        <li>力导向布局图</li>
-                    </ul>
-                    <li>新增组件</li>
-                    <ul>
-                        <li>dataRange</li>
-                    </ul>
-                    <li>新增特性</li>
-                    <ul>
-                        <li>数据区域选择（支持框选）</li>
-                        <li>值域漫游</li>
-                        <li>大数据模式（仅散点图支持）</li>
-                    </ul>
-                    <li>新增事件：RESTORE，DATA_RANGE，MAP_SELECTED</li>
-                    <li>新增接口：</li>
-                    <ul>
-                        <li>resize，显示区域大小更新</li>
-                        <li>refresh，刷新图表，图例选择、数据区域缩放，拖拽状态均保持</li>
-                        <li>restore，还原图表，各种状态均被清除，还原为最初展现时的状态。</li>
-                        <li>getZrender，获取当前图表所用ZRender实例，可用于添加额外图形或进行深度定制</li>
-                    </ul>
-                    <li>【重要】 图表按需加载，需要使用方主动require</li>
-                    <li>toolbox.feature.refresh改为restore</li>
-                    <li>[bug fixed] tooltip 0值</li>
-                    <li>饼图升级selected Mode，label支持formatter</li>
-                    <li>图例升级为icon，折线图例有更形象的展现和更易点击</li>
-                    <li>数值轴升级scale模式，可以脱离0值，聚焦到数值变化区间</li>
-                    <li>默认动画缓动效果从'BounceOut'改为'ExponentialOut'</li>
-                </ul>
-            </div>
-            <div>
-                <h3>1.0.0<small>（2013-06-30）</small></h3>
-                <ul>
-                    <li>提供商业产品常用图表库，支持折线图（区域图）、柱状图（条状图）、饼图（环形图）</li>
-                    <li>特性</li>
-                    <ul>
-                        <li>图表混搭</li>
-                        <li>拖拽重计算</li>
-                        <li>数据视图</li>
-                        <li>动态类型切换</li>
-                        <li>图例开关</li>
-                        <li>数据区域选择</li>
-                        <li>标线辅助</li>
-                        <li>多维度堆积</li>
-                    </ul>
-                    <li>多级控制，个性化定制</li>
-                    <li>事件交互：REFRESH，CLICK，HOVER，DATA_CHANGED，MAGIC_TYPE_CHANGED，DATA_VIEW_CHANGED，DATA_ZOOM，LEGEND_SELECTED</li>
-                </ul>
-            </div>
-        </div>
-      <hr>
-      <footer>
-        <p class="pull-right"><a href="#">Back to top</a></p>
-        <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="changelog.html">Changelog</a></p>
-      </footer>
-
-    </div> <!-- /container -->
-
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="asset/js/esl/esl.js"></script>
-    <script src="asset/js/dataDancing.js"></script>
-    <script src="asset/js/jquery.js"></script>
-    <script src="asset/js/bootstrap-transition.js"></script>
-    <script src="asset/js/bootstrap-alert.js"></script>
-    <script src="asset/js/bootstrap-modal.js"></script>
-    <script src="asset/js/bootstrap-dropdown.js"></script>
-    <script src="asset/js/bootstrap-scrollspy.js"></script>
-    <script src="asset/js/bootstrap-tab.js"></script>
-    <script src="asset/js/bootstrap-tooltip.js"></script>
-    <script src="asset/js/bootstrap-popover.js"></script>
-    <script src="asset/js/bootstrap-button.js"></script>
-    <script src="asset/js/bootstrap-collapse.js"></script>
-    <script src="asset/js/bootstrap-carousel.js"></script>
-    <script src="asset/js/bootstrap-typeahead.js"></script>
+    <script>
+        var t = 8;
+        function go() {
+            document.getElementById('t').innerHTML = t--;
+            if (t > 0) {
+                setTimeout(go, 1000);
+            }
+            else {
+                window.location = 'http://echarts.baidu.com';
+            }
+        }
+        go();
+    </script>
   </body>
 </html>
