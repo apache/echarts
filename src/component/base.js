@@ -562,13 +562,15 @@ define(function(require) {
                                    ? data[i][0].value : '';
                 
                 itemShape = getLineMarkShape(
-                    mlOption,                   // markLine 
+                    mlOption,                   // markLine
+                    seriesIndex,
                     data[i],                    // 数据
+                    i,
                     parsePercent(data[i][0].x, zrWidth),   // 坐标
                     parsePercent(data[i][0].y, zrHeight),  // 坐标
                     parsePercent(data[i][1].x, zrWidth),   // 坐标
                     parsePercent(data[i][1].y, zrHeight),  // 坐标
-                    color               // 默认symbol和color
+                    color                       // 默认symbol和color
                 );
                 
                 effect = self.deepMerge(
@@ -598,7 +600,7 @@ define(function(require) {
         }
         
         function getSymbolShape(
-            serie, seriesIndex,    // 系列 
+            serie, seriesIndex,     // 系列 
             data, dataIndex, name,  // 数据
             x, y,                   // 坐标
             symbol, color,          // 默认symbol和color，来自legend或dataRange全局分配
@@ -651,16 +653,21 @@ define(function(require) {
                     brushType : 'both',
                     color : symbol.match('empty') 
                             ? emptyColor 
-                            : (normal.color || color),
-                    strokeColor : normal.borderColor || normal.color || color,
+                            : (self.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
+                               || color),
+                    strokeColor : normal.borderColor 
+                              || self.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
+                              || color,
                     lineWidth: nBorderWidth
                 },
                 highlightStyle : {
                     color : symbol.match('empty') 
                             ? emptyColor 
-                            : (emphasis.color|| normal.color || color),
-                    strokeColor : emphasis.borderColor || normal.borderColor 
-                                  || emphasis.color || normal.color || color,
+                            : self.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data),
+                    strokeColor : emphasis.borderColor 
+                              || normal.borderColor
+                              || self.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
+                              || color,
                     lineWidth: eBorderWidth
                 },
                 clickable : true
@@ -731,7 +738,9 @@ define(function(require) {
         
         function getLineMarkShape(
             mlOption,               // 系列 
+            seriesIndex,            // 系列索引
             data,                   // 数据
+            dataIndex,              // 数据索引
             xStart, yStart,         // 坐标
             xEnd, yEnd,             // 坐标
             color                   // 默认color，来自legend或dataRange全局分配
@@ -771,10 +780,12 @@ define(function(require) {
                 queryTarget,
                 'itemStyle.normal'
             );
+            normal.color = self.getItemStyleColor(normal.color, seriesIndex, dataIndex, data);
             var emphasis = self.deepMerge(
                 queryTarget,
                 'itemStyle.emphasis'
             );
+            emphasis.color = self.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data);
             
             var nlineStyle = normal.lineStyle;
             var elineStyle = emphasis.lineStyle;
@@ -814,12 +825,12 @@ define(function(require) {
                     color : normal.color || color,
                     strokeColor : nlineStyle.color
                                   || normal.borderColor
-                                  || color
-                                  || normal.color,
+                                  || normal.color
+                                  || color,
                     lineWidth: nBorderWidth,
                     symbolBorderColor: normal.borderColor
-                                       || color
-                                       || normal.color,
+                                       || normal.color
+                                       || color,
                     symbolBorder: normal.borderWidth
                 },
                 highlightStyle : {
@@ -832,15 +843,15 @@ define(function(require) {
                                   || nlineStyle.color
                                   || emphasis.borderColor 
                                   || normal.borderColor
-                                  || color 
                                   || emphasis.color 
-                                  || normal.color,
+                                  || normal.color
+                                  || color,
                     lineWidth: eBorderWidth,
                     symbolBorderColor: emphasis.borderColor
                                        || normal.borderColor
-                                       || color
                                        || emphasis.color
-                                       || normal.color,
+                                       || normal.color
+                                       || color,
                     symbolBorder: typeof emphasis.borderWidth == 'undefined'
                                   ? (normal.borderWidth + 2)
                                   : (emphasis.borderWidth)
@@ -910,6 +921,13 @@ define(function(require) {
             x = (x + '').split('.');
             return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g,'$1,') 
                    + (x.length > 1 ? ('.' + x[1]) : '');
+        }
+        
+        
+        function getItemStyleColor(itemColor, seriesIndex, dataIndex, data) {
+            return typeof itemColor == 'function'
+                   ? itemColor(seriesIndex, dataIndex, data) : itemColor;
+            
         }
         
         function _trim(str) {
@@ -1262,6 +1280,7 @@ define(function(require) {
         self.parseCenter = parseCenter;
         self.parseRadius = parseRadius;
         self.numAddCommas = numAddCommas;
+        self.getItemStyleColor = getItemStyleColor;
         self.subPixelOptimize = subPixelOptimize;
         self.animation = animation;
         self.animationMark = animationMark;
