@@ -298,8 +298,10 @@ define(function(require) {
                 queryTarget,
                 'itemStyle.emphasis'
             ) || {};
-            var normalColor = normal.color || defaultColor;
-            var emphasisColor = emphasis.color 
+            var normalColor = self.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
+                              || defaultColor;
+            
+            var emphasisColor = self.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data) 
                 || (typeof normalColor == 'string'
                     ? zrColor.lift(normalColor, -0.2)
                     : normalColor

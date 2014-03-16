@@ -486,8 +486,8 @@ define(function(require) {
                     lineColor = self.query(
                         serie, 'itemStyle.normal.lineStyle.color'
                     );
-                    normalColor = self.query(
-                        serie, 'itemStyle.normal.color'
+                    normalColor = self.getItemStyleColor(
+                        self.query(serie, 'itemStyle.normal.color'), seriesIndex, -1
                     );
 
                     isFill = typeof self.query(

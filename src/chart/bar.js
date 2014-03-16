@@ -672,23 +672,24 @@ define(function(require) {
                     width : width,
                     height : height,
                     brushType : 'both',
-                    color : normalColor,
+                    color : self.getItemStyleColor(normalColor, seriesIndex, dataIndex, data),
                     radius : normal.borderRadius,
                     lineWidth : normalBorderWidth,
                     strokeColor : normal.borderColor
                 },
                 highlightStyle : {
-                    color : emphasisColor 
-                            || (typeof normalColor == 'string'
-                                ? zrColor.lift(normalColor, -0.3)
-                                : normalColor
-                               ),
+                    color : self.getItemStyleColor(emphasisColor, seriesIndex, dataIndex, data),
                     radius : emphasis.borderRadius,
                     lineWidth : emphasis.borderWidth,
                     strokeColor : emphasis.borderColor
                 },
                 _orient : orient
             };
+            barShape.highlightStyle.color = barShape.highlightStyle.color
+                            || (typeof barShape.style.color == 'string'
+                                ? zrColor.lift(barShape.style.color, -0.3)
+                                : barShape.style.color
+                               );
             // 考虑线宽的显示优化
             if (normalBorderWidth > 0
                 && barShape.style.height > normalBorderWidth

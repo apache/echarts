@@ -670,10 +670,17 @@ define(function(require) {
                 
                 // 常规设置
                 style.brushType = 'both';
-                style.color = color || self.deepQuery(
+                style.color = color 
+                              || self.getItemStyleColor(
+                                     self.deepQuery(queryTarget, 'itemStyle.normal.color'),
+                                     data.seriesIndex,
+                                     -1,
+                                     data
+                                 )
+                              || self.deepQuery(
                                   queryTarget,
                                   'itemStyle.normal.areaStyle.color'
-                              );
+                                 );
                 style.strokeColor = self.deepQuery(
                     queryTarget,
                     'itemStyle.normal.borderColor'

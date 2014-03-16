@@ -51,24 +51,20 @@ define(function(require) {
                     _sIndex2ShapeMap[i] = self.query(serie, 'symbol')
                                           || _symbol[i % _symbol.length];
                     if (legend){
-                        self.selectedMap[serieName] = 
-                            legend.isSelected(serieName);
+                        self.selectedMap[serieName] = legend.isSelected(serieName);
                             
-                        _sIndex2ColorMap[i] = 
-                            zrColor.alpha(legend.getColor(serieName),0.5);
+                        _sIndex2ColorMap[i] = zrColor.alpha(legend.getColor(serieName), 0.5);
                             
                         iconShape = legend.getItemShape(serieName);
                         if (iconShape) {
                             // 回调legend，换一个更形象的icon
                             iconShape.shape = 'icon';
                             var iconType = _sIndex2ShapeMap[i];
-                            iconShape.style.brushType = iconType.match('empty') 
-                                                        ? 'stroke' : 'both';
-                            iconType = iconType.replace('empty', '')
-                                               .toLowerCase();
+                            iconShape.style.brushType = iconType.match('empty') ? 'stroke' : 'both';
+                            iconType = iconType.replace('empty', '').toLowerCase();
+                            
                             if (iconType.match('star')) {
-                                iconShape.style.n = 
-                                    (iconType.replace('star','') - 0) || 5;
+                                iconShape.style.n = (iconType.replace('star','') - 0) || 5;
                                 iconType = 'star';
                             }
                             
@@ -88,7 +84,8 @@ define(function(require) {
                             iconShape.style.iconType = iconType;
                             legend.setItemShape(serieName, iconShape);
                         }
-                    } else {
+                    } 
+                    else {
                         self.selectedMap[serieName] = true;
                         _sIndex2ColorMap[i] = zr.getColor(i);
                     }
@@ -178,8 +175,12 @@ define(function(require) {
                 if (serie.large && serie.data.length > serie.largeThreshold) {
                     self.shapeList.push(_getLargeSymbol(
                         seriesPL, 
-                        self.query(
-                            serie, 'itemStyle.normal.color'
+                        self.getItemStyleColor(
+                            self.query(
+                                serie, 'itemStyle.normal.color'
+                            ),
+                            seriesIndex,
+                            -1
                         ) || _sIndex2ColorMap[seriesIndex]
                     ));
                     continue;

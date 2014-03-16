@@ -196,8 +196,13 @@
         ) {
             // 多级控制
             var queryTarget = [data, serie];
-            var nColor = self.deepQuery(
-                queryTarget, 'itemStyle.normal.color'
+            var nColor = self.getItemStyleColor(
+                self.deepQuery(
+                    queryTarget, 'itemStyle.normal.color'
+                ),
+                seriesIndex,
+                dataIndex,
+                data
             );
             var nLineWidth = self.deepQuery(
                 queryTarget, 'itemStyle.normal.lineStyle.width'
@@ -237,9 +242,15 @@
                                   || nAreaColor 
                                   || nColor 
                                   || zrColor.alpha(defaultColor,0.5),
-                    strokeColor : self.deepQuery(
-                                      queryTarget, 'itemStyle.emphasis.color'
-                                  ) || nColor || defaultColor,
+                    strokeColor : self.getItemStyleColor(
+                                       self.deepQuery(
+                                           queryTarget, 'itemStyle.emphasis.color'
+                                       ),
+                                       seriesIndex,
+                                       dataIndex,
+                                       data
+                                   )
+                                   || nColor || defaultColor,
                     lineWidth   : self.deepQuery(
                                       queryTarget,
                                       'itemStyle.emphasis.lineStyle.width'
