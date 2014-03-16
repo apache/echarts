@@ -52,6 +52,8 @@ define(function (require) {
 
         // 轴线
         function _buildAxisLine() {
+            var lineWidth = option.axisLine.lineStyle.width;
+            var halfLineWidth = lineWidth / 2;
             var axShape = {
                 shape : 'line',
                 zlevel : _zlevelBase + 1,
@@ -60,34 +62,34 @@ define(function (require) {
             switch (option.position) {
                 case 'left' :
                     axShape.style = {
-                        xStart : grid.getX(),
-                        yStart : grid.getYend(),
-                        xEnd : grid.getX(),
-                        yEnd : grid.getY()
+                        xStart : grid.getX() - halfLineWidth,
+                        yStart : grid.getYend() + halfLineWidth,
+                        xEnd : grid.getX() - halfLineWidth,
+                        yEnd : grid.getY() - halfLineWidth
                     };
                     break;
                 case 'right' :
                     axShape.style = {
-                        xStart : grid.getXend(),
-                        yStart : grid.getYend(),
-                        xEnd : grid.getXend(),
-                        yEnd : grid.getY()
+                        xStart : grid.getXend() + halfLineWidth,
+                        yStart : grid.getYend() + halfLineWidth,
+                        xEnd : grid.getXend() + halfLineWidth,
+                        yEnd : grid.getY() - halfLineWidth
                     };
                     break;
                 case 'bottom' :
                     axShape.style = {
-                        xStart : grid.getX(),
-                        yStart : grid.getYend(),
-                        xEnd : grid.getXend(),
-                        yEnd : grid.getYend()
+                        xStart : grid.getX() - halfLineWidth,
+                        yStart : grid.getYend() + halfLineWidth,
+                        xEnd : grid.getXend() + halfLineWidth,
+                        yEnd : grid.getYend() + halfLineWidth
                     };
                     break;
                 case 'top' :
                     axShape.style = {
-                        xStart : grid.getX(),
-                        yStart : grid.getY(),
-                        xEnd : grid.getXend(),
-                        yEnd : grid.getY()
+                        xStart : grid.getX() - halfLineWidth,
+                        yStart : grid.getY() - halfLineWidth,
+                        xEnd : grid.getXend() + halfLineWidth,
+                        yEnd : grid.getY() - halfLineWidth
                     };
                     break;
             }
@@ -308,7 +310,7 @@ define(function (require) {
                 var ey = grid.getYend();
                 var x;
 
-                for (var i = 0; i < dataLength; i++) {
+                for (var i = 1; i < dataLength - 1; i++) {
                     // 亚像素优化
                     x = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
@@ -335,7 +337,7 @@ define(function (require) {
                 var ex = grid.getXend();
                 var y;
 
-                for (var i = 0; i < dataLength; i++) {
+                for (var i = 1; i < dataLength - 1; i++) {
                     // 亚像素优化
                     y = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
@@ -876,10 +878,13 @@ define(function (require) {
                 result = (value - _min) / valueRange * total + grid.getX();
             }
 
+            return result;
             // Math.floor可能引起一些偏差，但性能会更好
+            /* 准确更重要
             return (value == _min || value == _max)
                    ? result
                    : Math.floor(result);
+            */
         }
 
         function getPosition() {
