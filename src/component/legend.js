@@ -93,12 +93,8 @@ define(function (require) {
                     }
                     continue;
                 }
-                itemType = _getSeriesByName(itemName);
-                if (itemType) {
-                    itemType = itemType.type;
-                } else {
-                    itemType = 'bar';
-                }
+                itemType = _getSomethingByName(itemName).type;
+                
                 color = getColor(itemName);
 
                 if (legendOption.orient == 'horizontal') {
@@ -410,67 +406,63 @@ define(function (require) {
         }
 
         /**
-         * 根据名称返回series数据
+         * 根据名称返回series数据或data
          */
-        function _getSeriesByName(name) {
+        function _getSomethingByName(name) {
             var series = option.series;
             var hasFind;
             var data;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].name == name) {
                     // 系列名称优先
-                    return series[i];
+                    return {
+                        type : series[i].type,
+                        series : series[i],
+                        seriesIndex : i,
+                        data : null,
+                        dataIndex : -1
+                    }
                 }
 
                 if (
                     series[i].type == ecConfig.CHART_TYPE_PIE 
                     || series[i].type == ecConfig.CHART_TYPE_RADAR
                     || series[i].type == ecConfig.CHART_TYPE_CHORD
+                    || series[i].type == ecConfig.CHART_TYPE_FORCE
                 ) {
-                    // 饼图、雷达图、和弦图得查找里面的数据名字
-                    hasFind = false;
-                    data = series[i].data;
+                    data = series[i].type != ecConfig.CHART_TYPE_FORCE
+                           ? series[i].data         // 饼图、雷达图、和弦图得查找里面的数据名字
+                           : series[i].categories;  // 力导布局查找categories配置
                     for (var j = 0, k = data.length; j < k; j++) {
                         if (data[j].name == name) {
-                            data = data[j];
-                            data.type = 
-                                series[i].type == ecConfig.CHART_TYPE_CHORD 
-                                ? ecConfig.CHART_TYPE_PIE // 和弦图复用pie图样式
-                                : series[i].type;
-                            hasFind = true;
-                            break;
+                            return {
+                                type : series[i].type,
+                                series : series[i],
+                                seriesIndex : i,
+                                data : data[j],
+                                dataIndex : j
+                            }
                         }
-                    }
-                    if (hasFind) {
-                        return data;
-                    }
-                }
-                else if (series[i].type == ecConfig.CHART_TYPE_FORCE) {
-                    // 力导布局查找categories配置
-                    hasFind = false;
-                    data = series[i].categories;
-                    for (var j = 0, k = data.length; j < k; j++) {
-                        if (data[j].name == name) {
-                            data = data[j];
-                            data.type = ecConfig.CHART_TYPE_FORCE;
-                            hasFind = true;
-                            break;
-                        }
-                    }
-                    if (hasFind) {
-                        return data;
                     }
                 }
             }
-            return;
+            return {
+                type : 'bar',
+                series : null,
+                seriesIndex : -1,
+                data : null,
+                dataIndex : -1
+            }
         }
-
+        
         function _getItemShapeByType(x, y, width, height, color, itemType) {
             var itemShape = {
                 shape : 'icon',
                 zlevel : _zlevelBase,
                 style : {
-                    iconType : 'legendicon' + itemType,
+                    iconType : 'legendicon' 
+                               + (itemType != ecConfig.CHART_TYPE_CHORD   // 和弦复用饼图
+                                  ? itemType : ecConfig.CHART_TYPE_PIE),
                     x : x,
                     y : y,
                     width : width,
@@ -540,22 +532,34 @@ define(function (require) {
 
             var data = legendOption.data || [];
             var itemName;
-            var serie;
+            var something;
             var color;
+            var queryTarget;
             for (var i = 0, dataLength = data.length; i < dataLength; i++) {
                 itemName = data[i];
                 if (itemName === '') {
                     continue;
                 }
-                serie = _getSeriesByName(itemName);
-                if (!serie) {
+                something = _getSomethingByName(itemName);
+                if (!something.series) {
                     _selectedMap[itemName] = false;
                 } 
                 else {
-                    color = self.query(
-                        serie, 'itemStyle.normal.color'
+                    if (something.type == ecConfig.CHART_TYPE_PIE) {
+                        queryTarget = [something.data, something.series];
+                    }
+                    else {
+                        queryTarget = [something.series];
+                    }
+                    color = self.getItemStyleColor(
+                        self.deepQuery(
+                            queryTarget, 'itemStyle.normal.color'
+                        ),
+                        something.seriesIndex,
+                        something.dataIndex,
+                        something.data
                     );
-                    if (color && serie.type != ecConfig.CHART_TYPE_K) {
+                    if (color && something.type != ecConfig.CHART_TYPE_K) {
                         setColor(itemName, color);
                     }
                     _selectedMap[itemName] = true;
