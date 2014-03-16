@@ -1072,6 +1072,7 @@ define(function(require) {
                                            : 'circle',
                                 x : shadowBlur + 1, // 线宽
                                 y : shadowBlur + 1,
+                                n : shape.style.n,
                                 width : shape.style.width * size,
                                 height : shape.style.height * size,
                                 lineWidth : 1,
