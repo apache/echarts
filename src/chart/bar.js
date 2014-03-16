@@ -226,8 +226,7 @@ define(function(require) {
                     // 堆叠数据用第一条valueAxis
                     yAxisIndex = series[locationMap[j][0]].yAxisIndex || 0;
                     valueAxis = component.yAxis.getAxis(yAxisIndex);
-                    baseYP = lastYP = valueAxis.getCoord(0) - 1;
-                    baseYN = lastYN = lastYP + 2;
+                    baseYP = lastYP = baseYN = lastYN = valueAxis.getCoord(0);
                     for (var m = 0, n = locationMap[j].length; m < n; m++) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
@@ -253,7 +252,6 @@ define(function(require) {
                             }
                             lastYP -= barHeight;
                             y = lastYP;
-                            //lastYP -= 0.5; //白色视觉分隔线宽修正
                         }
                         else if (value < 0){
                             // 负向堆叠
@@ -266,7 +264,6 @@ define(function(require) {
                             }
                             y = lastYN;
                             lastYN += barHeight;
-                            //lastYN += 0.5; //白色视觉分隔线宽修正
                         }
                         else {
                             // 0值
@@ -274,7 +271,6 @@ define(function(require) {
                             // 最小高度无效
                             lastYP -= barHeight;
                             y = lastYP;
-                            //lastYP -= 0.5; //白色视觉分隔线宽修正
                         }
 
                         barShape = _getBarItem(
@@ -318,13 +314,14 @@ define(function(require) {
                             barShape = _getBarItem(
                                 seriesIndex, i,
                                 categoryAxis.getNameByIndex(i),
-                                x + 1, y,
-                                (barWidthMap[seriesIndex] || barWidth) - 2,
-                                ecConfig.island.r,
+                                x + 0.5, y + 0.5,
+                                (barWidthMap[seriesIndex] || barWidth) - 1,
+                                ecConfig.island.r - 1,
                                 'vertical'
                             );
                             barShape.hoverable = false;
                             barShape.draggable = false;
+                            barShape.style.lineWidth = 1;
                             barShape.style.brushType = 'stroke';
                             barShape.style.strokeColor =
                                     serie.calculableHolderColor
@@ -380,8 +377,7 @@ define(function(require) {
                     // 堆叠数据用第一条valueAxis
                     xAxisIndex = series[locationMap[j][0]].xAxisIndex || 0;
                     valueAxis = component.xAxis.getAxis(xAxisIndex);
-                    baseXP = lastXP = valueAxis.getCoord(0) + 1;
-                    baseXN = lastXN = lastXP - 2;
+                    baseXP = lastXP = baseXN = lastXN = valueAxis.getCoord(0);
                     for (var m = 0, n = locationMap[j].length; m < n; m++) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
@@ -407,7 +403,6 @@ define(function(require) {
                             }
                             x = lastXP;
                             lastXP += barHeight;
-                            //lastXP += 0.5; //白色视觉分隔线宽修正
                         }
                         else if (value < 0){
                             // 负向堆叠
@@ -420,7 +415,6 @@ define(function(require) {
                             }
                             lastXN -= barHeight;
                             x = lastXN;
-                            //lastXN -= 0.5; //白色视觉分隔线宽修正
                         }
                         else {
                             // 0值
@@ -428,7 +422,6 @@ define(function(require) {
                             // 最小高度无效
                             x = lastXP;
                             lastXP += barHeight;
-                            //lastXP += 0.5; //白色视觉分隔线宽修正
                         }
 
                         barShape = _getBarItem(
@@ -473,14 +466,14 @@ define(function(require) {
                                 seriesIndex,
                                 i,
                                 categoryAxis.getNameByIndex(i),
-                                x,
-                                y + 1 - (barWidthMap[seriesIndex] || barWidth),
-                                ecConfig.island.r,
-                                (barWidthMap[seriesIndex] || barWidth) - 2,
+                                x + 0.5, y + 0.5 - (barWidthMap[seriesIndex] || barWidth),
+                                ecConfig.island.r - 1,
+                                (barWidthMap[seriesIndex] || barWidth) - 1,
                                 'horizontal'
                             );
                             barShape.hoverable = false;
                             barShape.draggable = false;
+                            barShape.style.lineWidth = 1;
                             barShape.style.brushType = 'stroke';
                             barShape.style.strokeColor =
                                     serie.calculableHolderColor
@@ -495,6 +488,7 @@ define(function(require) {
             }
             _buildMark(seriesArray, xMarkMap, false);
         }
+        
         /**
          * 我真是自找麻烦啊，为啥要允许系列级个性化最小宽度和高度啊！！！
          * @param {CategoryAxis} categoryAxis 类目坐标轴，需要知道类目间隔大小
@@ -686,7 +680,7 @@ define(function(require) {
                 highlightStyle : {
                     color : emphasisColor 
                             || (typeof normalColor == 'string'
-                                ? zrColor.lift(normalColor, -0.2)
+                                ? zrColor.lift(normalColor, -0.3)
                                 : normalColor
                                ),
                     radius : emphasis.borderRadius,
@@ -696,7 +690,8 @@ define(function(require) {
                 _orient : orient
             };
             // 考虑线宽的显示优化
-            if (barShape.style.height > normalBorderWidth
+            if (normalBorderWidth > 0
+                && barShape.style.height > normalBorderWidth
                 && barShape.style.width > normalBorderWidth
             ) {
                 barShape.style.y += normalBorderWidth / 2;
@@ -705,7 +700,7 @@ define(function(require) {
                 barShape.style.width -= normalBorderWidth;
             }
             else {
-                // 太小了，废了边线
+                // 太小了或者线宽小于0，废了边线
                 barShape.style.brushType = 'fill';
             }
             
