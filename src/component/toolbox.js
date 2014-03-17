@@ -153,15 +153,10 @@ define(function (require) {
                         iconType : _iconList[i],
                         lineWidth : 1,
                         strokeColor : color[i % color.length],
-                        shadowColor: '#ccc',
-                        shadowBlur : 2,
-                        shadowOffsetX : 2,
-                        shadowOffsetY : 2,
                         brushType: 'stroke'
                     },
                     highlightStyle : {
                         lineWidth : 2,
-                        shadowBlur: 5,
                         text : toolboxOption.showTitle 
                                ? toolboxOption.featureTitle[_iconList[i]]
                                : false,
@@ -174,8 +169,9 @@ define(function (require) {
                 };
                 
                 if (toolboxOption.featureImageIcon[_iconList[i]]) {
-                    itemShape.style.image = 
-                        toolboxOption.featureImageIcon[_iconList[i]];
+                    itemShape.style.image = toolboxOption.featureImageIcon[_iconList[i]].replace(
+                        new RegExp('^image:\\/\\/'), ''
+                    );
                     itemShape.style.opacity = 0.8;
                     itemShape.highlightStyle.opacity = 1;
                     itemShape.shape = 'image';
@@ -243,6 +239,9 @@ define(function (require) {
                                 itemShape.style.strokeColor = _enableColor;
                             }
                             itemShape.onclick = _onMagicType;
+                        }
+                        else {
+                            itemShape.onclick = _onCustomHandler;
                         }
                         break;
                 }
@@ -795,6 +794,15 @@ define(function (require) {
                 null,
                 {magicType : _magicType}
             );
+        }
+        
+        // 用户自定义扩展toolbox方法
+        function _onCustomHandler(param) {
+            var target = param.target.style.iconType;
+            var featureHandler = option.toolbox.featureHandler;
+            if (typeof featureHandler[target] === 'function') {
+                featureHandler[target]();
+            }
         }
 
         // 重置备份还原状态等
