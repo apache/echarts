@@ -920,6 +920,7 @@ define(function (require) {
         
         function getMagicOption(){
             var axis;
+            console.log(_magicType)
             if (_magicType[ecConfig.CHART_TYPE_LINE] || _magicType[ecConfig.CHART_TYPE_BAR]) {
                 // 图表类型有切换
                 var boundaryGap = _magicType[ecConfig.CHART_TYPE_LINE] ? false : true;
@@ -937,6 +938,7 @@ define(function (require) {
                                ? option.xAxis[option.series[i].xAxisIndex || 0]
                                : option.xAxis;
                         if (axis && axis.type == 'category') {
+                            console.log(11111)
                             axis.boundaryGap = 
                                 boundaryGap ? true : axis.__boundaryGap;
                         }
@@ -963,6 +965,7 @@ define(function (require) {
                                ? option.xAxis[option.series[i].xAxisIndex || 0]
                                : option.xAxis;
                         if (axis && axis.type == 'category') {
+                            console.log(axis.__boundaryGap)
                             axis.boundaryGap = axis.__boundaryGap;
                         }
                         axis = option.yAxis instanceof Array
