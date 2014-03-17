@@ -1192,6 +1192,9 @@ define(function (require) {
          * 异步回调填充内容
          */
         function _setContent(ticket, content) {
+            if (!_tDom) {
+                return;
+            }
             if (ticket == _curTicket) {
                 _tDom.innerHTML = content;
             }
