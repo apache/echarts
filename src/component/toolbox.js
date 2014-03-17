@@ -28,7 +28,7 @@ define(function (require) {
         self.type = ecConfig.COMPONENT_TYPE_TOOLBOX;
 
         var _zlevelBase = self.getZlevelBase();
-        var _magicType;
+        var _magicType = {};
         var _magicMap;
         var _isSilence = false;
         
@@ -48,6 +48,9 @@ define(function (require) {
         var _zoomQueue;
 
         var _dataView;
+        
+        var _MAGICTYPE_STACK = 'stack';
+        var _MAGICTYPE_TILED = 'tiled';
 
         function _buildShape() {
             _iconList = [];
@@ -235,7 +238,7 @@ define(function (require) {
                     default:
                         if (_iconList[i].match('Chart')) {
                             itemShape._name = _iconList[i].replace('Chart', '');
-                            if (itemShape._name == _magicType) {
+                            if (_magicType[itemShape._name]) {
                                 itemShape.style.strokeColor = _enableColor;
                             }
                             itemShape.onclick = _onMagicType;
@@ -769,13 +772,27 @@ define(function (require) {
         function _onMagicType(param) {
             _resetMark();
             var itemName = param.target._name;
-            if (itemName == _magicType) {
+            if (_magicType[itemName]) {
                 // 取消
-                _magicType = false;
+                _magicType[itemName] = false;
             }
             else {
                 // 启用
-                _magicType = itemName;
+                _magicType[itemName] = true;
+                // 折柱互斥
+                if (itemName == ecConfig.CHART_TYPE_LINE) {
+                    _magicType[ecConfig.CHART_TYPE_BAR] = false;
+                }
+                else if (itemName == ecConfig.CHART_TYPE_BAR) {
+                    _magicType[ecConfig.CHART_TYPE_LINE] = false;
+                }
+                // 堆叠平铺互斥
+                if (itemName == _MAGICTYPE_STACK) {
+                    _magicType[_MAGICTYPE_TILED] = false;
+                }
+                else if (itemName == _MAGICTYPE_TILED) {
+                    _magicType[_MAGICTYPE_STACK] = false;
+                }
             }
             messageCenter.dispatch(
                 ecConfig.EVENT.MAGIC_TYPE_CHANGED,
@@ -821,6 +838,7 @@ define(function (require) {
 
                 len = newOption.series.length;
                 var oriType;        // 备份还原可控类型
+                var oriStack;       // 备份还原堆积名称
                 var axis;
                 while (len--) {
                     oriType = newOption.series[len].type;
@@ -854,9 +872,13 @@ define(function (require) {
                               )
                             : {};
                     }
+                    
+                    if (_magicMap[_MAGICTYPE_STACK] || _magicMap[_MAGICTYPE_TILED]) {
+                        newOption.series[len].__stack = newOption.series[len].stack;
+                    }
                 }
             }
-            _magicType = false;
+            _magicType = {};
             
             // 框选缩放
             var zoomOption = newOption.dataZoom;
@@ -886,16 +908,26 @@ define(function (require) {
                 _zoomQueue = [];
             }
         }
-
+        
+        function _hasMagicType() {
+            for (var k in _magicType) {
+                if (_magicType[k]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
         function getMagicOption(){
             var axis;
-            if (_magicType) {
-                // 启动
-                var boundaryGap = _magicType == ecConfig.CHART_TYPE_LINE
-                                  ? false : true;
+            if (_magicType[ecConfig.CHART_TYPE_LINE] || _magicType[ecConfig.CHART_TYPE_BAR]) {
+                // 图表类型有切换
+                var boundaryGap = _magicType[ecConfig.CHART_TYPE_LINE] ? false : true;
                 for (var i = 0, l = option.series.length; i < l; i++) {
                     if (_magicMap[option.series[i].type]) {
-                        option.series[i].type = _magicType;
+                        option.series[i].type = _magicType[ecConfig.CHART_TYPE_LINE]
+                                                ? ecConfig.CHART_TYPE_LINE
+                                                : ecConfig.CHART_TYPE_BAR;
                         // 避免不同类型图表类型的样式污染
                         option.series[i].itemStyle = zrUtil.clone(
                             option.series[i].__itemStyle
@@ -919,7 +951,7 @@ define(function (require) {
                 }
             }
             else {
-                // 还原
+                // 图表类型无切换
                 for (var i = 0, l = option.series.length; i < l; i++) {
                     if (_magicMap[option.series[i].type]) {
                         option.series[i].type = option.series[i].__type;
@@ -940,6 +972,26 @@ define(function (require) {
                             axis.boundaryGap = axis.__boundaryGap;
                         }
                     }
+                }
+            }
+            
+            if (_magicType[_MAGICTYPE_STACK] || _magicType[_MAGICTYPE_TILED]) {
+                // 有堆叠平铺切换
+                for (var i = 0, l = option.series.length; i < l; i++) {
+                    if (_magicType[_MAGICTYPE_STACK]) {
+                        // 启用堆叠
+                        option.series[i].stack = '_ECHARTS_STACK_KENER_2014_';
+                    }
+                    else if (_magicType[_MAGICTYPE_TILED]) {
+                        // 启用平铺
+                        option.series[i].stack = null;
+                    }
+                }
+            }
+            else {
+                // 无堆叠平铺切换
+                for (var i = 0, l = option.series.length; i < l; i++) {
+                    option.series[i].stack = option.series[i].__stack;
                 }
             }
 

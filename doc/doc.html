@@ -1152,10 +1152,13 @@ require(['echarts'], function(ec){
 feature : {
     mark : true,                    // 辅助线标志，上图icon左数1/2/3，分别是启用，删除上一条，删除全部
     dataZoom : true,                // 框选区域缩放，自动与存在的dataZoom控件同步，上图icon左数4/5，分别是启用，缩放后退
-    magicType:['line', 'bar'],      // 图表类型切换，当前仅支持直角系下的折线图、柱状图转换，上图icon左数6/7，分别是切换折线图，切换柱形图
-    dataView : true,                // 数据视图，上图icon左数8，打开数据视图
-    restore : true                  // 还原，复位原始图表，上图icon左数9，还原
-    saveAsImage : true              // 保存为图片，上图icon左数10，保存
+    
+    // 动态类型切换，支持直角系下的折线图、柱状图、堆叠、平铺转换，上图icon左数6/7/8/9，分别是切换折线图，切换柱形图，切换为堆叠，切换为平铺
+    magicType:['line', 'bar', 'stack', 'tiled'],      
+    
+    dataView : true,                // 数据视图，上图icon左数10，打开数据视图
+    restore : true                  // 还原，复位原始图表，上图icon左数11，还原
+    saveAsImage : true              // 保存为图片，上图icon左数12，保存
 }
                     </pre>
                     </div>

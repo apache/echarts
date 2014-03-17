@@ -89,6 +89,8 @@ define(
                 restore : _iconRestore,
                 lineChart : _iconLineChart,
                 barChart : _iconBarChart,
+                stackChart : _iconStackChart,
+                tiledChart : _iconTiledChart,
                 dataView : _iconDataView,
                 saveAsImage : _iconSave,
                 
@@ -272,6 +274,30 @@ define(
             ctx.lineTo(style.x + 12 * dx,       style.y + 14 * dy);
         }
 
+        function _iconStackChart(ctx, style) {
+            var x = style.x;
+            var y = style.y;
+            var width = style.width;
+            var height = style.height;
+            var dy = Math.round(height / 3);
+            var len = 3;
+            while (len--) {
+                ctx.rect(x, y + dy * len + 2, width, 2);
+            }
+        }
+        
+        function _iconTiledChart(ctx, style) {
+            var x = style.x;
+            var y = style.y;
+            var width = style.width;
+            var height = style.height;
+            var dx = Math.round(width / 3);
+            var len = 3;
+            while (len--) {
+                ctx.rect(x + dx * len, y, 2, height);
+            }
+        }
+        
         function _iconDataView(ctx, style) {
             var dx = style.width / 16;
 
