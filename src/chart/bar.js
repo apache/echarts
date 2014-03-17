@@ -134,9 +134,17 @@ define(function(require) {
                     iconShape = legend.getItemShape(serieName);
                     if (iconShape) {
                         // 回调legend，换一个更形象的icon
-                        iconShape.style.strokeColor = 
-                            serie.itemStyle.normal.borderColor;
-                        iconShape.style.brushType = 'both';
+                        if (serie.itemStyle.normal.borderWidth > 0) {
+                            iconShape.style.x += 1;
+                            iconShape.style.y += 1;
+                            iconShape.style.width -= 2;
+                            iconShape.style.height -= 2;
+                            iconShape.style.strokeColor = 
+                            iconShape.highlightStyle.strokeColor =
+                                serie.itemStyle.normal.borderColor;
+                            iconShape.highlightStyle.lineWidth = 3;
+                            iconShape.style.brushType = 'both';
+                        }
                         legend.setItemShape(serieName, iconShape);
                     }
                 } else {

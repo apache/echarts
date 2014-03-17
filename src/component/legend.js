@@ -17,7 +17,9 @@ define(function (require) {
         var Base = require('./base');
         Base.call(this, ecConfig, zr);
 
+        var zrUtil = require('zrender/tool/util');
         var zrArea = require('zrender/tool/area');
+        var zrColor = require('zrender/tool/color');
 
         var self = this;
         self.type = ecConfig.COMPONENT_TYPE_LEGEND;
@@ -59,7 +61,10 @@ define(function (require) {
             var itemType;
             var itemShape;
             var textShape;
-            var font = self.getFont(legendOption.textStyle);
+            var textStyle  = legendOption.textStyle;
+            var font = self.getFont(textStyle);
+            var dataTextStyle;
+            var dataFont;
 
             var zrWidth = zr.getWidth();
             var zrHeight = zr.getHeight();
@@ -79,7 +84,14 @@ define(function (require) {
             }
 
             for (var i = 0; i < dataLength; i++) {
-                itemName = data[i];
+                dataTextStyle = zrUtil.merge(
+                    data[i].textStyle || {},
+                    textStyle,
+                    {'overwrite': false}
+                );
+                dataFont = self.getFont(dataTextStyle);
+                
+                itemName = data[i].name || data[i];
                 if (itemName === '') {
                     if (legendOption.orient == 'horizontal') {
                         lastX = _itemGroupLocation.x;
@@ -100,7 +112,10 @@ define(function (require) {
                 if (legendOption.orient == 'horizontal') {
                     if (zrWidth - lastX < 200   // 最后200px做分行预判
                         && (itemWidth + 5
-                            + zrArea.getTextWidth(itemName, font)
+                            + zrArea.getTextWidth(
+                                itemName, 
+                                dataFont
+                            )
                             // 分行的最后一个不用算itemGap
                             + (i == dataLength - 1 || data[i+1] === ''
                                ? 0 : itemGap))
@@ -130,7 +145,8 @@ define(function (require) {
                     lastX, lastY,
                     itemWidth, itemHeight,
                     (_selectedMap[itemName] ? color : '#ccc'),
-                    itemType
+                    itemType,
+                    color
                 );
                 itemShape._name = itemName;
                 if (legendOption.selectedMode) {
@@ -146,11 +162,15 @@ define(function (require) {
                         x : lastX + itemWidth + 5,
                         y : lastY,
                         color : _selectedMap[itemName]
-                                ? legendOption.textStyle.color
+                                ? (dataTextStyle.color === 'auto' ? color : dataTextStyle.color)
                                 : '#ccc',
                         text: itemName,
-                        textFont: font,
+                        textFont: dataFont,
                         textBaseline: 'top'
+                    },
+                    highlightStyle : {
+                        color : color,
+                        brushType: 'fill'
                     },
                     hoverable : !!legendOption.selectedMode,
                     clickable : !!legendOption.selectedMode
@@ -171,7 +191,7 @@ define(function (require) {
 
                 if (legendOption.orient == 'horizontal') {
                     lastX += itemWidth + 5
-                             + zrArea.getTextWidth(itemName, font)
+                             + zrArea.getTextWidth(itemName, dataFont)
                              + itemGap;
                 }
                 else {
@@ -190,7 +210,6 @@ define(function (require) {
         
         // 多行橫排居中优化
         function _mLineOptimize() {
-            var font = self.getFont(legendOption.textStyle);
             var lineOffsetArray = []; // 每行宽度
             var lastX = _itemGroupLocation.x;
             for (var i = 2, l = self.shapeList.length; i < l; i++) {
@@ -201,7 +220,8 @@ define(function (require) {
                             - (
                                 self.shapeList[i - 1].style.x
                                 + zrArea.getTextWidth(
-                                      self.shapeList[i - 1].style.text, font
+                                      self.shapeList[i - 1].style.text,
+                                      self.shapeList[i - 1].style.textFont
                                   )
                                 - lastX
                             )
@@ -215,7 +235,8 @@ define(function (require) {
                             - (
                                 self.shapeList[i].style.x
                                 + zrArea.getTextWidth(
-                                      self.shapeList[i].style.text, font
+                                      self.shapeList[i].style.text,
+                                      self.shapeList[i].style.textFont
                                   )
                                 - lastX
                             )
@@ -271,7 +292,8 @@ define(function (require) {
             var itemGap = legendOption.itemGap;
             var itemWidth = legendOption.itemWidth + 5; // 5px是图形和文字的间隔，不可配
             var itemHeight = legendOption.itemHeight;
-            var font = self.getFont(legendOption.textStyle);
+            var textStyle  = legendOption.textStyle;
+            var font = self.getFont(textStyle);
             var totalWidth = 0;
             var totalHeight = 0;
             var padding = legendOption.padding;
@@ -297,10 +319,21 @@ define(function (require) {
                         temp = 0;
                         continue;
                     }
+                    dataTextStyle = zrUtil.merge(
+                        data[i].textStyle || {},
+                        textStyle,
+                        {'overwrite': false}
+                    );
                     temp += itemWidth
                             + zrArea.getTextWidth(
-                                  data[i],
-                                  font
+                                  data[i].name || data[i],
+                                  data[i].textStyle 
+                                  ? self.getFont(zrUtil.merge(
+                                        data[i].textStyle || {},
+                                        textStyle,
+                                        {'overwrite': false}
+                                    ))
+                                  : font
                               )
                             + itemGap;
                 }
@@ -319,8 +352,14 @@ define(function (require) {
                     maxWidth = Math.max(
                         maxWidth,
                         zrArea.getTextWidth(
-                            data[i],
-                            font
+                            data[i].name || data[i],
+                            data[i].textStyle 
+                            ? self.getFont(zrUtil.merge(
+                                  data[i].textStyle || {},
+                                  textStyle,
+                                  {'overwrite': false}
+                              ))
+                            : font
                         )
                     );
                 }
@@ -455,7 +494,11 @@ define(function (require) {
             }
         }
         
-        function _getItemShapeByType(x, y, width, height, color, itemType) {
+        function _getItemShapeByType(x, y, width, height, color, itemType, defaultColor) {
+            var highlightColor = color === '#ccc' 
+                                 ? defaultColor 
+                                 : typeof color == 'string' && color != '#ccc' 
+                                   ? zrColor.lift(color, -0.3) : color;
             var itemShape = {
                 shape : 'icon',
                 zlevel : _zlevelBase,
@@ -469,7 +512,12 @@ define(function (require) {
                     height : height,
                     color : color,
                     strokeColor : color,
-                    lineWidth : 3
+                    lineWidth : 2
+                },
+                highlightStyle: {
+                    color : highlightColor,
+                    strokeColor : highlightColor,
+                    lineWidth : 1
                 },
                 hoverable : legendOption.selectedMode,
                 clickable : legendOption.selectedMode
@@ -478,9 +526,16 @@ define(function (require) {
             switch (itemType) {
                 case 'line' :
                     itemShape.style.brushType = 'stroke';
+                    itemShape.highlightStyle.lineWidth = 3;
+                    break;
+                case 'radar' :
+                case 'scatter' :   
+                    itemShape.highlightStyle.lineWidth = 3;
                     break;
                 case 'k' :
                     itemShape.style.brushType = 'both';
+                    itemShape.highlightStyle.lineWidth = 3;
+                    itemShape.highlightStyle.color =
                     itemShape.style.color = self.query(
                         ecConfig, 'k.itemStyle.normal.color'
                     ) || '#fff';
@@ -536,7 +591,7 @@ define(function (require) {
             var color;
             var queryTarget;
             for (var i = 0, dataLength = data.length; i < dataLength; i++) {
-                itemName = data[i];
+                itemName = data[i].name || data[i];
                 if (itemName === '') {
                     continue;
                 }

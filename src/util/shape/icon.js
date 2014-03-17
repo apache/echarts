@@ -334,10 +334,15 @@ define(
         function _iconCircle(ctx, style) {
             var width = style.width / 2;
             var height = style.height / 2;
+            var r = Math.min(width, height);
+            ctx.moveTo(
+                style.x + width + r, 
+                style.y + height
+            );
             ctx.arc(
                 style.x + width, 
                 style.y + height, 
-                Math.min(width, height),
+                r,
                 0, 
                 Math.PI * 2
             );

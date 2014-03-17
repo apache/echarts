@@ -79,9 +79,15 @@ option = {
         itemGap: 20,
         textStyle: {color: 'red'},
         selected: {
-            '降水量' : false,
+            '降水量' : false
         },
-        data: ['蒸发量','降水量','最高气温', '最低气温']
+        data: [
+            {
+                name:'蒸发量',
+                textStyle:{fontWeight:'bold', color:'green'}
+            },
+            '降水量','最高气温', '最低气温'
+        ]
     },
     xAxis :{
         data : ['周一','周二','周三','周四','周五','周六','周日']

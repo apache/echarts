@@ -912,7 +912,7 @@ require(['echarts'], function(ec){
                         <tr>
                             <td> <b>{Object}</b> textStyle </td>
                             <td> {color: '#333'} </td>
-                            <td> 默认只设定了图例文字颜色（详见<a href="#TextStyle" title="">textStyle</a>） </td>
+                            <td> 默认只设定了图例文字颜色（详见<a href="#TextStyle" title="">textStyle</a>） ，更个性化的是，要指定文字颜色跟随图例，可设color为'auto'</td>
                         </tr>
                         <tr>
                             <td> <b>{boolean | string}</b> selectedMode </td>
@@ -927,7 +927,10 @@ require(['echarts'], function(ec){
                         <tr>
                             <td> {Array &lt;string&gt;} data </td>
                             <td> [ ] </td>
-                            <td> 图例内容数组，数组项为<b>{string}</b>，每一项代表一个系列的name。<br/>使用根据该值索引<a href="#Series" title="">series</a>中同名系列所用的图表类型和itemStyle，如果索引不到，该item将默认为没启用状态。</td>
+                            <td> 图例内容数组，数组项通常为<b>{string}</b>，每一项代表一个系列的name。
+                                <br/>使用根据该值索引<a href="#Series" title="">series</a>中同名系列所用的图表类型和itemStyle，如果索引不到，该item将默认为没启用状态。
+                                <br/>如需个性化图例文字样式，可把数组项改为<b>{Object}</b>，格式为{name: <b>{string}</b>, textStyle: <b>{Object}</b>}
+                            </td>
                         </tr>
                     </table>
                     <p><img src="./asset/img/doc/legend.png" title="" alt="图例"/></P>

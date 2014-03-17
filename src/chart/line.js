@@ -901,8 +901,6 @@ define(function(require) {
         var height = style.height;
         
         var dy = height / 2;
-        ctx.moveTo(x, y + dy);
-        ctx.lineTo(x + width, y + dy);
         
         if (style.symbol.match('empty')) {
             ctx.fillStyle = '#fff';
@@ -932,6 +930,13 @@ define(function(require) {
         symbol = require('zrender/shape').get('icon').get(symbol);
         
         if (symbol) {
+            var x2 = style.x;
+            var y2 = style.y;
+            ctx.moveTo(x2, y2 + dy);
+            ctx.lineTo(x2 + 4, y2 + dy);
+            ctx.moveTo(x2 + style.width - 4, y2 + dy);
+            ctx.lineTo(x2 + style.width, y2 + dy);
+            
             symbol(ctx, {
                 x : x + 3,
                 y : y + 3,
@@ -940,6 +945,11 @@ define(function(require) {
                 n : dy,
                 image : imageLocation
             });
+            
+        }
+        else {
+            ctx.moveTo(x, y + dy);
+            ctx.lineTo(x + width, y + dy);
         }
     }
     
