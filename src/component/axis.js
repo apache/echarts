@@ -117,11 +117,11 @@ define(function (require) {
 
             var axisOption;
             if (axisType == 'xAxis') {
-                option.xAxis =self.reformOption(newOption.xAxis);
+                option.xAxis = self.reformOption(newOption.xAxis);
                 axisOption = option.xAxis;
             }
             else {
-                option.yAxis = reformOption(newOption.yAxis);
+                option.yAxis = self.reformOption(newOption.yAxis);
                 axisOption = option.yAxis;
             }
 
