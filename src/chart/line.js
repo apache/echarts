@@ -924,8 +924,8 @@ define(function(require) {
                     new RegExp('^image:\\/\\/'), ''
                 );
             symbol = 'image';
-            x += Math.round((width - height) / 2);
-            width = height;
+            x += Math.round((width - height) / 2) - 1;
+            width = height = height + 2;
         }
         symbol = require('zrender/shape').get('icon').get(symbol);
         
@@ -933,15 +933,15 @@ define(function(require) {
             var x2 = style.x;
             var y2 = style.y;
             ctx.moveTo(x2, y2 + dy);
-            ctx.lineTo(x2 + 4, y2 + dy);
-            ctx.moveTo(x2 + style.width - 4, y2 + dy);
+            ctx.lineTo(x2 + 5, y2 + dy);
+            ctx.moveTo(x2 + style.width - 5, y2 + dy);
             ctx.lineTo(x2 + style.width, y2 + dy);
             
             symbol(ctx, {
-                x : x + 3,
-                y : y + 3,
-                width : width - 6,
-                height : height - 6,
+                x : x + 4,
+                y : y + 4,
+                width : width - 8,
+                height : height - 8,
                 n : dy,
                 image : imageLocation
             });
