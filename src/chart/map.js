@@ -673,22 +673,15 @@ define(function(require) {
                 style.color = color 
                               || self.getItemStyleColor(
                                      self.deepQuery(queryTarget, 'itemStyle.normal.color'),
-                                     data.seriesIndex,
-                                     -1,
-                                     data
+                                     data.seriesIndex, -1, data
                                  )
                               || self.deepQuery(
-                                  queryTarget,
-                                  'itemStyle.normal.areaStyle.color'
+                                  queryTarget, 'itemStyle.normal.areaStyle.color'
                                  );
-                style.strokeColor = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.borderColor'
-                );
-                style.lineWidth = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.borderWidth'
-                );
+                style.strokeColor = self.deepQuery(queryTarget, 'itemStyle.normal.borderColor');
+                style.lineWidth = self.deepQuery(queryTarget, 'itemStyle.normal.borderWidth');
+                style.lineJoin = 'round';
+                
                 style.text = _getLabelText(name, value, queryTarget, 'normal');
                 style._text = name;
                 style.textAlign = 'center';
@@ -701,10 +694,7 @@ define(function(require) {
                     'itemStyle.normal.label.textStyle'
                 );
                 style.textFont = self.getFont(font);
-                if (!self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.label.show'
-                )) {
+                if (!self.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {
                     style.textColor = 'rgba(0,0,0,0)';  // 默认不呈现文字
                 }
                 
@@ -719,9 +709,7 @@ define(function(require) {
                         brushType: 'both',
                         x : style.textX,
                         y : style.textY,
-                        text : _getLabelText(
-                            name, value, queryTarget, 'normal'
-                        ),
+                        text : _getLabelText(name, value, queryTarget, 'normal'),
                         _text : name,
                         textAlign : 'center',
                         color : style.textColor,
@@ -736,10 +724,14 @@ define(function(require) {
                 
                 // 高亮
                 highlightStyle.brushType = 'both';
-                highlightStyle.color = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.emphasis.areaStyle.color'
-                ) || style.color;
+                highlightStyle.color = self.getItemStyleColor(
+                                           self.deepQuery(queryTarget, 'itemStyle.emphasis.color'),
+                                           data.seriesIndex, -1, data
+                                       ) 
+                                       || self.deepQuery(
+                                              queryTarget, 'itemStyle.emphasis.areaStyle.color'
+                                          ) 
+                                       || style.color;
                 highlightStyle.strokeColor = self.deepQuery(
                     queryTarget,
                     'itemStyle.emphasis.borderColor'
@@ -749,10 +741,7 @@ define(function(require) {
                     'itemStyle.emphasis.borderWidth'
                 ) || style.lineWidth;
                 highlightStyle._text = name;
-                if (self.deepQuery(
-                    queryTarget,
-                    'itemStyle.emphasis.label.show'
-                )) {
+                if (self.deepQuery(queryTarget, 'itemStyle.emphasis.label.show')) {
                     highlightStyle.text = _getLabelText(
                         name, value, queryTarget, 'emphasis'
                     );
