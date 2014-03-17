@@ -71,29 +71,101 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
-option = {
-    dataRange: {
+dataRangeStyle = [
+// 0
+    {
         min: 0,
-        orient: 'horizontal', // 'vertical'
-        x: 'right', // 'center' | 'left' | {number},
-        y: 'top', // 'center' | 'top' | {number}
-        backgroundColor: '#eee',
-        borderColor: 'rgba(178,34,34,0.8)',
-        borderWidth: 4,
-        //padding: 10,    // [5, 10, 15, 20]
-        itemGap: 5,
-        //textStyle: {color: 'red'},
-        splitNumber: 6,            // 分割段数，默认为5
-        color:['red','yellow'],//颜色 
-        text:['高','低'],           // 文本，默认为数值文本
-        //calculable : true,
         max: 2000
     },
+// 1
+    {
+        orient: 'horizontal', // 'vertical'
+        min: 0,
+        max: 2000
+    },
+// 2
+    {
+        text:['高','低'],           // 文本，默认为数值文本
+        min: 0,
+        max: 2000
+    },
+// 3
+    {
+        orient: 'horizontal', // 'vertical'
+        text:['高','低'],           // 文本，默认为数值文本
+        min: 0,
+        max: 2000
+    },
+// 4
+    {
+        splitNumber: 0,
+        min: 0,
+        max: 2000
+    },
+// 5
+    {
+        orient: 'horizontal', // 'vertical'
+        splitNumber: 0,
+        min: 0,
+        max: 2000
+    },
+// 6
+    {
+        splitNumber: 0,
+        text:['高','低'],            // 文本，默认为数值文本
+        min: 0,
+        max: 2000
+    },
+// 7
+    {
+        orient: 'horizontal', // 'vertical'
+        splitNumber: 0,
+        text:['高','低'],            // 文本，默认为数值文本
+        min: 0,
+        max: 2000
+    },
+// 8
+    {
+        calculable : true,
+        min: 0,
+        max: 2000
+    },
+// 9
+    {
+        orient: 'horizontal',      // 'vertical'
+        calculable : true,
+        min: 0,
+        max: 2000
+    },
+// 10
+    {
+        color:['red','yellow'],    //颜色 
+        text:['高','低'],            // 文本，默认为数值文本
+        calculable : true,
+        min: 0,
+        max: 2000
+    },
+// 11
+    {
+        orient: 'horizontal',      // 'vertical'
+        color:['red','yellow'],    //颜色 
+        text:['高','低'],            // 文本，默认为数值文本
+        calculable : true,
+        min: 0,
+        max: 2000
+    }
+]
+var cur = curIndex++%dataRangeStyle.length;
+option = {
+    title:{
+        text: '当前样式序号:' + cur,
+        subtext: 'NO.' + cur
+    },
+    dataRange: dataRangeStyle[cur],
     series : [
         {
-            name: 'iphone3',
+            name: '',
             type: 'map',
-            mapType: 'china',
             data:[]
         }
     ]
@@ -104,7 +176,7 @@ option = {
             <div id="graphic" class="span8">
                 <div id="main" class="main" style="height: 530px;"></div>
                 <div>
-                    <button onclick="refresh(true)">Refresh ~</button>
+                    <button onclick="refresh(true)">下一个 (Next) ~</button>
                     <span id='wrong-message' style="color:red"></span>
                 </div>
             </div><!--/span-->
@@ -130,6 +202,16 @@ option = {
     <script src="../asset/js/bootstrap-collapse.js"></script>
     <script src="../asset/js/bootstrap-carousel.js"></script>
     <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script type="text/javascript">
+        var curIndex = 0;
+    </script>
     <script src="../asset/js/echartsExample.js"></script>
+    <script>
+        function focusGraphic() {
+            domCode.className = 'span4 ani';
+            domGraphic.className = 'span8 ani';
+            refresh();
+        }
+    </script>
 </body>
 </html>
