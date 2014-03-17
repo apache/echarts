@@ -27,7 +27,7 @@ require(
                 show : true,
                 feature : {
                     mark : true,
-                    magicType:['line', 'bar'],
+                    magicType:['line', 'bar', 'stack', 'tiled'],
                     restore : true,
                     saveAsImage : true
                 }
