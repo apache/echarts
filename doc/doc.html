@@ -1107,58 +1107,85 @@ require(['echarts'], function(ec){
                             <td> 工具箱icon颜色序列，循环使用 </td>
                         </tr>
                         <tr>
-                            <td> <b>{Object}</b> feature </td>
-                            <td> {} </td>
-                            <td> 启用功能，目前支持feature见下</td>
-                        </tr>
-                        <tr>
                             <td> <b>{boolean}</b> showTitle </td>
                             <td> true </td>
                             <td> 是否显示工具箱文字提示，默认启用</td>
                         </tr>
                         <tr>
-                            <td> <b>{Object}</b> featureTitle </td>
-                            <td> {<br/>
-                                    mark : '辅助线开关',<br/>
-                                    markUndo : '删除辅助线',<br/>
-                                    markClear : '清空辅助线',<br/>
-                                    dataZoom : '区域缩放',<br/>
-                                    dataZoomReset : '区域缩放后退',<br/>
-                                    dataView : '数据视图',<br/>
-                                    lineChart : '折线图切换',<br/>
-                                    barChart : '柱形图切换',<br/>
-                                    restore : '还原',<br/>
-                                    saveAsImage : '保存为图片'<br/>
-                                 } 
-                            </td>
-                            <td> 工具箱文字提示默认话术</td>
+                            <td> <b>{Object}</b> textStyle </td>
+                            <td> {} </td>
+                            <td> 工具箱提示文字样式，（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
                         <tr>
-                            <td> <b>{Object}</b> featureImageIcon </td>
-                            <td> {} 
-                            </td>
-                            <td> 工具箱自定义图标，格式同featureTitle，传入图片地址（路径）</td>
-                        </tr>
-                        <tr>
-                            <td> <b>{Object}</b> featureHandler </td>
-                            <td> {} 
-                            </td>
-                            <td> 工具箱自定义功能回调处理</td>
+                            <td> <b>{Object}</b> feature </td>
+                            <td><pre>{
+    mark : {
+        show : false,
+        title : {
+            mark : '辅助线开关',
+            markUndo : '删除辅助线',
+            markClear : '清空辅助线'
+        },
+        lineStyle : {
+            width : 2,
+            color : '#1e90ff',
+            type : 'dashed'
+        }
+    },
+    dataZoom : {
+        show : false,
+        title : {
+            dataZoom : '区域缩放',
+            dataZoomReset : '区域缩放后退'
+        }
+    },
+    dataView : {
+        show : false,
+        title : '数据视图',
+        readOnly: false,
+        lang : ['Data View', 'close', 'refresh']
+    },
+    magicType: {
+        show : false,
+        title : {
+            line : '折线图切换',
+            bar : '柱形图切换',
+            stack : '堆叠',
+            tiled : '平铺'
+        },
+        type : [],
+    },
+    restore : {
+        show : false,
+        title : '还原'
+    },
+    saveAsImage : {
+        show : false,
+        title : '保存为图片',
+        type : 'png',
+        lang : ['点击保存'] 
+    }
+} 
+                              </pre></td>
+                            <td> 启用功能，目前支持feature见下，工具箱自定义功能回调处理，见<a href="example/toolbox.html" target="_blank">try this »</a></td>
                         </tr>
                     </table>
                     <p><img src="./asset/img/doc/toolbox.png" title="" alt="工具箱"/></P>
                     <div class="code">
                     <pre>
 feature : {
-    mark : true,                    // 辅助线标志，上图icon左数1/2/3，分别是启用，删除上一条，删除全部
-    dataZoom : true,                // 框选区域缩放，自动与存在的dataZoom控件同步，上图icon左数4/5，分别是启用，缩放后退
+    mark : {show : true},                    // 辅助线标志，上图icon左数1/2/3，分别是启用，删除上一条，删除全部
+    dataZoom : {show : true},                // 框选区域缩放，自动与存在的dataZoom控件同步，上图icon左数4/5，分别是启用，缩放后退
     
     // 动态类型切换，支持直角系下的折线图、柱状图、堆叠、平铺转换，上图icon左数6/7/8/9，分别是切换折线图，切换柱形图，切换为堆叠，切换为平铺
-    magicType:['line', 'bar', 'stack', 'tiled'],      
+    magicType : {
+        show : true,
+        type : ['line', 'bar', 'stack', 'tiled'] 
+    },
     
-    dataView : true,                // 数据视图，上图icon左数10，打开数据视图
-    restore : true                  // 还原，复位原始图表，上图icon左数11，还原
-    saveAsImage : true              // 保存为图片，上图icon左数12，保存
+    dataView : {show : true},                // 数据视图，上图icon左数10，打开数据视图
+    restore : {show : true},                  // 还原，复位原始图表，上图icon左数11，还原
+    saveAsImage : {show : true}              // 保存为图片，上图icon左数12，保存
 }
                     </pre>
                     </div>
@@ -1167,39 +1194,30 @@ feature : {
                         <li>
                             mark，辅助线标志
                             <ul>
-                                <li>简单传入true启动辅助线标志功能</li>
-                                <li>传入lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式</li>
+                                <li>可传入lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式</li>
                             </ul>
                         </li>
                         <li>
-                            dataView，数据视图
+                            dataView，数据视图，可设置更多属性
                             <ul>
-                                <li>简单传入true启动数据视图</li>
-                                <li>传入<b>{Object}</b>设置更多属性</li>
-                                <ul>
-                                    <li><b>{boolean=}</b> readOnly 默认数据视图为只读，可指定readOnly为false打开编辑功能</li>
-                                    <li><b>{Function=}</b> optionToContent 自主编排数据视图的显示内容</li>
-                                    <li><b>{Function=}</b> contentToOption 当数据视图readOnly为false时，会出现刷新按钮，如果是自主编排的显示内容，如何翻转也请自理</li>
-                                    <li><b>{Array=}</b> lang 数据视图上有三个话术，默认是['Data View', 'close', 'refresh']，如需改写，可自定义</li>
-                                </ul>
+                                <li><b>{boolean=}</b> readOnly 默认数据视图为只读，可指定readOnly为false打开编辑功能</li>
+                                <li><b>{Function=}</b> optionToContent 自主编排数据视图的显示内容</li>
+                                <li><b>{Function=}</b> contentToOption 当数据视图readOnly为false时，会出现刷新按钮，如果是自主编排的显示内容，如何翻转也请自理</li>
+                                <li><b>{Array=}</b> lang 数据视图上有三个话术，默认是['Data View', 'close', 'refresh']，如需改写，可自定义</li>
                             </ul>
                         </li>
                         <li>
-                            magicType，图表类型切换，当前仅支持直角系下的折线图、柱状图转换
+                            magicType，图表类型切换，支持直角系下的折线图、柱状图、堆叠、平铺转换
                             <ul>
-                                <li>['line', 'bar']</li>
+                                <li><b>{Array}</b> type ['line', 'bar', 'stack', 'tiled'] </li>
                             </ul>
                         </li>
                         <li>
-                            saveAsImage，保存图片（IE8-不支持）
+                            saveAsImage，保存图片（IE8-不支持），可设置更多属性
                             <ul>
-                                <li>简单传入true启动保存功能</li>
-                                <li>传入<b>{Object}</b>设置更多属性</li>
-                                <ul>
-                                    <li>{string=} type 默认保存图片类型为'png'，需改为'jpeg'</li>
-                                    <li>{string=} name 指定图片名称，如不指定，则用图表title标题，如无title标题则图片名称默认为“ECharts”</li>
-                                    <li>{string=} lang 非IE浏览器支持点击下载，有保存话术，默认是“点击保存”，可修改</li>
-                                </ul>
+                                <li><b>{string=}</b> type 默认保存图片类型为'png'，需改为'jpeg'</li>
+                                <li><b>{string=}</b> name 指定图片名称，如不指定，则用图表title标题，如无title标题则图片名称默认为“ECharts”</li>
+                                <li><b>{string=}</b> lang 非IE浏览器支持点击下载，有保存话术，默认是“点击保存”，可修改</li>
                             </ul>
                         </li>
                     </ul>

@@ -35,9 +35,11 @@ define(function (require) {
         var _iconList;
         var _iconShapeMap = {};
         var _itemGroupLocation;
+        var _featureTitle = {};             // 文字
+        var _featureIcon = {};              // 图标
+        var _featureColor = {};             // 颜色
         var _enableColor = 'red';
         var _disableColor = '#ccc';
-        var _markColor;
         var _markStart;
         var _marking;
         var _markShape;
@@ -55,36 +57,52 @@ define(function (require) {
         function _buildShape() {
             _iconList = [];
             var feature = option.toolbox.feature;
+            var iconName = [];
             for (var key in feature){
-                if (feature[key]) {
+                if (feature[key].show) {
                     switch (key) {
                         case 'mark' :
-                            _iconList.push('mark');
-                            _iconList.push('markUndo');
-                            _iconList.push('markClear');
+                            iconName.push({key : key, name : 'mark'});
+                            iconName.push({key : key, name : 'markUndo'});
+                            iconName.push({key : key, name : 'markClear'});
                             break;
                         case 'magicType' :
-                            for (var i = 0, l = feature[key].length; i < l; i++
-                            ) {
-                                _iconList.push(feature[key][i] + 'Chart');
+                            for (var i = 0, l = feature[key].type.length; i < l; i++) {
+                                feature[key].title[feature[key].type[i] + 'Chart']
+                                    = feature[key].title[feature[key].type[i]];
+                                iconName.push({key : key, name : feature[key].type[i] + 'Chart'});
                             }
                             break;
                         case 'dataZoom' :
-                            _iconList.push('dataZoom');
-                            _iconList.push('dataZoomReset');
+                            iconName.push({key : key, name : 'dataZoom'});
+                            iconName.push({key : key, name : 'dataZoomReset'});
                             break;
                         case 'saveAsImage' :
                             if (!G_vmlCanvasManager) {
-                                _iconList.push('saveAsImage');
+                                iconName.push({key : key, name : 'saveAsImage'});
                             }
                             break;
                         default :
-                            _iconList.push(key);
+                            iconName.push({key : key, name : key});
                             break;
                     }
                 }
             }
-            if (_iconList.length > 0) {
+            if (iconName.length > 0) {
+                var name;
+                var key;
+                for (var i = 0, l = iconName.length; i < l; i++) {
+                    name = iconName[i].name;
+                    key = iconName[i].key;
+                    _iconList.push(name);
+                    _featureTitle[name] = feature[key].title[name] || feature[key].title;
+                    if (feature[key].icon) {
+                        _featureIcon[name] = feature[key].icon[name] || feature[key].icon;
+                    }
+                    if (feature[key].color) {
+                        _featureColor[name] = feature[key].color[name] || feature[key].color;
+                    }
+                }
                 _itemGroupLocation = _getItemGroupLocation();
 
                 _buildBackground();
@@ -155,24 +173,24 @@ define(function (require) {
                         height : itemSize,
                         iconType : _iconList[i],
                         lineWidth : 1,
-                        strokeColor : color[i % color.length],
+                        strokeColor : _featureColor[_iconList[i]] || color[i % color.length],
                         brushType: 'stroke'
                     },
                     highlightStyle : {
                         lineWidth : 2,
                         text : toolboxOption.showTitle 
-                               ? toolboxOption.featureTitle[_iconList[i]]
+                               ? _featureTitle[_iconList[i]]
                                : false,
                         textFont : textFont,
                         textPosition : textPosition,
-                        strokeColor : color[i % color.length]
+                        strokeColor : _featureColor[_iconList[i]] || color[i % color.length]
                     },
                     hoverable : true,
                     clickable : true
                 };
                 
-                if (toolboxOption.featureImageIcon[_iconList[i]]) {
-                    itemShape.style.image = toolboxOption.featureImageIcon[_iconList[i]].replace(
+                if (_featureIcon[_iconList[i]]) {
+                    itemShape.style.image = _featureIcon[_iconList[i]].replace(
                         new RegExp('^image:\\/\\/'), ''
                     );
                     itemShape.style.opacity = 0.8;
@@ -205,7 +223,6 @@ define(function (require) {
                 switch(_iconList[i]) {
                     case 'mark':
                         itemShape.onclick = _onMark;
-                        _markColor = itemShape.style.strokeColor;
                         break;
                     case 'markUndo':
                         itemShape.onclick = _onMarkUndo;
@@ -511,15 +528,15 @@ define(function (require) {
                         lineWidth : self.query(
                                         option,
                                         'toolbox.feature.mark.lineStyle.width'
-                                    ) || 2,
+                                    ),
                         strokeColor : self.query(
                                           option,
                                           'toolbox.feature.mark.lineStyle.color'
-                                      ) || _markColor,
+                                      ),
                         lineType : self.query(
                                        option,
                                        'toolbox.feature.mark.lineStyle.type'
-                                   ) || 'dashed'
+                                   )
                     }
                 };
                 zr.addHoverShape(_markShape);
@@ -735,7 +752,7 @@ define(function (require) {
                 + (!!(window.attachEvent 
                      && navigator.userAgent.indexOf('Opera') === -1)
                   ? '右键->图片另存为'
-                  : (saveOption.lang ? saveOption.lang : '点击保存'))
+                  : (saveOption.lang ? saveOption.lang[0] : '点击保存'))
                 + '"/>';
             
             downloadDiv.appendChild(downloadLink);
@@ -816,9 +833,9 @@ define(function (require) {
         // 用户自定义扩展toolbox方法
         function _onCustomHandler(param) {
             var target = param.target.style.iconType;
-            var featureHandler = option.toolbox.featureHandler;
-            if (typeof featureHandler[target] === 'function') {
-                featureHandler[target]();
+            var featureHandler = option.toolbox.feature[target].onclick;
+            if (typeof featureHandler === 'function') {
+                featureHandler(option);
             }
         }
 
@@ -827,9 +844,11 @@ define(function (require) {
             if (newOption.toolbox
                 && newOption.toolbox.show
                 && newOption.toolbox.feature.magicType
-                && newOption.toolbox.feature.magicType.length > 0
+                && newOption.toolbox.feature.magicType.show
+                && newOption.toolbox.feature.magicType.type
+                && newOption.toolbox.feature.magicType.type.length > 0
             ) {
-                var magicType = newOption.toolbox.feature.magicType;
+                var magicType = newOption.toolbox.feature.magicType.type;
                 var len = magicType.length;
                 _magicMap = {};     // 标识可控类型
                 while (len--) {

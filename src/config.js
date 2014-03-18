@@ -152,27 +152,55 @@ define(function() {
             itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
             itemSize: 16,             // 工具箱图形宽度
-            feature : {
-                //mark : true,
-                //dataZoom : true,
-                //dataView : {readOnly: false},
-                //magicType: ['line', 'bar'],
-                //restore : true,
-                //saveAsImage : true
-            },
             showTitle : true,
-            featureImageIcon : {},   // 自定义图片icon
-            featureTitle : {
-                mark : '辅助线开关',
-                markUndo : '删除辅助线',
-                markClear : '清空辅助线',
-                dataZoom : '区域缩放',
-                dataZoomReset : '区域缩放后退',
-                dataView : '数据视图',
-                lineChart : '折线图切换',
-                barChart : '柱形图切换',
-                restore : '还原',
-                saveAsImage : '保存为图片'
+            //textStyle : {},
+            feature : {
+                mark : {
+                    show : false,
+                    title : {
+                        mark : '辅助线开关',
+                        markUndo : '删除辅助线',
+                        markClear : '清空辅助线'
+                    },
+                    lineStyle : {
+                        width : 1,
+                        color : '#1e90ff',
+                        type : 'dashed'
+                    }
+                },
+                dataZoom : {
+                    show : false,
+                    title : {
+                        dataZoom : '区域缩放',
+                        dataZoomReset : '区域缩放后退'
+                    }
+                },
+                dataView : {
+                    show : false,
+                    title : '数据视图',
+                    readOnly: false,
+                    lang : ['Data View', 'close', 'refresh']
+                },
+                magicType: {
+                    show : false,
+                    title : {
+                        line : '折线图切换',
+                        bar : '柱形图切换',
+                        stack : '堆叠',
+                        tiled : '平铺'
+                    },
+                    type : [], // 'line', 'bar', 'stack', 'tiled'
+                },
+                restore : {
+                    show : false,
+                    title : '还原'
+                },
+                saveAsImage : {
+                    show : false,
+                    title : '保存为图片',
+                    type : 'png',
+                    lang : ['点击保存'] 
+                }
             }
         },
 
