@@ -290,10 +290,28 @@ define(function(require) {
                             'vertical'
                         );
                         
-                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] || {};
+                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
+                                                || {
+                                                    min : Number.POSITIVE_INFINITY,
+                                                    max : Number.NEGATIVE_INFINITY,
+                                                    sum : 0,
+                                                    counter : 0,
+                                                    average : 0
+                                                };
                         xMarkMap[seriesIndex][i] = 
                             x + (barWidthMap[seriesIndex] || barWidth) / 2;
-
+                        if (xMarkMap[seriesIndex].min > value) {
+                            xMarkMap[seriesIndex].min = value;
+                            xMarkMap[seriesIndex].minY = y;
+                            xMarkMap[seriesIndex].minX = xMarkMap[seriesIndex][i];
+                        }
+                        if (xMarkMap[seriesIndex].max < value) {
+                            xMarkMap[seriesIndex].max = value;
+                            xMarkMap[seriesIndex].maxY = y;
+                            xMarkMap[seriesIndex].maxX = xMarkMap[seriesIndex][i];
+                        }
+                        xMarkMap[seriesIndex].sum += value;
+                        xMarkMap[seriesIndex].counter++;
                         self.shapeList.push(barShape);
                     }
 
@@ -342,6 +360,31 @@ define(function(require) {
                     x += ((barWidthMap[seriesIndex] || barWidth) + barGap);
                 }
             }
+            
+            for (var j = 0, k = locationMap.length; j < k; j++) {
+                for (var m = 0, n = locationMap[j].length; m < n; m++) {
+                    seriesIndex = locationMap[j][m];
+                    xMarkMap[seriesIndex].average = 
+                        xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter;
+                        
+                    y = component.yAxis.getAxis(series[seriesIndex].yAxisIndex || 0)
+                        .getCoord(xMarkMap[seriesIndex].average);
+                        
+                    xMarkMap[seriesIndex].averageLine = [
+                        [component.grid.getX(), y],
+                        [component.grid.getXend(), y]
+                    ];
+                    xMarkMap[seriesIndex].minLine = [
+                        [component.grid.getX(), xMarkMap[seriesIndex].minY],
+                        [component.grid.getXend(), xMarkMap[seriesIndex].minY]
+                    ];
+                    xMarkMap[seriesIndex].maxLine = [
+                        [component.grid.getX(), xMarkMap[seriesIndex].maxY],
+                        [component.grid.getXend(), xMarkMap[seriesIndex].maxY]
+                    ];
+                }
+            }
+                        
             _buildMark(seriesArray, xMarkMap, true);
         }
 
@@ -441,10 +484,28 @@ define(function(require) {
                             'horizontal'
                         );
                         
-                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] || {};
+                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
+                                                || {
+                                                    min : Number.POSITIVE_INFINITY,
+                                                    max : Number.NEGATIVE_INFINITY,
+                                                    sum : 0,
+                                                    counter : 0,
+                                                    average : 0
+                                                };
                         xMarkMap[seriesIndex][i] = 
                             y - (barWidthMap[seriesIndex] || barWidth) / 2;
-
+                        if (xMarkMap[seriesIndex].min > value) {
+                            xMarkMap[seriesIndex].min = value;
+                            xMarkMap[seriesIndex].minX = x + barHeight;
+                            xMarkMap[seriesIndex].minY = xMarkMap[seriesIndex][i];
+                        }
+                        if (xMarkMap[seriesIndex].max < value) {
+                            xMarkMap[seriesIndex].max = value;
+                            xMarkMap[seriesIndex].maxX = x + barHeight;
+                            xMarkMap[seriesIndex].maxY = xMarkMap[seriesIndex][i];
+                        }
+                        xMarkMap[seriesIndex].sum += value;
+                        xMarkMap[seriesIndex].counter++;
                         self.shapeList.push(barShape);
                     }
 
@@ -494,6 +555,31 @@ define(function(require) {
                     y -= ((barWidthMap[seriesIndex] || barWidth) + barGap);
                 }
             }
+            
+            for (var j = 0, k = locationMap.length; j < k; j++) {
+                for (var m = 0, n = locationMap[j].length; m < n; m++) {
+                    seriesIndex = locationMap[j][m];
+                    xMarkMap[seriesIndex].average = 
+                        xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter;
+                        
+                    x = component.xAxis.getAxis(series[seriesIndex].xAxisIndex || 0)
+                        .getCoord(xMarkMap[seriesIndex].average);
+                        
+                    xMarkMap[seriesIndex].averageLine = [
+                        [x, component.grid.getYend()],
+                        [x, component.grid.getY()]
+                    ];
+                    xMarkMap[seriesIndex].minLine = [
+                        [xMarkMap[seriesIndex].minX, component.grid.getYend()],
+                        [xMarkMap[seriesIndex].minX, component.grid.getY()]
+                    ];
+                    xMarkMap[seriesIndex].maxLine = [
+                        [xMarkMap[seriesIndex].maxX, component.grid.getYend()],
+                        [xMarkMap[seriesIndex].maxX, component.grid.getY()]
+                    ];
+                }
+            }
+            
             _buildMark(seriesArray, xMarkMap, false);
         }
         
@@ -753,7 +839,18 @@ define(function(require) {
             var yAxis = component.yAxis.getAxis(serie.yAxisIndex);
             var dataIndex;
             var pos;
-            if (markCoordParams.isHorizontal) {
+            if (mpData.type
+                && (mpData.type === 'max' || mpData.type === 'min' || mpData.type === 'average')
+            ) {
+                // 特殊值内置支持
+                pos = [
+                    markCoordParams.xMarkMap[seriesIndex][mpData.type + 'X'],
+                    markCoordParams.xMarkMap[seriesIndex][mpData.type + 'Y'],
+                    markCoordParams.xMarkMap[seriesIndex][mpData.type + 'Line'],
+                    markCoordParams.xMarkMap[seriesIndex][mpData.type]
+                ];
+            }
+            else if (markCoordParams.isHorizontal) {
                 // 横向
                 dataIndex = typeof mpData.xAxis == 'string'
                             && xAxis.getIndexByName

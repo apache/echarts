@@ -9,6 +9,7 @@ define(function(require) {
     function Base(ecConfig, zr){
         var ecData = require('../util/ecData');
         var zrUtil = require('zrender/tool/util');
+        var zrArea = require('zrender/tool/area');
         //var zrColor = require('zrender/tool/color');
         var self = this;
 
@@ -309,6 +310,15 @@ define(function(require) {
                                       ? mpData.x : pos[0];
                 markPoint.data[i].y = typeof mpData.y != 'undefined'
                                       ? mpData.y : pos[1];
+                if (mpData.type
+                    && (mpData.type === 'max' || mpData.type === 'min')
+                ) {
+                    // 特殊值内置支持
+                    markPoint.data[i].value = pos[3];
+                    markPoint.data[i].name = mpData.name || mpData.type;
+                    markPoint.data[i].symbolSize = markPoint.data[i].symbolSize
+                        || (zrArea.getTextWidth(pos[3], self.getFont()) / 2 + 5);
+                }
             }
             
             var shapeList = _markPoint(
@@ -349,14 +359,28 @@ define(function(require) {
             var markLine = zrUtil.clone(serie.markLine);
             for (var i = 0, l = markLine.data.length; i < l; i++) {
                 mlData = markLine.data[i];
-                pos = [
-                    self.getMarkCoord(
-                        serie, seriesIndex, mlData[0], markCoordParams
-                    ),
-                    self.getMarkCoord(
-                        serie, seriesIndex, mlData[1], markCoordParams
-                    )
-                ];
+                if (mlData.type
+                    && (mlData.type === 'max' || mlData.type === 'min' || mlData.type === 'average')
+                ) {
+                    // 特殊值内置支持
+                    pos = self.getMarkCoord(serie, seriesIndex, mlData, markCoordParams);
+                    markLine.data[i] = [zrUtil.clone(mlData), {}];
+                    markLine.data[i][0].name = mlData.name || mlData.type;
+                    markLine.data[i][0].value = pos[3];
+                    pos = pos[2];
+                    mlData = [{},{}];
+                }
+                else {
+                    pos = [
+                        self.getMarkCoord(
+                            serie, seriesIndex, mlData[0], markCoordParams
+                        ),
+                        self.getMarkCoord(
+                            serie, seriesIndex, mlData[1], markCoordParams
+                        )
+                    ];
+                }
+                
                 markLine.data[i][0].x = typeof mlData[0].x != 'undefined'
                                       ? mlData[0].x : pos[0][0];
                 markLine.data[i][0].y = typeof mlData[0].y != 'undefined'

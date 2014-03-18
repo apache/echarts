@@ -100,21 +100,26 @@ define(function(require) {
                 return;
             }
 
+            var xMarkMap = {}; // 为标注记录一些参数
             switch (position) {
                 case 'bottom' :
                 case 'top' :
-                    _buildHorizontal(maxDataLength, locationMap);
+                    _buildHorizontal(maxDataLength, locationMap, xMarkMap);
                     break;
                 case 'left' :
                 case 'right' :
-                    _buildVertical(maxDataLength, locationMap);
+                    _buildVertical(maxDataLength, locationMap, xMarkMap);
                     break;
             }
+            
             for (var i = 0, l = seriesArray.length; i < l; i++) {
                 self.buildMark(
                     series[seriesArray[i]],
                     seriesArray[i],
-                    component
+                    component,
+                    {
+                        xMarkMap : xMarkMap
+                    }
                 );
             }
         }
@@ -209,7 +214,7 @@ define(function(require) {
         /**
          * 构建类目轴为水平方向的折线图系列
          */
-        function _buildHorizontal(maxDataLength, locationMap) {
+        function _buildHorizontal(maxDataLength, locationMap, xMarkMap) {
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
             var serie = series[seriesIndex];
@@ -277,6 +282,27 @@ define(function(require) {
                         curPLMap[seriesIndex].push(
                             [x, y, i, categoryAxis.getNameByIndex(i), x, baseYP]
                         );
+                        
+                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
+                                                || {
+                                                    min : Number.POSITIVE_INFINITY,
+                                                    max : Number.NEGATIVE_INFINITY,
+                                                    sum : 0,
+                                                    counter : 0,
+                                                    average : 0
+                                                };
+                        if (xMarkMap[seriesIndex].min > value) {
+                            xMarkMap[seriesIndex].min = value;
+                            xMarkMap[seriesIndex].minY = y;
+                            xMarkMap[seriesIndex].minX = x;
+                        }
+                        if (xMarkMap[seriesIndex].max < value) {
+                            xMarkMap[seriesIndex].max = value;
+                            xMarkMap[seriesIndex].maxY = y;
+                            xMarkMap[seriesIndex].maxX = x;
+                        }
+                        xMarkMap[seriesIndex].sum += value;
+                        xMarkMap[seriesIndex].counter++;
                     }
                 }
                 // 补充空数据的拖拽提示
@@ -314,7 +340,7 @@ define(function(require) {
                     }
                 }
             }
-
+            
             // 把剩余未完成的curPLMap全部添加到finalPLMap中
             for (var sId in curPLMap) {
                 if (curPLMap[sId].length > 0) {
@@ -323,13 +349,38 @@ define(function(require) {
                     curPLMap[sId] = [];
                 }
             }
+            
+            for (var j = 0, k = locationMap.length; j < k; j++) {
+                for (var m = 0, n = locationMap[j].length; m < n; m++) {
+                    seriesIndex = locationMap[j][m];
+                    xMarkMap[seriesIndex].average = 
+                        xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter;
+                        
+                    y = component.yAxis.getAxis(series[seriesIndex].yAxisIndex || 0)
+                        .getCoord(xMarkMap[seriesIndex].average);
+                        
+                    xMarkMap[seriesIndex].averageLine = [
+                        [component.grid.getX(), y],
+                        [component.grid.getXend(), y]
+                    ];
+                    xMarkMap[seriesIndex].minLine = [
+                        [component.grid.getX(), xMarkMap[seriesIndex].minY],
+                        [component.grid.getXend(), xMarkMap[seriesIndex].minY]
+                    ];
+                    xMarkMap[seriesIndex].maxLine = [
+                        [component.grid.getX(), xMarkMap[seriesIndex].maxY],
+                        [component.grid.getXend(), xMarkMap[seriesIndex].maxY]
+                    ];
+                }
+            }
+            
             _buildBorkenLine(finalPLMap, categoryAxis, 'horizontal');
         }
 
         /**
          * 构建类目轴为垂直方向的折线图系列
          */
-        function _buildVertical(maxDataLength, locationMap) {
+        function _buildVertical(maxDataLength, locationMap, xMarkMap) {
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
             var serie = series[seriesIndex];
@@ -397,6 +448,27 @@ define(function(require) {
                         curPLMap[seriesIndex].push(
                             [x, y, i, categoryAxis.getNameByIndex(i), baseXP, y]
                         );
+                        
+                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
+                                                || {
+                                                    min : Number.POSITIVE_INFINITY,
+                                                    max : Number.NEGATIVE_INFINITY,
+                                                    sum : 0,
+                                                    counter : 0,
+                                                    average : 0
+                                                };
+                        if (xMarkMap[seriesIndex].min > value) {
+                            xMarkMap[seriesIndex].min = value;
+                            xMarkMap[seriesIndex].minX = x;
+                            xMarkMap[seriesIndex].minY = y;
+                        }
+                        if (xMarkMap[seriesIndex].max < value) {
+                            xMarkMap[seriesIndex].max = value;
+                            xMarkMap[seriesIndex].maxX = x;
+                            xMarkMap[seriesIndex].maxY = y;
+                        }
+                        xMarkMap[seriesIndex].sum += value;
+                        xMarkMap[seriesIndex].counter++;
                     }
                 }
                 // 补充空数据的拖拽提示
@@ -443,6 +515,31 @@ define(function(require) {
                     curPLMap[sId] = [];
                 }
             }
+            
+            for (var j = 0, k = locationMap.length; j < k; j++) {
+                for (var m = 0, n = locationMap[j].length; m < n; m++) {
+                    seriesIndex = locationMap[j][m];
+                    xMarkMap[seriesIndex].average = 
+                        xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter;
+                        
+                    x = component.xAxis.getAxis(series[seriesIndex].xAxisIndex || 0)
+                        .getCoord(xMarkMap[seriesIndex].average);
+                        
+                    xMarkMap[seriesIndex].averageLine = [
+                        [x, component.grid.getYend()],
+                        [x, component.grid.getY()]
+                    ];
+                    xMarkMap[seriesIndex].minLine = [
+                        [xMarkMap[seriesIndex].minX, component.grid.getYend()],
+                        [xMarkMap[seriesIndex].minX, component.grid.getY()]
+                    ];
+                    xMarkMap[seriesIndex].maxLine = [
+                        [xMarkMap[seriesIndex].maxX, component.grid.getYend()],
+                        [xMarkMap[seriesIndex].maxX, component.grid.getY()]
+                    ];
+                }
+            }
+            
             _buildBorkenLine(finalPLMap, categoryAxis, 'vertical');
         }
 
@@ -662,9 +759,21 @@ define(function(require) {
         }
 
         // 位置转换
-        function getMarkCoord(serie, seriesIndex, mpData) {
+        function getMarkCoord(serie, seriesIndex, mpData, markCoordParams) {
             var xAxis = component.xAxis.getAxis(serie.xAxisIndex);
             var yAxis = component.yAxis.getAxis(serie.yAxisIndex);
+            
+            if (mpData.type
+                && (mpData.type === 'max' || mpData.type === 'min' || mpData.type === 'average')
+            ) {
+                // 特殊值内置支持
+                return [
+                    markCoordParams.xMarkMap[seriesIndex][mpData.type + 'X'],
+                    markCoordParams.xMarkMap[seriesIndex][mpData.type + 'Y'],
+                    markCoordParams.xMarkMap[seriesIndex][mpData.type + 'Line'],
+                    markCoordParams.xMarkMap[seriesIndex][mpData.type]
+                ];
+            }
             
             return [
                 typeof mpData.xAxis != 'string' 
