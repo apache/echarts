@@ -1344,7 +1344,7 @@ define(function(require) {
                     left : domSize[0],
                     top : domSize[1],
                     right : domSize[0] + domSize[2],
-                    bottom : domSize[1] + domSize[3],
+                    bottom : domSize[1] + domSize[3]
                 }
             };
             var minLeft = imgList.self.left;
@@ -1362,7 +1362,7 @@ define(function(require) {
                     left : domSize[0],
                     top : domSize[1],
                     right : domSize[0] + domSize[2],
-                    bottom : domSize[1] + domSize[3],
+                    bottom : domSize[1] + domSize[3]
                 }
                 minLeft = Math.min(minLeft, imgList[c].left);
                 minTop = Math.min(minTop, imgList[c].top);

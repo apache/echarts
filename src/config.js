@@ -189,7 +189,7 @@ define(function() {
                         stack : '堆叠',
                         tiled : '平铺'
                     },
-                    type : [], // 'line', 'bar', 'stack', 'tiled'
+                    type : [] // 'line', 'bar', 'stack', 'tiled'
                 },
                 restore : {
                     show : false,
@@ -868,7 +868,7 @@ define(function() {
                 normal: {
                     // color: 各异,           // 标线主色，线色，symbol主色
                     // borderColor: 随color,     // 标线symbol边框颜色，优先于color 
-                    borderWidth: 2,          // 标线symbol边框线宽，单位px，默认为2
+                    borderWidth: 1,          // 标线symbol边框线宽，单位px，默认为2
                     label: {
                         show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
