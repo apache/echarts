@@ -848,7 +848,7 @@ define(function (require) {
                                      newOption.series[len].xAxisIndex || 0
                                  ]
                                : newOption.xAxis;
-                        if (axis && axis.type == 'category') {
+                        if (axis && axis.type || 'category'   == 'category') {
                             axis.__boundaryGap =
                                 typeof axis.boundaryGap != 'undefined'
                                 ? axis.boundaryGap : true;
@@ -920,7 +920,6 @@ define(function (require) {
         
         function getMagicOption(){
             var axis;
-            console.log(_magicType)
             if (_magicType[ecConfig.CHART_TYPE_LINE] || _magicType[ecConfig.CHART_TYPE_BAR]) {
                 // 图表类型有切换
                 var boundaryGap = _magicType[ecConfig.CHART_TYPE_LINE] ? false : true;
@@ -937,8 +936,7 @@ define(function (require) {
                         axis = option.xAxis instanceof Array
                                ? option.xAxis[option.series[i].xAxisIndex || 0]
                                : option.xAxis;
-                        if (axis && axis.type == 'category') {
-                            console.log(11111)
+                        if (axis && axis.type || 'category' == 'category') {
                             axis.boundaryGap = 
                                 boundaryGap ? true : axis.__boundaryGap;
                         }
@@ -964,8 +962,7 @@ define(function (require) {
                         axis = option.xAxis instanceof Array
                                ? option.xAxis[option.series[i].xAxisIndex || 0]
                                : option.xAxis;
-                        if (axis && axis.type == 'category') {
-                            console.log(axis.__boundaryGap)
+                        if (axis && axis.type || 'category'  == 'category') {
                             axis.boundaryGap = axis.__boundaryGap;
                         }
                         axis = option.yAxis instanceof Array
