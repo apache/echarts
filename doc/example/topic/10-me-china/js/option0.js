@@ -28,10 +28,10 @@ function option0 () {
             x: 'left',
             y: 'top',
             feature : {
-                mark : true,
-                dataView : {readOnly: false},
-                restore : true,
-                saveAsImage : true
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                restore : {show: true},
+                saveAsImage : {show: true}
             }
         },
         grid:{

@@ -98,9 +98,9 @@ var optionMap = {
         toolbox: {
             show : true,
             feature : {
-                dataView : {readOnly: false},
-                restore : true,
-                saveAsImage : true
+                dataView : {show: true, readOnly: false},
+                restore : {show: true},
+                saveAsImage : {show: true}
             }
         },
         calculable : true,
@@ -131,11 +131,11 @@ var optionMap = {
         toolbox: {
             show : true,
             feature : {
-                mark : true,
-                dataView : {readOnly: false},
-                magicType:['line', 'bar'],
-                restore : true,
-                saveAsImage : true
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                magicType : {show: true, type: ['line', 'bar']},
+                restore : {show: true},
+                saveAsImage : {show: true}
             }
         },
         calculable : true,
@@ -185,11 +185,11 @@ var optionMap = {
         toolbox: {
             show : true,
             feature : {
-                mark : true,
-                dataView : {readOnly: false},
-                magicType:['line', 'bar'],
-                restore : true,
-                saveAsImage : true
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                magicType: {show: true, type : ['line', 'bar']},
+                restore : {show: true},
+                saveAsImage : {show: true}
             }
         },
         calculable : true,
@@ -245,11 +245,11 @@ var optionMap = {
         toolbox: {
             show : true,
             feature : {
-                mark : true,
-                dataView : {readOnly: false},
-                magicType:['line', 'bar'],
-                restore : true,
-                saveAsImage : true
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                magicType: {show: true, type : ['line', 'bar']},
+                restore : {show: true},
+                saveAsImage : {show: true}
             }
         },
         calculable : true,
@@ -303,10 +303,10 @@ var optionMap = {
         toolbox: {
             show : true,
             feature : {
-                mark : true,
-                dataView : {readOnly: false},
-                restore : true,
-                saveAsImage : true
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                restore : {show: true},
+                saveAsImage : {show: true}
             }
         },
         series : [
@@ -373,11 +373,11 @@ var optionMap = {
         toolbox: {
             show : true,
             feature : {
-                mark : true,
-                dataZoom : true,
-                dataView : {readOnly: false},
-                restore : true,
-                saveAsImage : true
+                mark : {show: true},
+                dataZoom : {show: true},
+                dataView : {show: true, readOnly: false},
+                restore : {show: true},
+                saveAsImage : {show: true}
             }
         },
         dataZoom : {
@@ -562,11 +562,11 @@ var optionMap = {
         toolbox: {
             show : true,
             feature : {
-                mark : true,
-                dataZoom : true,
-                dataView : {readOnly: false},
-                restore : true,
-                saveAsImage : true
+                mark : {show: true},
+                dataZoom : {show: true},
+                dataView : {show: true, readOnly: false},
+                restore : {show: true},
+                saveAsImage : {show: true}
             }
         },
         xAxis : [
@@ -790,11 +790,11 @@ var optionMap = {
 	        toolbox: {
 	            show : true,
 	            feature : {
-	                mark : true,
-	                dataView : {readOnly: false},
-	                magicType:['line', 'bar'],
-	                restore : true,
-	                saveAsImage : true
+	                mark : {show: true},
+	                dataView : {show: true, readOnly: false},
+	                magicType: {show: true, type : ['line', 'bar']},
+	                restore : {show: true},
+	                saveAsImage : {show: true}
 	            }
 	        },
 	        dataZoom : {
@@ -1083,11 +1083,11 @@ var optionMap = {
             x: 'right',
             y: 'center',
             feature : {
-                mark : true,
-                dataView : {readOnly: false},
-                magicType:['line', 'bar'],
-                restore : true,
-                saveAsImage : true
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                magicType: {show: true, type : ['line', 'bar']},
+                restore : {show: true},
+                saveAsImage : {show: true}
             }
         },
         calculable : true,
@@ -1166,11 +1166,11 @@ var optionMap = {
         toolbox: {
             show : true,
             feature : {
-                mark : true,
-                dataView : {readOnly: false},
-                magicType:['line', 'bar'],
-                restore : true,
-                saveAsImage : true
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                magicType: {show: true, type : ['line', 'bar']},
+                restore : {show: true},
+                saveAsImage : {show: true}
             }
         },
         calculable : true,
@@ -1227,11 +1227,11 @@ var optionMap = {
             show : true,
             y: 'bottom',
             feature : {
-                mark : true,
-                dataView : {readOnly: false},
-                magicType:['line', 'bar'],
-                restore : true,
-                saveAsImage : true
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                magicType: {show: true, type : ['line', 'bar']},
+                restore : {show: true},
+                saveAsImage : {show: true}
             }
         },
         calculable : true,
@@ -1331,8 +1331,8 @@ var optionMap = {
             x:'right',
             y:'center',
             feature : {
-                mark : true,
-                dataView : {readOnly: false}
+                mark : {show: true},
+                dataView : {show: true, readOnly: false}
             }
         },
         series : [
@@ -1446,10 +1446,10 @@ var optionMap = {
 		        toolbox: {
 		            show : true,
 		            feature : {
-		                mark : true,
-		                dataView : {readOnly: false},
-		                restore : true,
-		                saveAsImage : true
+		                mark : {show: true},
+		                dataView : {show: true, readOnly: false},
+		                restore : {show: true},
+		                saveAsImage : {show: true}
 		            }
 		        },
 		        series : (function(){
@@ -1544,10 +1544,10 @@ var optionMap = {
 			        orient : 'vertical',
 			        y:'center',
 			        feature : {
-			            mark : true,
-			            dataView : {readOnly: false},
-			            restore : true,
-			            saveAsImage : true
+			            mark : {show: true},
+			            dataView : {show: true, readOnly: false},
+			            restore : {show: true},
+			            saveAsImage : {show: true}
 			        }
 			    },
 			   polar : [

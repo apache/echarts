@@ -26,10 +26,10 @@ require(
             toolbox: {
                 show : true,
                 feature : {
-                    mark : true,
-                    magicType:['line', 'bar', 'stack', 'tiled'],
-                    restore : true,
-                    saveAsImage : true
+                    mark : {show: true},
+                    magicType: {show: true, type: ['line', 'bar', 'stack', 'tiled']},
+                    restore : {show: true},
+                    saveAsImage : {show: true}
                 }
             },
             xAxis : [

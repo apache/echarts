@@ -234,9 +234,9 @@ var option = {
         toolbox: {
             show : true,
             feature : {
-                magicType:['line', 'bar'],
-                dataView : {readOnly: false},
-                restore : true
+                magicType: {show: true, type: ['line', 'bar']},
+                dataView : {show: true, readOnly: false},
+                restore : {show: true}
             }
         },
         legend: {
@@ -305,8 +305,8 @@ var option = {
             x : 'right',
             y : 'center',
             feature : {
-                magicType:['line', 'bar'],
-                restore : true
+                magicType: {show: true, type: ['line', 'bar']},
+                restore : {show: true}
             }
         },
         tooltip : {
@@ -388,8 +388,8 @@ var option = {
             x : 'right',
             y : 'center',
             feature : {
-                magicType:['line', 'bar'],
-                restore : true
+                magicType: {show: true, type: ['line', 'bar']},
+                restore : {show: true}
             }
         },
         grid : {
@@ -465,11 +465,11 @@ var option = {
         toolbox: {
             show : true,
             feature : {
-                mark : true,
-                dataZoom : true,
-                magicType:['line', 'bar'],
-                dataView : {readOnly: false},
-                restore : true
+                mark : {show: true},
+                dataZoom : {show: true},
+                magicType: {show: true, type: ['line', 'bar']},
+                dataView : {show: true, readOnly: false},
+                restore : {show: true}
             }
         },
         dataZoom : {
@@ -668,8 +668,8 @@ var option = {
             x : 'right',
             y : 'center',
             feature : {
-                dataZoom : true,
-                restore : true
+                dataZoom : {show: true},
+                restore : {show: true}
             }
         },
         grid : {
@@ -833,8 +833,8 @@ var option = {
             x : 'right',
             y : 'center',
             feature : {
-                dataZoom : true,
-                restore : true
+                dataZoom : {show: true},
+                restore : {show: true}
             }
         },
         grid : {
@@ -920,9 +920,9 @@ var option = {
             x: 'right',
             y: 'center',
             feature : {
-                mark : true,
-                dataView : {readOnly: false},
-                restore : true
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                restore : {show: true}
             }
         },
         series : [

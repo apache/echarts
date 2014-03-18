@@ -9,11 +9,11 @@ function option2 (idx, selected) {
             y: 'top',
             show : true,
             feature : {
-                mark : true,
-                dataZoom : true,
-                dataView : {readOnly: false},
-                restore : true,
-                saveAsImage : true
+                mark : {show: true},
+                dataZoom : {show: true},
+                dataView : {show: true, readOnly: false},
+                restore : {show: true},
+                saveAsImage : {show: true}
             }
         },
         legend : {

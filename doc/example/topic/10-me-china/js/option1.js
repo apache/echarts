@@ -28,11 +28,11 @@ function option1 (curSelected) {
         toolbox: {
             show : true,
             feature : {
-                mark : true,
-                dataView : {readOnly: false},
-                magicType:['line', 'bar'],
-                restore : true,
-                saveAsImage : true
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                magicType : {show: true, type: ['line', 'bar']},
+                restore : {show: true},
+                saveAsImage : {show: true}
             }
         },
         calculable : true,

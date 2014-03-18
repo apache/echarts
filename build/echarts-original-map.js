@@ -153,27 +153,55 @@ define('echarts/config',[],function() {
             itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
             itemSize: 16,             // 工具箱图形宽度
-            feature : {
-                //mark : true,
-                //dataZoom : true,
-                //dataView : {readOnly: false},
-                //magicType: ['line', 'bar'],
-                //restore : true,
-                //saveAsImage : true
-            },
             showTitle : true,
-            featureImageIcon : {},   // 自定义图片icon
-            featureTitle : {
-                mark : '辅助线开关',
-                markUndo : '删除辅助线',
-                markClear : '清空辅助线',
-                dataZoom : '区域缩放',
-                dataZoomReset : '区域缩放后退',
-                dataView : '数据视图',
-                lineChart : '折线图切换',
-                barChart : '柱形图切换',
-                restore : '还原',
-                saveAsImage : '保存为图片'
+            //textStyle : {},
+            feature : {
+                mark : {
+                    show : false,
+                    title : {
+                        mark : '辅助线开关',
+                        markUndo : '删除辅助线',
+                        markClear : '清空辅助线'
+                    },
+                    lineStyle : {
+                        width : 1,
+                        color : '#1e90ff',
+                        type : 'dashed'
+                    }
+                },
+                dataZoom : {
+                    show : false,
+                    title : {
+                        dataZoom : '区域缩放',
+                        dataZoomReset : '区域缩放后退'
+                    }
+                },
+                dataView : {
+                    show : false,
+                    title : '数据视图',
+                    readOnly: false,
+                    lang : ['Data View', 'close', 'refresh']
+                },
+                magicType: {
+                    show : false,
+                    title : {
+                        line : '折线图切换',
+                        bar : '柱形图切换',
+                        stack : '堆叠',
+                        tiled : '平铺'
+                    },
+                    type : [], // 'line', 'bar', 'stack', 'tiled'
+                },
+                restore : {
+                    show : false,
+                    title : '还原'
+                },
+                saveAsImage : {
+                    show : false,
+                    title : '保存为图片',
+                    type : 'png',
+                    lang : ['点击保存'] 
+                }
             }
         },
 
@@ -412,7 +440,7 @@ define('echarts/config',[],function() {
                     // color: '各异',
                     borderColor: '#fff',       // 柱条边线
                     borderRadius: 0,           // 柱条边线圆角，单位px，默认为0
-                    borderWidth: 1,            // 柱条边线线宽，单位px，默认为1
+                    borderWidth: 0,            // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -423,9 +451,9 @@ define('echarts/config',[],function() {
                 },
                 emphasis: {
                     // color: '各异',
-                    borderColor: 'rgba(0,0,0,0)',   // 柱条边线
+                    borderColor: '#fff',            // 柱条边线
                     borderRadius: 0,                // 柱条边线圆角，单位px，默认为0
-                    borderWidth: 1,                 // 柱条边线线宽，单位px，默认为1
+                    borderWidth: 0,                 // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -892,7 +920,7 @@ define('echarts/config',[],function() {
             RESIZE: 'resize',
             CLICK: 'click',
             HOVER: 'hover',
-            MOUSEWHEEL: 'mousewheel',
+            //MOUSEWHEEL: 'mousewheel',
             // -------业务交互逻辑
             DATA_CHANGED: 'dataChanged',
             DATA_ZOOM: 'dataZoom',
@@ -904,7 +932,9 @@ define('echarts/config',[],function() {
             DATA_VIEW_CHANGED: 'dataViewChanged',
             MAP_ROAM : 'mapRoam',
             // -------内部通信
-            TOOLTIP_HOVER: 'tooltipHover'
+            TOOLTIP_HOVER: 'tooltipHover',
+            TOOLTIP_IN_GRID: 'tooltipInGrid',
+            TOOLTIP_OUT_GRID: 'tooltipOutGrid'
         },
         DRAG_ENABLE_TIME : 150,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
         // 默认标志图形类型列表
@@ -11380,7 +11410,9 @@ define(
 
             var _domList = {};              //canvas dom元素
             var _ctxList = {};              //canvas 2D context对象，与domList对应
-
+            var _domListBack = {};
+            var _ctxListBack = {};
+            
             // 每个zLevel 的配置
             // @config clearColor
             var _zLevelConfig = {};
@@ -11599,6 +11631,9 @@ define(
                 }
                 //检查_maxZlevel是否变大，如是则同步创建需要的Canvas
                 _syncMaxZlevelCanvase();
+                
+                //清空已有内容，render默认为首次渲染
+                clear();
 
                 //升序遍历，shape上的zlevel指定绘画图层的z轴层叠
                 storage.iterShape(
@@ -12848,6 +12883,8 @@ define(
                 restore : _iconRestore,
                 lineChart : _iconLineChart,
                 barChart : _iconBarChart,
+                stackChart : _iconStackChart,
+                tiledChart : _iconTiledChart,
                 dataView : _iconDataView,
                 saveAsImage : _iconSave,
                 
@@ -13031,6 +13068,30 @@ define(
             ctx.lineTo(style.x + 12 * dx,       style.y + 14 * dy);
         }
 
+        function _iconStackChart(ctx, style) {
+            var x = style.x;
+            var y = style.y;
+            var width = style.width;
+            var height = style.height;
+            var dy = Math.round(height / 3);
+            var len = 3;
+            while (len--) {
+                ctx.rect(x, y + dy * len + 2, width, 2);
+            }
+        }
+        
+        function _iconTiledChart(ctx, style) {
+            var x = style.x;
+            var y = style.y;
+            var width = style.width;
+            var height = style.height;
+            var dx = Math.round(width / 3);
+            var len = 3;
+            while (len--) {
+                ctx.rect(x + dx * len, y, 2, height);
+            }
+        }
+        
         function _iconDataView(ctx, style) {
             var dx = style.width / 16;
 
@@ -13093,10 +13154,15 @@ define(
         function _iconCircle(ctx, style) {
             var width = style.width / 2;
             var height = style.height / 2;
+            var r = Math.min(width, height);
+            ctx.moveTo(
+                style.x + width + r, 
+                style.y + height
+            );
             ctx.arc(
                 style.x + width, 
                 style.y + height, 
-                Math.min(width, height),
+                r,
                 0, 
                 Math.PI * 2
             );
@@ -14352,13 +14418,15 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util',
                                    ? data[i][0].value : '';
                 
                 itemShape = getLineMarkShape(
-                    mlOption,                   // markLine 
+                    mlOption,                   // markLine
+                    seriesIndex,
                     data[i],                    // 数据
+                    i,
                     parsePercent(data[i][0].x, zrWidth),   // 坐标
                     parsePercent(data[i][0].y, zrHeight),  // 坐标
                     parsePercent(data[i][1].x, zrWidth),   // 坐标
                     parsePercent(data[i][1].y, zrHeight),  // 坐标
-                    color               // 默认symbol和color
+                    color                       // 默认symbol和color
                 );
                 
                 effect = self.deepMerge(
@@ -14388,7 +14456,7 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util',
         }
         
         function getSymbolShape(
-            serie, seriesIndex,    // 系列 
+            serie, seriesIndex,     // 系列 
             data, dataIndex, name,  // 数据
             x, y,                   // 坐标
             symbol, color,          // 默认symbol和color，来自legend或dataRange全局分配
@@ -14441,16 +14509,21 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util',
                     brushType : 'both',
                     color : symbol.match('empty') 
                             ? emptyColor 
-                            : (normal.color || color),
-                    strokeColor : normal.borderColor || normal.color || color,
+                            : (self.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
+                               || color),
+                    strokeColor : normal.borderColor 
+                              || self.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
+                              || color,
                     lineWidth: nBorderWidth
                 },
                 highlightStyle : {
                     color : symbol.match('empty') 
                             ? emptyColor 
-                            : (emphasis.color|| normal.color || color),
-                    strokeColor : emphasis.borderColor || normal.borderColor 
-                                  || emphasis.color || normal.color || color,
+                            : self.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data),
+                    strokeColor : emphasis.borderColor 
+                              || normal.borderColor
+                              || self.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
+                              || color,
                     lineWidth: eBorderWidth
                 },
                 clickable : true
@@ -14521,7 +14594,9 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util',
         
         function getLineMarkShape(
             mlOption,               // 系列 
+            seriesIndex,            // 系列索引
             data,                   // 数据
+            dataIndex,              // 数据索引
             xStart, yStart,         // 坐标
             xEnd, yEnd,             // 坐标
             color                   // 默认color，来自legend或dataRange全局分配
@@ -14561,10 +14636,12 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util',
                 queryTarget,
                 'itemStyle.normal'
             );
+            normal.color = self.getItemStyleColor(normal.color, seriesIndex, dataIndex, data);
             var emphasis = self.deepMerge(
                 queryTarget,
                 'itemStyle.emphasis'
             );
+            emphasis.color = self.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data);
             
             var nlineStyle = normal.lineStyle;
             var elineStyle = emphasis.lineStyle;
@@ -14604,12 +14681,12 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util',
                     color : normal.color || color,
                     strokeColor : nlineStyle.color
                                   || normal.borderColor
-                                  || color
-                                  || normal.color,
+                                  || normal.color
+                                  || color,
                     lineWidth: nBorderWidth,
                     symbolBorderColor: normal.borderColor
-                                       || color
-                                       || normal.color,
+                                       || normal.color
+                                       || color,
                     symbolBorder: normal.borderWidth
                 },
                 highlightStyle : {
@@ -14622,15 +14699,15 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util',
                                   || nlineStyle.color
                                   || emphasis.borderColor 
                                   || normal.borderColor
-                                  || color 
                                   || emphasis.color 
-                                  || normal.color,
+                                  || normal.color
+                                  || color,
                     lineWidth: eBorderWidth,
                     symbolBorderColor: emphasis.borderColor
                                        || normal.borderColor
-                                       || color
                                        || emphasis.color
-                                       || normal.color,
+                                       || normal.color
+                                       || color,
                     symbolBorder: typeof emphasis.borderWidth == 'undefined'
                                   ? (normal.borderWidth + 2)
                                   : (emphasis.borderWidth)
@@ -14700,6 +14777,13 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util',
             x = (x + '').split('.');
             return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g,'$1,') 
                    + (x.length > 1 ? ('.' + x[1]) : '');
+        }
+        
+        
+        function getItemStyleColor(itemColor, seriesIndex, dataIndex, data) {
+            return typeof itemColor == 'function'
+                   ? itemColor(seriesIndex, dataIndex, data) : itemColor;
+            
         }
         
         function _trim(str) {
@@ -14814,7 +14898,6 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util',
                     }
                 }
             }
-            zr.refresh();
             self.animationEffect();
         }
 
@@ -14832,7 +14915,7 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util',
             }
             
             var color;
-            var shadowColo;
+            var shadowColor;
             var size;
             var effect;
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
@@ -14863,6 +14946,7 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util',
                                            : 'circle',
                                 x : shadowBlur + 1, // 线宽
                                 y : shadowBlur + 1,
+                                n : shape.style.n,
                                 width : shape.style.width * size,
                                 height : shape.style.height * size,
                                 lineWidth : 1,
@@ -15052,6 +15136,7 @@ define('echarts/component/base',['require','../util/ecData','zrender/tool/util',
         self.parseCenter = parseCenter;
         self.parseRadius = parseRadius;
         self.numAddCommas = numAddCommas;
+        self.getItemStyleColor = getItemStyleColor;
         self.subPixelOptimize = subPixelOptimize;
         self.animation = animation;
         self.animationMark = animationMark;
@@ -15283,9 +15368,10 @@ define('echarts/chart/calculableBase',['require','../util/ecData','../util/accMa
                 if (self.selectedMap[itemName] != legendSelected[itemName]) {
                     // 有一项不一致都需要重绘
                     status.needRefresh = true;
-                    return;
                 }
+                self.selectedMap[itemName] = legendSelected[itemName];
             }
+            return;
         }
 
         /**
@@ -16045,6 +16131,8 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
 
         // 轴线
         function _buildAxisLine() {
+            var lineWidth = option.axisLine.lineStyle.width;
+            var halfLineWidth = lineWidth / 2;
             var axShape = {
                 shape : 'line',
                 zlevel : _zlevelBase + 1,
@@ -16053,34 +16141,34 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
             switch (option.position) {
                 case 'left' :
                     axShape.style = {
-                        xStart : grid.getX(),
-                        yStart : grid.getYend(),
-                        xEnd : grid.getX(),
-                        yEnd : grid.getY()
+                        xStart : grid.getX() - halfLineWidth,
+                        yStart : grid.getYend() + halfLineWidth,
+                        xEnd : grid.getX() - halfLineWidth,
+                        yEnd : grid.getY() - halfLineWidth
                     };
                     break;
                 case 'right' :
                     axShape.style = {
-                        xStart : grid.getXend(),
-                        yStart : grid.getYend(),
-                        xEnd : grid.getXend(),
-                        yEnd : grid.getY()
+                        xStart : grid.getXend() + halfLineWidth,
+                        yStart : grid.getYend() + halfLineWidth,
+                        xEnd : grid.getXend() + halfLineWidth,
+                        yEnd : grid.getY() - halfLineWidth
                     };
                     break;
                 case 'bottom' :
                     axShape.style = {
-                        xStart : grid.getX(),
-                        yStart : grid.getYend(),
-                        xEnd : grid.getXend(),
-                        yEnd : grid.getYend()
+                        xStart : grid.getX() - halfLineWidth,
+                        yStart : grid.getYend() + halfLineWidth,
+                        xEnd : grid.getXend() + halfLineWidth,
+                        yEnd : grid.getYend() + halfLineWidth
                     };
                     break;
                 case 'top' :
                     axShape.style = {
-                        xStart : grid.getX(),
-                        yStart : grid.getY(),
-                        xEnd : grid.getXend(),
-                        yEnd : grid.getY()
+                        xStart : grid.getX() - halfLineWidth,
+                        yStart : grid.getY() - halfLineWidth,
+                        xEnd : grid.getXend() + halfLineWidth,
+                        yEnd : grid.getY() - halfLineWidth
                     };
                     break;
             }
@@ -16100,7 +16188,6 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
             }
             axShape.style.strokeColor = option.axisLine.lineStyle.color;
             
-            var lineWidth = option.axisLine.lineStyle.width;
             axShape.style.lineWidth = lineWidth;
             // 亚像素优化
             if (option.position == 'left' || option.position == 'right') {
@@ -16138,17 +16225,17 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
                              : typeof onGap == 'undefined'
                                    ? (option.boundaryGap ? (getGap() / 2) : 0)
                                    : 0;
-                                   
+            var startIndex = optGap > 0 ? -interval : 0;                       
             if (option.position == 'bottom' || option.position == 'top') {
                 // 横向
                 var yPosition = option.position == 'bottom'
                         ? (tickOption.inside ? (grid.getYend() - length) : grid.getYend())
                         : (tickOption.inside ? grid.getY() : (grid.getY() - length));
                 var x;
-                for (var i = 0; i < dataLength; i += interval) {
+                for (var i = startIndex; i < dataLength; i += interval) {
                     // 亚像素优化
                     x = self.subPixelOptimize(
-                        getCoordByIndex(i) + optGap, lineWidth
+                        getCoordByIndex(i) + (i >= 0 ? optGap : 0), lineWidth
                     );
                     axShape = {
                         shape : 'line',
@@ -16173,10 +16260,10 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
                         : (tickOption.inside ? (grid.getXend() - length) : grid.getXend());
                         
                 var y;
-                for (var i = 0; i < dataLength; i += interval) {
+                for (var i = startIndex; i < dataLength; i += interval) {
                     // 亚像素优化
                     y = self.subPixelOptimize(
-                        getCoordByIndex(i) - optGap, lineWidth
+                        getCoordByIndex(i) - (i >= 0 ? optGap : 0), lineWidth
                     );
                     axShape = {
                         shape : 'line',
@@ -16330,7 +16417,7 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
                              : typeof onGap == 'undefined'
                                    ? (option.boundaryGap ? (getGap() / 2) : 0)
                                    : 0;
-
+            dataLength -= (onGap || (typeof onGap == 'undefined' && option.boundaryGap)) ? 1 : 0;
             if (option.position == 'bottom' || option.position == 'top') {
                 // 横向
                 var sy = grid.getY();
@@ -16548,7 +16635,6 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
             var gap = getGap();
             var position = option.boundaryGap ? (gap / 2) : 0;
 
-            // Math.floor可能引起一些偏差，但性能会更好
             for (var i = 0; i < dataLength; i++) {
                 if (data[i] == value
                     || (typeof data[i].value != 'undefined' 
@@ -16564,9 +16650,14 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
                         // 纵向
                         position = grid.getYend() - position;
                     }
+                    
+                    return position;
+                    // Math.floor可能引起一些偏差，但性能会更好
+                    /* 准确更重要
                     return (i === 0 || i == dataLength - 1)
                            ? position
                            : Math.floor(position);
+                    */
                 }
                 position += gap;
             }
@@ -16605,9 +16696,13 @@ define('echarts/component/categoryAxis',['require','./base','zrender/tool/util',
                     // 纵向
                     position = grid.getYend() - position;
                 }
+                
+                return position;
+                /* 准确更重要
                 return (dataIndex === 0 || dataIndex == option.data.length - 1)
                        ? position
                        : Math.floor(position);
+                */
             }
         }
 
@@ -16722,6 +16817,8 @@ define('echarts/component/valueAxis',['require','./base','zrender/tool/util','..
 
         // 轴线
         function _buildAxisLine() {
+            var lineWidth = option.axisLine.lineStyle.width;
+            var halfLineWidth = lineWidth / 2;
             var axShape = {
                 shape : 'line',
                 zlevel : _zlevelBase + 1,
@@ -16730,34 +16827,34 @@ define('echarts/component/valueAxis',['require','./base','zrender/tool/util','..
             switch (option.position) {
                 case 'left' :
                     axShape.style = {
-                        xStart : grid.getX(),
-                        yStart : grid.getYend(),
-                        xEnd : grid.getX(),
-                        yEnd : grid.getY()
+                        xStart : grid.getX() - halfLineWidth,
+                        yStart : grid.getYend() + halfLineWidth,
+                        xEnd : grid.getX() - halfLineWidth,
+                        yEnd : grid.getY() - halfLineWidth
                     };
                     break;
                 case 'right' :
                     axShape.style = {
-                        xStart : grid.getXend(),
-                        yStart : grid.getYend(),
-                        xEnd : grid.getXend(),
-                        yEnd : grid.getY()
+                        xStart : grid.getXend() + halfLineWidth,
+                        yStart : grid.getYend() + halfLineWidth,
+                        xEnd : grid.getXend() + halfLineWidth,
+                        yEnd : grid.getY() - halfLineWidth
                     };
                     break;
                 case 'bottom' :
                     axShape.style = {
-                        xStart : grid.getX(),
-                        yStart : grid.getYend(),
-                        xEnd : grid.getXend(),
-                        yEnd : grid.getYend()
+                        xStart : grid.getX() - halfLineWidth,
+                        yStart : grid.getYend() + halfLineWidth,
+                        xEnd : grid.getXend() + halfLineWidth,
+                        yEnd : grid.getYend() + halfLineWidth
                     };
                     break;
                 case 'top' :
                     axShape.style = {
-                        xStart : grid.getX(),
-                        yStart : grid.getY(),
-                        xEnd : grid.getXend(),
-                        yEnd : grid.getY()
+                        xStart : grid.getX() - halfLineWidth,
+                        yStart : grid.getY() - halfLineWidth,
+                        xEnd : grid.getXend() + halfLineWidth,
+                        yEnd : grid.getY() - halfLineWidth
                     };
                     break;
             }
@@ -16978,7 +17075,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/tool/util','..
                 var ey = grid.getYend();
                 var x;
 
-                for (var i = 0; i < dataLength; i++) {
+                for (var i = 1; i < dataLength - 1; i++) {
                     // 亚像素优化
                     x = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
@@ -17005,7 +17102,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/tool/util','..
                 var ex = grid.getXend();
                 var y;
 
-                for (var i = 0; i < dataLength; i++) {
+                for (var i = 1; i < dataLength - 1; i++) {
                     // 亚像素优化
                     y = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
@@ -17546,10 +17643,13 @@ define('echarts/component/valueAxis',['require','./base','zrender/tool/util','..
                 result = (value - _min) / valueRange * total + grid.getX();
             }
 
+            return result;
             // Math.floor可能引起一些偏差，但性能会更好
+            /* 准确更重要
             return (value == _min || value == _max)
                    ? result
                    : Math.floor(result);
+            */
         }
 
         function getPosition() {
@@ -17690,11 +17790,11 @@ define('echarts/component/axis',['require','./base','./categoryAxis','./valueAxi
 
             var axisOption;
             if (axisType == 'xAxis') {
-                option.xAxis =self.reformOption(newOption.xAxis);
+                option.xAxis = self.reformOption(newOption.xAxis);
                 axisOption = option.xAxis;
             }
             else {
-                option.yAxis = reformOption(newOption.yAxis);
+                option.yAxis = self.reformOption(newOption.yAxis);
                 axisOption = option.yAxis;
             }
 
@@ -19007,7 +19107,7 @@ define('echarts/component/dataZoom',['require','./base','../component','zrender/
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/component/legend',['require','./base','zrender/tool/area','zrender/shape','zrender/shape','zrender/shape','zrender/shape','zrender/shape','../component'],function (require) {
+define('echarts/component/legend',['require','./base','zrender/tool/util','zrender/tool/area','zrender/tool/color','zrender/shape','zrender/shape','zrender/shape','zrender/shape','zrender/shape','../component'],function (require) {
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -19019,7 +19119,9 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
         var Base = require('./base');
         Base.call(this, ecConfig, zr);
 
+        var zrUtil = require('zrender/tool/util');
         var zrArea = require('zrender/tool/area');
+        var zrColor = require('zrender/tool/color');
 
         var self = this;
         self.type = ecConfig.COMPONENT_TYPE_LEGEND;
@@ -19061,7 +19163,10 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
             var itemType;
             var itemShape;
             var textShape;
-            var font = self.getFont(legendOption.textStyle);
+            var textStyle  = legendOption.textStyle;
+            var font = self.getFont(textStyle);
+            var dataTextStyle;
+            var dataFont;
 
             var zrWidth = zr.getWidth();
             var zrHeight = zr.getHeight();
@@ -19081,7 +19186,14 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
             }
 
             for (var i = 0; i < dataLength; i++) {
-                itemName = data[i];
+                dataTextStyle = zrUtil.merge(
+                    data[i].textStyle || {},
+                    textStyle,
+                    {'overwrite': false}
+                );
+                dataFont = self.getFont(dataTextStyle);
+                
+                itemName = data[i].name || data[i];
                 if (itemName === '') {
                     if (legendOption.orient == 'horizontal') {
                         lastX = _itemGroupLocation.x;
@@ -19095,18 +19207,17 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
                     }
                     continue;
                 }
-                itemType = _getSeriesByName(itemName);
-                if (itemType) {
-                    itemType = itemType.type;
-                } else {
-                    itemType = 'bar';
-                }
+                itemType = _getSomethingByName(itemName).type;
+                
                 color = getColor(itemName);
 
                 if (legendOption.orient == 'horizontal') {
                     if (zrWidth - lastX < 200   // 最后200px做分行预判
                         && (itemWidth + 5
-                            + zrArea.getTextWidth(itemName, font)
+                            + zrArea.getTextWidth(
+                                itemName, 
+                                dataFont
+                            )
                             // 分行的最后一个不用算itemGap
                             + (i == dataLength - 1 || data[i+1] === ''
                                ? 0 : itemGap))
@@ -19136,7 +19247,8 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
                     lastX, lastY,
                     itemWidth, itemHeight,
                     (_selectedMap[itemName] ? color : '#ccc'),
-                    itemType
+                    itemType,
+                    color
                 );
                 itemShape._name = itemName;
                 if (legendOption.selectedMode) {
@@ -19152,11 +19264,15 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
                         x : lastX + itemWidth + 5,
                         y : lastY,
                         color : _selectedMap[itemName]
-                                ? legendOption.textStyle.color
+                                ? (dataTextStyle.color === 'auto' ? color : dataTextStyle.color)
                                 : '#ccc',
                         text: itemName,
-                        textFont: font,
+                        textFont: dataFont,
                         textBaseline: 'top'
+                    },
+                    highlightStyle : {
+                        color : color,
+                        brushType: 'fill'
                     },
                     hoverable : !!legendOption.selectedMode,
                     clickable : !!legendOption.selectedMode
@@ -19177,7 +19293,7 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
 
                 if (legendOption.orient == 'horizontal') {
                     lastX += itemWidth + 5
-                             + zrArea.getTextWidth(itemName, font)
+                             + zrArea.getTextWidth(itemName, dataFont)
                              + itemGap;
                 }
                 else {
@@ -19196,7 +19312,6 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
         
         // 多行橫排居中优化
         function _mLineOptimize() {
-            var font = self.getFont(legendOption.textStyle);
             var lineOffsetArray = []; // 每行宽度
             var lastX = _itemGroupLocation.x;
             for (var i = 2, l = self.shapeList.length; i < l; i++) {
@@ -19207,7 +19322,8 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
                             - (
                                 self.shapeList[i - 1].style.x
                                 + zrArea.getTextWidth(
-                                      self.shapeList[i - 1].style.text, font
+                                      self.shapeList[i - 1].style.text,
+                                      self.shapeList[i - 1].style.textFont
                                   )
                                 - lastX
                             )
@@ -19221,7 +19337,8 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
                             - (
                                 self.shapeList[i].style.x
                                 + zrArea.getTextWidth(
-                                      self.shapeList[i].style.text, font
+                                      self.shapeList[i].style.text,
+                                      self.shapeList[i].style.textFont
                                   )
                                 - lastX
                             )
@@ -19277,7 +19394,8 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
             var itemGap = legendOption.itemGap;
             var itemWidth = legendOption.itemWidth + 5; // 5px是图形和文字的间隔，不可配
             var itemHeight = legendOption.itemHeight;
-            var font = self.getFont(legendOption.textStyle);
+            var textStyle  = legendOption.textStyle;
+            var font = self.getFont(textStyle);
             var totalWidth = 0;
             var totalHeight = 0;
             var padding = legendOption.padding;
@@ -19303,10 +19421,21 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
                         temp = 0;
                         continue;
                     }
+                    dataTextStyle = zrUtil.merge(
+                        data[i].textStyle || {},
+                        textStyle,
+                        {'overwrite': false}
+                    );
                     temp += itemWidth
                             + zrArea.getTextWidth(
-                                  data[i],
-                                  font
+                                  data[i].name || data[i],
+                                  data[i].textStyle 
+                                  ? self.getFont(zrUtil.merge(
+                                        data[i].textStyle || {},
+                                        textStyle,
+                                        {'overwrite': false}
+                                    ))
+                                  : font
                               )
                             + itemGap;
                 }
@@ -19325,8 +19454,14 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
                     maxWidth = Math.max(
                         maxWidth,
                         zrArea.getTextWidth(
-                            data[i],
-                            font
+                            data[i].name || data[i],
+                            data[i].textStyle 
+                            ? self.getFont(zrUtil.merge(
+                                  data[i].textStyle || {},
+                                  textStyle,
+                                  {'overwrite': false}
+                              ))
+                            : font
                         )
                     );
                 }
@@ -19412,74 +19547,79 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
         }
 
         /**
-         * 根据名称返回series数据
+         * 根据名称返回series数据或data
          */
-        function _getSeriesByName(name) {
+        function _getSomethingByName(name) {
             var series = option.series;
             var hasFind;
             var data;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].name == name) {
                     // 系列名称优先
-                    return series[i];
+                    return {
+                        type : series[i].type,
+                        series : series[i],
+                        seriesIndex : i,
+                        data : null,
+                        dataIndex : -1
+                    }
                 }
 
                 if (
                     series[i].type == ecConfig.CHART_TYPE_PIE 
                     || series[i].type == ecConfig.CHART_TYPE_RADAR
                     || series[i].type == ecConfig.CHART_TYPE_CHORD
+                    || series[i].type == ecConfig.CHART_TYPE_FORCE
                 ) {
-                    // 饼图、雷达图、和弦图得查找里面的数据名字
-                    hasFind = false;
-                    data = series[i].data;
+                    data = series[i].type != ecConfig.CHART_TYPE_FORCE
+                           ? series[i].data         // 饼图、雷达图、和弦图得查找里面的数据名字
+                           : series[i].categories;  // 力导布局查找categories配置
                     for (var j = 0, k = data.length; j < k; j++) {
                         if (data[j].name == name) {
-                            data = data[j];
-                            data.type = 
-                                series[i].type == ecConfig.CHART_TYPE_CHORD 
-                                ? ecConfig.CHART_TYPE_PIE // 和弦图复用pie图样式
-                                : series[i].type;
-                            hasFind = true;
-                            break;
+                            return {
+                                type : series[i].type,
+                                series : series[i],
+                                seriesIndex : i,
+                                data : data[j],
+                                dataIndex : j
+                            }
                         }
-                    }
-                    if (hasFind) {
-                        return data;
-                    }
-                }
-                else if (series[i].type == ecConfig.CHART_TYPE_FORCE) {
-                    // 力导布局查找categories配置
-                    hasFind = false;
-                    data = series[i].categories;
-                    for (var j = 0, k = data.length; j < k; j++) {
-                        if (data[j].name == name) {
-                            data = data[j];
-                            data.type = ecConfig.CHART_TYPE_FORCE;
-                            hasFind = true;
-                            break;
-                        }
-                    }
-                    if (hasFind) {
-                        return data;
                     }
                 }
             }
-            return;
+            return {
+                type : 'bar',
+                series : null,
+                seriesIndex : -1,
+                data : null,
+                dataIndex : -1
+            }
         }
-
-        function _getItemShapeByType(x, y, width, height, color, itemType) {
+        
+        function _getItemShapeByType(x, y, width, height, color, itemType, defaultColor) {
+            var highlightColor = color === '#ccc' 
+                                 ? defaultColor 
+                                 : typeof color == 'string' && color != '#ccc' 
+                                   ? zrColor.lift(color, -0.3) : color;
             var itemShape = {
                 shape : 'icon',
                 zlevel : _zlevelBase,
                 style : {
-                    iconType : 'legendicon' + itemType,
+                    iconType : 'legendicon' 
+                               + (itemType != ecConfig.CHART_TYPE_CHORD   // 和弦复用饼图
+                                  ? itemType : ecConfig.CHART_TYPE_PIE),
                     x : x,
                     y : y,
                     width : width,
                     height : height,
                     color : color,
                     strokeColor : color,
-                    lineWidth : 3
+                    lineWidth : 2
+                },
+                highlightStyle: {
+                    color : highlightColor,
+                    strokeColor : highlightColor,
+                    lineWidth : 1
                 },
                 hoverable : legendOption.selectedMode,
                 clickable : legendOption.selectedMode
@@ -19488,9 +19628,16 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
             switch (itemType) {
                 case 'line' :
                     itemShape.style.brushType = 'stroke';
+                    itemShape.highlightStyle.lineWidth = 3;
+                    break;
+                case 'radar' :
+                case 'scatter' :   
+                    itemShape.highlightStyle.lineWidth = 3;
                     break;
                 case 'k' :
                     itemShape.style.brushType = 'both';
+                    itemShape.highlightStyle.lineWidth = 3;
+                    itemShape.highlightStyle.color =
                     itemShape.style.color = self.query(
                         ecConfig, 'k.itemStyle.normal.color'
                     ) || '#fff';
@@ -19542,22 +19689,34 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
 
             var data = legendOption.data || [];
             var itemName;
-            var serie;
+            var something;
             var color;
+            var queryTarget;
             for (var i = 0, dataLength = data.length; i < dataLength; i++) {
-                itemName = data[i];
+                itemName = data[i].name || data[i];
                 if (itemName === '') {
                     continue;
                 }
-                serie = _getSeriesByName(itemName);
-                if (!serie) {
+                something = _getSomethingByName(itemName);
+                if (!something.series) {
                     _selectedMap[itemName] = false;
                 } 
                 else {
-                    color = self.query(
-                        serie, 'itemStyle.normal.color'
+                    if (something.type == ecConfig.CHART_TYPE_PIE) {
+                        queryTarget = [something.data, something.series];
+                    }
+                    else {
+                        queryTarget = [something.series];
+                    }
+                    color = self.getItemStyleColor(
+                        self.deepQuery(
+                            queryTarget, 'itemStyle.normal.color'
+                        ),
+                        something.seriesIndex,
+                        something.dataIndex,
+                        something.data
                     );
-                    if (color && serie.type != ecConfig.CHART_TYPE_K) {
+                    if (color && something.type != ecConfig.CHART_TYPE_K) {
                         setColor(itemName, color);
                     }
                     _selectedMap[itemName] = true;
@@ -19589,7 +19748,6 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
                 }
             }
             legendOption = option.legend;
-            
             self.clear();
             _buildShape();
         }
@@ -19681,6 +19839,21 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
         function getSelectedMap() {
             return _selectedMap;
         }
+        
+        /**
+         * 图例选择
+         */
+        function onlegendSelected(param, status) {
+            var legendSelected = param.selected;
+            for (var itemName in _selectedMap) {
+                if (_selectedMap[itemName] != legendSelected[itemName]) {
+                    // 有一项不一致都需要重绘
+                    status.needRefresh = true;
+                }
+                _selectedMap[itemName] = legendSelected[itemName];
+            }
+            return;
+        }
 
         self.init = init;
         self.refresh = refresh;
@@ -19693,6 +19866,7 @@ define('echarts/component/legend',['require','./base','zrender/tool/area','zrend
         self.setItemShape = setItemShape;
         self.isSelected = isSelected;
         self.getSelectedMap = getSelectedMap;
+        self.onlegendSelected = onlegendSelected;
 
         init(option);
     }
@@ -22216,6 +22390,10 @@ define('echarts/component/tooltip',['require','./base','../util/ecData','zrender
                         my
                     )
                 ) {
+                    !_event.connectTrigger && messageCenter.dispatch(
+                        ecConfig.EVENT.TOOLTIP_IN_GRID,
+                        _event
+                    );
                     _showingTicket = setTimeout(_tryShow, _showDelay);
                 }
                 else if (_needAxisTrigger 
@@ -22225,6 +22403,10 @@ define('echarts/component/tooltip',['require','./base','../util/ecData','zrender
                     _showingTicket = setTimeout(_tryShow, _showDelay);
                 }
                 else {
+                    !_event.connectTrigger && messageCenter.dispatch(
+                        ecConfig.EVENT.TOOLTIP_OUT_GRID,
+                        _event
+                    );
                     _hidingTicket = setTimeout(_hide, _hideDelay);
                 }
             }
@@ -22270,6 +22452,9 @@ define('echarts/component/tooltip',['require','./base','../util/ecData','zrender
          * 异步回调填充内容
          */
         function _setContent(ticket, content) {
+            if (!_tDom) {
+                return;
+            }
             if (ticket == _curTicket) {
                 _tDom.innerHTML = content;
             }
@@ -22360,7 +22545,7 @@ define('echarts/component/tooltip',['require','./base','../util/ecData','zrender
                 return true; // 没在legend里定义的都为true啊~
             }
         }
-        
+
         /**
          * 模拟tooltip hover方法
          * {object} params  参数
@@ -22721,8 +22906,9 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
      * @param {Object} messageCenter echart消息中心
      * @param {ZRender} zr zrender实例
      * @param {HtmlElement} dom 目标对象
+     * @param {ECharts} myChart 当前图表实例
      */
-    function Toolbox(ecConfig, messageCenter, zr, dom) {
+    function Toolbox(ecConfig, messageCenter, zr, dom, myChart) {
         var Base = require('./base');
         Base.call(this, ecConfig, zr);
 
@@ -22737,14 +22923,18 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
         self.type = ecConfig.COMPONENT_TYPE_TOOLBOX;
 
         var _zlevelBase = self.getZlevelBase();
-        var _magicType;
+        var _magicType = {};
         var _magicMap;
+        var _isSilence = false;
+        
         var _iconList;
         var _iconShapeMap = {};
         var _itemGroupLocation;
+        var _featureTitle = {};             // 文字
+        var _featureIcon = {};              // 图标
+        var _featureColor = {};             // 颜色
         var _enableColor = 'red';
         var _disableColor = '#ccc';
-        var _markColor;
         var _markStart;
         var _marking;
         var _markShape;
@@ -22755,40 +22945,59 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
         var _zoomQueue;
 
         var _dataView;
+        
+        var _MAGICTYPE_STACK = 'stack';
+        var _MAGICTYPE_TILED = 'tiled';
 
         function _buildShape() {
             _iconList = [];
             var feature = option.toolbox.feature;
+            var iconName = [];
             for (var key in feature){
-                if (feature[key]) {
+                if (feature[key].show) {
                     switch (key) {
                         case 'mark' :
-                            _iconList.push('mark');
-                            _iconList.push('markUndo');
-                            _iconList.push('markClear');
+                            iconName.push({key : key, name : 'mark'});
+                            iconName.push({key : key, name : 'markUndo'});
+                            iconName.push({key : key, name : 'markClear'});
                             break;
                         case 'magicType' :
-                            for (var i = 0, l = feature[key].length; i < l; i++
-                            ) {
-                                _iconList.push(feature[key][i] + 'Chart');
+                            for (var i = 0, l = feature[key].type.length; i < l; i++) {
+                                feature[key].title[feature[key].type[i] + 'Chart']
+                                    = feature[key].title[feature[key].type[i]];
+                                iconName.push({key : key, name : feature[key].type[i] + 'Chart'});
                             }
                             break;
                         case 'dataZoom' :
-                            _iconList.push('dataZoom');
-                            _iconList.push('dataZoomReset');
+                            iconName.push({key : key, name : 'dataZoom'});
+                            iconName.push({key : key, name : 'dataZoomReset'});
                             break;
                         case 'saveAsImage' :
                             if (!G_vmlCanvasManager) {
-                                _iconList.push('saveAsImage');
+                                iconName.push({key : key, name : 'saveAsImage'});
                             }
                             break;
                         default :
-                            _iconList.push(key);
+                            iconName.push({key : key, name : key});
                             break;
                     }
                 }
             }
-            if (_iconList.length > 0) {
+            if (iconName.length > 0) {
+                var name;
+                var key;
+                for (var i = 0, l = iconName.length; i < l; i++) {
+                    name = iconName[i].name;
+                    key = iconName[i].key;
+                    _iconList.push(name);
+                    _featureTitle[name] = feature[key].title[name] || feature[key].title;
+                    if (feature[key].icon) {
+                        _featureIcon[name] = feature[key].icon[name] || feature[key].icon;
+                    }
+                    if (feature[key].color) {
+                        _featureColor[name] = feature[key].color[name] || feature[key].color;
+                    }
+                }
                 _itemGroupLocation = _getItemGroupLocation();
 
                 _buildBackground();
@@ -22859,30 +23068,26 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
                         height : itemSize,
                         iconType : _iconList[i],
                         lineWidth : 1,
-                        strokeColor : color[i % color.length],
-                        shadowColor: '#ccc',
-                        shadowBlur : 2,
-                        shadowOffsetX : 2,
-                        shadowOffsetY : 2,
+                        strokeColor : _featureColor[_iconList[i]] || color[i % color.length],
                         brushType: 'stroke'
                     },
                     highlightStyle : {
                         lineWidth : 2,
-                        shadowBlur: 5,
                         text : toolboxOption.showTitle 
-                               ? toolboxOption.featureTitle[_iconList[i]]
+                               ? _featureTitle[_iconList[i]]
                                : false,
                         textFont : textFont,
                         textPosition : textPosition,
-                        strokeColor : color[i % color.length]
+                        strokeColor : _featureColor[_iconList[i]] || color[i % color.length]
                     },
                     hoverable : true,
                     clickable : true
                 };
                 
-                if (toolboxOption.featureImageIcon[_iconList[i]]) {
-                    itemShape.style.image = 
-                        toolboxOption.featureImageIcon[_iconList[i]];
+                if (_featureIcon[_iconList[i]]) {
+                    itemShape.style.image = _featureIcon[_iconList[i]].replace(
+                        new RegExp('^image:\\/\\/'), ''
+                    );
                     itemShape.style.opacity = 0.8;
                     itemShape.highlightStyle.opacity = 1;
                     itemShape.shape = 'image';
@@ -22913,7 +23118,6 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
                 switch(_iconList[i]) {
                     case 'mark':
                         itemShape.onclick = _onMark;
-                        _markColor = itemShape.style.strokeColor;
                         break;
                     case 'markUndo':
                         itemShape.onclick = _onMarkUndo;
@@ -22946,10 +23150,13 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
                     default:
                         if (_iconList[i].match('Chart')) {
                             itemShape._name = _iconList[i].replace('Chart', '');
-                            if (itemShape._name == _magicType) {
+                            if (_magicType[itemShape._name]) {
                                 itemShape.style.strokeColor = _enableColor;
                             }
                             itemShape.onclick = _onMagicType;
+                        }
+                        else {
+                            itemShape.onclick = _onCustomHandler;
                         }
                         break;
                 }
@@ -23216,15 +23423,15 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
                         lineWidth : self.query(
                                         option,
                                         'toolbox.feature.mark.lineStyle.width'
-                                    ) || 2,
+                                    ),
                         strokeColor : self.query(
                                           option,
                                           'toolbox.feature.mark.lineStyle.color'
-                                      ) || _markColor,
+                                      ),
                         lineType : self.query(
                                        option,
                                        'toolbox.feature.mark.lineStyle.type'
-                                   ) || 'dashed'
+                                   )
                     }
                 };
                 zr.addHoverShape(_markShape);
@@ -23396,12 +23603,20 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
             if (imgType != 'png' && imgType != 'jpeg') {
                 imgType = 'png';
             }
-            var bgColor = option.backgroundColor 
-                          && option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
-                              ? '#fff' : option.backgroundColor;
-            var image = zr.toDataURL(
-                'image/' + imgType, bgColor
-            ); 
+            
+            var image;
+            if (!myChart.isConnected()) {
+                image = zr.toDataURL(
+                    'image/' + imgType,
+                    option.backgroundColor 
+                    && option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
+                        ? '#fff' : option.backgroundColor
+                );
+            }
+            else {
+                image = myChart.getConnectedDataURL(imgType);
+            }
+             
             var downloadDiv = document.createElement('div');
             downloadDiv.id = '__echarts_download_wrap__';
             downloadDiv.style.cssText = 'position:fixed;'
@@ -23432,7 +23647,7 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
                 + (!!(window.attachEvent 
                      && navigator.userAgent.indexOf('Opera') === -1)
                   ? '右键->图片另存为'
-                  : (saveOption.lang ? saveOption.lang : '点击保存'))
+                  : (saveOption.lang ? saveOption.lang[0] : '点击保存'))
                 + '"/>';
             
             downloadDiv.appendChild(downloadLink);
@@ -23469,13 +23684,27 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
         function _onMagicType(param) {
             _resetMark();
             var itemName = param.target._name;
-            if (itemName == _magicType) {
+            if (_magicType[itemName]) {
                 // 取消
-                _magicType = false;
+                _magicType[itemName] = false;
             }
             else {
                 // 启用
-                _magicType = itemName;
+                _magicType[itemName] = true;
+                // 折柱互斥
+                if (itemName == ecConfig.CHART_TYPE_LINE) {
+                    _magicType[ecConfig.CHART_TYPE_BAR] = false;
+                }
+                else if (itemName == ecConfig.CHART_TYPE_BAR) {
+                    _magicType[ecConfig.CHART_TYPE_LINE] = false;
+                }
+                // 堆叠平铺互斥
+                if (itemName == _MAGICTYPE_STACK) {
+                    _magicType[_MAGICTYPE_TILED] = false;
+                }
+                else if (itemName == _MAGICTYPE_TILED) {
+                    _magicType[_MAGICTYPE_STACK] = false;
+                }
             }
             messageCenter.dispatch(
                 ecConfig.EVENT.MAGIC_TYPE_CHANGED,
@@ -23484,15 +23713,37 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
             );
             return true;
         }
+        
+        function setMagicType(magicType) {
+            _resetMark();
+            _magicType = magicType;
+            
+            !_isSilence && messageCenter.dispatch(
+                ecConfig.EVENT.MAGIC_TYPE_CHANGED,
+                null,
+                {magicType : _magicType}
+            );
+        }
+        
+        // 用户自定义扩展toolbox方法
+        function _onCustomHandler(param) {
+            var target = param.target.style.iconType;
+            var featureHandler = option.toolbox.feature[target].onclick;
+            if (typeof featureHandler === 'function') {
+                featureHandler(option);
+            }
+        }
 
         // 重置备份还原状态等
         function reset(newOption) {
             if (newOption.toolbox
                 && newOption.toolbox.show
                 && newOption.toolbox.feature.magicType
-                && newOption.toolbox.feature.magicType.length > 0
+                && newOption.toolbox.feature.magicType.show
+                && newOption.toolbox.feature.magicType.type
+                && newOption.toolbox.feature.magicType.type.length > 0
             ) {
-                var magicType = newOption.toolbox.feature.magicType;
+                var magicType = newOption.toolbox.feature.magicType.type;
                 var len = magicType.length;
                 _magicMap = {};     // 标识可控类型
                 while (len--) {
@@ -23501,6 +23752,7 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
 
                 len = newOption.series.length;
                 var oriType;        // 备份还原可控类型
+                var oriStack;       // 备份还原堆积名称
                 var axis;
                 while (len--) {
                     oriType = newOption.series[len].type;
@@ -23510,7 +23762,7 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
                                      newOption.series[len].xAxisIndex || 0
                                  ]
                                : newOption.xAxis;
-                        if (axis && axis.type == 'category') {
+                        if (axis && axis.type || 'category'   == 'category') {
                             axis.__boundaryGap =
                                 typeof axis.boundaryGap != 'undefined'
                                 ? axis.boundaryGap : true;
@@ -23534,9 +23786,13 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
                               )
                             : {};
                     }
+                    
+                    if (_magicMap[_MAGICTYPE_STACK] || _magicMap[_MAGICTYPE_TILED]) {
+                        newOption.series[len].__stack = newOption.series[len].stack;
+                    }
                 }
             }
-            _magicType = false;
+            _magicType = {};
             
             // 框选缩放
             var zoomOption = newOption.dataZoom;
@@ -23566,16 +23822,26 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
                 _zoomQueue = [];
             }
         }
-
+        
+        function _hasMagicType() {
+            for (var k in _magicType) {
+                if (_magicType[k]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
         function getMagicOption(){
             var axis;
-            if (_magicType) {
-                // 启动
-                var boundaryGap = _magicType == ecConfig.CHART_TYPE_LINE
-                                  ? false : true;
+            if (_magicType[ecConfig.CHART_TYPE_LINE] || _magicType[ecConfig.CHART_TYPE_BAR]) {
+                // 图表类型有切换
+                var boundaryGap = _magicType[ecConfig.CHART_TYPE_LINE] ? false : true;
                 for (var i = 0, l = option.series.length; i < l; i++) {
                     if (_magicMap[option.series[i].type]) {
-                        option.series[i].type = _magicType;
+                        option.series[i].type = _magicType[ecConfig.CHART_TYPE_LINE]
+                                                ? ecConfig.CHART_TYPE_LINE
+                                                : ecConfig.CHART_TYPE_BAR;
                         // 避免不同类型图表类型的样式污染
                         option.series[i].itemStyle = zrUtil.clone(
                             option.series[i].__itemStyle
@@ -23584,7 +23850,7 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
                         axis = option.xAxis instanceof Array
                                ? option.xAxis[option.series[i].xAxisIndex || 0]
                                : option.xAxis;
-                        if (axis && axis.type == 'category') {
+                        if (axis && axis.type || 'category' == 'category') {
                             axis.boundaryGap = 
                                 boundaryGap ? true : axis.__boundaryGap;
                         }
@@ -23599,7 +23865,7 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
                 }
             }
             else {
-                // 还原
+                // 图表类型无切换
                 for (var i = 0, l = option.series.length; i < l; i++) {
                     if (_magicMap[option.series[i].type]) {
                         option.series[i].type = option.series[i].__type;
@@ -23610,7 +23876,7 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
                         axis = option.xAxis instanceof Array
                                ? option.xAxis[option.series[i].xAxisIndex || 0]
                                : option.xAxis;
-                        if (axis && axis.type == 'category') {
+                        if (axis && axis.type || 'category'  == 'category') {
                             axis.boundaryGap = axis.__boundaryGap;
                         }
                         axis = option.yAxis instanceof Array
@@ -23622,10 +23888,34 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
                     }
                 }
             }
+            
+            if (_magicType[_MAGICTYPE_STACK] || _magicType[_MAGICTYPE_TILED]) {
+                // 有堆叠平铺切换
+                for (var i = 0, l = option.series.length; i < l; i++) {
+                    if (_magicType[_MAGICTYPE_STACK]) {
+                        // 启用堆叠
+                        option.series[i].stack = '_ECHARTS_STACK_KENER_2014_';
+                    }
+                    else if (_magicType[_MAGICTYPE_TILED]) {
+                        // 启用平铺
+                        option.series[i].stack = null;
+                    }
+                }
+            }
+            else {
+                // 无堆叠平铺切换
+                for (var i = 0, l = option.series.length; i < l; i++) {
+                    option.series[i].stack = option.series[i].__stack;
+                }
+            }
 
             return option;
         }
 
+        function silence(s) {
+            _isSilence = s;
+        }
+        
         function render(newOption, newComponent){
             _resetMark();
             _resetZoom();
@@ -23698,6 +23988,8 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
         self.resize = resize;
         self.hideDataView = hideDataView;
         self.getMagicOption = getMagicOption;
+        self.silence = silence;
+        self.setMagicType = setMagicType;
         self.reset = reset;
         self.refresh = refresh;
     }
@@ -25167,11 +25459,12 @@ define('echarts/theme/default',[],function() {
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zrender/tool/event','zrender/config','./util/shape/icon','./util/shape/markLine','./chart','./chart/island','./component','./component/title','./component/axis','./component/categoryAxis','./component/valueAxis','./component/grid','./component/dataZoom','./component/legend','./component/dataRange','./component/tooltip','./component/toolbox','./component/dataView','./component/polar','./util/ecData','./chart','./component','zrender/tool/util','zrender/tool/util','zrender/tool/color','zrender/tool/util','zrender/tool/util','zrender/tool/util','zrender/tool/util','zrender/tool/util','./theme/default','./theme/default'],function(require) {
+define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zrender/tool/event','zrender/config','./util/shape/icon','./util/shape/markLine','./chart','./chart/island','./component','./component/title','./component/axis','./component/categoryAxis','./component/valueAxis','./component/grid','./component/dataZoom','./component/legend','./component/dataRange','./component/tooltip','./component/toolbox','./component/dataView','./component/polar','./util/ecData','./chart','./component','zrender/tool/util','zrender/tool/util','zrender/tool/color','zrender/tool/util','zrender/tool/util','zrender/tool/util','zrender','zrender/tool/util','zrender/tool/util','./theme/default','./theme/default'],function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
     
     var _canvasSupported = !!document.createElement('canvas').getContext;
+    var _idBase = new Date() - 0;
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
@@ -25187,7 +25480,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
         // dom与echarts实例映射索引
         var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
         if (!key) {
-            key = new Date() - 0;
+            key = _idBase++;
             dom.setAttribute(DOM_ATTRIBUTE_KEY, key);
         }
         if (_instances[key]) {
@@ -25217,13 +25510,13 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
         var _themeConfig = require('zrender/tool/util').clone(ecConfig);
 
         var self = this;
-        var _id = '__ECharts__' + (new Date() - 0);
         var _zr;
         var _option;
         var _optionBackup;          // for各种change和zoom
         var _optionRestore;         // for restore;
         var _chartList;             // 图表实例
         var _messageCenter;         // Echarts层的消息中心，做zrender原始事件转换
+        var _connected = false;
 
         var _status = {         // 用于图表间通信
             dragIn : false,
@@ -25261,35 +25554,17 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
             // 添加消息中心的事件分发器特性
             var zrEvent = require('zrender/tool/event');
             zrEvent.Dispatcher.call(_messageCenter);
-            _messageCenter.bind(
-                ecConfig.EVENT.LEGEND_SELECTED, _onlegendSelected
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.DATA_ZOOM, _ondataZoom
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.DATA_RANGE, _ondataRange
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.MAGIC_TYPE_CHANGED, _onmagicTypeChanged
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.DATA_VIEW_CHANGED, _ondataViewChanged
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.TOOLTIP_HOVER, _tooltipHover
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.RESTORE, _onrestore
-            );
-            _messageCenter.bind(
-                ecConfig.EVENT.REFRESH, _onrefresh
-            );
+            for (var e in ecConfig.EVENT) {
+                if (e != 'CLICK' && e != 'HOVER' && e != 'MAP_ROAM') {
+                    _messageCenter.bind(ecConfig.EVENT[e], _onevent);
+                }
+            }
+            
 
             var zrConfig = require('zrender/config');
             _zr.on(zrConfig.EVENT.CLICK, _onclick);
             _zr.on(zrConfig.EVENT.MOUSEOVER, _onhover);
-            _zr.on(zrConfig.EVENT.MOUSEWHEEL, _onmousewheel);
+            //_zr.on(zrConfig.EVENT.MOUSEWHEEL, _onmousewheel);
             _zr.on(zrConfig.EVENT.DRAGSTART, _ondragstart);
             _zr.on(zrConfig.EVENT.DRAGEND, _ondragend);
             _zr.on(zrConfig.EVENT.DRAGENTER, _ondragenter);
@@ -25324,11 +25599,117 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
             require('./component/polar');
             // 工具箱
             var Toolbox = componentLibrary.get('toolbox');
-            _toolbox = new Toolbox(_themeConfig, _messageCenter, _zr, dom);
+            _toolbox = new Toolbox(_themeConfig, _messageCenter, _zr, dom, self);
             
             _disposeChartList();
         }
 
+        /**
+         * ECharts事件处理中心 
+         */
+        var _curEventType = null; // 破循环信号灯
+        function _onevent(param){
+            param.__echarts_id__ = param.__echarts_id__ || self.id;
+            var fromMyself = true;
+            if (param.__echarts_id__ != self.id) {
+                // 来自其他联动图表的事件
+                fromMyself = false;
+            }
+            
+            if (!_curEventType) {
+                _curEventType = param.type;
+            }
+            
+            switch(param.type) {
+                case ecConfig.EVENT.LEGEND_SELECTED :
+                    _onlegendSelected(param);
+                    break;
+                case ecConfig.EVENT.DATA_ZOOM :
+                    if (!fromMyself) {
+                        var dz = self.component.dataZoom;
+                        if (dz) {
+                            dz.silence(true);
+                            dz.absoluteZoom(param.zoom);
+                            dz.silence(false);
+                        }
+                    }
+                    _ondataZoom(param);
+                    break;        
+                case ecConfig.EVENT.DATA_RANGE :
+                    fromMyself && _ondataRange(param);
+                    break;        
+                case ecConfig.EVENT.MAGIC_TYPE_CHANGED :
+                    if (!fromMyself) {
+                        var tb = self.component.toolbox;
+                        if (tb) {
+                            tb.silence(true);
+                            tb.setMagicType(param.magicType);
+                            tb.silence(false);
+                        }
+                    }
+                    _onmagicTypeChanged(param);
+                    break;        
+                case ecConfig.EVENT.DATA_VIEW_CHANGED :
+                    fromMyself && _ondataViewChanged(param);
+                    break;        
+                case ecConfig.EVENT.TOOLTIP_HOVER :
+                    fromMyself && _tooltipHover(param);
+                    break;        
+                case ecConfig.EVENT.RESTORE :
+                    _onrestore();
+                    break;        
+                case ecConfig.EVENT.REFRESH :
+                    fromMyself && _onrefresh(param);
+                    break;
+                // 鼠标同步
+                case ecConfig.EVENT.TOOLTIP_IN_GRID :
+                case ecConfig.EVENT.TOOLTIP_OUT_GRID :
+                    if (!fromMyself) {
+                        // 只处理来自外部的鼠标同步
+                        var grid = self.component.grid;
+                        if (grid) {
+                            _zr.trigger(
+                                'mousemove',
+                                {
+                                    connectTrigger : true,
+                                    zrenderX : grid.getX() + param.x * grid.getWidth(),
+                                    zrenderY : grid.getY() + param.y * grid.getHeight()
+                                }
+                            );
+                        }
+                    } 
+                    else if (_connected) {
+                        // 来自自己，并且存在多图联动，空间坐标映射修改参数分发
+                        var grid = self.component.grid;
+                        if (grid) {
+                            param.x = (param.event.zrenderX - grid.getX()) / grid.getWidth();
+                            param.y = (param.event.zrenderY - grid.getY()) / grid.getHeight();
+                        }
+                    }
+                    break;
+                /*
+                case ecConfig.EVENT.RESIZE :
+                case ecConfig.EVENT.DATA_CHANGED :
+                case ecConfig.EVENT.PIE_SELECTED :
+                case ecConfig.EVENT.MAP_SELECTED :
+                    break;
+                */
+            }
+            
+            // 多图联动，只做自己的一级事件分发，避免级联事件循环
+            if (_connected && fromMyself && _curEventType == param.type) { 
+                for (var c in _connected) {
+                    _connected[c].connectedEventHandler(param);
+                }
+                // 分发完毕后复位
+                _curEventType = null;
+            }
+            
+            if (!fromMyself) {  // 处理了完联动事件复位
+                _curEventType = null;
+            }
+        }
+        
         /**
          * 点击事件，响应zrender事件，包装后分发到Echarts层
          */
@@ -25369,7 +25750,6 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
 
         /**
          * 滚轮回调，孤岛可计算特性
-         */
         function _onmousewheel(param) {
             _messageCenter.dispatch(
                 ecConfig.EVENT.MOUSEWHEEL,
@@ -25377,6 +25757,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
                 _eventPackage(param.target)
             );
         }
+        */
 
         /**
          * dragstart回调，可计算特性实现
@@ -25574,7 +25955,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
             self.refresh(param);
             _refreshInside = false;
         }
-
+        
         /**
          * 当前正在使用的option，还原可能存在的dataZoom
          */
@@ -25860,7 +26241,9 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
             _island.render(magicOption);
 
             _toolbox.render(magicOption, {dataZoom: dataZoom});
-
+            
+            _zr.render();
+            
             if (magicOption.animation && !magicOption.renderAsImage) {
                 var len = _chartList.length;
                 while (len--) {
@@ -25875,10 +26258,8 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
                     }
                 }
             }
-
-            _zr.render();
             
-            var imgId = 'IMG' + _id;
+            var imgId = 'IMG' + self.id;
             var img = document.getElementById(imgId);
             if (magicOption.renderAsImage && _canvasSupported) {
                 // IE8- 不支持图片渲染形式
@@ -26330,6 +26711,13 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
         }
 
         /**
+         * 获取当前dom 
+         */
+        function getDom() {
+            return dom;
+        }
+        
+        /**
          * 获取当前zrender实例，可用于添加额为的shape和深度控制 
          */
         function getZrender() {
@@ -26347,12 +26735,15 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
             }
             if (_chartList.length === 0) {
                 // 渲染为图片
-                var imgId = 'IMG' + _id;
+                var imgId = 'IMG' + self.id;
                 var img = document.getElementById(imgId);
                 if (img) {
                     return img.src;
                 }
             }
+            // 清除可能存在的tooltip元素
+            self.component.tooltip && self.component.tooltip.hideTip();
+                
             imgType = imgType || 'png';
             if (imgType != 'png' && imgType != 'jpeg') {
                 imgType = 'png';
@@ -26371,6 +26762,102 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
         function getImage(imgType) {
             var imgDom = document.createElement('img');
             imgDom.src = getDataURL(imgType);
+            imgDom.title = (_optionRestore.title && _optionRestore.title.text)
+                           || 'ECharts';
+            return imgDom;
+        }
+        
+        /**
+         * 获取多图联动的Base64图片dataURL
+         * @param {string} imgType 图片类型，支持png|jpeg，默认为png
+         * @return imgDataURL
+         */
+        function getConnectedDataURL(imgType) {
+            if (!isConnected()) {
+                return getDataURL(imgType);
+            }
+            
+            var tempDom;
+            var domSize = domSize = [
+                dom.offsetLeft, dom.offsetTop, 
+                dom.offsetWidth, dom.offsetHeight
+            ];
+            var imgList = {
+                'self' : {
+                    img : self.getDataURL(imgType),
+                    left : domSize[0],
+                    top : domSize[1],
+                    right : domSize[0] + domSize[2],
+                    bottom : domSize[1] + domSize[3],
+                }
+            };
+            var minLeft = imgList.self.left;
+            var minTop = imgList.self.top;
+            var maxRight = imgList.self.right;
+            var maxBottom = imgList.self.bottom;
+            for (var c in _connected) {
+                tempDom = _connected[c].getDom();
+                domSize = [
+                    tempDom.offsetLeft, tempDom.offsetTop, 
+                    tempDom.offsetWidth, tempDom.offsetHeight
+                ];
+                imgList[c] = {
+                    img : _connected[c].getDataURL(imgType),
+                    left : domSize[0],
+                    top : domSize[1],
+                    right : domSize[0] + domSize[2],
+                    bottom : domSize[1] + domSize[3],
+                }
+                minLeft = Math.min(minLeft, imgList[c].left);
+                minTop = Math.min(minTop, imgList[c].top);
+                maxRight = Math.max(maxRight, imgList[c].right);
+                maxBottom = Math.max(maxBottom, imgList[c].bottom);
+            }
+            
+            var zrDom = document.createElement('div');
+            zrDom.style.position = 'absolute';
+            zrDom.style.left = '-4000px';
+            zrDom.style.width = (maxRight - minLeft) + 'px';
+            zrDom.style.height = (maxBottom - minTop) + 'px';
+            document.body.appendChild(zrDom);
+            
+            var zrImg = require('zrender').init(zrDom);
+            
+            for (var c in imgList) {
+                zrImg.addShape({
+                    shape:'image',
+                    style : {
+                        x : imgList[c].left - minLeft,
+                        y : imgList[c].top - minTop,
+                        image : imgList[c].img
+                    }
+                });
+            }
+            
+            zrImg.render();
+            var bgColor = _option.backgroundColor 
+                          && _option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
+                          ? '#fff' : _option.backgroundColor;
+                          
+            var image = zrImg.toDataURL('image/png', bgColor);
+            
+            setTimeout(function(){
+                zrImg.dispose();
+                zrDom.parentNode.removeChild(zrDom);
+                zrDom = null;
+            },100);
+            
+            return image;
+        }
+        
+        /**
+         * 获取多图联动的img
+         * @param {string} imgType 图片类型，支持png|jpeg，默认为png
+         * @return img dom
+         */
+        function getConnectedImage(imgType) {
+            var imgDom = document.createElement('img');
+            imgDom.src = getConnectedDataURL(imgType);
             imgDom.title = (_optionRestore.title && _optionRestore.title.text)
                            || 'ECharts';
             return imgDom;
@@ -26394,6 +26881,75 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
         function un(eventName, eventListener) {
             _messageCenter.unbind(eventName, eventListener);
             return self;
+        }
+        
+        /**
+         * 多图联动 
+         * @param connectTarget{ECharts | Array <ECharts>} connectTarget 联动目标
+         */
+        function connect(connectTarget) {
+            if (!connectTarget) {
+                return self;
+            }
+            
+            if (!_connected) {
+                _connected = {};
+            }
+            
+            if (connectTarget instanceof Array) {
+                for (var i = 0, l = connectTarget.length; i < l; i++) {
+                    _connected[connectTarget[i].id] = connectTarget[i];
+                }
+            }
+            else {
+                _connected[connectTarget.id] = connectTarget;
+            }
+            
+            return self;
+        }
+        
+        /**
+         * 解除多图联动 
+         * @param connectTarget{ECharts | Array <ECharts>} connectTarget 解除联动目标
+         */
+        function disConnect(connectTarget) {
+            if (!connectTarget || !_connected) {
+                return self;
+            }
+            
+            if (connectTarget instanceof Array) {
+                for (var i = 0, l = connectTarget.length; i < l; i++) {
+                    delete _connected[connectTarget[i].id];
+                }
+            }
+            else {
+                delete _connected[connectTarget.id];
+            }
+            
+            for (var k in _connected) {
+                return self; // 非空
+            }
+            
+            // 空，转为标志位
+            _connected = false;
+            return self;
+        }
+        
+        /**
+         * 联动事件响应 
+         */
+        function connectedEventHandler(param) {
+            if (param.__echarts_id__ != self.id) {
+                // 来自其他联动图表的事件
+                _onevent(param);
+            }
+        }
+        
+        /**
+         * 是否存在多图联动 
+         */
+        function isConnected() {
+            return !!_connected
         }
         
         /**
@@ -26553,11 +27109,18 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender','zr
         self.addData = addData;
         self.getOption = getOption;
         self.getSeries = getSeries;
+        self.getDom = getDom;
         self.getZrender = getZrender;
         self.getDataURL = getDataURL;
         self.getImage =  getImage;
+        self.getConnectedDataURL = getConnectedDataURL;
+        self.getConnectedImage = getConnectedImage;
         self.on = on;
         self.un = un;
+        self.connect = connect;
+        self.disConnect = disConnect;
+        self.connectedEventHandler = connectedEventHandler;
+        self.isConnected = isConnected;
         self.showLoading = showLoading;
         self.hideLoading = hideLoading;
         self.setTheme = setTheme;
@@ -26847,24 +27410,20 @@ define('echarts/chart/scatter',['require','../component/base','./calculableBase'
                     _sIndex2ShapeMap[i] = self.query(serie, 'symbol')
                                           || _symbol[i % _symbol.length];
                     if (legend){
-                        self.selectedMap[serieName] = 
-                            legend.isSelected(serieName);
+                        self.selectedMap[serieName] = legend.isSelected(serieName);
                             
-                        _sIndex2ColorMap[i] = 
-                            zrColor.alpha(legend.getColor(serieName),0.5);
+                        _sIndex2ColorMap[i] = zrColor.alpha(legend.getColor(serieName), 0.5);
                             
                         iconShape = legend.getItemShape(serieName);
                         if (iconShape) {
                             // 回调legend，换一个更形象的icon
                             iconShape.shape = 'icon';
                             var iconType = _sIndex2ShapeMap[i];
-                            iconShape.style.brushType = iconType.match('empty') 
-                                                        ? 'stroke' : 'both';
-                            iconType = iconType.replace('empty', '')
-                                               .toLowerCase();
+                            iconShape.style.brushType = iconType.match('empty') ? 'stroke' : 'both';
+                            iconType = iconType.replace('empty', '').toLowerCase();
+                            
                             if (iconType.match('star')) {
-                                iconShape.style.n = 
-                                    (iconType.replace('star','') - 0) || 5;
+                                iconShape.style.n = (iconType.replace('star','') - 0) || 5;
                                 iconType = 'star';
                             }
                             
@@ -26884,7 +27443,8 @@ define('echarts/chart/scatter',['require','../component/base','./calculableBase'
                             iconShape.style.iconType = iconType;
                             legend.setItemShape(serieName, iconShape);
                         }
-                    } else {
+                    } 
+                    else {
                         self.selectedMap[serieName] = true;
                         _sIndex2ColorMap[i] = zr.getColor(i);
                     }
@@ -26974,8 +27534,12 @@ define('echarts/chart/scatter',['require','../component/base','./calculableBase'
                 if (serie.large && serie.data.length > serie.largeThreshold) {
                     self.shapeList.push(_getLargeSymbol(
                         seriesPL, 
-                        self.query(
-                            serie, 'itemStyle.normal.color'
+                        self.getItemStyleColor(
+                            self.query(
+                                serie, 'itemStyle.normal.color'
+                            ),
+                            seriesIndex,
+                            -1
                         ) || _sIndex2ColorMap[seriesIndex]
                     ));
                     continue;
@@ -28081,8 +28645,13 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../u
         ) {
             // 多级控制
             var queryTarget = [data, serie];
-            var nColor = self.deepQuery(
-                queryTarget, 'itemStyle.normal.color'
+            var nColor = self.getItemStyleColor(
+                self.deepQuery(
+                    queryTarget, 'itemStyle.normal.color'
+                ),
+                seriesIndex,
+                dataIndex,
+                data
             );
             var nLineWidth = self.deepQuery(
                 queryTarget, 'itemStyle.normal.lineStyle.width'
@@ -28122,9 +28691,15 @@ define('echarts/chart/k',['require','../component/base','./calculableBase','../u
                                   || nAreaColor 
                                   || nColor 
                                   || zrColor.alpha(defaultColor,0.5),
-                    strokeColor : self.deepQuery(
-                                      queryTarget, 'itemStyle.emphasis.color'
-                                  ) || nColor || defaultColor,
+                    strokeColor : self.getItemStyleColor(
+                                       self.deepQuery(
+                                           queryTarget, 'itemStyle.emphasis.color'
+                                       ),
+                                       seriesIndex,
+                                       dataIndex,
+                                       data
+                                   )
+                                   || nColor || defaultColor,
                     lineWidth   : self.deepQuery(
                                       queryTarget,
                                       'itemStyle.emphasis.lineStyle.width'
@@ -33830,18 +34405,18 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                 
                 // 常规设置
                 style.brushType = 'both';
-                style.color = color || self.deepQuery(
-                                  queryTarget,
-                                  'itemStyle.normal.areaStyle.color'
-                              );
-                style.strokeColor = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.borderColor'
-                );
-                style.lineWidth = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.borderWidth'
-                );
+                style.color = color 
+                              || self.getItemStyleColor(
+                                     self.deepQuery(queryTarget, 'itemStyle.normal.color'),
+                                     data.seriesIndex, -1, data
+                                 )
+                              || self.deepQuery(
+                                  queryTarget, 'itemStyle.normal.areaStyle.color'
+                                 );
+                style.strokeColor = self.deepQuery(queryTarget, 'itemStyle.normal.borderColor');
+                style.lineWidth = self.deepQuery(queryTarget, 'itemStyle.normal.borderWidth');
+                style.lineJoin = 'round';
+                
                 style.text = _getLabelText(name, value, queryTarget, 'normal');
                 style._text = name;
                 style.textAlign = 'center';
@@ -33854,10 +34429,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                     'itemStyle.normal.label.textStyle'
                 );
                 style.textFont = self.getFont(font);
-                if (!self.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.label.show'
-                )) {
+                if (!self.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {
                     style.textColor = 'rgba(0,0,0,0)';  // 默认不呈现文字
                 }
                 
@@ -33872,9 +34444,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                         brushType: 'both',
                         x : style.textX,
                         y : style.textY,
-                        text : _getLabelText(
-                            name, value, queryTarget, 'normal'
-                        ),
+                        text : _getLabelText(name, value, queryTarget, 'normal'),
                         _text : name,
                         textAlign : 'center',
                         color : style.textColor,
@@ -33889,10 +34459,14 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                 
                 // 高亮
                 highlightStyle.brushType = 'both';
-                highlightStyle.color = self.deepQuery(
-                    queryTarget,
-                    'itemStyle.emphasis.areaStyle.color'
-                ) || style.color;
+                highlightStyle.color = self.getItemStyleColor(
+                                           self.deepQuery(queryTarget, 'itemStyle.emphasis.color'),
+                                           data.seriesIndex, -1, data
+                                       ) 
+                                       || self.deepQuery(
+                                              queryTarget, 'itemStyle.emphasis.areaStyle.color'
+                                          ) 
+                                       || style.color;
                 highlightStyle.strokeColor = self.deepQuery(
                     queryTarget,
                     'itemStyle.emphasis.borderColor'
@@ -33902,10 +34476,7 @@ define('echarts/chart/map',['require','../component/base','./calculableBase','..
                     'itemStyle.emphasis.borderWidth'
                 ) || style.lineWidth;
                 highlightStyle._text = name;
-                if (self.deepQuery(
-                    queryTarget,
-                    'itemStyle.emphasis.label.show'
-                )) {
+                if (self.deepQuery(queryTarget, 'itemStyle.emphasis.label.show')) {
                     highlightStyle.text = _getLabelText(
                         name, value, queryTarget, 'emphasis'
                     );
@@ -35193,8 +35764,8 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','z
                     lineColor = self.query(
                         serie, 'itemStyle.normal.lineStyle.color'
                     );
-                    normalColor = self.query(
-                        serie, 'itemStyle.normal.color'
+                    normalColor = self.getItemStyleColor(
+                        self.query(serie, 'itemStyle.normal.color'), seriesIndex, -1
                     );
 
                     isFill = typeof self.query(
@@ -35608,8 +36179,6 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','z
         var height = style.height;
         
         var dy = height / 2;
-        ctx.moveTo(x, y + dy);
-        ctx.lineTo(x + width, y + dy);
         
         if (style.symbol.match('empty')) {
             ctx.fillStyle = '#fff';
@@ -35633,20 +36202,32 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','z
                     new RegExp('^image:\\/\\/'), ''
                 );
             symbol = 'image';
-            x += Math.round((width - height) / 2);
-            width = height;
+            x += Math.round((width - height) / 2) - 1;
+            width = height = height + 2;
         }
         symbol = require('zrender/shape').get('icon').get(symbol);
         
         if (symbol) {
+            var x2 = style.x;
+            var y2 = style.y;
+            ctx.moveTo(x2, y2 + dy);
+            ctx.lineTo(x2 + 5, y2 + dy);
+            ctx.moveTo(x2 + style.width - 5, y2 + dy);
+            ctx.lineTo(x2 + style.width, y2 + dy);
+            
             symbol(ctx, {
-                x : x + 3,
-                y : y + 3,
-                width : width - 6,
-                height : height - 6,
+                x : x + 4,
+                y : y + 4,
+                width : width - 8,
+                height : height - 8,
                 n : dy,
                 image : imageLocation
             });
+            
+        }
+        else {
+            ctx.moveTo(x, y + dy);
+            ctx.lineTo(x + width, y + dy);
         }
     }
     
@@ -35794,9 +36375,17 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                     iconShape = legend.getItemShape(serieName);
                     if (iconShape) {
                         // 回调legend，换一个更形象的icon
-                        iconShape.style.strokeColor = 
-                            serie.itemStyle.normal.borderColor;
-                        iconShape.style.brushType = 'both';
+                        if (serie.itemStyle.normal.borderWidth > 0) {
+                            iconShape.style.x += 1;
+                            iconShape.style.y += 1;
+                            iconShape.style.width -= 2;
+                            iconShape.style.height -= 2;
+                            iconShape.style.strokeColor = 
+                            iconShape.highlightStyle.strokeColor =
+                                serie.itemStyle.normal.borderColor;
+                            iconShape.highlightStyle.lineWidth = 3;
+                            iconShape.style.brushType = 'both';
+                        }
                         legend.setItemShape(serieName, iconShape);
                     }
                 } else {
@@ -35886,8 +36475,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                     // 堆叠数据用第一条valueAxis
                     yAxisIndex = series[locationMap[j][0]].yAxisIndex || 0;
                     valueAxis = component.yAxis.getAxis(yAxisIndex);
-                    baseYP = lastYP = valueAxis.getCoord(0) - 1;
-                    baseYN = lastYN = lastYP + 2;
+                    baseYP = lastYP = baseYN = lastYN = valueAxis.getCoord(0);
                     for (var m = 0, n = locationMap[j].length; m < n; m++) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
@@ -35913,7 +36501,6 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             }
                             lastYP -= barHeight;
                             y = lastYP;
-                            //lastYP -= 0.5; //白色视觉分隔线宽修正
                         }
                         else if (value < 0){
                             // 负向堆叠
@@ -35926,7 +36513,6 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             }
                             y = lastYN;
                             lastYN += barHeight;
-                            //lastYN += 0.5; //白色视觉分隔线宽修正
                         }
                         else {
                             // 0值
@@ -35934,7 +36520,6 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             // 最小高度无效
                             lastYP -= barHeight;
                             y = lastYP;
-                            //lastYP -= 0.5; //白色视觉分隔线宽修正
                         }
 
                         barShape = _getBarItem(
@@ -35978,13 +36563,14 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             barShape = _getBarItem(
                                 seriesIndex, i,
                                 categoryAxis.getNameByIndex(i),
-                                x + 1, y,
-                                (barWidthMap[seriesIndex] || barWidth) - 2,
-                                ecConfig.island.r,
+                                x + 0.5, y + 0.5,
+                                (barWidthMap[seriesIndex] || barWidth) - 1,
+                                ecConfig.island.r - 1,
                                 'vertical'
                             );
                             barShape.hoverable = false;
                             barShape.draggable = false;
+                            barShape.style.lineWidth = 1;
                             barShape.style.brushType = 'stroke';
                             barShape.style.strokeColor =
                                     serie.calculableHolderColor
@@ -36040,8 +36626,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                     // 堆叠数据用第一条valueAxis
                     xAxisIndex = series[locationMap[j][0]].xAxisIndex || 0;
                     valueAxis = component.xAxis.getAxis(xAxisIndex);
-                    baseXP = lastXP = valueAxis.getCoord(0) + 1;
-                    baseXN = lastXN = lastXP - 2;
+                    baseXP = lastXP = baseXN = lastXN = valueAxis.getCoord(0);
                     for (var m = 0, n = locationMap[j].length; m < n; m++) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
@@ -36067,7 +36652,6 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             }
                             x = lastXP;
                             lastXP += barHeight;
-                            //lastXP += 0.5; //白色视觉分隔线宽修正
                         }
                         else if (value < 0){
                             // 负向堆叠
@@ -36080,7 +36664,6 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             }
                             lastXN -= barHeight;
                             x = lastXN;
-                            //lastXN -= 0.5; //白色视觉分隔线宽修正
                         }
                         else {
                             // 0值
@@ -36088,7 +36671,6 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             // 最小高度无效
                             x = lastXP;
                             lastXP += barHeight;
-                            //lastXP += 0.5; //白色视觉分隔线宽修正
                         }
 
                         barShape = _getBarItem(
@@ -36133,14 +36715,14 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                 seriesIndex,
                                 i,
                                 categoryAxis.getNameByIndex(i),
-                                x,
-                                y + 1 - (barWidthMap[seriesIndex] || barWidth),
-                                ecConfig.island.r,
-                                (barWidthMap[seriesIndex] || barWidth) - 2,
+                                x + 0.5, y + 0.5 - (barWidthMap[seriesIndex] || barWidth),
+                                ecConfig.island.r - 1,
+                                (barWidthMap[seriesIndex] || barWidth) - 1,
                                 'horizontal'
                             );
                             barShape.hoverable = false;
                             barShape.draggable = false;
+                            barShape.style.lineWidth = 1;
                             barShape.style.brushType = 'stroke';
                             barShape.style.strokeColor =
                                     serie.calculableHolderColor
@@ -36155,6 +36737,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
             }
             _buildMark(seriesArray, xMarkMap, false);
         }
+        
         /**
          * 我真是自找麻烦啊，为啥要允许系列级个性化最小宽度和高度啊！！！
          * @param {CategoryAxis} categoryAxis 类目坐标轴，需要知道类目间隔大小
@@ -36338,25 +36921,27 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                     width : width,
                     height : height,
                     brushType : 'both',
-                    color : normalColor,
+                    color : self.getItemStyleColor(normalColor, seriesIndex, dataIndex, data),
                     radius : normal.borderRadius,
                     lineWidth : normalBorderWidth,
                     strokeColor : normal.borderColor
                 },
                 highlightStyle : {
-                    color : emphasisColor 
-                            || (typeof normalColor == 'string'
-                                ? zrColor.lift(normalColor, -0.2)
-                                : normalColor
-                               ),
+                    color : self.getItemStyleColor(emphasisColor, seriesIndex, dataIndex, data),
                     radius : emphasis.borderRadius,
                     lineWidth : emphasis.borderWidth,
                     strokeColor : emphasis.borderColor
                 },
                 _orient : orient
             };
+            barShape.highlightStyle.color = barShape.highlightStyle.color
+                            || (typeof barShape.style.color == 'string'
+                                ? zrColor.lift(barShape.style.color, -0.3)
+                                : barShape.style.color
+                               );
             // 考虑线宽的显示优化
-            if (barShape.style.height > normalBorderWidth
+            if (normalBorderWidth > 0
+                && barShape.style.height > normalBorderWidth
                 && barShape.style.width > normalBorderWidth
             ) {
                 barShape.style.y += normalBorderWidth / 2;
@@ -36365,7 +36950,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                 barShape.style.width -= normalBorderWidth;
             }
             else {
-                // 太小了，废了边线
+                // 太小了或者线宽小于0，废了边线
                 barShape.style.brushType = 'fill';
             }
             
@@ -36955,8 +37540,10 @@ define('echarts/chart/pie',['require','../component/base','./calculableBase','..
                 queryTarget,
                 'itemStyle.emphasis'
             ) || {};
-            var normalColor = normal.color || defaultColor;
-            var emphasisColor = emphasis.color 
+            var normalColor = self.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
+                              || defaultColor;
+            
+            var emphasisColor = self.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data) 
                 || (typeof normalColor == 'string'
                     ? zrColor.lift(normalColor, -0.2)
                     : normalColor
