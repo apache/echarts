@@ -611,10 +611,16 @@ define(function(require) {
                                 'barWidth'
                             );
                             if (typeof sBarWidth != 'undefined') {
+                                // 同一堆叠第一个生效barWidth
                                 barWidthMap[seriesIndex] = sBarWidth;
                                 sBarWidthTotal += sBarWidth;
                                 sBarWidthCounter++;
                                 hasFound = true;
+                                // 复位前面同一堆叠但没被定义的
+                                for (var ii = 0, ll = m; ii < ll; ii++) {
+                                    var pSeriesIndex = locationMap[j][ii];
+                                    barWidthMap[pSeriesIndex] = sBarWidth;
+                                }
                             }
                         } else {
                             barWidthMap[seriesIndex] = sBarWidth;   // 用找到的一个
@@ -716,7 +722,6 @@ define(function(require) {
                     return _mapSize(categoryAxis, locationMap, true);
                 }
             }
-
 
             return {
                 barWidthMap : barWidthMap,
