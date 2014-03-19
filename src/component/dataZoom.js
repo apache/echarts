@@ -1019,7 +1019,7 @@ define(function (require) {
             if (option.dataZoom.show
                 || (
                     self.query(option, 'toolbox.show')
-                    && self.query(option, 'toolbox.feature.dataZoom')
+                    && self.query(option, 'toolbox.feature.dataZoom.show')
                 )
             ) {
                 _location = _getLocation();
@@ -1043,7 +1043,7 @@ define(function (require) {
             if (option.dataZoom.show
                 || (
                     self.query(option, 'toolbox.show')
-                    && self.query(option, 'toolbox.feature.dataZoom')
+                    && self.query(option, 'toolbox.feature.dataZoom.show')
                 )
             ) {
                 _location = _getLocation();

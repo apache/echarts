@@ -841,12 +841,8 @@ define(function (require) {
 
         // 重置备份还原状态等
         function reset(newOption) {
-            if (newOption.toolbox
-                && newOption.toolbox.show
-                && newOption.toolbox.feature.magicType
-                && newOption.toolbox.feature.magicType.show
-                && newOption.toolbox.feature.magicType.type
-                && newOption.toolbox.feature.magicType.type.length > 0
+            if (self.query(newOption, 'toolbox.show')
+                && self.query(newOption, 'toolbox.feature.magicType.show')
             ) {
                 var magicType = newOption.toolbox.feature.magicType.type;
                 var len = magicType.length;

@@ -545,11 +545,11 @@ define(
                     e.style.__rect = rect;
                 }
                 // 提高交互体验，太小的图形包围盒四向扩大4px
-                var delta = (rect.height < 10 || rect.width < 10 ) ? 4 : 0;
+                var delta = (rect.height < 8 || rect.width < 8 ) ? 4 : 0;
                 if (x >= rect.x - delta
-                    && x <= (rect.x + rect.width + 2 * delta)
+                    && x <= (rect.x + rect.width + delta)
                     && y >= rect.y - delta
-                    && y <= (rect.y + rect.height + 2 * delta)
+                    && y <= (rect.y + rect.height + delta)
                 ) {
                     // 矩形内
                     return true;
