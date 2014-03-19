@@ -248,7 +248,7 @@ define(function(require) {
                 markPoint.data[i].y = typeof mpData.y != 'undefined'
                                       ? mpData.y : pos[1];
                 if (mpData.type
-                    && (mpData.type === 'max' || mpData.type === 'min')
+                    && (mpData.type == 'max' || mpData.type == 'min')
                 ) {
                     // 特殊值内置支持
                     markPoint.data[i].value = pos[3];
@@ -297,7 +297,7 @@ define(function(require) {
             for (var i = 0, l = markLine.data.length; i < l; i++) {
                 mlData = markLine.data[i];
                 if (mlData.type
-                    && (mlData.type === 'max' || mlData.type === 'min' || mlData.type === 'average')
+                    && (mlData.type == 'max' || mlData.type == 'min' || mlData.type == 'average')
                 ) {
                     // 特殊值内置支持
                     pos = self.getMarkCoord(serie, seriesIndex, mlData, markCoordParams);
@@ -547,7 +547,8 @@ define(function(require) {
                     itemShape,
                     serie, seriesIndex,
                     data[i][0], 0,
-                    data[i][0].name + ' : ' + data[i][1].name
+                    data[i][0].name + (data[i][1].name != '' 
+                                      ? (' > ' + data[i][1].name) : '')
                 );
                 pList.push(itemShape);
             }

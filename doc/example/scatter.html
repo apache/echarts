@@ -132,7 +132,21 @@ option = {
                     ]);
                 }
                 return d;
-            })()
+            })(),
+            markPoint : {
+                data : [
+                    {type : 'max', name: 'y最大值'},
+                    {type : 'min', name: 'y最小值'},
+                    {type : 'max', name: 'x最大值', valueIndex : 0, symbol:'arrow',itemStyle:{normal:{borderColor:'red'}}},
+                    {type : 'min', name: 'x最小值', valueIndex : 0, symbol:'arrow',itemStyle:{normal:{borderColor:'red'}}}
+                ]
+            },
+            markLine : {
+                data : [
+                    {type : 'average', name: 'y平均值'},
+                    {type : 'average', name: 'x平均值', valueIndex : 0, itemStyle:{normal:{borderColor:'red'}}}
+                ]
+            }
         },
         {
             name:'scatter2',

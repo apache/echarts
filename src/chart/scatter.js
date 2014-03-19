@@ -150,17 +150,142 @@ define(function(require) {
                         i,                  // 数据index
                         data.name || ''     // 名称
                     ]);
+                    
                 }
+                _markMap(xAxis, yAxis, serie.data, pointList[seriesIndex])
                 self.buildMark(
                     serie,
                     seriesIndex,
-                    component
+                    component,
+                    {
+                        xMarkMap : _needMarkMap(seriesIndex) 
+                                   ? _markMap(xAxis, yAxis, serie.data, pointList[seriesIndex])
+                                   : {}
+                    }
                 );
             }
+            
             // console.log(pointList)
             _buildPointList(pointList);
         }
-
+        
+        function _needMarkMap(seriesIndex) {
+            var serie = series[seriesIndex];
+            var mark = [];
+            if (serie.markPoint && serie.markPoint.data) {
+                mark.push(serie.markPoint.data);
+            }
+            if (serie.markLine && serie.markLine.data) {
+                mark.push(serie.markLine.data);
+            }
+            
+            var data;
+            var len = mark.length;
+            while (len--) {
+                data = mark[len];
+                for (var i = 0, l = data.length; i < l; i++) {
+                    if (data[i].type == 'max' 
+                        || data[i].type == 'min' 
+                        || data[i].type == 'average'
+                    ) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        
+        function _markMap(xAxis, yAxis, data, pointList) {
+            var xMarkMap = {
+                min0 : Number.POSITIVE_INFINITY,
+                max0 : Number.NEGATIVE_INFINITY,
+                sum0 : 0,
+                counter0 : 0,
+                average0 : 0,
+                min1 : Number.POSITIVE_INFINITY,
+                max1 : Number.NEGATIVE_INFINITY,
+                sum1 : 0,
+                counter1 : 0,
+                average1 : 0
+            };
+            var value;
+            for (var i = 0, l = pointList.length; i < l; i++) {
+                /**
+                x,                  // 横坐标
+                y,                  // 纵坐标
+                i,                  // 数据index
+                data.name || ''     // 名称 
+                 */
+                value = data[pointList[i][2]].value || data[pointList[i][2]];
+                // 横轴
+                if (xMarkMap.min0 > value[0]) {
+                    xMarkMap.min0 = value[0];
+                    xMarkMap.minY0 = pointList[i][1];
+                    xMarkMap.minX0 = pointList[i][0];
+                }
+                if (xMarkMap.max0 < value[0]) {
+                    xMarkMap.max0 = value[0];
+                    xMarkMap.maxY0 = pointList[i][1];
+                    xMarkMap.maxX0 = pointList[i][0];
+                }
+                xMarkMap.sum0 += value[0];
+                xMarkMap.counter0++;
+                
+                // 纵轴
+                if (xMarkMap.min1 > value[1]) {
+                    xMarkMap.min1 = value[1];
+                    xMarkMap.minY1 = pointList[i][1];
+                    xMarkMap.minX1 = pointList[i][0];
+                }
+                if (xMarkMap.max1 < value[1]) {
+                    xMarkMap.max1 = value[1];
+                    xMarkMap.maxY1 = pointList[i][1];
+                    xMarkMap.maxX1 = pointList[i][0];
+                }
+                xMarkMap.sum1 += value[1];
+                xMarkMap.counter1++;
+            }
+            
+            var gridX = component.grid.getX();
+            var gridXend = component.grid.getXend();
+            var gridY = component.grid.getY();
+            var gridYend = component.grid.getYend();
+            
+            xMarkMap.average0 = (xMarkMap.sum0 / xMarkMap.counter0).toFixed(2) - 0;
+            var x = xAxis.getCoord(xMarkMap.average0); 
+            // 横轴平均纵向
+            xMarkMap.averageLine0 = [
+                [x, gridYend],
+                [x, gridY]
+            ];
+            xMarkMap.minLine0 = [
+                [xMarkMap.minX0, gridYend],
+                [xMarkMap.minX0, gridY]
+            ];
+            xMarkMap.maxLine0 = [
+                [xMarkMap.maxX0, gridYend],
+                [xMarkMap.maxX0, gridY]
+            ];
+            
+            xMarkMap.average1 = (xMarkMap.sum1 / xMarkMap.counter1).toFixed(2) - 0;
+            var y = yAxis.getCoord(xMarkMap.average1);
+            // 纵轴平均横向
+            xMarkMap.averageLine1 = [
+                [gridX, y],
+                [gridXend, y]
+            ];
+            xMarkMap.minLine1 = [
+                [gridX, xMarkMap.minY1],
+                [gridXend, xMarkMap.minY1]
+            ];
+            xMarkMap.maxLine1 = [
+                [gridX, xMarkMap.maxY1],
+                [gridXend, xMarkMap.maxY1]
+            ];
+            
+            return xMarkMap;
+        }
+        
         /**
          * 生成折线和折线上的拐点
          */
@@ -260,21 +385,40 @@ define(function(require) {
         }
         
         // 位置转换
-        function getMarkCoord(serie, seriesIndex, mpData) {
+        function getMarkCoord(serie, seriesIndex, mpData, markCoordParams) {
             var xAxis = component.xAxis.getAxis(serie.xAxisIndex);
             var yAxis = component.yAxis.getAxis(serie.yAxisIndex);
+            var pos;
             
-            return [
-                typeof mpData.xAxis != 'string' 
-                && xAxis.getCoordByIndex
-                ? xAxis.getCoordByIndex(mpData.xAxis || 0)
-                : xAxis.getCoord(mpData.xAxis || 0),
-                
-                typeof mpData.yAxis != 'string' 
-                && yAxis.getCoordByIndex
-                ? yAxis.getCoordByIndex(mpData.yAxis || 0)
-                : yAxis.getCoord(mpData.yAxis || 0)
-            ];
+            if (mpData.type
+                && (mpData.type == 'max' || mpData.type == 'min' || mpData.type == 'average')
+            ) {
+                // 特殊值内置支持
+                // 默认取纵值
+                var valueIndex = typeof mpData.valueIndex != 'undefined'
+                                 ? mpData.valueIndex : 1;
+                pos = [
+                    markCoordParams.xMarkMap[mpData.type + 'X' + valueIndex],
+                    markCoordParams.xMarkMap[mpData.type + 'Y' + valueIndex],
+                    markCoordParams.xMarkMap[mpData.type + 'Line' + valueIndex],
+                    markCoordParams.xMarkMap[mpData.type + valueIndex]
+                ];
+            }
+            else {
+                pos = [
+                    typeof mpData.xAxis != 'string' 
+                    && xAxis.getCoordByIndex
+                    ? xAxis.getCoordByIndex(mpData.xAxis || 0)
+                    : xAxis.getCoord(mpData.xAxis || 0),
+                    
+                    typeof mpData.yAxis != 'string' 
+                    && yAxis.getCoordByIndex
+                    ? yAxis.getCoordByIndex(mpData.yAxis || 0)
+                    : yAxis.getCoord(mpData.yAxis || 0)
+                ];
+            }
+            
+            return pos;
         }
 
         /**
