@@ -8,6 +8,7 @@
 define(function(require) {
     function Base(ecConfig, zr){
         var ecData = require('../util/ecData');
+        var ecQuery = require('../util/ecQuery');
         var zrUtil = require('zrender/tool/util');
         var zrArea = require('zrender/tool/area');
         //var zrColor = require('zrender/tool/color');
@@ -117,71 +118,6 @@ define(function(require) {
         }
 
         /**
-         * 获取嵌套选项的基础方法
-         * 返回optionTarget中位于optionLocation上的值，如果没有定义，则返回undefined
-         */
-        function query(optionTarget, optionLocation) {
-            if (typeof optionTarget == 'undefined') {
-                return undefined;
-            }
-            if (!optionLocation) {
-                return optionTarget;
-            }
-            optionLocation = optionLocation.split('.');
-
-            var length = optionLocation.length;
-            var curIdx = 0;
-            while (curIdx < length) {
-                optionTarget = optionTarget[optionLocation[curIdx]];
-                if (typeof optionTarget == 'undefined') {
-                    return undefined;
-                }
-                curIdx++;
-            }
-            return optionTarget;
-        }
-            
-        /**
-         * 获取多级控制嵌套属性的基础方法
-         * 返回ctrList中优先级最高（最靠前）的非undefined属性，ctrList中均无定义则返回undefined
-         */
-        function deepQuery(ctrList, optionLocation) {
-            var finalOption;
-            for (var i = 0, l = ctrList.length; i < l; i++) {
-                finalOption = query(ctrList[i], optionLocation);
-                if (typeof finalOption != 'undefined') {
-                    return finalOption;
-                }
-            }
-            return undefined;
-        }
-        
-        /**
-         * 获取多级控制嵌套属性的基础方法
-         * 根据ctrList中优先级合并产出目标属性
-         */
-        function deepMerge (ctrList, optionLocation) {
-            var finalOption;
-            var tempOption;
-            var len = ctrList.length;
-            while (len--) {
-                tempOption = query(ctrList[len], optionLocation);
-                if (typeof tempOption != 'undefined') {
-                    if (typeof finalOption == 'undefined') {
-                        finalOption = zrUtil.clone(tempOption);
-                    }
-                    else {
-                        zrUtil.merge(
-                            finalOption, tempOption,
-                            { 'overwrite': true, 'recursive': true }
-                        );
-                    }
-                }
-            }
-            return finalOption;
-        }
-
-        /**
          * 获取自定义和默认配置合并后的字体设置
          */
         function getFont(textStyle) {
@@ -202,8 +138,8 @@ define(function(require) {
         function addLabel(tarShape, serie, data, name, orient) {
             // 多级控制
             var queryTarget = [data, serie];
-            var nLabel = deepMerge(queryTarget, 'itemStyle.normal.label');
-            var eLabel = deepMerge(queryTarget, 'itemStyle.emphasis.label');
+            var nLabel = self.deepMerge(queryTarget, 'itemStyle.normal.label');
+            var eLabel = self.deepMerge(queryTarget, 'itemStyle.emphasis.label');
 
             var nTextStyle = nLabel.textStyle || {};
             var eTextStyle = eLabel.textStyle || {};
@@ -1292,9 +1228,11 @@ define(function(require) {
         self.getZlevelBase = getZlevelBase;
         self.reformOption = reformOption;
         self.reformCssArray = reformCssArray;
-        self.query = query;
-        self.deepQuery = deepQuery;
-        self.deepMerge = deepMerge;
+        
+        self.query = ecQuery.query;
+        self.deepQuery = ecQuery.deepQuery;
+        self.deepMerge = ecQuery.deepMerge;
+        
         self.getFont = getFont;
         self.addLabel = addLabel;
         self.buildMark = buildMark;

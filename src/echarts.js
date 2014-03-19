@@ -558,11 +558,11 @@ define(function(require) {
          * 数据修改后的反向同步备份数据 
          */
         function _syncBackupData(curOption) {
-            if ((curOption.dataZoom && curOption.dataZoom.show)
-                || (curOption.toolbox
-                    && curOption.toolbox.show
-                    && curOption.toolbox.feature
-                    && curOption.toolbox.feature.dataZoom
+            var ecQuery = require('./util/ecQuery');
+            if (ecQuery.query(curOption, 'dataZoom.show')
+                || (
+                    ecQuery.query(curOption, 'toolbox.show')
+                    && ecQuery.query(curOption, 'toolbox.feature.dataZoom.show')
                 )
             ) {
                 // 有dataZoom就dataZoom做同步
@@ -574,14 +574,15 @@ define(function(require) {
                     }
                 }
             }
-            
-            // 没有就ECharts做
-            var curSeries = curOption.series;
-            var curData;
-            for (var i = 0, l = curSeries.length; i < l; i++) {
-                curData = curSeries[i].data;
-                for (var j = 0, k = curData.length; j < k; j++) {
-                    _optionBackup.series[i].data[j] = curData[j];
+            else {
+                // 没有就ECharts做
+                var curSeries = curOption.series;
+                var curData;
+                for (var i = 0, l = curSeries.length; i < l; i++) {
+                    curData = curSeries[i].data;
+                    for (var j = 0, k = curData.length; j < k; j++) {
+                        _optionBackup.series[i].data[j] = curData[j];
+                    }
                 }
             }
         }
@@ -875,17 +876,17 @@ define(function(require) {
                 // 做简单的差异合并去同步内部持有的数据克隆，不建议带入数据
                 // 开启数据区域缩放、拖拽重计算、数据视图可编辑模式情况下，当用户产生了数据变化后无法同步
                 // 如有带入option存在数据变化，请重新setOption
-                var zrUtil = require('zrender/tool/util');
-                if (_optionBackup.toolbox
-                    && _optionBackup.toolbox.show
-                    && _optionBackup.toolbox.feature.magicType
-                    && _optionBackup.toolbox.feature.magicType.length > 0
+                var ecQuery = require('./util/ecQuery');
+                if (ecQuery.query(_optionBackup, 'toolbox.show')
+                    && ecQuery.query(_optionBackup, 'toolbox.feature.magicType.show')
                 ) {
                     magicOption = _getMagicOption();
                 }
                 else {
                     magicOption = _getMagicOption(_island.getOption());
                 }
+                
+                var zrUtil = require('zrender/tool/util');
                 zrUtil.merge(
                     magicOption, param.option,
                     { 'overwrite': true, 'recursive': true }
@@ -1048,11 +1049,10 @@ define(function(require) {
          * 返回内部持有的当前显示option克隆 
          */
         function getOption() {
+            var ecQuery = require('./util/ecQuery');
             var zrUtil = require('zrender/tool/util');
-            if (_optionBackup.toolbox
-                && _optionBackup.toolbox.show
-                && _optionBackup.toolbox.feature.magicType
-                && _optionBackup.toolbox.feature.magicType.length > 0
+            if (ecQuery.query(_optionBackup, 'toolbox.show')
+                && ecQuery.query(_optionBackup, 'toolbox.feature.magicType.show')
             ) {
                  return zrUtil.clone(_getMagicOption());
             }
@@ -1095,23 +1095,23 @@ define(function(require) {
          * @param {string=} additionData 是否增加类目轴(饼图为图例)数据，附加操作同isHead和dataGrow
          */
         function addData(seriesIdx, data, isHead, dataGrow, additionData) {
-            var zrUtil = require('zrender/tool/util');
-            var params = seriesIdx instanceof Array
-                         ? seriesIdx
-                         : [[seriesIdx, data, isHead, dataGrow, additionData]];
-            var axisIdx;
-            var legendDataIdx;
+            var ecQuery = require('./util/ecQuery');
             var magicOption;
-            if (_optionBackup.toolbox
-                && _optionBackup.toolbox.show
-                && _optionBackup.toolbox.feature.magicType
-                && _optionBackup.toolbox.feature.magicType.length > 0
+            if (ecQuery.query(_optionBackup, 'toolbox.show')
+                && ecQuery.query(_optionBackup, 'toolbox.feature.magicType.show')
             ) {
                 magicOption = _getMagicOption();
             }
             else {
                 magicOption = _getMagicOption(_island.getOption());
             }
+            
+            var zrUtil = require('zrender/tool/util');
+            var params = seriesIdx instanceof Array
+                         ? seriesIdx
+                         : [[seriesIdx, data, isHead, dataGrow, additionData]];
+            var axisIdx;
+            var legendDataIdx;
             //_optionRestore 和 _optionBackup都要同步
             for (var i = 0, l = params.length; i < l; i++) {
                 seriesIdx = params[i][0];
