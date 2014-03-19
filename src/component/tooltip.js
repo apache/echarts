@@ -220,10 +220,14 @@ define(function (require) {
             var domHeight = _tDom.offsetHeight;
             var domWidth = _tDom.offsetWidth;
             if (x + domWidth > _zrWidth) {
-                x = _zrWidth - domWidth;
+                // 太靠右
+                //x = _zrWidth - domWidth;
+                x -= (domWidth + 40);
             }
             if (y + domHeight > _zrHeight) {
-                y = _zrHeight - domHeight;
+                // 太靠下
+                //y = _zrHeight - domHeight;
+                y -= (domHeight - 20);
             }
             if (y < 20) {
                 y = 0;
@@ -232,8 +236,9 @@ define(function (require) {
                                   + _defaultCssText
                                   + (specialCssText ? specialCssText : '')
                                   + 'left:' + x + 'px;top:' + y + 'px;';
-            if (_zrWidth - x < 100 || _zrHeight - y < 100) {
-                // 太靠边的做一次refixed
+            
+            if (domHeight < 10 || domWidth < 10) {
+                // _zrWidth - x < 100 || _zrHeight - y < 100
                 setTimeout(_refixed, 20);
             }
         }
@@ -244,17 +249,17 @@ define(function (require) {
                 var domHeight = _tDom.offsetHeight;
                 var domWidth = _tDom.offsetWidth;
                 if (_tDom.offsetLeft + domWidth > _zrWidth) {
-                    cssText += 'left:' + (_zrWidth - domWidth) + 'px;';
+                    cssText += 'left:' + (_zrWidth - domWidth - 20) + 'px;';
                 }
                 if (_tDom.offsetTop + domHeight > _zrHeight) {
-                    cssText += 'top:' + (_zrHeight - domHeight) + 'px;';
+                    cssText += 'top:' + (_zrHeight - domHeight - 10) + 'px;';
                 }
                 if (cssText !== '') {
                     _tDom.style.cssText += cssText;
                 }
             }
         }
-
+        
         function _tryShow() {
             var needShow;
             var trigger;
@@ -1198,26 +1203,8 @@ define(function (require) {
             if (ticket == _curTicket) {
                 _tDom.innerHTML = content;
             }
-            var cssText = '';
-            var domHeight = _tDom.offsetHeight;
-            var domWidth = _tDom.offsetWidth;
-
-            if (_tDom.offsetLeft + domWidth > _zrWidth) {
-                cssText += 'left:' + (_zrWidth - domWidth) + 'px;';
-            }
-            if (_tDom.offsetTop + domHeight > _zrHeight) {
-                cssText += 'top:' + (_zrHeight - domHeight) + 'px;';
-            }
-            if (cssText !== '') {
-                _tDom.style.cssText += cssText;
-            }
             
-            if (_zrWidth - _tDom.offsetLeft < 100 
-                || _zrHeight - _tDom.offsetTop < 100
-            ) {
-                // 太靠边的做一次refixed
-                setTimeout(_refixed, 20);
-            }
+            setTimeout(_refixed, 20);
         }
 
         function setComponent() {
