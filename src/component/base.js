@@ -9,6 +9,7 @@ define(function(require) {
     function Base(ecConfig, zr){
         var ecData = require('../util/ecData');
         var ecQuery = require('../util/ecQuery');
+        var number = require('../util/number');
         var zrUtil = require('zrender/tool/util');
         var zrArea = require('zrender/tool/area');
         //var zrColor = require('zrender/tool/color');
@@ -412,8 +413,8 @@ define(function(require) {
                 itemShape = getSymbolShape(
                     mpOption, seriesIndex,      // 系列 
                     data[i], i, data[i].name,   // 数据
-                    parsePercent(data[i].x, zrWidth),   // 坐标
-                    parsePercent(data[i].y, zrHeight),  // 坐标
+                    self.parsePercent(data[i].x, zrWidth),   // 坐标
+                    self.parsePercent(data[i].y, zrHeight),  // 坐标
                     'pin', color,               // 默认symbol和color
                     'rgba(0,0,0,0)',
                     'horizontal'                // 走向，用于默认文字定位
@@ -526,10 +527,10 @@ define(function(require) {
                     seriesIndex,
                     data[i],                    // 数据
                     i,
-                    parsePercent(data[i][0].x, zrWidth),   // 坐标
-                    parsePercent(data[i][0].y, zrHeight),  // 坐标
-                    parsePercent(data[i][1].x, zrWidth),   // 坐标
-                    parsePercent(data[i][1].y, zrHeight),  // 坐标
+                    self.parsePercent(data[i][0].x, zrWidth),   // 坐标
+                    self.parsePercent(data[i][0].y, zrHeight),  // 坐标
+                    self.parsePercent(data[i][1].x, zrWidth),   // 坐标
+                    self.parsePercent(data[i][1].y, zrHeight),  // 坐标
                     color                       // 默认symbol和color
                 );
                 
@@ -833,67 +834,12 @@ define(function(require) {
             return itemShape;
         }
         
-        /**
-         * 百分比计算
-         */
-        function parsePercent(value, maxValue) {
-            if (typeof(value) === 'string') {
-                if (_trim(value).match(/%$/)) {
-                    return parseFloat(value) / 100 * maxValue;
-                } else {
-                    return parseFloat(value);
-                }
-            } else {
-                return value;
-            }
-        }
-        
-        /**
-         * 获取中心坐标
-         */ 
-        function parseCenter(center) {
-            return [
-                parsePercent(center[0], self.zr.getWidth()),
-                parsePercent(center[1], self.zr.getHeight()),
-            ];
-        }
-
-        /**
-         * 获取自适应半径
-         */ 
-        function parseRadius(radius) {
-            // 传数组实现环形图，[内半径，外半径]，传单个则默认为外半径为
-            if (!(radius instanceof Array)) {
-                radius = [0, radius];
-            }
-            var zrSize = Math.min(self.zr.getWidth(), self.zr.getHeight()) / 2;
-            return [
-                parsePercent(radius[0], zrSize),
-                parsePercent(radius[1], zrSize),
-            ];
-        }
-        
-        // 每三位默认加,格式化
-        function numAddCommas(x){
-            if (isNaN(x)) {
-                return '-';
-            }
-            x = (x + '').split('.');
-            return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g,'$1,') 
-                   + (x.length > 1 ? ('.' + x[1]) : '');
-        }
-        
-        
         function getItemStyleColor(itemColor, seriesIndex, dataIndex, data) {
             return typeof itemColor == 'function'
                    ? itemColor(seriesIndex, dataIndex, data) : itemColor;
             
         }
         
-        function _trim(str) {
-            return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
-        }
-
         // 亚像素优化
         function subPixelOptimize(position, lineWidth) {
             if (lineWidth % 2 == 1) {
@@ -1238,10 +1184,12 @@ define(function(require) {
         self.buildMark = buildMark;
         self.getMarkCoord = getMarkCoord;
         self.getSymbolShape = getSymbolShape;
-        self.parsePercent = parsePercent;
-        self.parseCenter = parseCenter;
-        self.parseRadius = parseRadius;
-        self.numAddCommas = numAddCommas;
+        
+        self.parsePercent = number.parsePercent;
+        self.parseCenter = number.parseCenter;
+        self.parseRadius = number.parseRadius;
+        self.numAddCommas = number.addCommas;
+        
         self.getItemStyleColor = getItemStyleColor;
         self.subPixelOptimize = subPixelOptimize;
         self.animation = animation;

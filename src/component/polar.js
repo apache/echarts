@@ -447,7 +447,7 @@ define(
              */
             function getCenter(index) {
                 var index = index || 0;
-                return self.parseCenter(polar[index].center);
+                return self.parseCenter(zr, polar[index].center);
             }
 
             /**
