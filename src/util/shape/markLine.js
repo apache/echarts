@@ -120,7 +120,7 @@ define(
                 style.iconType = style.symbol[idx].replace('empty', '')
                                                   .toLowerCase();
                 if (style.symbol[idx].match('empty')) {
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+                    ctx.fillStyle = '#fff'; //'rgba(0, 0, 0, 0)';
                 }
                 
                 // symbolRotate
@@ -161,8 +161,8 @@ define(
                 }
                 
                 ctx.closePath();
-                ctx.stroke();
                 ctx.fill();
+                ctx.stroke();
                 ctx.restore();
             },
             

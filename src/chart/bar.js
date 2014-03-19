@@ -214,7 +214,7 @@ define(function(require) {
             var barMinHeightMap = size.barMinHeightMap;
             var barHeight;
 
-            var xMarkMap = {}; // 为标注记录一个横向偏移
+            var xMarkMap = {}; // 为标注记录一些参数
             var x;
             var y;
             var lastYP; // 正向堆叠处理
@@ -365,7 +365,7 @@ define(function(require) {
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     seriesIndex = locationMap[j][m];
                     xMarkMap[seriesIndex].average = 
-                        xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter;
+                        (xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter).toFixed(2) - 0;
                         
                     y = component.yAxis.getAxis(series[seriesIndex].yAxisIndex || 0)
                         .getCoord(xMarkMap[seriesIndex].average);
@@ -840,7 +840,7 @@ define(function(require) {
             var dataIndex;
             var pos;
             if (mpData.type
-                && (mpData.type === 'max' || mpData.type === 'min' || mpData.type === 'average')
+                && (mpData.type == 'max' || mpData.type == 'min' || mpData.type == 'average')
             ) {
                 // 特殊值内置支持
                 pos = [

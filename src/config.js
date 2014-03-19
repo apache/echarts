@@ -868,7 +868,7 @@ define(function() {
                 normal: {
                     // color: 各异,           // 标线主色，线色，symbol主色
                     // borderColor: 随color,     // 标线symbol边框颜色，优先于color 
-                    borderWidth: 1,          // 标线symbol边框线宽，单位px，默认为2
+                    borderWidth: 1.5,          // 标线symbol边框线宽，单位px，默认为2
                     label: {
                         show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -882,7 +882,7 @@ define(function() {
                     lineStyle: {
                         // color: 随borderColor, // 主色，线色，优先级高于borderColor和color
                         // width: 随borderWidth, // 优先于borderWidth
-                        type: 'solid',
+                        type: 'dashed',
                         shadowColor : 'rgba(0,0,0,0)', //默认透明
                         shadowBlur: 5,
                         shadowOffsetX: 3,
