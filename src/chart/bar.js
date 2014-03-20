@@ -248,10 +248,13 @@ define(function(require) {
                             // 空数据在做完后补充拖拽提示框
                             continue;
                         }
-                        y = valueAxis.getCoord(value);
+                        //y = valueAxis.getCoord(value);
                         if (value > 0) {
                             // 正向堆叠
-                            barHeight = baseYP - y;
+                            //barHeight = baseYP - y;
+                            barHeight = m > 0 
+                                        ? valueAxis.getCoordSize(value)
+                                        : (baseYP - valueAxis.getCoord(value));
                             // 非堆叠数据最小高度有效
                             if (n == 1
                                 && barMinHeightMap[seriesIndex] > barHeight
@@ -263,7 +266,10 @@ define(function(require) {
                         }
                         else if (value < 0){
                             // 负向堆叠
-                            barHeight = y - baseYN;
+                            //barHeight = y - baseYN;
+                            barHeight = m > 0 
+                                        ? valueAxis.getCoordSize(value)
+                                        : (valueAxis.getCoord(value) - baseYN);
                             // 非堆叠数据最小高度有效
                             if (n == 1
                                 && barMinHeightMap[seriesIndex] > barHeight
@@ -275,7 +281,7 @@ define(function(require) {
                         }
                         else {
                             // 0值
-                            barHeight = baseYP - y;
+                            barHeight = 0;//baseYP - y;
                             // 最小高度无效
                             lastYP -= barHeight;
                             y = lastYP;
@@ -442,10 +448,13 @@ define(function(require) {
                             // 空数据在做完后补充拖拽提示框
                             continue;
                         }
-                        x = valueAxis.getCoord(value);
+                        //x = valueAxis.getCoord(value);
                         if (value > 0) {
                             // 正向堆叠
-                            barHeight = x - baseXP;
+                            //barHeight = x - baseXP;
+                            barHeight = m > 0 
+                                        ? valueAxis.getCoordSize(value)
+                                        : (valueAxis.getCoord(value) - baseXP);
                             // 非堆叠数据最小高度有效
                             if (n == 1
                                 && barMinHeightMap[seriesIndex] > barHeight
@@ -457,7 +466,10 @@ define(function(require) {
                         }
                         else if (value < 0){
                             // 负向堆叠
-                            barHeight = baseXN - x;
+                            //barHeight = baseXN - x;
+                            barHeight = m > 0 
+                                        ? valueAxis.getCoordSize(value)
+                                        : (baseXN - valueAxis.getCoord(value));
                             // 非堆叠数据最小高度有效
                             if (n == 1
                                 && barMinHeightMap[seriesIndex] > barHeight
@@ -469,7 +481,7 @@ define(function(require) {
                         }
                         else {
                             // 0值
-                            barHeight = x - baseXP;
+                            barHeight = 0;//x - baseXP;
                             // 最小高度无效
                             x = lastXP;
                             lastXP += barHeight;

@@ -481,10 +481,10 @@ define(function (require) {
                         // 不是自己的数据不计算极值
                         continue;
                     }
-
+                    
+                    var key = series[i].name || 'kener';
                     if (!series[i].stack) {
-                        var key = series[i].name || '';
-                        data[key] = [];
+                        data[key] = data[key] || [];
                         oriData = series[i].data;
                         for (var j = 0, k = oriData.length; j < k; j++) {
                             value = typeof oriData[j].value != 'undefined'
@@ -515,6 +515,7 @@ define(function (require) {
                         var keyN = '__Magic_Key_Negative__' + series[i].stack;
                         data[keyP] = data[keyP] || [];
                         data[keyN] = data[keyN] || [];
+                        data[key] = data[key] || [];  // scale下还需要记录每一个量
                         oriData = series[i].data;
                         for (var j = 0, k = oriData.length; j < k; j++) {
                             value = typeof oriData[j].value != 'undefined'
@@ -539,6 +540,9 @@ define(function (require) {
                                 else {
                                     data[keyN][j] = value;
                                 }
+                            }
+                            if (option.scale) {
+                                data[key].push(value);
                             }
                         }
                     }
@@ -676,7 +680,7 @@ define(function (require) {
             var splitGap;
             var power;
             if (precision === 0) {    // 整数
-                 power = option.power;
+                 power = option.power > 1 ? option.power : 1;
             }
             else {                          // 小数
                 // 放大倍数后复用整数逻辑，最后再缩小回去
@@ -690,52 +694,52 @@ define(function (require) {
             if (_min >= 0 && _max >= 0) {
                 // 双正
                 if (!scale) {
+                    // power自动降级
+                    while ((_max / power < splitNumber) && power != 1) {
+                        power = power / 10;
+                    }
                     _min = 0;
                 }
-                // power自动降级
-                while ((_max / power < splitNumber) && power != 1) {
-                    power = power / 10;
-                }
-                total = _max - _min;
-                // 粗算
-                splitGap = Math.ceil((total / splitNumber) / power) * power;
-                if (scale) {
+                else {
+                    // power自动降级
+                    while (_min < power && power != 1) {
+                        power = power / 10;
+                    }
                     if (precision === 0) {    // 整数
-                        _min = Math.floor(_min / splitGap) * splitGap;
-                    }
-                    // 修正
-                    if (_min + splitGap * splitNumber < _max) {
-                        splitGap = 
-                            Math.ceil(((_max - _min) / splitNumber) / power)
-                            * power;
+                        // 满足power
+                        _min = Math.floor(_min / power) * power;
+                        _max = Math.ceil(_max / power) * power;
                     }
                 }
+                power = power > 1 ? power / 10 : 1;
+                total = _max - _min;
+                splitGap = Math.ceil((total / splitNumber) / power) * power;
                 _max = _min + splitGap * splitNumber;
             }
             else if (_min <= 0 && _max <= 0) {
                 // 双负
+                power = -power;
                 if (!scale) {
+                    // power自动降级
+                    while ((_min / power < splitNumber) && power != -1) {
+                        power = power / 10;
+                    }
                     _max = 0;
                 }
-                power = -power;
-                // power自动降级
-                while ((_min / power < splitNumber) && power != -1) {
-                    power = power / 10;
+                else {
+                    // power自动降级
+                    while (_max > power && power != -1) {
+                        power = power / 10;
+                    }
+                    if (precision === 0) {    // 整数
+                        // 满足power
+                        _min = Math.ceil(_min / power) * power;
+                        _max = Math.floor(_max / power) * power;
+                    }
                 }
+                power = power < -1 ? power / 10 : -1;
                 total = _min - _max;
                 splitGap = -Math.ceil((total / splitNumber) / power) * power;
-                if (scale) {
-                    if (precision === 0) {    // 整数
-                        _max = Math.ceil(_max / splitGap) * splitGap;
-                    }
-                    // 修正
-                    if (_max - splitGap * splitNumber > _min) {
-                        splitGap = 
-                            Math.ceil(((_min - _max) / splitNumber) / power)
-                            * power;
-                    }
-                }
-                
                 _min = -splitGap * splitNumber + _max;
             }
             else {
@@ -777,7 +781,6 @@ define(function (require) {
                         (_valueList[i] / power).toFixed(precision) - 0;
                 }
             }
-            
             _reformLabelData();
         }
 
@@ -886,6 +889,18 @@ define(function (require) {
                    : Math.floor(result);
             */
         }
+        
+        // 根据值换算绝对大小
+        function getCoordSize(value) {
+            if (option.position == 'left' || option.position == 'right') {
+                // 纵向
+                return Math.abs(value / (_max - _min) * grid.getHeight());
+            }
+            else {
+                // 横向
+                return Math.abs(value / (_max - _min) * grid.getWidth());
+            }
+        }
 
         function getPosition() {
             return option.position;
@@ -895,6 +910,7 @@ define(function (require) {
         self.refresh = refresh;
         self.getExtremum = getExtremum;
         self.getCoord = getCoord;
+        self.getCoordSize = getCoordSize;
         self.getPosition = getPosition;
 
         init(option, grid, series);

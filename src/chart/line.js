@@ -268,15 +268,19 @@ define(function(require) {
                             }
                             continue;
                         }
-                        y = valueAxis.getCoord(value);
+                        //y = valueAxis.getCoord(value);
                         if (value >= 0) {
                             // 正向堆叠
-                            lastYP -= (baseYP - y);
+                            lastYP -= m > 0
+                                      ? valueAxis.getCoordSize(value)
+                                      : (baseYP - valueAxis.getCoord(value));
                             y = lastYP;
                         }
                         else if (value < 0){
                             // 负向堆叠
-                            lastYN += y - baseYN;
+                            lastYN += m > 0 
+                                      ? valueAxis.getCoordSize(value)
+                                      : (valueAxis.getCoord(value) - baseYN);
                             y = lastYN;
                         }
                         curPLMap[seriesIndex].push(
@@ -434,15 +438,19 @@ define(function(require) {
                             }
                             continue;
                         }
-                        x = valueAxis.getCoord(value);
+                        //x = valueAxis.getCoord(value);
                         if (value >= 0) {
                             // 正向堆叠
-                            lastXP += x - baseXP;
+                            lastXP += m > 0
+                                      ? valueAxis.getCoordSize(value)
+                                      : (valueAxis.getCoord(value) - baseXP);
                             x = lastXP;
                         }
                         else if (value < 0){
                             // 负向堆叠
-                            lastXN -= baseXN - x;
+                            lastXN -= m > 0
+                                      ? valueAxis.getCoordSize(value)
+                                      : (baseXN - valueAxis.getCoord(value));
                             x = lastXN;
                         }
                         curPLMap[seriesIndex].push(
