@@ -209,8 +209,8 @@
                                        // {number}（x坐标，单位px）
             y: null,            // 垂直安放位置，默认为根据grid参数适配，可选为：
                                        // {number}（y坐标，单位px）
-            width: {number},        // 指定宽度，横向布局时默认为根据grid参数适配
-            height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
+            //width: {number},        // 指定宽度，横向布局时默认为根据grid参数适配
+            //height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
             backgroundColor: 'rgba(0,0,0,0)',       // 背景颜色
             dataBackgroundColor: '#eee',            // 数据背景颜色
             fillerColor: 'rgba(144,197,237,0.2)',   // 填充颜色
