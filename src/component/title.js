@@ -65,6 +65,9 @@ define(function (require) {
                     textFont: font,
                     textBaseline: 'top'
                 },
+                highlightStyle: {
+                    brushType: 'fill'
+                },
                 hoverable: false
             };
             if (link) {
@@ -84,6 +87,9 @@ define(function (require) {
                     text: subtext,
                     textFont: subfont,
                     textBaseline: 'bottom'
+                },
+                highlightStyle: {
+                    brushType: 'fill'
                 },
                 hoverable: false
             };
