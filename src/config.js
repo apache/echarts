@@ -608,7 +608,7 @@ define(function() {
         pie: {
             center : ['50%', '50%'],    // 默认全局居中
             radius : [0, '75%'],
-            clockWise : false,          // 默认逆时针
+            clockWise : true,           // 默认顺时针
             startAngle: 90,
             minAngle: 0,                // 最小角度改为0
             selectedOffset: 10,         // 选中是扇区偏移量
@@ -870,14 +870,12 @@ define(function() {
                     // borderColor: 随color,     // 标线symbol边框颜色，优先于color 
                     borderWidth: 1.5,          // 标线symbol边框线宽，单位px，默认为2
                     label: {
-                        show: false,
+                        show: true,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
                         // formatter : null,
                         // 可选为 'start'|'end'|'left'|'right'|'top'|'bottom'
-                        position: 'inside',  
-                        textStyle: {         // 默认使用全局文本样式，详见TEXTSTYLE
-                            color: '#333'
-                        }
+                        position: 'end'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     lineStyle: {
                         // color: 随borderColor, // 主色，线色，优先级高于borderColor和color
