@@ -1,3 +1,47 @@
+var developMode = true;
+
+if (developMode) {
+    // for develop
+    require.config({
+    	paths : {
+    		webkitDep : '../../doc/example/webkit-dep'
+    	},
+        packages: [
+            {
+                name: 'echarts',
+                location: '../../src',
+                main: 'echarts'
+            },
+            {
+                name: 'zrender',
+                //location: 'http://ecomfe.github.io/zrender/src',
+                location: '../../../zrender/src',
+                main: 'zrender'
+            }
+        ]
+    });
+}
+else {
+    // for echarts online home page
+    var fileLocation = '../../doc/example/www/js/echarts-map';
+    require.config({
+        paths:{ 
+            echarts: fileLocation,
+            'echarts/chart/line': fileLocation,
+            'echarts/chart/bar': fileLocation,
+            'echarts/chart/scatter': fileLocation,
+            'echarts/chart/k': fileLocation,
+            'echarts/chart/pie': fileLocation,
+            'echarts/chart/radar': fileLocation,
+            'echarts/chart/map': fileLocation,
+            'echarts/chart/chord': fileLocation,
+            'echarts/chart/force': fileLocation,
+       		 webkitDep : '../../doc/example/webkit-dep'
+        }
+    });
+}
+
+/*
 require.config({
     paths:{ 
         echarts: '../../doc/example/www/js/echarts-map',
@@ -9,11 +53,10 @@ require.config({
         'echarts/chart/radar': '../../doc/example/www/js/echarts-map',
         'echarts/chart/map': '../../doc/example/www/js/echarts-map',
         'echarts/chart/force': '../../doc/example/www/js/echarts-map',
-        'echarts/chart/chord': '../../doc/example/www/js/echarts-map',
-        webkitDep : '../../doc/example/webkit-dep'
+        'echarts/chart/chord': '../../doc/example/www/js/echarts-map'
     }
 });
-
+*/
 var echarts;
 var webkitDepData;
 require(
@@ -45,43 +88,188 @@ require(
             }
         }
         if (typeof curEvent != 'undefined') {
-            showChart(curEvent);
+        	clearTimeout(showChartTimer);
+        	getCurParams();
+        	showChart()
+            //showChartTimer = setTimeout(showChart, 500);
         }
     }
 );
 
 var curEvent;
+var showChartTimer;
 Reveal.addEventListener( 'ready', function(event){
+    clearTimeout(showChartTimer);
     curEvent = event;
+    getCurParams();
+    showChartTimer = setTimeout(showChart, 800);
 });
 
-
-Reveal.addEventListener( 'slidechanged', showChart);
+Reveal.addEventListener( 'slidechanged', function(event){
+    clearTimeout(showChartTimer);
+    curEvent = event;
+    getCurParams();
+    showChartTimer = setTimeout(showChart, 800);
+});
 
 var myChart;
+var myChart2;
+var myChart3;
 var timeTicket;
-function showChart(event) {
+var dom;
+var optionKey;
+function getCurParams(){
 	clearInterval(timeTicket);
-    if (myChart && myChart.dispose) {
-        myChart.dispose();
-        myChart = null;
-    }
-    var len = event.currentSlide.childNodes.length;
-    var dom;
-    var optionKey;
+    var len = curEvent.currentSlide.childNodes.length;
     while(--len) {
-        dom = event.currentSlide.childNodes[len];
+        dom = curEvent.currentSlide.childNodes[len];
         if (dom.className == 'main'){
-            myChart = echarts.init(dom);
             optionKey = dom.getAttribute('optionKey');
-            myChart.setOption(optionMap[optionKey]);
-            if (functionMap[optionKey]) {
-                functionMap[optionKey]();
+            if (optionKey == 'multiCharts') {
+            	if (myChart2 && myChart2.dispose) {
+					myChart2.getDom().className = 'main';
+			        myChart2.dispose();
+			        myChart2 = null;
+			    }
+			    if (myChart3 && myChart3.dispose) {
+					myChart3.getDom().className = 'main';
+			        myChart3.dispose();
+			        myChart3 = null;
+			    }
             }
             return;
         }
     }
+    optionKey = false;
 }
+function showChart() {
+	if (!echarts) {return;}
+	if (myChart && myChart.dispose) {
+		myChart.getDom().className = 'main';
+        myChart.dispose();
+        myChart = null;
+    }
+    if (optionKey) {
+    	myChart = echarts.init(dom);
+	    var option = optionMap[optionKey];
+	    dom.className = 'main noLoading';
+		myChart.setOption(option);
+	    if (functionMap[optionKey]) {
+	        functionMap[optionKey]();
+	    }
+    }
+}
+
+var axisData = [
+    "2013/1/24", "2013/1/25", "2013/1/28", "2013/1/29", "2013/1/30",
+    "2013/1/31", "2013/2/1", "2013/2/4", "2013/2/5", "2013/2/6", 
+    "2013/2/7", "2013/2/8", "2013/2/18", "2013/2/19", "2013/2/20", 
+    "2013/2/21", "2013/2/22", "2013/2/25", "2013/2/26", "2013/2/27", 
+    "2013/2/28", "2013/3/1", "2013/3/4", "2013/3/5", "2013/3/6", 
+    "2013/3/7", "2013/3/8", "2013/3/11", "2013/3/12", "2013/3/13", 
+    "2013/3/14", "2013/3/15", "2013/3/18", "2013/3/19", "2013/3/20", 
+    "2013/3/21", "2013/3/22", "2013/3/25", "2013/3/26", "2013/3/27", 
+    "2013/3/28", "2013/3/29", "2013/4/1", "2013/4/2", "2013/4/3", 
+    "2013/4/8", "2013/4/9", "2013/4/10", "2013/4/11", "2013/4/12", 
+    "2013/4/15", "2013/4/16", "2013/4/17", "2013/4/18", "2013/4/19", 
+    "2013/4/22", "2013/4/23", "2013/4/24", "2013/4/25", "2013/4/26", 
+    "2013/5/2", "2013/5/3", "2013/5/6", "2013/5/7", "2013/5/8", 
+    "2013/5/9", "2013/5/10", "2013/5/13", "2013/5/14", "2013/5/15", 
+    "2013/5/16", "2013/5/17", "2013/5/20", "2013/5/21", "2013/5/22", 
+    "2013/5/23", "2013/5/24", "2013/5/27", "2013/5/28", "2013/5/29", 
+    "2013/5/30", "2013/5/31", "2013/6/3", "2013/6/4", "2013/6/5", 
+    "2013/6/6", "2013/6/7", "2013/6/13"
+];
+var kData = [ // 开盘，收盘，最低，最高
+    [2320.26,2302.6,2287.3,2362.94],
+    [2300,2291.3,2288.26,2308.38],
+    [2295.35,2346.5,2295.35,2346.92],
+    [2347.22,2358.98,2337.35,2363.8],
+    [2360.75,2382.48,2347.89,2383.76],
+    [2383.43,2385.42,2371.23,2391.82],
+    [2377.41,2419.02,2369.57,2421.15],
+    [2425.92,2428.15,2417.58,2440.38],
+    [2411,2433.13,2403.3,2437.42],
+    [2432.68,2434.48,2427.7,2441.73],
+    [2430.69,2418.53,2394.22,2433.89],
+    [2416.62,2432.4,2414.4,2443.03],
+    [2441.91,2421.56,2415.43,2444.8],
+    [2420.26,2382.91,2373.53,2427.07],
+    [2383.49,2397.18,2370.61,2397.94],
+    [2378.82,2325.95,2309.17,2378.82],
+    [2322.94,2314.16,2308.76,2330.88],
+    [2320.62,2325.82,2315.01,2338.78],
+    [2313.74,2293.34,2289.89,2340.71],
+    [2297.77,2313.22,2292.03,2324.63],
+    [2322.32,2365.59,2308.92,2366.16],
+    [2364.54,2359.51,2330.86,2369.65],
+    [2332.08,2273.4,2259.25,2333.54],
+    [2274.81,2326.31,2270.1,2328.14],
+    [2333.61,2347.18,2321.6,2351.44],
+    [2340.44,2324.29,2304.27,2352.02],
+    [2326.42,2318.61,2314.59,2333.67],
+    [2314.68,2310.59,2296.58,2320.96],
+    [2309.16,2286.6,2264.83,2333.29],
+    [2282.17,2263.97,2253.25,2286.33],
+    [2255.77,2270.28,2253.31,2276.22],
+    [2269.31,2278.4,2250,2312.08],
+    [2267.29,2240.02,2239.21,2276.05],
+    [2244.26,2257.43,2232.02,2261.31],
+    [2257.74,2317.37,2257.42,2317.86],
+    [2318.21,2324.24,2311.6,2330.81],
+    [2321.4,2328.28,2314.97,2332],
+    [2334.74,2326.72,2319.91,2344.89],
+    [2318.58,2297.67,2281.12,2319.99],
+    [2299.38,2301.26,2289,2323.48],
+    [2273.55,2236.3,2232.91,2273.55],
+    [2238.49,2236.62,2228.81,2246.87],
+    [2229.46,2234.4,2227.31,2243.95],
+    [2234.9,2227.74,2220.44,2253.42],
+    [2232.69,2225.29,2217.25,2241.34],
+    [2196.24,2211.59,2180.67,2212.59],
+    [2215.47,2225.77,2215.47,2234.73],
+    [2224.93,2226.13,2212.56,2233.04],
+    [2236.98,2219.55,2217.26,2242.48],
+    [2218.09,2206.78,2204.44,2226.26],
+    [2199.91,2181.94,2177.39,2204.99],
+    [2169.63,2194.85,2165.78,2196.43],
+    [2195.03,2193.8,2178.47,2197.51],
+    [2181.82,2197.6,2175.44,2206.03],
+    [2201.12,2244.64,2200.58,2250.11],
+    [2236.4,2242.17,2232.26,2245.12],
+    [2242.62,2184.54,2182.81,2242.62],
+    [2187.35,2218.32,2184.11,2226.12],
+    [2213.19,2199.31,2191.85,2224.63],
+    [2203.89,2177.91,2173.86,2210.58],
+    [2170.78,2174.12,2161.14,2179.65],
+    [2179.05,2205.5,2179.05,2222.81],
+    [2212.5,2231.17,2212.5,2236.07],
+    [2227.86,2235.57,2219.44,2240.26],
+    [2242.39,2246.3,2235.42,2255.21],
+    [2246.96,2232.97,2221.38,2247.86],
+    [2228.82,2246.83,2225.81,2247.67],
+    [2247.68,2241.92,2231.36,2250.85],
+    [2238.9,2217.01,2205.87,2239.93],
+    [2217.09,2224.8,2213.58,2225.19],
+    [2221.34,2251.81,2210.77,2252.87],
+    [2249.81,2282.87,2248.41,2288.09],
+    [2286.33,2299.99,2281.9,2309.39],
+    [2297.11,2305.11,2290.12,2305.3],
+    [2303.75,2302.4,2292.43,2314.18],
+    [2293.81,2275.67,2274.1,2304.95],
+    [2281.45,2288.53,2270.25,2292.59],
+    [2286.66,2293.08,2283.94,2301.7],
+    [2293.4,2321.32,2281.47,2322.1],
+    [2323.54,2324.02,2321.17,2334.33],
+    [2316.25,2317.75,2310.49,2325.72],
+    [2320.74,2300.59,2299.37,2325.53],
+    [2300.21,2299.25,2294.11,2313.43],
+    [2297.1,2272.42,2264.76,2297.1],
+    [2270.71,2270.93,2260.87,2276.86],
+    [2264.43,2242.11,2240.07,2266.69],
+    [2242.26,2210.9,2205.07,2250.63],
+    [2190.1,2148.35,2126.22,2190.1]
+];
 
 var functionMap = {};
 var optionMap = {
@@ -148,7 +336,7 @@ var optionMap = {
                 data : function(){
                     var list = [];
                     for (var i = 1; i <= 30; i++) {
-                        list.push('2012-11-' + i);
+                        list.push('11 - ' + i);
                     }
                     return list;
                 }()
@@ -240,14 +428,14 @@ var optionMap = {
             trigger: 'axis'
         },
         legend: {
-            data:['意向','预购','成交']
+            data:['成交','预购','意向']
         },
         toolbox: {
             show : true,
             feature : {
                 mark : {show: true},
                 dataView : {show: true, readOnly: false},
-                magicType: {show: true, type : ['line', 'bar']},
+                magicType: {show: true, type : ['line', 'bar', 'stack', 'tiled']},
                 restore : {show: true},
                 saveAsImage : {show: true}
             }
@@ -390,26 +578,8 @@ var optionMap = {
             {
                 type : 'category',
                 boundaryGap : true,
-                data : [
-                    "2013/1/24", "2013/1/25", "2013/1/28", "2013/1/29", "2013/1/30",
-                    "2013/1/31", "2013/2/1", "2013/2/4", "2013/2/5", "2013/2/6", 
-                    "2013/2/7", "2013/2/8", "2013/2/18", "2013/2/19", "2013/2/20", 
-                    "2013/2/21", "2013/2/22", "2013/2/25", "2013/2/26", "2013/2/27", 
-                    "2013/2/28", "2013/3/1", "2013/3/4", "2013/3/5", "2013/3/6", 
-                    "2013/3/7", "2013/3/8", "2013/3/11", "2013/3/12", "2013/3/13", 
-                    "2013/3/14", "2013/3/15", "2013/3/18", "2013/3/19", "2013/3/20", 
-                    "2013/3/21", "2013/3/22", "2013/3/25", "2013/3/26", "2013/3/27", 
-                    "2013/3/28", "2013/3/29", "2013/4/1", "2013/4/2", "2013/4/3", 
-                    "2013/4/8", "2013/4/9", "2013/4/10", "2013/4/11", "2013/4/12", 
-                    "2013/4/15", "2013/4/16", "2013/4/17", "2013/4/18", "2013/4/19", 
-                    "2013/4/22", "2013/4/23", "2013/4/24", "2013/4/25", "2013/4/26", 
-                    "2013/5/2", "2013/5/3", "2013/5/6", "2013/5/7", "2013/5/8", 
-                    "2013/5/9", "2013/5/10", "2013/5/13", "2013/5/14", "2013/5/15", 
-                    "2013/5/16", "2013/5/17", "2013/5/20", "2013/5/21", "2013/5/22", 
-                    "2013/5/23", "2013/5/24", "2013/5/27", "2013/5/28", "2013/5/29", 
-                    "2013/5/30", "2013/5/31", "2013/6/3", "2013/6/4", "2013/6/5", 
-                    "2013/6/6", "2013/6/7", "2013/6/13"
-                ]
+                axisTick: {onGap:false},
+                data : axisData
             }
         ],
         yAxis : [
@@ -426,6 +596,11 @@ var optionMap = {
                 scale:true,
                 splitNumber: 9,
                 boundaryGap: [0.05, 0.05],
+                axisLabel: {
+	                formatter: function(v) {
+	                    return Math.round(v/10000) + ' 万'
+	                }
+	            },
                 splitArea : {show : true}
             }
         ],
@@ -454,104 +629,316 @@ var optionMap = {
                     11105205, 9202153, 9992016, 12035250, 11431155, 
                     10354677, 10070399, 9164861, 9237718, 7114268, 
                     7526158.5, 8105835, 7971452.5
-                ]
+                ],
+                markPoint : {
+                	symbol: 'emptyPin',
+                	itemStyle : {
+                		normal : {
+                			color:'#1e90ff',
+                			label : {
+                				show:true,
+                				position:'top',
+				                formatter: function(a,b,v) {
+				                    return Math.round(v/10000) + ' 万'
+				                }
+                			}
+                		}
+                	},
+	                data : [
+	                    {type : 'max', name: '最大值', symbolSize:5},
+	                    {type : 'min', name: '最小值', symbolSize:5}
+	                ]
+	            },
+	            markLine : {
+	            	symbol : 'none',
+	            	itemStyle : {
+                		normal : {
+                			color:'#1e90ff',
+                			label : {
+                				show:true,
+				                formatter: function(a,b,v) {
+				                    return Math.round(v/10000) + ' 万'
+				                }
+                			}
+                		}
+                	},
+	                data : [
+	                    {type : 'average', name: '平均值'}
+	                ]
+	            }
             },
             {
                 name:'上证指数',
                 type:'k',
-                data:[ // 开盘，收盘，最低，最高
-                    [2320.26,2302.6,2287.3,2362.94],
-                [2300,2291.3,2288.26,2308.38],
-                [2295.35,2346.5,2295.35,2346.92],
-                [2347.22,2358.98,2337.35,2363.8],
-                [2360.75,2382.48,2347.89,2383.76],
-                [2383.43,2385.42,2371.23,2391.82],
-                [2377.41,2419.02,2369.57,2421.15],
-                [2425.92,2428.15,2417.58,2440.38],
-                [2411,2433.13,2403.3,2437.42],
-                [2432.68,2434.48,2427.7,2441.73],
-                [2430.69,2418.53,2394.22,2433.89],
-                [2416.62,2432.4,2414.4,2443.03],
-                [2441.91,2421.56,2415.43,2444.8],
-                [2420.26,2382.91,2373.53,2427.07],
-                [2383.49,2397.18,2370.61,2397.94],
-                [2378.82,2325.95,2309.17,2378.82],
-                [2322.94,2314.16,2308.76,2330.88],
-                [2320.62,2325.82,2315.01,2338.78],
-                [2313.74,2293.34,2289.89,2340.71],
-                [2297.77,2313.22,2292.03,2324.63],
-                [2322.32,2365.59,2308.92,2366.16],
-                [2364.54,2359.51,2330.86,2369.65],
-                [2332.08,2273.4,2259.25,2333.54],
-                [2274.81,2326.31,2270.1,2328.14],
-                [2333.61,2347.18,2321.6,2351.44],
-                [2340.44,2324.29,2304.27,2352.02],
-                [2326.42,2318.61,2314.59,2333.67],
-                [2314.68,2310.59,2296.58,2320.96],
-                [2309.16,2286.6,2264.83,2333.29],
-                [2282.17,2263.97,2253.25,2286.33],
-                [2255.77,2270.28,2253.31,2276.22],
-                [2269.31,2278.4,2250,2312.08],
-                [2267.29,2240.02,2239.21,2276.05],
-                [2244.26,2257.43,2232.02,2261.31],
-                [2257.74,2317.37,2257.42,2317.86],
-                [2318.21,2324.24,2311.6,2330.81],
-                [2321.4,2328.28,2314.97,2332],
-                [2334.74,2326.72,2319.91,2344.89],
-                [2318.58,2297.67,2281.12,2319.99],
-                [2299.38,2301.26,2289,2323.48],
-                [2273.55,2236.3,2232.91,2273.55],
-                [2238.49,2236.62,2228.81,2246.87],
-                [2229.46,2234.4,2227.31,2243.95],
-                [2234.9,2227.74,2220.44,2253.42],
-                [2232.69,2225.29,2217.25,2241.34],
-                [2196.24,2211.59,2180.67,2212.59],
-                [2215.47,2225.77,2215.47,2234.73],
-                [2224.93,2226.13,2212.56,2233.04],
-                [2236.98,2219.55,2217.26,2242.48],
-                [2218.09,2206.78,2204.44,2226.26],
-                [2199.91,2181.94,2177.39,2204.99],
-                [2169.63,2194.85,2165.78,2196.43],
-                [2195.03,2193.8,2178.47,2197.51],
-                [2181.82,2197.6,2175.44,2206.03],
-                [2201.12,2244.64,2200.58,2250.11],
-                [2236.4,2242.17,2232.26,2245.12],
-                [2242.62,2184.54,2182.81,2242.62],
-                [2187.35,2218.32,2184.11,2226.12],
-                [2213.19,2199.31,2191.85,2224.63],
-                [2203.89,2177.91,2173.86,2210.58],
-                [2170.78,2174.12,2161.14,2179.65],
-                [2179.05,2205.5,2179.05,2222.81],
-                [2212.5,2231.17,2212.5,2236.07],
-                [2227.86,2235.57,2219.44,2240.26],
-                [2242.39,2246.3,2235.42,2255.21],
-                [2246.96,2232.97,2221.38,2247.86],
-                [2228.82,2246.83,2225.81,2247.67],
-                [2247.68,2241.92,2231.36,2250.85],
-                [2238.9,2217.01,2205.87,2239.93],
-                [2217.09,2224.8,2213.58,2225.19],
-                [2221.34,2251.81,2210.77,2252.87],
-                [2249.81,2282.87,2248.41,2288.09],
-                [2286.33,2299.99,2281.9,2309.39],
-                [2297.11,2305.11,2290.12,2305.3],
-                [2303.75,2302.4,2292.43,2314.18],
-                [2293.81,2275.67,2274.1,2304.95],
-                [2281.45,2288.53,2270.25,2292.59],
-                [2286.66,2293.08,2283.94,2301.7],
-                [2293.4,2321.32,2281.47,2322.1],
-                [2323.54,2324.02,2321.17,2334.33],
-                [2316.25,2317.75,2310.49,2325.72],
-                [2320.74,2300.59,2299.37,2325.53],
-                [2300.21,2299.25,2294.11,2313.43],
-                [2297.1,2272.42,2264.76,2297.1],
-                [2270.71,2270.93,2260.87,2276.86],
-                [2264.43,2242.11,2240.07,2266.69],
-                [2242.26,2210.9,2205.07,2250.63],
-                [2190.1,2148.35,2126.22,2190.1]
-                ]
+                data: kData
             }
         ]
     },
+    multiCharts : (function(){
+        functionMap.multiCharts = function(){
+            var option2 = {
+                tooltip : {
+                    trigger: 'axis',
+                    showDelay: 0
+                },
+                legend: {
+                    y : -30,
+                    data:['上证指数','成交金额(万)','虚拟数据']
+                },
+                toolbox: {
+                    y : -30,
+                    show : true,
+                    feature : {
+                        mark : {show: true},
+                        dataZoom : {show: true},
+                        dataView : {show: true, readOnly: false},
+                        magicType : {show: true, type: ['line', 'bar']},
+                        restore : {show: true},
+                        saveAsImage : {show: true}
+                    }
+                },
+                dataZoom : {
+                    show : true,
+                    realtime: true,
+                    start : 50,
+                    end : 100
+                },
+                grid: {
+                    x: 80,
+                    y:5,
+                    x2:20,
+                    y2:40
+                },
+                xAxis : [
+                    {
+                        type : 'category',
+                        position:'top',
+                        boundaryGap : true,
+                        axisLabel:{show:false},
+                        axisTick: {onGap:false},
+                        splitLine: {show:false},
+                        data : axisData
+                    }
+                ],
+                yAxis : [
+                    {
+                        type : 'value',
+                        scale:true,
+                        splitNumber: 3,
+                        boundaryGap: [0.05, 0.05],
+                        axisLabel: {
+			                formatter: function(v) {
+			                    return Math.round(v/10000) + ' 万'
+			                }
+			            },
+                        splitArea : {show : true}
+                    }
+                ],
+                series : [
+                    {
+                        name:'成交金额(万)',
+                        type:'line',
+                        symbol: 'none',
+                        data:[
+                            13560434, 8026738.5, 11691637, 12491697, 12485603, 
+                            11620504, 12555496, 15253370, 12709611, 10458354, 
+                            10933507, 9896523, 10365702, 10633095, 9722230, 
+                            12662783, 8757982, 7764234, 10591719, 8826293, 
+                            11591827, 11153111, 14304651, 11672120, 12536480, 
+                            12608589, 8843860, 7391994.5, 10063709, 7768895.5, 
+                            6921859, 10157810, 8148617.5, 7551207, 11397426, 
+                            10478607, 8595132, 8541862, 9181132, 8570842, 
+                            10759351, 7335819, 6699753.5, 7759666.5, 6880135.5, 
+                            7366616.5, 7313504, 7109021.5, 6213270, 5619688, 
+                            5816217.5, 6695584.5, 5998655.5, 6188812.5, 9538301,
+                            8224500, 8221751.5, 7897721, 8448324, 6525151, 
+                            5987761, 7831570, 8162560.5, 7904092, 8139084.5, 
+                            9116529, 8128014, 7919148, 7566047, 6665826.5, 
+                            10225527, 11124881, 12884353, 11302521, 11529046, 
+                            11105205, 9202153, 9992016, 12035250, 11431155, 
+                            10354677, 10070399, 9164861, 9237718, 7114268, 
+                            7526158.5, 8105835, 7971452.5
+                        ]
+                    }
+                ]
+            };
+            document.getElementById('mcMain2').className = 'main noLoading';
+            myChart2 = echarts.init(document.getElementById('mcMain2'));
+            myChart2.setOption(option2);
+
+            var option3 = {
+                tooltip : {
+                    trigger: 'axis',
+                    showDelay: 0
+                },
+                legend: {
+                    y : -30,
+                    data:['上证指数','成交金额(万)','虚拟数据']
+                },
+                toolbox: {
+                    y : -30,
+                    show : true,
+                    feature : {
+                        mark : {show: true},
+                        dataZoom : {show: true},
+                        dataView : {show: true, readOnly: false},
+                        magicType : {show: true, type: ['line', 'bar']},
+                        restore : {show: true},
+                        saveAsImage : {show: true}
+                    }
+                },
+                dataZoom : {
+                    y:200,
+                    show : true,
+                    realtime: true,
+                    start : 50,
+                    end : 100
+                },
+                grid: {
+                    x: 80,
+                    y:5,
+                    x2:20,
+                    y2:30
+                },
+                xAxis : [
+                    {
+                        type : 'category',
+                        position:'bottom',
+                        boundaryGap : true,
+                        axisTick: {onGap:false},
+                        splitLine: {show:false},
+                        data : axisData
+                    }
+                ],
+                yAxis : [
+                    {
+                        type : 'value',
+                        scale:true,
+                        splitNumber:3,
+                        boundaryGap: [0.05, 0.05],
+                        axisLabel: {
+			                formatter: function(v) {
+			                    return Math.round(v/10000) + ' 万'
+			                }
+			            },
+                        splitArea : {show : true}
+                    }
+                ],
+                series : [
+                    {
+                        name:'虚拟数据',
+                        type:'bar',
+                        symbol: 'none',
+                        data:[
+                            560434, 226738, 696370, 249697, 248563, 
+                            620504, 555496, 525337, 270968, 458354, 
+                            933507, 896523, 365702, 633095, 722230, 
+                            662783, 875798, 776423, 105979, 882629, 
+                            598278, 231253, 430465, 672208, 253648, 
+                            608589, 884386, 739994, 263709, 776889, 
+                            692859, 105780, 848675, 755207, 397426, 
+                            478607, 859532, 854862, 983288, 857084, 
+                            759358, 733589, 669975, 775965, 688035, 
+                            736666, 733504, 709025, 623270, 569688, 
+                            586275, 669558, 599865, 688825, 953830,
+                            822450, 822755, 789772, 844832, 652558, 
+                            598776, 783570, 862560, 794092, 839084, 
+                            965298, 828048, 799480, 756647, 665826, 
+                            102257, 248870, 288435, 302528, 529046, 
+                            105205, 920253, 999206, 203525, 435588, 
+                            103546, 703990, 964868, 923778, 742688,
+                            752658, 805835, 797452
+                        ]
+                    }
+                ]
+            };
+            document.getElementById('mcMain3').className = 'main noLoading';
+            myChart3 = echarts.init(document.getElementById('mcMain3'));
+            myChart3.setOption(option3);
+
+            myChart.connect([myChart2, myChart3]);
+            myChart2.connect([myChart, myChart3]);
+            myChart3.connect([myChart, myChart2])
+        }
+        return {
+            title : {
+                text: '2013年上半年上证指数'
+            },
+            tooltip : {
+                trigger: 'axis',
+                showDelay: 0,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
+                formatter: function(params) {
+                    var res = params[0][1];
+                    res += '<br/>' + params[0][0];
+                    res += '<br/>  开盘 : ' + params[0][2][0] + '  最高 : ' + params[0][2][3];
+                    res += '<br/>  收盘 : ' + params[0][2][1] + '  最低 : ' + params[0][2][2];
+                    return res;
+                }
+            },
+            legend: {
+                data:['上证指数','成交金额(万)','虚拟数据']
+            },
+            toolbox: {
+                show : true,
+                feature : {
+                    mark : {show: true},
+                    dataZoom : {show: true},
+                    magicType : {show: true, type: ['line', 'bar']},
+                    restore : {show: true},
+                    saveAsImage : {show: true}
+                }
+            },
+            dataZoom : {
+                y: 250,
+                show : true,
+                realtime: true,
+                start : 50,
+                end : 100
+            },
+            grid: {
+                x: 80,
+                y: 40,
+                x2:20,
+                y2:25
+            },
+            xAxis : [
+                {
+                    type : 'category',
+                    boundaryGap : true,
+                    axisTick: {onGap:false},
+                    splitLine: {show:false},
+                    data : axisData
+                }
+            ],
+            yAxis : [
+                {
+                    type : 'value',
+                    scale:true,
+                    precision: 2,
+                    boundaryGap: [0.05, 0.05],
+                    splitArea : {show : true}
+                }
+            ],
+            series : [
+                {
+                    name:'上证指数',
+                    type:'k',
+                    data: kData
+                },
+                {
+                    name:'成交金额(万)',
+                    type:'line',
+                    symbol: 'none',
+                    data:[]
+                },
+                {
+                    name:'虚拟数据',
+                    type:'bar',data:[]
+                }
+                
+            ]
+        };
+    })(),
     scatter : {
         tooltip : {
             trigger: 'item'
@@ -748,149 +1135,148 @@ var optionMap = {
             }
             return {};
     })(),
-    
     dynamic : (function(){
-    	functionMap.dynamic = function() {
-    		var lastData = 11;
-			var axisData;			
-			timeTicket = setInterval(function(){
-			    lastData += Math.random() * ((Math.round(Math.random() * 10) % 2) == 0 ? 1 : -1);
-			    lastData = lastData.toFixed(1) - 0;
-			    axisData = (new Date()).toLocaleTimeString().replace(/^\D*/,'');
-			    
-			    // 动态数据接口 addData
-			    myChart.addData([
-			        [
-			            0,        // 系列索引
-			            Math.round(Math.random() * 1000), // 新增数据
-			            true,     // 新增数据是否从队列头部插入
-			            false     // 是否增加队列长度，false则自定删除原有数据，队头插入删队尾，队尾插入删队头
-			        ],
-			        [
-			            1,        // 系列索引
-			            lastData, // 新增数据
-			            false,    // 新增数据是否从队列头部插入
-			            false,    // 是否增加队列长度，false则自定删除原有数据，队头插入删队尾，队尾插入删队头
-			            axisData  // 坐标轴标签
-			        ]
-			    ]);
-			}, 1500);
-    	};
-    	return {
-	        title : {
-	            text: '动态数据',
-	            subtext: '纯属虚构'
-	        },
-	        tooltip : {
-	            trigger: 'axis'
-	        },
-	        legend: {
-	            data:['最新成交价', '预购队列']
-	        },
-	        toolbox: {
-	            show : true,
-	            feature : {
-	                mark : {show: true},
-	                dataView : {show: true, readOnly: false},
-	                magicType: {show: true, type : ['line', 'bar']},
-	                restore : {show: true},
-	                saveAsImage : {show: true}
-	            }
-	        },
-	        dataZoom : {
-	            show : false,
-	            realtime: true,
-	            start : 50,
-	            end : 100
-	        },
-	        xAxis : [
-	            {
-	                type : 'category',
-	                boundaryGap : true,
-	                data : (function(){
-	                    var now = new Date();
-	                    var res = [];
-	                    var len = 10;
-	                    while (len--) {
-	                        res.unshift(now.toLocaleTimeString().replace(/^\D*/,''));
-	                        now = new Date(now - 2000);
-	                    }
-	                    return res;
-	                })()
-	            },
-	            {
-	                type : 'category',
-	                boundaryGap : true,
-	                splitline : {show : false},
-	                data : (function(){
-	                    var res = [];
-	                    var len = 10;
-	                    while (len--) {
-	                        res.push(len + 1);
-	                    }
-	                    return res;
-	                })()
-	            }
-	        ],
-	        yAxis : [
-	            {
-	                type : 'value',
-	                scale: true,
-	                precision:1,
-	                power:1,
-	                name : '价格',
-	                boundaryGap: [0.2, 0.2],
-	                splitArea : {show : true}
-	            },
-	            {
-	                type : 'value',
-	                scale: true,
-	                name : '预购量',
-	                boundaryGap: [0.2, 0.2]
-	            }
-	        ],
-	        series : [
-	            {
-	                name:'预购队列',
-	                type:'bar',
-	                xAxisIndex: 1,
-	                yAxisIndex: 1,
-	                itemStyle: {
-	                    normal: {
-	                        color : 'rgba(135,206,205,0.4)'
-	                    }
-	                },
-	                data:(function(){
-	                    var res = [];
-	                    var len = 10;
-	                    while (len--) {
-	                        res.push(Math.round(Math.random() * 1000));
-	                    }
-	                    return res;
-	                })()
-	            },
-	            {
-	                name:'最新成交价',
-	                type:'line',
-	                itemStyle: {
-	                    normal: {
-	                        // areaStyle: {type: 'default'},
-	                        lineStyle: {
-	                            shadowColor : 'rgba(0,0,0,0.4)'
-	                        }
-	                    }
-	                },
-	                data:(function(){
-	                    var res = [];
-	                    var len = 10;
-	                    while (len--) {
-	                        res.push((Math.random()*10 + 5).toFixed(1) - 0);
-	                    }
-	                    return res;
-	                })()
-	            }
-	        ]
-	    }
+        functionMap.dynamic = function() {
+            var lastData = 11;
+            var axisData;            
+            timeTicket = setInterval(function(){
+                lastData += Math.random() * ((Math.round(Math.random() * 10) % 2) == 0 ? 1 : -1);
+                lastData = lastData.toFixed(1) - 0;
+                axisData = (new Date()).toLocaleTimeString().replace(/^\D*/,'');
+                
+                // 动态数据接口 addData
+                myChart.addData([
+                    [
+                        0,        // 系列索引
+                        Math.round(Math.random() * 1000), // 新增数据
+                        true,     // 新增数据是否从队列头部插入
+                        false     // 是否增加队列长度，false则自定删除原有数据，队头插入删队尾，队尾插入删队头
+                    ],
+                    [
+                        1,        // 系列索引
+                        lastData, // 新增数据
+                        false,    // 新增数据是否从队列头部插入
+                        false,    // 是否增加队列长度，false则自定删除原有数据，队头插入删队尾，队尾插入删队头
+                        axisData  // 坐标轴标签
+                    ]
+                ]);
+            }, 1500);
+        };
+        return {
+            title : {
+                text: '动态数据',
+                subtext: '纯属虚构'
+            },
+            tooltip : {
+                trigger: 'axis'
+            },
+            legend: {
+                data:['最新成交价', '预购队列']
+            },
+            toolbox: {
+                show : true,
+                feature : {
+                    mark : {show: true},
+                    dataView : {show: true, readOnly: false},
+                    magicType: {show: true, type : ['line', 'bar']},
+                    restore : {show: true},
+                    saveAsImage : {show: true}
+                }
+            },
+            dataZoom : {
+                show : false,
+                realtime: true,
+                start : 50,
+                end : 100
+            },
+            xAxis : [
+                {
+                    type : 'category',
+                    boundaryGap : true,
+                    data : (function(){
+                        var now = new Date();
+                        var res = [];
+                        var len = 10;
+                        while (len--) {
+                            res.unshift(now.toLocaleTimeString().replace(/^\D*/,''));
+                            now = new Date(now - 2000);
+                        }
+                        return res;
+                    })()
+                },
+                {
+                    type : 'category',
+                    boundaryGap : true,
+                    splitline : {show : false},
+                    data : (function(){
+                        var res = [];
+                        var len = 10;
+                        while (len--) {
+                            res.push(len + 1);
+                        }
+                        return res;
+                    })()
+                }
+            ],
+            yAxis : [
+                {
+                    type : 'value',
+                    scale: true,
+                    precision:1,
+                    power:1,
+                    name : '价格',
+                    boundaryGap: [0.2, 0.2],
+                    splitArea : {show : true}
+                },
+                {
+                    type : 'value',
+                    scale: true,
+                    name : '预购量',
+                    boundaryGap: [0.2, 0.2]
+                }
+            ],
+            series : [
+                {
+                    name:'预购队列',
+                    type:'bar',
+                    xAxisIndex: 1,
+                    yAxisIndex: 1,
+                    itemStyle: {
+                        normal: {
+                            color : 'rgba(135,206,205,0.4)'
+                        }
+                    },
+                    data:(function(){
+                        var res = [];
+                        var len = 10;
+                        while (len--) {
+                            res.push(Math.round(Math.random() * 1000));
+                        }
+                        return res;
+                    })()
+                },
+                {
+                    name:'最新成交价',
+                    type:'line',
+                    itemStyle: {
+                        normal: {
+                            // areaStyle: {type: 'default'},
+                            lineStyle: {
+                                shadowColor : 'rgba(0,0,0,0.4)'
+                            }
+                        }
+                    },
+                    data:(function(){
+                        var res = [];
+                        var len = 10;
+                        while (len--) {
+                            res.push((Math.random()*10 + 5).toFixed(1) - 0);
+                        }
+                        return res;
+                    })()
+                }
+            ]
+        }
     })(),
     legendSelected : {
         color : [
@@ -1160,6 +1546,7 @@ var optionMap = {
         ]
     },
     mix1 : {
+    	color: ['#ff7f50','#87cefa','#da70d6','#ff69b4','#ba55d3','#32cd32','#6495ed'],
         tooltip : {
             trigger: 'axis'
         },
@@ -1175,7 +1562,8 @@ var optionMap = {
         },
         calculable : true,
         legend: {
-            data:['蒸发量','降水量','平均温度']
+        	x : 'left',
+            data:['蒸发量','降水量','平均温度','日蒸发量','夜蒸发量','日降水量','夜降水量']
         },
         xAxis : [
             {
@@ -1200,7 +1588,29 @@ var optionMap = {
             }
         ],
         series : [
-
+        	{
+                name:'总和',
+                type:'pie',
+                tooltip : {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b} : {c} ({d}%)'
+                },
+                center: [230,150],
+                radius : [0, 50],
+                itemStyle :　{
+                    normal : {
+                        labelLine : {
+                            length : 20
+                        }
+                    }
+                },
+                data:[
+                	{value:356.5, name:'日降水量'},
+                    {value:220.4, name:'夜降水量'},
+                    {value:440.5, name:'日蒸发量'},
+                    {value:59.0, name:'夜蒸发量'}
+                ]
+            },
             {
                 name:'蒸发量',
                 type:'bar',
@@ -1219,96 +1629,119 @@ var optionMap = {
             }
         ]
     },
-    mix2 : {
-        tooltip : {
-            trigger: 'axis'
-        },
-        toolbox: {
-            show : true,
-            y: 'bottom',
-            feature : {
-                mark : {show: true},
-                dataView : {show: true, readOnly: false},
-                magicType: {show: true, type : ['line', 'bar']},
-                restore : {show: true},
-                saveAsImage : {show: true}
-            }
-        },
-        calculable : true,
-        legend: {
-            data:['直接访问','邮件营销','联盟广告','视频广告','搜索引擎','百度','谷歌','必应','其他']
-        },
-        xAxis : [
-            {
-                type : 'category',
-                splitLine : {show : false},
-                data : ['周一','周二','周三','周四','周五','周六','周日']
-            }
-        ],
-        yAxis : [
-            {
-                type : 'value',
-                position: 'right',
-                splitArea : {show : true}
-            }
-        ],
-        series : [
-            {
-                name:'直接访问',
-                type:'bar',
-                data:[320, 332, 301, 334, 390, 330, 320]
-            },
-            {
-                name:'邮件营销',
-                type:'bar',
-                tooltip : {trigger: 'item'},
-                stack: '广告',
-                data:[120, 132, 101, 134, 90, 230, 210]
-            },
-            {
-                name:'联盟广告',
-                type:'bar',
-                tooltip : {trigger: 'item'},
-                stack: '广告',
-                data:[220, 182, 191, 234, 290, 330, 310]
-            },
-            {
-                name:'视频广告',
-                type:'bar',
-                tooltip : {trigger: 'item'},
-                stack: '广告',
-                data:[150, 232, 201, 154, 190, 330, 410]
-            },
-            {
-                name:'搜索引擎',
-                type:'line',
-                data:[862, 1018, 964, 1026, 1679, 1600, 1570]
-            },
-            {
-                name:'搜索引擎细分',
-                type:'pie',
-                tooltip : {
-                    trigger: 'item',
-                    formatter: '{a} <br/>{b} : {c} ({d}%)'
-                },
-                center: [160,130],
-                radius : [0, 50],
-                itemStyle :　{
-                    normal : {
-                        labelLine : {
-                            length : 20
-                        }
-                    }
-                },
-                data:[
-                    {value:1048, name:'百度'},
-                    {value:251, name:'谷歌'},
-                    {value:147, name:'必应'},
-                    {value:102, name:'其他'}
-                ]
-            }
-        ]
-    },
+    mix2 : (function(){
+    	var sData1 = (function() {
+		    var d = [];
+		    var len = 40;
+		    var value;
+		    while (len--) {
+		        d.push([
+		            Math.round(Math.random()*10) * (Math.round(Math.random()*10) > 5 ? 1 : -1),
+		            Math.round(Math.random()*10) * (Math.round(Math.random()*10) > 5 ? 1 : -1),
+		            Math.round(Math.random()*20)
+		        ]);
+		    }
+		    return d;
+		})();
+		var sData2 = (function() {
+		    var d = [];
+		    var len = sData1.length;
+		    for (var i = 0; i < len; i++) {
+		        d.push([
+		            sData1[i][0],
+		            sData1[i][1],
+		            Math.round(Math.random()*15)
+		        ]);
+		    }
+		    return d;
+		})();
+
+		functionMap.mix2 = function (){
+		    var xAxis = myChart.component.xAxis.getAxis(0);
+		    var yAxis = myChart.component.yAxis.getAxis(0);
+		    var len = sData1.length;
+		    var option = myChart.getOption();
+		    option.series = option.series.slice(0,2);
+		    while (len--) {
+		        option.series.push({
+		            type: 'pie',
+		            itemStyle : {
+		                normal : {
+		                    label : {
+		                        show : false
+		                    },
+		                    labelLine : {
+		                        show : false
+		                    }
+		                }
+		            },
+		            radius : [(sData1[len][2] + sData2[len][2])/2.5, (sData1[len][2] + sData2[len][2])/2.5 + 15],
+		            center: [
+		                xAxis.getCoord(sData1[len][0]), 
+		                yAxis.getCoord(sData1[len][1])
+		            ],
+		            data: [
+		                {name: '系列1', value: sData1[len][2]},
+		                {name: '系列2', value: sData2[len][2]}
+		            ]
+		        })
+		    }
+		    option.animation = true;
+		    myChart.setOption(option);
+		}
+
+		return {
+		    color : ['rgba(255, 69, 0, 0.5)', 'rgba(30, 144, 255, 0.5)'],
+		    title : {
+		        text: '饼图代替散点',
+		        subtext : '混搭（随机数据）'
+		    },
+		    tooltip : {
+		        trigger: 'item',
+		         formatter: "{b} : {c} ({d}%)"
+		    },
+		    legend : {
+		        data : ['系列1', '系列2']
+		    },
+		    toolbox: {
+		        show : true,
+		        feature : {
+		            mark : {show: true},
+		            dataView : {show: true, readOnly: false},
+		            restore : {show: true},
+		            saveAsImage : {show: true}
+		        }
+		    },
+		    xAxis : [
+		        {
+		            type : 'value',
+		            splitNumber: 2,
+		            splitArea: {show:true}
+		        }
+		    ],
+		    yAxis : [
+		        {
+		            type : 'value',
+		            splitNumber: 2,
+		            splitArea : {show : true}
+		        }
+		    ],
+		    animation: false,
+		    series : [
+		        {
+		            type:'scatter',
+		            symbol: 'none',
+		            data: sData1
+		        },
+		        {
+		            type:'scatter',
+		            symbol: 'none',
+		            data: sData2
+		        }
+		    ]
+		};
+		
+    })(),
     mix3 : {
         tooltip : {
             trigger: 'item'
@@ -1432,174 +1865,174 @@ var optionMap = {
         })()
     },
     lasagna : (function() {
-    	 functionMap.lasagna = function() {
+         functionMap.lasagna = function() {
             myChart.setOption({
-		        tooltip : {
-		            trigger: 'item',
-		            formatter: "{a} <br/>{b} : {c} ({d}%)"
-		        },
-		        legend: {
-		            orient : 'vertical',
-		            x : 'left',
-		            data:['Chrome','Firefox','Safari','IE9+','IE8-']
-		        },
-		        toolbox: {
-		            show : true,
-		            feature : {
-		                mark : {show: true},
-		                dataView : {show: true, readOnly: false},
-		                restore : {show: true},
-		                saveAsImage : {show: true}
-		            }
-		        },
-		        series : (function(){
-		            var series = [];
-		            for (var i = 0; i < 30; i++) {
-		                series.push({
-		                    name:'浏览器（数据纯属虚构）',
-		                    type:'pie',
-		                    itemStyle : {normal : {
-		                        label : {show : i > 28},
-		                        labelLine : {show : i > 28, length:20}
-		                    }},
-		                    radius : [i * 4 + 40, i * 4 + 43],
-		                    data:[
-		                        {value: i * 128 + 80,  name:'Chrome'},
-		                        {value: i * 64  + 160,  name:'Firefox'},
-		                        {value: i * 32  + 320,  name:'Safari'},
-		                        {value: i * 16  + 640,  name:'IE9+'},
-		                        {value: i * 8  + 1280, name:'IE8-'}
-		                    ]
-		                })
-		            }
-		            return series;
-		        })(),
-		        calculable : (function(){
-		            functionMap.mix4 = function() {
-		                setTimeout(function(){
-		                    if (!myChart) {
-		                        return;
-		                    }
-		                    var _ZR = myChart.getZrender();
-		                    // 补充千层饼
-		                    _ZR.addShape({
-		                        shape : 'text',
-		                        style : {
-		                            x : _ZR.getWidth() / 2,
-		                            y : _ZR.getHeight() / 2,
-		                            color: '#bbb',
-		                            text : '恶梦的过去',
-		                            textAlign : 'center'
-		                        }
-		                    });
-		                    _ZR.addShape({
-		                        shape : 'text',
-		                        style : {
-		                            x : _ZR.getWidth() / 2 + 200,
-		                            y : _ZR.getHeight() / 2,
-		                            brushType:'both',
-		                            color: 'orange',
-		                            strokeColor: 'yellow',
-		                            text : '美好的未来',
-		                            textAlign : 'left',
-		                            textFont:'normal 20px 微软雅黑'
-		                        }
-		                    });
-		                    _ZR.refresh();
-		                }, 2000);
-		            }
-		            return false;
-		        })()
-		    }, true);
+                tooltip : {
+                    trigger: 'item',
+                    formatter: "{a} <br/>{b} : {c} ({d}%)"
+                },
+                legend: {
+                    orient : 'vertical',
+                    x : 'left',
+                    data:['Chrome','Firefox','Safari','IE9+','IE8-']
+                },
+                toolbox: {
+                    show : true,
+                    feature : {
+                        mark : {show: true},
+                        dataView : {show: true, readOnly: false},
+                        restore : {show: true},
+                        saveAsImage : {show: true}
+                    }
+                },
+                series : (function(){
+                    var series = [];
+                    for (var i = 0; i < 30; i++) {
+                        series.push({
+                            name:'浏览器（数据纯属虚构）',
+                            type:'pie',
+                            itemStyle : {normal : {
+                                label : {show : i > 28},
+                                labelLine : {show : i > 28, length:20}
+                            }},
+                            radius : [i * 4 + 40, i * 4 + 43],
+                            data:[
+                                {value: i * 128 + 80,  name:'Chrome'},
+                                {value: i * 64  + 160,  name:'Firefox'},
+                                {value: i * 32  + 320,  name:'Safari'},
+                                {value: i * 16  + 640,  name:'IE9+'},
+                                {value: i * 8  + 1280, name:'IE8-'}
+                            ]
+                        })
+                    }
+                    return series;
+                })(),
+                calculable : (function(){
+                    functionMap.mix4 = function() {
+                        setTimeout(function(){
+                            if (!myChart) {
+                                return;
+                            }
+                            var _ZR = myChart.getZrender();
+                            // 补充千层饼
+                            _ZR.addShape({
+                                shape : 'text',
+                                style : {
+                                    x : _ZR.getWidth() / 2,
+                                    y : _ZR.getHeight() / 2,
+                                    color: '#bbb',
+                                    text : '恶梦的过去',
+                                    textAlign : 'center'
+                                }
+                            });
+                            _ZR.addShape({
+                                shape : 'text',
+                                style : {
+                                    x : _ZR.getWidth() / 2 + 200,
+                                    y : _ZR.getHeight() / 2,
+                                    brushType:'both',
+                                    color: 'orange',
+                                    strokeColor: 'yellow',
+                                    text : '美好的未来',
+                                    textAlign : 'left',
+                                    textFont:'normal 20px 微软雅黑'
+                                }
+                            });
+                            _ZR.refresh();
+                        }, 2000);
+                    }
+                    return false;
+                })()
+            }, true);
         }
         functionMap.wormhole = function() {
-        	myChart.setOption({
-			    color : (function(){
-			        var zrColor = require('zrender/tool/color');
-			        return zrColor.getStepColors('yellow', 'red', 28);
-			    })(),
-			    title : {
-			        text: '浏览器占比变化',
-			        subtext: '纯属虚构',
-			        x:'right',
-			        y:'bottom'
-			    },
-			    tooltip : {
-			        trigger: 'item',
-        			backgroundColor : 'rgba(0,0,250,0.2)'
-			    },
-			    legend: {
-			       // orient : 'vertical',
-			        //x : 'center',
-			        data: function(){
-			                var list = [];
-			                for (var i = 1; i <=28; i++) {
-			                    list.push(i + 2000);
-			                }
-			                return list;
-			            }()
-			    },
-			    toolbox: {
-			        show : true,
-			        orient : 'vertical',
-			        y:'center',
-			        feature : {
-			            mark : {show: true},
-			            dataView : {show: true, readOnly: false},
-			            restore : {show: true},
-			            saveAsImage : {show: true}
-			        }
-			    },
-			   polar : [
-			       {
-			           indicator : [
-			               { text: 'IE8-', max: 400},
-			               { text: 'IE9+', max: 400},
-			               { text: 'Safari', max: 400},
-			               { text: 'Firefox', max: 400},
-			               { text: 'Chrome', max: 400}
-			            ],
-			            center : ['50%', 240],
-			            radius : 150
-			        }
-			    ],
-			    calculable : false,
-			    series : (function(){
-			        var series = [];
-			        for (var i = 1; i <= 28; i++) {
-			            series.push({
-			                name:'浏览器（数据纯属虚构）',
-			                type:'radar',
-			                symbol:'none',
-			                itemStyle: {
-			                    normal: {
-			                        lineStyle: {
-			                          width:1
-			                        }
-			                    },
-			                    emphasis : {
-			                        areaStyle: {color:'rgba(0,250,0,0.3)'}
-			                    }
+            myChart.setOption({
+                color : (function(){
+                    var zrColor = require('zrender/tool/color');
+                    return zrColor.getStepColors('yellow', 'red', 28);
+                })(),
+                title : {
+                    text: '浏览器占比变化',
+                    subtext: '纯属虚构',
+                    x:'right',
+                    y:'bottom'
+                },
+                tooltip : {
+                    trigger: 'item',
+                    backgroundColor : 'rgba(0,0,250,0.2)'
+                },
+                legend: {
+                   // orient : 'vertical',
+                    //x : 'center',
+                    data: function(){
+                            var list = [];
+                            for (var i = 1; i <=28; i++) {
+                                list.push(i + 2000);
+                            }
+                            return list;
+                        }()
+                },
+                toolbox: {
+                    show : true,
+                    orient : 'vertical',
+                    y:'center',
+                    feature : {
+                        mark : {show: true},
+                        dataView : {show: true, readOnly: false},
+                        restore : {show: true},
+                        saveAsImage : {show: true}
+                    }
+                },
+               polar : [
+                   {
+                       indicator : [
+                           { text: 'IE8-', max: 400},
+                           { text: 'IE9+', max: 400},
+                           { text: 'Safari', max: 400},
+                           { text: 'Firefox', max: 400},
+                           { text: 'Chrome', max: 400}
+                        ],
+                        center : ['50%', 240],
+                        radius : 150
+                    }
+                ],
+                calculable : false,
+                series : (function(){
+                    var series = [];
+                    for (var i = 1; i <= 28; i++) {
+                        series.push({
+                            name:'浏览器（数据纯属虚构）',
+                            type:'radar',
+                            symbol:'none',
+                            itemStyle: {
+                                normal: {
+                                    lineStyle: {
+                                      width:1
+                                    }
+                                },
+                                emphasis : {
+                                    areaStyle: {color:'rgba(0,250,0,0.3)'}
+                                }
 
-			                },
-			                data:[
-			                  {
-			                    value:[
-			                        (40 - i) * 10,
-			                        (38 - i) * 4 + 60,
-			                        i * 5 + 10,
-			                        i * 9,
-			                        i * i /2
-			                    ],
-			                    name:i + 2000
-			                  }
-			                ]
-			            })
-			        }
-			        return series;
-			    })()
-			}, true);
+                            },
+                            data:[
+                              {
+                                value:[
+                                    (40 - i) * 10,
+                                    (38 - i) * 4 + 60,
+                                    i * 5 + 10,
+                                    i * 9,
+                                    i * i /2
+                                ],
+                                name:i + 2000
+                              }
+                            ]
+                        })
+                    }
+                    return series;
+                })()
+            }, true);
         }
-    	return {};
+        return {};
     })()
 }

@@ -10,7 +10,7 @@ define({
                     "brushType": "both",
                      "color": "#D0D102",
                      "strokeColor": "#5182ab",
-                     "lineWidth": 2
+                     "lineWidth": 1
                 }
             }
         },
@@ -23,7 +23,7 @@ define({
                     "brushType": "both",
                     "color": "#00A1CB",
                     "strokeColor": "#5182ab",
-                    "lineWidth": 2
+                    "lineWidth": 1
                 }
             }
         },
@@ -36,7 +36,7 @@ define({
                      "brushType": "both",
                      "color": "#dda0dd",
                      "strokeColor": "#5182ab",
-                     "lineWidth": 2
+                     "lineWidth": 1
                 }
             }
         },
@@ -49,7 +49,7 @@ define({
                      "brushType": "both",
                      "color": "#61AE24",
                      "strokeColor": "#5182ab",
-                     "lineWidth": 2
+                     "lineWidth": 1
                 }
             }
         },
@@ -60,7 +60,7 @@ define({
                 "normal": {
                      "brushType": "both",
                      "strokeColor": "#5182ab",
-                     "lineWidth": 2
+                     "lineWidth": 1
                 }
             }
         }
