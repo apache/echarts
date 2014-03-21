@@ -187,8 +187,8 @@ define(
                 var width = rect.width;
 
                 for (var i = 1, l = pointList.length; i < l; i++) {
-                    idx = ( (pointList[i][0] - rect.x) * ratio
-                           + (pointList[i][1]- rect.y) * width * ratio * ratio
+                    idx = ((Math.floor(pointList[i][0]) - rect.x) * ratio
+                           + (Math.floor(pointList[i][1])- rect.y) * width * ratio * ratio
                           ) * 4;
                     data[idx] = r;
                     data[idx + 1] = g;
