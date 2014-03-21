@@ -145,6 +145,11 @@ option = {
             scale:true,
             splitNumber: 9,
             boundaryGap: [0.05, 0.05],
+            axisLabel: {
+                formatter: function(v) {
+                    return Math.round(v/10000) + ' 万'
+                }
+            },
             splitArea : {show : true}
         }
     ],
@@ -173,7 +178,43 @@ option = {
                 11105205, 9202153, 9992016, 12035250, 11431155, 
                 10354677, 10070399, 9164861, 9237718, 7114268, 
                 7526158.5, 8105835, 7971452.5
-            ]
+            ],
+            markPoint : {
+                symbol: 'emptyPin',
+                itemStyle : {
+                    normal : {
+                        color:'#1e90ff',
+                        label : {
+                            show:true,
+                            position:'top',
+                            formatter: function(a,b,v) {
+                                return Math.round(v/10000) + ' 万'
+                            }
+                        }
+                    }
+                },
+                data : [
+                    {type : 'max', name: '最大值', symbolSize:5},
+                    {type : 'min', name: '最小值', symbolSize:5}
+                ]
+            },
+            markLine : {
+                symbol : 'none',
+                itemStyle : {
+                    normal : {
+                        color:'#1e90ff',
+                        label : {
+                            show:true,
+                            formatter: function(a,b,v) {
+                                return Math.round(v/10000) + ' 万'
+                            }
+                        }
+                    }
+                },
+                data : [
+                    {type : 'average', name: '平均值'}
+                ]
+            }
         },
         {
             name:'上证指数',

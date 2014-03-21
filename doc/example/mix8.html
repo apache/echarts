@@ -100,7 +100,6 @@ option = {
     tooltip : {
         trigger: 'axis',
         showDelay: 0,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
-        hideDelay: 0,             // 隐藏延迟，单位ms
         formatter: function(params) {
             var res = params[0][1];
             res += '<br/>' + params[0][0];
@@ -265,8 +264,7 @@ option = {
 option2 = {
     tooltip : {
         trigger: 'axis',
-        showDelay: 0,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
-        hideDelay: 0              // 隐藏延迟，单位ms
+        showDelay: 0             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
     },
     legend: {
         y : -30,
@@ -313,6 +311,11 @@ option2 = {
             scale:true,
             splitNumber: 3,
             boundaryGap: [0.05, 0.05],
+            axisLabel: {
+                formatter: function(v) {
+                    return Math.round(v/10000) + ' 万'
+                }
+            },
             splitArea : {show : true}
         }
     ],
@@ -340,7 +343,21 @@ option2 = {
                 11105205, 9202153, 9992016, 12035250, 11431155, 
                 10354677, 10070399, 9164861, 9237718, 7114268, 
                 7526158.5, 8105835, 7971452.5
-            ]
+            ],
+            markLine : {
+                symbol : 'none',
+                itemStyle : {
+                    normal : {
+                        color:'#1e90ff',
+                        label : {
+                            show:false
+                        }
+                    }
+                },
+                data : [
+                    {type : 'average', name: '平均值'}
+                ]
+            }
         }
     ]
 };
@@ -350,8 +367,7 @@ myChart2.setOption(option2);
 option3 = {
     tooltip : {
         trigger: 'axis',
-        showDelay: 0,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
-        hideDelay: 0              // 隐藏延迟，单位ms
+        showDelay: 0             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
     },
     legend: {
         y : -30,
@@ -398,6 +414,11 @@ option3 = {
             scale:true,
             splitNumber:3,
             boundaryGap: [0.05, 0.05],
+            axisLabel: {
+                formatter: function(v) {
+                    return Math.round(v/10000) + ' 万'
+                }
+            },
             splitArea : {show : true}
         }
     ],
@@ -425,7 +446,21 @@ option3 = {
                 105205, 920253, 999206, 203525, 435588, 
                 103546, 703990, 964868, 923778, 742688,
                 752658, 805835, 797452
-            ]
+            ],
+            markLine : {
+                symbol : 'none',
+                itemStyle : {
+                    normal : {
+                        color:'#1e90ff',
+                        label : {
+                            show:false
+                        }
+                    }
+                },
+                data : [
+                    {type : 'average', name: '平均值'}
+                ]
+            }
         }
     ]
 };
