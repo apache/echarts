@@ -600,7 +600,9 @@ define(function (require) {
                     _selectedMap[itemName] = false;
                 } 
                 else {
-                    if (something.type == ecConfig.CHART_TYPE_PIE) {
+                    if (something.type == ecConfig.CHART_TYPE_PIE
+                        || something.type == ecConfig.CHART_TYPE_FORCE
+                    ) {
                         queryTarget = [something.data, something.series];
                     }
                     else {

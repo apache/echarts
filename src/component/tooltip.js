@@ -445,6 +445,10 @@ define(function (require) {
          * 直角系 
          */
         function _showAxisTrigger(xAxisIndex, yAxisIndex, dataIndex) {
+            !_event.connectTrigger && messageCenter.dispatch(
+                ecConfig.EVENT.TOOLTIP_IN_GRID,
+                _event
+            );
             if (typeof xAxis == 'undefined'
                 || typeof yAxis == 'undefined'
                 || typeof xAxisIndex == 'undefined'
@@ -1135,10 +1139,6 @@ define(function (require) {
                         my
                     )
                 ) {
-                    !_event.connectTrigger && messageCenter.dispatch(
-                        ecConfig.EVENT.TOOLTIP_IN_GRID,
-                        _event
-                    );
                     _showingTicket = setTimeout(_tryShow, _showDelay);
                 }
                 else if (_needAxisTrigger 
