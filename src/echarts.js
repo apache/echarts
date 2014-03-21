@@ -261,7 +261,7 @@ define(function(require) {
                 _curEventType = null;
             }
             
-            if (!fromMyself) {  // 处理了完联动事件复位
+            if (!fromMyself || (!_connected && fromMyself)) {  // 处理了完联动事件复位
                 _curEventType = null;
             }
         }
