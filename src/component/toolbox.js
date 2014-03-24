@@ -747,7 +747,7 @@ define(function (require) {
                    : 'ECharts')
                 + '.' + imgType 
             );
-            downloadLink.innerHTML = '<img src="' + image 
+            downloadLink.innerHTML = '<img style="vertical-align:middle" src="' + image 
                 + '" title="'
                 + (!!(window.attachEvent 
                      && navigator.userAgent.indexOf('Opera') === -1)
