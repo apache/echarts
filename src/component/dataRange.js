@@ -142,6 +142,9 @@ define(function (require) {
                             textFont: font,
                             textBaseline: 'top'
                         },
+                        highlightStyle:{
+                            brushType: 'fill'
+                        },
                         clickable : true
                     };
                     if (dataRangeOption.orient == 'vertical'
@@ -302,6 +305,10 @@ define(function (require) {
                     height : _calculableLocation.height,
                     color : 'rgba(255,255,255,0)'
                 },
+                highlightStyle : {
+                    strokeColor : 'rgba(255,255,255,0.5)',
+                    lineWidth : 1
+                },
                 draggable : true,
                 ondrift : _ondrift,
                 ondragend : _ondragend,
@@ -335,68 +342,86 @@ define(function (require) {
                         font
                     )
                 ) + 2;
-                            
+            
             var pointListStart;
             var textXStart;
             var textYStart;
+            var coverRectStart;
             var pointListEnd;
             var textXEnd;
             var textYEnd;
+            var coverRectEnd
             if (dataRangeOption.orient == 'horizontal') {
                 // 水平
                 if (dataRangeOption.y != 'bottom') {
                     // 手柄统统在下方
                     pointListStart = [
                         [x, y],
-                        [x, y + height + textHeight / 2 * 3],
-                        [x - textWidth, y + height + textHeight / 2 * 3],
-                        [x - textWidth, y + height + textHeight / 2],
-                        [x - textHeight / 2, y + height + textHeight / 2],
+                        [x, y + height + textHeight],
+                        [x - textHeight, y + height + textHeight],
                         [x - 1, y + height],
                         [x - 1, y]
                         
                     ];
-                    textXStart = x - textWidth / 2;
-                    textYStart = y + height + textHeight;
+                    textXStart = x - textWidth / 2 - textHeight;
+                    textYStart = y + height + textHeight / 2 + 2;
+                    coverRectStart = {
+                        x : x - textWidth - textHeight,
+                        y : y + height,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                     
                     pointListEnd = [
                         [x + width, y],
-                        [x + width, y + height + textHeight / 2 * 3],
-                        [x + width + textWidth, y + height + textHeight/2*3],
-                        [x + width + textWidth, y + height + textHeight / 2],
-                        [x + width + textHeight / 2, y + height + textHeight/2],
+                        [x + width, y + height + textHeight],
+                        [x + width + textHeight, y + height + textHeight],
                         [x + width + 1, y + height],
                         [x + width + 1, y]
                     ];
-                    textXEnd = x + width + textWidth / 2;
+                    textXEnd = x + width + textWidth / 2 + textHeight;
                     textYEnd = textYStart;
+                    coverRectEnd = {
+                        x : x + width,
+                        y : y + height,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                 }
                 else {
                     // 手柄在上方
                     pointListStart = [
                         [x, y + height],
-                        [x, y - textHeight / 2 * 3],
-                        [x - textWidth, y - textHeight / 2 * 3],
-                        [x - textWidth, y - textHeight / 2],
-                        [x - textHeight / 2, y - textHeight / 2],
+                        [x, y - textHeight],
+                        [x - textHeight, y - textHeight],
                         [x - 1, y],
                         [x - 1, y + height]
                         
                     ];
-                    textXStart = x - textWidth / 2;
-                    textYStart = y - textHeight;
+                    textXStart = x - textWidth / 2 - textHeight;
+                    textYStart = y - textHeight / 2 - 2;
+                    coverRectStart = {
+                        x : x - textWidth - textHeight,
+                        y : y - textHeight,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                     
                     pointListEnd = [
                         [x + width, y + height],
-                        [x + width, y - textHeight / 2 * 3],
-                        [x + width + textWidth, y - textHeight / 2 * 3],
-                        [x + width + textWidth, y - textHeight / 2],
-                        [x  + width + textHeight / 2, y - textHeight / 2],
+                        [x + width, y - textHeight],
+                        [x + width + textHeight, y - textHeight],
                         [x + width + 1, y],
                         [x + width + 1, y + height]
                     ];
-                    textXEnd = x + width + textWidth / 2;
+                    textXEnd = x + width + textWidth / 2 + textHeight;
                     textYEnd = textYStart;
+                    coverRectEnd = {
+                        x : x + width,
+                        y : y - textHeight,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                 }
             }
             else {
@@ -406,54 +431,74 @@ define(function (require) {
                     // 手柄统统在右侧
                     pointListStart = [
                         [x, y],
-                        [x + width + textWidth, y],
-                        [x + width + textWidth, y - textHeight],
+                        [x + width + textHeight, y],
                         [x + width + textHeight, y - textHeight],
                         [x + width, y - 1],
                         [x, y - 1]
                     ];
                     textXStart = x + width + textWidth / 2 + textHeight / 2;
                     textYStart = y - textHeight / 2;
+                    coverRectStart = {
+                        x : x + width,
+                        y : y - textHeight,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
+                    
                     pointListEnd = [
                         [x, y + height],
-                        [x + width + textWidth, y + height],
-                        [x + width + textWidth, y + textHeight + height],
+                        [x + width + textHeight, y + height],
                         [x + width + textHeight, y + textHeight + height],
                         [x + width, y + 1 + height],
                         [x, y + height + 1]
                     ];
                     textXEnd = textXStart;
                     textYEnd = y  + height + textHeight / 2;
+                    coverRectEnd = {
+                        x : x + width,
+                        y : y + height,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    }
                 }
                 else {
                     // 手柄在左侧
                     pointListStart = [
                         [x + width, y],
-                        [x - textWidth, y],
-                        [x - textWidth, y - textHeight],
+                        [x - textHeight, y],
                         [x - textHeight, y - textHeight],
                         [x, y - 1],
                         [x + width, y - 1]
                     ];
                     textXStart = x - textWidth / 2 - textHeight / 2;
                     textYStart = y - textHeight / 2;
+                    coverRectStart = {
+                        x : x - textWidth - textHeight,
+                        y : y - textHeight,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                     
                     pointListEnd = [
                         [x + width, y + height],
-                        [x - textWidth, y + height],
-                        [x - textWidth, y + textHeight + height],
+                        [x - textHeight, y + height],
                         [x - textHeight, y + textHeight + height],
                         [x, y + 1 + height],
                         [x + width, y + height + 1]
                     ];
                     textXEnd = textXStart;
                     textYEnd = y  + height + textHeight / 2;
+                    coverRectEnd = {
+                        x : x - textWidth - textHeight,
+                        y : y + height,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                 }
             }
             
             _startShape = {
-                shape : 'polygon',
-                zlevel : _zlevelBase + 1,
+                shape : 'handlePolygon',
                 style : {
                     pointList : pointListStart,
                     text : dataRangeOption.max.toFixed(
@@ -461,26 +506,21 @@ define(function (require) {
                            ),
                     textX : textXStart,
                     textY : textYStart,
-                    textPosition : 'specific',
-                    textAlign : 'center',
-                    textBaseline : 'middle',
-                    textColor: dataRangeOption.textStyle.color,
                     color : getColor(dataRangeOption.max),
-                    width : 0,                 // for ondrif计算统一
-                    height : 0,
+                    rect : coverRectStart,
                     x : pointListStart[0][0],
                     y : pointListStart[0][1],
                     _x : pointListStart[0][0],   // 拖拽区域控制缓存
                     _y : pointListStart[0][1]
-                },
-                draggable : true,
-                ondrift : _ondrift,
-                ondragend : _ondragend
+                }
+            };
+            _startShape.highlightStyle = {
+                strokeColor : _startShape.style.color,
+                lineWidth : 1
             };
             
             _endShape = {
-                shape : 'polygon',
-                zlevel : _zlevelBase + 1,
+                shape : 'handlePolygon',
                 style : {
                     pointList : pointListEnd,
                     text : dataRangeOption.min.toFixed(
@@ -488,22 +528,34 @@ define(function (require) {
                            ),
                     textX : textXEnd,
                     textY : textYEnd,
-                    textPosition : 'specific',
-                    textAlign : 'center',
-                    textBaseline : 'middle',
-                    textColor: dataRangeOption.textStyle.color,
                     color : getColor(dataRangeOption.min),
-                    width : 0,                 // for ondrif计算统一
-                    height : 0,
+                    rect : coverRectEnd,
                     x : pointListEnd[0][0],
                     y : pointListEnd[0][1],
                     _x : pointListEnd[0][0],   // 拖拽区域控制缓存
                     _y : pointListEnd[0][1]
-                },
-                draggable : true,
-                ondrift : _ondrift,
-                ondragend : _ondragend
+                }
             };
+            _endShape.highlightStyle = {
+                strokeColor : _endShape.style.color,
+                lineWidth : 1
+            }
+            
+            // 统一参数
+            _startShape.zlevel              = _endShape.zlevel              = _zlevelBase + 1;
+            _startShape.draggable           = _endShape.draggable           = true;
+            _startShape.ondrift             = _endShape.ondrift             = _ondrift;
+            _startShape.ondragend           = _endShape.ondragend           = _ondragend;
+            
+            _startShape.style.textColor     = _endShape.style.textColor     
+                                            = dataRangeOption.textStyle.color;
+            _startShape.style.textAlign     = _endShape.style.textAlign     = 'center';
+            _startShape.style.textPosition  = _endShape.style.textPosition  = 'specific';
+            _startShape.style.textBaseline  = _endShape.style.textBaseline  = 'middle';
+            _startShape.style.width         = _endShape.style.width         = 0; // for ondrif计算统一
+            _startShape.style.height        = _endShape.style.height        = 0;
+            _startShape.style.textPosition  = _endShape.style.textPosition  = 'specific';
+            
             self.shapeList.push(_startShape);
             self.shapeList.push(_endShape);
         }
@@ -731,21 +783,21 @@ define(function (require) {
                 var handlerWidth = Math.max(
                     zrArea.getTextWidth(dataRangeOption.max, font),
                     zrArea.getTextWidth(dataRangeOption.min, font)
-                );
+                ) + textHeight;
                 if (dataRangeOption.orient == 'horizontal') {
                     if (x < handlerWidth) {
-                        x = handlerWidth + 5;
+                        x = handlerWidth;
                     }
                     if (x + totalWidth + handlerWidth > zrWidth) {
-                        x -= handlerWidth + 5;
+                        x -= handlerWidth;
                     }
                 }
                 else {
                     if (y < textHeight) {
-                        y = textHeight + 5;
+                        y = textHeight;
                     }
                     if (y + totalHeight + textHeight > zrHeight) {
-                        y -= textHeight + 5;
+                        y -= textHeight;
                     }
                 }
             }
@@ -781,7 +833,8 @@ define(function (require) {
                                    ? 'middle' : 'top'),
                     textAlign: (dataRangeOption.orient == 'horizontal'
                                ? 'left' : 'center')
-                }
+                },
+                hoverable : false
             };
         }
 
@@ -796,6 +849,10 @@ define(function (require) {
                     width : width,
                     height : height - 2,
                     color : color
+                },
+                highlightStyle: {
+                    strokeColor: color,
+                    lineWidth : 1
                 },
                 clickable : true
             };
@@ -1037,7 +1094,7 @@ define(function (require) {
                     _gap * _range.start + dataRangeOption.min
                 ).toFixed(dataRangeOption.precision);
             }
-            _startShape.style.color = getColor(
+            _startShape.style.color = _startShape.highlightStyle.strokeColor = getColor(
                 _gap * _range.start + dataRangeOption.min
             );
             
@@ -1057,7 +1114,7 @@ define(function (require) {
                     _gap * _range.end + dataRangeOption.min
                 ).toFixed(dataRangeOption.precision);
             }
-            _endShape.style.color = getColor(
+            _endShape.style.color = _endShape.highlightStyle.strokeColor = getColor(
                 _gap * _range.end + dataRangeOption.min
             );
             zr.modShape(_endShape.id, _endShape);
@@ -1246,6 +1303,9 @@ define(function (require) {
         
         init(option);
     }
+    
+    // 动态扩展zrender shape：candle
+    require('../util/shape/handlePolygon');
 
     require('../component').define('dataRange', DataRange);
 
