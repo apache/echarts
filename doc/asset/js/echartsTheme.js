@@ -5,14 +5,22 @@ var theme = 'erik';
 $('[name=theme-select]').on('change', function(){selectChange(this.value);});
 
 function selectChange(value){
-    window.location.hash = value;
+    
     theme = value;
     showLoading();
     $('[name=theme-select]').val(theme);
-    require(['theme/' + theme], function(curTheme){
-        theme = curTheme;
+    if (theme != 'default') {
+        window.location.hash = value;
+        require(['theme/' + theme], function(curTheme){
+            theme = curTheme;
+            setTimeout(refreshAll, 500);
+        })
+    }
+    else {
+        window.location.hash = '';
+        theme = {};
         setTimeout(refreshAll, 500);
-    })
+    }
 }
 
 function showLoading() {
@@ -65,7 +73,7 @@ else {
     });
 }
 
-var hash = window.location.hash.replace('#','') || 'default';
+var hash = window.location.hash.replace('#','') || 'erik';
 if ($('[name=theme-select]').val(hash).val() != hash) {
     $('[name=theme-select]').val('erik');
     hash = 'erik';
