@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+
+    <script src="../asset/js/esl/esl.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+</head>
+
+<body>
+    <!-- NAVBAR
+    ================================================== -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="../../index.html">ECharts</a>
+          <div class="nav-collapse collapse">
+              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
+              <ul class="nav">
+                <li><a href="../../index.html"><i class="icon-home icon-white"></i> Home</a></li>
+                <li class="active"><a href="../example.html" class="active">Example</a></li>
+                <li><a href="../doc.html" >API &amp; Doc</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a id="last-release-link" href=""> </a></li>
+                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
+                  </ul>
+                </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
+                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
+                    <li class="divider"></li>
+                    <!--li class="nav-header">Library</li-->
+                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
+                    
+                  </ul>
+                </li>
+              </ul>
+           </div><!--/.nav-collapse -->
+        </div><!-- /.container -->
+      </div><!-- /.navbar-inner -->
+    </div><!-- /.navbar-wrapper -->
+
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div id="sidebar-code" class="span4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+option = {
+    title : {
+        text: '某站点用户访问来源',
+        subtext: '纯属虚构',
+        x:'center'
+    },
+    tooltip : {
+        trigger: 'item',
+        formatter: "{a} <br/>{b} : {c} ({d}%)"
+    },
+    legend: {
+        orient : 'vertical',
+        x : 'left',
+        data:['直接访问','邮件营销','联盟广告','视频广告','搜索引擎']
+    },
+    calculable : true,
+    series : [
+        {
+            name:'访问来源',
+            type:'pie',
+            radius : '55%',
+            center: ['50%', 225],
+            data:[
+                {value:335, name:'直接访问'},
+                {value:310, name:'邮件营销'},
+                {value:234, name:'联盟广告'},
+                {value:135, name:'视频广告'},
+                {value:1548, name:'搜索引擎'}
+            ]
+        }
+    ]
+};
+
+option2 = {
+    tooltip : {
+        trigger: 'axis',
+        axisPointer : {
+            type: 'shadow'
+        }
+    },
+    legend: {
+        data:['直接访问','邮件营销','联盟广告','视频广告','搜索引擎']
+    },
+    toolbox: {
+        show : true,
+        orient : 'vertical',
+        y : 'center',
+        feature : {
+            mark : {show: true},
+            magicType : {show: true, type: ['line', 'bar', 'stack', 'tiled']},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    calculable : true,
+    xAxis : [
+        {
+            type : 'category',
+            data : ['周一','周二','周三','周四','周五','周六','周日']
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value',
+            splitArea : {show : true}
+        }
+    ],
+    grid: {
+        x2:40
+    },
+    series : [
+        {
+            name:'直接访问',
+            type:'bar',
+            stack: '总量',
+            data:[320, 332, 301, 334, 390, 330, 320]
+        },
+        {
+            name:'邮件营销',
+            type:'bar',
+            stack: '总量',
+            data:[120, 132, 101, 134, 90, 230, 210]
+        },
+        {
+            name:'联盟广告',
+            type:'bar',
+            stack: '总量',
+            data:[220, 182, 191, 234, 290, 330, 310]
+        },
+        {
+            name:'视频广告',
+            type:'bar',
+            stack: '总量',
+            data:[150, 232, 201, 154, 190, 330, 410]
+        },
+        {
+            name:'搜索引擎',
+            type:'bar',
+            stack: '总量',
+            data:[820, 932, 901, 934, 1290, 1330, 1320]
+        }
+    ]
+};
+
+myChart2 = echarts.init(document.getElementById('main2'));
+myChart2.setOption(option2);
+
+myChart.connect(myChart2);
+myChart2.connect(myChart);
+
+setTimeout(function(){
+    window.onresize = function() {
+        myChart.resize();
+        myChart2.resize();
+    }
+},200)
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="span8">
+                <div id="main" class="main" style='width:45%;float:left;margin-right:0;padding-right:0;border-right-width:0'></div>
+                <div id="main2" class="main" style='width:50%;margin-left:0;padding-left:0;border-left-width:0'></div>
+                <div>
+                    <button onclick="refresh(true)">Refresh ~</button>
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        <hr>
+        <!-- FOOTER -->
+        <footer>
+          <p class="pull-right"><a href="#">Back to top</a></p>
+          <p>&copy; 2014 <a href="http://efe.baidu.com" target="_blank">EFE</a> &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">License</a> &middot; <a href="../changelog.html" target="_blank">Changelog</a></p>
+        </footer>
+    </div><!--/.fluid-container-->
+
+    <script src="../asset/js/jquery.js"></script>
+    <script src="../asset/js/bootstrap-transition.js"></script>
+    <script src="../asset/js/bootstrap-alert.js"></script>
+    <script src="../asset/js/bootstrap-modal.js"></script>
+    <script src="../asset/js/bootstrap-dropdown.js"></script>
+    <script src="../asset/js/bootstrap-scrollspy.js"></script>
+    <script src="../asset/js/bootstrap-tab.js"></script>
+    <script src="../asset/js/bootstrap-tooltip.js"></script>
+    <script src="../asset/js/bootstrap-popover.js"></script>
+    <script src="../asset/js/bootstrap-button.js"></script>
+    <script src="../asset/js/bootstrap-collapse.js"></script>
+    <script src="../asset/js/bootstrap-carousel.js"></script>
+    <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+    <script type="text/javascript">
+        function refresh(isBtnRefresh){
+            if (isBtnRefresh) {
+                needRefresh = true;
+                focusGraphic();
+                myChart2.showLoading();
+                return;
+            }
+            needRefresh = false;
+            
+            myChart = echarts.init(domMain);
+            (new Function(editor.doc.getValue()))();
+            myChart.setOption(option, true);
+            domMessage.innerHTML = '';
+            window.onresize = function() {
+                myChart.resize();
+                myChart2.resize();
+            }
+        }
+    </script>
+</body>
+</html>
