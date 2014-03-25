@@ -483,9 +483,9 @@ define(function() {
                         width: 2,
                         type: 'solid',
                         shadowColor : 'rgba(0,0,0,0)', //默认透明
-                        shadowBlur: 5,
-                        shadowOffsetX: 3,
-                        shadowOffsetY: 3
+                        shadowBlur: 0,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0
                     }
                 },
                 emphasis: {
@@ -882,9 +882,9 @@ define(function() {
                         // width: 随borderWidth, // 优先于borderWidth
                         type: 'dashed',
                         shadowColor : 'rgba(0,0,0,0)', //默认透明
-                        shadowBlur: 5,
-                        shadowOffsetX: 3,
-                        shadowOffsetY: 3
+                        shadowBlur: 0,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0
                     }
                 },
                 emphasis: {
