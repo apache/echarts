@@ -126,7 +126,7 @@ define(function() {
             splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变
             calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
             realtime: true,
-            color:['#1e90ff','#f0ffff'],//颜色 
+            color:['#006edd','#e0ffff'],//颜色 
             //text:['高','低'],           // 文本，默认为数值文本
             textStyle: {
                 color: '#333'          // 值域文字颜色
