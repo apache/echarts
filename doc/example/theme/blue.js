@@ -5,7 +5,7 @@ var theme = {
     backgroundColor: '#FFF',
     
     // 默认色板
-    color: ['#1bb2d8','#1790cf',
+    color: ['#1790cf','#1bb2d8',
             '#99d2dd','#88b0bb','#1c7099','#038cc4','#75abd0','#afd6dd'],
 
     // 图表标题
@@ -466,9 +466,6 @@ var theme = {
     pie: {
         center : ['50%', '50%'],    // 默认全局居中
         radius : [0, '75%'],
-        clockWise : false,          // 默认逆时针
-        startAngle: 90,
-        minAngle: 0,                // 最小角度改为0
         selectedOffset: 10,         // 选中是扇区偏移量
         itemStyle: {
             normal: {

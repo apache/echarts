@@ -1,13 +1,29 @@
 var myChart = [];
-var domCode = document.getElementById('sidebar-code');
-var domGraphic = document.getElementById('graphic');
 var domMain = $("[md='main']");
-var needRefresh = false;
 
+var theme = 'erik';
+$('[name=theme-select]').on('change', function(){selectChange(this.value);});
+
+function selectChange(value){
+    window.location.hash = value;
+    theme = value;
+    showLoading();
+    $('[name=theme-select]').val(theme);
+    require(['theme/' + theme], function(curTheme){
+        theme = curTheme;
+        setTimeout(refreshAll, 500);
+    })
+}
+
+function showLoading() {
+    for (var i = 0, l = domMain.length; i < l; i++) {
+        myChart[i].showLoading();
+    }
+}
 
 function refreshAll() {
     for (var i = 0, l = domMain.length; i < l; i++) {
-        //myChart[i].setTheme(theme);
+        myChart[i].setTheme(theme);
     }
 }
 
@@ -49,10 +65,17 @@ else {
     });
 }
 
+var hash = window.location.hash.replace('#','') || 'default';
+if ($('[name=theme-select]').val(hash).val() != hash) {
+    $('[name=theme-select]').val('erik');
+    hash = 'erik';
+}
+
 // 按需加载
 require(
     [
         'echarts',
+        'theme/' + hash,
         'echarts/chart/line',
         'echarts/chart/bar',
         'echarts/chart/scatter',
@@ -68,10 +91,10 @@ require(
 
 
 var echarts;
-function requireCallback (ec) {
+function requireCallback (ec, defaultTheme) {
     echarts = ec;
     for (var i = 0, l = domMain.length; i < l; i++) {
-        myChart[i] = echarts.init(domMain[i]);
+        myChart[i] = echarts.init(domMain[i], defaultTheme);
         myChart[i].setOption(option[i]);
     }
     
@@ -89,8 +112,8 @@ function requireCallback (ec) {
         var zrDom = document.createElement('div');
         zrDom.style.position = 'absolute';
         zrDom.style.left = '-4000px';
-        zrDom.style.width = domGWidth * 2 + 'px';
-        zrDom.style.height = (domGHeight / 2)+ 'px';
+        zrDom.style.width = domGWidth + 'px';
+        zrDom.style.height = domGHeight + 'px';
         document.body.appendChild(zrDom);
         
         var _zr = require('zrender').init(zrDom);
@@ -112,8 +135,8 @@ function requireCallback (ec) {
             _zr.addShape({
                 shape:'image',
                 style : {
-                    x : domMain[i].offsetLeft - domGLeft + (i < 6 ? 0: domGWidth),
-                    y : domMain[i].offsetTop - domGTop - (i < 6 ? 0: 1200),
+                    x : domMain[i].offsetLeft - domGLeft,
+                    y : domMain[i].offsetTop - domGTop,
                     image : myChart[i].getDataURL()
                 }
             });
@@ -172,11 +195,11 @@ function requireCallback (ec) {
 
 }
 
-var theme;
 var option = {
     0 : {
         title : {
-            text: '折线图'
+            text: '折线图',
+            subtext: 'ECharts'
         },
         tooltip : {
             trigger: 'axis'
@@ -206,10 +229,10 @@ var option = {
         ],
         series : [
             {
-                name:'成交',
+                name:'意向',
                 type:'line',
                 smooth:true,
-                data:[10, 12, 21, 54, 260, 830, 710]
+                data:[1320, 1132, 601, 234, 120, 90, 20]
             },
             {
                 name:'预购',
@@ -218,16 +241,17 @@ var option = {
                 data:[30, 182, 434, 791, 390, 30, 10]
             },
             {
-                name:'意向',
+                name:'成交',
                 type:'line',
                 smooth:true,
-                data:[1320, 1132, 601, 234, 120, 90, 20]
+                data:[10, 12, 21, 54, 260, 830, 710]
             }
         ]
     },
     1 : {
         title : {
-            text: '柱形图'
+            text: '柱形图',
+            subtext: 'ECharts'
         },
         legend: {
             data:['直接','邮件','联盟','搜索']
@@ -261,12 +285,12 @@ var option = {
             {
                 name:'直接',
                 type:'bar',
-                data:[120, 132, 201, 234, 290, 230, 220]
+                data:[80, 132, 101, 134, 90, 180, 200]
             },
             {
                 name:'邮件',
                 type:'bar',
-                data:[80, 102, 101, 134, 90, 230, 210]
+                data:[120, 102, 151, 164, 230, 230, 280]
             },
             {
                 name:'联盟',
@@ -282,7 +306,8 @@ var option = {
     },
     2 : {
         title : {
-            text: '散点图'
+            text: '散点图',
+            subtext: 'ECharts'
         },
         tooltip : {
             trigger: 'item',
@@ -442,7 +467,8 @@ var option = {
     },
     3 : {
         title : {
-            text: 'K线图'
+            text: 'K线图',
+            subtext: 'ECharts'
         },
         tooltip : {
             trigger: 'axis',
@@ -609,7 +635,8 @@ var option = {
     },
     4 : {
         title : {
-            text: '地图'
+            text: '地图',
+            subtext: 'ECharts'
         },
         tooltip : {
             trigger: 'item'
@@ -626,6 +653,7 @@ var option = {
         dataRange: {
             min: 0,
             max: 100000,
+            realtime: false,
             calculable : true
         },
         series : [
@@ -817,7 +845,8 @@ var option = {
     },
     5 : {
         title : {
-            text: '饼图'
+            text: '饼图',
+            subtext: 'ECharts'
         },
         tooltip : {
             trigger: 'item',
@@ -861,7 +890,8 @@ var option = {
     },
     6 : {
         title : {
-            text: '雷达图'
+            text: '雷达图',
+            subtext: 'ECharts'
         },
         tooltip : {
             trigger: 'axis'
@@ -911,7 +941,8 @@ var option = {
     },
     7 : {
         title : {
-            text: '和弦图'
+            text: '和弦图',
+            subtext: 'ECharts'
         },
         tooltip : {
             trigger: 'item'
@@ -1011,7 +1042,8 @@ var option = {
         
         return {
             title : {
-                text: '力导向布局图'
+                text: '力导向布局图',
+                subtext: 'ECharts'
             },
             tooltip : {
                 trigger: 'item',

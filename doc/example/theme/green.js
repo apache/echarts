@@ -5,7 +5,7 @@ var theme = {
     backgroundColor: '#fff',
     
     // 默认色板
-    color: ['#68a54a','#408829',
+    color: ['#408829','#68a54a',
             '#a9cba2','#86b379','#397b29','#8abb6f','#759c6a','#bfd3b7'],
 
     // 图表标题
@@ -158,8 +158,8 @@ var theme = {
         // height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
         backgroundColor: 'rgba(0,0,0,0)',       // 背景颜色
         dataBackgroundColor: '#eee',            // 数据背景颜色
-        fillerColor: 'rgba(144,197,237,0.2)',   // 填充颜色
-        handleColor: 'rgba(70,130,180,0.8)'     // 手柄颜色
+        fillerColor: 'rgba(144,237,197,0.2)',   // 填充颜色
+        handleColor: 'rgba(50,160,50,0.8)'     // 手柄颜色
     },
 
     // 网格
@@ -466,9 +466,6 @@ var theme = {
     pie: {
         center : ['50%', '50%'],    // 默认全局居中
         radius : [0, '75%'],
-        clockWise : false,          // 默认逆时针
-        startAngle: 90,
-        minAngle: 0,                // 最小角度改为0
         selectedOffset: 10,         // 选中是扇区偏移量
         itemStyle: {
             normal: {
