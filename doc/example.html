@@ -1,26 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
     <title>ECharts</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="ECharts">
     <meta name="author" content="linzhifeng@baidu.com">
 
-    <script src="asset/js/esl/esl.js"></script>
-
     <!-- Le styles -->
     <link href="asset/css/bootstrap.css" rel="stylesheet">
     <link href="asset/css/bootstrap-responsive.css" rel="stylesheet">
     <link href="asset/css/echartsHome.css" rel="stylesheet">
-    <link href="asset/css/flexslider.css" rel="stylesheet"/>
 
     <!-- Fav and touch icons -->
     <link rel="shortcut icon" href="asset/ico/favicon.png">
-  </head>
+    <style type="text/css">
+        .affix {
+            width:170px;
+        }
+        .affix i {
+            margin-top:4px;
+            opacity:.5;
+        }
+        ul {
+            margin:5px;
+        }
+        .affix li {
+            list-style-type : none;
+            height : 30px;
+            line-height:30px;
+            vertical-align:middle;
+        }
+        ul.slides li{
+            width : 33.3%;
+            overflow:hidden;
+            float : left;
+            border:0px solid #ccc;
+            margin: 15px 0;
+            list-style-type : none;
+            position:relative;
+        }
+        ul.slides li a {
+            padding:5px;
+            display:block;
+        }
+        ul.slides li a strong{
+            font-size:15px;
+            color : #1e90ff;
+        }
+        ul.slides li a:hover {
+            background-color:#eee;
+            text-decoration:none;
+        }
+        ul.slides li img {
+            width:60%;
+        }
+        ul.slides li span {
+            color:#666;
+            width:36%;
+            vertical-align:top;
+            display:inline-block;
+            *zoom:1;
+        }
+        .span10 h3 {
+            clear:both;
+            margin:10px 0;
+            padding-bottom:10px;
+            border-bottom:1px solid #ddd;
+        }
+        .span10 h3 a {
+            display:inline-block;
+            *zoom:1;
+            padding-top:80px;
+        }
+    </style>
+</head>
 
-  <body>
-
+<body>
     <!-- NAVBAR
     ================================================== -->
     <div class="navbar navbar-inverse navbar-fixed-top">
@@ -64,428 +120,446 @@
 
     <div class="container">
         <div class="row-fluid">
-            <div class="span6">
-                <h1>折线图</h1>
-                <section class="slider">
-                    <div class="flexslider thumb3">
-                      <ul class="slides">
-                        <li data-thumb="asset/img/example/line1.png">
-                          <a href="example/line1.html"><img src="asset/img/example/line1.png" ></a>
-                          <p>标准折线图</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/line2.html"><img src="asset/img/example/cache.png"></a>
-                          <p>堆积折线图，支持任意系列堆积</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/line5.html"><img src="asset/img/example/cache.png"></a>
-                          <p>标准折线图，横纵坐标轴互换</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/line3.html"><img src="asset/img/example/cache.png"></a>
-                          <p>标准面积图</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/line4.html"><img src="asset/img/example/cache.png"></a>
-                          <p>堆积面积图，支持任意系列堆积</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/line.html"><img src="asset/img/example/cache.png"></a>
-                          <p>折线图：【个性化】填充、线条、拐点样式等~</p>
-                        </li><!--/li-->
-                      </ul>
-                    </div>
-                  </section>
+            <div class="span2">
+                <div class = 'affix'>
+                    <ul>
+                        <li><i class="icon-star"></i> <a href="#line">折线（面积）图</a></li>
+                        <li><i class="icon-star"></i> <a href="#bar">柱状（条形）图</a></li>
+                        <li><i class="icon-star"></i> <a href="#scatter">散点（气泡）图</a></li>
+                        <li><i class="icon-star"></i> <a href="#k">K线图</a></li>
+                        <li><i class="icon-star"></i> <a href="#pie">饼（圆环）图</a></li>
+                        <li><i class="icon-star"></i> <a href="#radar">雷达（面积）图</a></li>
+                        <li><i class="icon-star"></i> <a href="#chord">和弦图</a></li>
+                        <li><i class="icon-star"></i> <a href="#force">力导向布局图</a></li>
+                        <li><i class="icon-star"></i> <a href="#map">地图</a></li>
+                        <li><i class="icon-fire"></i> <a href="#mix">混搭</a></li>
+                        <li><i class="icon-wrench"></i> <a href="#component">组件</a></li>
+                        <li><i class="icon-flag"></i> <a href="#other">其他</a></li>
+                        <li><i class="icon-leaf"></i> <a href="#theme">主题</a></li>
+                        <li><i class="icon-globe"></i> <a href="#topic">专题</a></li>
+                    </ul>
+                </div>
             </div>
-            <div class="span6">
-                <h1>柱状图</h1>
-                <section class="slider">
-                    <div class="flexslider thumb4">
-                      <ul class="slides">
-                        <li data-thumb="asset/img/example/bar1.png">
-                          <a href="example/bar1.html"><img src="asset/img/example/bar1.png"></a>
-                          <p>标准柱状图。</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/bar2.html"><img src="asset/img/example/cache.png"></a>
-                          <p>堆积柱状图，支持任意系列堆积。</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/bar3.html"><img src="asset/img/example/cache.png"></a>
-                          <p>标准条状图。</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/bar4.html"><img src="asset/img/example/cache.png"></a>
-                          <p>堆积条状图，支持任意系列堆积。</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/bar5.html"><img src="asset/img/example/cache.png"></a>
-                          <p>标准条状图，正负值混合。</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/bar6.html"><img src="asset/img/example/cache.png"></a>
-                          <p>阶梯瀑布图。</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/bar7.html"><img src="asset/img/example/cache.png"></a>
-                          <p>瀑布图。</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/bar8.html"><img src="asset/img/example/cache.png"></a>
-                          <p>交错正负轴标签。</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/bar9.html"><img src="asset/img/example/cache.png"></a>
-                          <p>多维条形图。</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/bar10.html"><img src="asset/img/example/cache.png"></a>
-                          <p>温度计式图表。</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/bar.html"><img src="asset/img/example/cache.png"></a>
-                          <p>柱状图：【个性化】柱形宽度，填充、高亮样式等~</p>
-                        </li><!--/li-->
-                      </ul>
-                    </div>
-                  </section>
+            <div class="span10">
+                <p style="margin:10px 0 -30px 0">
+                    <a href="mailto:echarts@baidu.com">Any feedback or question ? »</a>
+                </p>
+                <div>
+                    <h3>折线图<a name="line"> </a></h3>
+                    <section>
+                        <div class="thumb3">
+                          <ul class="slides">
+                            <li data-thumb="asset/img/example/line1.png">
+                              <a href="example/line1.html"><img src="asset/img/example/line1.png" >
+                              <span><strong>标准折线图</strong><br/>标注，标线，个性化线条阴影</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/line2.html"><img src="asset/img/example/cache.png">
+                              <span><strong>堆积折线图</strong><br/>任意系列多维度堆积</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/line5.html"><img src="asset/img/example/cache.png">
+                              <span><strong>标准折线图</strong><br/>横纵坐标轴互换，平滑曲线</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/line3.html"><img src="asset/img/example/cache.png">
+                              <span><strong>标准面积图</strong><br/>填充样式，平滑曲线<br/></span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/line4.html"><img src="asset/img/example/cache.png">
+                              <span><strong>堆积面积图</strong><br/>任意系列多维度堆积</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/line.html"><img src="asset/img/example/cache.png">
+                              <span><strong>折线图</strong><br/>多级控制，个性化，填充、线条、拐点样式等</span></a>
+                            </li><!--/li-->
+                          </ul>
+                        </div>
+                    </section>
+                </div>
+                <div>
+                    <h3>柱状图<a name="bar"> </a></h3>
+                    <section>
+                        <div class="thumb4">
+                          <ul class="slides">
+                            <li data-thumb="asset/img/example/bar1.png">
+                              <a href="example/bar1.html"><img src="asset/img/example/bar1.png">
+                              <span><strong>标准柱状图</strong><br/>标注，标线</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/bar2.html"><img src="asset/img/example/cache.png">
+                              <span><strong>堆积柱状图</strong><br/>标线，任意系列多维度堆积</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/bar10.html"><img src="asset/img/example/cache.png">
+                              <span><strong>温度计式图表</strong><br/>个性化样式，文本标签显示</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/bar7.html"><img src="asset/img/example/cache.png">
+                              <span><strong>组成瀑布图</strong><br/>个性化样式，文本标签显示，透明数据驱动样式</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/bar6.html"><img src="asset/img/example/cache.png">
+                              <span><strong>变化瀑布图</strong><br/>个性化样式，文本标签显示，透明数据驱动样式</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/bar.html"><img src="asset/img/example/cache.png">
+                              <span><strong>柱状图</strong><br/>个性化，柱形宽度，填充、高亮、文本样式等</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/bar3.html"><img src="asset/img/example/cache.png">
+                              <span><strong>标准条形图</strong><br/>横纵坐标轴互换</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/bar4.html"><img src="asset/img/example/cache.png">
+                              <span><strong>堆积条形图</strong><br/>任意系列多维度堆积</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/bar9.html"><img src="asset/img/example/cache.png">
+                              <span><strong>多维条形图</strong><br/>个性化样式，文本标签显示，透明数据驱动样式</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/bar5.html"><img src="asset/img/example/cache.png">
+                              <span><strong>旋风条形图</strong><br/>正负值混合</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/bar8.html"><img src="asset/img/example/cache.png">
+                              <span><strong>旋风条形图</strong><br/>正负值混合，交错正负轴标签</span></a>
+                            </li><!--/li-->
+                          </ul>
+                        </div>
+                    </section>
+                </div>
+                <div>
+                    <h3>散点图<a name="scatter"> </a></h3>
+                    <section>
+                        <div class="thumb4">
+                          <ul class="slides">
+                            <li data-thumb="asset/img/example/scatter1.png">
+                              <a href="example/scatter1.html"><img src="asset/img/example/scatter1.png">
+                              <span><strong>标准散点图</strong><br/>标注，标线</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                               <a href="example/scatter2.html"><img src="asset/img/example/cache.png">
+                              <span><strong>标准气泡图</strong><br/>气泡大小计算</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                               <a href="example/scatter3.html"><img src="asset/img/example/cache.png">
+                              <span><strong>大规模散点图</strong><br/>（IE8-不支持）<br/>启用设置</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/scatter.html"><img src="asset/img/example/cache.png">
+                              <span><strong>散点图</strong><br/>多级控制，个性化图形样式，大小等</span></a>
+                            </li><!--/li-->
+                          </ul>
+                        </div>
+                    </section>
+                </div>
+                <div>
+                    <h3>K线图<a name="k"> </a></h3>
+                    <section>
+                        <div class="thumb4">
+                          <ul class="slides">
+                            <li data-thumb="asset/img/example/k1.png">
+                              <a href="example/k1.html"><img src="asset/img/example/k1.png">
+                              <span><strong>标准K线图</strong><br/>标注，标线，数据区域缩放</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/k.html"><img src="asset/img/example/cache.png">
+                              <span><strong>K线图</strong><br/>多级控制，个性化，柱形阴阳图形样式等</span></a>
+                            </li><!--/li-->
+                          </ul>
+                        </div>
+                      </section>
+                </div>
+                <div>
+                    <h3>饼图<a name="pie"> </a></h3>
+                    <section>
+                        <div class="thumb4">
+                            <ul class="slides">
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/pie1.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>标准饼图</strong><br/>中心，半径设置</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/pie2.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>标准环形图</strong><br/>中心，半径设置，文本标签显示</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/pie3.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>嵌套饼图</strong><br/>多个饼图，中心，半径设置，文本标签显示</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/pie4.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>南丁格尔玫瑰图</strong>半径、面积玫瑰图样式<br/></span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/pie5.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>环形图</strong><br/>信息图样式，文本标签技巧</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/pie6.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>环形图</strong><br/>信息图样式，额外内容添加，文本标签技巧</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/pie.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>饼图</strong><br/>多级控制，个性化填充、标签文本、视觉引导线样式等</span></a>
+                                </li><!--/li-->
+                            </ul>
+                        </div>
+                      </section>
+                </div>
+                <div>
+                    <h3>雷达图<a name="radar"> </a></h3>
+                    <section>
+                        <div class="thumb4">
+                            <ul class="slides">
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/radar1.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>标准雷达图</strong><br/>极坐标设置</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/radar2.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>标准填充雷达图</strong><br/>极坐标设置，填充样式</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/radar3.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>多雷达图</strong><br/>多个极坐标</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/radar.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>雷达图</strong><br/>多级控制，个性化线条，拐点，填充样式</span></a>
+                                </li><!--/li-->
+                            </ul>
+                        </div>
+                      </section>
+                </div>
+                <div>
+                    <h3>和弦图<a name="chord"> </a></h3>
+                    <section>
+                        <div class="thumb3">
+                            <ul class="slides">
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/chord1.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>标准和弦图</strong><br/>数据格式，排序</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/chord2.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>多系列和弦图</strong><br/>多维图例选择</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/chord.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>和弦图</strong><br/>多级控制，个性化填充、标签文本、线条样式等</span></a>
+                                </li><!--/li-->
+                            </ul>
+                        </div>
+                      </section>
+                </div>
+                <div>
+                    <h3>力导向布局图<a name="force"> </a></h3>
+                    <section>
+                        <div class="thumb3">
+                            <ul class="slides">
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/force1.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>简单关系网络</strong><br/>数据格式</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/force2.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>树状关系网络</strong><br/>数据格式</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/webkit-dep.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>复杂关系网络</strong><br/>Webkit内核依赖</span></a>
+                                </li><!--/li-->
+                            </ul>
+                        </div>
+                      </section>
+                </div>
+                <div>
+                    <h3>地图<a name="map"> </a></h3>
+                    <section>
+                        <div class="thumb4">
+                            <ul class="slides">
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/map1.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>标准地图</strong><br/>中国地图，多系列，值域漫游</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/map2.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>标准地图</strong><br/>中国地图，地域选择器</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/map4.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>标准地图</strong><br/>世界地图，值域漫游</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/map5.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>标准地图</strong><br/>世界地图，地域选择器</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/map3.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>标准地图</strong><br/>事件响应，切换，全国34个省市自治区</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/map6.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>地图扩展</strong><br/>标准geoJson格式扩展地图类型-香港</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/map7.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>地图扩展</strong><br/>标准geoJson格式扩展地图类型-美国</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/map8.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>子区域模式</strong><br/>子区域模式使用，值域漫游</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/map9.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>地图标注</strong><br/>（markPoint）<br/>值域漫游</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/map10.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>地图标线</strong><br/>（markLine）<br/>多系列</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/mix5.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>多地图</strong><br/>数据驱动，省市级下钻</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/map.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>地图</strong><br/>多级控制，个性化填充、标签文本、线条样式等</span></a>
+                                </li><!--/li-->
+                            </ul>
+                        </div>
+                      </section>
+                </div>
+                <div>
+                    <h3>混搭<a name="mix"> </a></h3>
+                    <section>
+                        <div class="thumb4">
+                            <ul class="slides">
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/mix1.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>折柱混搭</strong><br/>双数值轴</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/mix2.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>柱状饼混搭</strong><br/>数据驱动，饼图中心定义</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/mix4.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>折线散点混搭</strong><br/>数值轴与类目轴坐标同步</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/mix7.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>散饼图</strong><br/>用饼图代替气泡图中的散点，多系列</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/mix3.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>地图与饼图混搭</strong><br/>地图作为地域选择器</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/lasagna.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>千层饼</strong><br/>多层嵌套环形图</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/wormhole.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>虫洞</strong><br/>多层嵌套雷达图</span></a>
+                                </li><!--/li-->
+                            </ul>
+                        </div>
+                      </section>
+                </div>
+                <div>
+                    <h3>组件<a name="component"> </a></h3>
+                    <section>
+                        <div class="thumb3">
+                            <ul class="slides">
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/axis.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>坐标系</strong><br/>多级控制，个性化标签文字、间隔线样式等</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/dataZoom1.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>数据区域缩放</strong><br/>基本使用</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/dataZoom.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>数据区域缩放</strong><br/>个性化布局，数据阴影、背景、拖拽手柄样式等</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/tooltip.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>提示框</strong><br/>多级控制，个性化文字样式、边框、背景、格式器等</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/dataRange1.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>值域漫游</strong><br/>基本使用</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/dataRange.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>值域控件</strong><br/>个性化布局，背景、拖拽手柄样式等</span></a>
+                                </li><!--/li-->
+                            </ul>
+                        </div>
+                      </section>
+                </div>
+                <div>
+                    <h3>其他<a name="other"> </a></h3>
+                    <section>
+                        <div class="thumb4">
+                            <ul class="slides">
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/dynamicLineBar.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>动态数据</strong><br/>折线图、柱状图</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/dynamicScatterK.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>动态数据</strong><br/>散点图、K线图</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/dynamicPieRadar.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>动态数据</strong><br/>饼图、雷达图</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/loading.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>过渡动画</strong><br/>加载中，Loading</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/import.png">
+                                  <a href="example/www/index.html"><img src="asset/img/example/import.png">
+                                  <span><strong>单文件引入</strong><br/>模块化单文件ECharts.js</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/import.png">
+                                  <a href="example/www2/index.html"><img src="asset/img/example/import.png">
+                                  <span><strong>单文件引入</strong><br/>标签式（非模块化）单文件ECharts-plain.js</span></a>
+                                </li><!--/li-->
+                                <li data-thumb="asset/img/example/cache.png">
+                                  <a href="example/event.html"><img src="asset/img/example/cache.png">
+                                  <span><strong>事件交互</strong><br/>可捕获的用户交互和数据变化事件，实现图表与外界的联动</span></a>
+                                </li><!--/li-->
+                            </ul>
+                        </div>
+                      </section>
+                </div>
+                <div>
+                    <h3>主题<a name="theme"> </a></h3>
+                    <p>主题定制调试工具，<a href='example/themeDesigner.html' target="_blank">ECharts Theme Designer</a></p>
+                    <p><small>ps:别太依赖代码编辑区，没做本地缓存，页面刷新就没了，建议使用一个本地编辑器编辑主题，只用代码区作为主题定制调试工具。主题写好试试顶部的SaveAsImage（IE8-不支持），会把所有图表合并到一张图中，这是默认样式，期待与我们联系，show出你的主题，让你的设计成为ECharts内置甚至默认主题随时有可能，我们将为您献上一份小礼品同时你的名字将被永留在贡献者名单中。</small></p>
+                    <a href="example/themeDesigner.html" target="_blank"><img src="asset/img/example/EChartsTheme.png"></a>
+                <div>
+                </div>
+                    <h3>专题<a name="topic"></a></h3>
+                    <p><small>专题页没做低版本IE兼容性处理，请用IE9+、chrome、safari、firefox或opear等现代浏览器。</small></p>
+                    <ul>
+                        <li><a href="example/topic/aqi-china/index.html" target="_blank">中国主要城市空气质量实况 </a> by <a href="http://weibo.com/wfsr" target="_blank">大佛</a>（百度） · <a href="http://weibo.com/kenerlinfeng" target="_blank">林峰</a>（百度）</li>
+                        <li><a href="example/topic/10-me-china/index.html" target="_blank">中国经济十年时空漫游（2002-2011）</a> by 于博（新华社） · 吴楚茵（南方都市报） · <a href="http://weibo.com/kenerlinfeng" target="_blank">林峰</a>（百度）</li>
+                        <li><a href="example/topic/24-population-china/index.html" target="_blank">中国人口流动大潮（1987-2011）</a> by 孟立昕（腾讯）· 王飞宇（证券时报） · 颜冬（视觉中国） · <a href="http://weibo.com/kenerlinfeng" target="_blank">林峰</a>（百度）</li>
+                        
+                    </ul>
+                </div>
             </div>
-            <hr>
         </div>
-        <div class="row-fluid">
-            <div class="span6">
-                <h1>散点图</h1>
-                <section class="slider">
-                    <div class="flexslider thumb4">
-                      <ul class="slides">
-                        <li data-thumb="asset/img/example/scatter1.png">
-                          <a href="example/scatter1.html"><img src="asset/img/example/scatter1.png"></a>
-                          <p>标准散点图</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                           <a href="example/scatter2.html"><img src="asset/img/example/cache.png"></a>
-                          <p>气泡图</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                           <a href="example/scatter3.html"><img src="asset/img/example/cache.png"></a>
-                          <p>大规模散点图（IE8-不支持）</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/scatter.html"><img src="asset/img/example/cache.png"></a>
-                          <p>散点图：【个性化】图形样式，大小等~</p>
-                        </li><!--/li-->
-                      </ul>
-                    </div>
-                  </section>
-            </div>
-            <div class="span6">
-                <h1>K线图</h1>
-                <section class="slider">
-                    <div class="flexslider thumb4">
-                      <ul class="slides">
-                        <li data-thumb="asset/img/example/k1.png">
-                          <a href="example/k1.html"><img src="asset/img/example/k1.png"></a>
-                          <p>标准K线图</p>
-                        </li><!--/li-->
-                        <li data-thumb="asset/img/example/cache.png">
-                          <a href="example/k.html"><img src="asset/img/example/cache.png"></a>
-                          <p>K线图：【个性化】柱形阴阳图形样式等~</p>
-                        </li><!--/li-->
-                      </ul>
-                    </div>
-                  </section>
-            </div>
-        </div>
-        <div class="row-fluid">
-            <div class="span6">
-                <h1>饼图</h1>
-                <section class="slider">
-                    <div class="flexslider thumb4">
-                        <ul class="slides">
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/pie1.html"><img src="asset/img/example/cache.png"></a>
-                              <p>标准饼图</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/pie2.html"><img src="asset/img/example/cache.png"></a>
-                              <p>标准环形图</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/pie3.html"><img src="asset/img/example/cache.png"></a>
-                              <p>嵌套饼图</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/pie4.html"><img src="asset/img/example/cache.png"></a>
-                              <p>南丁格尔玫瑰图</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/pie5.html"><img src="asset/img/example/cache.png"></a>
-                              <p>信息图样式</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/pie6.html"><img src="asset/img/example/cache.png"></a>
-                              <p>信息图样式2</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/pie.html"><img src="asset/img/example/cache.png"></a>
-                              <p>饼图：【个性化】填充、标签文本、视觉引导线样式等~</p>
-                            </li><!--/li-->
-                        </ul>
-                    </div>
-                  </section>
-            </div>
-            <div class="span6">
-                <h1>雷达图</h1>
-                <section class="slider">
-                    <div class="flexslider thumb4">
-                        <ul class="slides">
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/radar1.html"><img src="asset/img/example/cache.png"></a>
-                              <p>标准雷达图</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/radar2.html"><img src="asset/img/example/cache.png"></a>
-                              <p>标准填充雷达图</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/radar3.html"><img src="asset/img/example/cache.png"></a>
-                              <p>多雷达图</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/radar.html"><img src="asset/img/example/cache.png"></a>
-                              <p>雷达图：【个性化】线条，拐点，填充样式</p>
-                            </li><!--/li-->
-                        </ul>
-                    </div>
-                  </section>
-            </div>
-        </div>
-        <div class="row-fluid">
-            <div class="span6">
-                <h1>和弦图</h1>
-                <section class="slider">
-                    <div class="flexslider thumb3">
-                        <ul class="slides">
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/chord1.html"><img src="asset/img/example/cache.png"></a>
-                              <p>标准和弦图</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/chord2.html"><img src="asset/img/example/cache.png"></a>
-                              <p>多维图例选择</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/chord.html"><img src="asset/img/example/cache.png"></a>
-                              <p>和弦图：【个性化】填充、标签文本、线条样式等~</p>
-                            </li><!--/li-->
-                        </ul>
-                    </div>
-                  </section>
-            </div>
-            <div class="span6">
-                <h1>力导向布局图</h1>
-                <section class="slider">
-                    <div class="flexslider thumb3">
-                        <ul class="slides">
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/force1.html"><img src="asset/img/example/cache.png"></a>
-                              <p>简单关系网络。</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/force2.html"><img src="asset/img/example/cache.png"></a>
-                              <p>树状关系网络。</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/webkit-dep.html"><img src="asset/img/example/cache.png"></a>
-                              <p>Webkit内核依赖。</p>
-                            </li><!--/li-->
-                        </ul>
-                    </div>
-                  </section>
-            </div>
-        </div>
-        <div class="row-fluid">
-            <div class="span6">
-                <h1>地图</h1>
-                <section class="slider">
-                    <div class="flexslider thumb4">
-                        <ul class="slides">
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/map1.html"><img src="asset/img/example/cache.png"></a>
-                              <p>标准地图</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/map2.html"><img src="asset/img/example/cache.png"></a>
-                              <p>地域选择器</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/map4.html"><img src="asset/img/example/cache.png"></a>
-                              <p>标准世界地图</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/map5.html"><img src="asset/img/example/cache.png"></a>
-                              <p>世界地图选择器</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/map3.html"><img src="asset/img/example/cache.png"></a>
-                              <p>全国34个省市自治区</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/map6.html"><img src="asset/img/example/cache.png"></a>
-                              <p>自定义扩展-香港</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/map7.html"><img src="asset/img/example/cache.png"></a>
-                              <p>自定义扩展-美国</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/map8.html"><img src="asset/img/example/cache.png"></a>
-                              <p>mapType支持子区域模式</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/map9.html"><img src="asset/img/example/cache.png"></a>
-                              <p>标注支持（markPoint）</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/map10.html"><img src="asset/img/example/cache.png"></a>
-                              <p>标线支持（markLine）</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/mix5.html"><img src="asset/img/example/cache.png"></a>
-                              <p>数据驱动，省市级下钻</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/map.html"><img src="asset/img/example/cache.png"></a>
-                              <p>地图：【个性化】填充、标签文本、线条样式等~</p>
-                            </li><!--/li-->
-                        </ul>
-                    </div>
-                  </section>
-            </div>
-            <div class="span6">
-                <h1>混搭</h1>
-                <section class="slider">
-                    <div class="flexslider thumb4">
-                        <ul class="slides">
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/mix1.html"><img src="asset/img/example/cache.png"></a>
-                              <p>折线图与柱状图混搭，双数值轴</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/mix2.html"><img src="asset/img/example/cache.png"></a>
-                              <p>柱状图与饼图混搭</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/mix4.html"><img src="asset/img/example/cache.png"></a>
-                              <p>折线图与散点图混合（使用时需要注意同步数值轴与类目轴坐标）</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/mix7.html"><img src="asset/img/example/cache.png"></a>
-                              <p>用饼图代替散点混合</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/mix3.html"><img src="asset/img/example/cache.png"></a>
-                              <p>地图与饼图混搭，地图同时作为地域选择器</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/lasagna.html"><img src="asset/img/example/cache.png"></a>
-                              <p>多层嵌套环形图，千层饼</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/wormhole.html"><img src="asset/img/example/cache.png"></a>
-                              <p>多层嵌套雷达图，虫洞</p>
-                            </li><!--/li-->
-                        </ul>
-                    </div>
-                  </section>
-            </div>
-        </div>
-        <div class="row-fluid">
-            <div class="span6">
-                <h1>组件</h1>
-                <section class="slider">
-                    <div class="flexslider thumb3"  id="component">
-                        <ul class="slides">
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/axis.html"><img src="asset/img/example/cache.png"></a>
-                              <p>坐标系：【个性化】标签文字、间隔线、间隔区域样式等~</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/dataZoom1.html"><img src="asset/img/example/cache.png"></a>
-                              <p>数据区域缩放</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/dataZoom.html"><img src="asset/img/example/cache.png"></a>
-                              <p>数据区域缩放：【个性化】数据阴影、背景、拖拽手柄样式等~</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/dataRange1.html"><img src="asset/img/example/cache.png"></a>
-                              <p>值域漫游</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/dataRange.html"><img src="asset/img/example/cache.png"></a>
-                              <p>值域控件：【个性化】布局，填充样式样式等~</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/tooltip.html"><img src="asset/img/example/cache.png"></a>
-                              <p>提示框：【个性化】文字样式、边框、背景、格式器等~</p>
-                            </li><!--/li-->
-                        </ul>
-                    </div>
-                  </section>
-            </div>
-            <div class="span6">
-                <h1>其他</h1>
-                <section class="slider">
-                    <div class="flexslider thumb4">
-                        <ul class="slides">
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/dynamicLineBar.html"><img src="asset/img/example/cache.png"></a>
-                              <p>动态数据（折线图、柱状图）</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/dynamicScatterK.html"><img src="asset/img/example/cache.png"></a>
-                              <p>动态数据（散点图、K线图）</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/dynamicPieRadar.html"><img src="asset/img/example/cache.png"></a>
-                              <p>动态数据（饼图、雷达图）</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/loading.html"><img src="asset/img/example/cache.png"></a>
-                              <p>加载中（Loading）</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/cache.png">
-                              <a href="example/event.html"><img src="asset/img/example/cache.png"></a>
-                              <p>事件交互，可以捕获的用户交互和数据变化事件实现图表与外界的联动。</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/import.png">
-                              <a href="example/www/index.html"><img src="asset/img/example/import.png"></a>
-                              <p>模块化单文件引入ECharts</p>
-                            </li><!--/li-->
-                            <li data-thumb="asset/img/example/import.png">
-                              <a href="example/www2/index.html"><img src="asset/img/example/import.png"></a>
-                              <p>非模块化单文件引入ECharts</p>
-                            </li><!--/li-->
-                        </ul>
-                    </div>
-                  </section>
-            </div>
-        </div>
-        <hr>
-        <h3>主题<a name="topic"></a></h3>
-        <p>主题定制调试工具，<a href='example/themeDesigner.html' target="_blank">ECharts Theme Designer</a></p>
-        <p><small>ps:别太依赖代码编辑区，没做本地缓存，页面刷新就没了，建议使用一个本地编辑器编辑主题，只用代码区作为主题定制调试工具。主题写好试试顶部的SaveAsImage（IE8-不支持），会把所有图表合并到一张图中，这是默认样式，期待与我们联系，show出你的主题，让你的设计成为ECharts内置甚至默认主题随时有可能，我们将为您献上一份小礼品同时你的名字将被永留在贡献者名单中。</small></p>
-        <a href="example/themeDesigner.html" target="_blank"><img src="asset/img/example/EChartsTheme.png"></a>
-        <hr>
-        <h3>专题<a name="topic"></a></h3>
-        <p><small>专题页没做低版本IE兼容性处理，请用IE9+、chrome、safari、firefox或opear等现代浏览器。</small></p>
-        <ul>
-            <li><a href="example/topic/aqi-china/index.html" target="_blank">中国主要城市空气质量实况 </a> by <a href="http://weibo.com/wfsr" target="_blank">大佛</a>（百度） · <a href="http://weibo.com/kenerlinfeng" target="_blank">林峰</a>（百度）</li>
-            <li><a href="example/topic/10-me-china/index.html" target="_blank">中国经济十年时空漫游（2002-2011）</a> by 于博（新华社） · 吴楚茵（南方都市报） · <a href="http://weibo.com/kenerlinfeng" target="_blank">林峰</a>（百度）</li>
-            <li><a href="example/topic/24-population-china/index.html" target="_blank">中国人口流动大潮（1987-2011）</a> by 孟立昕（腾讯）· 王飞宇（证券时报） · 颜冬（视觉中国） · <a href="http://weibo.com/kenerlinfeng" target="_blank">林峰</a>（百度）</li>
-            
-        </ul>
+        
+        
         <hr>
         <footer>
           <p class="pull-right"><a href="#">Back to top</a></p>
@@ -509,16 +583,11 @@
     <script src="asset/js/bootstrap-collapse.js"></script>
     <script src="asset/js/bootstrap-carousel.js"></script>
     <script src="asset/js/bootstrap-typeahead.js"></script>
-    <!-- FlexSlider -->
-    <script defer src="asset/js/jquery.flexslider.js"></script>
     <script type="text/javascript">
+    
+    
     $(window).load(function(){
-      $('.flexslider').flexslider({
-        animation: "slide",
-        slideshowSpeed: 3000, 
-        controlNav: "thumbnails"
-      });
-      var section = $('.flexslider');
+      var section = $('section');
       function loadImage(i) {
           setTimeout(function(){
               var list = $('div>ul>li>a', section[i]);
@@ -527,7 +596,7 @@
               var src;
               if (list.length > 0) {
                   list[0].firstChild.alt = 'ECharts';
-                  for (var j = 1, k = list.length - 1; j < k; j++) {
+                  for (var j = 0, k = list.length; j < k; j++) {
                       list[j].target = '_blank';
                       href = list[j].href.slice(list[j].href.lastIndexOf('/') + 1, -5);
                       src = list[j].firstChild.src.replace(
@@ -535,12 +604,9 @@
                       );
                       list[j].firstChild.alt = 'ECharts ' + href;
                       list[j].firstChild.src = src;
-                      nav[j - 1].alt = 'ECharts ' + href;
-                      nav[j - 1].src = src;
                   }
-                  list[list.length - 1].firstChild.alt = 'ECharts';
               }
-          }, i * 500);
+          }, i * 100);
       }
       for (var i = 0, l = section.length; i < l; i++) {
           loadImage(i);
