@@ -146,7 +146,7 @@
                 </p>
                 <div>
                     <h3>折线图<a name="line"> </a></h3>
-                    <section>
+                    <div class="section">
                         <div class="thumb3">
                           <ul class="slides">
                             <li data-thumb="asset/img/example/line1.png">
@@ -175,11 +175,11 @@
                             </li><!--/li-->
                           </ul>
                         </div>
-                    </section>
+                    </div>
                 </div>
                 <div>
                     <h3>柱状图<a name="bar"> </a></h3>
-                    <section>
+                    <div class="section">
                         <div class="thumb4">
                           <ul class="slides">
                             <li data-thumb="asset/img/example/bar1.png">
@@ -228,11 +228,11 @@
                             </li><!--/li-->
                           </ul>
                         </div>
-                    </section>
+                    </div>
                 </div>
                 <div>
                     <h3>散点图<a name="scatter"> </a></h3>
-                    <section>
+                    <div class="section">
                         <div class="thumb4">
                           <ul class="slides">
                             <li data-thumb="asset/img/example/scatter1.png">
@@ -253,11 +253,11 @@
                             </li><!--/li-->
                           </ul>
                         </div>
-                    </section>
+                    </div>
                 </div>
                 <div>
                     <h3>K线图<a name="k"> </a></h3>
-                    <section>
+                    <div class="section">
                         <div class="thumb4">
                           <ul class="slides">
                             <li data-thumb="asset/img/example/k1.png">
@@ -270,11 +270,11 @@
                             </li><!--/li-->
                           </ul>
                         </div>
-                      </section>
+                      </div>
                 </div>
                 <div>
                     <h3>饼图<a name="pie"> </a></h3>
-                    <section>
+                    <div class="section">
                         <div class="thumb4">
                             <ul class="slides">
                                 <li data-thumb="asset/img/example/cache.png">
@@ -307,11 +307,11 @@
                                 </li><!--/li-->
                             </ul>
                         </div>
-                      </section>
+                      </div>
                 </div>
                 <div>
                     <h3>雷达图<a name="radar"> </a></h3>
-                    <section>
+                    <div class="section">
                         <div class="thumb4">
                             <ul class="slides">
                                 <li data-thumb="asset/img/example/cache.png">
@@ -332,11 +332,11 @@
                                 </li><!--/li-->
                             </ul>
                         </div>
-                      </section>
+                      </div>
                 </div>
                 <div>
                     <h3>和弦图<a name="chord"> </a></h3>
-                    <section>
+                    <div class="section">
                         <div class="thumb3">
                             <ul class="slides">
                                 <li data-thumb="asset/img/example/cache.png">
@@ -353,11 +353,11 @@
                                 </li><!--/li-->
                             </ul>
                         </div>
-                      </section>
+                      </div>
                 </div>
                 <div>
                     <h3>力导向布局图<a name="force"> </a></h3>
-                    <section>
+                    <div class="section">
                         <div class="thumb3">
                             <ul class="slides">
                                 <li data-thumb="asset/img/example/cache.png">
@@ -374,11 +374,11 @@
                                 </li><!--/li-->
                             </ul>
                         </div>
-                      </section>
+                      </div>
                 </div>
                 <div>
                     <h3>地图<a name="map"> </a></h3>
-                    <section>
+                    <div class="section">
                         <div class="thumb4">
                             <ul class="slides">
                                 <li data-thumb="asset/img/example/cache.png">
@@ -431,11 +431,11 @@
                                 </li><!--/li-->
                             </ul>
                         </div>
-                      </section>
+                      </div>
                 </div>
                 <div>
                     <h3>混搭<a name="mix"> </a></h3>
-                    <section>
+                    <div class="section">
                         <div class="thumb4">
                             <ul class="slides">
                                 <li data-thumb="asset/img/example/cache.png">
@@ -468,11 +468,11 @@
                                 </li><!--/li-->
                             </ul>
                         </div>
-                      </section>
+                      </div>
                 </div>
                 <div>
                     <h3>组件<a name="component"> </a></h3>
-                    <section>
+                    <div class="section">
                         <div class="thumb3">
                             <ul class="slides">
                                 <li data-thumb="asset/img/example/cache.png">
@@ -501,11 +501,11 @@
                                 </li><!--/li-->
                             </ul>
                         </div>
-                      </section>
+                      </div>
                 </div>
                 <div>
                     <h3>其他<a name="other"> </a></h3>
-                    <section>
+                    <div class="section">
                         <div class="thumb4">
                             <ul class="slides">
                                 <li data-thumb="asset/img/example/cache.png">
@@ -538,7 +538,7 @@
                                 </li><!--/li-->
                             </ul>
                         </div>
-                      </section>
+                      </div>
                 </div>
                 <div>
                     <h3>主题<a name="theme"> </a></h3>
@@ -587,7 +587,7 @@
     
     
     $(window).load(function(){
-      var section = $('section');
+      var section = $('[class=section]');
       function loadImage(i) {
           setTimeout(function(){
               var list = $('div>ul>li>a', section[i]);
@@ -595,7 +595,6 @@
               var href;
               var src;
               if (list.length > 0) {
-                  list[0].firstChild.alt = 'ECharts';
                   for (var j = 0, k = list.length; j < k; j++) {
                       list[j].target = '_blank';
                       href = list[j].href.slice(list[j].href.lastIndexOf('/') + 1, -5);
