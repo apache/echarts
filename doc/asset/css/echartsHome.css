@@ -133,7 +133,10 @@ body {
 }
 .main {
     height: 400px;
-    /*width: 800px;*/
+    /*
+    height : 400px !important;
+    width : 800px !important;
+    */
     overflow: hidden;
     padding : 10px;
     margin-bottom: 10px;
@@ -158,12 +161,14 @@ ul.nav-list {
     float: left;
     cursor : pointer;
     opacity: .3;
+    filter:alpha(opacity=30);
 }
 i.icon-chevron-right{
     float: right;
     margin-top: 2px;
     margin-right: -6px;
     opacity: .25;
+    filter:alpha(opacity=25);
 }
 .page-header {
     padding-top:35px;
@@ -277,7 +282,9 @@ table.full {width:100%;}
 #icon-resize {
     float:right;
     opacity:.3;
+    filter:alpha(opacity=30);
 }
 a#icon-resize:hover {
     opacity:.6;
+    filter:alpha(opacity=60);
 }
