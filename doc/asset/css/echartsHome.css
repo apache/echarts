@@ -295,3 +295,14 @@ a#icon-resize:hover {
     opacity:.6;
     filter:alpha(opacity=60);
 }
+
+.prettyprint {
+  margin-top: 8px;
+}
+.prettyprint xmp{   
+  margin: 0px;
+  padding: 10px;
+}
+.prettyprint .pln {
+  line-height: 0px;
+}
