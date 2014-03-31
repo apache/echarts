@@ -411,6 +411,8 @@ define(function(require) {
             var radius = self.parseRadius(zr, serie.radius);  // 标签位置半径
             var textAlign;
             var textBaseline = 'middle';
+            labelControl.position = labelControl.position 
+                                    || itemStyle.normal.label.position;
             if (labelControl.position == 'center') {
                 // center显示
                 radius = radius[1];
