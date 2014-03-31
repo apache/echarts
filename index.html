@@ -104,7 +104,7 @@
             <img src="doc/asset/img/architecture.png" alt="ECharts Architecture"/>
         </div>
         <p class="lead">ECharts (Enterprise Charts 商业产品图表库)</p>
-        <p>提供商业产品常用图表，底层基于<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>（一个全新的轻量级canvas类库），创建了坐标系，图例，提示，工具箱等基础组件，并在此上构建出折线图（区域图）、柱状图（条状图）、散点图（气泡图）、饼图（环形图）、K线图、地图、力导向布局图以及和弦图，同时支持任意维度的堆积和多图表混合展现。</p>
+        <p>提供商业产品常用图表，底层基于<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>（一个全新的轻量级canvas类库），创建了坐标系，图例，提示，工具箱等基础组件，并在此上构建出折线图（区域图）、柱状图（条状图）、散点图（气泡图）、饼图（环形图）、K线图、地图、和弦图以及力导向布局图，同时支持任意维度的堆积和多图表混合展现。</p>
         <div style="float:left;margin:20px 10px 30px 10px;"><img src="doc/asset/img/device.png" alt="Echarts device"/></div>
         <div>
             <img src="doc/asset/img/explorer.png"  alt="Echarts explorer"/>
@@ -125,8 +125,8 @@
             <img src="doc/asset/img/mix.jpg"  alt="Echarts mix"/>
         </div>
         <h2 class="featurette-heading">混搭</h2>
-        <p>混搭的图表会更具表现力也更有有趣味，ECharts提供的图表（共8类13种）支持任意混搭：</p>
-        <p>折线图（区域图）、柱状图（条状图）、散点图（气泡图）、K线图、<br/>饼图（环形图）、雷达图、地图、力导布局图。</p>
+        <p>混搭的图表会更具表现力也更有有趣味，ECharts提供的图表（共9类14种）支持任意混搭：</p>
+        <p>折线图（区域图）、柱状图（条状图）、散点图（气泡图）、K线图、<br/>饼图（环形图）、雷达图、地图、和弦图、力导布局图。</p>
         <p>混搭情况下一个标准图表：包含唯一图例、工具箱、数据区域缩放、值域漫游模块，一个直角坐标系（可包含一条或多条类目轴线，一条或多条值轴线，最多上下左右四条）</p>
       </div>
       <hr class="featurette-divider">
@@ -153,8 +153,8 @@
             <img src="doc/asset/img/magicType.gif"  alt="Echarts 动态类型切换"/>
         </div>
         <h2 class="featurette-heading">动态类型切换</h2>
-        <p>很多图表类型本身所表现的能力是相似的，但由于数据差异、表现需求和个人喜好的不同导致最终图表所呈现的张力又大不一样，比如折线图和柱状图的选择总是让人头疼。</p>
-        <p>ECharts提供了动态类型切换，让用户随心所欲的切换到他所需要的图表类型。</p>
+        <p>很多图表类型本身所表现的能力是相似的，但由于数据差异、表现需求和个人喜好的不同导致最终图表所呈现的张力又大不一样，比如折线图和柱状图的选择,系列数据是堆叠还是平铺总是让人头疼。</p>
+        <p>ECharts提供了动态类型切换，让用户随心所欲的切换到他所需要的图表类型和堆叠状态。</p>
       </div>
       <hr class="featurette-divider">
       <div class="featurette">
@@ -163,7 +163,7 @@
         </div>
         <h2 class="featurette-heading">图例开关</h2>
         <p>多系列数据的同时展现呈现出丰富内容，但如何让用户切换到他所关心的个别系列上？</p>
-        <p>ECharts提供了方便快捷的图例开关，可以随时切换到你所关心的数据系列。</p>
+        <p>ECharts提供了方便快捷的多维度图例开关，可以随时切换到你所关心的数据系列。</p>
       </div>
       <hr class="featurette-divider">
       <div class="featurette">
@@ -172,15 +172,34 @@
         </div>
         <h2 class="featurette-heading">数据区域选择</h2>
         <p>数据可以是无限的，但显示空间总是有限的，数据区域选择组件提供了大数据量中漫游的能力，让用户选择并呈现他所关心的数据区域。</p>
+        <p>配合随动的均值（极值）标线，标注展现强大的数据剖析能力。 try <a href="./doc/example/mix10.html" target="_blank">this 》</a></p>
       </div>
       <hr class="featurette-divider">
       <div class="featurette">
-        <div class="span5 pull-left">
+          <div class="span4 pull-left">
+            <img src="doc/asset/img/connect.gif" alt="Echarts 多图联动"/>
+        </div>
+        <h2 class="featurette-heading">多图联动</h2>
+        <p>多系列数据在同一个直角系内同时展现有时候会产生混乱，但他们又存在极强的关联意义不可分离？</p>
+        <p>ECharts提供了多图联动的能力（connect），能做的可不仅仅是鼠标划过的详情显示，连接的多个图表会共享组件事件并且实现了保存图片时的自动拼接。 try <a href="./doc/example/mix8.html" target="_blank">this 》</a></p>
+      </div>
+      <hr class="featurette-divider">
+      <div class="featurette">
+        <div class="span5 pull-right">
             <img src="doc/asset/img/dataRange.gif"  alt="Echarts 值域漫游"/>
         </div>
         <h2 class="featurette-heading">值域漫游</h2>
         <p>基于坐标的图表（如地图、散点图）通过色彩变化表现数值的大小能直观形象的展示数据分布。</p>
         <p>但如何聚焦到我所关心的数值上？我们创造了称为值域漫游的功能，让你可以轻松进行数值筛选。</p>
+      </div>
+      <hr class="featurette-divider">
+      <div class="featurette">
+          <div class="span4 pull-left">
+            <img src="doc/asset/img/effect.gif" alt="Echarts 炫光特效"/>
+        </div>
+        <h2 class="featurette-heading">炫光特效</h2>
+        <p>我们知道，很多时候我们需要一些吸引眼球的能力。</p>
+        <p>ECharts支持标注标线的<a href="./doc/example/map12.html" target="_blank">炫光特效</a>，特别用在地图上轻松实现<a href="./doc/example/map11.html" target="_blank">百度迁徙数据可视化特效</a></p>
       </div>
       <hr class="featurette-divider">
       <div class="featurette">
