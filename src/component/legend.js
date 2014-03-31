@@ -600,14 +600,17 @@ define(function (require) {
                     _selectedMap[itemName] = false;
                 } 
                 else {
-                    if (something.type == ecConfig.CHART_TYPE_PIE
-                        || something.type == ecConfig.CHART_TYPE_FORCE
+                    if (something.data
+                        && (something.type == ecConfig.CHART_TYPE_PIE
+                            || something.type == ecConfig.CHART_TYPE_FORCE)
+                        
                     ) {
                         queryTarget = [something.data, something.series];
                     }
                     else {
                         queryTarget = [something.series];
                     }
+                    
                     color = self.getItemStyleColor(
                         self.deepQuery(
                             queryTarget, 'itemStyle.normal.color'
