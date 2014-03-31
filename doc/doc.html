@@ -545,7 +545,7 @@ require(
                     <p>更详细的配置在build/config-tpl.js目录下，具体的配置项使用可以参考requirejs optimizer的<a href="https://github.com/jrburke/r.js/blob/master/build/example.build.js">example build file</a>，要注意的的是optimize, include, wrap三个配置项会在build过程中根据输入的参数被改掉，所以不建议直接修改这三个配置项，修改config-tpl.js最常见的场景是zrender和echarts不在同一个目录下从而需要修改zrender的package路径。</p>
 
                     <h3>初始化<a name="初始化"> </a></h3>
-                    <p>通过require获得echarts接口后可实例化图表，echarts接口仅有一个方法init，执行init时传入一个具备大小的dom节点（width、height可被计算得到即可，不一定可见）后即可实例化出图表对象，图表库实现为多实例的，同一页面可在多个dom上init出多个图表，同一个dom上多次init均返回同一个实例（1.3.8+）。init方法说明如下：</p>
+                    <p>通过require获得echarts接口后可实例化图表，echarts接口仅有一个方法init，执行init时传入一个具备大小的dom节点（width、height可被计算得到即可，不一定可见）后即可实例化出图表对象，图表库实现为多实例的，同一页面可在多个dom上init出多个图表，同一个dom上多次init将自动释放已有实例（1.4.0+）。init方法说明如下：</p>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
                             <th> 名称 </th>
@@ -647,16 +647,32 @@ require(['echarts'], function(ec){
                             <td><b>{self}</b> on</td>
                             <td><b>{string}</b> eventName, <br/><b>{Function}</b> eventListener</td>
                             <td>事件绑定，支持事件有：
-                                <br/>REFRESH，RESTORE，CLICK，HOVER，
+                                <br/>REFRESH，RESTORE，RESIZE，CLICK，HOVER，
                                 <br/>DATA_CHANGED，MAGIC_TYPE_CHANGED，DATA_VIEW_CHANGED，
-                                <br/>DATA_ZOOM，DATA_RANGE，LEGEND_SELECTED，MAP_SELECTED
+                                <br/>DATA_ZOOM，DATA_RANGE，MAP_ROAM，
+                                <br/>LEGEND_SELECTED，MAP_SELECTED，PIE_SELECTED，
                                 <br/>事件命名统一挂载到require('echarts/config').EVENT（非模块化为echarts.config.EVENT）命名空间下，建议使用此命名空间作为事件名引用。
+                                     <a href="./example/event.html" target="_blank">事件调试 »</a>
                             </td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> un</td>
                             <td><b>{string}</b> eventName, <br/><b>{Function}</b> eventListener</td>
                             <td>事件解绑定 </td>
+                        </tr>
+                        <tr>
+                            <td><b>{self}</b> connect</td>
+                            <td><b>{ECharts | Array &lt;ECharts&gt;}</b> connectTarget</td>
+                            <td>多图联动，传入联动目标为EChart实例，支持数组。多图联动支持直角系下tooltip联动，保存图片的自动拼接，同时支持的联动事件有：
+                                <br/>REFRESH，RESTORE，MAGIC_TYPE_CHANGED
+                                <br/>DATA_ZOOM，DATA_RANGE，LEGEND_SELECTED
+                                <br/><a href="./example/mix8.html" target="_blank">多图联动 »</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>{self}</b> disConnect</td>
+                            <td><b>{ECharts | Array &lt;ECharts&gt;}</b> connectTarget</td>
+                            <td>解除已连结的多图联动 </td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> showLoading</td>
@@ -669,7 +685,7 @@ require(['echarts'], function(ec){
                             <td>过渡控制，隐藏loading（读取中） </td>
                         </tr>
                         <tr>
-                            <td>{ZRender} getZrender</td>
+                            <td><b>{ZRender}</b> getZrender</td>
                             <td><b>{void}</b></td>
                             <td>获取当前图表所用ZRender实例，可用于添加额外图形或进行深度定制，zrender接口详见<a href="http://ecomfe.github.io/zrender/doc/doc.html#zrenderInstance" target="_blank">ZRender</a> </td>
                         </tr>
@@ -2427,7 +2443,28 @@ indicator : [
                             <td> 标注图形旋转角度，同series中的<a href="#Series">symbolRotate</a> </td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> itemStyle </td>
+                            <td> <b>{Object}</b> effect </td>
+                            <td> {
+                                <br/>show: false,
+                                <br/>period: 15,
+                                <br/>scaleSize : 2,
+                                <br/>color : null,
+                                <br/>shadowColor : null,
+                                <br/>shadowBlur : 0
+                                <br/>}
+                            </td>
+                            <td> 标注图形炫光特效:
+                                <br/>show 是否开启，默认关闭
+                                <br/>period 运动周期，无单位，值越大越慢，默认为15
+                                <br/>scaleSize 放大倍数，以markPoint symbolSize为基准
+                                <br/>color 炫光颜色，默认跟随markPoint itemStyle定义颜色,
+                                <br/>shadowColor 光影颜色，默认跟随color
+                                <br/>shadowBlur 光影模糊度，默认为0
+                                <br/><a href="./example/map11.html" target="_blank">百度迁徙（模拟） »</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> itemStyle </td>
                             <td> {...} </td>
                             <td> 标注图形样式属性，同series中的<a href="#Series">itemStyle</a> </td>
                         </tr>
@@ -2459,6 +2496,13 @@ indicator : [
     {name: '标注2', value: 100, xAxis: '周三', yAxis: 20}, // 当xAxis为类目轴时，字符串'周三'会被理解为与类目轴的文本进行匹配
     {name: '标注3', value: 200, xAxis: 10, yAxis: 20},     // 当xAxis或yAxis为数值轴时，不管传入是什么，都被理解为数值后做空间位置换算
     ...
+]</pre>
+                    </div>
+                    <P> 更为实用的，在折线、柱形、散点图中，可以直接使用如下几个开箱即用的特殊点标注</P>
+                    <div class="code">
+                        <pre>data : [
+    {type : 'max', name: '自定义名字'},    // 最大值
+    {type : 'min', name: '自定义名字'}     // 最小值
 ]</pre>
                     </div>
                     <P> 标注数据比较特殊也最为常用的地图上，除了直接位置定位外，如果希望基于地理坐标标注，并且能够随地图漫游缩放，需要为markPoint提供一份geoCoord，如下</P>
@@ -2500,7 +2544,28 @@ geoCoord : {
                             <td> 标线起始和结束的symbol旋转控制，同series中的<a href="#Series">symbolRotate</a> </td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> itemStyle </td>
+                            <td> <b>{Object}</b> effect </td>
+                            <td> {
+                                <br/>show: false,
+                                <br/>period: 15,
+                                <br/>scaleSize : 2,
+                                <br/>color : null,
+                                <br/>shadowColor : null,
+                                <br/>shadowBlur : null
+                                <br/>}
+                            </td>
+                            <td> 标线图形炫光特效:
+                                <br/>show 是否开启，默认关闭
+                                <br/>period 运动周期，无单位，值越大越慢，默认为15
+                                <br/>scaleSize 放大倍数，以markLine lineWidth为基准
+                                <br/>color 炫光颜色，默认跟随markLine itemStyle定义颜色,
+                                <br/>shadowColor 光影颜色，默认跟随color
+                                <br/>shadowBlur 光影模糊度，默认根据scaleSize计算
+                                <br/><a href="./example/map11.html" target="_blank">百度迁徙（模拟） »</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> itemStyle </td>
                             <td> {...} </td>
                             <td> 标线图形样式属性，同series中的<a href="#Series">itemStyle</a> </td>
                         </tr>
@@ -2545,6 +2610,22 @@ geoCoord : {
     ...
 ]</pre>
                     </div>
+                    <P> 更为实用的，在折线、柱形、散点图中，可以直接使用如下几个开箱即用的特殊点作为标线类型</P>
+                    <div class="code">
+                        <pre>data : [
+    {type : 'max', name: '自定义名字'},    // 最大值水平线或垂直线
+    {type : 'min', name: '自定义名字'},    // 最小值水平线或垂直线
+    {type : 'average', name: '自定义名字'},// 平均值水平线或垂直线
+    
+    // 最小值指向最大值的连线
+    [
+        {type : 'min', name: '自定义名字'},
+        {type : 'max', name: '自定义名字'}
+    ],
+    
+    // 散点图中存在两个数值型坐标，默认用纵轴值计算特殊点，可以通过valueIndex:0指定为横轴特殊点
+    {type : 'max', name: '自定义名字', valueIndex:0} 
+]</pre>
                     <P> 标线数据比较特殊也最为常用的地图上，除了直接位置定位外，如果希望基于地理坐标标线，并且能够随地图漫游缩放，需要为markLine提供一份geoCoord，如下</P>
                     <div class="code">
                         <pre>data : [
