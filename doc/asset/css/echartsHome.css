@@ -269,7 +269,6 @@ table.full {width:100%;}
 .ADoc_table th, .ADoc_table td {
     border:1px solid rgb(23,53,81);
     padding: 3px;
-    background:#fff;
     color:#222;
 }
 
@@ -278,7 +277,15 @@ table.full {width:100%;}
     background:rgb(37,78,117);
     color:#fff;
 }
-
+.bgRed {
+    background:rgb(255,230,230);
+}
+.bgGreen {
+    background:rgb(230,255,230);
+}
+.bgBlue {
+    background:rgb(210,230,255);
+}
 #icon-resize {
     float:right;
     opacity:.3;

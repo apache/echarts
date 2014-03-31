@@ -136,6 +136,7 @@
                                 <li><a href="#BackgroundColor">backgroundColor</a></li>
                                 <li><a href="#Color">color</a></li>
                                 <li><a href="#SymbolList">symbolList</a></li>
+                                <li><a href="#RenderAsImage">renderAsImage</a></li>
                                 <li><a href="#Calculable">calculable</a></li>
                                 <li><a href="#CalculableColor">calculableColor</a></li>
                                 <li><a href="#CalculableHolderColor">calculableHolderColor</a></li>
@@ -728,53 +729,85 @@ require(['echarts'], function(ec){
                     <h3>选项<a name="选项"> </a></h3>
 
                     <h4>option<a name="Option"> </a></h4>
-                    <P> 图表选项，包含图表实例任何可配置选项</P>
+                    <P> 图表选项，包含图表实例任何可配置选项：<span class='bgGreen'> 公共选项 </span>，<span class='bgRed'> 组件选项 </span>，<span class='bgBlue'> 数据选项 </span></P>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
                             <th> 名称 </th>
                             <th> 描述 </th>
                         </tr>
-                        <tr>
-                            <td> <b>{Array}</b> color </td>
-                            <td> 数值系列的颜色列表，默认为null则采用内置颜色，可配数组，eg：['#87cefa', 'rgba(123,123,123,0.5)','...']，当系列数量个数比颜色列表长度大时将循环选取 </td>
+                        <tr class='bgGreen'>
+                            <td> <b>{color}</b> backgroundColor </td>
+                            <td> 全图默认背景，（详见<a href="#BackgroundColor" title="">backgroundColor</a>），默认为无，透明</td>
                         </tr>
-                         <tr>
+                        <tr class='bgGreen'>
+                            <td> <b>{Array}</b> color </td>
+                            <td> 数值系列的颜色列表，（详见<a href="#Color" title="">color</a>），默认采用内置颜色，可配数组，eg：['#87cefa', 'rgba(123,123,123,0.5)','...']，当系列数量个数比颜色列表长度大时将循环选取 </td>
+                        </tr>
+                        <tr class='bgGreen'>
+                            <td> <b>{Array}</b> SymbolList </td>
+                            <td> 默认标志图形类型列表，（详见<a href="#SymbolList" title="">symbolList</a>）</td>
+                        </tr>
+                        <tr class='bgGreen'>
+                            <td> <b>{boolean}</b> renderAsImage </td>
+                            <td> 非IE8-支持渲染为图片，（详见<a href="#RenderAsImage" title="">renderAsImage</a>）</td>
+                        </tr>
+                        <tr class='bgGreen'>
+                            <td> <b>{boolean}</b> calculable </td>
+                            <td> 是否启用拖拽重计算特性，默认关闭，（详见<a href="#calculable" title="">calculable</a>，相关的还有
+                                <a href="#CalculableColor" title="">calculableColor</a>，
+                                <a href="#CalculableHolderColor" title="">calculableHolderColor</a>，
+                                <a href="#NameConnector" title="">nameConnector</a>，
+                                <a href="#ValueConnector" title="">valueConnector</a>）
+                            </td>
+                        </tr>
+                        <tr class='bgGreen'>
+                            <td> <b>{boolean}</b> animation </td>
+                            <td> 是否开启动画，默认开启，（详见
+                                <a href="#Animation" title="">animation</a>，相关的还有
+                                <a href="#AddDataAnimation" title="">addDataAnimation</a>，
+                                <a href="#AnimationThreshold" title="">animationThreshold</a>，
+                                <a href="#AnimationDuration" title="">animationDuration</a>，
+                                <a href="#AnimationEasing" title="">animationEasing</a>）
+                            </td>
+                        </tr>
+                        
+                         <tr class='bgRed'>
                             <td> <b>{Object}</b> title </td>
                             <td> 标题（详见<a href="#Title" title="">title</a>），每个图表最多仅有一个标题控件 </td>
                         </tr>
-                        <tr>
+                        <tr class='bgRed'>
                             <td> <b>{Object}</b> legend </td>
                             <td> 图例（详见<a href="#Legend" title="">legend</a>），每个图表最多仅有一个图例，混搭图表共享 </td>
                         </tr>
-                        <tr>
+                        <tr class='bgRed'>
                             <td> <b>{Object}</b> dataRange </td>
                             <td> 值域选择（详见<a href="#DataRange" title="">dataRange</a>）,值域范围 </td>
                         </tr>
-                        <tr>
+                        <tr class='bgRed'>
                             <td> <b>{Object}</b> toolbox </td>
                             <td> 工具箱（详见<a href="#Toolbox" title="">toolbox</a>），每个图表最多仅有一个工具箱 </td>
                         </tr>
-                        <tr>
+                        <tr class='bgRed'>
                             <td> <b>{Object}</b> tooltip </td>
                             <td> 提示框（详见<a href="#Tooltip" title="">tooltip</a>），鼠标悬浮交互时的信息提示 </td>
                         </tr>
-                        <tr>
+                        <tr class='bgRed'>
                             <td> <b>{Object}</b> dataZoom </td>
                             <td> 数据区域缩放（详见<a href="#DataZoom" title="">dataZoom</a>）,数据展现范围选择 </td>
                         </tr>
-                        <tr>
+                        <tr class='bgRed'>
                             <td> <b>{Object}</b> grid </td>
                             <td> 直角坐标系内绘图网格（详见<a href="#Grid" title="">grid</a>） </td>
                         </tr>
-                        <tr>
+                        <tr class='bgRed'>
                             <td> <b>{Array | Object}</b> xAxis </td>
                             <td> 直角坐标系中横轴数组（详见<a href="#Xaxis" title="">xAxis</a>），数组中每一项代表一条横轴坐标轴，标准（1.0）中规定最多同时存在2条横轴 </td>
                         </tr>
-                        <tr>
+                        <tr class='bgRed'>
                             <td> <b>{Array | Object}</b> yAxis </td>
                             <td> 直角坐标系中纵轴数组（详见<a href="#Yaxis" title="">yAxis</a>），数组中每一项代表一条纵轴坐标轴，标准（1.0）中规定最多同时存在2条纵轴 </td>
                         </tr>
-                        <tr>
+                        <tr class='bgBlue'>
                             <td> <b>{Array}</b> series </td>
                             <td> 驱动图表生成的数据内容（详见<a href="#Series" title="">series</a>），数组中每一项代表一个系列的特殊选项及数据 </td>
                         </tr>
@@ -2980,25 +3013,25 @@ geoCoord : {
 
                     <h4>backgroundColor<a name="BackgroundColor"> </a></h4>
                     <P>
-                        <b>{color}</b> 'rgba(0,0,0,0)'，全图默认背景
+                        <b>{color}</b> null，全图默认背景，默认为null，同'rgba(0,0,0,0)'
                     </P>
                     
                     <h4>color<a name="Color"> </a></h4>
                     <P>
                         <b>{Array}</b> [
-                        '#ff7f50', '#87cefa', '#da70d6', '#32cd32', '#6495ed', 
-                        '#ff69b4', '#ba55d3', '#cd5c5c', '#ffa500', '#40e0d0', 
-                        '#1e90ff', '#ff6347', '#7b68ee', '#00fa9a', '#ffd700', 
-                        '#6b8e23', '#ff00ff', '#3cb371', '#b8860b', '#30e0e0'
-                        ]，默认颜色序列
+                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'#ff7f50', '#87cefa', '#da70d6', '#32cd32', '#6495ed', 
+                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'#ff69b4', '#ba55d3', '#cd5c5c', '#ffa500', '#40e0d0', 
+                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'#1e90ff', '#ff6347', '#7b68ee', '#00fa9a', '#ffd700', 
+                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'#6b8e23', '#ff00ff', '#3cb371', '#b8860b', '#30e0e0'
+                        <br/>]，默认颜色序列，循环使用
                     </P>
                     
                     <h4>symbolList<a name="SymbolList"> </a></h4>
                     <P>
                         <b>{Array}</b> [
-                        'circle', 'rectangle', 'triangle', 'diamond', 
-                        'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
-                        ]，默认标志图形类型列表，循环使用
+                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'circle', 'rectangle', 'triangle', 'diamond', 
+                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
+                        <br/>]，默认标志图形类型列表，循环使用
                     </P>
                                 
                     <h4>renderAsImage<a name="RenderAsImage"> </a></h4>
