@@ -449,7 +449,7 @@ define(function (require) {
          * 极值计算
          */
         function _calculateValue() {
-            if (isNaN(option.min) || isNaN(option.max)) {
+            if (isNaN(option.min - 0) || isNaN(option.max - 0)) {
                 // 有一个没指定都得算
                 // 数据整形
                 var oriData;            // 原始数据
@@ -571,32 +571,38 @@ define(function (require) {
                         }
                     }
                 }
+                
+                //console.log(_min,_max,'vvvvv111111')
+                _min = isNaN(option.min - 0)
+                       ? (_min - Math.abs(_min * option.boundaryGap[0]))
+                       : (option.min - 0);    // 指定min忽略boundaryGay[0]
+    
+                _max = isNaN(option.max - 0)
+                       ? (_max + Math.abs(_max * option.boundaryGap[1]))
+                       : (option.max - 0);    // 指定max忽略boundaryGay[1]
+                if (_min == _max) {
+                    if (_max === 0) {
+                        // 修复全0数据
+                        _max = option.power > 0 ? option.power : 1;
+                    }
+                    // 修复最大值==最小值时数据整形
+                    else if (_max > 0) {
+                        _min = _max / option.splitNumber;
+                    }
+                    else { // _max < 0
+                        _max = _max / option.splitNumber;
+                    }
+                }
+                _reformValue(option.scale);
             }
             else {
                 _hasData = true;
+                // 用户指定min max就不多管闲事了
+                _min = option.min - 0;    // 指定min忽略boundaryGay[0]
+                _max = option.max - 0;    // 指定max忽略boundaryGay[1]
+                customerDefine = true;
+                _customerValue();
             }
-            //console.log(_min,_max,'vvvvv111111')
-            _min = isNaN(option.min)
-                   ? (_min - Math.abs(_min * option.boundaryGap[0]))
-                   : option.min;    // 指定min忽略boundaryGay[0]
-
-            _max = isNaN(option.max)
-                   ? (_max + Math.abs(_max * option.boundaryGap[1]))
-                   : option.max;    // 指定max忽略boundaryGay[1]
-            if (_min == _max) {
-                if (_max === 0) {
-                    // 修复全0数据
-                    _max = option.power > 0 ? option.power : 1;
-                }
-                // 修复最大值==最小值时数据整形
-                else if (_max > 0) {
-                    _min = _max / option.splitNumber;
-                }
-                else { // _max < 0
-                    _max = _max / option.splitNumber;
-                }
-            }
-            _reformValue(option.scale);
         }
 
         /**
@@ -780,6 +786,18 @@ define(function (require) {
                     _valueList[i] = 
                         (_valueList[i] / power).toFixed(precision) - 0;
                 }
+            }
+            _reformLabelData();
+        }
+        
+        function _customerValue() {
+            var splitNumber = option.splitNumber;
+            var precision = option.precision;
+            var splitGap = (_max - _min) / splitNumber;
+            
+            _valueList = [];
+            for (var i = 0; i <= splitNumber; i++) {
+                _valueList.push((_min + splitGap * i).toFixed(precision) - 0);
             }
             _reformLabelData();
         }
