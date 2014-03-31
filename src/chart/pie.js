@@ -121,7 +121,7 @@ define(function(require) {
                 } else {
                     self.selectedMap[itemName] = true;
                 }
-                if (self.selectedMap[itemName]) {
+                if (self.selectedMap[itemName] && !isNaN(data[i].value)) {
                     if (+data[i].value !== 0) {
                         totalSelected++;
                     }
@@ -150,7 +150,7 @@ define(function(require) {
 
             for (var i = 0, l = data.length; i < l; i++){
                 itemName = data[i].name;
-                if (!self.selectedMap[itemName]) {
+                if (!self.selectedMap[itemName] || isNaN(data[i].value)) {
                     continue;
                 }
                 // 默认颜色策略
