@@ -768,6 +768,7 @@ define(function(require) {
             for (var i = 0, l = magicOption.series.length; i < l; i++) {
                 chartType = magicOption.series[i].type;
                 if (!chartType) {
+                    console.error('series[' + i + '] chart type has not been defined.');
                     continue;
                 }
                 if (!chartMap[chartType]) {
@@ -792,6 +793,9 @@ define(function(require) {
                         _chartList.push(chart);
                         self.chart[chartType] = chart;
                     }
+                }
+                else {
+                    console.error(chartType + ' has not been required.');
                 }
             }
 
