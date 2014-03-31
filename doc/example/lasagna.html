@@ -113,6 +113,12 @@ option = {
                 ]
             })
         }
+        series[0].markPoint = {
+            symbol:'emptyCircle',
+            symbolSize:series[0].radius[0],
+            effect:{show:true,scaleSize:12,color:'rgba(250,225,50,0.8)',shadowBlur:10,period:30},
+            data:[{x:'50%',y:'50%'}]
+        };
         return series;
     })()
 };
@@ -124,7 +130,7 @@ setTimeout(function(){
         style : {
             x : _ZR.getWidth() / 2,
             y : _ZR.getHeight() / 2,
-            color: '#bbb',
+            color: '#666',
             text : '恶梦的过去',
             textAlign : 'center'
         }
@@ -134,9 +140,8 @@ setTimeout(function(){
         style : {
             x : _ZR.getWidth() / 2 + 200,
             y : _ZR.getHeight() / 2,
-            brushType:'both',
+            brushType:'fill',
             color: 'orange',
-            strokeColor: 'yellow',
             text : '美好的未来',
             textAlign : 'left',
             textFont:'normal 20px 微软雅黑'

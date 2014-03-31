@@ -68,12 +68,22 @@
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
 option = {
+    title :{
+        text : '销售数据',
+        subtext : '纯属虚构'
+    },
     tooltip : {
-        trigger: 'axis'
+        trigger: 'axis',
+        formatter: function(v){
+            return v[0][1] + ' : '
+                   + (v[0][2] - v[1][2] > 0 ? '+' : '-') 
+                   + v[3][2] + '<br/>'
+                   + v[0][0] + ' : ' + v[0][2] + '<br/>'
+                   + v[1][0] + ' : ' + v[1][2] + '<br/>'
+        }
     },
     toolbox: {
         show : true,
-        y: 'bottom',
         feature : {
             mark : {show: true},
             dataView : {show: true, readOnly: false},
@@ -82,9 +92,9 @@ option = {
             saveAsImage : {show: true}
         }
     },
-    calculable : true,
     legend: {
-        data:['上周对比','本周变化']
+        data:['本周', '上周'],
+        selectedMode:false
     },
     xAxis : [
         {
@@ -95,42 +105,56 @@ option = {
     yAxis : [
         {
             type : 'value',
-            power: 10,
+            min : 200,
+            max : 450,
             splitArea : {show : true}
         }
     ],
     series : [
         {
-            name:'上周对比2',
-            type:'bar',
-            stack: '1',
-            barWidth: 20,
-            tooltip : {
-                show: 'false',
-                trigger:'none'
-            },
+            name:'本周',
+            type:'line',
+            data:[400, 374, 251, 300, 420, 400, 440]
+        },
+        {
+            name:'上周',
+            type:'line',
+            symbol:'none',
             itemStyle:{
                 normal:{
-                    borderColor:'rgba(0,0,0,0)',
+                  lineStyle: {
+                    width:1,
+                    type:'dashed'
+                  }
+                }
+            },
+            data:[320, 332, 301, 334, 360, 330, 350]
+        },
+        {
+            name:'上周2',
+            type:'bar',
+            stack: '1',
+            barWidth: 6,
+            itemStyle:{
+                normal:{
                     color:'rgba(0,0,0,0)'
                 },
                 emphasis:{
-                    borderColor:'rgba(0,0,0,0)',
                     color:'rgba(0,0,0,0)'
                 }
             },
-            data:[320, 332, 200, 334, 300, 330, 320]
+            data:[320, 332, 251, 300, 360, 330, 350]
         },
         {
-            name:'本周变化',
+            name:'变化',
             type:'bar',
             stack: '1',
-            data:[120, 132, 101, 134, 90, 230, 210]
-        },
-        {
-            name:'上周对比',
-            type:'line',
-            data:[320, 332, 301, 334, 390, 330, 320]
+            data:[
+              80, 42, 
+              {value : 50, itemStyle:{ normal:{color:'red'}}},
+              {value : 34, itemStyle:{ normal:{color:'red'}}}, 
+              60, 70, 90
+            ]
         }
     ]
 };

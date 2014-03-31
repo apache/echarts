@@ -410,9 +410,9 @@ option = {
             markLine : {
                 data : [
                     [
-                        {name : '周最低', value : 620, xAxis: '周一', yAxis: 620},
-                        {name : '周最高', value : 930, xAxis: '周六', yAxis: 930}
-                        
+                        {type : 'average', name : '平均值'},
+                        {type : 'max'},
+                        {type : 'min'}
                     ]
                 ]
             }
@@ -489,7 +489,7 @@ option = {
                     label : {show: true}
                 },
                 emphasis: {
-                    color: 'lightgreen',
+                    color: 'lightgreen'
                 }
             },
             data: (function() {
@@ -672,11 +672,11 @@ option = {
                             color0: 'blue',         // 阴线填充颜色
                             lineStyle: {
                                 width: 3,
-                                color0: 'blue',     // 阴线边框颜色
+                                color0: 'blue'      // 阴线边框颜色
                             }
                         },
                         emphasis: {
-                            color0: 'blue',         // 阴线填充颜色
+                            color0: 'blue'          // 阴线填充颜色
                         }
                     }
                 },
@@ -830,34 +830,24 @@ option = {
                 normal : {
                     label : {
                         position : 'inner',
-                        formatter : function(a,b,c,d) {return (d - 0).toFixed(0) + ' %'},
+                        formatter : function(a,b,c,d) {return (d - 0).toFixed(0) + '%'}
                     },
                     labelLine : {
                         show : false
                     }
+                },
+                emphasis : {
+                    label : {
+                        show : true,
+                        formatter : "{b}\n{d}%"
+                    }
                 }
+                
             },
             data:[
                 {value:335, name:'直达'},
                 {value:679, name:'营销广告'},
-                {
-                    value:1548,
-                    name:'搜索引擎',
-                    itemStyle : {
-                        normal : {
-                            label : {
-                                show : false
-                            }
-                        },
-                        emphasis : {
-                            label : {
-                                show : true,
-                                formatter : "{b} : {d}%",
-                                position : 'inner'
-                            }
-                        }
-                    }
-                }
+                {value:1548, name:'搜索引擎'}
             ]
         },
         {
@@ -1262,14 +1252,14 @@ option = {
                             color: 'rgba(255,30,30,0.5)',
                             lineStyle : {
                                 width: 1,
-                                color: 'green',
+                                color: 'green'
                             }
                         },
                         emphasis: {
                             color: 'yellow',
                             lineStyle : {
                                 width: 2,
-                                color: 'blue',
+                                color: 'blue'
                             }
                         }
                     }
@@ -1506,7 +1496,7 @@ option = {
                                 }
                             }
                         }
-                    },
+                    }
                 }
             ],
             markPoint : {

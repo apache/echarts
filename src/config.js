@@ -819,7 +819,7 @@ define(function() {
                 period: 15,             // 运动周期，无单位，值越大越慢
                 scaleSize : 2         // 放大倍数，以markPoint点size为基准
                 // color : 'gold',
-                // shadowColor : 'rgba(255,215,0,0.8)'
+                // shadowColor : 'rgba(255,215,0,0.8)',
                 // shadowBlur : 0          // 炫光模糊
             },
             itemStyle: {
@@ -860,8 +860,8 @@ define(function() {
                 show: false,
                 period: 15,             // 运动周期，无单位，值越大越慢
                 scaleSize : 2           // 放大倍数，以markLine线lineWidth为基准
-                // color : 'gold'
-                // shadowColor : 'rgba(255,215,0,0.8)'
+                // color : 'gold',
+                // shadowColor : 'rgba(255,215,0,0.8)',
                 // shadowBlur : lineWidth * 2      // 炫光模糊，默认等于scaleSize计算所得
             },
             itemStyle: {

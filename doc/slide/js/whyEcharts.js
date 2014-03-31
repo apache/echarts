@@ -1910,42 +1910,45 @@ var optionMap = {
                             ]
                         })
                     }
+                    series[0].markPoint = {
+                        symbol:'emptyCircle',
+                        symbolSize:series[0].radius[0],
+                        effect:{show:true,scaleSize:13,color:'rgba(250,225,50,0.8)',shadowBlur:10,period:30},
+                        data:[{x:'50%',y:'50%'}]
+                    };
                     return series;
                 })(),
                 calculable : (function(){
-                    functionMap.mix4 = function() {
-                        setTimeout(function(){
-                            if (!myChart) {
-                                return;
+                    setTimeout(function(){
+                        if (!myChart) {
+                            return;
+                        }
+                        var _ZR = myChart.getZrender();
+                        // 补充千层饼
+                        _ZR.addShape({
+                            shape : 'text',
+                            style : {
+                                x : _ZR.getWidth() / 2,
+                                y : _ZR.getHeight() / 2,
+                                color: '#666',
+                                text : '恶梦的过去',
+                                textAlign : 'center'
                             }
-                            var _ZR = myChart.getZrender();
-                            // 补充千层饼
-                            _ZR.addShape({
-                                shape : 'text',
-                                style : {
-                                    x : _ZR.getWidth() / 2,
-                                    y : _ZR.getHeight() / 2,
-                                    color: '#bbb',
-                                    text : '恶梦的过去',
-                                    textAlign : 'center'
-                                }
-                            });
-                            _ZR.addShape({
-                                shape : 'text',
-                                style : {
-                                    x : _ZR.getWidth() / 2 + 200,
-                                    y : _ZR.getHeight() / 2,
-                                    brushType:'both',
-                                    color: 'orange',
-                                    strokeColor: 'yellow',
-                                    text : '美好的未来',
-                                    textAlign : 'left',
-                                    textFont:'normal 20px 微软雅黑'
-                                }
-                            });
-                            _ZR.refresh();
-                        }, 2000);
-                    }
+                        });
+                        _ZR.addShape({
+                            shape : 'text',
+                            style : {
+                                x : _ZR.getWidth() / 2 + 200,
+                                y : _ZR.getHeight() / 2,
+                                brushType:'fill',
+                                color: 'orange',
+                                text : '美好的未来',
+                                textAlign : 'left',
+                                textFont:'normal 20px 微软雅黑'
+                            }
+                        });
+                        _ZR.refresh();
+                    }, 2000);
                     return false;
                 })()
             }, true);
