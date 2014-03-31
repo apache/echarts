@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+
+    <script src="../asset/js/esl/esl.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+</head>
+
+<body>
+    <!-- NAVBAR
+    ================================================== -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="../../index.html">ECharts</a>
+          <div class="nav-collapse collapse">
+              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
+              <ul class="nav">
+                <li><a href="../../index.html"><i class="icon-home icon-white"></i> Home</a></li>
+                <li class="active"><a href="../example.html" class="active">Example</a></li>
+                <li><a href="../doc.html" >API &amp; Doc</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a id="last-release-link" href=""> </a></li>
+                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
+                  </ul>
+                </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
+                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
+                    <li class="divider"></li>
+                    <!--li class="nav-header">Library</li-->
+                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
+                    
+                  </ul>
+                </li>
+              </ul>
+           </div><!--/.nav-collapse -->
+        </div><!-- /.container -->
+      </div><!-- /.navbar-inner -->
+    </div><!-- /.navbar-wrapper -->
+
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div id="sidebar-code" class="span4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+option = {
+    title : {
+        text: '模块关联图',
+        x:'right',
+        y:'bottom'
+    },
+    tooltip : {
+        trigger: 'item',
+        formatter: '{a} : {b}'
+    },
+    legend: {
+        x: 'left',
+        data:['模块']
+    },
+    series : [
+        {
+            type:'force',
+            name : "模块关系",
+            categories : [
+                {
+                    name: '模块',
+                    itemStyle: {
+                        normal: {
+                            color : '#ff7f50'
+                        }
+                    }
+                }
+            ],
+            itemStyle: {
+                normal: {
+                    label: {
+                        show: false,
+                        textStyle: {
+                            color: '#800080'
+                        }
+                    },
+                    nodeStyle : {
+                        brushType : 'fill',
+                        strokeColor : 'rgba(255,215,0,0.4)',
+                        lineWidth : 8
+                    }
+                },
+                emphasis: {
+                    label: {
+                        show: false
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
+                    nodeStyle : {
+                        r: 15
+                    },
+                    linkStyle : {}
+                }
+            },
+            minRadius : 5,
+            maxRadius : 15,
+            density : 0.9,
+            attractiveness: 0.8,
+            nodes: [
+                {
+                    "name": "cbws-fcgi",
+                    "color": 1,
+                    "id": 0,
+                    "value": 6,
+                    "module_id": "1",
+                    "category" : 0
+                },
+                {
+                    "name": "cbws-nginx",
+                    "color": 1,
+                    "id": 1,
+                    "value": 9,
+                    "module_id": "2",
+                    "category" : 0
+                },
+                {
+                    "name": "bfp",
+                    "color": 1,
+                    "id": 2,
+                    "value": 9,
+                    "module_id": "3",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_AS_MATRIX_DB",
+                    "color": 1,
+                    "id": 3,
+                    "value": 2,
+                    "module_id": "6",
+                    "category" : 0
+                },
+                {
+                    "name": "adx",
+                    "color": 1,
+                    "id": 4,
+                    "value": 2,
+                    "module_id": "21",
+                    "category" : 0
+                },
+                {
+                    "name": "eos_offline_agent_m",
+                    "color": 1,
+                    "id": 5,
+                    "value": 1,
+                    "module_id": "33",
+                    "category" : 0
+                },
+                {
+                    "name": "eos_kwfilter_agent_m",
+                    "color": 1,
+                    "id": 6,
+                    "value": 2,
+                    "module_id": "37",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_SEARCH_ROUTER_YF",
+                    "color": 1,
+                    "id": 7,
+                    "value": 6,
+                    "module_id": "46",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_SEARCH_ROUTER_TC",
+                    "color": 1,
+                    "id": 8,
+                    "value": 10,
+                    "module_id": "47",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_ZCACHE_H",
+                    "color": 1,
+                    "id": 9,
+                    "value": 3,
+                    "module_id": "75",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_AS_MATRIX_TC",
+                    "color": 1,
+                    "id": 10,
+                    "value": 7,
+                    "module_id": "136",
+                    "category" : 0
+                },
+                {
+                    "name": "datatr_wget",
+                    "color": 1,
+                    "id": 11,
+                    "value": 2,
+                    "module_id": "138",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_QT",
+                    "color": 1,
+                    "id": 12,
+                    "value": 9,
+                    "module_id": "139",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_UI_ZCACHE_META",
+                    "color": 1,
+                    "id": 13,
+                    "value": 2,
+                    "module_id": "155",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_AS_ZCACHE_SERVER_BJ",
+                    "color": 1,
+                    "id": 14,
+                    "value": 8,
+                    "module_id": "162",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_PFS_ZCACHE_SERVER_BJ",
+                    "color": 1,
+                    "id": 15,
+                    "value": 1,
+                    "module_id": "164",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_UFS_ZCACHE_SERVER_BJ",
+                    "color": 1,
+                    "id": 16,
+                    "value": 4,
+                    "module_id": "170",
+                    "category" : 0
+                },
+                {
+                    "name": "CTR-RTS_MODEL_TRAIN",
+                    "color": 1,
+                    "id": 17,
+                    "value": 6,
+                    "module_id": "173",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_DATA_CLIENT_PFS_HZ",
+                    "color": 1,
+                    "id": 18,
+                    "value": 9,
+                    "module_id": "176",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_DATA_CLIENT_AS_HZ",
+                    "color": 1,
+                    "id": 19,
+                    "value": 9,
+                    "module_id": "179",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_DPCLIENT",
+                    "color": 1,
+                    "id": 20,
+                    "value": 11,
+                    "module_id": "181",
+                    "category" : 0
+                },
+                {
+                    "name": "nebula_hadoop",
+                    "color": 1,
+                    "id": 21,
+                    "value": 1,
+                    "module_id": "183",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_PFS_EC_FILL4HZ_ADPOS",
+                    "color": 1,
+                    "id": 22,
+                    "value": 1,
+                    "module_id": "184",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_PFS_EC_FILL4HZ",
+                    "color": 1,
+                    "id": 23,
+                    "value": 2,
+                    "module_id": "185",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_UI_TRANSMIT_MAPPING4HZ",
+                    "color": 1,
+                    "id": 24,
+                    "value": 1,
+                    "module_id": "186",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_AS_MATRIX_HZ",
+                    "color": 1,
+                    "id": 25,
+                    "value": 8,
+                    "module_id": "187",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_BS_MATRIX_HZ01",
+                    "color": 1,
+                    "id": 26,
+                    "value": 2,
+                    "module_id": "193",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_CS3_M",
+                    "color": 1,
+                    "id": 27,
+                    "value": 1,
+                    "module_id": "195",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_CS1_M",
+                    "color": 1,
+                    "id": 28,
+                    "value": 1,
+                    "module_id": "197",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_BS_RECV_BIGPIPE",
+                    "color": 1,
+                    "id": 29,
+                    "value": 9,
+                    "module_id": "201",
+                    "category" : 0
+                },
+                {
+                    "name": "pfs-hdfs-fill-pagefea",
+                    "color": 1,
+                    "id": 30,
+                    "value": 2,
+                    "module_id": "218",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_PFS-HDFS-FILL-PAGE",
+                    "color": 1,
+                    "id": 31,
+                    "value": 2,
+                    "module_id": "219",
+                    "category" : 0
+                },
+                {
+                    "name": "pfs-ec-fill_adpos",
+                    "color": 1,
+                    "id": 32,
+                    "value": 3,
+                    "module_id": "220",
+                    "category" : 0
+                },
+                {
+                    "name": "NAMING_SERVICE_AGENT_M",
+                    "color": 1,
+                    "id": 33,
+                    "value": 2,
+                    "module_id": "223",
+                    "category" : 0
+                },
+                {
+                    "name": "ECOM_NOVA_PFS_EC_RECEIVER",
+                    "color": 1,
+                    "id": 34,
+                    "value": 3,
+                    "module_id": "224",
+                    "category" : 0
+                },
+                {
+                    "name": "ECOM_NOVA_PFS_EC_SPIDER_RECEIVER",
+                    "color": 1,
+                    "id": 35,
+                    "value": 3,
+                    "module_id": "225",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_BSIDX_M",
+                    "color": 1,
+                    "id": 36,
+                    "value": 35,
+                    "module_id": "226",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA-SM",
+                    "color": 1,
+                    "id": 37,
+                    "value": 2,
+                    "module_id": "229",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_DC_DCAPP",
+                    "color": 1,
+                    "id": 38,
+                    "value": 1,
+                    "module_id": "237",
+                    "category" : 0
+                },
+                {
+                    "name": "DATA_TRANSFER",
+                    "color": 1,
+                    "id": 39,
+                    "value": 10,
+                    "module_id": "245",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_PFS_SRV_M",
+                    "color": 1,
+                    "id": 40,
+                    "value": 3,
+                    "module_id": "247",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_FR_M",
+                    "color": 1,
+                    "id": 41,
+                    "value": 2,
+                    "module_id": "248",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_BS_M",
+                    "color": 1,
+                    "id": 42,
+                    "value": 7,
+                    "module_id": "250",
+                    "category" : 0
+                },
+                {
+                    "name": "NOVA_UI_M",
+                    "color": 1,
+                    "id": 43,
+                    "value": 8,
+                    "module_id": "251",
+                    "category" : 0
+                },
+                {
+                    "name": "ECOM_NOVA_PFS_EC_SPIDER",
+                    "color": 1,
+                    "id": 44,
+                    "value": 2,
+                    "module_id": "258",
+                    "category" : 0
+                },
+                {
+                    "name": "qatest_lyptest",
+                    "color": 1,
+                    "id": 45,
+                    "value": 1,
+                    "module_id": "670",
+                    "category" : 0
+                }
+            ],
+            links: [
+                {
+                    "source": 42,
+                    "target": 23,
+                    "value": 100 / 2,
+                    "relation_id": "476"
+                },
+                {
+                    "source": 0,
+                    "target": 39,
+                    "value": 100 / 10,
+                    "relation_id": "488"
+                },
+                {
+                    "source": 0,
+                    "target": 1,
+                    "value": 100 / 9,
+                    "relation_id": "491"
+                },
+                {
+                    "source": 17,
+                    "target": 0,
+                    "value": 100 / 6,
+                    "relation_id": "497"
+                },
+                {
+                    "source": 8,
+                    "target": 17,
+                    "value": 100 / 6,
+                    "relation_id": "498"
+                },
+                {
+                    "source": 35,
+                    "target": 34,
+                    "value": 100 / 3,
+                    "relation_id": "500"
+                },
+                {
+                    "source": 33,
+                    "target": 39,
+                    "value": 100 / 10,
+                    "relation_id": "501"
+                },
+                {
+                    "source": 37,
+                    "target": 39,
+                    "value": 100 / 10,
+                    "relation_id": "503"
+                },
+                {
+                    "source": 12,
+                    "target": 8,
+                    "value": 100 / 10,
+                    "relation_id": "505"
+                },
+                {
+                    "source": 29,
+                    "target": 0,
+                    "value": 100 / 6,
+                    "relation_id": "506"
+                },
+                {
+                    "source": 39,
+                    "target": 26,
+                    "value": 100 / 2,
+                    "relation_id": "507"
+                },
+                {
+                    "source": 20,
+                    "target": 19,
+                    "value": 100 / 9,
+                    "relation_id": "508"
+                },
+                {
+                    "source": 14,
+                    "target": 43,
+                    "value": 100 / 8,
+                    "relation_id": "509"
+                },
+                {
+                    "source": 23,
+                    "target": 39,
+                    "value": 100 / 10,
+                    "relation_id": "510"
+                },
+                {
+                    "source": 32,
+                    "target": 39,
+                    "value": 100 / 10,
+                    "relation_id": "753"
+                },
+                {
+                    "source": 10,
+                    "target": 41,
+                    "value": 100 / 2,
+                    "relation_id": "774"
+                },
+                {
+                    "source": 31,
+                    "target": 39,
+                    "value": 100 / 10,
+                    "relation_id": "780"
+                },
+                {
+                    "source": 42,
+                    "target": 35,
+                    "value": 100 / 3,
+                    "relation_id": "782"
+                },
+                {
+                    "source": 40,
+                    "target": 41,
+                    "value": 100 / 2,
+                    "relation_id": "784"
+                },
+                {
+                    "source": 39,
+                    "target": 32,
+                    "value": 100 / 3,
+                    "relation_id": "789"
+                },
+                {
+                    "source": 34,
+                    "target": 15,
+                    "value": 100 / 1,
+                    "relation_id": "839"
+                },
+                {
+                    "source": 28,
+                    "target": 1,
+                    "value": 100 / 9,
+                    "relation_id": "840"
+                },
+                {
+                    "source": 26,
+                    "target": 39,
+                    "value": 100 / 10,
+                    "relation_id": "841"
+                },
+                {
+                    "source": 43,
+                    "target": 1,
+                    "value": 100 / 9,
+                    "relation_id": "842"
+                },
+                {
+                    "source": 43,
+                    "target": 8,
+                    "value": 100 / 10,
+                    "relation_id": "843"
+                },
+                {
+                    "source": 42,
+                    "target": 11,
+                    "value": 100 / 2,
+                    "relation_id": "844"
+                },
+                {
+                    "source": 29,
+                    "target": 1,
+                    "value": 100 / 9,
+                    "relation_id": "848"
+                },
+                {
+                    "source": 21,
+                    "target": 45,
+                    "value": 100 / 1,
+                    "relation_id": "947"
+                },
+                {
+                    "source": 43,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1154"
+                },
+                {
+                    "source": 17,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1155"
+                },
+                {
+                    "source": 36,
+                    "target": 42,
+                    "value": 100 / 7,
+                    "relation_id": "1156"
+                },
+                {
+                    "source": 36,
+                    "target": 33,
+                    "value": 100 / 2,
+                    "relation_id": "1157"
+                },
+                {
+                    "source": 36,
+                    "target": 6,
+                    "value": 100 / 2,
+                    "relation_id": "1158"
+                },
+                {
+                    "source": 4,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1159"
+                },
+                {
+                    "source": 14,
+                    "target": 12,
+                    "value": 100 / 9,
+                    "relation_id": "1160"
+                },
+                {
+                    "source": 17,
+                    "target": 1,
+                    "value": 100 / 9,
+                    "relation_id": "1161"
+                },
+                {
+                    "source": 2,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1163"
+                },
+                {
+                    "source": 7,
+                    "target": 25,
+                    "value": 100 / 8,
+                    "relation_id": "1164"
+                },
+                {
+                    "source": 36,
+                    "target": 22,
+                    "value": 100 / 1,
+                    "relation_id": "1165"
+                },
+                {
+                    "source": 30,
+                    "target": 25,
+                    "value": 100 / 8,
+                    "relation_id": "1166"
+                },
+                {
+                    "source": 36,
+                    "target": 17,
+                    "value": 100 / 6,
+                    "relation_id": "1167"
+                },
+                {
+                    "source": 19,
+                    "target": 10,
+                    "value": 100 / 7,
+                    "relation_id": "1168"
+                },
+                {
+                    "source": 36,
+                    "target": 2,
+                    "value": 100 / 9,
+                    "relation_id": "1169"
+                },
+                {
+                    "source": 36,
+                    "target": 43,
+                    "value": 100 / 8,
+                    "relation_id": "1171"
+                },
+                {
+                    "source": 37,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1172"
+                },
+                {
+                    "source": 29,
+                    "target": 39,
+                    "value": 100 / 10,
+                    "relation_id": "1173"
+                },
+                {
+                    "source": 8,
+                    "target": 1,
+                    "value": 100 / 9,
+                    "relation_id": "1174"
+                },
+                {
+                    "source": 8,
+                    "target": 19,
+                    "value": 100 / 9,
+                    "relation_id": "1175"
+                },
+                {
+                    "source": 25,
+                    "target": 42,
+                    "value": 100 / 7,
+                    "relation_id": "1176"
+                },
+                {
+                    "source": 18,
+                    "target": 43,
+                    "value": 100 / 8,
+                    "relation_id": "1177"
+                },
+                {
+                    "source": 6,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1178"
+                },
+                {
+                    "source": 12,
+                    "target": 3,
+                    "value": 100 / 2,
+                    "relation_id": "1179"
+                },
+                {
+                    "source": 20,
+                    "target": 12,
+                    "value": 100 / 9,
+                    "relation_id": "1180"
+                },
+                {
+                    "source": 19,
+                    "target": 2,
+                    "value": 100 / 9,
+                    "relation_id": "1181"
+                },
+                {
+                    "source": 36,
+                    "target": 32,
+                    "value": 100 / 3,
+                    "relation_id": "1182"
+                },
+                {
+                    "source": 8,
+                    "target": 14,
+                    "value": 100 / 8,
+                    "relation_id": "1183"
+                },
+                {
+                    "source": 36,
+                    "target": 34,
+                    "value": 100 / 3,
+                    "relation_id": "1184"
+                },
+                {
+                    "source": 18,
+                    "target": 10,
+                    "value": 100 / 7,
+                    "relation_id": "1185"
+                },
+                {
+                    "source": 18,
+                    "target": 29,
+                    "value": 100 / 9,
+                    "relation_id": "1186"
+                },
+                {
+                    "source": 18,
+                    "target": 7,
+                    "value": 100 / 6,
+                    "relation_id": "1187"
+                },
+                {
+                    "source": 19,
+                    "target": 7,
+                    "value": 100 / 6,
+                    "relation_id": "1188"
+                },
+                {
+                    "source": 25,
+                    "target": 16,
+                    "value": 100 / 4,
+                    "relation_id": "1189"
+                },
+                {
+                    "source": 20,
+                    "target": 29,
+                    "value": 100 / 9,
+                    "relation_id": "1190"
+                },
+                {
+                    "source": 36,
+                    "target": 31,
+                    "value": 100 / 2,
+                    "relation_id": "1191"
+                },
+                {
+                    "source": 7,
+                    "target": 14,
+                    "value": 100 / 8,
+                    "relation_id": "1192"
+                },
+                {
+                    "source": 2,
+                    "target": 9,
+                    "value": 100 / 3,
+                    "relation_id": "1193"
+                },
+                {
+                    "source": 12,
+                    "target": 16,
+                    "value": 100 / 4,
+                    "relation_id": "1194"
+                },
+                {
+                    "source": 13,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1195"
+                },
+                {
+                    "source": 43,
+                    "target": 2,
+                    "value": 100 / 9,
+                    "relation_id": "1196"
+                },
+                {
+                    "source": 20,
+                    "target": 14,
+                    "value": 100 / 8,
+                    "relation_id": "1197"
+                },
+                {
+                    "source": 19,
+                    "target": 29,
+                    "value": 100 / 9,
+                    "relation_id": "1198"
+                },
+                {
+                    "source": 10,
+                    "target": 19,
+                    "value": 100 / 9,
+                    "relation_id": "1199"
+                },
+                {
+                    "source": 25,
+                    "target": 13,
+                    "value": 100 / 2,
+                    "relation_id": "1200"
+                },
+                {
+                    "source": 36,
+                    "target": 16,
+                    "value": 100 / 4,
+                    "relation_id": "1201"
+                },
+                {
+                    "source": 8,
+                    "target": 12,
+                    "value": 100 / 9,
+                    "relation_id": "1202"
+                },
+                {
+                    "source": 18,
+                    "target": 1,
+                    "value": 100 / 9,
+                    "relation_id": "1203"
+                },
+                {
+                    "source": 36,
+                    "target": 8,
+                    "value": 100 / 10,
+                    "relation_id": "1204"
+                },
+                {
+                    "source": 25,
+                    "target": 7,
+                    "value": 100 / 6,
+                    "relation_id": "1205"
+                },
+                {
+                    "source": 2,
+                    "target": 14,
+                    "value": 100 / 8,
+                    "relation_id": "1207"
+                },
+                {
+                    "source": 25,
+                    "target": 12,
+                    "value": 100 / 9,
+                    "relation_id": "1208"
+                },
+                {
+                    "source": 36,
+                    "target": 29,
+                    "value": 100 / 9,
+                    "relation_id": "1209"
+                },
+                {
+                    "source": 2,
+                    "target": 18,
+                    "value": 100 / 9,
+                    "relation_id": "1210"
+                },
+                {
+                    "source": 0,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1211"
+                },
+                {
+                    "source": 12,
+                    "target": 20,
+                    "value": 100 / 11,
+                    "relation_id": "1212"
+                },
+                {
+                    "source": 2,
+                    "target": 0,
+                    "value": 100 / 6,
+                    "relation_id": "1213"
+                },
+                {
+                    "source": 18,
+                    "target": 14,
+                    "value": 100 / 8,
+                    "relation_id": "1215"
+                },
+                {
+                    "source": 10,
+                    "target": 29,
+                    "value": 100 / 9,
+                    "relation_id": "1217"
+                },
+                {
+                    "source": 8,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1218"
+                },
+                {
+                    "source": 42,
+                    "target": 2,
+                    "value": 100 / 9,
+                    "relation_id": "1220"
+                },
+                {
+                    "source": 36,
+                    "target": 11,
+                    "value": 100 / 2,
+                    "relation_id": "1222"
+                },
+                {
+                    "source": 20,
+                    "target": 4,
+                    "value": 100 / 2,
+                    "relation_id": "1223"
+                },
+                {
+                    "source": 9,
+                    "target": 20,
+                    "value": 100 / 11,
+                    "relation_id": "1225"
+                },
+                {
+                    "source": 36,
+                    "target": 20,
+                    "value": 100 / 11,
+                    "relation_id": "1226"
+                },
+                {
+                    "source": 30,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1227"
+                },
+                {
+                    "source": 7,
+                    "target": 8,
+                    "value": 100 / 10,
+                    "relation_id": "1228"
+                },
+                {
+                    "source": 29,
+                    "target": 12,
+                    "value": 100 / 9,
+                    "relation_id": "1229"
+                },
+                {
+                    "source": 43,
+                    "target": 25,
+                    "value": 100 / 8,
+                    "relation_id": "1230"
+                },
+                {
+                    "source": 19,
+                    "target": 16,
+                    "value": 100 / 4,
+                    "relation_id": "1231"
+                },
+                {
+                    "source": 36,
+                    "target": 18,
+                    "value": 100 / 9,
+                    "relation_id": "1232"
+                },
+                {
+                    "source": 44,
+                    "target": 35,
+                    "value": 100 / 3,
+                    "relation_id": "1233"
+                },
+                {
+                    "source": 27,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1234"
+                },
+                {
+                    "source": 3,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1235"
+                },
+                {
+                    "source": 36,
+                    "target": 38,
+                    "value": 100 / 1,
+                    "relation_id": "1236"
+                },
+                {
+                    "source": 20,
+                    "target": 1,
+                    "value": 100 / 9,
+                    "relation_id": "1237"
+                },
+                {
+                    "source": 10,
+                    "target": 1,
+                    "value": 100 / 9,
+                    "relation_id": "1239"
+                },
+                {
+                    "source": 36,
+                    "target": 24,
+                    "value": 100 / 1,
+                    "relation_id": "1240"
+                },
+                {
+                    "source": 42,
+                    "target": 18,
+                    "value": 100 / 9,
+                    "relation_id": "1241"
+                },
+                {
+                    "source": 19,
+                    "target": 40,
+                    "value": 100 / 3,
+                    "relation_id": "1242"
+                },
+                {
+                    "source": 14,
+                    "target": 20,
+                    "value": 100 / 11,
+                    "relation_id": "1243"
+                },
+                {
+                    "source": 44,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1245"
+                },
+                {
+                    "source": 5,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1246"
+                },
+                {
+                    "source": 10,
+                    "target": 36,
+                    "value": 100 / 35,
+                    "relation_id": "1247"
+                },
+                {
+                    "source": 20,
+                    "target": 17,
+                    "value": 100 / 6,
+                    "relation_id": "1248"
+                },
+                {
+                    "source": 36,
+                    "target": 9,
+                    "value": 100 / 3,
+                    "relation_id": "1249"
+                },
+                {
+                    "source": 36,
+                    "target": 40,
+                    "value": 100 / 3,
+                    "relation_id": "1250"
+                }
+            ]
+        }
+    ]
+};
+var ecConfig = require('echarts/config');
+function focus(param) {
+    var data = param.data;
+    var links = option.series[0].links;
+    var nodes = option.series[0].nodes;
+    if (
+        data.source !== undefined
+        && data.target !== undefined
+    ) { //点击的是边
+        var sourceNode = nodes[data.source];
+        var targetNode = nodes[data.target];
+        console.log("选中了边 " + sourceNode.name + ' -> ' + targetNode.name + ' (' + data.weight + ')');
+    } else { // 点击的是点
+        console.log("选中了" + data.name + '(' + data.value + ')');
+    }
+    console.log(param);
+}
+myChart.on(ecConfig.EVENT.CLICK, focus)
+
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="span8">
+                <div id="main" class="main"></div>
+                <div>
+                    <button onclick="refresh(true)">Refresh ~</button>
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        <hr>
+        <!-- FOOTER -->
+        <footer>
+          <p class="pull-right"><a href="#">Back to top</a></p>
+          <p>&copy; 2014 <a href="http://efe.baidu.com" target="_blank">EFE</a> &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">License</a> &middot; <a href="../changelog.html" target="_blank">Changelog</a></p>
+        </footer>
+    </div><!--/.fluid-container-->
+
+    <script src="../asset/js/jquery.js"></script>
+    <script src="../asset/js/bootstrap-transition.js"></script>
+    <script src="../asset/js/bootstrap-alert.js"></script>
+    <script src="../asset/js/bootstrap-modal.js"></script>
+    <script src="../asset/js/bootstrap-dropdown.js"></script>
+    <script src="../asset/js/bootstrap-scrollspy.js"></script>
+    <script src="../asset/js/bootstrap-tab.js"></script>
+    <script src="../asset/js/bootstrap-tooltip.js"></script>
+    <script src="../asset/js/bootstrap-popover.js"></script>
+    <script src="../asset/js/bootstrap-button.js"></script>
+    <script src="../asset/js/bootstrap-collapse.js"></script>
+    <script src="../asset/js/bootstrap-carousel.js"></script>
+    <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>
