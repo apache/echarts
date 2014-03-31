@@ -711,11 +711,11 @@ define(
                     if (!power) {
                         str = (delta + '').split('.')[0];
                         n = str.length;
-                        if (str[0] >= 5) {
+                        if (str.charAt(0) >= 5) {
                             return Math.pow(10, n);
                         }
                         else {
-                            return (str[0] - 0 + 1 ) * Math.pow(10, n - 1);
+                            return (str.charAt(0) - 0 + 1 ) * Math.pow(10, n - 1);
                         }
                     }
                     else {
