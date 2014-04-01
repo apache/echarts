@@ -1,0 +1,178 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+
+    <script src="../asset/js/esl/esl.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+    <style type="text/css">
+        .CodeMirror {
+            height: 550px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVBAR
+    ================================================== -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="../../index.html">ECharts</a>
+          <div class="nav-collapse collapse">
+              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
+              <ul class="nav">
+                <li><a href="../../index.html"><i class="icon-home icon-white"></i> Home</a></li>
+                <li class="active"><a href="../example.html" class="active">Example</a></li>
+                <li><a href="../doc.html" >API &amp; Doc</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a id="last-release-link" href=""> </a></li>
+                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
+                  </ul>
+                </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
+                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
+                    <li class="divider"></li>
+                    <!--li class="nav-header">Library</li-->
+                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
+                    
+                  </ul>
+                </li>
+              </ul>
+           </div><!--/.nav-collapse -->
+        </div><!-- /.container -->
+      </div><!-- /.navbar-inner -->
+    </div><!-- /.navbar-wrapper -->
+
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div id="sidebar-code" class="span4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+// 自定义扩展图表类型：mapType = continent 大洲地图
+require('echarts/util/mapData/params').params.continent = {
+    getGeoJson: function(callback) {
+        $.getJSON('geoJson/continent_geo.json',callback);
+    }
+}
+option = {
+    title : {
+        text : '金棕榈 智慧旅行@云数据',
+        subtext: 'by 江江的喵',
+        link: 'http://www.palmyou.com/',
+        sublink: 'http://weibo.com/u/2813464944'
+    },
+    tooltip : {
+        trigger: 'item',
+        formatter: function(a){
+            var sName = a[0];
+            var pName = a[1];
+            var value = a[2] + '万人次 （' + (a[2]/98.19).toFixed(2) + '%）';
+            return sName + '<br/>' + pName + ' : ' + value;
+        }
+    },
+    toolbox: {
+        show : true,
+        orient : 'vertical',
+        x: 'right',
+        y: 'center',
+        feature : {
+            mark : {show: true},
+            dataView : {show: true, readOnly: false},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    dataRange: {
+        min: 0,
+        max: 1000,
+        text:['热', '冷'],
+        splitNumber:0,
+        color: ['orangered','yellow','lightskyblue']
+    },
+    series : [
+        {
+            name: '2013年出境目的地（洲际统计）',
+            type: 'map',
+            mapType: 'continent', // 自定义扩展图表类型
+            itemStyle:{
+                normal:{label:{show:true}},
+                emphasis:{label:{show:true}}
+            },
+            data:[
+                {name: '亚洲', value: 8967.69},
+                {name: '大洋洲', value: 592.09},
+                {name: '欧洲', value: 183.62},
+                {name: '北美洲', value: 41.63},
+                {name: '南美洲', value: 10.41},
+                {name: '非洲', value: 22.5837}
+            ],
+            // 文本位置修正
+            textFixed : {
+                '大洋洲' : [265, 0],
+                '非洲' : [10, -30],
+                '北美洲' : [20, 0],
+                '南美洲' : [0, -10],
+                '亚洲' : [20, -30],
+                '欧洲' : [200, -10],
+            }
+        }
+    ]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="span8">
+                <div id="main" class="main" style="height: 530px;"></div>
+                <div>
+                    <button onclick="refresh(true)">Refresh ~</button>
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        <hr>
+        <!-- FOOTER -->
+        <footer>
+          <p class="pull-right"><a href="#">Back to top</a></p>
+          <p>&copy; 2014 <a href="http://efe.baidu.com" target="_blank">EFE</a> &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">License</a> &middot; <a href="../changelog.html" target="_blank">Changelog</a></p>
+        </footer>
+    </div><!--/.fluid-container-->
+
+    <script src="../asset/js/jquery.js"></script>
+    <script src="../asset/js/bootstrap-transition.js"></script>
+    <script src="../asset/js/bootstrap-alert.js"></script>
+    <script src="../asset/js/bootstrap-modal.js"></script>
+    <script src="../asset/js/bootstrap-dropdown.js"></script>
+    <script src="../asset/js/bootstrap-scrollspy.js"></script>
+    <script src="../asset/js/bootstrap-tab.js"></script>
+    <script src="../asset/js/bootstrap-tooltip.js"></script>
+    <script src="../asset/js/bootstrap-popover.js"></script>
+    <script src="../asset/js/bootstrap-button.js"></script>
+    <script src="../asset/js/bootstrap-collapse.js"></script>
+    <script src="../asset/js/bootstrap-carousel.js"></script>
+    <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>
