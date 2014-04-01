@@ -26,7 +26,9 @@ define(function (require) {
         
         var self = this;
         self.type = ecConfig.COMPONENT_TYPE_TOOLBOX;
-
+        
+        var _canvasSupported = require('zrender/tool/env').canvasSupported;
+        
         var _zlevelBase = self.getZlevelBase();
         var _magicType = {};
         var _magicMap;
@@ -78,7 +80,7 @@ define(function (require) {
                             iconName.push({key : key, name : 'dataZoomReset'});
                             break;
                         case 'saveAsImage' :
-                            if (!G_vmlCanvasManager) {
+                            if (_canvasSupported) {
                                 iconName.push({key : key, name : 'saveAsImage'});
                             }
                             break;

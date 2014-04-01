@@ -19,7 +19,7 @@ define(function(require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
     
-    var _canvasSupported = !!document.createElement('canvas').getContext;
+    var _canvasSupported = require('zrender/tool/env').canvasSupported;
     var _idBase = new Date() - 0;
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
@@ -803,8 +803,6 @@ define(function(require) {
 
             _toolbox.render(magicOption, {dataZoom: dataZoom});
             
-            _zr.render();
-            
             if (magicOption.animation && !magicOption.renderAsImage) {
                 var len = _chartList.length;
                 while (len--) {
@@ -818,6 +816,10 @@ define(function(require) {
                         chart.animation();
                     }
                 }
+                _zr.refresh();
+            }
+            else {
+                _zr.render();
             }
             
             var imgId = 'IMG' + self.id;

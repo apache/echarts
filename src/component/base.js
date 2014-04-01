@@ -21,7 +21,7 @@ define(function(require) {
         self.effectList = [];
         
         var EFFECT_ZLEVEL = 7;
-        var canvasSupported = !G_vmlCanvasManager;
+        var _canvasSupported = require('zrender/tool/env').canvasSupported;
         
         var _aniMap = {};
         _aniMap[ecConfig.CHART_TYPE_LINE] = true;
@@ -955,7 +955,7 @@ define(function(require) {
         function animationEffect() {
             clearAnimationShape();
             var zlevel = EFFECT_ZLEVEL;
-            if (canvasSupported) {
+            if (_canvasSupported) {
                 zr.modLayer(
                     zlevel,
                     {
@@ -1008,7 +1008,7 @@ define(function(require) {
                             draggable : false,
                             hoverable : false
                         };
-                        if (canvasSupported) {  // 提高性能，换成image
+                        if (_canvasSupported) {  // 提高性能，换成image
                             effectShape.style.image = zr.shapeToImage(
                                 effectShape, 
                                 effectShape.style.width + shadowBlur * 2 + 2, 
@@ -1037,7 +1037,7 @@ define(function(require) {
                             draggable : false,
                             hoverable : false
                         };
-                        if (canvasSupported) {  // 提高性能，换成image
+                        if (_canvasSupported) {  // 提高性能，换成image
                             effectShape.style.image = zr.shapeToImage(
                                 effectShape, 
                                 (size + shadowBlur) * 2,

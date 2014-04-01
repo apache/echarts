@@ -22,6 +22,8 @@ define(function (require) {
 
         var _lang = ['Data View', 'close', 'refresh'];
 
+        var _canvasSupported = require('zrender/tool/env').canvasSupported;
+        
         // dataview dom & css
         var _tDom = document.createElement('div');
         var _textArea = document.createElement('textArea');
@@ -237,7 +239,7 @@ define(function (require) {
                     );
                 },
                 // 有动画，所以高级浏览器时间更长点
-                !G_vmlCanvasManager ? 800 : 100
+                _canvasSupported ? 800 : 100
             );
         }
 
