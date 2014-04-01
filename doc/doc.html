@@ -154,6 +154,7 @@
                             <ul>
                                 <li><a href="#附录组件实例接口">组件实例接口</a></li>
                                 <ul>
+                                    <li><a href="#TooltipInterface">tooltip</a></li>
                                     <li><a href="#LegendInterface">legend</a></li>
                                     <li><a href="#DataRangeInterface">dataRange</a></li>
                                     <li><a href="#DataZoomInterface">dataZoom</a></li>
@@ -1272,7 +1273,7 @@ feature : {
                     </ul>
 
                     <h4>tooltip<a name="Tooltip"> </a></h4>
-                    <P> 提示框,鼠标悬浮交互时的信息提示。<a href="example/tooltip.html" target="_blank">try this »</a></P>
+                    <P> 提示框，鼠标悬浮交互时的信息提示。<a href="example/tooltip.html" target="_blank">try this »</a></P>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
                             <th> 名称 </th>
@@ -1374,17 +1375,13 @@ feature : {
                                     <ul>
                                         <li>折线（区域）图、柱状（条形）图: a（系列名称），b（类目值），c（数值）, d（无）</li>
                                         <li>散点图（气泡）图 : a（系列名称），b（数据名称），c（数值数组）, d（无）</li>
+                                        <li>地图: a（系列名称），b（区域名称），c（数值）, d（无）</li>
                                         <li>饼图、雷达图 : a（系列名称），b（数据项名称），c（数值）, d（百分比）</li>
                                         <li>弦图 : a（系列名称），b（项1名称），c（项1-项2值），d（项2名称)， e(项2-项1值)</li>
-                                        <li>
-                                            力导向图 : 
+                                        <li>力导向图 : 
                                             <ul>
-                                                <li>
-                                                    节点 : a（类目名称），b（节点名称），c（节点值）
-                                                </li>
-                                                <li>
-                                                    边 : a（系列名称），b（源名称-目标名称），c（边权重）， d（如果为true的话则数据来源是边）
-                                                </li>
+                                                <li>节点 : a（类目名称），b（节点名称），c（节点值）</li>
+                                                <li>边 : a（系列名称），b（源名称-目标名称），c（边权重）， d（如果为true的话则数据来源是边）</li>
                                         </li>
                                     </ul>
                                 </li>
@@ -3146,6 +3143,34 @@ option.series = [
                     
                     <h4>组件实例接口<a name="附录组件实例接口"> </a></h3>
                     <p>ECharts包含组件有：title、legend、dataRange、toolbox、tooltip、dataZoom、grid、xAxis、yAxis、polar</p>
+                    
+                    <h4>tooltip<a name="TooltipInterface"> </a></h4>
+                    <P>提示框，鼠标悬浮交互时的信息提示，每个图表最多仅有一个提示框。可使用的属性和方法有：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 类型 </th>
+                            <th> 名称 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b></td>
+                            <td> type </td>
+                            <td> 组件类型，等于config.COMPONENT_TYPE_LEGEND </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Function}</b></td>
+                            <td> showTip</td>
+                            <td> 显示提示框。<br/>参数：<b>{Object}</b> param （见下）<br/> 返回：null
+                                <br/>参数格式：{ seriesIndex: 0, seriesName:'', dataInex:0 } // line、bar、scatter、k、radar
+                                <br/>参数格式：{ seriesIndex: 0, seriesName:'', name:'' } // map、pie、chord
+                            </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Function}</b></td>
+                            <td> hideTip</td>
+                            <td> 隐藏提示框。<br/>参数：无<br/> 返回：null</td>
+                        </tr>
+                    </table>
                     
                     <h4>legend<a name="LegendInterface"> </a></h4>
                     <P>图例，每个图表最多仅有一个图例。可使用的属性和方法有：</P>
