@@ -396,7 +396,7 @@ define(function (require) {
                     right = curCoord;
                 }
                 if (x - left < right - x) {
-                    dataIndex -= dataIndex != 0 ? 1 : 0;
+                    dataIndex -= dataIndex !== 0 ? 1 : 0;
                 }
                 else {
                     // 离右边近，看是否为最后一个
@@ -426,7 +426,7 @@ define(function (require) {
                 }
 
                 if (y - top > bottom - y) {
-                    dataIndex -= dataIndex != 0 ? 1 : 0;
+                    dataIndex -= dataIndex !== 0 ? 1 : 0;
                 }
                 else {
                     // 离上方边近，看是否为最后一个
@@ -1356,7 +1356,7 @@ define(function (require) {
                             return;
                         }
                         var polarIndex = serie.polarIndex || 0;
-                        var vector = polar.getVector(polarIndex, dataIndex, 'max')
+                        var vector = polar.getVector(polarIndex, dataIndex, 'max');
                         _event = {
                             zrenderX : vector[0],
                             zrenderY : vector[1]
@@ -1399,7 +1399,7 @@ define(function (require) {
                                 && ecData.get(shapeList[i], 'dataIndex') == dataIndex
                             ) {
                                 _curTarget = shapeList[i];
-                                var vector = polar.getCenter(serie.polarIndex || 0)
+                                var vector = polar.getCenter(serie.polarIndex || 0);
                                 x = vector[0];
                                 y = vector[1];
                                 break;

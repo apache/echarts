@@ -62,7 +62,6 @@ define(function (require) {
             var itemShape;
             var textShape;
             var textStyle  = legendOption.textStyle;
-            var font = self.getFont(textStyle);
             var dataTextStyle;
             var dataFont;
 
@@ -449,7 +448,6 @@ define(function (require) {
          */
         function _getSomethingByName(name) {
             var series = option.series;
-            var hasFind;
             var data;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].name == name) {
@@ -460,7 +458,7 @@ define(function (require) {
                         seriesIndex : i,
                         data : null,
                         dataIndex : -1
-                    }
+                    };
                 }
 
                 if (
@@ -480,7 +478,7 @@ define(function (require) {
                                 seriesIndex : i,
                                 data : data[j],
                                 dataIndex : j
-                            }
+                            };
                         }
                     }
                 }
@@ -491,7 +489,7 @@ define(function (require) {
                 seriesIndex : -1,
                 data : null,
                 dataIndex : -1
-            }
+            };
         }
         
         function _getItemShapeByType(x, y, width, height, color, itemType, defaultColor) {

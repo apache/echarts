@@ -152,7 +152,7 @@ define(function(require) {
                     ]);
                     
                 }
-                _markMap(xAxis, yAxis, serie.data, pointList[seriesIndex])
+                _markMap(xAxis, yAxis, serie.data, pointList[seriesIndex]);
                 self.buildMark(
                     serie,
                     seriesIndex,

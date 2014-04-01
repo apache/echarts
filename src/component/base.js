@@ -514,7 +514,8 @@ define(function(require) {
                 }
                 
                 // 标准化一些参数
-                data[i][0].tooltip = mergeData.tooltip || {trigger:'item'}; // tooltip.trigger指定为item
+                data[i][0].tooltip = mergeData.tooltip 
+                                     || {trigger:'item'}; // tooltip.trigger指定为item
                 data[i][0].name = typeof data[i][0].name != 'undefined'
                                   ? data[i][0].name : '';
                 data[i][1].name = typeof data[i][1].name != 'undefined'
@@ -547,7 +548,7 @@ define(function(require) {
                     itemShape,
                     serie, seriesIndex,
                     data[i][0], 0,
-                    data[i][0].name + (data[i][1].name != '' 
+                    data[i][0].name + (data[i][1].name !== '' 
                                       ? (' > ' + data[i][1].name) : '')
                 );
                 pList.push(itemShape);
@@ -866,7 +867,6 @@ define(function(require) {
         }
         
         function animationMark(duration , easing) {
-            var mlShape = require('zrender/shape').get('markLine');
             var x;
             var y;
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
@@ -1063,9 +1063,10 @@ define(function(require) {
                 else if (shape._mark === 'line') {
                     effectShape.style.x = shape.style.xStart - Offset;
                     effectShape.style.y = shape.style.yStart - Offset;
-                    var distance = (shape.style.xStart - shape._x) * (shape.style.xStart - shape._x)
-                                    +
-                                   (shape.style.yStart - shape._y) * (shape.style.yStart - shape._y);
+                    var distance = 
+                        (shape.style.xStart - shape._x) * (shape.style.xStart - shape._x)
+                        +
+                        (shape.style.yStart - shape._y) * (shape.style.yStart - shape._y);
                     duration = Math.round(Math.sqrt(Math.round(
                                    distance * effect.period * effect.period
                                )));

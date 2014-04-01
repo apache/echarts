@@ -301,7 +301,7 @@ define(function(require) {
             var normalColor = self.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
                               || defaultColor;
             
-            var emphasisColor = self.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data) 
+            var emphasisColor = self.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data)
                 || (typeof normalColor == 'string'
                     ? zrColor.lift(normalColor, -0.2)
                     : normalColor
@@ -326,7 +326,6 @@ define(function(require) {
                 },
                 highlightStyle : {
                     color : emphasisColor,
-                    strokeColor : 'rgba(0,0,0,0)',
                     lineWidth : emphasis.borderWidth,
                     strokeColor : emphasis.borderColor,
                     lineJoin: 'round'

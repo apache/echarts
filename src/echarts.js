@@ -55,7 +55,7 @@ define(function(require) {
      */
     self.getInstanceById = function(key) {
         return _instances[key];
-    }
+    };
 
     /**
      * 基于zrender实现Echarts接口层
@@ -165,9 +165,9 @@ define(function(require) {
          */
         var _curEventType = null; // 破循环信号灯
         function _onevent(param){
-            param.__echarts_id__ = param.__echarts_id__ || self.id;
+            param.__echartsId = param.__echartsId || self.id;
             var fromMyself = true;
-            if (param.__echarts_id__ != self.id) {
+            if (param.__echartsId != self.id) {
                 // 来自其他联动图表的事件
                 fromMyself = false;
             }
@@ -793,9 +793,9 @@ define(function(require) {
                         _chartList.push(chart);
                         self.chart[chartType] = chart;
                     }
-                }
-                else {
-                    console.error(chartType + ' has not been required.');
+                    else {
+                        console.error(chartType + ' has not been required.');
+                    }
                 }
             }
 
@@ -1338,7 +1338,7 @@ define(function(require) {
             }
             
             var tempDom;
-            var domSize = domSize = [
+            var domSize = [
                 dom.offsetLeft, dom.offsetTop, 
                 dom.offsetWidth, dom.offsetHeight
             ];
@@ -1367,7 +1367,7 @@ define(function(require) {
                     top : domSize[1],
                     right : domSize[0] + domSize[2],
                     bottom : domSize[1] + domSize[3]
-                }
+                };
                 minLeft = Math.min(minLeft, imgList[c].left);
                 minTop = Math.min(minTop, imgList[c].top);
                 maxRight = Math.max(maxRight, imgList[c].right);
@@ -1499,7 +1499,7 @@ define(function(require) {
          * 联动事件响应 
          */
         function connectedEventHandler(param) {
-            if (param.__echarts_id__ != self.id) {
+            if (param.__echartsId != self.id) {
                 // 来自其他联动图表的事件
                 _onevent(param);
             }
@@ -1509,7 +1509,7 @@ define(function(require) {
          * 是否存在多图联动 
          */
         function isConnected() {
-            return !!_connected
+            return !!_connected;
         }
         
         /**

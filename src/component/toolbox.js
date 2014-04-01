@@ -853,7 +853,6 @@ define(function (require) {
 
                 len = newOption.series.length;
                 var oriType;        // 备份还原可控类型
-                var oriStack;       // 备份还原堆积名称
                 var axis;
                 while (len--) {
                     oriType = newOption.series[len].type;
@@ -922,15 +921,6 @@ define(function (require) {
             else {
                 _zoomQueue = [];
             }
-        }
-        
-        function _hasMagicType() {
-            for (var k in _magicType) {
-                if (_magicType[k]) {
-                    return true;
-                }
-            }
-            return false;
         }
         
         function getMagicOption(){

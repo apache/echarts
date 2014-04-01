@@ -350,7 +350,7 @@ define(function (require) {
             var pointListEnd;
             var textXEnd;
             var textYEnd;
-            var coverRectEnd
+            var coverRectEnd;
             if (dataRangeOption.orient == 'horizontal') {
                 // 水平
                 if (dataRangeOption.y != 'bottom') {
@@ -459,7 +459,7 @@ define(function (require) {
                         y : y + height,
                         width : textWidth + textHeight,
                         height : textHeight
-                    }
+                    };
                 }
                 else {
                     // 手柄在左侧
@@ -539,7 +539,7 @@ define(function (require) {
             _endShape.highlightStyle = {
                 strokeColor : _endShape.style.color,
                 lineWidth : 1
-            }
+            };
             
             // 统一参数
             _startShape.zlevel              = _endShape.zlevel              = _zlevelBase + 1;
