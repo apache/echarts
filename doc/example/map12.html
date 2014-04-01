@@ -73,7 +73,7 @@
                     <textarea id="code" name="code">
 var effect = {
     show: true,
-    scaleSize: 1,
+    scaleSize: require('zrender/tool/env').canvasSupported ? 1 : 2,
     period: 10,             // 运动周期，无单位，值越大越慢
     color: '#fff',
     shadowColor: 'rgba(220,220,220,0.8)',
