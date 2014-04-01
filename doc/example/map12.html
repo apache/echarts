@@ -74,7 +74,7 @@
 var effect = {
     show: true,
     scaleSize: require('zrender/tool/env').canvasSupported ? 1 : 2,
-    period: 10,             // 运动周期，无单位，值越大越慢
+    period: 30,             // 运动周期，无单位，值越大越慢
     color: '#fff',
     shadowColor: 'rgba(220,220,220,0.8)',
     shadowBlur : 15 
@@ -116,6 +116,7 @@ option = {
     legend: {
         orient: 'vertical',
         x:'left',
+        selectedMode:'single',
         data:['八纵通道', '八横通道'],
         textStyle : {
             color: '#fff'
@@ -155,7 +156,7 @@ option = {
                 symbolSize : 1,
                 effect : effect,
                 itemStyle : itemStyle(0),
-                smooth:false,
+                smooth:true,
                 data : [
                     [{name:'北京'}, {name:'哈尔滨'}],
                     [{name:'哈尔滨'}, {name:'满洲里'}],
@@ -222,7 +223,7 @@ option = {
                 symbolSize : 1,
                 effect : effect,
                 itemStyle : itemStyle(1),
-                smooth:false,
+                smooth:true,
                 data : [
                     [{name:'北京'}, {name:'兰州'}],
                     [{name:'兰州'}, {name:'拉萨'}],
