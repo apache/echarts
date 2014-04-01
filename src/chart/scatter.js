@@ -370,14 +370,14 @@ define(function(require) {
             return itemShape;
         }
         
-        function _getLargeSymbol(symbolList, nColor) {
+        function _getLargeSymbol(pointList, nColor) {
             return {
                 shape : 'symbol',
                 zlevel : _zlevelBase,
                 _main : true,
                 hoverable: false,
                 style : {
-                    pointList : symbolList,
+                    pointList : pointList,
                     color : nColor,
                     strokeColor : nColor
                 }

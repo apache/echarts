@@ -986,9 +986,11 @@ define(function(require) {
             }
             
             // 默认标志图形类型列表
+            /*
             if (typeof magicOption.symbolList == 'undefined') {
                 magicOption.symbolList = _themeConfig.symbolList;
             }
+            */
 
             var zrColor = require('zrender/tool/color');
             // 数值系列的颜色列表，不传则采用内置颜色，可配数组，借用zrender实例注入，会有冲突风险，先这样
