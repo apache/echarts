@@ -1487,7 +1487,7 @@ define(function(require) {
             }
             
             for (var k in _connected) {
-                return self; // 非空
+                return k, self; // 非空
             }
             
             // 空，转为标志位
