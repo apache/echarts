@@ -151,6 +151,7 @@ var overviewContent = {
     ]
 }
 functionMap.chart0 = function (type) {
+    myChart0.hideLoading();
     myChart0.setOption(option0(type));
     dataWorst = data[type];
     setTimeout(extMark, 200);
@@ -206,6 +207,7 @@ function extMark() {
 }
 
 functionMap.chart1 = function () {
+    myChart1.hideLoading();
     myChart1.setOption(option1());
 }
 
@@ -233,12 +235,16 @@ function legendShare() {
             PG[city].color = zrColor.alpha(legend.getColor(city), 0.6);
         }
     }
+    myChart20.hideLoading();
+    myChart21.hideLoading();
+    myChart22.hideLoading();
     myChart20.setOption(option2(0, selected), true);
     myChart21.setOption(option2(1, selected), true);
     myChart22.setOption(option2(2, selected), true);
 }
 
 functionMap.chart3 = function (type) {
+    myChart3.hideLoading();
     myChart3.setOption(option3(type));
 }
 

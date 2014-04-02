@@ -22,6 +22,7 @@ function option3 (name) {
             text: '空气质量排行榜（'+name+' 前后30名）',
             subtext: 'data from PM25.in',
             sublink: 'http://www.pm25.in',
+            itemGap: 5,
             x:'center'
         },
         tooltip : {
@@ -57,7 +58,7 @@ function option3 (name) {
         },
         grid:{
             x: 0,
-            y: 40,
+            y: 50,
             x2: 0,
             y2: 0,
             borderWidth:0

@@ -1,4 +1,4 @@
-var developMode = true;
+var developMode = false;
 
 if (developMode) {
     // for develop
@@ -2550,7 +2550,7 @@ var optionMap = {
 			                    [{name:'广州'},{name:'徐州'}],
 			                    [{name:'广州'},{name:'烟台'}],
 			                    [{name:'广州'},{name:'盐城'}]
-			                ],
+			                ]
 			            },
 			            geoCoord: {
 			                '上海': [121.4648,31.2891],
