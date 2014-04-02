@@ -37,7 +37,7 @@
             }
         },
 
-		// 图例
+        // 图例
         legend: {
             orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
@@ -89,7 +89,7 @@
             splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变
             calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
             realtime: true,
-            color:['#1e90ff','#f0ffff'],//颜色 
+            color:['#006edd','#e0ffff'],//颜色 
             text:null,           // 文本，默认为数值文本
             textStyle: {
                 color: '#333'          // 值域文字颜色
@@ -114,7 +114,7 @@
                                        // 接受数组分别设定上右下左边距，同css
             itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
-            itemSize: 16,             // 工具箱图形宽度，非标准参数
+            itemSize: 16,             // 工具箱图形宽度
             showTitle : true,
             textStyle : {},
             feature : {
@@ -152,7 +152,7 @@
                         stack : '堆叠',
                         tiled : '平铺'
                     },
-                    type : [], // 'line', 'bar', 'stack', 'tiled'
+                    type : [] // 'line', 'bar', 'stack', 'tiled'
                 },
                 restore : {
                     show : false,
@@ -227,7 +227,7 @@
         grid: {
             x: 80,
             y: 60,
-			x2: 80,
+            x2: 80,
             y2: 60,
             width: null,
             height: null,
@@ -394,7 +394,7 @@
             yAxisIndex: 0,
             barMinHeight: 0,
             barWidth: null,        // 默认自适应
-			barGap: '30%',            // 柱间距离，默认为柱形宽度的30%，可设固定值
+            barGap: '30%',            // 柱间距离，默认为柱形宽度的30%，可设固定值
             barCategoryGap : '20%',   // 类目间柱形距离，默认为类目间距的20%，可设固定值
             itemStyle: {
                 normal: {
@@ -405,7 +405,7 @@
                     label: {
                         show: false,
                         formatter: '标签文本格式器，同Tooltip.formatter，不支持回调',
-                        position: "默认自适应，水平布局为'top'，垂直布局为'right'，可选为",
+                        position: "默认自适应，水平布局为'top'，垂直布局为'right'",
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
@@ -418,7 +418,7 @@
                     label: {
                         show: false,
                         formatter: '标签文本格式器，同Tooltip.formatter，不支持回调',
-                        position: "默认自适应，水平布局为'top'，垂直布局为'right'，可选为",
+                        position: "默认自适应，水平布局为'top'，垂直布局为'right'",
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
@@ -437,7 +437,7 @@
                     label: {
                         show: false,
                         formatter: '标签文本格式器，同Tooltip.formatter，不支持回调',
-                        position: "默认自使用，水平布局为'top'，垂直布局为'right'，可选为",
+                        position: "默认自使用，水平布局为'top'，垂直布局为'right'",
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
@@ -445,9 +445,9 @@
                         width: 2,
                         type: 'solid',
                         shadowColor : 'rgba(0,0,0,0)', //默认透明
-                        shadowBlur: 5,
-                        shadowOffsetX: 3,
-                        shadowOffsetY: 3
+                        shadowBlur: 0,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0
                     }
                 },
                 emphasis: {
@@ -455,17 +455,17 @@
                     label: {
                         show: false,
                         formatter: '标签文本格式器，同Tooltip.formatter，不支持回调',
-                        position: "默认自使用，水平布局为'top'，垂直布局为'right'，可选为",
+                        position: "默认自使用，水平布局为'top'，垂直布局为'right'",
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
                 }
             },
-			smooth : false,
-            symbol: null,     		// 拐点图形类型，非标准参数
-            symbolSize: 2,    		// 可计算特性参数，空数据拖拽提示图形大小
+            smooth : false,
+            symbol: null,             // 拐点图形类型，非标准参数
+            symbolSize: 2,            // 可计算特性参数，空数据拖拽提示图形大小
             symbolRotate : null,    // 拐点图形旋转控制
-			showAllSymbol: false	// 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
+            showAllSymbol: false    // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
         },
 
         // K线图默认参数
@@ -514,7 +514,7 @@
                                 return c[0] + ' , ' + c[1];
                             }
                         },
-                        position: "默认自使用，水平布局为'top'，垂直布局为'right'，可选为",
+                        position: "默认自使用，水平布局为'top'，垂直布局为'right'",
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
@@ -532,7 +532,7 @@
                                 return c[0] + ' , ' + c[1];
                             }
                         },
-                        position: "默认自使用，水平布局为'top'，垂直布局为'right'，可选为",
+                        position: "默认自使用，水平布局为'top'，垂直布局为'right'",
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
@@ -563,19 +563,19 @@
             },
             symbol: null,            // 拐点图形类型，非标准参数
             symbolSize: 2,           // 可计算特性参数，空数据拖拽提示图形大小
-			symbolRotate : null,     // 图形旋转控制
+            symbolRotate : null     // 图形旋转控制
         },
 
         // 饼图默认参数
         pie: {
             center : ['50%', '50%'],    // 默认全局居中
             radius : [0, '75%'],
-            clockWise : false,          // 默认逆时针
+            clockWise : true,           // 默认顺时针
             startAngle: 90,
             minAngle: 0,                    // 最小角度改为0
             selectedOffset: 10,             // 选中是扇区偏移量
             selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
-			roseType : null,     // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
+            roseType : null,     // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
             itemStyle: {
                 normal: {
                     color: null,
@@ -584,7 +584,7 @@
                     label: {
                         show: true,
                         position: 'outer',
-						formatter: '标签文本格式器，同Tooltip.formatter，不支持回调',
+                        formatter: '标签文本格式器，同Tooltip.formatter，不支持回调',
                         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     labelLine: {
@@ -604,7 +604,7 @@
                     label: {
                         show: false,
                         position: 'outer',
-						formatter: '标签文本格式器，同Tooltip.formatter，不支持回调',
+                        formatter: '标签文本格式器，同Tooltip.formatter，不支持回调',
                         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     labelLine: {
@@ -632,7 +632,7 @@
             mapValuePrecision : 0,         // 地图数值计算结果小数精度
             showLegendSymbol : true,       // 显示图例颜色标识（系列标识的小圆点），存在legend时生效
             selectedMode: false,           // 选择模式，默认关闭，可选single，multiple
-			hoverable: true,
+            hoverable: true,
             roam : false,               // 是否开启缩放及漫游模式
             itemStyle: {
                 normal: {
@@ -666,7 +666,7 @@
             }
         },
 
-		force : {
+        force : {
             // 数据map到圆的半径的最小值和最大值
             minRadius : 10,
             maxRadius : 20,
@@ -778,10 +778,10 @@
             effect : {
                 show: false,
                 period: 15,             // 运动周期，无单位，值越大越慢
-                scaleSize : 2         // 放大倍数，以markPoint点size为基准
-                // color : 'gold',
-                // shadowColor : 'rgba(255,215,0,0.8)'
-                // shadowBlur : 0          // 炫光模糊
+                scaleSize : 2,         // 放大倍数，以markPoint点size为基准
+                color : null,
+                shadowColor : null,
+                shadowBlur : 0          // 炫光模糊
             },
             itemStyle: {
                 normal: {
@@ -820,34 +820,32 @@
             effect : {
                 show: false,
                 period: 15,             // 运动周期，无单位，值越大越慢
-                scaleSize : 2           // 放大倍数，以markLine线lineWidth为基准
-                // color : 'gold'
-                // shadowColor : 'rgba(255,215,0,0.8)'
-                // shadowBlur : lineWidth * 2      // 炫光模糊，默认等于scaleSize计算所得
+                scaleSize : 2,           // 放大倍数，以markLine线lineWidth为基准
+                color : null,
+                shadowColor : null,
+                shadowBlur : 'lineWidth*2'      // 炫光模糊，默认等于scaleSize计算所得
             },
             itemStyle: {
                 normal: {
                     color: null,           // 标线主色，线色，symbol主色
                     borderColor: null,     // 标线symbol边框颜色，优先于color 
-                    borderWidth: 2,          // 标线symbol边框线宽，单位px，默认为2
+                    borderWidth: 1.5,          // 标线symbol边框线宽，单位px，默认为2
                     label: {
-                        show: false,
+                        show: true,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
                         formatter : null,
                         // 可选为 'start'|'end'|'left'|'right'|'top'|'bottom'
-                        position: 'inside',  
-                        textStyle: {         // 默认使用全局文本样式，详见TEXTSTYLE
-                            color: '#333'
-                        }
+                        position: 'end',
+                        textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     lineStyle: {
                         color: null, // 主色，线色，优先级高于borderColor和color
                         width: null, // 优先于borderWidth
-                        type: 'solid',
+                        type: 'dashed',
                         shadowColor : 'rgba(0,0,0,0)', //默认透明
-                        shadowBlur: 5,
-                        shadowOffsetX: 3,
-                        shadowOffsetY: 3
+                        shadowBlur: 0,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0
                     }
                 },
                 emphasis: {
@@ -864,6 +862,7 @@
             }
         },
 
+        // 主题，主题
         textStyle: {
             decoration: 'none',
             fontFamily: 'Arial, Verdana, sans-serif',

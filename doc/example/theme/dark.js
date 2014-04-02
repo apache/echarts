@@ -419,7 +419,7 @@ var theme = {
             normal: {
                 // color: 各异,
                 label: {
-                    show: false,
+                    show: false
                     // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                     //           'inside'|'left'|'right'|'top'|'bottom'
                     // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -428,7 +428,7 @@ var theme = {
             emphasis: {
                 // color: '各异'
                 label: {
-                    show: false,
+                    show: false
                     // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                     //           'inside'|'left'|'right'|'top'|'bottom'
                     // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE

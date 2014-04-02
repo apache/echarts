@@ -55,6 +55,7 @@ function refresh(isBtnRefresh){
 function refreshAll() {
     (new Function(editor.doc.getValue()))();
     for (var i = 0, l = domMain.length; i < l; i++) {
+        myChart[i].hideLoading();
         myChart[i].setTheme(theme);
     }
 }
@@ -318,7 +319,7 @@ var option = {
         grid : {
             x : 45,
             y : 40,
-            x2 : 35,
+            x2 : 35
         },
         xAxis : [
             {
@@ -395,7 +396,7 @@ var option = {
         grid : {
             x : 45,
             y : 40,
-            x2 : 35,
+            x2 : 35
         },
         xAxis : [
             {

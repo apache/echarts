@@ -2,7 +2,7 @@ var myChart = [];
 var domMain = $("[md='main']");
 
 var theme = 'erik';
-$('[name=theme-select]').on('change', function(){selectChange(this.value);});
+$('[name=theme-select]').on('change', function(){selectChange($('[name=theme-select]').val());});
 
 function selectChange(value){
     
@@ -31,6 +31,7 @@ function showLoading() {
 
 function refreshAll() {
     for (var i = 0, l = domMain.length; i < l; i++) {
+        myChart[i].hideLoading();
         myChart[i].setTheme(theme);
     }
 }
@@ -541,7 +542,7 @@ var option = {
                 type : 'value',
                 scale:true,
                 precision: 2,
-                boundaryGap:[0.01,0.01],
+                boundaryGap:[0.01,0.01]
             }
         ],
         series : [
