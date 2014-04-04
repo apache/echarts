@@ -692,7 +692,7 @@ define(function(require) {
                         );
                     }
                     // 无法满足用户定义的宽度设计，忽略用户宽度，打回重做
-                    if (barWidth < 0) {
+                    if (barWidth <= 0) {
                         return _mapSize(categoryAxis, locationMap, true);
                     }
                 }
@@ -702,7 +702,7 @@ define(function(require) {
                     barGap = 0;
                     barWidth = Math.floor(gap / locationMap.length);
                     // 已经忽略用户定义的宽度设定依然还无法满足显示，只能硬来了;
-                    if (barWidth < 0) {
+                    if (barWidth <= 0) {
                         barWidth = 1;
                     }
                 }
