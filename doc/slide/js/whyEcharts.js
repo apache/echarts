@@ -2089,6 +2089,7 @@ var optionMap = {
 		    },
 		    legend: {
 		        orient: 'vertical',
+		        selectedMode:'single',
 		        x:'left',
 		        data:['八纵通道', '八横通道'],
 		        textStyle : {
