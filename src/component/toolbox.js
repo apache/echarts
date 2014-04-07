@@ -182,7 +182,7 @@ define(function (require) {
                         lineWidth : 2,
                         text : toolboxOption.showTitle 
                                ? _featureTitle[_iconList[i]]
-                               : false,
+                               : undefined,
                         textFont : textFont,
                         textPosition : textPosition,
                         strokeColor : _featureColor[_iconList[i]] || color[i % color.length]
