@@ -254,6 +254,14 @@ define(function(require) {
                                   : data)
                                 : '-';
                         curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
+                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
+                                                || {
+                                                    min : Number.POSITIVE_INFINITY,
+                                                    max : Number.NEGATIVE_INFINITY,
+                                                    sum : 0,
+                                                    counter : 0,
+                                                    average : 0
+                                                };
                         if (value == '-') {
                             // 空数据则把正在记录的curPLMap添加到finalPLMap中
                             if (curPLMap[seriesIndex].length > 0) {
@@ -287,14 +295,6 @@ define(function(require) {
                             [x, y, i, categoryAxis.getNameByIndex(i), x, baseYP]
                         );
                         
-                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
-                                                || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
-                                                };
                         if (xMarkMap[seriesIndex].min > value) {
                             xMarkMap[seriesIndex].min = value;
                             xMarkMap[seriesIndex].minY = y;
@@ -357,16 +357,18 @@ define(function(require) {
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     seriesIndex = locationMap[j][m];
-                    xMarkMap[seriesIndex].average = 
-                        (xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter).toFixed(2) - 0;
-                        
+                    if (xMarkMap[seriesIndex].counter > 0) {
+                        xMarkMap[seriesIndex].average = 
+                            (xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter).toFixed(2) 
+                            - 0;
+                    }
                     y = component.yAxis.getAxis(series[seriesIndex].yAxisIndex || 0)
                         .getCoord(xMarkMap[seriesIndex].average);
-                        
                     xMarkMap[seriesIndex].averageLine = [
                         [component.grid.getX(), y],
                         [component.grid.getXend(), y]
                     ];
+                    
                     xMarkMap[seriesIndex].minLine = [
                         [component.grid.getX(), xMarkMap[seriesIndex].minY],
                         [component.grid.getXend(), xMarkMap[seriesIndex].minY]
@@ -424,6 +426,14 @@ define(function(require) {
                                   : data)
                                 : '-';
                         curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
+                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
+                                                || {
+                                                    min : Number.POSITIVE_INFINITY,
+                                                    max : Number.NEGATIVE_INFINITY,
+                                                    sum : 0,
+                                                    counter : 0,
+                                                    average : 0
+                                                };
                         if (value == '-') {
                             // 空数据则把正在记录的curPLMap添加到finalPLMap中
                             if (curPLMap[seriesIndex].length > 0) {
@@ -457,14 +467,6 @@ define(function(require) {
                             [x, y, i, categoryAxis.getNameByIndex(i), baseXP, y]
                         );
                         
-                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
-                                                || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
-                                                };
                         if (xMarkMap[seriesIndex].min > value) {
                             xMarkMap[seriesIndex].min = value;
                             xMarkMap[seriesIndex].minX = x;
@@ -527,9 +529,12 @@ define(function(require) {
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     seriesIndex = locationMap[j][m];
-                    xMarkMap[seriesIndex].average = 
-                        xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter;
-                        
+                    if (xMarkMap[seriesIndex].counter > 0) {
+                        xMarkMap[seriesIndex].average = 
+                            (xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter).toFixed(2) 
+                            - 0;
+                    }
+                    
                     x = component.xAxis.getAxis(series[seriesIndex].xAxisIndex || 0)
                         .getCoord(xMarkMap[seriesIndex].average);
                         
