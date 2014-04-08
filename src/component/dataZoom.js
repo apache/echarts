@@ -358,8 +358,8 @@ define(function (require) {
             }
 
             var pointList = [];
-            var x = _location.width / maxLength;
-            var y = _location.height / maxLength;
+            var x = _location.width / (maxLength - (maxLength > 1 ? 1 : 0));
+            var y = _location.height / (maxLength - (maxLength > 1 ? 1 : 0));
             for (var i = 0, l = maxLength; i < l; i++) {
                 value = typeof data[i] != 'undefined'
                         ? (typeof data[i].value != 'undefined'
