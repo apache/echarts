@@ -66,6 +66,6 @@ if (document.location.href.indexOf('local') == -1) {
 
 var lrl = document.getElementById('last-release-link');
 if (lrl) {
-    lrl.href = 'https://github.com/ecomfe/echarts/archive/1.4.0.zip';
-    lrl.innerHTML = 'ZIP (1.4.0)';
+    lrl.href = 'https://github.com/ecomfe/echarts/archive/1.4.1.zip';
+    lrl.innerHTML = 'ZIP (1.4.1)';
 }

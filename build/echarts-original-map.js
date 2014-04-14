@@ -10530,7 +10530,7 @@ define(
         var _idx = 0;           //ZRender instance's id
         var _instances = {};    //ZRender实例map索引
 
-        self.version = '1.1.1';
+        self.version = '1.1.2';
 
         /**
          * zrender初始化
@@ -11437,18 +11437,18 @@ define(
                 var stl = root.currentStyle
                           || document.defaultView.getComputedStyle(root);
 
-                return (root.clientWidth || (stl.style.width.replace(/\D/g,'')))
-                       - stl.paddingLeft.replace(/\D/g,'')   // 请原谅我这比较粗暴
-                       - stl.paddingRight.replace(/\D/g,'');
+                return ((root.clientWidth || parseInt(stl.width, 10))
+                       - parseInt(stl.paddingLeft, 10)   // 请原谅我这比较粗暴
+                       - parseInt(stl.paddingRight, 10)).toFixed(0) - 0;
             }
 
             function _getHeight(){
                 var stl = root.currentStyle
                           || document.defaultView.getComputedStyle(root);
 
-                return (root.clientHeight || (stl.style.height.replace(/\D/g,'')))
-                       - stl.paddingTop.replace(/\D/g,'')    // 请原谅我这比较粗暴
-                       - stl.paddingBottom.replace(/\D/g,'');
+                return ((root.clientHeight || parseInt(stl.height, 10))
+                       - parseInt(stl.paddingTop, 10)    // 请原谅我这比较粗暴
+                       - parseInt(stl.paddingBottom, 10)).toFixed(0) - 0;
             }
 
             function _init() {
@@ -14408,7 +14408,8 @@ define('echarts/component/base',['require','../util/ecData','../util/ecQuery','.
                 }
                 
                 // 标准化一些参数
-                data[i].tooltip = {trigger:'item'}; // tooltip.trigger指定为item
+                data[i].tooltip = data[i].tooltip 
+                                  || {trigger:'item'}; // tooltip.trigger指定为item
                 data[i].name = typeof data[i].name != 'undefined'
                                ? data[i].name : '';
                 data[i].value = typeof data[i].value != 'undefined'
@@ -18487,8 +18488,8 @@ define('echarts/component/dataZoom',['require','./base','../component','zrender/
             }
 
             var pointList = [];
-            var x = _location.width / maxLength;
-            var y = _location.height / maxLength;
+            var x = _location.width / (maxLength - (maxLength > 1 ? 1 : 0));
+            var y = _location.height / (maxLength - (maxLength > 1 ? 1 : 0));
             for (var i = 0, l = maxLength; i < l; i++) {
                 value = typeof data[i] != 'undefined'
                         ? (typeof data[i].value != 'undefined'
@@ -23308,7 +23309,7 @@ define('echarts/component/toolbox',['require','./base','zrender/config','zrender
                         lineWidth : 2,
                         text : toolboxOption.showTitle 
                                ? _featureTitle[_iconList[i]]
-                               : false,
+                               : undefined,
                         textFont : textFont,
                         textPosition : textPosition,
                         strokeColor : _featureColor[_iconList[i]] || color[i % color.length]
@@ -25689,9 +25690,9 @@ define('echarts/echarts',['require','zrender/tool/env','./config','zrender/tool/
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
-    self.version = '1.4.0';
+    self.version = '1.4.1';
     self.dependencies = {
-        zrender : '1.1.1'
+        zrender : '1.1.2'
     };
     /**
      * 入口方法 
@@ -35828,6 +35829,14 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','z
                                   : data)
                                 : '-';
                         curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
+                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
+                                                || {
+                                                    min : Number.POSITIVE_INFINITY,
+                                                    max : Number.NEGATIVE_INFINITY,
+                                                    sum : 0,
+                                                    counter : 0,
+                                                    average : 0
+                                                };
                         if (value == '-') {
                             // 空数据则把正在记录的curPLMap添加到finalPLMap中
                             if (curPLMap[seriesIndex].length > 0) {
@@ -35861,14 +35870,6 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','z
                             [x, y, i, categoryAxis.getNameByIndex(i), x, baseYP]
                         );
                         
-                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
-                                                || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
-                                                };
                         if (xMarkMap[seriesIndex].min > value) {
                             xMarkMap[seriesIndex].min = value;
                             xMarkMap[seriesIndex].minY = y;
@@ -35931,16 +35932,18 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','z
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     seriesIndex = locationMap[j][m];
-                    xMarkMap[seriesIndex].average = 
-                        (xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter).toFixed(2) - 0;
-                        
+                    if (xMarkMap[seriesIndex].counter > 0) {
+                        xMarkMap[seriesIndex].average = 
+                            (xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter).toFixed(2) 
+                            - 0;
+                    }
                     y = component.yAxis.getAxis(series[seriesIndex].yAxisIndex || 0)
                         .getCoord(xMarkMap[seriesIndex].average);
-                        
                     xMarkMap[seriesIndex].averageLine = [
                         [component.grid.getX(), y],
                         [component.grid.getXend(), y]
                     ];
+                    
                     xMarkMap[seriesIndex].minLine = [
                         [component.grid.getX(), xMarkMap[seriesIndex].minY],
                         [component.grid.getXend(), xMarkMap[seriesIndex].minY]
@@ -35998,6 +36001,14 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','z
                                   : data)
                                 : '-';
                         curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
+                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
+                                                || {
+                                                    min : Number.POSITIVE_INFINITY,
+                                                    max : Number.NEGATIVE_INFINITY,
+                                                    sum : 0,
+                                                    counter : 0,
+                                                    average : 0
+                                                };
                         if (value == '-') {
                             // 空数据则把正在记录的curPLMap添加到finalPLMap中
                             if (curPLMap[seriesIndex].length > 0) {
@@ -36031,14 +36042,6 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','z
                             [x, y, i, categoryAxis.getNameByIndex(i), baseXP, y]
                         );
                         
-                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
-                                                || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
-                                                };
                         if (xMarkMap[seriesIndex].min > value) {
                             xMarkMap[seriesIndex].min = value;
                             xMarkMap[seriesIndex].minX = x;
@@ -36101,9 +36104,12 @@ define('echarts/chart/line',['require','../component/base','./calculableBase','z
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     seriesIndex = locationMap[j][m];
-                    xMarkMap[seriesIndex].average = 
-                        xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter;
-                        
+                    if (xMarkMap[seriesIndex].counter > 0) {
+                        xMarkMap[seriesIndex].average = 
+                            (xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter).toFixed(2) 
+                            - 0;
+                    }
+                    
                     x = component.xAxis.getAxis(series[seriesIndex].xAxisIndex || 0)
                         .getCoord(xMarkMap[seriesIndex].average);
                         
@@ -36898,6 +36904,14 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                   ? data.value
                                   : data)
                                 : '-';
+                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
+                                                || {
+                                                    min : Number.POSITIVE_INFINITY,
+                                                    max : Number.NEGATIVE_INFINITY,
+                                                    sum : 0,
+                                                    counter : 0,
+                                                    average : 0
+                                                };
                         if (value == '-') {
                             // 空数据在做完后补充拖拽提示框
                             continue;
@@ -36950,14 +36964,6 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             'vertical'
                         );
                         
-                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
-                                                || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
-                                                };
                         xMarkMap[seriesIndex][i] = 
                             x + (barWidthMap[seriesIndex] || barWidth) / 2;
                         if (xMarkMap[seriesIndex].min > value) {
@@ -37024,9 +37030,12 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     seriesIndex = locationMap[j][m];
-                    xMarkMap[seriesIndex].average = 
-                        (xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter).toFixed(2) - 0;
-                        
+                    if (xMarkMap[seriesIndex].counter > 0) {
+                        xMarkMap[seriesIndex].average = 
+                            (xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter).toFixed(2) 
+                            - 0;
+                    }
+                    
                     y = component.yAxis.getAxis(series[seriesIndex].yAxisIndex || 0)
                         .getCoord(xMarkMap[seriesIndex].average);
                         
@@ -37098,6 +37107,14 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                                   ? data.value
                                   : data)
                                 : '-';
+                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
+                                                || {
+                                                    min : Number.POSITIVE_INFINITY,
+                                                    max : Number.NEGATIVE_INFINITY,
+                                                    sum : 0,
+                                                    counter : 0,
+                                                    average : 0
+                                                };
                         if (value == '-') {
                             // 空数据在做完后补充拖拽提示框
                             continue;
@@ -37150,14 +37167,6 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                             'horizontal'
                         );
                         
-                        xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
-                                                || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
-                                                };
                         xMarkMap[seriesIndex][i] = 
                             y - (barWidthMap[seriesIndex] || barWidth) / 2;
                         if (xMarkMap[seriesIndex].min > value) {
@@ -37225,9 +37234,12 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     seriesIndex = locationMap[j][m];
-                    xMarkMap[seriesIndex].average = 
-                        xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter;
-                        
+                    if (xMarkMap[seriesIndex].counter > 0) {
+                        xMarkMap[seriesIndex].average = 
+                            (xMarkMap[seriesIndex].sum / xMarkMap[seriesIndex].counter).toFixed(2)
+                            - 0;
+                    }
+                    
                     x = component.xAxis.getAxis(series[seriesIndex].xAxisIndex || 0)
                         .getCoord(xMarkMap[seriesIndex].average);
                         
@@ -37346,7 +37358,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                         );
                     }
                     // 无法满足用户定义的宽度设计，忽略用户宽度，打回重做
-                    if (barWidth < 0) {
+                    if (barWidth <= 0) {
                         return _mapSize(categoryAxis, locationMap, true);
                     }
                 }
@@ -37356,7 +37368,7 @@ define('echarts/chart/bar',['require','../component/base','./calculableBase','..
                     barGap = 0;
                     barWidth = Math.floor(gap / locationMap.length);
                     // 已经忽略用户定义的宽度设定依然还无法满足显示，只能硬来了;
-                    if (barWidth < 0) {
+                    if (barWidth <= 0) {
                         barWidth = 1;
                     }
                 }

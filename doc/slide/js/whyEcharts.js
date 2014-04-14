@@ -1,4 +1,4 @@
-var developMode = false;
+﻿var developMode = false;
 
 if (developMode) {
     // for develop
@@ -296,6 +296,7 @@ var optionMap = {
             {
                 name:'浏览器占比',
                 type:'pie',
+                radius : ['30%', '70%'],
                 data:[
                     {value:535, name:'Chrome'},
                     {value:310, name:'Firefox'},
@@ -397,7 +398,10 @@ var optionMap = {
             {
                 name:'利润',
                 type:'bar',
-                itemStyle : { normal: {label : {show: true, position: 'inside'}}},
+                itemStyle : { normal: {
+                    color: 'rgba(248, 83, 0, 1)',
+                    label : {show: true, position: 'inside'}}
+                },
                 data:[200, 170, 240, 244, 200, 220, 210]
             },
             {
@@ -406,7 +410,7 @@ var optionMap = {
                 stack: '总量',
                 barWidth : 5,
                 itemStyle: {normal: {
-                    color: 'rgba(138, 43, 226, 0.5)',
+                    color: 'rgba(255, 160, 0, 0.8)',//'rgba(138, 43, 226, 0.6)',
                     label : {show: true}
                 }},
                 data:[320, 302, 341, 374, 390, 450, 420]
@@ -416,7 +420,7 @@ var optionMap = {
                 type:'bar',
                 stack: '总量',
                 itemStyle: {normal: {
-                    color: 'rgba(30, 144, 255, 0.5)',
+                    color: 'rgba(30, 144, 255, 0.6)',
                     label : {show: true, position: 'left'}
                 }},
                 data:[-120, -132, -101, -134, -190, -230, -210]
@@ -428,7 +432,7 @@ var optionMap = {
             trigger: 'axis'
         },
         legend: {
-            data:['成交','预购','意向']
+            data:['意向','预购','成交']
         },
         toolbox: {
             show : true,
@@ -455,11 +459,11 @@ var optionMap = {
         ],
         series : [
             {
-                name:'成交',
+                name:'意向',
                 type:'bar',
                 smooth:true,
                 itemStyle: {normal: {areaStyle: {type: 'default'}}},
-                data:[10, 12, 21, 54, 260, 830, 710]
+                data:[1320, 1132, 601, 234, 120, 90, 20]
             },
             {
                 name:'预购',
@@ -469,21 +473,25 @@ var optionMap = {
                 data:[30, 182, 434, 791, 390, 30, 10]
             },
             {
-                name:'意向',
+                name:'成交',
                 type:'bar',
                 smooth:true,
                 itemStyle: {normal: {areaStyle: {type: 'default'}}},
-                data:[1320, 1132, 601, 234, 120, 90, 20]
+                data:[10, 12, 21, 54, 260, 830, 710]
             }
         ]
     },
     dataRange1 : {
+        title : {
+            text: '2011全国GDP（亿元）',
+            subtext: '数据来自国家统计局'
+        },
         tooltip : {
             trigger: 'item'
         },
         dataRange: {
             min: 0,
-            max: 1000,
+            max: 55000,
             text:['高','低'],           // 文本，默认为数值文本
             color:[ 'red', 'yellow'],//颜色 
             calculable : true
@@ -499,45 +507,44 @@ var optionMap = {
         },
         series : [
             {
-                name: '销售量',
+                name: '2011全国GDP',
                 type: 'map',
                 mapType: 'china',
-                height: 400,
+                itemStyle:{
+                    normal:{label:{show:true}}
+                },
                 data:[
-                    {name: '北京',value: Math.round(Math.random()*1000)},
-                    {name: '天津',value: Math.round(Math.random()*1000)},
-                    {name: '上海',value: Math.round(Math.random()*1000)},
-                    {name: '重庆',value: Math.round(Math.random()*1000)},
-                    {name: '河北',value: Math.round(Math.random()*1000)},
-                    {name: '河南',value: Math.round(Math.random()*1000)},
-                    {name: '云南',value: Math.round(Math.random()*1000)},
-                    {name: '辽宁',value: Math.round(Math.random()*1000)},
-                    {name: '黑龙江',value: Math.round(Math.random()*1000)},
-                    {name: '湖南',value: Math.round(Math.random()*1000)},
-                    {name: '安徽',value: Math.round(Math.random()*1000)},
-                    {name: '山东',value: Math.round(Math.random()*1000)},
-                    {name: '新疆',value: Math.round(Math.random()*1000)},
-                    {name: '江苏',value: Math.round(Math.random()*1000)},
-                    {name: '浙江',value: Math.round(Math.random()*1000)},
-                    {name: '江西',value: Math.round(Math.random()*1000)},
-                    {name: '湖北',value: Math.round(Math.random()*1000)},
-                    {name: '广西',value: Math.round(Math.random()*1000)},
-                    {name: '甘肃',value: Math.round(Math.random()*1000)},
-                    {name: '山西',value: Math.round(Math.random()*1000)},
-                    {name: '内蒙古',value: Math.round(Math.random()*1000)},
-                    {name: '陕西',value: Math.round(Math.random()*1000)},
-                    {name: '吉林',value: Math.round(Math.random()*1000)},
-                    {name: '福建',value: Math.round(Math.random()*1000)},
-                    {name: '贵州',value: Math.round(Math.random()*1000)},
-                    {name: '广东',value: Math.round(Math.random()*1000)},
-                    {name: '青海',value: Math.round(Math.random()*1000)},
-                    {name: '西藏',value: Math.round(Math.random()*1000)},
-                    {name: '四川',value: Math.round(Math.random()*1000)},
-                    {name: '宁夏',value: Math.round(Math.random()*1000)},
-                    {name: '海南',value: Math.round(Math.random()*1000)},
-                    {name: '台湾',value: Math.round(Math.random()*1000)},
-                    {name: '香港',value: Math.round(Math.random()*1000)},
-                    {name: '澳门',value: Math.round(Math.random()*1000)}
+                    {name:'西藏', value:605.83},
+                    {name:'青海', value:1670.44},
+                    {name:'宁夏', value:2102.21},
+                    {name:'海南', value:2522.66},
+                    {name:'甘肃', value:5020.37},
+                    {name:'贵州', value:5701.84},
+                    {name:'新疆', value:6610.05},
+                    {name:'云南', value:8893.12},
+                    {name:'重庆', value:10011.37},
+                    {name:'吉林', value:10568.83},
+                    {name:'山西', value:11237.55},
+                    {name:'天津', value:11307.28},
+                    {name:'江西', value:11702.82},
+                    {name:'广西', value:11720.87},
+                    {name:'陕西', value:12512.3},
+                    {name:'黑龙江', value:12582},
+                    {name:'内蒙古', value:14359.88},
+                    {name:'安徽', value:15300.65},
+                    {name:'北京', value:16251.93},
+                    {name:'福建', value:17560.18},
+                    {name:'上海', value:19195.69},
+                    {name:'湖北', value:19632.26},
+                    {name:'湖南', value:19669.56},
+                    {name:'四川', value:21026.68},
+                    {name:'辽宁', value:22226.7},
+                    {name:'河北', value:24515.76},
+                    {name:'河南', value:26931.03},
+                    {name:'浙江', value:32318.85},
+                    {name:'山东', value:45361.85},
+                    {name:'江苏', value:49110.27},
+                    {name:'广东', value:53210.28}
                 ]
             }
         ]
@@ -546,12 +553,12 @@ var optionMap = {
         tooltip : {
             trigger: 'axis',
             formatter: function(params) {
-                var res = params[0][1];
-                res += '<br/>' + params[0][0];
-                res += '<br/>  开盘 : ' + params[0][2][0] + '  最高 : ' + params[0][2][3];
-                res += '<br/>  收盘 : ' + params[0][2][1] + '  最低 : ' + params[0][2][2];
+                var res = params[1][1];
                 res += '<br/>' + params[1][0];
-                res += ' : ' + params[1][2];
+                res += '<br/>  开盘 : ' + params[1][2][0] + '  最高 : ' + params[1][2][3];
+                res += '<br/>  收盘 : ' + params[1][2][1] + '  最低 : ' + params[1][2][2];
+                res += '<br/>' + params[0][0];
+                res += ' : ' + params[0][2];
                 return res;
             }
         },
@@ -610,6 +617,11 @@ var optionMap = {
                 type:'line',
                 yAxisIndex: 1,
                 symbol: 'none',
+                itemStyle:{
+                    normal:{
+                        color:'#1e90ff'
+                    }
+                },
                 data:[
                     13560434, 8026738.5, 11691637, 12491697, 12485603, 
                     11620504, 12555496, 15253370, 12709611, 10458354, 
@@ -978,9 +990,10 @@ var optionMap = {
                 name:'sin',
                 type:'scatter',
                 large: true,
+                symbol:'circle',
                 data: (function() {
                     var d = [];
-                    var len = 10000;
+                    var len = 25000;
                     var x = 0;
                     while (len--) {
                         x = (Math.random() * 10).toFixed(3) - 0;
@@ -997,9 +1010,10 @@ var optionMap = {
                 name:'cos',
                 type:'scatter',
                 large: true,
+                symbol:'circle',
                 data: (function() {
                     var d = [];
-                    var len = 10000;
+                    var len = 25000;
                     var x = 0;
                     while (len--) {
                         x = (Math.random() * 10).toFixed(3) - 0;
@@ -1458,7 +1472,10 @@ var optionMap = {
     },
     stack : {
         tooltip : {
-            trigger: 'axis'
+            trigger: 'axis',
+            axisPointer:{
+                type:'shadow'
+            }
         },
         legend: {
             data:['直接访问','邮件营销','联盟广告','视频广告','搜索引擎','百度','谷歌','必应','其他']
@@ -1759,7 +1776,7 @@ var optionMap = {
         dataRange: {
             orient: 'horizontal',
             min: 0,
-            max: 1000,
+            max: 55000,
             text:['高','低'],           // 文本，默认为数值文本
             splitNumber:0
         },
@@ -1787,40 +1804,37 @@ var optionMap = {
                     emphasis:{label:{show:true}}
                 },
                 data:[
-                    {name: '北京',value: 790,selected:true},
-                    {name: '天津',value: Math.round(Math.random()*1000)},
-                    {name: '上海',value: 940,selected:true},
-                    {name: '重庆',value: Math.round(Math.random()*1000)},
-                    {name: '河北',value: Math.round(Math.random()*1000)},
-                    {name: '河南',value: Math.round(Math.random()*1000)},
-                    {name: '云南',value: Math.round(Math.random()*1000)},
-                    {name: '辽宁',value: Math.round(Math.random()*1000)},
-                    {name: '黑龙江',value: Math.round(Math.random()*1000)},
-                    {name: '湖南',value: Math.round(Math.random()*1000)},
-                    {name: '安徽',value: Math.round(Math.random()*1000)},
-                    {name: '山东',value: Math.round(Math.random()*1000)},
-                    {name: '新疆',value: Math.round(Math.random()*1000)},
-                    {name: '江苏',value: Math.round(Math.random()*1000)},
-                    {name: '浙江',value: Math.round(Math.random()*1000)},
-                    {name: '江西',value: Math.round(Math.random()*1000)},
-                    {name: '湖北',value: Math.round(Math.random()*1000)},
-                    {name: '广西',value: Math.round(Math.random()*1000)},
-                    {name: '甘肃',value: Math.round(Math.random()*1000)},
-                    {name: '山西',value: Math.round(Math.random()*1000)},
-                    {name: '内蒙古',value: Math.round(Math.random()*1000)},
-                    {name: '陕西',value: Math.round(Math.random()*1000)},
-                    {name: '吉林',value: Math.round(Math.random()*1000)},
-                    {name: '福建',value: Math.round(Math.random()*1000)},
-                    {name: '贵州',value: Math.round(Math.random()*1000)},
-                    {name: '广东',value: 978,selected:true},
-                    {name: '青海',value: Math.round(Math.random()*1000)},
-                    {name: '西藏',value: Math.round(Math.random()*1000)},
-                    {name: '四川',value: Math.round(Math.random()*1000)},
-                    {name: '宁夏',value: Math.round(Math.random()*1000)},
-                    {name: '海南',value: Math.round(Math.random()*1000)},
-                    {name: '台湾',value: Math.round(Math.random()*1000)},
-                    {name: '香港',value: Math.round(Math.random()*1000)},
-                    {name: '澳门',value: Math.round(Math.random()*1000)}
+                    {name:'西藏', value:605.83},
+                    {name:'青海', value:1670.44},
+                    {name:'宁夏', value:2102.21},
+                    {name:'海南', value:2522.66},
+                    {name:'甘肃', value:5020.37},
+                    {name:'贵州', value:5701.84},
+                    {name:'新疆', value:6610.05},
+                    {name:'云南', value:8893.12},
+                    {name:'重庆', value:10011.37},
+                    {name:'吉林', value:10568.83},
+                    {name:'山西', value:11237.55},
+                    {name:'天津', value:11307.28},
+                    {name:'江西', value:11702.82},
+                    {name:'广西', value:11720.87},
+                    {name:'陕西', value:12512.3},
+                    {name:'黑龙江', value:12582},
+                    {name:'内蒙古', value:14359.88},
+                    {name:'安徽', value:15300.65},
+                    {name:'北京', value:16251.93, selected:true},
+                    {name:'福建', value:17560.18},
+                    {name:'上海', value:19195.69, selected:true},
+                    {name:'湖北', value:19632.26},
+                    {name:'湖南', value:19669.56},
+                    {name:'四川', value:21026.68},
+                    {name:'辽宁', value:22226.7},
+                    {name:'河北', value:24515.76},
+                    {name:'河南', value:26931.03},
+                    {name:'浙江', value:32318.85},
+                    {name:'山东', value:45361.85},
+                    {name:'江苏', value:49110.27},
+                    {name:'广东', value:53210.28, selected:true}
                 ]
             },
             {
@@ -1832,11 +1846,11 @@ var optionMap = {
                     formatter: "{a} <br/>{b} : {c} ({d}%)"
                 },
                 center: [700, 225],
-                radius: [40, 120],
+                radius: [30, 120],
                 data:[
-                    {name: '北京', value: 790},
-                    {name: '上海', value: 940},
-                    {name: '广东', value: 978}
+                    {name: '北京', value: 16251.93},
+                    {name: '上海', value: 19195.69},
+                    {name: '广东', value: 53210.28}
                 ]
             }
         ],
@@ -2089,8 +2103,8 @@ var optionMap = {
 		    },
 		    legend: {
 		        orient: 'vertical',
+                x:'left',
 		        selectedMode:'single',
-		        x:'left',
 		        data:['八纵通道', '八横通道'],
 		        textStyle : {
 		            color: '#fff'
