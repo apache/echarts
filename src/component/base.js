@@ -403,7 +403,8 @@ define(function(require) {
                 }
                 
                 // 标准化一些参数
-                data[i].tooltip = {trigger:'item'}; // tooltip.trigger指定为item
+                data[i].tooltip = data[i].tooltip 
+                                  || {trigger:'item'}; // tooltip.trigger指定为item
                 data[i].name = typeof data[i].name != 'undefined'
                                ? data[i].name : '';
                 data[i].value = typeof data[i].value != 'undefined'
