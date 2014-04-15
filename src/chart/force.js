@@ -14,6 +14,8 @@ define(function(require) {
                                 || window.webkitRequestAnimationFrame
                                 || function(func){setTimeout(func, 16);};
 
+    require('../util/shape/icon');
+
     // 保存节点的位置，改变数据时能够有更好的动画效果
     var nodeInitialPos = {};
 
@@ -52,6 +54,7 @@ define(function(require) {
 
         var nodeShapes = [];
         var linkShapes = [];
+        var arrowShapes = [];
 
         // 节点分类
         var categories = [];
@@ -173,14 +176,15 @@ define(function(require) {
                     rawLinks = zrUtil.clone(self.query(serie, 'links'));
                     _preProcessData(rawNodes, rawLinks);
                     // Reset data
-                    nodePositions = [];
-                    nodePrePositions = [];
-                    nodeMasses = [];
-                    nodeWeights = [];
-                    linkWeights = [];
-                    nodeMasses = [];
-                    nodeShapes = [];
-                    linkShapes = [];
+                    nodePositions.length = 0;
+                    nodePrePositions.length = 0;
+                    nodeMasses.length = 0;
+                    nodeWeights.length = 0;
+                    linkWeights.length = 0;
+                    nodeMasses.length = 0;
+                    nodeShapes.length = 0;
+                    linkShapes.length = 0;
+                    arrowShapes.length = 0;
 
                     var area = viewportWidth * viewportHeight;
 
@@ -451,7 +455,6 @@ define(function(require) {
                 linkShapes.push(linkShape);
                 self.shapeList.push(linkShape);
 
-
                 var source = filteredNodes[link.source];
                 var target = filteredNodes[link.target];
 
@@ -480,6 +483,35 @@ define(function(require) {
                 );
 
                 zr.addShape(linkShape);
+
+                // Arrow shape
+                if (forceSerie.showArrow) {
+                    var arrowShape = {
+                        id : zr.newShapeId(self.type),
+                        shape : 'icon',
+                        style: {
+                            x: -5,
+                            y: 0,
+                            width: 10,
+                            height: 15,
+                            iconType: 'arrow',
+                            brushType: "fill",
+                            // Use same style with link shape
+                            color: linkShape.style.strokeColor,
+                            opacity: linkShape.style.opacity,
+                            shadowBlur: linkShape.style.shadowBlur,
+                            shadowColor: linkShape.style.shadowColor,
+                            shadowOffsetX: linkShape.style.shadowOffsetX,
+                            shadowOffsetY: linkShape.style.shadowOffsetY,
+                        },
+                        highlightStyle: linkShape.highlightStyle,
+                        position: [0, 0],
+                        rotation: 0
+                    };
+                    self.shapeList.push(arrowShape);
+                    arrowShapes.push(arrowShape);
+                    zr.addShape(arrowShape);
+                }
             }
 
             var narr = new NDArray(linkWeights);
@@ -489,8 +521,10 @@ define(function(require) {
             }
         }
 
-        function _updateLinkShapes(){
-            for (var i = 0, l = filteredLinks.length; i < l; i++) {
+        function _updateLinkShapes() {
+            var v = vec2.create();
+            var right = vec2.create(1, 0);
+            for (var i = 0, len = filteredLinks.length; i < len; i++) {
                 var link = filteredLinks[i];
                 var linkShape = linkShapes[i];
                 var sourceShape = nodeShapes[link.source];
@@ -500,6 +534,29 @@ define(function(require) {
                 linkShape.style.yStart = sourceShape.position[1];
                 linkShape.style.xEnd = targetShape.position[0];
                 linkShape.style.yEnd = targetShape.position[1];
+
+                if (forceSerie.showArrow) {
+                    var arrowShape = arrowShapes[i];
+                    vec2.copy(arrowShape.position, targetShape.position);
+
+                    vec2.sub(v, sourceShape.position, targetShape.position);
+                    vec2.normalize(v, v);
+
+                    vec2.scaleAndAdd(
+                        arrowShape.position, arrowShape.position, v, targetShape.style.r + 2
+                    );
+
+                    if (v[0] < 0) {
+                        var angle = Math.asin(v[1]);
+                    } else {
+                        if (v[1] < 0) {
+                            var angle = 2 * Math.PI - Math.acos(-v[0]);
+                        } else {
+                            var angle = Math.acos(-v[0]);
+                        }
+                    }
+                    arrowShape.rotation = angle  - Math.PI / 2;
+                }
             }
         }
 
@@ -651,6 +708,14 @@ define(function(require) {
             for (var i = 0; i < linkShapes.length; i++) {
                 var shape = linkShapes[i];
                 tmp.style = shape.style;
+                zr.modShape(shape.id, tmp, true);
+            }
+
+            tmp = {};
+            for (var i = 0; i < arrowShapes.length; i++) {
+                var shape = arrowShapes[i];
+                tmp.position = shape.position;
+                tmp.rotation = shape.rotation;
                 zr.modShape(shape.id, tmp, true);
             }
 

@@ -680,6 +680,7 @@
             coolDown : 0.99,
             // 分类里如果有样式会覆盖节点默认样式
             categories : [],
+            showArrow: false,
             itemStyle: {
                 normal: {
                     color: null,
