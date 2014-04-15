@@ -485,16 +485,16 @@ define(function(require) {
                 zr.addShape(linkShape);
 
                 // Arrow shape
-                if (forceSerie.showArrow) {
+                if (forceSerie.linkSymbol) {
                     var arrowShape = {
                         id : zr.newShapeId(self.type),
                         shape : 'icon',
                         style: {
                             x: -5,
                             y: 0,
-                            width: 10,
-                            height: 15,
-                            iconType: 'arrow',
+                            width: forceSerie.linkSymbolSize[0],
+                            height: forceSerie.linkSymbolSize[1],
+                            iconType: forceSerie.linkSymbol,
                             brushType: "fill",
                             // Use same style with link shape
                             color: linkShape.style.strokeColor,
@@ -535,7 +535,7 @@ define(function(require) {
                 linkShape.style.xEnd = targetShape.position[0];
                 linkShape.style.yEnd = targetShape.position[1];
 
-                if (forceSerie.showArrow) {
+                if (forceSerie.linkSymbol) {
                     var arrowShape = arrowShapes[i];
                     vec2.copy(arrowShape.position, targetShape.position);
 
@@ -546,14 +546,10 @@ define(function(require) {
                         arrowShape.position, arrowShape.position, v, targetShape.style.r + 2
                     );
 
-                    if (v[0] < 0) {
-                        var angle = Math.asin(v[1]);
+                    if (v[1] < 0) {
+                        var angle = 2 * Math.PI - Math.acos(-v[0]);
                     } else {
-                        if (v[1] < 0) {
-                            var angle = 2 * Math.PI - Math.acos(-v[0]);
-                        } else {
-                            var angle = Math.acos(-v[0]);
-                        }
+                        var angle = Math.acos(-v[0]);
                     }
                     arrowShape.rotation = angle  - Math.PI / 2;
                 }

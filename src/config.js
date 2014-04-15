@@ -717,6 +717,8 @@ define(function() {
             centripetal : 1,
             // 冷却因子
             coolDown : 0.99,
+            linkSymbol: null,
+            linkSymbolSize: [10, 15],
             // 分类里如果有样式会覆盖节点默认样式
             categories : [],
             itemStyle: {
