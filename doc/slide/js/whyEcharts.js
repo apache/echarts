@@ -1,4 +1,4 @@
-﻿var developMode = false;
+﻿var developMode = true;
 
 if (developMode) {
     // for develop
