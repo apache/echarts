@@ -8,6 +8,7 @@
 define(
     function(require) {
         var Base = require('zrender/shape/Base');
+        var PolygonShape = require('zrender/shape/Polygon');
         var matrix = require('zrender/tool/matrix');
         
         function HandlePolygon(options) {
@@ -22,7 +23,7 @@ define(
              * @param {Object} style 样式
              */
             buildPath : function(ctx, style) {
-                require('zrender/shape').get('polygon').buildPath(
+                PolygonShape.prototype.buildPath(
                     ctx, style
                 );
                 return;
@@ -45,7 +46,7 @@ define(
                     y = originPos[1];
                 }
 
-                var rect = e.style.rect;
+                var rect = this.style.rect;
                 if (x >= rect.x
                     && x <= (rect.x + rect.width)
                     && y >= rect.y

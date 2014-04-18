@@ -93,10 +93,7 @@ define(function(require) {
             return zrUtil.merge(
                        opt || {},
                        zrUtil.clone(ecConfig[self.type] || {}),
-                       {
-                           'overwrite': false,
-                           'recursive': true
-                       }
+                       false
                    );
         }
 
@@ -129,8 +126,7 @@ define(function(require) {
         function getFont(textStyle) {
             var finalTextStyle = zrUtil.merge(
                 zrUtil.clone(textStyle) || {},
-                ecConfig.textStyle,
-                { 'overwrite': false}
+                ecConfig.textStyle
             );
             return finalTextStyle.fontStyle + ' '
                    + finalTextStyle.fontWeight + ' '
@@ -356,11 +352,7 @@ define(function(require) {
         function _markPoint(serie, seriesIndex, mpOption, component) {
             zrUtil.merge(
                 mpOption,
-                ecConfig.markPoint,
-                {
-                    'overwrite': false,
-                    'recursive': true
-                }
+                ecConfig.markPoint
             );
             mpOption.name = serie.name;
                    
@@ -448,11 +440,7 @@ define(function(require) {
         function _markLine(serie, seriesIndex, mlOption, component) {
             zrUtil.merge(
                 mlOption,
-                ecConfig.markLine,
-                {
-                    'overwrite': false,
-                    'recursive': true
-                }
+                ecConfig.markLine
             );
             // 标准化一些同时支持Array和String的参数
             mlOption.symbol = mlOption.symbol instanceof Array

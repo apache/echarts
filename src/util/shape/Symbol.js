@@ -34,6 +34,8 @@
 define(
     function(require) {
         var Base = require('zrender/shape/Base');
+        var PolygonShape = require('zrender/shape/Polygon')
+        var polygonInstance = new PolygonShape({});
         
         function Symbol(options) {
             Base.call(this, options);
@@ -91,7 +93,7 @@ define(
              * @param {Object} style
              */
             getRect : function(style) {
-                return require('zrender/shape/Polygon').getRect(style);
+                return polygonInstance.getRect(style);
             },
             
             isCover : function() {

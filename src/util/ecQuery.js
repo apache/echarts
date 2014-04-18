@@ -64,8 +64,7 @@ define(function() {
                 }
                 else {
                     zrUtil.merge(
-                        finalOption, tempOption,
-                        { 'overwrite': true, 'recursive': true }
+                        finalOption, tempOption, true
                     );
                 }
             }

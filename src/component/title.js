@@ -134,7 +134,7 @@ define(function (require) {
             }
 
             self.shapeList.push(new TextShape(textShape));
-            subtext !== '' && self.shapeList.push(new TextSahpe(subtextShape));
+            subtext !== '' && self.shapeList.push(new TextShape(subtextShape));
         }
 
         function _buildBackground() {
@@ -250,19 +250,11 @@ define(function (require) {
                 titleOption = option.title;
                 titleOption.textStyle = zrUtil.merge(
                     titleOption.textStyle,
-                    ecConfig.textStyle,
-                    {
-                        'overwrite': false,
-                        'recursive': false
-                    }
+                    ecConfig.textStyle
                 );
                 titleOption.subtextStyle = zrUtil.merge(
                     titleOption.subtextStyle,
-                    ecConfig.textStyle,
-                    {
-                        'overwrite': false,
-                        'recursive': false
-                    }
+                    ecConfig.textStyle
                 );
     
                 self.clear();

@@ -729,19 +729,11 @@ define(function(require) {
             var _merge = zrUtil.merge;
             opt = _merge(
                       opt || {},
-                      ecConfig.chord,
-                      {
-                          'overwrite' : false,
-                          'recursive' : true
-                      }
+                      ecConfig.chord
                   );
             opt.itemStyle.normal.label.textStyle = _merge(
                 opt.itemStyle.normal.label.textStyle || {},
-                ecConfig.textStyle,
-                {
-                    'overwrite' : false,
-                    'recursive' : true
-                }
+                ecConfig.textStyle
             );
         }
 

@@ -8,6 +8,7 @@
 define(function (require) {
     var LineShape = require('zrender/shape/Line');
     var RectangleShape = require('zrender/shape/Rectangle');
+    var rectangleInstance = new RectangleShape({});
     
     /**
      * 构造函数
@@ -77,7 +78,7 @@ define(function (require) {
                 // strokeColor : ecConfig.categoryAxis.axisLine.lineStyle.color
             }
         });
-        var _axisShadowShape = LineShape({
+        var _axisShadowShape = new LineShape({
             zlevel: 1,                      // grid上，chart下
             invisible : true,
             hoverable: false,
@@ -1130,7 +1131,7 @@ define(function (require) {
                 if (_needAxisTrigger 
                     && grid 
                     && zrArea.isInside(
-                        RectangleShape,
+                        rectangleInstance,
                         grid.getArea(),
                         mx,
                         my
@@ -1497,11 +1498,7 @@ define(function (require) {
             option.tooltip = self.reformOption(option.tooltip);
             option.tooltip.textStyle = zrUtil.merge(
                 option.tooltip.textStyle,
-                ecConfig.textStyle,
-                {
-                    'overwrite': false,
-                    'recursive': true
-                }
+                ecConfig.textStyle
             );
             // 补全padding属性
             option.tooltip.padding = self.reformCssArray(
@@ -1520,7 +1517,6 @@ define(function (require) {
                     break;
                 }
             }
-            
             _showDelay = option.tooltip.showDelay;
             _hideDelay = option.tooltip.hideDelay;
             _defaultCssText = _style(option.tooltip);
@@ -1540,11 +1536,7 @@ define(function (require) {
                 option.tooltip = self.reformOption(option.tooltip);
                 option.tooltip.textStyle = zrUtil.merge(
                     option.tooltip.textStyle,
-                    ecConfig.textStyle,
-                    {
-                        'overwrite': false,
-                        'recursive': true
-                    }
+                    ecConfig.textStyle
                 );
                 // 补全padding属性
                 option.tooltip.padding = self.reformCssArray(

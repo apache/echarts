@@ -400,11 +400,7 @@ define(function(require) {
             // serie里有默认配置，放心大胆的用！
             var itemStyle = zrUtil.merge(
                     zrUtil.clone(data.itemStyle) || {},
-                    serie.itemStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
+                    serie.itemStyle
                 );
             // label配置
             var labelControl = itemStyle[status].label;
@@ -540,11 +536,7 @@ define(function(require) {
                 // serie里有默认配置，放心大胆的用！
                 var itemStyle = zrUtil.merge(
                         zrUtil.clone(data.itemStyle) || {},
-                        serie.itemStyle,
-                        {
-                            'overwrite' : false,
-                            'recursive' : true
-                        }
+                        serie.itemStyle
                     );
                 // labelLine配置
                 var labelLineControl = itemStyle[status].labelLine;
@@ -563,7 +555,7 @@ define(function(require) {
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
                 // 三角函数缓存已在zrender/tool/math中做了
-                return new BorkenLineShape({
+                return new BrokenLineShape({
                     shape : 'brokenLine',
                     zlevel : _zlevelBase + 1,
                     hoverable : false,
@@ -638,29 +630,17 @@ define(function(require) {
             var _merge = zrUtil.merge;
             opt = _merge(
                       opt || {},
-                      ecConfig.pie,
-                      {
-                          'overwrite' : false,
-                          'recursive' : true
-                      }
+                      ecConfig.pie
                   );
 
             // 通用字体设置
             opt.itemStyle.normal.label.textStyle = _merge(
                 opt.itemStyle.normal.label.textStyle || {},
-                ecConfig.textStyle,
-                {
-                    'overwrite' : false,
-                    'recursive' : true
-                }
+                ecConfig.textStyle
             );
             opt.itemStyle.emphasis.label.textStyle = _merge(
                 opt.itemStyle.emphasis.label.textStyle || {},
-                ecConfig.textStyle,
-                {
-                    'overwrite' : false,
-                    'recursive' : true
-                }
+                ecConfig.textStyle
             );
 
             return opt;

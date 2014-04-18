@@ -257,6 +257,9 @@ define(function(require) {
                         vector[0], vector[1]
                     ];
                 }
+                else {
+                    rotation = [0, 0, 0];
+                }
                 
                 self.shapeList.push(new TextShape({
                     style : style,

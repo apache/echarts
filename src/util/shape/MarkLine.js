@@ -8,8 +8,17 @@
 define(
     function(require) {
         var Base = require('zrender/shape/Base');
+        var IconShape = require('./Icon');
+        var LineShape = require('zrender/shape/Line');
+        var lineInstance = new LineShape({});
+        var BrokenLineShape = require('zrender/shape/BrokenLine');
+        var brokenLineInstance = new BrokenLineShape({});
+    
         var matrix = require('zrender/tool/matrix');
         var area = require('zrender/tool/area');
+        var dashedLineTo = require('zrender/shape/util/dashedLineTo');
+        var smoothSpline = require('zrender/shape/util/smoothSpline');
+        
         
         function MarkLine(options) {
             Base.call(this, options);
@@ -87,7 +96,7 @@ define(
                                      * (style.lineType == 'dashed' ? 5 : 1);
                         ctx.moveTo(pointList[0][0],pointList[0][1]);
                         for (var i = 1; i < len; i++) {
-                            this.dashedLineTo(
+                            dashedLineTo(
                                 ctx,
                                 pointList[i - 1][0], pointList[i - 1][1],
                                 pointList[i][0], pointList[i][1],
@@ -158,7 +167,7 @@ define(
                     style.y = y - symbolSize,
                     style.width = symbolSize * 2;
                     style.height = symbolSize * 2;
-                    require('zrender/shape').get('icon').buildPath(ctx, style);
+                    IconShape.prototype.buildPath(ctx, style);
                 }
                 
                 ctx.closePath();
@@ -254,7 +263,7 @@ define(
                     pointList[3] = [lastPointX, lastPointY];
                     pointList[1] = this.getOffetPoint(pointList[0], pointList[3]);
                     pointList[2] = this.getOffetPoint(pointList[3], pointList[0]);
-                    pointList = this.smoothSpline(pointList, false);
+                    pointList = smoothSpline(pointList, false);
                     // 修正最后一点在插值产生的偏移
                     pointList[pointList.length - 1] = [lastPointX, lastPointY];
                 }
@@ -329,8 +338,8 @@ define(
             
             isCover : function(x, y) {
                 return this.style.smooth !== 'spline' 
-                       ? area.isInside(require('zrender/shape/Line'), this.style, x, y)
-                       : area.isInside(require('zrender/shape/BrokenLine'), this.style, x, y);
+                       ? area.isInside(lineInstance, this.style, x, y)
+                       : area.isInside(brokenLineInstance, this.style, x, y);
             }
         };
 

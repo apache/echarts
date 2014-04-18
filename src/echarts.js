@@ -128,10 +128,6 @@ define(function(require) {
             _zr.on(zrConfig.EVENT.DRAGLEAVE, _ondragleave);
             _zr.on(zrConfig.EVENT.DROP, _ondrop);
 
-            // 动态扩展zrender shape：icon、markLine
-            require('./util/shape/icon');
-            require('./util/shape/markLine');
-
             // 内置图表注册
             var chartLibrary = require('./chart');
             require('./chart/island');
@@ -894,16 +890,13 @@ define(function(require) {
                 
                 var zrUtil = require('zrender/tool/util');
                 zrUtil.merge(
-                    magicOption, param.option,
-                    { 'overwrite': true, 'recursive': true }
+                    magicOption, param.option, true
                 );
                 zrUtil.merge(
-                    _optionBackup, param.option,
-                    { 'overwrite': true, 'recursive': true }
+                    _optionBackup, param.option, true
                 );
                 zrUtil.merge(
-                    _optionRestore, param.option,
-                    { 'overwrite': true, 'recursive': true }
+                    _optionRestore, param.option, true
                 );
                 _island.refresh(magicOption);
                 _toolbox.refresh(magicOption);
@@ -1023,10 +1016,7 @@ define(function(require) {
                 zrUtil.merge(
                     _option,
                     zrUtil.clone(option),
-                    {
-                        'overwrite': true,
-                        'recursive': true
-                    }
+                    true
                 );
             }
             else {
@@ -1529,8 +1519,7 @@ define(function(require) {
 
             var finalTextStyle = zrUtil.merge(
                 zrUtil.clone(loadingOption.textStyle),
-                _themeConfig.textStyle,
-                { 'overwrite': false}
+                _themeConfig.textStyle
             );
             loadingOption.textStyle.textFont = finalTextStyle.fontStyle + ' '
                                             + finalTextStyle.fontWeight + ' '
@@ -1599,8 +1588,7 @@ define(function(require) {
                 
                 // 应用新主题
                 zrUtil.merge(
-                    _themeConfig, zrUtil.clone(theme),
-                    { 'overwrite': true, 'recursive': true }
+                    _themeConfig, zrUtil.clone(theme), true
                 );
             }
             

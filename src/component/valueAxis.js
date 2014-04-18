@@ -851,19 +851,11 @@ define(function (require) {
                 // 通用字体设置
                 option.axisLabel.textStyle = zrUtil.merge(
                     option.axisLabel.textStyle || {},
-                    ecConfig.textStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
+                    ecConfig.textStyle
                 );
                 option.axisLabel.textStyle = zrUtil.merge(
                     option.axisLabel.textStyle || {},
-                    ecConfig.textStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
+                    ecConfig.textStyle
                 );
                 series = newSeries;
             }

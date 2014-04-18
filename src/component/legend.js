@@ -90,8 +90,7 @@ define(function (require) {
             for (var i = 0; i < dataLength; i++) {
                 dataTextStyle = zrUtil.merge(
                     data[i].textStyle || {},
-                    textStyle,
-                    {'overwrite': false}
+                    textStyle
                 );
                 dataFont = self.getFont(dataTextStyle);
                 
@@ -324,8 +323,7 @@ define(function (require) {
                     }
                     dataTextStyle = zrUtil.merge(
                         data[i].textStyle || {},
-                        textStyle,
-                        {'overwrite': false}
+                        textStyle
                     );
                     temp += itemWidth
                             + zrArea.getTextWidth(
@@ -333,8 +331,7 @@ define(function (require) {
                                   data[i].textStyle 
                                   ? self.getFont(zrUtil.merge(
                                         data[i].textStyle || {},
-                                        textStyle,
-                                        {'overwrite': false}
+                                        textStyle
                                     ))
                                   : font
                               )
@@ -359,8 +356,7 @@ define(function (require) {
                             data[i].textStyle 
                             ? self.getFont(zrUtil.merge(
                                   data[i].textStyle || {},
-                                  textStyle,
-                                  {'overwrite': false}
+                                  textStyle
                               ))
                             : font
                         )

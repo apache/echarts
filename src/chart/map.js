@@ -95,13 +95,13 @@ define(function(require) {
                                         || {};
 
                     if (series[i].textFixed) {
-                        zrUtil.mergeFast(
-                            _textFixed, series[i].textFixed, true, false
+                        zrUtil.merge(
+                            _textFixed, series[i].textFixed, true
                         );
                     }
                     if (series[i].geoCoord) {
-                        zrUtil.mergeFast(
-                            _geoCoord, series[i].geoCoord, true, false
+                        zrUtil.merge(
+                            _geoCoord, series[i].geoCoord, true
                         );
                     }
                     

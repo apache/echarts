@@ -98,11 +98,7 @@ define(function (require) {
                                         self.getFont(
                                             zrUtil.merge(
                                                 data[i].textStyle,
-                                                option.axisLabel.textStyle,
-                                                {
-                                                    'overwrite': false,
-                                                    'recursive': true
-                                                }
+                                                option.axisLabel.textStyle
                                            )
                                         )
                                     );
@@ -352,8 +348,7 @@ define(function (require) {
                     }
                     dataTextStyle = zrUtil.merge(
                         data[i].textStyle || {},
-                        textStyle,
-                        {'overwrite': false}
+                        textStyle
                     );
                     axShape = {
                         shape : 'text',
@@ -404,8 +399,7 @@ define(function (require) {
                     }
                     dataTextStyle = zrUtil.merge(
                         data[i].textStyle || {},
-                        textStyle,
-                        {'overwrite': false}
+                        textStyle
                     );
                     axShape = {
                         shape : 'text',
@@ -631,19 +625,11 @@ define(function (require) {
                 // 通用字体设置
                 option.axisLabel.textStyle = zrUtil.merge(
                     option.axisLabel.textStyle || {},
-                    ecConfig.textStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
+                    ecConfig.textStyle
                 );
                 option.axisLabel.textStyle = zrUtil.merge(
                     option.axisLabel.textStyle || {},
-                    ecConfig.textStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
+                    ecConfig.textStyle
                 );
             }
             self.clear();

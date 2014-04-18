@@ -39,7 +39,7 @@ define(function(require) {
         var _symbol = ecConfig.symbolList;
         var _sIndex2ShapeMap = {};  // series拐点图形类型，seriesIndex索引到shape type
 
-        IconShape.iconLibrary['legendLineIcon'] = legendLineIcon;
+        IconShape.prototype.iconLibrary['legendLineIcon'] = legendLineIcon;
         
         function _buildShape() {
             finalPLMap = {};
@@ -1047,7 +1047,7 @@ define(function(require) {
             x += Math.round((width - height) / 2) - 1;
             width = height = height + 2;
         }
-        symbol = IconShape.iconLibrary[symbol];
+        symbol = IconShape.prototype.iconLibrary[symbol];
         
         if (symbol) {
             var x2 = style.x;
