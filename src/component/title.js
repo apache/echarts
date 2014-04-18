@@ -6,6 +6,9 @@
  *
  */
 define(function (require) {
+    var TextShape = require('zrender/shape/Text');
+    var RectangleShape = require('zrender/shape/Rectangle');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -34,7 +37,6 @@ define(function (require) {
             _buildItem();
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
         }
@@ -131,8 +133,8 @@ define(function (require) {
                                           = titleOption.textAlign;
             }
 
-            self.shapeList.push(textShape);
-            subtext !== '' && self.shapeList.push(subtextShape);
+            self.shapeList.push(new TextShape(textShape));
+            subtext !== '' && self.shapeList.push(new TextSahpe(subtextShape));
         }
 
         function _buildBackground() {
@@ -141,8 +143,7 @@ define(function (require) {
             var pBottom = titleOption.padding[2];
             var pLeft = titleOption.padding[3];
 
-            self.shapeList.push({
-                shape : 'rectangle',
+            self.shapeList.push(new RectangleShape({
                 zlevel : _zlevelBase,
                 hoverable :false,
                 style : {
@@ -156,7 +157,7 @@ define(function (require) {
                     strokeColor : titleOption.borderColor,
                     lineWidth : titleOption.borderWidth
                 }
-            });
+            }));
         }
 
         /**

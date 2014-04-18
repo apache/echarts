@@ -6,6 +6,10 @@
  *
  */
 define(function (require) {
+    var TextShape = require('zrender/shape/Text');
+    var RectangleShape = require('zrender/shape/Rectangle');
+    var HandlePolygonShape = require('../util/shape/HandlePolygon');
+
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -57,7 +61,6 @@ define(function (require) {
             }
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
             
@@ -110,7 +113,7 @@ define(function (require) {
                         textShape.style.y += textHeight / 2 + _textGap;
                         textShape.style.textBaseline = 'bottom';
                     }
-                    self.shapeList.push(textShape);
+                    self.shapeList.push(new TextShape(textShape));
                 }
             }
 
@@ -125,12 +128,11 @@ define(function (require) {
                 );
                 itemShape._idx = i;
                 itemShape.onclick = _dataRangeSelected;
-                self.shapeList.push(itemShape);
+                self.shapeList.push(new RectangleShapeShape(itemShape));
                 
                 if (needValueText) {
                     // 文字
                     textShape = {
-                        shape : 'text',
                         zlevel : _zlevelBase,
                         style : {
                             x : lastX + itemWidth + 5,
@@ -155,7 +157,7 @@ define(function (require) {
                     }
                     textShape._idx = i;
                     textShape.onclick = _dataRangeSelected;
-                    self.shapeList.push(textShape);
+                    self.shapeList.push(new TextShape(textShape));
                 }
 
                 if (dataRangeOption.orient == 'horizontal') {
@@ -188,7 +190,7 @@ define(function (require) {
                     textShape.style.textBaseline = 'top';
                 }
 
-                self.shapeList.push(textShape);
+                self.shapeList.push(new TextShape(textShape));
             }
         }
  
@@ -227,7 +229,7 @@ define(function (require) {
                         textShape.style.y += textHeight / 2 + _textGap;
                         textShape.style.textBaseline = 'bottom';
                     }
-                    self.shapeList.push(textShape);
+                    self.shapeList.push(new TextShape(textShape));
                 } 
             }
             
@@ -239,7 +241,6 @@ define(function (require) {
             }
             if (dataRangeOption.orient == 'horizontal') {
                 itemShape = {
-                    shape : 'rectangle',
                     zlevel : _zlevelBase,
                     style : {
                         x : lastX,
@@ -257,7 +258,6 @@ define(function (require) {
             }
             else {
                 itemShape = {
-                    shape : 'rectangle',
                     zlevel : _zlevelBase,
                     style : {
                         x : lastX,
@@ -273,7 +273,7 @@ define(function (require) {
                 };
                 lastY += itemHeight * 10 + _textGap;
             }
-            self.shapeList.push(itemShape);
+            self.shapeList.push(new RectangleShape(itemShape));
             if (dataRangeOption.calculable) {
                 _calculableLocation = itemShape.style;
                 _buildFiller();
@@ -287,7 +287,7 @@ define(function (require) {
                     lastX, lastY, dataRangeOption.text[1]
                 );
 
-                self.shapeList.push(textShape);
+                self.shapeList.push(new TextShape(textShape));
             }
         }
         
@@ -296,7 +296,6 @@ define(function (require) {
          */
         function _buildFiller() {
             _fillerShae = {
-                shape : 'rectangle',
                 zlevel : _zlevelBase + 1,
                 style : {
                     x : _calculableLocation.x,
@@ -315,7 +314,7 @@ define(function (require) {
                 _type : 'filler'
             };
 
-            self.shapeList.push(_fillerShae);
+            self.shapeList.push(new RectangleShape(_fillerShae));
         }
         
         /**
@@ -498,7 +497,6 @@ define(function (require) {
             }
             
             _startShape = {
-                shape : 'handlePolygon',
                 style : {
                     pointList : pointListStart,
                     text : dataRangeOption.max.toFixed(
@@ -520,7 +518,6 @@ define(function (require) {
             };
             
             _endShape = {
-                shape : 'handlePolygon',
                 style : {
                     pointList : pointListEnd,
                     text : dataRangeOption.min.toFixed(
@@ -556,8 +553,8 @@ define(function (require) {
             _startShape.style.height        = _endShape.style.height        = 0;
             _startShape.style.textPosition  = _endShape.style.textPosition  = 'specific';
             
-            self.shapeList.push(_startShape);
-            self.shapeList.push(_endShape);
+            self.shapeList.push(new HandlePolygonShape(_startShape));
+            self.shapeList.push(new HandlePolygonShape(_endShape));
         }
         
         function _bulidMask() {
@@ -566,7 +563,6 @@ define(function (require) {
             var width = _calculableLocation.width;
             var height = _calculableLocation.height;
             _startMask = {
-                shape : 'rectangle',
                 zlevel : _zlevelBase + 1,
                 style : {
                     x : x,
@@ -580,7 +576,6 @@ define(function (require) {
                 hoverable:false
             };
             _endMask = {
-                shape : 'rectangle',
                 zlevel : _zlevelBase + 1,
                 style : {
                     x : dataRangeOption.orient == 'horizontal'
@@ -595,8 +590,8 @@ define(function (require) {
                 },
                 hoverable:false
             };
-            self.shapeList.push(_startMask);
-            self.shapeList.push(_endMask);
+            self.shapeList.push(new RectangleShape(_startMask));
+            self.shapeList.push(new RectangleShape(_endMask));
         }
         
         function _buildBackground() {
@@ -605,8 +600,7 @@ define(function (require) {
             var pBottom = dataRangeOption.padding[2];
             var pLeft = dataRangeOption.padding[3];
 
-            self.shapeList.push({
-                shape : 'rectangle',
+            self.shapeList.push(new RectangleShape({
                 zlevel : _zlevelBase,
                 hoverable :false,
                 style : {
@@ -620,7 +614,7 @@ define(function (require) {
                     strokeColor : dataRangeOption.borderColor,
                     lineWidth : dataRangeOption.borderWidth
                 }
-            });
+            }));
         }
 
         /**
@@ -813,7 +807,6 @@ define(function (require) {
         // 指定文本
         function _getTextShape(x, y, text) {
             return {
-                shape : 'text',
                 zlevel : _zlevelBase,
                 style : {
                     x : (dataRangeOption.orient == 'horizontal'
@@ -841,7 +834,6 @@ define(function (require) {
         // 色尺legend item shape
         function _getItemShape(x, y, width, height, color) {
             return {
-                shape : 'rectangle',
                 zlevel : _zlevelBase,
                 style : {
                     x : x,
@@ -861,40 +853,40 @@ define(function (require) {
         /**
          * 拖拽范围控制
          */
-        function _ondrift(e, dx, dy) {
+        function _ondrift(dx, dy) {
             var x = _calculableLocation.x;
             var y = _calculableLocation.y;
             var width = _calculableLocation.width;
             var height = _calculableLocation.height;
             
             if (dataRangeOption.orient == 'horizontal') {
-                if (e.style.x + dx <= x) {
-                    e.style.x = x;
+                if (this.style.x + dx <= x) {
+                    this.style.x = x;
                 }
-                else if (e.style.x + dx + e.style.width >= x + width) {
-                    e.style.x = x + width - e.style.width;
+                else if (this.style.x + dx + this.style.width >= x + width) {
+                    this.style.x = x + width - this.style.width;
                 }
                 else {
-                    e.style.x += dx;
+                    this.style.x += dx;
                 }
             }
             else {
-                if (e.style.y + dy <= y) {
-                    e.style.y = y;
+                if (this.style.y + dy <= y) {
+                    this.style.y = y;
                 }
-                else if (e.style.y + dy + e.style.height >= y + height) {
-                    e.style.y = y + height - e.style.height;
+                else if (this.style.y + dy + this.style.height >= y + height) {
+                    this.style.y = y + height - this.style.height;
                 }
                 else {
-                    e.style.y += dy;
+                    this.style.y += dy;
                 }
             }
 
-            if (e._type == 'filler') {
+            if (this._type == 'filler') {
                 _syncHandleShape();
             }
             else {
-                _syncFillerShape(e);
+                _syncFillerShape(this);
             }
             
             if (dataRangeOption.realtime) {
@@ -1304,9 +1296,6 @@ define(function (require) {
         init(option);
     }
     
-    // 动态扩展zrender shape：candle
-    require('../util/shape/handlePolygon');
-
     require('../component').define('dataRange', DataRange);
 
     return DataRange;

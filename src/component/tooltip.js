@@ -6,6 +6,9 @@
  *
  */
 define(function (require) {
+    var LineShape = require('zrender/shape/Line');
+    var RectangleShape = require('zrender/shape/Rectangle');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -21,14 +24,12 @@ define(function (require) {
         var ecData = require('../util/ecData');
 
         var zrConfig = require('zrender/config');
-        var zrShape = require('zrender/shape');
         var zrEvent = require('zrender/tool/event');
         var zrArea = require('zrender/tool/area');
         var zrColor = require('zrender/tool/color');
         var zrUtil = require('zrender/tool/util');
-        var zrShapeBase = require('zrender/shape/base');
+        var zrShapeBase = require('zrender/shape/Base');
 
-        var rectangle = zrShape.get('rectangle');
         var self = this;
         self.type = ecConfig.COMPONENT_TYPE_TOOLTIP;
 
@@ -67,9 +68,7 @@ define(function (require) {
 
         var _lastTipShape = false;
         var _axisLineWidth = 0;
-        var _axisLineShape = {
-            shape : 'line',
-            id : zr.newShapeId('tooltip'),
+        var _axisLineShape = new LineShape({
             zlevel: _zlevelBase,
             invisible : true,
             hoverable: false,
@@ -77,10 +76,8 @@ define(function (require) {
                 // lineWidth : 2,
                 // strokeColor : ecConfig.categoryAxis.axisLine.lineStyle.color
             }
-        };
-        var _axisShadowShape = {
-            shape : 'line',
-            id : zr.newShapeId('tooltip'),
+        });
+        var _axisShadowShape = LineShape({
             zlevel: 1,                      // grid上，chart下
             invisible : true,
             hoverable: false,
@@ -88,7 +85,7 @@ define(function (require) {
                 // lineWidth : 10,
                 // strokeColor : ecConfig.categoryAxis.axisLine.lineStyle.color
             }
-        };
+        });
         zr.addShape(_axisLineShape);
         zr.addShape(_axisShadowShape);
 
@@ -1133,7 +1130,7 @@ define(function (require) {
                 if (_needAxisTrigger 
                     && grid 
                     && zrArea.isInside(
-                        rectangle,
+                        RectangleShape,
                         grid.getArea(),
                         mx,
                         my
@@ -1223,9 +1220,8 @@ define(function (require) {
                     zr.delShape(_lastTipShape.tipShape);
                 }
                 for (var i = 0, l = tipShape.length; i < l; i++) {
-                    tipShape[i].id = zr.newShapeId('tooltip');
                     tipShape[i].zlevel = _zlevelBase;
-                    tipShape[i].style = zrShapeBase.getHighlightStyle(
+                    tipShape[i].style = zrShapeBase.prototype.getHighlightStyle(
                         tipShape[i].style,
                         tipShape[i].highlightStyle
                     );
@@ -1394,7 +1390,7 @@ define(function (require) {
                     case ecConfig.CHART_TYPE_RADAR :
                         var dataIndex = params.dataIndex;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
-                            if (shapeList[i].shape == 'polygon'
+                            if (shapeList[i].type == 'polygon'
                                 && ecData.get(shapeList[i], 'seriesIndex') == seriesIndex
                                 && ecData.get(shapeList[i], 'dataIndex') == dataIndex
                             ) {
@@ -1409,7 +1405,7 @@ define(function (require) {
                     case ecConfig.CHART_TYPE_PIE :
                         var name = params.name;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
-                            if (shapeList[i].shape == 'sector'
+                            if (shapeList[i].type == 'sector'
                                 && ecData.get(shapeList[i], 'seriesIndex') == seriesIndex
                                 && ecData.get(shapeList[i], 'name') == name
                             ) {
@@ -1427,7 +1423,7 @@ define(function (require) {
                         var name = params.name;
                         var mapType = serie.mapType;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
-                            if (shapeList[i].shape == 'text'
+                            if (shapeList[i].type == 'text'
                                 && shapeList[i]._mapType == mapType
                                 && shapeList[i].style._text == name
                             ) {
@@ -1441,7 +1437,7 @@ define(function (require) {
                     case ecConfig.CHART_TYPE_CHORD:
                         var name = params.name;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
-                            if (shapeList[i].shape == 'sector'
+                            if (shapeList[i].type == 'sector'
                                 && ecData.get(shapeList[i], 'name') == name
                             ) {
                                 _curTarget = shapeList[i];
@@ -1464,7 +1460,7 @@ define(function (require) {
                     case ecConfig.CHART_TYPE_FORCE:
                         var name = params.name;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
-                            if (shapeList[i].shape == 'circle'
+                            if (shapeList[i].type == 'circle'
                                 && ecData.get(shapeList[i], 'name') == name
                             ) {
                                 _curTarget = shapeList[i];

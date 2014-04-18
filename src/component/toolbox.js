@@ -6,6 +6,11 @@
  *
  */
 define(function (require) {
+    var LineShape = require('zrender/shape/Line');
+    var ImageShape = require('zrender/shape/Image');
+    var RectangleShape = require('zrender/shape/Rectangle');
+    var IconShape = require('../util/shape/Icon');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -166,7 +171,7 @@ define(function (require) {
             for (var i = 0; i < iconLength; i++) {
                 // 图形
                 itemShape = {
-                    shape : 'icon',
+                    type : 'icon',
                     zlevel : _zlevelBase,
                     style : {
                         x : lastX,
@@ -197,7 +202,7 @@ define(function (require) {
                     );
                     itemShape.style.opacity = 0.8;
                     itemShape.highlightStyle.opacity = 1;
-                    itemShape.shape = 'image';
+                    itemShape.type = 'image';
                 }
                 
                 if (toolboxOption.orient == 'horizontal') {
@@ -268,6 +273,12 @@ define(function (require) {
                         break;
                 }
 
+                if (itemShape.type == 'icon') {
+                    itemShape = new IconShape(itemShape);
+                }
+                else if (itemShape.type == 'image') {
+                    itemShape = new ImageShape(itemShape);
+                }
                 self.shapeList.push(itemShape);
                 _iconShapeMap[_iconList[i]] = itemShape;
 
@@ -287,8 +298,7 @@ define(function (require) {
             var pBottom = toolboxOption.padding[2];
             var pLeft = toolboxOption.padding[3];
 
-            self.shapeList.push({
-                shape : 'rectangle',
+            self.shapeList.push(new RectangleShape({
                 zlevel : _zlevelBase,
                 hoverable :false,
                 style : {
@@ -302,7 +312,7 @@ define(function (require) {
                     strokeColor : toolboxOption.borderColor,
                     lineWidth : toolboxOption.borderWidth
                 }
-            });
+            }));
         }
 
         /**
@@ -456,9 +466,7 @@ define(function (require) {
             var x = zrEvent.getX(param.event);
             var y = zrEvent.getY(param.event);
             var zoomOption = option.dataZoom || {};
-            _zoomShape = {
-                shape : 'rectangle',
-                id : zr.newShapeId('zoom'),
+            _zoomShape = new RectangleShape({
                 zlevel : _zlevelBase,
                 style : {
                     x : x,
@@ -475,7 +483,7 @@ define(function (require) {
                                   || ecConfig.dataZoom.handleColor,
                     brushType: 'both'
                 }
-            };
+            });
             zr.addHoverShape(_zoomShape);
             return true; // 阻塞全局事件
         }
@@ -518,9 +526,7 @@ define(function (require) {
                 _marking = true;
                 var x = zrEvent.getX(param.event);
                 var y = zrEvent.getY(param.event);
-                _markShape = {
-                    shape : 'line',
-                    id : zr.newShapeId('mark'),
+                _markShape = new LineShape({
                     zlevel : _zlevelBase,
                     style : {
                         xStart : x,
@@ -540,7 +546,7 @@ define(function (require) {
                                        'toolbox.feature.mark.lineStyle.type'
                                    )
                     }
-                };
+                });
                 zr.addHoverShape(_markShape);
             }
         }
@@ -651,7 +657,7 @@ define(function (require) {
         }
 
         function _iconDisable(target) {
-            if (target.shape != 'image') {
+            if (target.type != 'image') {
                 zr.modShape(target.id, {
                     hoverable : false,
                     clickable : false,
@@ -672,7 +678,7 @@ define(function (require) {
         }
 
         function _iconEnable(target) {
-            if (target.shape != 'image') {
+            if (target.type != 'image') {
                 zr.modShape(target.id, {
                     hoverable : true,
                     clickable : true,

@@ -6,6 +6,11 @@
  *
  */
 define(function(require) {
+    var CircleShape = require('zrender/shape/Circle');
+    var ImageShape = require('zrender/shape/Image');
+    var IconShape = require('../util/shape/Icon');
+    var MarkLineShape = require('../util/shape/MarkLine');
+            
     function Base(ecConfig, zr){
         var ecData = require('../util/ecData');
         var ecQuery = require('../util/ecQuery');
@@ -281,7 +286,6 @@ define(function(require) {
                 || self.type == ecConfig.CHART_TYPE_CHORD
             ) {
                 for (var i = 0, l = shapeList.length; i < l; i++) {
-                    shapeList[i].id = self.zr.newShapeId(self.type);
                     self.zr.addShape(shapeList[i]);
                 }
             }
@@ -344,7 +348,6 @@ define(function(require) {
                 || self.type == ecConfig.CHART_TYPE_CHORD
             ) {
                 for (var i = 0, l = shapeList.length; i < l; i++) {
-                    shapeList[i].id = self.zr.newShapeId(self.type);
                     self.zr.addShape(shapeList[i]);
                 }
             }
@@ -606,8 +609,7 @@ define(function(require) {
                 eBorderWidth = nBorderWidth + 2;
             }
             
-            var itemShape = {
-                shape : 'icon',
+            var itemShape = new IconShape({
                 style : {
                     iconType : symbol.replace('empty', '').toLowerCase(),
                     x : x - symbolSize,
@@ -635,12 +637,16 @@ define(function(require) {
                     lineWidth: eBorderWidth
                 },
                 clickable : true
-            };
+            });
 
             if (symbol.match('image')) {
                 itemShape.style.image = 
                     symbol.replace(new RegExp('^image:\\/\\/'), '');
-                itemShape.shape = 'image';
+                itemShape = new ImageShape({
+                    style : itemShape.style,
+                    highlightStyle : itemShape.highlightStyle,
+                    clickable : true
+                });
             }
             
             if (typeof symbolRotate != 'undefined') {
@@ -768,8 +774,7 @@ define(function(require) {
                 }
             }
             
-            var itemShape = {
-                shape : 'markLine',
+            var itemShape = new MarkLineShape({
                 style : {
                     smooth : mlOption.smooth ? 'spline' : false,
                     symbol : symbol, 
@@ -821,7 +826,7 @@ define(function(require) {
                                   : (emphasis.borderWidth)
                 },
                 clickable : true
-            };
+            });
             
             itemShape = self.addLabel(
                 itemShape, 
@@ -986,9 +991,7 @@ define(function(require) {
                         size = effect.scaleSize;
                         shadowBlur = typeof effect.shadowBlur != 'undefined'
                                      ? effect.shadowBlur : size;
-                        effectShape = {
-                            shape : shape.shape,
-                            id : zr.newShapeId(),
+                        effectShape = new IconShape({
                             zlevel : zlevel,
                             style : {
                                 brushType : 'stroke',
@@ -1008,14 +1011,20 @@ define(function(require) {
                             },
                             draggable : false,
                             hoverable : false
-                        };
+                        });
                         if (_canvasSupported) {  // 提高性能，换成image
                             effectShape.style.image = zr.shapeToImage(
                                 effectShape, 
                                 effectShape.style.width + shadowBlur * 2 + 2, 
                                 effectShape.style.height + shadowBlur * 2 + 2
                             ).style.image;
-                            effectShape.shape = 'image';
+                            
+                            effectShape = new ImageShape({
+                                zlevel : effectShape.zlevel,
+                                style : effectShape.style,
+                                draggable : false,
+                                hoverable : false
+                            });
                         }
                         Offset = (effectShape.style.width - shape.style.width) / 2;
                         break; 
@@ -1023,9 +1032,7 @@ define(function(require) {
                         size = shape.style.lineWidth * effect.scaleSize;
                         shadowBlur = typeof effect.shadowBlur != 'undefined'
                                      ? effect.shadowBlur : size;
-                        effectShape = {
-                            shape : 'circle',
-                            id : zr.newShapeId(),
+                        effectShape = new CircleShape({
                             zlevel : zlevel,
                             style : {
                                 x : shadowBlur,
@@ -1037,18 +1044,23 @@ define(function(require) {
                             },
                             draggable : false,
                             hoverable : false
-                        };
+                        });
                         if (_canvasSupported) {  // 提高性能，换成image
                             effectShape.style.image = zr.shapeToImage(
                                 effectShape, 
                                 (size + shadowBlur) * 2,
                                 (size + shadowBlur) * 2
                             ).style.image;
-                            effectShape.shape = 'image';
+                            effectShape = new ImageShape({
+                                zlevel : effectShape.zlevel,
+                                style : effectShape.style,
+                                draggable : false,
+                                hoverable : false
+                            });
                             Offset = shadowBlur;
                         }
                         else {
-                             Offset = 0;
+                            Offset = 0;
                         }
                         break;
                 }
