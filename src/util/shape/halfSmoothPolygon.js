@@ -53,7 +53,7 @@ define(
         }
 
         HalfSmoothPolygon.prototype = {
-            type : 'halfSmoothPolygon',
+            type : 'half-smooth-polygon',
             /**
              * 创建多边形路径
              * @param {Context2D} ctx Canvas 2D上下文

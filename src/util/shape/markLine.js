@@ -16,7 +16,7 @@ define(
         }
 
         MarkLine.prototype =  {
-            type : 'markLine',
+            type : 'mark-line',
             /**
              * 画刷
              * @param ctx       画布句柄
