@@ -91,7 +91,7 @@ define(
              * @param {Object} style
              */
             getRect : function(style) {
-                return require('zrender/shape/polygon').getRect(style);
+                return require('zrender/shape/Polygon').getRect(style);
             },
             
             isCover : function() {

@@ -329,8 +329,8 @@ define(
             
             isCover : function(x, y) {
                 return this.style.smooth !== 'spline' 
-                       ? area.isInside(require('zrender/shape/line'), this.style, x, y)
-                       : area.isInside(require('zrender/shape/brokenLine'), this.style, x, y);
+                       ? area.isInside(require('zrender/shape/Line'), this.style, x, y)
+                       : area.isInside(require('zrender/shape/BrokenLine'), this.style, x, y);
             }
         };
 
