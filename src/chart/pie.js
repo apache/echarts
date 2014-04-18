@@ -6,6 +6,12 @@
  *
  */
 define(function(require) {
+    var TextShape = require('zrender/shape/Text');
+    var RingShape = require('zrender/shape/Ring');
+    var CircleShape = require('zrender/shape/Circle');
+    var SectorShape = require('zrender/shape/Sector');
+    var BrokenLineShape = require('zrender/shape/BrokenLine');
+
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -64,7 +70,6 @@ define(function(require) {
                     _selected[i] = [];
                     if (self.deepQuery([series[i], option], 'calculable')) {
                         pieCase = {
-                            shape : radius[0] <= 10 ? 'circle' : 'ring',
                             zlevel : _zlevelBase,
                             hoverable : false,
                             style : {
@@ -81,6 +86,10 @@ define(function(require) {
                         };
                         ecData.pack(pieCase, series[i], i, undefined, -1);
                         self.setCalculable(pieCase);
+                        
+                        pieCase = radius[0] <= 10 
+                            ? new CircleShape(pieCase) 
+                            : new RingShape(pieCase);
                         self.shapeList.push(pieCase);
                     }
                     _buildSinglePie(i);
@@ -93,7 +102,6 @@ define(function(require) {
             }
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
         }
@@ -308,7 +316,6 @@ define(function(require) {
                 );
 
             var sector = {
-                shape : 'sector',             // 扇形
                 zlevel : _zlevelBase,
                 clickable : true,
                 style : {
@@ -367,6 +374,8 @@ define(function(require) {
             ) {
                 sector.onmouseover = self.shapeHandler.onmouseover;
             }
+            
+            sector = new SectorShape(sector);
             return sector;
         }
 
@@ -452,8 +461,7 @@ define(function(require) {
             data.__labelX = x - (textAlign == 'left' ? 5 : -5);
             data.__labelY = y;
             
-            return {
-                shape : 'text',
+            return new TextShape({
                 zlevel : _zlevelBase + 1,
                 hoverable : false,
                 style : {
@@ -472,7 +480,7 @@ define(function(require) {
                 },
                 _seriesIndex : seriesIndex, 
                 _dataIndex : dataIndex
-            };
+            });
         }
 
         /**
@@ -555,7 +563,7 @@ define(function(require) {
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
                 // 三角函数缓存已在zrender/tool/math中做了
-                return {
+                return new BorkenLineShape({
                     shape : 'brokenLine',
                     zlevel : _zlevelBase + 1,
                     hoverable : false,
@@ -584,7 +592,7 @@ define(function(require) {
                     },
                     _seriesIndex : seriesIndex, 
                     _dataIndex : dataIndex
-                };
+                });
             }
             else {
                 return;
@@ -682,42 +690,6 @@ define(function(require) {
         
         /**
          * 动态数据增加动画 
-         * 心跳效果
-        function addDataAnimation(params) {
-            var aniMap = {}; // seriesIndex索引参数
-            for (var i = 0, l = params.length; i < l; i++) {
-                aniMap[params[i][0]] = params[i];
-            }
-            var x;
-            var y;
-            var r;
-            var seriesIndex;
-            for (var i = self.shapeList.length - 1; i >= 0; i--) {
-                seriesIndex = ecData.get(self.shapeList[i], 'seriesIndex');
-                if (aniMap[seriesIndex]) {
-                    if (self.shapeList[i].shape == 'sector'
-                        || self.shapeList[i].shape == 'circle'
-                        || self.shapeList[i].shape == 'ring'
-                    ) {
-                        r = self.shapeList[i].style.r;
-                        zr.animate(self.shapeList[i].id, 'style')
-                            .when(
-                                300,
-                                {r : r * 0.9}
-                            )
-                            .when(
-                                500,
-                                {r : r}
-                            )
-                            .start();
-                    }
-                }
-            }
-        }
-         */
-        
-        /**
-         * 动态数据增加动画 
          */
         function addDataAnimation(params) {
             var aniMap = {}; // seriesIndex索引参数
@@ -772,7 +744,7 @@ define(function(require) {
                 dataIndex = self.shapeList[i]._dataIndex;
                 key = seriesIndex + '_' + dataIndex;
                 // map映射让n*n变n
-                switch (self.shapeList[i].shape) {
+                switch (self.shapeList[i].type) {
                     case 'sector' :
                         sectorMap[key] = self.shapeList[i];
                         break;
@@ -796,7 +768,7 @@ define(function(require) {
                     if (!targeSector) {
                         continue;
                     }
-                    if (backupShapeList[i].shape == 'sector') {
+                    if (backupShapeList[i].type == 'sector') {
                         if (targeSector != 'delete') {
                             // 原有扇形
                             zr.animate(backupShapeList[i].id, 'style')
@@ -829,8 +801,8 @@ define(function(require) {
                                 .start();
                         }
                     }
-                    else if (backupShapeList[i].shape == 'text'
-                             || backupShapeList[i].shape == 'line'
+                    else if (backupShapeList[i].type == 'text'
+                             || backupShapeList[i].type == 'line'
                     ) {
                         if (targeSector == 'delete') {
                             // 删除逻辑一样
@@ -888,9 +860,9 @@ define(function(require) {
             var dataIndex;
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                if (self.shapeList[i].shape == 'sector'
-                    || self.shapeList[i].shape == 'circle'
-                    || self.shapeList[i].shape == 'ring'
+                if (self.shapeList[i].type == 'sector'
+                    || self.shapeList[i].type == 'circle'
+                    || self.shapeList[i].type == 'ring'
                 ) {
                     x = self.shapeList[i].style.x;
                     y = self.shapeList[i].style.y;

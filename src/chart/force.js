@@ -6,6 +6,10 @@
  */
 
 define(function(require) {
+    var CircleShape = require('zrender/shape/Circle');
+    var LineShape = require('zrender/shape/Line');
+    var IconShape = require('../util/shape/Icon');
+
     'use strict';
 
     var requestAnimationFrame = window.requestAnimationFrame
@@ -13,8 +17,6 @@ define(function(require) {
                                 || window.mozRequestAnimationFrame
                                 || window.webkitRequestAnimationFrame
                                 || function(func){setTimeout(func, 16);};
-
-    require('../util/shape/icon');
 
     // 保存节点的位置，改变数据时能够有更好的动画效果
     var nodeInitialPos = {};
@@ -287,8 +289,6 @@ define(function(require) {
                 nodeMasses[i] = r * r * density * 0.035;
 
                 var shape = {
-                    id : zr.newShapeId(self.type),
-                    shape : 'circle',
                     style : {
                         r : r,
                         x : 0,
@@ -376,9 +376,6 @@ define(function(require) {
                 shape.ondragstart = self.shapeHandler.ondragstart;
                 shape.draggable = true;
                 
-                nodeShapes.push(shape);
-                self.shapeList.push(shape);
-
                 var categoryName = '';
                 if (typeof(node.category) !== 'undefined') {
                     var category = categories[node.category];
@@ -402,6 +399,10 @@ define(function(require) {
                     // value
                     node.value
                 );
+                
+                shape = new CircleShape(shape);
+                nodeShapes.push(shape);
+                self.shapeList.push(shape);
                 zr.addShape(shape);
             }
 
@@ -422,8 +423,6 @@ define(function(require) {
                 }
 
                 var linkShape = {
-                    id : zr.newShapeId(self.type),
-                    shape : 'line',
                     style : {
                         xStart : 0,
                         yStart : 0,
@@ -452,9 +451,6 @@ define(function(require) {
                     }
                 }
 
-                linkShapes.push(linkShape);
-                self.shapeList.push(linkShape);
-
                 var source = filteredNodes[link.source];
                 var target = filteredNodes[link.target];
 
@@ -482,13 +478,14 @@ define(function(require) {
                     true
                 );
 
+                linkShape = new LineShape(linkShape);
+                linkShapes.push(linkShape);
+                self.shapeList.push(linkShape);
                 zr.addShape(linkShape);
 
                 // Arrow shape
                 if (forceSerie.linkSymbol) {
                     var arrowShape = {
-                        id : zr.newShapeId(self.type),
-                        shape : 'icon',
                         style: {
                             x: -5,
                             y: 0,
@@ -508,6 +505,7 @@ define(function(require) {
                         position: [0, 0],
                         rotation: 0
                     };
+                    arrowShape = new IconShape(arrowShape);
                     self.shapeList.push(arrowShape);
                     arrowShapes.push(arrowShape);
                     zr.addShape(arrowShape);

@@ -6,6 +6,8 @@
  *
  */
 define(function(require) {
+    var RectangleShape = require('zrender/shape/Rectangle');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -75,7 +77,6 @@ define(function(require) {
             }
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
         }
@@ -318,7 +319,7 @@ define(function(require) {
                         }
                         xMarkMap[seriesIndex].sum += value;
                         xMarkMap[seriesIndex].counter++;
-                        self.shapeList.push(barShape);
+                        self.shapeList.push(new RectangleShape(barShape));
                     }
 
                     // 补充空数据的拖拽提示框
@@ -359,7 +360,7 @@ define(function(require) {
                                     serie.calculableHolderColor
                                     || ecConfig.calculableHolderColor;
 
-                            self.shapeList.push(barShape);
+                            self.shapeList.push(new RectangleShape(barShape));
                         }
                     }
 
@@ -521,7 +522,7 @@ define(function(require) {
                         }
                         xMarkMap[seriesIndex].sum += value;
                         xMarkMap[seriesIndex].counter++;
-                        self.shapeList.push(barShape);
+                        self.shapeList.push(new RectangleShape(barShape));
                     }
 
                     // 补充空数据的拖拽提示框
@@ -563,7 +564,7 @@ define(function(require) {
                                     serie.calculableHolderColor
                                     || ecConfig.calculableHolderColor;
 
-                            self.shapeList.push(barShape);
+                            self.shapeList.push(new RectangleShape(barShape));
                         }
                     }
 
@@ -780,7 +781,6 @@ define(function(require) {
                 'itemStyle.emphasis'
             );
             barShape = {
-                shape : 'rectangle',
                 zlevel : _zlevelBase,
                 clickable: true,
                 style : {
@@ -939,7 +939,7 @@ define(function(require) {
                 seriesIndex = ecData.get(self.shapeList[i], 'seriesIndex');
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
                     // 有数据删除才有移动的动画
-                    if (self.shapeList[i].shape == 'rectangle') {
+                    if (self.shapeList[i].type == 'rectangle') {
                         // 主动画
                         dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
                         serie = series[seriesIndex];
@@ -996,7 +996,7 @@ define(function(require) {
             var dataIndex;
             var value;
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                if (self.shapeList[i].shape == 'rectangle') {
+                if (self.shapeList[i].type == 'rectangle') {
                     serie = ecData.get(self.shapeList[i], 'series');
                     dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
                     value = ecData.get(self.shapeList[i], 'value');
