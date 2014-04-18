@@ -116,7 +116,6 @@ define(function (require) {
                 _buildItem();
 
                 for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                    self.shapeList[i].id = zr.newShapeId(self.type);
                     zr.addShape(self.shapeList[i]);
                 }
                 if (_iconShapeMap['mark']) {

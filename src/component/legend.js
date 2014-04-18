@@ -8,10 +8,10 @@
 define(function (require) {
     var TextShape = require('zrender/shape/Text');
     var RectangleShape = require('zrender/shape/Rectangle');
-    var SectorShape = require('zrender/shape/sector');
-    var BeziercurveShape = require('zrender/shape/beziercurve');
+    var SectorShape = require('zrender/shape/Sector');
+    var BeziercurveShape = require('zrender/shape/Beziercurve');
     var IconShape = require('../util/shape/Icon');
-    var CandleShape = require('../util/shape/candle');
+    var CandleShape = require('../util/shape/Candle');
     
     /**
      * 构造函数

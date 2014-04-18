@@ -8,7 +8,7 @@
 define(function(require) {
     var TextShape = require('zrender/shape/Text');
     var LineShape = require('zrender/shape/Line');
-    var RectangleShape = require('zrender/shape/Rectangle');
+    var PolygonShape = require('zrender/shape/Polygon');
 
     function Polar(ecConfig, messageCenter, zr, option, component) {
         var Base = require('./base');
