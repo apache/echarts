@@ -404,7 +404,7 @@ define(
 
         Icon.prototype =  {
             type : 'icon',
-            _iconLibrary : {
+            iconLibrary : {
                 mark : _iconMark,
                 markUndo : _iconMarkUndo,
                 markClear : _iconMarkClear,
@@ -436,8 +436,8 @@ define(
              * @param {Object} style 样式
              */
             buildPath : function(ctx, style) {
-                if (this._iconLibrary[style.iconType]) {
-                    this._iconLibrary[style.iconType](ctx, style);
+                if (this.iconLibrary[style.iconType]) {
+                    this.iconLibrary[style.iconType](ctx, style);
                 }
                 else {
                     ctx.moveTo(style.x, style.y);
