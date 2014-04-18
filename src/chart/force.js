@@ -495,7 +495,7 @@ define(function(require) {
                             width: forceSerie.linkSymbolSize[0],
                             height: forceSerie.linkSymbolSize[1],
                             iconType: forceSerie.linkSymbol,
-                            brushType: "fill",
+                            brushType: 'fill',
                             // Use same style with link shape
                             color: linkShape.style.strokeColor,
                             opacity: linkShape.style.opacity,
@@ -523,7 +523,7 @@ define(function(require) {
 
         function _updateLinkShapes() {
             var v = vec2.create();
-            var right = vec2.create(1, 0);
+            //var right = vec2.create(1, 0);
             for (var i = 0, len = filteredLinks.length; i < len; i++) {
                 var link = filteredLinks[i];
                 var linkShape = linkShapes[i];
@@ -545,11 +545,11 @@ define(function(require) {
                     vec2.scaleAndAdd(
                         arrowShape.position, arrowShape.position, v, targetShape.style.r + 2
                     );
-
+                    var angle;
                     if (v[1] < 0) {
-                        var angle = 2 * Math.PI - Math.acos(-v[0]);
+                        angle = 2 * Math.PI - Math.acos(-v[0]);
                     } else {
-                        var angle = Math.acos(-v[0]);
+                        angle = Math.acos(-v[0]);
                     }
                     arrowShape.rotation = angle  - Math.PI / 2;
                 }
