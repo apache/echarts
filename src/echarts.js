@@ -1377,15 +1377,15 @@ define(function(require) {
             
             var zrImg = require('zrender').init(zrDom);
             
+            var ImageShape = require('zrender/shape/Image');
             for (var c in imgList) {
-                zrImg.addShape({
-                    shape:'image',
+                zrImg.addShape(new ImageShape({
                     style : {
                         x : imgList[c].left - minLeft,
                         y : imgList[c].top - minTop,
                         image : imgList[c].img
                     }
-                });
+                }));
             }
             
             zrImg.render();

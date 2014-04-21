@@ -92,8 +92,7 @@ define(function(require) {
         function reformOption(opt) {
             return zrUtil.merge(
                        opt || {},
-                       zrUtil.clone(ecConfig[self.type] || {}),
-                       false
+                       zrUtil.clone(ecConfig[self.type] || {})
                    );
         }
 

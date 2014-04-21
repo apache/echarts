@@ -118,7 +118,6 @@ define(function(require) {
                 var serie = series[i];
                 if (serie.type === ecConfig.CHART_TYPE_FORCE) {
                     series[i] = self.reformOption(series[i]);
-                    
                     serieName = series[i].name || '';
                     // 系列图例开关
                     self.selectedMap[serieName] = 
@@ -302,8 +301,7 @@ define(function(require) {
 
                 // Label 
                 var labelStyle;
-                if (self.query(forceSerie, 'itemStyle.normal.label.show')
-                ) {
+                if (self.query(forceSerie, 'itemStyle.normal.label.show')) {
                     shape.style.text = node.name;
                     shape.style.textPosition = 'inside';
                     labelStyle = self.query(
@@ -342,15 +340,13 @@ define(function(require) {
                         var style = category.itemStyle;
                         if (style) {
                             if (style.normal) {
-                                zrUtil.merge(shape.style, style.normal, {
-                                    overwrite : true
-                                });
+                                zrUtil.merge(shape.style, style.normal, true);
                             }
                             if (style.emphasis) {
                                 zrUtil.merge(
                                     shape.highlightStyle, 
                                     style.emphasis, 
-                                    { overwrite : true }
+                                    true
                                 );
                             }
                         }
@@ -359,14 +355,10 @@ define(function(require) {
                 if (typeof(node.itemStyle) !== 'undefined') {
                     var style = node.itemStyle;
                     if(style.normal ){ 
-                        zrUtil.merge(shape.style, style.normal, {
-                            overwrite : true
-                        });
+                        zrUtil.merge(shape.style, style.normal, true);
                     }
                     if(style.normal ){ 
-                        zrUtil.merge(shape.highlightStyle, style.emphasis, {
-                            overwrite : true
-                        });
+                        zrUtil.merge(shape.highlightStyle, style.emphasis, true);
                     }
                 }
                 
@@ -438,15 +430,13 @@ define(function(require) {
                 zrUtil.merge(linkShape.highlightStyle, linkEmphasisStyle);
                 if (typeof(link.itemStyle) !== 'undefined') {
                     if(link.itemStyle.normal){
-                        zrUtil.merge(linkShape.style, link.itemStyle.normal, {
-                            overwrite : true
-                        });
+                        zrUtil.merge(linkShape.style, link.itemStyle.normal, true);
                     }
                     if(link.itemStyle.emphasis){
                         zrUtil.merge(
                             linkShape.highlightStyle, 
                             link.itemStyle.emphasis, 
-                            { overwrite : true }
+                            true
                         );
                     }
                 }
