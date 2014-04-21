@@ -119,6 +119,7 @@ option = {
 };
 clearTimeout(loadingTicket);
 loadingTicket = setTimeout(function(){
+    myChart.hideLoading();
     myChart.setOption(option);
 },2200);
                     </textarea>

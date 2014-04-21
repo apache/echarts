@@ -889,15 +889,9 @@ define(function(require) {
                 }
                 
                 var zrUtil = require('zrender/tool/util');
-                zrUtil.merge(
-                    magicOption, param.option, true
-                );
-                zrUtil.merge(
-                    _optionBackup, param.option, true
-                );
-                zrUtil.merge(
-                    _optionRestore, param.option, true
-                );
+                zrUtil.merge(magicOption, param.option, true);
+                zrUtil.merge(_optionBackup, param.option, true);
+                zrUtil.merge(_optionRestore, param.option, true);
                 _island.refresh(magicOption);
                 _toolbox.refresh(magicOption);
             }
@@ -1511,6 +1505,14 @@ define(function(require) {
          * @param {Object} loadingOption
          */
         function showLoading(loadingOption) {
+            var effectList = {
+                    bar : require('zrender/loadingEffect/Bar'),
+                    bubble : require('zrender/loadingEffect/Bubble'),
+                    dynamicLine : require('zrender/loadingEffect/DynamicLine'),
+                    ring : require('zrender/loadingEffect/Ring'),
+                    spin : require('zrender/loadingEffect/Spin'),
+                    whirling : require('zrender/loadingEffect/Whirling')
+                };
             _toolbox.hideDataView();
 
             var zrUtil = require('zrender/tool/util');
@@ -1536,8 +1538,11 @@ define(function(require) {
             if (typeof loadingOption.y != 'undefined') {
                 loadingOption.textStyle.y = loadingOption.y;
             }
-            _zr.showLoading(loadingOption);
-
+            loadingOption.effectOption = loadingOption.effectOption || {};
+            loadingOption.effectOption.textStyle = loadingOption.textStyle;
+            _zr.showLoading(new effectList[loadingOption.effect](
+                loadingOption.effectOption
+            ));
             return self;
         }
 
