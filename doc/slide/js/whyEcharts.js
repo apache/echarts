@@ -1938,9 +1938,9 @@ var optionMap = {
                             return;
                         }
                         var _ZR = myChart.getZrender();
+                        var TextShape = require('zrender/shape/Text');
                         // 补充千层饼
-                        _ZR.addShape({
-                            shape : 'text',
+                        _ZR.addShape(new TextShape({
                             style : {
                                 x : _ZR.getWidth() / 2,
                                 y : _ZR.getHeight() / 2,
@@ -1948,9 +1948,8 @@ var optionMap = {
                                 text : '恶梦的过去',
                                 textAlign : 'center'
                             }
-                        });
-                        _ZR.addShape({
-                            shape : 'text',
+                        }));
+                        _ZR.addShape(new TextShape({
                             style : {
                                 x : _ZR.getWidth() / 2 + 200,
                                 y : _ZR.getHeight() / 2,
@@ -1960,7 +1959,7 @@ var optionMap = {
                                 textAlign : 'left',
                                 textFont:'normal 20px 微软雅黑'
                             }
-                        });
+                        }));
                         _ZR.refresh();
                     }, 2000);
                     return false;
