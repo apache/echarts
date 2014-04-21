@@ -476,8 +476,8 @@ define(function (require) {
                         )
                 */
             };
-
-            self.shapeList.push(new RectangleShape(_fillerShae));
+            _fillerShae = new RectangleShape(_fillerShae);
+            self.shapeList.push(_fillerShae);
         }
 
         /**
@@ -521,8 +521,10 @@ define(function (require) {
                 _endShape.style.y = _fillerShae.style.y 
                                     + _fillerShae.style.height;
             }
-            self.shapeList.push(new IconShape(_startShape));
-            self.shapeList.push(new IconShape(_endShape));
+            _startShape = new IconShape(_startShape);
+            _endShape = new IconShape(_endShape);
+            self.shapeList.push(_startShape);
+            self.shapeList.push(_endShape);
         }
 
         /**
@@ -547,8 +549,11 @@ define(function (require) {
                 }
             };
             _endFrameShape = zrUtil.clone(_startFrameShape);
-            self.shapeList.push(new RectangleShape(_startFrameShape));
-            self.shapeList.push(new RectangleShape(_endFrameShape));
+            
+            _startFrameShape = new RectangleShape(_startFrameShape);
+            _endFrameShape = new RectangleShape(_endFrameShape);
+            self.shapeList.push(_startFrameShape);
+            self.shapeList.push();
             return;
         }
         

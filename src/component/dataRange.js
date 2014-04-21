@@ -553,8 +553,10 @@ define(function (require) {
             _startShape.style.height        = _endShape.style.height        = 0;
             _startShape.style.textPosition  = _endShape.style.textPosition  = 'specific';
             
-            self.shapeList.push(new HandlePolygonShape(_startShape));
-            self.shapeList.push(new HandlePolygonShape(_endShape));
+            _startShape = new HandlePolygonShape(_startShape);
+            _endShape = new HandlePolygonShape(_endShape);
+            self.shapeList.push(_startShape);
+            self.shapeList.push(_endShape);
         }
         
         function _bulidMask() {
@@ -590,8 +592,10 @@ define(function (require) {
                 },
                 hoverable:false
             };
-            self.shapeList.push(new RectangleShape(_startMask));
-            self.shapeList.push(new RectangleShape(_endMask));
+            _startMask = new RectangleShape(_startMask);
+            _endMask = new RectangleShape(_endMask);
+            self.shapeList.push(_startMask);
+            self.shapeList.push(_endMask);
         }
         
         function _buildBackground() {
@@ -1091,7 +1095,6 @@ define(function (require) {
             );
             
             zr.modShape(_startShape.id, _startShape);
-            
             _endShape.position = [
                 _endShape.style.x - _endShape.style._x,
                 _endShape.style.y - _endShape.style._y

@@ -21,7 +21,8 @@ define(function(require) {
             },
             ondragover : function (param) {
                 // 返回触发可计算特性的图形提示
-                var calculableShape = zrUtil.clone(param.target);
+                var calculableShape = param.target;
+                var highlightStyle = calculableShape.highlightStyle;
                 calculableShape.highlightStyle = {
                     text : '',
                     r : calculableShape.style.r + 5,
@@ -30,6 +31,9 @@ define(function(require) {
                     lineWidth : (calculableShape.style.lineWidth || 1) + 12
                 };
                 self.zr.addHoverShape(calculableShape);
+                setTimeout(function(){
+                    calculableShape.highlightStyle = highlightStyle;
+                },20);
             },
 
             ondrop : function (param) {
