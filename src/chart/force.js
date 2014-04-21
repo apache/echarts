@@ -6,6 +6,7 @@
  */
 
 define(function(require) {
+    // 图形依赖
     var CircleShape = require('zrender/shape/Circle');
     var LineShape = require('zrender/shape/Line');
     var IconShape = require('../util/shape/Icon');

@@ -135,20 +135,14 @@ define(function(require) {
             var Island = chartLibrary.get('island');
             _island = new Island(_themeConfig, _messageCenter, _zr);
             
-            // 内置组件注册
+            // 内置通用组件
             var componentLibrary = require('./component');
             require('./component/title');
-            require('./component/axis');
-            require('./component/categoryAxis');
-            require('./component/valueAxis');
-            require('./component/grid');
-            require('./component/dataZoom');
             require('./component/legend');
-            require('./component/dataRange');
             require('./component/tooltip');
             require('./component/toolbox');
             require('./component/dataView');
-            require('./component/polar');
+            
             // 工具箱
             var Toolbox = componentLibrary.get('toolbox');
             _toolbox = new Toolbox(_themeConfig, _messageCenter, _zr, dom, self);

@@ -6,6 +6,7 @@
  *
  */
 define(function(require) {
+    // 图形依赖
     var TextShape = require('zrender/shape/Text');
     var RingShape = require('zrender/shape/Ring');
     var CircleShape = require('zrender/shape/Circle');

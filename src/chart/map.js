@@ -6,10 +6,13 @@
  *
  */
 define(function(require) {
+    // 图形依赖
     var TextShape = require('zrender/shape/Text');
     var PathShape = require('zrender/shape/Path');
     var CircleShape = require('zrender/shape/Circle');
-
+    // 组件依赖
+    require('../component/dataRange');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心

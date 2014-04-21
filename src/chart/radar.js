@@ -7,8 +7,11 @@
  */
 
  define(function(require) {
+     // 图形依赖
     var PolygonShape = require('zrender/shape/Polygon');
-     
+     // 组件依赖
+    require('../component/polar');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心

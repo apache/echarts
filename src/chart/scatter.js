@@ -6,7 +6,16 @@
  *
  */
 define(function(require) {
+    // 图形依赖
     var SymbolShape = require('../util/shape/Symbol');
+    // 组件依赖
+    require('../component/axis');
+    require('../component/categoryAxis');
+    require('../component/valueAxis');
+    require('../component/grid');
+    require('../component/dataZoom');
+    require('../component/dataRange');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心

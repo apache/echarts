@@ -6,10 +6,16 @@
  *
  */
 define(function(require) {
+    // 图形依赖
     var BrokenLineShape = require('zrender/shape/BrokenLine');
     var IconShape = require('../util/shape/Icon');
     var HalfSmoothPolygonShape = require('../util/shape/HalfSmoothPolygon');
-    
+    // 组件依赖
+    require('../component/axis');
+    require('../component/categoryAxis');
+    require('../component/valueAxis');
+    require('../component/grid');
+    require('../component/dataZoom');
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心

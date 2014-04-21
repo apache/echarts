@@ -6,7 +6,14 @@
  *
  */
 define(function(require) {
+    // 图形依赖
     var RectangleShape = require('zrender/shape/Rectangle');
+    // 组件依赖
+    require('../component/axis');
+    require('../component/categoryAxis');
+    require('../component/valueAxis');
+    require('../component/grid');
+    require('../component/dataZoom');
     
     /**
      * 构造函数
