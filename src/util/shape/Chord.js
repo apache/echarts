@@ -32,11 +32,11 @@
        // 事件属性，详见shape.Base
    }
  */
-define(function(require) {
+define(function (require) {
     var Base = require('zrender/shape/Base');
     var matrix = require('zrender/tool/matrix');
-    var util = require('zrender/tool/util');
-    var _ctx = util.getContext();
+    var zrUtil = require('zrender/tool/util');
+    var _ctx = zrUtil.getContext();
     
     function ChordShape(options) {
         Base.call(this, options);
@@ -45,7 +45,7 @@ define(function(require) {
     ChordShape.prototype = {
         type : 'chord',
         // center, source0, source1, target0, target1, r
-        buildPath : function(ctx, style) {
+        buildPath : function (ctx, style) {
             var PI2 = Math.PI * 2;
             var cx = style.center[0];
             var cy = style.center[1];
@@ -87,7 +87,7 @@ define(function(require) {
             );
         },
         
-        getRect : function(){
+        getRect : function (){
             return {
                 x : 0,
                 y : 0,
@@ -96,7 +96,7 @@ define(function(require) {
             };
         },
                 
-        isCover : function(x, y) {
+        isCover : function (x, y) {
             if (!_ctx.isPointInPath) {  // In ie
                 return false;
             }
@@ -125,6 +125,7 @@ define(function(require) {
         }
     };
 
-    require('zrender/tool/util').inherits(ChordShape, Base);
+    zrUtil.inherits(ChordShape, Base);
+    
     return ChordShape;
 });

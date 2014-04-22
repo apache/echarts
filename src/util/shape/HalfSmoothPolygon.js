@@ -39,64 +39,65 @@
        myName : 'kener',  // 可自带任何有效自定义属性
 
        clickable : true,
-       onClick : function(eventPacket) {
+       onClick : function (eventPacket) {
            alert(eventPacket.target.myName);
        }
    }
  */
-define(
-    function(require) {
-        var Base = require('zrender/shape/Base');
-        
-        function HalfSmoothPolygon(options) {
-            Base.call(this, options);
-        }
+define(function (require) {
+    var Base = require('zrender/shape/Base');
+    var smoothBezier = require('zrender/shape/util/smoothBezier');
+    var zrUtil = require('zrender/tool/util');
+    
+    function HalfSmoothPolygon(options) {
+        Base.call(this, options);
+    }
 
-        HalfSmoothPolygon.prototype = {
-            type : 'half-smooth-polygon',
-            /**
-             * 创建多边形路径
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
-             */
-            buildPath : function(ctx, style) {
-                var pointList = style.pointList;
-                if (pointList.length < 2) {
-                    // 少于2个点就不画了~
-                    return;
-                }
-                if (style.smooth) {
-                    var controlPoints = this.smoothBezier(
-                        pointList.slice(0, -2), style.smooth
-                    );
-
-                    ctx.moveTo(pointList[0][0], pointList[0][1]);
-                    var cp1;
-                    var cp2;
-                    var p;
-                    var l = pointList.length;
-                    for (var i = 0; i < l - 3; i++) {
-                        cp1 = controlPoints[i * 2];
-                        cp2 = controlPoints[i * 2 + 1];
-                        p = pointList[i + 1];
-                        ctx.bezierCurveTo(
-                            cp1[0], cp1[1], cp2[0], cp2[1], p[0], p[1]
-                        );
-                    }
-                    ctx.lineTo(pointList[l - 2][0], pointList[l - 2][1]);
-                    ctx.lineTo(pointList[l - 1][0], pointList[l - 1][1]);
-                    ctx.lineTo(pointList[0][0], pointList[0][1]);
-                } 
-                else {
-                    require('zrender/shape/Polygon').prototype.buildPath(
-                        ctx, style
-                    );
-                }
+    HalfSmoothPolygon.prototype = {
+        type : 'half-smooth-polygon',
+        /**
+         * 创建多边形路径
+         * @param {Context2D} ctx Canvas 2D上下文
+         * @param {Object} style 样式
+         */
+        buildPath : function (ctx, style) {
+            var pointList = style.pointList;
+            if (pointList.length < 2) {
+                // 少于2个点就不画了~
                 return;
             }
-        };
+            if (style.smooth) {
+                var controlPoints = smoothBezier(
+                    pointList.slice(0, -2), style.smooth
+                );
 
-        require('zrender/tool/util').inherits(HalfSmoothPolygon, Base);
-        return HalfSmoothPolygon;
-    }
-);
+                ctx.moveTo(pointList[0][0], pointList[0][1]);
+                var cp1;
+                var cp2;
+                var p;
+                var l = pointList.length;
+                for (var i = 0; i < l - 3; i++) {
+                    cp1 = controlPoints[i * 2];
+                    cp2 = controlPoints[i * 2 + 1];
+                    p = pointList[i + 1];
+                    ctx.bezierCurveTo(
+                        cp1[0], cp1[1], cp2[0], cp2[1], p[0], p[1]
+                    );
+                }
+                ctx.lineTo(pointList[l - 2][0], pointList[l - 2][1]);
+                ctx.lineTo(pointList[l - 1][0], pointList[l - 1][1]);
+                ctx.lineTo(pointList[0][0], pointList[0][1]);
+            } 
+            else {
+                require('zrender/shape/Polygon').prototype.buildPath(
+                    ctx, style
+                );
+            }
+            return;
+        }
+    };
+
+    zrUtil.inherits(HalfSmoothPolygon, Base);
+    
+    return HalfSmoothPolygon;
+});

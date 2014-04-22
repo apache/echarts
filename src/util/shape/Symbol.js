@@ -31,77 +31,77 @@
        // 事件属性，详见shape.Base
    }
  */
-define(
-    function(require) {
-        var Base = require('zrender/shape/Base');
-        var PolygonShape = require('zrender/shape/Polygon')
-        var polygonInstance = new PolygonShape({});
-        
-        function Symbol(options) {
-            Base.call(this, options);
-        }
-
-        Symbol.prototype =  {
-            type : 'symbol',
-            /**
-             * 创建矩形路径
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
-             */
-            buildPath : function(ctx, style) {
-                var pointList = style.pointList;
-                var rect = this.getRect(style);
-                var ratio = window.devicePixelRatio || 1;
-                // console.log(rect)
-                // var ti = new Date();
-                // bbox取整
-                rect = {
-                    x : Math.floor(rect.x),
-                    y : Math.floor(rect.y),
-                    width : Math.floor(rect.width),
-                    height : Math.floor(rect.height)
-                };
-                var pixels = ctx.getImageData(
-                    rect.x * ratio, rect.y * ratio, 
-                    rect.width * ratio, rect.height * ratio
-                );
-                var data = pixels.data;
-                var idx;
-                var zrColor = require('zrender/tool/color');
-                var color = zrColor.toArray(style.color);
-                var r = color[0];
-                var g = color[1];
-                var b = color[2];
-                var width = rect.width;
-
-                for (var i = 1, l = pointList.length; i < l; i++) {
-                    idx = ((Math.floor(pointList[i][0]) - rect.x) * ratio
-                           + (Math.floor(pointList[i][1])- rect.y) * width * ratio * ratio
-                          ) * 4;
-                    data[idx] = r;
-                    data[idx + 1] = g;
-                    data[idx + 2] = b;
-                    data[idx + 3] = 255; 
-                }
-                ctx.putImageData(pixels, rect.x * ratio, rect.y * ratio);
-                // console.log(new Date() - ti);
-                return;
-            },
-
-            /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
-             */
-            getRect : function(style) {
-                return polygonInstance.getRect(style);
-            },
-            
-            isCover : function() {
-                return false;
-            }
-        };
-
-        require('zrender/tool/util').inherits(Symbol, Base);
-        return Symbol;
+define(function (require) {
+    var Base = require('zrender/shape/Base');
+    var PolygonShape = require('zrender/shape/Polygon')
+    var polygonInstance = new PolygonShape({});
+    var zrUtil = require('zrender/tool/util');
+    
+    function Symbol(options) {
+        Base.call(this, options);
     }
-);
+
+    Symbol.prototype =  {
+        type : 'symbol',
+        /**
+         * 创建矩形路径
+         * @param {Context2D} ctx Canvas 2D上下文
+         * @param {Object} style 样式
+         */
+        buildPath : function (ctx, style) {
+            var pointList = style.pointList;
+            var rect = this.getRect(style);
+            var ratio = window.devicePixelRatio || 1;
+            // console.log(rect)
+            // var ti = new Date();
+            // bbox取整
+            rect = {
+                x : Math.floor(rect.x),
+                y : Math.floor(rect.y),
+                width : Math.floor(rect.width),
+                height : Math.floor(rect.height)
+            };
+            var pixels = ctx.getImageData(
+                rect.x * ratio, rect.y * ratio, 
+                rect.width * ratio, rect.height * ratio
+            );
+            var data = pixels.data;
+            var idx;
+            var zrColor = require('zrender/tool/color');
+            var color = zrColor.toArray(style.color);
+            var r = color[0];
+            var g = color[1];
+            var b = color[2];
+            var width = rect.width;
+
+            for (var i = 1, l = pointList.length; i < l; i++) {
+                idx = ((Math.floor(pointList[i][0]) - rect.x) * ratio
+                       + (Math.floor(pointList[i][1])- rect.y) * width * ratio * ratio
+                      ) * 4;
+                data[idx] = r;
+                data[idx + 1] = g;
+                data[idx + 2] = b;
+                data[idx + 3] = 255; 
+            }
+            ctx.putImageData(pixels, rect.x * ratio, rect.y * ratio);
+            // console.log(new Date() - ti);
+            return;
+        },
+
+        /**
+         * 返回矩形区域，用于局部刷新和文字定位
+         * @param {Object} style
+         */
+        getRect : function (style) {
+            return polygonInstance.getRect(style);
+        },
+        
+        isCover : function () {
+            return false;
+        }
+    };
+
+    zrUtil.inherits(Symbol, Base);
+    
+    return Symbol;
+});
