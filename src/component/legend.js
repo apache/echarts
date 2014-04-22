@@ -6,6 +6,9 @@
  *
  */
 define(function (require) {
+    var Base = require('./base');
+    
+    // 图形依赖
     var TextShape = require('zrender/shape/Text');
     var RectangleShape = require('zrender/shape/Rectangle');
     var SectorShape = require('zrender/shape/Sector');
@@ -13,6 +16,11 @@ define(function (require) {
     var IconShape = require('../util/shape/Icon');
     var CandleShape = require('../util/shape/Candle');
     
+    var ecConfig = require('../config');
+    var zrUtil = require('zrender/tool/util');
+    var zrArea = require('zrender/tool/area');
+    var zrColor = require('zrender/tool/color');
+
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -20,70 +28,57 @@ define(function (require) {
      * @param {Object} option 图表参数
      * @param {Object=} selected 用于状态保持
      */
-    function Legend(ecConfig, messageCenter, zr, option, selected) {
-        var Base = require('./base');
-        Base.call(this, ecConfig, zr);
+    function Legend(ecTheme, messageCenter, zr, option, selected) {
+        Base.call(this, ecTheme, zr, option);
 
-        var zrUtil = require('zrender/tool/util');
-        var zrArea = require('zrender/tool/area');
-        var zrColor = require('zrender/tool/color');
+        this.messageCenter = messageCenter;
+        this.selected = selected;
+        
+        this.init(option);
+    }
+    
+    Legend.prototype = {
+        type : ecConfig.COMPONENT_TYPE_LEGEND,
+        _buildShape : function () {
+            this._itemGroupLocation = this._getItemGroupLocation();
 
-        var self = this;
-        self.type = ecConfig.COMPONENT_TYPE_LEGEND;
+            this._buildBackground();
+            this._buildItem();
 
-        var legendOption;                       // 图例选项，共享数据源
-        var _zlevelBase = self.getZlevelBase();
-
-        var _itemGroupLocation = {};    // 图例元素组的位置参数，通过计算所得x, y, width, height
-
-        var _colorIndex = 0;
-        var _colorMap = {};
-        var _selectedMap = {};
-
-        for (var k in legendIcon) {
-            IconShape.prototype.iconLibrary['legendicon' + k] = legendIcon[k];
-            //console.log('legendicon' + k, legendIcon[k])
-        }
-
-        function _buildShape() {
-            _itemGroupLocation = _getItemGroupLocation();
-
-            _buildBackground();
-            _buildItem();
-
-            for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                zr.addShape(self.shapeList[i]);
+            for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                this.zr.addShape(this.shapeList[i]);
             }
-        }
+        },
 
         /**
          * 构建所有图例元素
          */
-        function _buildItem() {
-            var data = legendOption.data;
+        _buildItem : function () {
+            var self = this;
+            var data = this.legendOption.data;
             var dataLength = data.length;
             var itemName;
             var itemType;
             var itemShape;
             var textShape;
-            var textStyle  = legendOption.textStyle;
+            var textStyle  = this.legendOption.textStyle;
             var dataTextStyle;
             var dataFont;
 
-            var zrWidth = zr.getWidth();
-            var zrHeight = zr.getHeight();
-            var lastX = _itemGroupLocation.x;
-            var lastY = _itemGroupLocation.y;
-            var itemWidth = legendOption.itemWidth;
-            var itemHeight = legendOption.itemHeight;
-            var itemGap = legendOption.itemGap;
+            var zrWidth = this.zr.getWidth();
+            var zrHeight = this.zr.getHeight();
+            var lastX = this._itemGroupLocation.x;
+            var lastY = this._itemGroupLocation.y;
+            var itemWidth = this.legendOption.itemWidth;
+            var itemHeight = this.legendOption.itemHeight;
+            var itemGap = this.legendOption.itemGap;
             var color;
 
-            if (legendOption.orient == 'vertical'
-                && legendOption.x == 'right'
+            if (this.legendOption.orient == 'vertical'
+                && this.legendOption.x == 'right'
             ) {
-                lastX = _itemGroupLocation.x
-                        + _itemGroupLocation.width
+                lastX = this._itemGroupLocation.x
+                        + this._itemGroupLocation.width
                         - itemWidth;
             }
 
@@ -92,27 +87,27 @@ define(function (require) {
                     data[i].textStyle || {},
                     textStyle
                 );
-                dataFont = self.getFont(dataTextStyle);
+                dataFont = this.getFont(dataTextStyle);
                 
                 itemName = data[i].name || data[i];
                 if (itemName === '') {
-                    if (legendOption.orient == 'horizontal') {
-                        lastX = _itemGroupLocation.x;
+                    if (this.legendOption.orient == 'horizontal') {
+                        lastX = this._itemGroupLocation.x;
                         lastY += itemHeight + itemGap;
                     }
                     else {
-                        legendOption.x == 'right'
-                        ? lastX -= _itemGroupLocation.maxWidth + itemGap
-                        : lastX += _itemGroupLocation.maxWidth + itemGap;
-                        lastY = _itemGroupLocation.y;
+                        this.legendOption.x == 'right'
+                        ? lastX -= this._itemGroupLocation.maxWidth + itemGap
+                        : lastX += this._itemGroupLocation.maxWidth + itemGap;
+                        lastY = this._itemGroupLocation.y;
                     }
                     continue;
                 }
-                itemType = _getSomethingByName(itemName).type;
+                itemType = this._getSomethingByName(itemName).type;
                 
-                color = getColor(itemName);
+                color = this.getColor(itemName);
 
-                if (legendOption.orient == 'horizontal') {
+                if (this.legendOption.orient == 'horizontal') {
                     if (zrWidth - lastX < 200   // 最后200px做分行预判
                         && (itemWidth + 5
                             + zrArea.getTextWidth(
@@ -124,7 +119,7 @@ define(function (require) {
                                ? 0 : itemGap))
                             >= zrWidth - lastX
                     ) {
-                        lastX = _itemGroupLocation.x;
+                        lastX = this._itemGroupLocation.x;
                         lastY += itemHeight + itemGap;
                     }
                 }
@@ -136,35 +131,37 @@ define(function (require) {
                                ? 0 : itemGap))
                             >= zrHeight - lastY
                     ) {
-                        legendOption.x == 'right'
-                        ? lastX -= _itemGroupLocation.maxWidth + itemGap
-                        : lastX += _itemGroupLocation.maxWidth + itemGap;
-                        lastY = _itemGroupLocation.y;
+                        this.legendOption.x == 'right'
+                        ? lastX -= this._itemGroupLocation.maxWidth + itemGap
+                        : lastX += this._itemGroupLocation.maxWidth + itemGap;
+                        lastY = this._itemGroupLocation.y;
                     }
                 }
 
                 // 图形
-                itemShape = _getItemShapeByType(
+                itemShape = this._getItemShapeByType(
                     lastX, lastY,
                     itemWidth, itemHeight,
-                    (_selectedMap[itemName] ? color : '#ccc'),
+                    (this._selectedMap[itemName] ? color : '#ccc'),
                     itemType,
                     color
                 );
                 itemShape._name = itemName;
-                if (legendOption.selectedMode) {
-                    itemShape.onclick = _legendSelected;
+                if (this.legendOption.selectedMode) {
+                    itemShape.onclick = function (param) {
+                        self._legendSelected(param);
+                    };
                 }
-                self.shapeList.push(new IconShape(itemShape));
+                this.shapeList.push(new IconShape(itemShape));
 
                 // 文字
                 textShape = {
                     shape : 'text',
-                    zlevel : _zlevelBase,
+                    zlevel : this._zlevelBase,
                     style : {
                         x : lastX + itemWidth + 5,
                         y : lastY,
-                        color : _selectedMap[itemName]
+                        color : this._selectedMap[itemName]
                                 ? (dataTextStyle.color === 'auto' ? color : dataTextStyle.color)
                                 : '#ccc',
                         text: itemName,
@@ -175,24 +172,26 @@ define(function (require) {
                         color : color,
                         brushType: 'fill'
                     },
-                    hoverable : !!legendOption.selectedMode,
-                    clickable : !!legendOption.selectedMode
+                    hoverable : !!this.legendOption.selectedMode,
+                    clickable : !!this.legendOption.selectedMode
                 };
 
-                if (legendOption.orient == 'vertical'
-                    && legendOption.x == 'right'
+                if (this.legendOption.orient == 'vertical'
+                    && this.legendOption.x == 'right'
                 ) {
                     textShape.style.x -= (itemWidth + 10);
                     textShape.style.textAlign = 'right';
                 }
 
                 textShape._name = itemName;
-                if (legendOption.selectedMode) {
-                    textShape.onclick = _legendSelected;
+                if (this.legendOption.selectedMode) {
+                    textShape.onclick = function (param) {
+                        self._legendSelected(param);
+                    };
                 }
-                self.shapeList.push(new TextShape(textShape));
+                this.shapeList.push(new TextShape(textShape));
 
-                if (legendOption.orient == 'horizontal') {
+                if (this.legendOption.orient == 'horizontal') {
                     lastX += itemWidth + 5
                              + zrArea.getTextWidth(itemName, dataFont)
                              + itemGap;
@@ -202,29 +201,29 @@ define(function (require) {
                 }
             }
         
-            if (legendOption.orient == 'horizontal'
-                && legendOption.x == 'center'
-                && lastY != _itemGroupLocation.y
+            if (this.legendOption.orient == 'horizontal'
+                && this.legendOption.x == 'center'
+                && lastY != this._itemGroupLocation.y
             ) {
                 // 多行橫排居中优化
-                _mLineOptimize();
+                this._mLineOptimize();
             }
-        }
+        },
         
         // 多行橫排居中优化
-        function _mLineOptimize() {
+        _mLineOptimize : function () {
             var lineOffsetArray = []; // 每行宽度
-            var lastX = _itemGroupLocation.x;
-            for (var i = 2, l = self.shapeList.length; i < l; i++) {
-                if (self.shapeList[i].style.x == lastX) {
+            var lastX = this._itemGroupLocation.x;
+            for (var i = 2, l = this.shapeList.length; i < l; i++) {
+                if (this.shapeList[i].style.x == lastX) {
                     lineOffsetArray.push(
                         (
-                            _itemGroupLocation.width 
+                            this._itemGroupLocation.width 
                             - (
-                                self.shapeList[i - 1].style.x
+                                this.shapeList[i - 1].style.x
                                 + zrArea.getTextWidth(
-                                      self.shapeList[i - 1].style.text,
-                                      self.shapeList[i - 1].style.textFont
+                                      this.shapeList[i - 1].style.text,
+                                      this.shapeList[i - 1].style.textFont
                                   )
                                 - lastX
                             )
@@ -234,12 +233,12 @@ define(function (require) {
                 else if (i == l - 1) {
                     lineOffsetArray.push(
                         (
-                            _itemGroupLocation.width 
+                            this._itemGroupLocation.width 
                             - (
-                                self.shapeList[i].style.x
+                                this.shapeList[i].style.x
                                 + zrArea.getTextWidth(
-                                      self.shapeList[i].style.text,
-                                      self.shapeList[i].style.textFont
+                                      this.shapeList[i].style.text,
+                                      this.shapeList[i].style.textFont
                                   )
                                 - lastX
                             )
@@ -248,63 +247,63 @@ define(function (require) {
                 }
             }
             var curLineIndex = -1;
-            for (var i = 1, l = self.shapeList.length; i < l; i++) {
-                if (self.shapeList[i].style.x == lastX) {
+            for (var i = 1, l = this.shapeList.length; i < l; i++) {
+                if (this.shapeList[i].style.x == lastX) {
                     curLineIndex++;
                 }
                 if (lineOffsetArray[curLineIndex] === 0) {
                     continue;
                 }
                 else {
-                    self.shapeList[i].style.x += 
+                    this.shapeList[i].style.x += 
                         lineOffsetArray[curLineIndex];
                 }
             }
-        }
+        },
 
-        function _buildBackground() {
-            var pTop = legendOption.padding[0];
-            var pRight = legendOption.padding[1];
-            var pBottom = legendOption.padding[2];
-            var pLeft = legendOption.padding[3];
+        _buildBackground : function () {
+            var pTop = this.legendOption.padding[0];
+            var pRight = this.legendOption.padding[1];
+            var pBottom = this.legendOption.padding[2];
+            var pLeft = this.legendOption.padding[3];
 
-            self.shapeList.push(new RectangleShape({
-                zlevel : _zlevelBase,
+            this.shapeList.push(new RectangleShape({
+                zlevel : this._zlevelBase,
                 hoverable :false,
                 style : {
-                    x : _itemGroupLocation.x - pLeft,
-                    y : _itemGroupLocation.y - pTop,
-                    width : _itemGroupLocation.width + pLeft + pRight,
-                    height : _itemGroupLocation.height + pTop + pBottom,
-                    brushType : legendOption.borderWidth === 0
+                    x : this._itemGroupLocation.x - pLeft,
+                    y : this._itemGroupLocation.y - pTop,
+                    width : this._itemGroupLocation.width + pLeft + pRight,
+                    height : this._itemGroupLocation.height + pTop + pBottom,
+                    brushType : this.legendOption.borderWidth === 0
                                 ? 'fill' : 'both',
-                    color : legendOption.backgroundColor,
-                    strokeColor : legendOption.borderColor,
-                    lineWidth : legendOption.borderWidth
+                    color : this.legendOption.backgroundColor,
+                    strokeColor : this.legendOption.borderColor,
+                    lineWidth : this.legendOption.borderWidth
                 }
             }));
-        }
+        },
 
         /**
          * 根据选项计算图例实体的位置坐标
          */
-        function _getItemGroupLocation() {
-            var data = legendOption.data;
+        _getItemGroupLocation : function () {
+            var data = this.legendOption.data;
             var dataLength = data.length;
-            var itemGap = legendOption.itemGap;
-            var itemWidth = legendOption.itemWidth + 5; // 5px是图形和文字的间隔，不可配
-            var itemHeight = legendOption.itemHeight;
-            var textStyle  = legendOption.textStyle;
-            var font = self.getFont(textStyle);
+            var itemGap = this.legendOption.itemGap;
+            var itemWidth = this.legendOption.itemWidth + 5; // 5px是图形和文字的间隔，不可配
+            var itemHeight = this.legendOption.itemHeight;
+            var textStyle  = this.legendOption.textStyle;
+            var font = this.getFont(textStyle);
             var totalWidth = 0;
             var totalHeight = 0;
-            var padding = legendOption.padding;
-            var zrWidth = zr.getWidth() - padding[1] - padding[3];
-            var zrHeight = zr.getHeight() - padding[0] - padding[2];
+            var padding = this.legendOption.padding;
+            var zrWidth = this.zr.getWidth() - padding[1] - padding[3];
+            var zrHeight = this.zr.getHeight() - padding[0] - padding[2];
             
             var temp = 0; // 宽高计算，用于多行判断
             var maxWidth = 0; // 垂直布局有用
-            if (legendOption.orient == 'horizontal') {
+            if (this.legendOption.orient == 'horizontal') {
                 // 水平布局，计算总宽度
                 totalHeight = itemHeight;
                 for (var i = 0; i < dataLength; i++) {
@@ -329,7 +328,7 @@ define(function (require) {
                             + zrArea.getTextWidth(
                                   data[i].name || data[i],
                                   data[i].textStyle 
-                                  ? self.getFont(zrUtil.merge(
+                                  ? this.getFont(zrUtil.merge(
                                         data[i].textStyle || {},
                                         textStyle
                                     ))
@@ -354,7 +353,7 @@ define(function (require) {
                         zrArea.getTextWidth(
                             data[i].name || data[i],
                             data[i].textStyle 
-                            ? self.getFont(zrUtil.merge(
+                            ? this.getFont(zrUtil.merge(
                                   data[i].textStyle || {},
                                   textStyle
                               ))
@@ -390,46 +389,46 @@ define(function (require) {
                 }
             }
 
-            zrWidth = zr.getWidth();
-            zrHeight = zr.getHeight();
+            zrWidth = this.zr.getWidth();
+            zrHeight = this.zr.getHeight();
             var x;
-            switch (legendOption.x) {
+            switch (this.legendOption.x) {
                 case 'center' :
                     x = Math.floor((zrWidth - totalWidth) / 2);
                     break;
                 case 'left' :
-                    x = legendOption.padding[3] + legendOption.borderWidth;
+                    x = this.legendOption.padding[3] + this.legendOption.borderWidth;
                     break;
                 case 'right' :
                     x = zrWidth
                         - totalWidth
-                        - legendOption.padding[1]
-                        - legendOption.padding[3]
-                        - legendOption.borderWidth * 2;
+                        - this.legendOption.padding[1]
+                        - this.legendOption.padding[3]
+                        - this.legendOption.borderWidth * 2;
                     break;
                 default :
-                    x = legendOption.x - 0;
+                    x = this.legendOption.x - 0;
                     x = isNaN(x) ? 0 : x;
                     break;
             }
 
             var y;
-            switch (legendOption.y) {
+            switch (this.legendOption.y) {
                 case 'top' :
-                    y = legendOption.padding[0] + legendOption.borderWidth;
+                    y = this.legendOption.padding[0] + this.legendOption.borderWidth;
                     break;
                 case 'bottom' :
                     y = zrHeight
                         - totalHeight
-                        - legendOption.padding[0]
-                        - legendOption.padding[2]
-                        - legendOption.borderWidth * 2;
+                        - this.legendOption.padding[0]
+                        - this.legendOption.padding[2]
+                        - this.legendOption.borderWidth * 2;
                     break;
                 case 'center' :
                     y = Math.floor((zrHeight - totalHeight) / 2);
                     break;
                 default :
-                    y = legendOption.y - 0;
+                    y = this.legendOption.y - 0;
                     y = isNaN(y) ? 0 : y;
                     break;
             }
@@ -441,13 +440,13 @@ define(function (require) {
                 height : totalHeight,
                 maxWidth : maxWidth
             };
-        }
+        },
 
         /**
          * 根据名称返回series数据或data
          */
-        function _getSomethingByName(name) {
-            var series = option.series;
+        _getSomethingByName : function (name) {
+            var series = this.option.series;
             var data;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].name == name) {
@@ -490,15 +489,15 @@ define(function (require) {
                 data : null,
                 dataIndex : -1
             };
-        }
+        },
         
-        function _getItemShapeByType(x, y, width, height, color, itemType, defaultColor) {
+        _getItemShapeByType : function (x, y, width, height, color, itemType, defaultColor) {
             var highlightColor = color === '#ccc' 
                                  ? defaultColor 
                                  : typeof color == 'string' && color != '#ccc' 
                                    ? zrColor.lift(color, -0.3) : color;
             var itemShape = {
-                zlevel : _zlevelBase,
+                zlevel : this._zlevelBase,
                 style : {
                     iconType : 'legendicon' 
                                + (itemType != ecConfig.CHART_TYPE_CHORD   // 和弦复用饼图
@@ -516,8 +515,8 @@ define(function (require) {
                     strokeColor : highlightColor,
                     lineWidth : 1
                 },
-                hoverable : legendOption.selectedMode,
-                clickable : legendOption.selectedMode
+                hoverable : this.legendOption.selectedMode,
+                clickable : this.legendOption.selectedMode
             };
             // 特殊设置
             switch (itemType) {
@@ -533,56 +532,65 @@ define(function (require) {
                     itemShape.style.brushType = 'both';
                     itemShape.highlightStyle.lineWidth = 3;
                     itemShape.highlightStyle.color =
-                    itemShape.style.color = self.query(
-                        ecConfig, 'k.itemStyle.normal.color'
+                    itemShape.style.color = this.query(
+                        this.ecTheme, 'k.itemStyle.normal.color'
                     ) || '#fff';
                     itemShape.style.strokeColor = color != '#ccc' 
-                        ? self.query(
-                              ecConfig, 'k.itemStyle.normal.lineStyle.color'
+                        ? this.query(
+                              this.ecTheme, 'k.itemStyle.normal.lineStyle.color'
                           ) || '#ff3200'
                         : color;
             }
             return itemShape;
-        }
+        },
 
-        function _legendSelected(param) {
+        _legendSelected : function (param) {
             var itemName = param.target._name;
-            if (legendOption.selectedMode === 'single') {
-                for (var k in _selectedMap) {
-                    _selectedMap[k] = false;
+            if (this.legendOption.selectedMode === 'single') {
+                for (var k in this._selectedMap) {
+                    this._selectedMap[k] = false;
                 }
             }
-            _selectedMap[itemName] = !_selectedMap[itemName];
-            messageCenter.dispatch(
+            this._selectedMap[itemName] = !this._selectedMap[itemName];
+            this.messageCenter.dispatch(
                 ecConfig.EVENT.LEGEND_SELECTED,
                 param.event,
                 {
-                    selected : _selectedMap,
+                    selected : this._selectedMap,
                     target : itemName
                 }
             );
-        }
+        },
 
-        function init(newOption) {
-            if (!self.query(newOption, 'legend.data')) {
+        init : function (newOption) {
+            //var this.legendOption;                       // 图例选项，共享数据源
+            this._itemGroupLocation = {};    // 图例元素组的位置参数，通过计算所得x, y, width, height
+            this._colorIndex = 0;
+            this._colorMap = {};
+            this._selectedMap = {};
+    
+            for (var k in legendIcon) {
+                IconShape.prototype.iconLibrary['legendicon' + k] = legendIcon[k];
+                //console.log('legendicon' + k, legendIcon[k])
+            }
+        
+            if (!this.query(newOption, 'legend.data')) {
                 return;
             }
 
-            option = newOption;
+            this.option = newOption;
 
-            option.legend = self.reformOption(option.legend);
+            this.option.legend = this.reformOption(this.option.legend);
             // 补全padding属性
-            option.legend.padding = self.reformCssArray(
-                option.legend.padding
+            this.option.legend.padding = this.reformCssArray(
+                this.option.legend.padding
             );
 
-            legendOption = option.legend;
+            this.legendOption = this.option.legend;
 
-            self.clear();
+            this.clear();
 
-            _selectedMap = {};
-
-            var data = legendOption.data || [];
+            var data = this.legendOption.data || [];
             var itemName;
             var something;
             var color;
@@ -592,9 +600,9 @@ define(function (require) {
                 if (itemName === '') {
                     continue;
                 }
-                something = _getSomethingByName(itemName);
+                something = this._getSomethingByName(itemName);
                 if (!something.series) {
-                    _selectedMap[itemName] = false;
+                    this._selectedMap[itemName] = false;
                 } 
                 else {
                     if (something.data
@@ -608,8 +616,8 @@ define(function (require) {
                         queryTarget = [something.series];
                     }
                     
-                    color = self.getItemStyleColor(
-                        self.deepQuery(
+                    color = this.getItemStyleColor(
+                        this.deepQuery(
                             queryTarget, 'itemStyle.normal.color'
                         ),
                         something.seriesIndex,
@@ -617,64 +625,64 @@ define(function (require) {
                         something.data
                     );
                     if (color && something.type != ecConfig.CHART_TYPE_K) {
-                        setColor(itemName, color);
+                        this.setColor(itemName, color);
                     }
-                    _selectedMap[itemName] = true;
+                    this._selectedMap[itemName] = true;
                 }
             }
-            if (selected) {
-                for (var k in selected) {
-                    _selectedMap[k] = selected[k];
+            if (this.selected) {
+                for (var k in this.selected) {
+                    this._selectedMap[k] = this.selected[k];
                 }
             }
-            _buildShape();
-        }
+            this._buildShape();
+        },
 
         /**
          * 刷新
          */
-        function refresh(newOption) {
+        refresh : function (newOption) {
             if (newOption) {
-                option = newOption;
-                option.legend = self.reformOption(option.legend);
+                this.option = newOption;
+                this.option.legend = this.reformOption(this.option.legend);
                 // 补全padding属性
-                option.legend.padding = self.reformCssArray(
-                    option.legend.padding
+                this.option.legend.padding = this.reformCssArray(
+                    this.option.legend.padding
                 );
-                if (option.legend.selected) {
-                    for (var k in option.legend.selected) {
-                        _selectedMap[k] = option.legend.selected[k];
+                if (this.option.legend.selected) {
+                    for (var k in this.option.legend.selected) {
+                        this._selectedMap[k] = this.option.legend.selected[k];
                     }
                 }
             }
-            legendOption = option.legend;
-            self.clear();
-            _buildShape();
-        }
+            this.legendOption = this.option.legend;
+            this.clear();
+            this._buildShape();
+        },
 
-        function setColor(legendName, color) {
-            _colorMap[legendName] = color;
-        }
+        setColor : function (legendName, color) {
+            this._colorMap[legendName] = color;
+        },
 
-        function getColor(legendName) {
-            if (!_colorMap[legendName]) {
-                _colorMap[legendName] = zr.getColor(_colorIndex++);
+        getColor : function (legendName) {
+            if (!this._colorMap[legendName]) {
+                this._colorMap[legendName] = this.zr.getColor(this._colorIndex++);
             }
-            return _colorMap[legendName];
-        }
+            return this._colorMap[legendName];
+        },
         
-        function hasColor(legendName) {
-            return _colorMap[legendName] ? _colorMap[legendName] : false;
-        }
+        hasColor : function (legendName) {
+            return this._colorMap[legendName] ? this._colorMap[legendName] : false;
+        },
 
-        function add(name, color){
-            legendOption.data.push(name);
-            setColor(name,color);
-            _selectedMap[name] = true;
-        }
+        add : function (name, color){
+            this.legendOption.data.push(name);
+            this.setColor(name,color);
+            this._selectedMap[name] = true;
+        },
 
-        function del(name){
-            var data = legendOption.data;
+        del : function (name){
+            var data = this.legendOption.data;
             var finalData = [];
             var found = false;
             for (var i = 0, dataLength = data.length; i < dataLength; i++) {
@@ -686,89 +694,74 @@ define(function (require) {
                     continue;
                 }
             }
-            legendOption.data = finalData;
-        }
+            this.legendOption.data = finalData;
+        },
         
         /**
          * 特殊图形元素回调设置
          * @param {Object} name
          * @param {Object} itemShape
          */
-        function getItemShape(name) {
+        getItemShape : function (name) {
             if (typeof name == 'undefined') {
                 return;
             }
             var shape;
-            for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                shape = self.shapeList[i];
+            for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                shape = this.shapeList[i];
                 if (shape._name == name && shape.type != 'text') {
                     return shape;
                 }
             }
-        }
+        },
         
         /**
          * 特殊图形元素回调设置
          * @param {Object} name
          * @param {Object} itemShape
          */
-        function setItemShape(name, itemShape) {
+        setItemShape : function (name, itemShape) {
             var shape;
-            for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                shape = self.shapeList[i];
+            for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                shape = this.shapeList[i];
                 if (shape._name == name && shape.type != 'text') {
-                    if (!_selectedMap[name]) {
+                    if (!this._selectedMap[name]) {
                         itemShape.style.color = '#ccc';
                         itemShape.style.strokeColor = '#ccc';
                     }
-                    zr.modShape(shape.id, itemShape);
+                    this.zr.modShape(shape.id, itemShape);
                 }
             }
-        }
+        },
 
-        function isSelected(itemName) {
-            if (typeof _selectedMap[itemName] != 'undefined') {
-                return _selectedMap[itemName];
+        isSelected : function (itemName) {
+            if (typeof this._selectedMap[itemName] != 'undefined') {
+                return this._selectedMap[itemName];
             }
             else {
                 // 没在legend里定义的都为true啊~
                 return true;
             }
-        }
+        },
         
-        function getSelectedMap() {
-            return _selectedMap;
-        }
+        getSelectedMap : function () {
+            return this._selectedMap;
+        },
         
         /**
          * 图例选择
          */
-        function onlegendSelected(param, status) {
+        onlegendSelected : function (param, status) {
             var legendSelected = param.selected;
-            for (var itemName in _selectedMap) {
-                if (_selectedMap[itemName] != legendSelected[itemName]) {
+            for (var itemName in this._selectedMap) {
+                if (this._selectedMap[itemName] != legendSelected[itemName]) {
                     // 有一项不一致都需要重绘
                     status.needRefresh = true;
                 }
-                _selectedMap[itemName] = legendSelected[itemName];
+                this._selectedMap[itemName] = legendSelected[itemName];
             }
             return;
         }
-
-        self.init = init;
-        self.refresh = refresh;
-        self.setColor = setColor;
-        self.getColor = getColor;
-        self.hasColor = hasColor;
-        self.add = add;
-        self.del = del;
-        self.getItemShape = getItemShape;
-        self.setItemShape = setItemShape;
-        self.isSelected = isSelected;
-        self.getSelectedMap = getSelectedMap;
-        self.onlegendSelected = onlegendSelected;
-
-        init(option);
     }
     
     var legendIcon = {
@@ -791,7 +784,7 @@ define(function (require) {
                 endAngle : 135
             });
         }, 
-        chord : function(ctx, style) {
+        chord : function (ctx, style) {
             var x = style.x;
             var y = style.y;
             var width = style.width;
@@ -854,10 +847,10 @@ define(function (require) {
             ctx.lineTo(x, y + r);
             ctx.quadraticCurveTo(x, y, x + r, y);
         },
-        force : function(ctx, style) {
+        force : function (ctx, style) {
             IconShape.prototype.iconLibrary.circle(ctx, style);
         },
-        radar: function(ctx, style) {
+        radar: function (ctx, style) {
             var n = 6;
             var x = style.x + style.width / 2;
             var y = style.y + style.height / 2;
@@ -877,6 +870,8 @@ define(function (require) {
             ctx.lineTo(xStart, yStart);
         }
     };
+    
+    zrUtil.inherits(Legend, Base);
     
     require('../component').define('legend', Legend);
     
