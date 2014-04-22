@@ -1,5 +1,5 @@
 var randomDataLength = 10000;
-var randomData = (function(){
+var randomData = (function (){
     var l = [];
     var len = randomDataLength;
     while(len--) {
@@ -44,7 +44,7 @@ function option(chartType, n) {
                 mapType: 'world',
                 roam: true,
                 large:true,
-                data: function(){
+                data: function (){
                     switch(chartType) {
                         case 'scatter' :
                             return scatterData(n);
@@ -75,7 +75,7 @@ function option(chartType, n) {
         opt.xAxis = [
             {
                 type : 'category',
-                data :  function(){
+                data :  function (){
                     var list = [];
                     for (var i = 1; i <= n; i++) {
                         list.push(i);
