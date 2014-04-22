@@ -6,11 +6,19 @@
  *
  */
 
- define(function(require) {
+ define(function (require) {
+    var ComponentBase = require('../component/base');
+    var CalculableBase = require('./calculableBase');
+    
      // 图形依赖
     var PolygonShape = require('zrender/shape/Polygon');
      // 组件依赖
     require('../component/polar');
+    
+    var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
+    var zrUtil = require('zrender/tool/util');
+    var zrColor = require('zrender/tool/color');
     
     /**
      * 构造函数
@@ -19,17 +27,11 @@
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Radar(ecConfig, messageCenter, zr, option, component) {
-        // 基类装饰
-        var ComponentBase = require('../component/base');
-        ComponentBase.call(this, ecConfig, zr);
+    function Radar(ecTheme, messageCenter, zr, option, component) {
+        // 基类
+        ComponentBase.call(this, ecTheme, zr, option);
         // 可计算特性装饰
-        var CalculableBase = require('./calculableBase');
-        CalculableBase.call(this, zr, option);
-
-        var ecData = require('../util/ecData');
-
-        var zrColor = require('zrender/tool/color');
+        CalculableBase.call(this);
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_RADAR;
@@ -476,7 +478,10 @@
 
         init(option, component);
     }
-
+    
+    zrUtil.inherits(Radar, CalculableBase);
+    zrUtil.inherits(Radar, ComponentBase);
+    
     // 图表注册
     require('../chart').define('radar', Radar);
     

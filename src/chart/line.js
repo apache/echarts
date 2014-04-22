@@ -5,17 +5,23 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function(require) {
+define(function (require) {
+    var ComponentBase = require('../component/base');
+    var CalculableBase = require('./calculableBase');
+    
     // 图形依赖
     var BrokenLineShape = require('zrender/shape/BrokenLine');
     var IconShape = require('../util/shape/Icon');
     var HalfSmoothPolygonShape = require('../util/shape/HalfSmoothPolygon');
     // 组件依赖
     require('../component/axis');
-    require('../component/categoryAxis');
-    require('../component/valueAxis');
     require('../component/grid');
     require('../component/dataZoom');
+    
+    var ecConfig = require('../config');
+    var zrUtil = require('zrender/tool/util');
+    var zrColor = require('zrender/tool/color');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -23,15 +29,11 @@ define(function(require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Line(ecConfig, messageCenter, zr, option, component){
-        // 基类装饰
-        var ComponentBase = require('../component/base');
-        ComponentBase.call(this, ecConfig, zr);
+    function Line(ecTheme, messageCenter, zr, option, component){
+        // 基类
+        ComponentBase.call(this, ecTheme, zr, option);
         // 可计算特性装饰
-        var CalculableBase = require('./calculableBase');
-        CalculableBase.call(this, zr, option);
-
-        var zrColor = require('zrender/tool/color');
+        CalculableBase.call(this);
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_LINE;
@@ -1078,6 +1080,9 @@ define(function(require) {
             ctx.lineTo(x + width, y + dy);
         }
     }
+    
+    zrUtil.inherits(Line, CalculableBase);
+    zrUtil.inherits(Line, ComponentBase);
     
     // 图表注册
     require('../chart').define('line', Line);

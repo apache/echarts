@@ -5,15 +5,21 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function(require) {
+define(function (require) {
+    var ComponentBase = require('../component/base');
+    var CalculableBase = require('./calculableBase');
+    
     // 图形依赖
     var RectangleShape = require('zrender/shape/Rectangle');
     // 组件依赖
     require('../component/axis');
-    require('../component/categoryAxis');
-    require('../component/valueAxis');
     require('../component/grid');
     require('../component/dataZoom');
+    
+    var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
+    var zrUtil = require('zrender/tool/util');
+    var zrColor = require('zrender/tool/color');
     
     /**
      * 构造函数
@@ -22,17 +28,11 @@ define(function(require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Bar(ecConfig, messageCenter, zr, option, component){
-        // 基类装饰
-        var ComponentBase = require('../component/base');
-        ComponentBase.call(this, ecConfig, zr);
+    function Bar(ecTheme, messageCenter, zr, option, component){
+        // 基类
+        ComponentBase.call(this, ecTheme, zr, option);
         // 可计算特性装饰
-        var CalculableBase = require('./calculableBase');
-        CalculableBase.call(this, zr, option);
-
-        var ecData = require('../util/ecData');
-        
-        var zrColor = require('zrender/tool/color');
+        CalculableBase.call(this);
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_BAR;
@@ -1120,7 +1120,10 @@ define(function(require) {
 
         init(option, component);
     }
-
+    
+    zrUtil.inherits(Bar, CalculableBase);
+    zrUtil.inherits(Bar, ComponentBase);
+    
     // 图表注册
     require('../chart').define('bar', Bar);
     

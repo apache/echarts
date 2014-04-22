@@ -5,16 +5,21 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function(require) {
+define(function (require) {
+    var ComponentBase = require('../component/base');
+    var CalculableBase = require('./calculableBase');
+    
     // 图形依赖
     var SymbolShape = require('../util/shape/Symbol');
     // 组件依赖
     require('../component/axis');
-    require('../component/categoryAxis');
-    require('../component/valueAxis');
     require('../component/grid');
     require('../component/dataZoom');
     require('../component/dataRange');
+    
+    var ecConfig = require('../config');
+    var zrUtil = require('zrender/tool/util');
+    var zrColor = require('zrender/tool/color');
     
     /**
      * 构造函数
@@ -23,15 +28,11 @@ define(function(require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Scatter(ecConfig, messageCenter, zr, option, component){
-        // 基类装饰
-        var ComponentBase = require('../component/base');
-        ComponentBase.call(this, ecConfig, zr);
+    function Scatter(ecTheme, messageCenter, zr, option, component){
+        // 基类
+        ComponentBase.call(this, ecTheme, zr, option);
         // 可计算特性装饰
-        var CalculableBase = require('./calculableBase');
-        CalculableBase.call(this, zr, option);
-
-        var zrColor = require('zrender/tool/color');
+        CalculableBase.call(this);
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_SCATTER;
@@ -515,7 +516,10 @@ define(function(require) {
         init(option, component);
     }
     
-    // 自注册
+    zrUtil.inherits(Scatter, CalculableBase);
+    zrUtil.inherits(Scatter, ComponentBase);
+    
+    // 图表注册
     require('../chart').define('scatter', Scatter);
     
     return Scatter;

@@ -6,7 +6,16 @@
  *
  */
 define(function (require) {
+    var ComponentBase = require('../component/base');
+    var CalculableBase = require('./calculableBase');
+    
+    // 图形依赖
     var CircleShape = require('zrender/shape/Circle');
+    
+    var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
+    var zrUtil = require('zrender/tool/util');
+    var zrEvent = require('zrender/tool/event');
     
     /**
      * 构造函数
@@ -14,17 +23,11 @@ define(function (require) {
      * @param {ZRender} zr zrender实例
      * @param {Object} option 图表选项
      */
-    function Island(ecConfig, messageCenter, zr) {
-        // 基类装饰
-        var ComponentBase = require('../component/base');
-        ComponentBase.call(this, ecConfig, zr);
+    function Island(ecTheme, messageCenter, zr) {
+        // 基类
+        ComponentBase.call(this, ecTheme, zr, {});
         // 可计算特性装饰
-        var CalculableBase = require('./calculableBase');
-        CalculableBase.call(this, zr, ecConfig);
-                
-        var ecData = require('../util/ecData');
-
-        var zrEvent = require('zrender/tool/event');
+        CalculableBase.call(this);
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_ISLAND;
@@ -216,7 +219,7 @@ define(function (require) {
         /**
          * 滚轮改变孤岛数据值
          */
-        self.shapeHandler.onmousewheel = function(param) {
+        self.shapeHandler.onmousewheel = function (param) {
             var shape = param.target;
 
             var event = param.event;
@@ -254,7 +257,10 @@ define(function (require) {
         self.ondrop = ondrop;
         self.ondragend = ondragend;
     }
-
+    
+    zrUtil.inherits(Island, CalculableBase);
+    zrUtil.inherits(Island, ComponentBase);
+    
     // 图表注册
     require('../chart').define('island', Island);
     

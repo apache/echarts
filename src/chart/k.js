@@ -5,15 +5,20 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function(require) {
+define(function (require) {
+    var ComponentBase = require('../component/base');
+    var CalculableBase = require('./calculableBase');
+    
     // 图形依赖
     var CandleShape = require('../util/shape/Candle');
     // 组件依赖
     require('../component/axis');
-    require('../component/categoryAxis');
-    require('../component/valueAxis');
     require('../component/grid');
     require('../component/dataZoom');
+    
+    var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
+    var zrUtil = require('zrender/tool/util');
     
     /**
      * 构造函数
@@ -22,16 +27,12 @@ define(function(require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function K(ecConfig, messageCenter, zr, option, component){
-        // 基类装饰
-        var ComponentBase = require('../component/base');
-        ComponentBase.call(this, ecConfig, zr);
+    function K(ecTheme, messageCenter, zr, option, component){
+        // 基类
+        ComponentBase.call(this, ecTheme, zr, option);
         // 可计算特性装饰
-        var CalculableBase = require('./calculableBase');
-        CalculableBase.call(this, zr, option);
+        CalculableBase.call(this);
 
-        var ecData = require('../util/ecData');
-        
         var self = this;
         self.type = ecConfig.CHART_TYPE_K;
 
@@ -523,6 +524,9 @@ define(function(require) {
 
         init(option, component);
     }
+    
+    zrUtil.inherits(K, CalculableBase);
+    zrUtil.inherits(K, ComponentBase);
     
     // 图表注册
     require('../chart').define('k', K);

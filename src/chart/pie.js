@@ -5,7 +5,10 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function(require) {
+define(function (require) {
+    var ComponentBase = require('../component/base');
+    var CalculableBase = require('./calculableBase');
+    
     // 图形依赖
     var TextShape = require('zrender/shape/Text');
     var RingShape = require('zrender/shape/Ring');
@@ -13,6 +16,12 @@ define(function(require) {
     var SectorShape = require('zrender/shape/Sector');
     var BrokenLineShape = require('zrender/shape/BrokenLine');
 
+    var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
+    var zrUtil = require('zrender/tool/util');
+    var zrMath = require('zrender/tool/math');
+    var zrColor = require('zrender/tool/color');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -20,19 +29,11 @@ define(function(require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Pie(ecConfig, messageCenter, zr, option, component){
-        // 基类装饰
-        var ComponentBase = require('../component/base');
-        ComponentBase.call(this, ecConfig, zr);
+    function Pie(ecTheme, messageCenter, zr, option, component){
+        // 基类
+        ComponentBase.call(this, ecTheme, zr, option);
         // 可计算特性装饰
-        var CalculableBase = require('./calculableBase');
-        CalculableBase.call(this, zr, option);
-
-        var ecData = require('../util/ecData');
-
-        var zrMath = require('zrender/tool/math');
-        var zrUtil = require('zrender/tool/util');
-        var zrColor = require('zrender/tool/color');
+        CalculableBase.call(this);
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_PIE;
@@ -1069,7 +1070,7 @@ define(function(require) {
         /**
          * 输出动态视觉引导线
          */
-        self.shapeHandler.onmouseover = function(param) {
+        self.shapeHandler.onmouseover = function (param) {
             var shape = param.target;
             var seriesIndex = ecData.get(shape, 'seriesIndex');
             var dataIndex = ecData.get(shape, 'dataIndex');
@@ -1115,7 +1116,10 @@ define(function(require) {
 
         init(option, component);
     }
-
+    
+    zrUtil.inherits(Pie, CalculableBase);
+    zrUtil.inherits(Pie, ComponentBase);
+    
     // 图表注册
     require('../chart').define('pie', Pie);
     

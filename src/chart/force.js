@@ -5,19 +5,31 @@
  *
  */
 
-define(function(require) {
+define(function (require) {
+    'use strict';
+    
+    var ComponentBase = require('../component/base');
+    var CalculableBase = require('./calculableBase');
+    
     // 图形依赖
     var CircleShape = require('zrender/shape/Circle');
     var LineShape = require('zrender/shape/Line');
     var IconShape = require('../util/shape/Icon');
 
-    'use strict';
+    var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
+    var zrUtil = require('zrender/tool/util');
+    var zrConfig = require('zrender/config');
+    var zrEvent = require('zrender/tool/event');
+    var vec2 = require('zrender/tool/vector');
 
+    var NDArray = require('../util/ndarray');
+        
     var requestAnimationFrame = window.requestAnimationFrame
                                 || window.msRequestAnimationFrame
                                 || window.mozRequestAnimationFrame
                                 || window.webkitRequestAnimationFrame
-                                || function(func){setTimeout(func, 16);};
+                                || function (func){setTimeout(func, 16);};
 
     // 保存节点的位置，改变数据时能够有更好的动画效果
     var nodeInitialPos = {};
@@ -29,23 +41,11 @@ define(function(require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Force(ecConfig, messageCenter, zr, option, component) {
-        // 基类装饰
-        var ComponentBase = require('../component/base');
-        ComponentBase.call(this, ecConfig, zr);
+    function Force(ecTheme, messageCenter, zr, option, component) {
+        // 基类
+        ComponentBase.call(this, ecTheme, zr, option);
         // 可计算特性装饰
-        var CalculableBase = require('./calculableBase');
-        CalculableBase.call(this, zr, option);
-
-        var ecData = require('../util/ecData');
-
-        var zrConfig = require('zrender/config');
-        var zrEvent = require('zrender/tool/event');
-        // var zrColor = require('zrender/tool/color');
-        var zrUtil = require('zrender/tool/util');
-        var vec2 = require('zrender/tool/vector');
-
-        var NDArray = require('../util/ndarray');
+        CalculableBase.call(this);
 
         var legend;
         var self = this;
@@ -204,7 +204,7 @@ define(function(require) {
         function _preProcessData(nodes, links) {
             var filteredNodeMap = [];
             var cursor = 0;
-            filteredNodes = _filter(nodes, function(node, idx) {
+            filteredNodes = _filter(nodes, function (node, idx) {
                 if (!node) {
                     return;
                 }
@@ -221,7 +221,7 @@ define(function(require) {
             var source;
             var target;
             var ret;
-            filteredLinks = _filter(links, function(link, idx){
+            filteredLinks = _filter(links, function (link, idx){
                 source = link.source;
                 target = link.target;
                 ret = true;
@@ -364,12 +364,12 @@ define(function(require) {
                 }
                 
                 // 拖拽特性
-                if (forceSerie.draggable) {
-                    self.setCalculable(shape);
-                    shape.dragEnableTime = 0;
-                    shape.ondragstart = self.shapeHandler.ondragstart;
-                    shape.draggable = forceSerie.draggable;
-                }
+				if (forceSerie.draggable) {
+	                self.setCalculable(shape);
+	                shape.dragEnableTime = 0;
+	                shape.ondragstart = self.shapeHandler.ondragstart;
+	                shape.draggable = forceSerie.draggable;
+				}
                 
                 var categoryName = '';
                 if (typeof(node.category) !== 'undefined') {
@@ -750,7 +750,7 @@ define(function(require) {
         /**
          * 输出动态视觉引导线
          */
-        self.shapeHandler.ondragstart = function() {
+        self.shapeHandler.ondragstart = function () {
             self.isDragstart = true;
         };
         
@@ -847,7 +847,9 @@ define(function(require) {
         }
         return result;
     }
-
+    zrUtil.inherits(Force, CalculableBase);
+    zrUtil.inherits(Force, ComponentBase);
+    
     // 图表注册
     require('../chart').define('force', Force);
 

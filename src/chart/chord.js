@@ -5,31 +5,31 @@
  *
  */
 
-define(function(require) {
+define(function (require) {
+    'use strict';
+    
+    var ComponentBase = require('../component/base');
+    var CalculableBase = require('./calculableBase');
+    
     // 图形依赖
     var TextShape = require('zrender/shape/Text');
     var LineShape = require('zrender/shape/Line');
     var SectorShape = require('zrender/shape/Sector');
     var ChordShape = require('../util/shape/Chord');
     
-    'use strict';
-
+    var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
+    var zrUtil = require('zrender/tool/util');
+    var vec2 = require('zrender/tool/vector');
+    var NDArray = require('../util/ndarray');
+    
     var _devicePixelRatio = window.devicePixelRatio || 1;
     
-    function Chord(ecConfig, messageCenter, zr, option, component) {
+    function Chord(ecTheme, messageCenter, zr, option, component) {
         var self = this;
 
-        var ComponentBase = require('../component/base');
-        ComponentBase.call(this, ecConfig, zr);
-
-        var CalculableBase = require('./calculableBase');
-        CalculableBase.call(this, zr, option);
-
-        var ecData = require('../util/ecData');
-
-        var zrUtil = require('zrender/tool/util');
-        var vec2 = require('zrender/tool/vector');
-        var NDArray = require('../util/ndarray');
+        ComponentBase.call(this, ecTheme, zr, option);
+        CalculableBase.call(this);
 
         var legend;
         var getColor;
@@ -314,11 +314,11 @@ define(function(require) {
             );
 
             function createMouseOver(idx) {
-                return function() {
+                return function () {
                     if (timeout) {
                         clearTimeout(timeout);
                     }
-                    timeout = setTimeout(function(){
+                    timeout = setTimeout(function (){
                         for (var i = 0; i < len; i++) {
                             sectorShapes[i].style.opacity 
                                 = i === idx ? 1 : 0.1;
@@ -345,11 +345,11 @@ define(function(require) {
             }
 
             function createMouseOut() {
-                return function() {
+                return function () {
                     if (timeout) {
                         clearTimeout(timeout);
                     }
-                    timeout = setTimeout(function(){
+                    timeout = setTimeout(function (){
                         for (var i = 0; i < len; i++) {
                             sectorShapes[i].style.opacity = 1.0;
                             zr.modShape(sectorShapes[i].id, sectorShapes[i]);
@@ -677,13 +677,17 @@ define(function(require) {
             self.clear();
             legend = component.legend;
             if (legend) {
-                getColor = legend.getColor;
-                isSelected = legend.isSelected;
+                getColor = function(param) {
+                    return legend.getColor(param);
+                };
+                isSelected = function(param) {
+                    return legend.isSelected(param);
+                };
             } else {
                 var colorIndices = {};
                 var colorMap = {};
                 var count = 0;
-                getColor = function(key) {
+                getColor = function (key) {
                     if (colorMap[key]) {
                         return colorMap[key];
                     }
@@ -719,7 +723,7 @@ define(function(require) {
 
                     return colorMap[key];
                 };
-                isSelected = function() {
+                isSelected = function () {
                     return true;
                 };
             }
@@ -744,7 +748,11 @@ define(function(require) {
 
         init(option, component);
     }
-
+    
+    zrUtil.inherits(Chord, CalculableBase);
+    zrUtil.inherits(Chord, ComponentBase);
+    
+    // 图表注册
     require('../chart').define('chord', Chord);
 
     return Chord;

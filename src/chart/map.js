@@ -5,13 +5,23 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function(require) {
+define(function (require) {
+    var ComponentBase = require('../component/base');
+    var CalculableBase = require('./calculableBase');
+    
     // 图形依赖
     var TextShape = require('zrender/shape/Text');
     var PathShape = require('zrender/shape/Path');
     var CircleShape = require('zrender/shape/Circle');
     // 组件依赖
     require('../component/dataRange');
+    
+    var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
+    var zrUtil = require('zrender/tool/util');
+    var zrConfig = require('zrender/config');
+    var zrUtil = require('zrender/tool/util');
+    var zrEvent = require('zrender/tool/event');
     
     /**
      * 构造函数
@@ -20,19 +30,11 @@ define(function(require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Map(ecConfig, messageCenter, zr, option, component){
-        // 基类装饰
-        var ComponentBase = require('../component/base');
-        ComponentBase.call(this, ecConfig, zr);
+    function Map(ecTheme, messageCenter, zr, option, component){
+        // 基类
+        ComponentBase.call(this, ecTheme, zr, option);
         // 可计算特性装饰
-        var CalculableBase = require('./calculableBase');
-        CalculableBase.call(this, zr, option);
-
-        var ecData = require('../util/ecData');
-
-        var zrConfig = require('zrender/config');
-        var zrUtil = require('zrender/tool/util');
-        var zrEvent = require('zrender/tool/event');
+        CalculableBase.call(this);
 
         var self = this;
         self.type = ecConfig.CHART_TYPE_MAP;
@@ -197,7 +199,7 @@ define(function(require) {
          * @param {Object} ms mapSeries
          */
         function _mapDataCallback(mt, vd, ms) {
-            return function(md) {
+            return function (md) {
                 if (!self) {
                     // 异步地图数据回调时有可能实例已经被释放
                     return;
@@ -1002,7 +1004,7 @@ define(function(require) {
                 _mx = mx;
                 _my = my;
                 _curMapType = mapType;
-                setTimeout(function(){
+                setTimeout(function (){
                     zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
                     zr.on(zrConfig.EVENT.MOUSEUP, _onmouseup);
                 },50);
@@ -1052,7 +1054,7 @@ define(function(require) {
             _mx = zrEvent.getX(event);
             _my = zrEvent.getY(event);
             _mousedown = false;
-            setTimeout(function(){
+            setTimeout(function (){
                 _justMove && self.animationEffect();
                 _justMove = false;
                 zr.un(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
@@ -1276,7 +1278,7 @@ define(function(require) {
         /**
          * 输出关联区域
          */
-        self.shapeHandler.onmouseover = function(param) {
+        self.shapeHandler.onmouseover = function (param) {
             var target = param.target;
             var name = target.style._text;
             if (_shapeListMap[name]) {
@@ -1303,7 +1305,10 @@ define(function(require) {
         
         init(option, component);
     }
-
+    
+    zrUtil.inherits(Map, CalculableBase);
+    zrUtil.inherits(Map, ComponentBase);
+    
     // 图表注册
     require('../chart').define('map', Map);
     
