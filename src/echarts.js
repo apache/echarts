@@ -15,7 +15,7 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function(require) {
+define(function (require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
     
@@ -31,7 +31,7 @@ define(function(require) {
     /**
      * 入口方法 
      */
-    self.init = function(dom, theme) {
+    self.init = function (dom, theme) {
         dom = dom instanceof Array ? dom[0] : dom;
         // dom与echarts实例映射索引
         var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
@@ -53,7 +53,7 @@ define(function(require) {
     /**
      * 通过id获得ECharts实例，id可在实例化后读取 
      */
-    self.getInstanceById = function(key) {
+    self.getInstanceById = function (key) {
         return _instances[key];
     };
 
@@ -976,12 +976,12 @@ define(function(require) {
             var zrColor = require('zrender/tool/color');
             // 数值系列的颜色列表，不传则采用内置颜色，可配数组，借用zrender实例注入，会有冲突风险，先这样
             if (magicOption.color && magicOption.color.length > 0) {
-                _zr.getColor = function(idx) {
+                _zr.getColor = function (idx) {
                     return zrColor.getColor(idx, magicOption.color);
                 };
             }
             else {
-                _zr.getColor = function(idx) {
+                _zr.getColor = function (idx) {
                     return zrColor.getColor(idx, _themeConfig.color);
                 };
             }
@@ -1242,7 +1242,7 @@ define(function(require) {
             }
             _island.refresh(magicOption);
             _toolbox.refresh(magicOption);
-            setTimeout(function(){
+            setTimeout(function (){
                 _messageCenter.dispatch(
                     ecConfig.EVENT.REFRESH,
                     '',
@@ -1383,7 +1383,7 @@ define(function(require) {
                           
             var image = zrImg.toDataURL('image/png', bgColor);
             
-            setTimeout(function(){
+            setTimeout(function (){
                 zrImg.dispose();
                 zrDom.parentNode.removeChild(zrDom);
                 zrDom = null;
@@ -1534,7 +1534,7 @@ define(function(require) {
             }
             loadingOption.effectOption = loadingOption.effectOption || {};
             loadingOption.effectOption.textStyle = loadingOption.textStyle;
-            _zr.showLoading(new effectList[loadingOption.effect](
+            _zr.showLoading(new effectList[loadingOption.effect || 'spin'](
                 loadingOption.effectOption
             ));
             return self;
