@@ -177,8 +177,8 @@ myChart2.setOption(option2);
 myChart.connect(myChart2);
 myChart2.connect(myChart);
 
-setTimeout(function(){
-    window.onresize = function() {
+setTimeout(function (){
+    window.onresize = function () {
         myChart.resize();
         myChart2.resize();
     }
@@ -228,10 +228,10 @@ setTimeout(function(){
             needRefresh = false;
             
             myChart = echarts.init(domMain);
-            (new Function(editor.doc.getValue()))();
+            (new function (editor.doc.getValue()))();
             myChart.setOption(option, true);
             domMessage.innerHTML = '';
-            window.onresize = function() {
+            window.onresize = function () {
                 myChart.resize();
                 myChart2.resize();
             }

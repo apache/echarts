@@ -244,10 +244,10 @@ option = {
             type:'scatter',
             xAxisIndex: 1,
             yAxisIndex: 1,
-            symbolSize: function(value){
+            symbolSize: function (value){
                 return Math.round(value[2] / 4);
             },
-            data: (function() {
+            data: (function () {
                 var d = [];
                 var len = 100;
                 while (len--) {
@@ -265,7 +265,7 @@ option = {
 var lastIndex = 0;
 var len = option.series[0].data.length;
 clearInterval(timeTicket);
-timeTicket = setInterval(function(){
+timeTicket = setInterval(function (){
     // 动态数据接口 addData
     lastIndex += 1;
     myChart.addData([

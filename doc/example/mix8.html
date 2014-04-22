@@ -100,7 +100,7 @@ option = {
     tooltip : {
         trigger: 'axis',
         showDelay: 0,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
-        formatter: function(params) {
+        formatter: function (params) {
             var res = params[0][1];
             res += '<br/>' + params[0][0];
             res += '<br/>  开盘 : ' + params[0][2][0] + '  最高 : ' + params[0][2][3];
@@ -312,7 +312,7 @@ option2 = {
             splitNumber: 3,
             boundaryGap: [0.05, 0.05],
             axisLabel: {
-                formatter: function(v) {
+                formatter: function (v) {
                     return Math.round(v/10000) + ' 万'
                 }
             },
@@ -415,7 +415,7 @@ option3 = {
             splitNumber:3,
             boundaryGap: [0.05, 0.05],
             axisLabel: {
-                formatter: function(v) {
+                formatter: function (v) {
                     return Math.round(v/10000) + ' 万'
                 }
             },
@@ -471,8 +471,8 @@ myChart.connect([myChart2, myChart3]);
 myChart2.connect([myChart, myChart3]);
 myChart3.connect([myChart, myChart2]);
 
-setTimeout(function(){
-    window.onresize = function() {
+setTimeout(function (){
+    window.onresize = function () {
         myChart.resize();
         myChart2.resize();
         myChart3.resize();
@@ -525,10 +525,10 @@ setTimeout(function(){
             needRefresh = false;
             
             myChart = echarts.init(domMain);
-            (new Function(editor.doc.getValue()))();
+            (new function (editor.doc.getValue()))();
             myChart.setOption(option, true);
             domMessage.innerHTML = '';
-            window.onresize = function() {
+            window.onresize = function () {
                 myChart.resize();
                 myChart2.resize();
                 myChart3.resize();

@@ -78,7 +78,7 @@ option = {
         axisPointer : {            // 坐标轴指示器，坐标轴触发有效
             type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
         },
-        formatter: function(params) {
+        formatter: function (params) {
             var tar;
             if (params[1][2] != '-') {
                 tar = params[1];
@@ -105,7 +105,7 @@ option = {
         {
             type : 'category',
             splitLine: {show:false},
-            data :  function(){
+            data :  function (){
                 var list = [];
                 for (var i = 1; i <= 11; i++) {
                     list.push('11月' + i + '日');

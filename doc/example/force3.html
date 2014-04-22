@@ -223,7 +223,7 @@ function focus(param) {
         var targetNode = nodes[data.id];
     
         if (!targetNode.__collapsed__) {
-            option.series[0].nodes = nodes.map(function(node) {
+            option.series[0].nodes = nodes.map(function (node) {
                 node.ignore = isAscendant(data, node);
                 return node;
             });
