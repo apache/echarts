@@ -6,8 +6,14 @@
  *
  */
 define(function (require) {
+    var Base = require('./base');
+    
+    // 图形依赖
     var RectangleShape = require('zrender/shape/Rectangle');
     
+    var ecConfig = require('../config');
+    var zrUtil = require('zrender/tool/util');
+
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -18,132 +24,114 @@ define(function (require) {
      *      @param {number=} option.grid.width 直角坐标系内绘图网格宽度，数值单位px
      *      @param {number=} option.grid.height 直角坐标系内绘图网格高度，数值单位px
      */
-    function Grid(ecConfig, messageCenter, zr, option) {
-        var Base = require('./base');
-        Base.call(this, ecConfig, zr);
+    function Grid(ecTheme, messageCenter, zr, option) {
+        Base.call(this, ecTheme, zr, option);
 
-        var self = this;
-        self.type = ecConfig.COMPONENT_TYPE_GRID;
-
-        var _zlevelBase = self.getZlevelBase();
-
-        var _x;
-        var _y;
-        var _width;
-        var _height;
-        var _zrWidth;
-        var _zrHeight;
-
+        this.init(option);
+    }
+    
+    Grid.prototype = {
+        type : ecConfig.COMPONENT_TYPE_GRID,
         /**
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
          * @param {Object} newZr
          * @param {Object} newOption
          */
-        function init(newOption) {
-            option = newOption;
+        init : function (newOption) {
+            this.option = newOption;
 
-            option.grid = self.reformOption(option.grid);
+            this.option.grid = this.reformOption(this.option.grid);
 
-            var gridOption = option.grid;
-            _zrWidth = zr.getWidth();
-            _zrHeight = zr.getHeight();
-            _x = self.parsePercent(gridOption.x, _zrWidth);
-            _y = self.parsePercent(gridOption.y, _zrHeight);
-            var x2 = self.parsePercent(gridOption.x2, _zrWidth);
-            var y2 = self.parsePercent(gridOption.y2, _zrHeight);
+            var gridOption = this.option.grid;
+            this._zrWidth = this.zr.getWidth();
+            this._zrHeight = this.zr.getHeight();
+            this._x = this.parsePercent(gridOption.x, this._zrWidth);
+            this._y = this.parsePercent(gridOption.y, this._zrHeight);
+            var x2 = this.parsePercent(gridOption.x2, this._zrWidth);
+            var y2 = this.parsePercent(gridOption.y2, this._zrHeight);
             
 
             if (typeof gridOption.width == 'undefined') {
-                _width = _zrWidth - _x - x2;
+                this._width = this._zrWidth - this._x - x2;
             }
             else {
-                _width = self.parsePercent(gridOption.width, _zrWidth);
+                this._width = this.parsePercent(gridOption.width, this._zrWidth);
             }
 
             if (typeof gridOption.height == 'undefined') {
-                _height = _zrHeight - _y - y2;
+                this._height = this._zrHeight - this._y - y2;
             }
             else {
-                _height = self.parsePercent(gridOption.height, _zrHeight);
+                this._height = this.parsePercent(gridOption.height, this._zrHeight);
             }
             
-            _x = self.subPixelOptimize(_x, gridOption.borderWidth);
-            _y = self.subPixelOptimize(_y, gridOption.borderWidth);
+            this._x = this.subPixelOptimize(this._x, gridOption.borderWidth);
+            this._y = this.subPixelOptimize(this._y, gridOption.borderWidth);
 
-            self.shapeList.push(new RectangleShape({
-                zlevel : _zlevelBase,
+            this.shapeList.push(new RectangleShape({
+                zlevel : this._zlevelBase,
                 hoverable : false,
                 style : {
-                    x : _x,
-                    y : _y,
-                    width : _width,
-                    height : _height,
+                    x : this._x,
+                    y : this._y,
+                    width : this._width,
+                    height : this._height,
                     brushType : gridOption.borderWidth > 0 ? 'both' : 'fill',
                     color : gridOption.backgroundColor,
                     strokeColor: gridOption.borderColor,
                     lineWidth : gridOption.borderWidth
-                    // type : option.splitArea.areaStyle.type,
+                    // type : this.option.splitArea.areaStyle.type,
                 }
             }));
-            zr.addShape(self.shapeList[0]);
-        }
+            this.zr.addShape(this.shapeList[0]);
+        },
 
-        function getX() {
-            return _x;
-        }
+        getX : function () {
+            return this._x;
+        },
 
-        function getY() {
-            return _y;
-        }
+        getY : function () {
+            return this._y;
+        },
 
-        function getWidth() {
-            return _width;
-        }
+        getWidth : function () {
+            return this._width;
+        },
 
-        function getHeight() {
-            return _height;
-        }
+        getHeight : function () {
+            return this._height;
+        },
 
-        function getXend() {
-            return _x + _width;
-        }
+        getXend : function () {
+            return this._x + this._width;
+        },
 
-        function getYend() {
-            return _y + _height;
-        }
+        getYend : function () {
+            return this._y + this._height;
+        },
 
-        function getArea() {
+        getArea : function () {
             return {
-                x : _x,
-                y : _y,
-                width : _width,
-                height : _height
+                x : this._x,
+                y : this._y,
+                width : this._width,
+                height : this._height
             };
-        }
+        },
         
-        function refresh(newOption) {
-            if (_zrWidth != zr.getWidth() 
-                || _zrHeight != zr.getHeight()
+        refresh : function (newOption) {
+            if (this._zrWidth != this.zr.getWidth() 
+                || this._zrHeight != this.zr.getHeight()
                 || newOption
             ) {
-                self.clear();
-                init(newOption || option);
+                this.clear();
+                this.init(newOption || this.option);
             }
         }
-
-        self.init = init;
-        self.getX = getX;
-        self.getY = getY;
-        self.getWidth = getWidth;
-        self.getHeight = getHeight;
-        self.getXend = getXend;
-        self.getYend = getYend;
-        self.getArea = getArea;
-        self.refresh = refresh;
-
-        init(option);
-    }
-
+    };
+    
+    zrUtil.inherits(Grid, Base);
+    
     require('../component').define('grid', Grid);
     
     return Grid;

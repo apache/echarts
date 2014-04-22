@@ -525,7 +525,7 @@ setTimeout(function (){
             needRefresh = false;
             
             myChart = echarts.init(domMain);
-            (new function (editor.doc.getValue()))();
+            (new Function(editor.doc.getValue()))();
             myChart.setOption(option, true);
             domMessage.innerHTML = '';
             window.onresize = function () {
