@@ -1,22 +1,20 @@
 /**
- * echarts组件基类
+ * echarts可计算特性基类
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function(require) {
-    function Base(zr, option){
-        var ecData = require('../util/ecData');
-        var accMath = require('../util/accMath');
-
-        var zrUtil = require('zrender/tool/util');
+define(function (require) {
+    var ecData = require('../util/ecData');
+    var accMath = require('../util/accMath');
+    var zrUtil = require('zrender/tool/util');
+    
+    function Base(){
         var self = this;
-
-        self.selectedMap = {};
-
-        self.shapeHandler = {
-            onclick : function() {
+        this.selectedMap = {};
+        this.shapeHandler = {
+            onclick : function () {
                 self.isClick = true;
             },
             ondragover : function (param) {
@@ -27,11 +25,11 @@ define(function(require) {
                     text : '',
                     r : calculableShape.style.r + 5,
                     brushType : 'stroke',
-                    strokeColor : option.calculableColor,//self.zr.getCalculableColor(),
+                    strokeColor : self.ecTheme.calculableColor,
                     lineWidth : (calculableShape.style.lineWidth || 1) + 12
                 };
                 self.zr.addHoverShape(calculableShape);
-                setTimeout(function(){
+                setTimeout(function (){
                     calculableShape.highlightStyle = highlightStyle;
                 },20);
             },
@@ -46,21 +44,29 @@ define(function(require) {
             ondragend : function () {
                 self.isDragend = true;
             }
-        };
-
-        function setCalculable(shape) {
-            shape.dragEnableTime = option.DRAG_ENABLE_TIME;
-            shape.ondragover = self.shapeHandler.ondragover;
-            shape.ondragend = self.shapeHandler.ondragend;
-            shape.ondrop = self.shapeHandler.ondrop;
-            return shape;
         }
+    }
+    
+    /**
+     * 基类方法
+     */
+    Base.prototype = {
+        /**
+         * 图形拖拽特性 
+         */
+        setCalculable : function (shape) {
+            shape.dragEnableTime = this.ecTheme.DRAG_ENABLE_TIME;
+            shape.ondragover = this.shapeHandler.ondragover;
+            shape.ondragend = this.shapeHandler.ondragend;
+            shape.ondrop = this.shapeHandler.ondrop;
+            return shape;
+        },
 
         /**
          * 数据项被拖拽进来
          */
-        function ondrop(param, status) {
-            if (!self.isDrop || !param.target) {
+        ondrop : function (param, status) {
+            if (!this.isDrop || !param.target) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
             }
@@ -72,30 +78,30 @@ define(function(require) {
             var dataIndex = ecData.get(target, 'dataIndex');
 
             // 落到数据item上，数据被拖拽到某个数据项上，数据修改
-            var data = option.series[seriesIndex].data[dataIndex] || '-';
+            var data = this.option.series[seriesIndex].data[dataIndex] || '-';
             if (data.value) {
                 if (data.value != '-') {
-                    option.series[seriesIndex].data[dataIndex].value = 
+                    this.option.series[seriesIndex].data[dataIndex].value = 
                         accMath.accAdd(
-                            option.series[seriesIndex].data[dataIndex].value,
+                            this.option.series[seriesIndex].data[dataIndex].value,
                             ecData.get(dragged, 'value')
                         );
                 }
                 else {
-                    option.series[seriesIndex].data[dataIndex].value =
+                    this.option.series[seriesIndex].data[dataIndex].value =
                         ecData.get(dragged, 'value');
                 }
             }
             else {
                 if (data != '-') {
-                    option.series[seriesIndex].data[dataIndex] = 
+                    this.option.series[seriesIndex].data[dataIndex] = 
                         accMath.accAdd(
-                            option.series[seriesIndex].data[dataIndex],
+                            this.option.series[seriesIndex].data[dataIndex],
                             ecData.get(dragged, 'value')
                         );
                 }
                 else {
-                    option.series[seriesIndex].data[dataIndex] =
+                    this.option.series[seriesIndex].data[dataIndex] =
                         ecData.get(dragged, 'value');
                 }
             }
@@ -104,16 +110,16 @@ define(function(require) {
             status.dragIn = status.dragIn || true;
 
             // 处理完拖拽事件后复位
-            self.isDrop = false;
+            this.isDrop = false;
 
             return;
-        }
+        },
 
         /**
          * 数据项被拖拽出去
          */
-        function ondragend(param, status) {
-            if (!self.isDragend || !param.target) {
+        ondragend : function (param, status) {
+            if (!this.isDragend || !param.target) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
             }
@@ -123,40 +129,32 @@ define(function(require) {
             var dataIndex = ecData.get(target, 'dataIndex');
 
             // 被拖拽的图形是折线图bar，删除被拖拽走的数据
-            option.series[seriesIndex].data[dataIndex] = '-';
+            this.option.series[seriesIndex].data[dataIndex] = '-';
 
             // 别status = {}赋值啊！！
             status.dragOut = true;
             status.needRefresh = true;
 
             // 处理完拖拽事件后复位
-            self.isDragend = false;
+            this.isDragend = false;
 
             return;
-        }
+        },
 
         /**
          * 图例选择
          */
-        function onlegendSelected(param, status) {
+        onlegendSelected : function (param, status) {
             var legendSelected = param.selected;
-            for (var itemName in self.selectedMap) {
-                if (self.selectedMap[itemName] != legendSelected[itemName]) {
+            for (var itemName in this.selectedMap) {
+                if (this.selectedMap[itemName] != legendSelected[itemName]) {
                     // 有一项不一致都需要重绘
                     status.needRefresh = true;
                 }
-                self.selectedMap[itemName] = legendSelected[itemName];
+                this.selectedMap[itemName] = legendSelected[itemName];
             }
             return;
         }
-
-        /**
-         * 基类方法
-         */
-        self.setCalculable = setCalculable;
-        self.ondrop = ondrop;
-        self.ondragend = ondragend;
-        self.onlegendSelected = onlegendSelected;
     }
 
     return Base;
