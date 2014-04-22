@@ -66,7 +66,7 @@ var categories = [{
 
 var nodesIdxMap = {};
 
-data.forEach(function(item){
+data.forEach(function (item){
     
     if (item[0] == "Event" || item[0] == "EventListener" ) return;
     if (item[1] == "Event" || item[1] == "EventListener" ) return;

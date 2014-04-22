@@ -73,7 +73,7 @@ require(
         'echarts/chart/chord',
         'echarts/chart/map'
     ],
-    function(ec, wd) {
+    function (ec, wd) {
         echarts = ec;
         webkitDepData = wd;
         webkitDepData.minRadius = 5;
@@ -98,14 +98,14 @@ require(
 
 var curEvent;
 var showChartTimer;
-Reveal.addEventListener( 'ready', function(event){
+Reveal.addEventListener( 'ready', function (event){
     clearTimeout(showChartTimer);
     curEvent = event;
     getCurParams();
     showChartTimer = setTimeout(showChart, 800);
 });
 
-Reveal.addEventListener( 'slidechanged', function(event){
+Reveal.addEventListener( 'slidechanged', function (event){
     clearTimeout(showChartTimer);
     curEvent = event;
     getCurParams();
@@ -334,7 +334,7 @@ var optionMap = {
                 axisLabel : {
                     rotate: 45
                 },
-                data : function(){
+                data : function (){
                     var list = [];
                     for (var i = 1; i <= 30; i++) {
                         list.push('11 - ' + i);
@@ -552,7 +552,7 @@ var optionMap = {
     dataZoom1 : {
         tooltip : {
             trigger: 'axis',
-            formatter: function(params) {
+            formatter: function (params) {
                 var res = params[1][1];
                 res += '<br/>' + params[1][0];
                 res += '<br/>  开盘 : ' + params[1][2][0] + '  最高 : ' + params[1][2][3];
@@ -604,7 +604,7 @@ var optionMap = {
                 splitNumber: 9,
                 boundaryGap: [0.05, 0.05],
                 axisLabel: {
-	                formatter: function(v) {
+	                formatter: function (v) {
 	                    return Math.round(v/10000) + ' 万'
 	                }
 	            },
@@ -650,7 +650,7 @@ var optionMap = {
                 			label : {
                 				show:true,
                 				position:'top',
-				                formatter: function(a,b,v) {
+				                formatter: function (a,b,v) {
 				                    return Math.round(v/10000) + ' 万'
 				                }
                 			}
@@ -668,7 +668,7 @@ var optionMap = {
                 			color:'#1e90ff',
                 			label : {
                 				show:true,
-				                formatter: function(a,b,v) {
+				                formatter: function (a,b,v) {
 				                    return Math.round(v/10000) + ' 万'
 				                }
                 			}
@@ -686,8 +686,8 @@ var optionMap = {
             }
         ]
     },
-    multiCharts : (function(){
-        functionMap.multiCharts = function(){
+    multiCharts : (function (){
+        functionMap.multiCharts = function (){
             var option2 = {
                 tooltip : {
                     trigger: 'axis',
@@ -739,7 +739,7 @@ var optionMap = {
                         splitNumber: 3,
                         boundaryGap: [0.05, 0.05],
                         axisLabel: {
-			                formatter: function(v) {
+			                formatter: function (v) {
 			                    return Math.round(v/10000) + ' 万'
 			                }
 			            },
@@ -829,7 +829,7 @@ var optionMap = {
                         splitNumber:3,
                         boundaryGap: [0.05, 0.05],
                         axisLabel: {
-			                formatter: function(v) {
+			                formatter: function (v) {
 			                    return Math.round(v/10000) + ' 万'
 			                }
 			            },
@@ -879,7 +879,7 @@ var optionMap = {
             tooltip : {
                 trigger: 'axis',
                 showDelay: 0,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
-                formatter: function(params) {
+                formatter: function (params) {
                     var res = params[0][1];
                     res += '<br/>' + params[0][0];
                     res += '<br/>  开盘 : ' + params[0][2][0] + '  最高 : ' + params[0][2][3];
@@ -991,7 +991,7 @@ var optionMap = {
                 type:'scatter',
                 large: true,
                 symbol:'circle',
-                data: (function() {
+                data: (function () {
                     var d = [];
                     var len = 25000;
                     var x = 0;
@@ -1011,7 +1011,7 @@ var optionMap = {
                 type:'scatter',
                 large: true,
                 symbol:'circle',
-                data: (function() {
+                data: (function () {
                     var d = [];
                     var len = 25000;
                     var x = 0;
@@ -1028,8 +1028,8 @@ var optionMap = {
             }
         ]
     },
-    force : (function() {
-            functionMap.force = function() {
+    force : (function () {
+            functionMap.force = function () {
                 myChart.setOption({
                     tooltip : {
                         trigger: 'item',
@@ -1134,7 +1134,7 @@ var optionMap = {
                     ]
                 }, true);
             }
-            functionMap.force2 = function() {
+            functionMap.force2 = function () {
                 myChart.setOption({
                     tooltip : {
                         trigger: 'item'
@@ -1149,11 +1149,11 @@ var optionMap = {
             }
             return {};
     })(),
-    dynamic : (function(){
-        functionMap.dynamic = function() {
+    dynamic : (function (){
+        functionMap.dynamic = function () {
             var lastData = 11;
             var axisData;            
-            timeTicket = setInterval(function(){
+            timeTicket = setInterval(function (){
                 lastData += Math.random() * ((Math.round(Math.random() * 10) % 2) == 0 ? 1 : -1);
                 lastData = lastData.toFixed(1) - 0;
                 axisData = (new Date()).toLocaleTimeString().replace(/^\D*/,'');
@@ -1207,7 +1207,7 @@ var optionMap = {
                 {
                     type : 'category',
                     boundaryGap : true,
-                    data : (function(){
+                    data : (function (){
                         var now = new Date();
                         var res = [];
                         var len = 10;
@@ -1222,7 +1222,7 @@ var optionMap = {
                     type : 'category',
                     boundaryGap : true,
                     splitline : {show : false},
-                    data : (function(){
+                    data : (function (){
                         var res = [];
                         var len = 10;
                         while (len--) {
@@ -1260,7 +1260,7 @@ var optionMap = {
                             color : 'rgba(135,206,205,0.4)'
                         }
                     },
-                    data:(function(){
+                    data:(function (){
                         var res = [];
                         var len = 10;
                         while (len--) {
@@ -1280,7 +1280,7 @@ var optionMap = {
                             }
                         }
                     },
-                    data:(function(){
+                    data:(function (){
                         var res = [];
                         var len = 10;
                         while (len--) {
@@ -1308,7 +1308,7 @@ var optionMap = {
         },
         tooltip : {
             trigger: 'item',
-            formatter : function(params) {
+            formatter : function (params) {
                 var g1 = params[1];
                 var serie = params[0];
                 var g2 = params[3];
@@ -1646,8 +1646,8 @@ var optionMap = {
             }
         ]
     },
-    mix2 : (function(){
-    	var sData1 = (function() {
+    mix2 : (function (){
+    	var sData1 = (function () {
 		    var d = [];
 		    var len = 40;
 		    var value;
@@ -1660,7 +1660,7 @@ var optionMap = {
 		    }
 		    return d;
 		})();
-		var sData2 = (function() {
+		var sData2 = (function () {
 		    var d = [];
 		    var len = sData1.length;
 		    for (var i = 0; i < len; i++) {
@@ -1854,10 +1854,10 @@ var optionMap = {
                 ]
             }
         ],
-        animation: (function() {
-            functionMap.mix3 = function() {
+        animation: (function () {
+            functionMap.mix3 = function () {
                 var ecConfig = require('echarts/config');
-                myChart.on(ecConfig.EVENT.MAP_SELECTED, function(param){
+                myChart.on(ecConfig.EVENT.MAP_SELECTED, function (param){
                     var selected = param.selected;
                     var option = optionMap.mix3;
                     var mapSeries = option.series[0];
@@ -1883,8 +1883,8 @@ var optionMap = {
             return false;
         })()
     },
-    lasagna : (function() {
-         functionMap.lasagna = function() {
+    lasagna : (function () {
+         functionMap.lasagna = function () {
             myChart.setOption({
                 tooltip : {
                     trigger: 'item',
@@ -1904,7 +1904,7 @@ var optionMap = {
                         saveAsImage : {show: true}
                     }
                 },
-                series : (function(){
+                series : (function (){
                     var series = [];
                     for (var i = 0; i < 30; i++) {
                         series.push({
@@ -1932,8 +1932,8 @@ var optionMap = {
                     };
                     return series;
                 })(),
-                calculable : (function(){
-                    setTimeout(function(){
+                calculable : (function (){
+                    setTimeout(function (){
                         if (!myChart) {
                             return;
                         }
@@ -1966,9 +1966,9 @@ var optionMap = {
                 })()
             }, true);
         }
-        functionMap.wormhole = function() {
+        functionMap.wormhole = function () {
             myChart.setOption({
-                color : (function(){
+                color : (function (){
                     var zrColor = require('zrender/tool/color');
                     return zrColor.getStepColors('yellow', 'red', 28);
                 })(),
@@ -1985,7 +1985,7 @@ var optionMap = {
                 legend: {
                    // orient : 'vertical',
                     //x : 'center',
-                    data: function(){
+                    data: function (){
                             var list = [];
                             for (var i = 1; i <=28; i++) {
                                 list.push(i + 2000);
@@ -2018,7 +2018,7 @@ var optionMap = {
                     }
                 ],
                 calculable : false,
-                series : (function(){
+                series : (function (){
                     var series = [];
                     for (var i = 1; i <= 28; i++) {
                         series.push({
@@ -2056,7 +2056,7 @@ var optionMap = {
         }
         return {};
     })(),
-    effect : (function() {
+    effect : (function () {
     	var effect = {
 		    show: true,
 		    scaleSize: 1,
@@ -2081,7 +2081,7 @@ var optionMap = {
 		        }
 		    }
 		};
-         functionMap.effect = function() {
+         functionMap.effect = function () {
             myChart.setOption({
 		    //ackgroundColor: '#1b1b1b',
 		    color: ['rgba(30,144,255,1)','lime'],
@@ -2096,7 +2096,7 @@ var optionMap = {
 		    },
 		    tooltip : {
 		        trigger: 'item',
-		        formatter: function(v) {
+		        formatter: function (v) {
 		            return v[1].replace(':', ' > ');
 		        }
 		    },
@@ -2333,7 +2333,7 @@ var optionMap = {
 		    ]
 		}, true);
         }
-        functionMap.effect2 = function() {
+        functionMap.effect2 = function () {
             myChart.setOption({
 			    dbackgroundColor: '#1b1b1b',
 			    color: ['gold','aqua','lime'],
@@ -2347,7 +2347,7 @@ var optionMap = {
 			    },
 			    tooltip : {
 			        trigger: 'item',
-			        formatter: function(v) {
+			        formatter: function (v) {
 			            return v[1].replace(':', ' > ');
 			        }
 			    },
@@ -2715,7 +2715,7 @@ var optionMap = {
 			            },
 			            markPoint : {
 			                symbol:'emptyCircle',
-			                symbolSize : function(v){
+			                symbolSize : function (v){
 			                    return 10 + v/10
 			                },
 			                effect : {
@@ -2773,7 +2773,7 @@ var optionMap = {
 			            },
 			            markPoint : {
 			                symbol:'emptyCircle',
-			                symbolSize : function(v){
+			                symbolSize : function (v){
 			                    return 10 + v/10
 			                },
 			                effect : {
@@ -2831,7 +2831,7 @@ var optionMap = {
 			            },
 			            markPoint : {
 			                symbol:'emptyCircle',
-			                symbolSize : function(v){
+			                symbolSize : function (v){
 			                    return 10 + v/10
 			                },
 			                effect : {

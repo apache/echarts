@@ -571,7 +571,7 @@ require(
         'echarts',
         'echarts/chart/pie'
     ], 
-    function(ec) {
+    function (ec) {
         var myChart = ec.init(document.getElementById('main'));
         myChart.setOption({...});
     }
@@ -591,7 +591,7 @@ myChart.setOption({...}); </pre>
                         <pre>
 // 不习惯模块化的你当然可以
 var ECharts;
-require(['echarts'], function(ec){
+require(['echarts'], function (ec){
     ECharts = ec;
 });
 // 是的，把echarts加载后保存起来作为命名空间使用</pre>
@@ -1852,7 +1852,7 @@ feature : {
                             <b>{Function}</b>，传递参数同模板变量：
                             <ul>
                                 <li>
-                                    eg：function(value){return "星期" + "日一二三四五六".charAt(value);'}
+                                    eg：function (value){return "星期" + "日一二三四五六".charAt(value);'}
                                 </li>
                             </ul>
 
@@ -3091,14 +3091,14 @@ geoCoord : {
 // step2: 在require('echarts/util/mapData/params').params中命名你的地图类型，如HK
 // step3: 命名赋值为对象{}, 实现接口方法getGeoJson，通过callback返回目标地区geoJson数据文件
 require('echarts/util/mapData/params').params.HK = {
-    getGeoJson: function(callback) {
+    getGeoJson: function (callback) {
         $.getJSON('geoJson/HK_geo.json',callback);
     }
 }
 
 // step3*: 对于数据地图类型，一般不需要特殊的投射算法，ECharts统一使用了简化的投射算法，因而对于个别地区可能需要人为调整，可以通过specialArea指定个别地区安的经纬度坐标和区间大小，如
 require('echarts/util/mapData/params').params.USA = {
-    getGeoJson: function(callback) {
+    getGeoJson: function (callback) {
         $.getJSON('geoJson/USA_geo.json', callback);
     },
     specialArea : {
