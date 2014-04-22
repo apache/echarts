@@ -31,7 +31,7 @@ define(function() {
             ];
         }
 
-        albers.invert = function(coordinates) {
+        albers.invert = function (coordinates) {
             var x = (coordinates[0] - translate[0]) / scale;
             var y = (coordinates[1] - translate[1]) / scale;
             var p0y = p0 + y;
@@ -56,7 +56,7 @@ define(function() {
             return albers;
         }
 
-        albers.origin = function(x) {
+        albers.origin = function (x) {
             if (!arguments.length) {
                 return origin;
             }
@@ -64,7 +64,7 @@ define(function() {
             return reload();
         };
 
-        albers.parallels = function(x) {
+        albers.parallels = function (x) {
             if (!arguments.length) {
                 return parallels;
             }
@@ -72,7 +72,7 @@ define(function() {
             return reload();
         };
 
-        albers.scale = function(x) {
+        albers.scale = function (x) {
             if (!arguments.length) {
                 return scale;
             }
@@ -80,7 +80,7 @@ define(function() {
             return albers;
         };
 
-        albers.translate = function(x) {
+        albers.translate = function (x) {
             if (!arguments.length) {
                 return translate;
             }

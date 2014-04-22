@@ -544,7 +544,7 @@ define(function() {
                     label: {
                         show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        formatter : function(a, b, c) {
+                        formatter : function (a, b, c) {
                             if (typeof c[2] != 'undefined') {
                                 return c[2];
                             }
@@ -562,7 +562,7 @@ define(function() {
                     label: {
                         show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        formatter : function(a, b, c) {
+                        formatter : function (a, b, c) {
                             if (typeof c[2] != 'undefined') {
                                 return c[2];
                             }

@@ -73,7 +73,7 @@ option = {
     },
     tooltip : {
         trigger: 'axis',
-        formatter: function(params) {
+        formatter: function (params) {
             var res = params[1][1];
             res += '<br/>' + params[1][0];
             res += '<br/>  开盘 : ' + params[1][2][0] + '  最高 : ' + params[1][2][3];
@@ -146,7 +146,7 @@ option = {
             splitNumber: 9,
             boundaryGap: [0.05, 0.05],
             axisLabel: {
-                formatter: function(v) {
+                formatter: function (v) {
                     return Math.round(v/10000) + ' 万'
                 }
             },
@@ -187,7 +187,7 @@ option = {
                         label : {
                             show:true,
                             position:'top',
-                            formatter: function(a,b,v) {
+                            formatter: function (a,b,v) {
                                 return Math.round(v/10000) + ' 万'
                             }
                         }
@@ -205,7 +205,7 @@ option = {
                         color:'#1e90ff',
                         label : {
                             show:true,
-                            formatter: function(a,b,v) {
+                            formatter: function (a,b,v) {
                                 return Math.round(v/10000) + ' 万'
                             }
                         }

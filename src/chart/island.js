@@ -6,6 +6,8 @@
  *
  */
 define(function (require) {
+    var CircleShape = require('zrender/shape/Circle');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -119,8 +121,6 @@ define(function (require) {
                              : '';
             var font = self.getFont(option.island.textStyle);
             var islandShape = {
-                shape : 'circle',
-                id : zr.newShapeId(self.type),
                 zlevel : _zlevelBase,
                 style : {
                     x : shape.style.x,
@@ -146,6 +146,7 @@ define(function (require) {
                 value, -1,
                 name
             );
+            islandShape = new CircleShape(islandShape);
             self.shapeList.push(islandShape);
             zr.addShape(islandShape);
         }

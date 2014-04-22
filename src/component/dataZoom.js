@@ -6,6 +6,10 @@
  *
  */
 define(function (require) {
+    var RectangleShape = require('zrender/shape/Rectangle');
+    var PolygonShape = require('zrender/shape/Polygon');
+    var IconShape = require('../util/shape/Icon');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -46,7 +50,6 @@ define(function (require) {
             _buildFrame();
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
             _syncFrameShape();
@@ -307,8 +310,7 @@ define(function (require) {
 
         function _buildBackground() {
             // 背景
-            self.shapeList.push({
-                shape : 'rectangle',
+            self.shapeList.push(new RectangleShape({
                 zlevel : _zlevelBase,
                 hoverable :false,
                 style : {
@@ -318,7 +320,7 @@ define(function (require) {
                     height : _location.height,
                     color : zoomOption.backgroundColor
                 }
-            });
+            }));
             
             // 数据阴影
             var maxLength = 0;
@@ -410,15 +412,14 @@ define(function (require) {
                 ]);
             }
 
-            self.shapeList.push({
-                shape : 'polygon',
+            self.shapeList.push(new PolygonShape({
                 zlevel : _zlevelBase,
                 style : {
                     pointList : pointList,
                     color : zoomOption.dataBackgroundColor
                 },
                 hoverable : false
-            });
+            }));
         }
 
         /**
@@ -426,7 +427,6 @@ define(function (require) {
          */
         function _buildFiller() {
             _fillerShae = {
-                shape : 'rectangle',
                 zlevel : _zlevelBase,
                 draggable : true,
                 ondrift : _ondrift,
@@ -476,7 +476,7 @@ define(function (require) {
                         )
                 */
             };
-
+            _fillerShae = new RectangleShape(_fillerShae);
             self.shapeList.push(_fillerShae);
         }
 
@@ -486,7 +486,6 @@ define(function (require) {
         function _buildHandle() {
             var zrUtil = require('zrender/tool/util');
             _startShape = {
-                shape : 'icon',
                 zlevel : _zlevelBase,
                 draggable : true,
                 style : {
@@ -522,6 +521,8 @@ define(function (require) {
                 _endShape.style.y = _fillerShae.style.y 
                                     + _fillerShae.style.height;
             }
+            _startShape = new IconShape(_startShape);
+            _endShape = new IconShape(_endShape);
             self.shapeList.push(_startShape);
             self.shapeList.push(_endShape);
         }
@@ -535,7 +536,6 @@ define(function (require) {
             var x = self.subPixelOptimize(_location.x, 1);
             var y = self.subPixelOptimize(_location.y, 1);
             _startFrameShape = {
-                shape : 'rectangle',
                 zlevel : _zlevelBase,
                 hoverable :false,
                 style : {
@@ -549,15 +549,19 @@ define(function (require) {
                 }
             };
             _endFrameShape = zrUtil.clone(_startFrameShape);
+            
+            _startFrameShape = new RectangleShape(_startFrameShape);
+            _endFrameShape = new RectangleShape(_endFrameShape);
             self.shapeList.push(_startFrameShape);
-            self.shapeList.push(_endFrameShape);
+            self.shapeList.push();
             return;
         }
         
         /**
          * 拖拽范围控制
          */
-        function _ondrift(e, dx, dy) {
+        function _ondrift(dx, dy) {
+            var e = this;
             if (zoomOption.zoomLock) {
                 // zoomLock时把handle转成filler的拖拽
                 e = _fillerShae;

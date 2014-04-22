@@ -6,6 +6,11 @@
  */
 
 define(function(require) {
+    // 图形依赖
+    var CircleShape = require('zrender/shape/Circle');
+    var LineShape = require('zrender/shape/Line');
+    var IconShape = require('../util/shape/Icon');
+
     'use strict';
 
     var requestAnimationFrame = window.requestAnimationFrame
@@ -13,8 +18,6 @@ define(function(require) {
                                 || window.mozRequestAnimationFrame
                                 || window.webkitRequestAnimationFrame
                                 || function(func){setTimeout(func, 16);};
-
-    require('../util/shape/icon');
 
     // 保存节点的位置，改变数据时能够有更好的动画效果
     var nodeInitialPos = {};
@@ -116,7 +119,6 @@ define(function(require) {
                 var serie = series[i];
                 if (serie.type === ecConfig.CHART_TYPE_FORCE) {
                     series[i] = self.reformOption(series[i]);
-                    
                     serieName = series[i].name || '';
                     // 系列图例开关
                     self.selectedMap[serieName] = 
@@ -287,8 +289,6 @@ define(function(require) {
                 nodeMasses[i] = r * r * density * 0.035;
 
                 var shape = {
-                    id : zr.newShapeId(self.type),
-                    shape : 'circle',
                     style : {
                         r : r,
                         x : 0,
@@ -302,8 +302,7 @@ define(function(require) {
 
                 // Label 
                 var labelStyle;
-                if (self.query(forceSerie, 'itemStyle.normal.label.show')
-                ) {
+                if (self.query(forceSerie, 'itemStyle.normal.label.show')) {
                     shape.style.text = node.name;
                     shape.style.textPosition = 'inside';
                     labelStyle = self.query(
@@ -342,15 +341,13 @@ define(function(require) {
                         var style = category.itemStyle;
                         if (style) {
                             if (style.normal) {
-                                zrUtil.merge(shape.style, style.normal, {
-                                    overwrite : true
-                                });
+                                zrUtil.merge(shape.style, style.normal, true);
                             }
                             if (style.emphasis) {
                                 zrUtil.merge(
                                     shape.highlightStyle, 
                                     style.emphasis, 
-                                    { overwrite : true }
+                                    true
                                 );
                             }
                         }
@@ -359,14 +356,10 @@ define(function(require) {
                 if (typeof(node.itemStyle) !== 'undefined') {
                     var style = node.itemStyle;
                     if(style.normal ){ 
-                        zrUtil.merge(shape.style, style.normal, {
-                            overwrite : true
-                        });
+                        zrUtil.merge(shape.style, style.normal, true);
                     }
                     if(style.normal ){ 
-                        zrUtil.merge(shape.highlightStyle, style.emphasis, {
-                            overwrite : true
-                        });
+                        zrUtil.merge(shape.highlightStyle, style.emphasis, true);
                     }
                 }
                 
@@ -378,9 +371,6 @@ define(function(require) {
                     shape.draggable = forceSerie.draggable;
                 }
                 
-                nodeShapes.push(shape);
-                self.shapeList.push(shape);
-
                 var categoryName = '';
                 if (typeof(node.category) !== 'undefined') {
                     var category = categories[node.category];
@@ -404,6 +394,10 @@ define(function(require) {
                     // value
                     node.value
                 );
+                
+                shape = new CircleShape(shape);
+                nodeShapes.push(shape);
+                self.shapeList.push(shape);
                 zr.addShape(shape);
             }
 
@@ -424,8 +418,6 @@ define(function(require) {
                 }
 
                 var linkShape = {
-                    id : zr.newShapeId(self.type),
-                    shape : 'line',
                     style : {
                         xStart : 0,
                         yStart : 0,
@@ -441,21 +433,16 @@ define(function(require) {
                 zrUtil.merge(linkShape.highlightStyle, linkEmphasisStyle);
                 if (typeof(link.itemStyle) !== 'undefined') {
                     if(link.itemStyle.normal){
-                        zrUtil.merge(linkShape.style, link.itemStyle.normal, {
-                            overwrite : true
-                        });
+                        zrUtil.merge(linkShape.style, link.itemStyle.normal, true);
                     }
                     if(link.itemStyle.emphasis){
                         zrUtil.merge(
                             linkShape.highlightStyle, 
                             link.itemStyle.emphasis, 
-                            { overwrite : true }
+                            true
                         );
                     }
                 }
-
-                linkShapes.push(linkShape);
-                self.shapeList.push(linkShape);
 
                 var source = filteredNodes[link.source];
                 var target = filteredNodes[link.target];
@@ -484,20 +471,21 @@ define(function(require) {
                     true
                 );
 
+                linkShape = new LineShape(linkShape);
+                linkShapes.push(linkShape);
+                self.shapeList.push(linkShape);
                 zr.addShape(linkShape);
 
                 // Arrow shape
                 if (forceSerie.linkSymbol) {
                     var arrowShape = {
-                        id : zr.newShapeId(self.type),
-                        shape : 'icon',
                         style: {
                             x: -5,
                             y: 0,
                             width: forceSerie.linkSymbolSize[0],
                             height: forceSerie.linkSymbolSize[1],
                             iconType: forceSerie.linkSymbol,
-                            brushType: "fill",
+                            brushType: 'fill',
                             // Use same style with link shape
                             color: linkShape.style.strokeColor,
                             opacity: linkShape.style.opacity,
@@ -510,6 +498,7 @@ define(function(require) {
                         position: [0, 0],
                         rotation: 0
                     };
+                    arrowShape = new IconShape(arrowShape);
                     self.shapeList.push(arrowShape);
                     arrowShapes.push(arrowShape);
                     zr.addShape(arrowShape);
@@ -525,7 +514,7 @@ define(function(require) {
 
         function _updateLinkShapes() {
             var v = vec2.create();
-            var right = vec2.create(1, 0);
+            //var right = vec2.create(1, 0);
             for (var i = 0, len = filteredLinks.length; i < len; i++) {
                 var link = filteredLinks[i];
                 var linkShape = linkShapes[i];
@@ -547,11 +536,11 @@ define(function(require) {
                     vec2.scaleAndAdd(
                         arrowShape.position, arrowShape.position, v, targetShape.style.r + 2
                     );
-
+                    var angle;
                     if (v[1] < 0) {
-                        var angle = 2 * Math.PI - Math.acos(-v[0]);
+                        angle = 2 * Math.PI - Math.acos(-v[0]);
                     } else {
-                        var angle = Math.acos(-v[0]);
+                        angle = Math.acos(-v[0]);
                     }
                     arrowShape.rotation = angle  - Math.PI / 2;
                 }

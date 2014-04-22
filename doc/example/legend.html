@@ -129,7 +129,7 @@ option = {
 };
 // 动态添加默认不显示的数据
 var ecConfig = require('echarts/config');
-myChart.on(ecConfig.EVENT.LEGEND_SELECTED, function(param){
+myChart.on(ecConfig.EVENT.LEGEND_SELECTED, function (param){
     var selected = param.selected;
     var len;
     var added;
@@ -148,7 +148,7 @@ myChart.on(ecConfig.EVENT.LEGEND_SELECTED, function(param){
                 text : '数据获取中',
                 effect: 'whirling'
             });
-            setTimeout(function(){
+            setTimeout(function (){
                 option.series.push({
                     name:'最低气温',
                     type:'line',

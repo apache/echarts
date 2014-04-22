@@ -5,8 +5,7 @@
  */
 
 define(
-    function(require) {
-
+    function (require) {
         var zrMath = require('zrender/tool/math');
 
         /**

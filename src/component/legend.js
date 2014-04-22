@@ -6,6 +6,13 @@
  *
  */
 define(function (require) {
+    var TextShape = require('zrender/shape/Text');
+    var RectangleShape = require('zrender/shape/Rectangle');
+    var SectorShape = require('zrender/shape/Sector');
+    var BeziercurveShape = require('zrender/shape/Beziercurve');
+    var IconShape = require('../util/shape/Icon');
+    var CandleShape = require('../util/shape/Candle');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -33,9 +40,8 @@ define(function (require) {
         var _colorMap = {};
         var _selectedMap = {};
 
-        var icon = require('zrender/shape').get('icon');
         for (var k in legendIcon) {
-            icon.define('legendicon' + k, legendIcon[k]);
+            IconShape.prototype.iconLibrary['legendicon' + k] = legendIcon[k];
             //console.log('legendicon' + k, legendIcon[k])
         }
 
@@ -46,7 +52,6 @@ define(function (require) {
             _buildItem();
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
         }
@@ -85,8 +90,7 @@ define(function (require) {
             for (var i = 0; i < dataLength; i++) {
                 dataTextStyle = zrUtil.merge(
                     data[i].textStyle || {},
-                    textStyle,
-                    {'overwrite': false}
+                    textStyle
                 );
                 dataFont = self.getFont(dataTextStyle);
                 
@@ -151,7 +155,7 @@ define(function (require) {
                 if (legendOption.selectedMode) {
                     itemShape.onclick = _legendSelected;
                 }
-                self.shapeList.push(itemShape);
+                self.shapeList.push(new IconShape(itemShape));
 
                 // 文字
                 textShape = {
@@ -186,7 +190,7 @@ define(function (require) {
                 if (legendOption.selectedMode) {
                     textShape.onclick = _legendSelected;
                 }
-                self.shapeList.push(textShape);
+                self.shapeList.push(new TextShape(textShape));
 
                 if (legendOption.orient == 'horizontal') {
                     lastX += itemWidth + 5
@@ -264,8 +268,7 @@ define(function (require) {
             var pBottom = legendOption.padding[2];
             var pLeft = legendOption.padding[3];
 
-            self.shapeList.push({
-                shape : 'rectangle',
+            self.shapeList.push(new RectangleShape({
                 zlevel : _zlevelBase,
                 hoverable :false,
                 style : {
@@ -279,7 +282,7 @@ define(function (require) {
                     strokeColor : legendOption.borderColor,
                     lineWidth : legendOption.borderWidth
                 }
-            });
+            }));
         }
 
         /**
@@ -320,8 +323,7 @@ define(function (require) {
                     }
                     dataTextStyle = zrUtil.merge(
                         data[i].textStyle || {},
-                        textStyle,
-                        {'overwrite': false}
+                        textStyle
                     );
                     temp += itemWidth
                             + zrArea.getTextWidth(
@@ -329,8 +331,7 @@ define(function (require) {
                                   data[i].textStyle 
                                   ? self.getFont(zrUtil.merge(
                                         data[i].textStyle || {},
-                                        textStyle,
-                                        {'overwrite': false}
+                                        textStyle
                                     ))
                                   : font
                               )
@@ -355,8 +356,7 @@ define(function (require) {
                             data[i].textStyle 
                             ? self.getFont(zrUtil.merge(
                                   data[i].textStyle || {},
-                                  textStyle,
-                                  {'overwrite': false}
+                                  textStyle
                               ))
                             : font
                         )
@@ -498,7 +498,6 @@ define(function (require) {
                                  : typeof color == 'string' && color != '#ccc' 
                                    ? zrColor.lift(color, -0.3) : color;
             var itemShape = {
-                shape : 'icon',
                 zlevel : _zlevelBase,
                 style : {
                     iconType : 'legendicon' 
@@ -702,7 +701,7 @@ define(function (require) {
             var shape;
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 shape = self.shapeList[i];
-                if (shape._name == name && shape.shape != 'text') {
+                if (shape._name == name && shape.type != 'text') {
                     return shape;
                 }
             }
@@ -717,7 +716,7 @@ define(function (require) {
             var shape;
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 shape = self.shapeList[i];
-                if (shape._name == name && shape.shape != 'text') {
+                if (shape._name == name && shape.type != 'text') {
                     if (!_selectedMap[name]) {
                         itemShape.style.color = '#ccc';
                         itemShape.style.strokeColor = '#ccc';
@@ -783,8 +782,7 @@ define(function (require) {
             var y = style.y;
             var width = style.width;
             var height = style.height;
-            var sector = require('zrender/shape').get('sector');
-            sector.buildPath(ctx, {
+            SectorShape.prototype.buildPath(ctx, {
                 x : x + width / 2,
                 y : y + height + 2,
                 r : height + 2,
@@ -792,15 +790,14 @@ define(function (require) {
                 startAngle : 45,
                 endAngle : 135
             });
-        },
+        }, 
         chord : function(ctx, style) {
             var x = style.x;
             var y = style.y;
             var width = style.width;
             var height = style.height;
-            var beziercurve = require('zrender/shape').get('beziercurve');
             ctx.moveTo(x, y + height);
-            beziercurve.buildPath(ctx, {
+            BeziercurveShape.prototype.buildPath(ctx, {
                 xStart : x,
                 yStart : y + height,
                 cpX1 : x + width,
@@ -811,7 +808,7 @@ define(function (require) {
                 yEnd : y + 4
             });
             ctx.lineTo(x + width, y);
-            beziercurve.buildPath(ctx, {
+            BeziercurveShape.prototype.buildPath(ctx, {
                 xStart : x + width,
                 yStart : y,
                 cpX1 : x,
@@ -822,34 +819,19 @@ define(function (require) {
                 yEnd : y + height - 4
             });
             ctx.lineTo(x, y + height);
-            /*
-            var x = style.x + 2;
-            var y = style.y;
-            var width = style.width - 2;
-            var height = style.height;
-            var r = width / Math.sqrt(3);
-            ctx.moveTo(x, y);
-            ctx.quadraticCurveTo(x + width / 4 * 3, y, x + width, y + height);
-            ctx.arc(
-                x + width / 2, y + height + r / 2, 
-                r, -Math.PI / 6, -Math.PI / 6 * 5, true);
-            ctx.quadraticCurveTo(x - width / 2, y + height / 3, x, y);
-            */
         },
         k : function (ctx, style) {
             var x = style.x;
             var y = style.y;
             var width = style.width;
             var height = style.height;
-            var candle = require('zrender/shape').get('candle');
-            candle.buildPath(ctx, {
+            CandleShape.prototype.buildPath(ctx, {
                 x : x + width / 2,
                 y : [y + 1, y + 1, y + height - 6, y + height],
                 width : width - 6
             });
         },
         bar : function (ctx, style) {
-            //ctx.rect(style.x, style.y + 1, style.width, style.height - 2);
             var x = style.x;
             var y = style.y +1;
             var width = style.width;
@@ -873,7 +855,7 @@ define(function (require) {
             ctx.quadraticCurveTo(x, y, x + r, y);
         },
         force : function(ctx, style) {
-            require('zrender/shape').get('icon').get('circle')(ctx, style);
+            IconShape.prototype.iconLibrary.circle(ctx, style);
         },
         radar: function(ctx, style) {
             var n = 6;

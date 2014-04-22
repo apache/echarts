@@ -6,6 +6,16 @@
  *
  */
 define(function(require) {
+    // 图形依赖
+    var BrokenLineShape = require('zrender/shape/BrokenLine');
+    var IconShape = require('../util/shape/Icon');
+    var HalfSmoothPolygonShape = require('../util/shape/HalfSmoothPolygon');
+    // 组件依赖
+    require('../component/axis');
+    require('../component/categoryAxis');
+    require('../component/valueAxis');
+    require('../component/grid');
+    require('../component/dataZoom');
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -35,9 +45,7 @@ define(function(require) {
         var _symbol = ecConfig.symbolList;
         var _sIndex2ShapeMap = {};  // series拐点图形类型，seriesIndex索引到shape type
 
-        require('zrender/shape').get('icon').define(
-            'legendLineIcon', legendLineIcon
-        );
+        IconShape.prototype.iconLibrary['legendLineIcon'] = legendLineIcon;
         
         function _buildShape() {
             finalPLMap = {};
@@ -81,7 +89,6 @@ define(function(require) {
             }
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
         }
@@ -158,7 +165,6 @@ define(function(require) {
                     iconShape = legend.getItemShape(serieName);
                     if (iconShape) {
                         // 回调legend，换一个更形象的icon
-                        iconShape.shape = 'icon';
                         iconShape.style.iconType = 'legendLineIcon';
                         iconShape.style.symbol = 
                             _sIndex2ShapeMap[seriesArray[i]];
@@ -637,8 +643,7 @@ define(function(require) {
 
                         }
                         // 折线图
-                        self.shapeList.push({
-                            shape : 'brokenLine',
+                        self.shapeList.push(new BrokenLineShape({
                             zlevel : _zlevelBase,
                             style : {
                                 miterLimit: lineWidth,
@@ -670,11 +675,10 @@ define(function(require) {
                             _main : true,
                             _seriesIndex : seriesIndex,
                             _orient : orient
-                        });
+                        }));
                         
                         if (isFill) {
-                            self.shapeList.push({
-                                shape : 'halfSmoothPolygon',
+                            self.shapeList.push(new HalfSmoothPolygonShape({
                                 zlevel : _zlevelBase,
                                 style : {
                                     miterLimit: lineWidth,
@@ -698,7 +702,7 @@ define(function(require) {
                                 _main : true,
                                 _seriesIndex : seriesIndex,
                                 _orient : orient
-                            });
+                            }));
                         }
                     }
                 }
@@ -880,7 +884,7 @@ define(function(require) {
                             
                         if (aniMap[seriesIndex][2]) {
                             // 队头加入删除末尾
-                            if (self.shapeList[i].shape == 'polygon') {
+                            if (self.shapeList[i].type == 'polygon') {
                                 //区域图
                                 var len = pointList.length;
                                 self.shapeList[i].style.pointList[len - 3]
@@ -902,7 +906,7 @@ define(function(require) {
                         else {
                             // 队尾加入删除头部
                             self.shapeList[i].style.pointList.shift();
-                            if (self.shapeList[i].shape == 'polygon') {
+                            if (self.shapeList[i].type == 'polygon') {
                                 //区域图
                                 var targetPoint = 
                                     self.shapeList[i].style.pointList.pop();
@@ -1049,7 +1053,7 @@ define(function(require) {
             x += Math.round((width - height) / 2) - 1;
             width = height = height + 2;
         }
-        symbol = require('zrender/shape').get('icon').get(symbol);
+        symbol = IconShape.prototype.iconLibrary[symbol];
         
         if (symbol) {
             var x2 = style.x;
@@ -1074,9 +1078,6 @@ define(function(require) {
             ctx.lineTo(x + width, y + dy);
         }
     }
-    
-    // 动态扩展zrender shape：halfSmoothPolygon
-    require('../util/shape/halfSmoothPolygon');
     
     // 图表注册
     require('../chart').define('line', Line);

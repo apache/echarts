@@ -7,13 +7,25 @@
  */
 define(
     function(require) {
+        var Base = require('zrender/shape/Base');
+        var IconShape = require('./Icon');
+        var LineShape = require('zrender/shape/Line');
+        var lineInstance = new LineShape({});
+        var BrokenLineShape = require('zrender/shape/BrokenLine');
+        var brokenLineInstance = new BrokenLineShape({});
+    
         var matrix = require('zrender/tool/matrix');
+        var area = require('zrender/tool/area');
+        var dashedLineTo = require('zrender/shape/util/dashedLineTo');
+        var smoothSpline = require('zrender/shape/util/smoothSpline');
         
-        function MarkLine() {
-            this.type = 'markLine';
+        
+        function MarkLine(options) {
+            Base.call(this, options);
         }
 
         MarkLine.prototype =  {
+            type : 'mark-line',
             /**
              * 画刷
              * @param ctx       画布句柄
@@ -22,14 +34,14 @@ define(
              * @param updateCallback 需要异步加载资源的shape可以通过这个callback(e)
              *                       让painter更新视图，base.brush没用，需要的话重载brush
              */
-            brush : function(ctx, e, isHighlight) {
-                var style = e.style || {};
+            brush : function(ctx, isHighlight) {
+                var style = this.style;
     
                 if (isHighlight) {
                     // 根据style扩展默认高亮样式
                     style = this.getHighlightStyle(
                         style,
-                        e.highlightStyle || {}
+                        this.highlightStyle || {}
                     );
                 }
 
@@ -37,19 +49,17 @@ define(
                 this.setContext(ctx, style);
     
                 // 设置transform
-                if (e.__needTransform) {
-                    ctx.transform.apply(ctx,this.updateTransform(e));
-                }
+                this.updateTransform(ctx);
     
                 ctx.beginPath();
                 this.buildLinePath(ctx, style);
                 ctx.stroke();
                 
-                this.brushSymbol(e, ctx, style, 0);
-                this.brushSymbol(e, ctx, style, 1);
+                this.brushSymbol(ctx, style, 0);
+                this.brushSymbol(ctx, style, 1);
     
                 if (typeof style.text != 'undefined') {
-                    this.drawText(ctx, style, e.style);
+                    this.drawText(ctx, style, this.style);
                 }
     
                 ctx.restore();
@@ -86,7 +96,7 @@ define(
                                      * (style.lineType == 'dashed' ? 5 : 1);
                         ctx.moveTo(pointList[0][0],pointList[0][1]);
                         for (var i = 1; i < len; i++) {
-                            this.dashedLineTo(
+                            dashedLineTo(
                                 ctx,
                                 pointList[i - 1][0], pointList[i - 1][1],
                                 pointList[i][0], pointList[i][1],
@@ -107,7 +117,7 @@ define(
             /**
              * 标线始末标注 
              */
-            brushSymbol : function(e, ctx, style, idx) {
+            brushSymbol : function(ctx, style, idx) {
                 if (style.symbol[idx] == 'none') {
                     return;
                 }
@@ -157,7 +167,7 @@ define(
                     style.y = y - symbolSize,
                     style.width = symbolSize * 2;
                     style.height = symbolSize * 2;
-                    require('zrender/shape').get('icon').buildPath(ctx, style);
+                    IconShape.prototype.buildPath(ctx, style);
                 }
                 
                 ctx.closePath();
@@ -253,7 +263,7 @@ define(
                     pointList[3] = [lastPointX, lastPointY];
                     pointList[1] = this.getOffetPoint(pointList[0], pointList[3]);
                     pointList[2] = this.getOffetPoint(pointList[3], pointList[0]);
-                    pointList = this.smoothSpline(pointList, false);
+                    pointList = smoothSpline(pointList, false);
                     // 修正最后一点在插值产生的偏移
                     pointList[pointList.length - 1] = [lastPointX, lastPointY];
                 }
@@ -309,8 +319,12 @@ define(
              * @param {Object} style
              */
             getRect : function(style) {
+                if (style.__rect) {
+                    return style.__rect;
+                }
+                
                 var lineWidth = style.lineWidth || 1;
-                return {
+                style.__rect = {
                     x : Math.min(style.xStart, style.xEnd) - lineWidth,
                     y : Math.min(style.yStart, style.yEnd) - lineWidth,
                     width : Math.abs(style.xStart - style.xEnd)
@@ -318,18 +332,18 @@ define(
                     height : Math.abs(style.yStart - style.yEnd)
                              + lineWidth
                 };
+                
+                return style.__rect;
             },
             
-            isCover : function(e, x, y) {
-                return require('zrender/shape').get(
-                    e.style.smooth !== 'spline' ? 'line' : 'brokenLine'
-                ).isCover(e,x,y);
+            isCover : function(x, y) {
+                return this.style.smooth !== 'spline' 
+                       ? area.isInside(lineInstance, this.style, x, y)
+                       : area.isInside(brokenLineInstance, this.style, x, y);
             }
         };
 
-        require('zrender/shape/base').derive(MarkLine);
-        require('zrender/shape').define('markLine', new MarkLine());
-        
+        require('zrender/tool/util').inherits(MarkLine, Base);
         return MarkLine;
     }
 );

@@ -73,7 +73,7 @@
                     <textarea id="code" name="code">
 // 自定义扩展图表类型：mapType = HK
 require('echarts/util/mapData/params').params.HK = {
-    getGeoJson: function(callback) {
+    getGeoJson: function (callback) {
         $.getJSON('geoJson/HK_geo.json',callback);
     }
 }

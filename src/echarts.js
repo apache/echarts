@@ -15,7 +15,7 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function(require) {
+define(function (require) {
     var self = {};
     var echarts = self;     // 提供内部反向使用静态方法；
     
@@ -31,7 +31,7 @@ define(function(require) {
     /**
      * 入口方法 
      */
-    self.init = function(dom, theme) {
+    self.init = function (dom, theme) {
         dom = dom instanceof Array ? dom[0] : dom;
         // dom与echarts实例映射索引
         var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
@@ -53,7 +53,7 @@ define(function(require) {
     /**
      * 通过id获得ECharts实例，id可在实例化后读取 
      */
-    self.getInstanceById = function(key) {
+    self.getInstanceById = function (key) {
         return _instances[key];
     };
 
@@ -128,10 +128,6 @@ define(function(require) {
             _zr.on(zrConfig.EVENT.DRAGLEAVE, _ondragleave);
             _zr.on(zrConfig.EVENT.DROP, _ondrop);
 
-            // 动态扩展zrender shape：icon、markLine
-            require('./util/shape/icon');
-            require('./util/shape/markLine');
-
             // 内置图表注册
             var chartLibrary = require('./chart');
             require('./chart/island');
@@ -139,20 +135,14 @@ define(function(require) {
             var Island = chartLibrary.get('island');
             _island = new Island(_themeConfig, _messageCenter, _zr);
             
-            // 内置组件注册
+            // 内置通用组件
             var componentLibrary = require('./component');
             require('./component/title');
-            require('./component/axis');
-            require('./component/categoryAxis');
-            require('./component/valueAxis');
-            require('./component/grid');
-            require('./component/dataZoom');
             require('./component/legend');
-            require('./component/dataRange');
             require('./component/tooltip');
             require('./component/toolbox');
             require('./component/dataView');
-            require('./component/polar');
+            
             // 工具箱
             var Toolbox = componentLibrary.get('toolbox');
             _toolbox = new Toolbox(_themeConfig, _messageCenter, _zr, dom, self);
@@ -893,18 +883,9 @@ define(function(require) {
                 }
                 
                 var zrUtil = require('zrender/tool/util');
-                zrUtil.merge(
-                    magicOption, param.option,
-                    { 'overwrite': true, 'recursive': true }
-                );
-                zrUtil.merge(
-                    _optionBackup, param.option,
-                    { 'overwrite': true, 'recursive': true }
-                );
-                zrUtil.merge(
-                    _optionRestore, param.option,
-                    { 'overwrite': true, 'recursive': true }
-                );
+                zrUtil.merge(magicOption, param.option, true);
+                zrUtil.merge(_optionBackup, param.option, true);
+                zrUtil.merge(_optionRestore, param.option, true);
                 _island.refresh(magicOption);
                 _toolbox.refresh(magicOption);
             }
@@ -995,12 +976,12 @@ define(function(require) {
             var zrColor = require('zrender/tool/color');
             // 数值系列的颜色列表，不传则采用内置颜色，可配数组，借用zrender实例注入，会有冲突风险，先这样
             if (magicOption.color && magicOption.color.length > 0) {
-                _zr.getColor = function(idx) {
+                _zr.getColor = function (idx) {
                     return zrColor.getColor(idx, magicOption.color);
                 };
             }
             else {
-                _zr.getColor = function(idx) {
+                _zr.getColor = function (idx) {
                     return zrColor.getColor(idx, _themeConfig.color);
                 };
             }
@@ -1023,10 +1004,7 @@ define(function(require) {
                 zrUtil.merge(
                     _option,
                     zrUtil.clone(option),
-                    {
-                        'overwrite': true,
-                        'recursive': true
-                    }
+                    true
                 );
             }
             else {
@@ -1264,7 +1242,7 @@ define(function(require) {
             }
             _island.refresh(magicOption);
             _toolbox.refresh(magicOption);
-            setTimeout(function(){
+            setTimeout(function (){
                 _messageCenter.dispatch(
                     ecConfig.EVENT.REFRESH,
                     '',
@@ -1387,15 +1365,15 @@ define(function(require) {
             
             var zrImg = require('zrender').init(zrDom);
             
+            var ImageShape = require('zrender/shape/Image');
             for (var c in imgList) {
-                zrImg.addShape({
-                    shape:'image',
+                zrImg.addShape(new ImageShape({
                     style : {
                         x : imgList[c].left - minLeft,
                         y : imgList[c].top - minTop,
                         image : imgList[c].img
                     }
-                });
+                }));
             }
             
             zrImg.render();
@@ -1405,7 +1383,7 @@ define(function(require) {
                           
             var image = zrImg.toDataURL('image/png', bgColor);
             
-            setTimeout(function(){
+            setTimeout(function (){
                 zrImg.dispose();
                 zrDom.parentNode.removeChild(zrDom);
                 zrDom = null;
@@ -1521,6 +1499,14 @@ define(function(require) {
          * @param {Object} loadingOption
          */
         function showLoading(loadingOption) {
+            var effectList = {
+                    bar : require('zrender/loadingEffect/Bar'),
+                    bubble : require('zrender/loadingEffect/Bubble'),
+                    dynamicLine : require('zrender/loadingEffect/DynamicLine'),
+                    ring : require('zrender/loadingEffect/Ring'),
+                    spin : require('zrender/loadingEffect/Spin'),
+                    whirling : require('zrender/loadingEffect/Whirling')
+                };
             _toolbox.hideDataView();
 
             var zrUtil = require('zrender/tool/util');
@@ -1529,8 +1515,7 @@ define(function(require) {
 
             var finalTextStyle = zrUtil.merge(
                 zrUtil.clone(loadingOption.textStyle),
-                _themeConfig.textStyle,
-                { 'overwrite': false}
+                _themeConfig.textStyle
             );
             loadingOption.textStyle.textFont = finalTextStyle.fontStyle + ' '
                                             + finalTextStyle.fontWeight + ' '
@@ -1547,8 +1532,11 @@ define(function(require) {
             if (typeof loadingOption.y != 'undefined') {
                 loadingOption.textStyle.y = loadingOption.y;
             }
-            _zr.showLoading(loadingOption);
-
+            loadingOption.effectOption = loadingOption.effectOption || {};
+            loadingOption.effectOption.textStyle = loadingOption.textStyle;
+            _zr.showLoading(new effectList[loadingOption.effect || 'spin'](
+                loadingOption.effectOption
+            ));
             return self;
         }
 
@@ -1599,8 +1587,7 @@ define(function(require) {
                 
                 // 应用新主题
                 zrUtil.merge(
-                    _themeConfig, zrUtil.clone(theme),
-                    { 'overwrite': true, 'recursive': true }
+                    _themeConfig, zrUtil.clone(theme), true
                 );
             }
             

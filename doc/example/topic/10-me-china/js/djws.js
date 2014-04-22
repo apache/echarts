@@ -49,7 +49,7 @@ require(
         //'echarts/chart/chord',
         'echarts/chart/map'
     ],
-    function(ec) {
+    function (ec) {
         EC_READY = true;
         myChart0 = ec.init(document.getElementById('g0')).setOption(option0()); 
         showTabContent(1);
@@ -106,11 +106,11 @@ functionMap.chart3 = function (idx) {
     myChart3 = require('echarts').init(document.getElementById('g' + idx));
     myChart3.setOption(option1(curSelected));
     // 图例状态保持
-    myChart3.on(require('echarts/config').EVENT.LEGEND_SELECTED, function(param){
+    myChart3.on(require('echarts/config').EVENT.LEGEND_SELECTED, function (param){
         curSelected = param.selected;
     });
 }
-functionMap.chart3dispose = function() {
+functionMap.chart3dispose = function () {
     if (myChart3) {
         myChart3.dispose();
         myChart3 = false;
@@ -167,7 +167,7 @@ functionMap.chart1 = function (idx) {
     //$('input:radio[name="optionsRadios"]:checked').val()
     myChart1.setOption(option3(curEIndex));
     // 值域状态保持
-    myChart1.on(require('echarts/config').EVENT.DATA_RANGE, function(param){
+    myChart1.on(require('echarts/config').EVENT.DATA_RANGE, function (param){
         var max = dataMap['dataA' + curEIndex][curYear + 'max'];
         curRange = {
             start : param.range.start / 100 * max,
@@ -176,17 +176,17 @@ functionMap.chart1 = function (idx) {
         }
     });
 }
-functionMap.chart1dispose = function() {
+functionMap.chart1dispose = function () {
     if (myChart1) {
         myChart1.dispose();
         myChart1 = false; 
     }
 }
 var resizeTicket;
-window.onload = function() {
-    window.onresize = function() {
+window.onload = function () {
+    window.onresize = function () {
         clearTimeout(resizeTicket);
-        resizeTicket = setTimeout(function(){
+        resizeTicket = setTimeout(function (){
             myChart0.resize();
             if (curTabIdx == 1) {
                 myChart1.resize();

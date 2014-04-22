@@ -6,6 +6,10 @@
  *
  */
 define(function (require) {
+    var TextShape = require('zrender/shape/Text');
+    var LineShape = require('zrender/shape/Line');
+    var RectangleShape = require('zrender/shape/Rectangle');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -94,11 +98,7 @@ define(function (require) {
                                         self.getFont(
                                             zrUtil.merge(
                                                 data[i].textStyle,
-                                                option.axisLabel.textStyle,
-                                                {
-                                                    'overwrite': false,
-                                                    'recursive': true
-                                                }
+                                                option.axisLabel.textStyle
                                            )
                                         )
                                     );
@@ -159,7 +159,6 @@ define(function (require) {
             option.axisLabel.show && _buildAxisLabel();
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
         }
@@ -239,7 +238,8 @@ define(function (require) {
             }
             
             axShape.style.lineType = option.axisLine.lineStyle.type;
-
+            
+            axShape = new LineShape(axShape);
             self.shapeList.push(axShape);
         }
 
@@ -285,7 +285,7 @@ define(function (require) {
                             lineWidth : lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    self.shapeList.push(new LineShape(axShape));
                 }
             }
             else {
@@ -313,7 +313,7 @@ define(function (require) {
                             lineWidth : lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    self.shapeList.push(new LineShape(axShape));
                 }
             }
         }
@@ -348,8 +348,7 @@ define(function (require) {
                     }
                     dataTextStyle = zrUtil.merge(
                         data[i].textStyle || {},
-                        textStyle,
-                        {'overwrite': false}
+                        textStyle
                     );
                     axShape = {
                         shape : 'text',
@@ -377,7 +376,7 @@ define(function (require) {
                             axShape.style.y
                         ];
                     }
-                    self.shapeList.push(axShape);
+                    self.shapeList.push(new TextShape(axShape));
                 }
             }
             else {
@@ -400,8 +399,7 @@ define(function (require) {
                     }
                     dataTextStyle = zrUtil.merge(
                         data[i].textStyle || {},
-                        textStyle,
-                        {'overwrite': false}
+                        textStyle
                     );
                     axShape = {
                         shape : 'text',
@@ -430,7 +428,7 @@ define(function (require) {
                             axShape.style.y
                         ];
                     }
-                    self.shapeList.push(axShape);
+                    self.shapeList.push(new TextShape(axShape));
                 }
             }
         }
@@ -478,7 +476,7 @@ define(function (require) {
                             lineWidth : lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    self.shapeList.push(new LineShape(axShape));
                 }
 
             }
@@ -507,7 +505,7 @@ define(function (require) {
                             lineWidth : lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    self.shapeList.push(new LineShape(axShape));
                 }
             }
         }
@@ -531,7 +529,7 @@ define(function (require) {
                         // type : option.splitArea.areaStyle.type,
                     }
                 };
-                self.shapeList.push(axShape);
+                self.shapeList.push(new RectangleShape(axShape));
             }
             else {
                 // 多颜色
@@ -568,7 +566,7 @@ define(function (require) {
                                 // type : option.splitArea.areaStyle.type,
                             }
                         };
-                        self.shapeList.push(axShape);
+                        self.shapeList.push(new RectangleShape(axShape));
                         lastX = curX;
                     }
                 }
@@ -596,7 +594,7 @@ define(function (require) {
                                 // type : option.splitArea.areaStyle.type
                             }
                         };
-                        self.shapeList.push(axShape);
+                        self.shapeList.push(new RectangleShape(axShape));
                         lastYend = curY;
                     }
                 }
@@ -627,19 +625,11 @@ define(function (require) {
                 // 通用字体设置
                 option.axisLabel.textStyle = zrUtil.merge(
                     option.axisLabel.textStyle || {},
-                    ecConfig.textStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
+                    ecConfig.textStyle
                 );
                 option.axisLabel.textStyle = zrUtil.merge(
                     option.axisLabel.textStyle || {},
-                    ecConfig.textStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
+                    ecConfig.textStyle
                 );
             }
             self.clear();

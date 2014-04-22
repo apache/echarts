@@ -127,7 +127,7 @@ option = {
     ]
 };
 var ecConfig = require('echarts/config');
-myChart.on(ecConfig.EVENT.PIE_SELECTED, function(param){
+myChart.on(ecConfig.EVENT.PIE_SELECTED, function (param){
     var selected = param.selected;
     var serie;
     var str = '当前选择： ';

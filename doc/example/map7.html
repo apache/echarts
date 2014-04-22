@@ -73,7 +73,7 @@
                     <textarea id="code" name="code">
 // 自定义扩展图表类型：mapType = USA
 require('echarts/util/mapData/params').params.USA = {
-    getGeoJson: function(callback) {
+    getGeoJson: function (callback) {
         $.getJSON('geoJson/USA_geo.json', callback);
     },
     specialArea : {
@@ -108,7 +108,7 @@ option = {
         trigger: 'item',
         showDelay: 0,
         transitionDuration: 0.2,
-        formatter : function(a) {
+        formatter : function (a) {
             var sName = a[0];
             var pName = a[1];
             var value = a[2] + '';

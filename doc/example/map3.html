@@ -89,7 +89,7 @@ var mapType = [
     // 2个特别行政区
     '香港', '澳门'
 ];
-myChart.on(ecConfig.EVENT.MOUSEWHEEL, function(param){
+myChart.on(ecConfig.EVENT.MOUSEWHEEL, function (param){
     curIndx += zrEvent.getDelta(param.event) > 0 ? (-1) : 1;
     if (curIndx < 0) {
         curIndx = mapType.length - 1;
@@ -107,7 +107,7 @@ myChart.on(ecConfig.EVENT.MOUSEWHEEL, function(param){
     
     zrEvent.stop(param.event);
 });
-myChart.on(ecConfig.EVENT.MAP_SELECTED, function(param){
+myChart.on(ecConfig.EVENT.MAP_SELECTED, function (param){
     var len = mapType.length;
     var mt = mapType[curIndx % len];
     if (mt == 'china') {

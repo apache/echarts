@@ -6,6 +6,15 @@
  *
  */
 define(function(require) {
+    // 图形依赖
+    var CandleShape = require('../util/shape/Candle');
+    // 组件依赖
+    require('../component/axis');
+    require('../component/categoryAxis');
+    require('../component/valueAxis');
+    require('../component/grid');
+    require('../component/dataZoom');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -59,7 +68,6 @@ define(function(require) {
             }
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
         }
@@ -352,7 +360,6 @@ define(function(require) {
             eColor, eLinewidth, eLineColor
         ) {
             var itemShape = {
-                shape : 'candle',
                 zlevel : _zlevelBase,
                 clickable: true,
                 style : {
@@ -377,7 +384,8 @@ define(function(require) {
                 series[seriesIndex].data[dataIndex], dataIndex,
                 name
             );
-
+            
+            itemShape = new CandleShape(itemShape);
             return itemShape;
         }
 
@@ -439,7 +447,7 @@ define(function(require) {
                 seriesIndex = self.shapeList[i]._seriesIndex;
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
                     // 有数据删除才有移动的动画
-                    if (self.shapeList[i].shape == 'candle') {
+                    if (self.shapeList[i].type == 'candle') {
                         dataIndex = ecData.get(self.shapeList[i], 'dataIndex');
                         serie = series[seriesIndex];
                         if (aniMap[seriesIndex][2] 
@@ -481,7 +489,7 @@ define(function(require) {
             var serie;
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                if (self.shapeList[i].shape == 'candle') {
+                if (self.shapeList[i].type == 'candle') {
                     serie = series[self.shapeList[i]._seriesIndex];
                     x = self.shapeList[i].style.x;
                     y = self.shapeList[i].style.y[0];
@@ -516,9 +524,6 @@ define(function(require) {
         init(option, component);
     }
     
-    // 动态扩展zrender shape：candle
-    require('../util/shape/candle');
-
     // 图表注册
     require('../chart').define('k', K);
     

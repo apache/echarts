@@ -6,6 +6,10 @@
  *
  */
 define(function (require) {
+    var TextShape = require('zrender/shape/Text');
+    var LineShape = require('zrender/shape/Line');
+    var RectangleShape = require('zrender/shape/Rectangle');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -45,7 +49,6 @@ define(function (require) {
             option.axisLabel.show && _buildAxisLabel();
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
         }
@@ -55,7 +58,6 @@ define(function (require) {
             var lineWidth = option.axisLine.lineStyle.width;
             var halfLineWidth = lineWidth / 2;
             var axShape = {
-                shape : 'line',
                 zlevel : _zlevelBase + 1,
                 hoverable : false
             };
@@ -127,7 +129,7 @@ define(function (require) {
             
             axShape.style.lineType = option.axisLine.lineStyle.type;
 
-            self.shapeList.push(axShape);
+            self.shapeList.push(new LineShape(axShape));
         }
 
         // 小标记
@@ -150,7 +152,6 @@ define(function (require) {
                     // 亚像素优化
                     x = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
-                        shape : 'line',
                         zlevel : _zlevelBase,
                         hoverable : false,
                         style : {
@@ -162,7 +163,7 @@ define(function (require) {
                             lineWidth : lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    self.shapeList.push(new LineShape(axShape));
                 }
             }
             else {
@@ -176,7 +177,6 @@ define(function (require) {
                     // 亚像素优化
                     y = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
-                        shape : 'line',
                         zlevel : _zlevelBase,
                         hoverable : false,
                         style : {
@@ -188,7 +188,7 @@ define(function (require) {
                             lineWidth : lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    self.shapeList.push(new LineShape(axShape));
                 }
             }
         }
@@ -217,7 +217,6 @@ define(function (require) {
 
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
-                        shape : 'text',
                         zlevel : _zlevelBase,
                         hoverable : false,
                         style : {
@@ -243,7 +242,7 @@ define(function (require) {
                             axShape.style.y
                         ];
                     }
-                    self.shapeList.push(axShape);
+                    self.shapeList.push(new TextShape(axShape));
                 }
             }
             else {
@@ -261,7 +260,6 @@ define(function (require) {
 
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
-                        shape : 'text',
                         zlevel : _zlevelBase,
                         hoverable : false,
                         style : {
@@ -288,7 +286,7 @@ define(function (require) {
                             axShape.style.y
                         ];
                     }
-                    self.shapeList.push(axShape);
+                    self.shapeList.push(new TextShape(axShape));
                 }
             }
         }
@@ -314,7 +312,6 @@ define(function (require) {
                     // 亚像素优化
                     x = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
-                        shape : 'line',
                         zlevel : _zlevelBase,
                         hoverable : false,
                         style : {
@@ -327,7 +324,7 @@ define(function (require) {
                             lineWidth : lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    self.shapeList.push(new LineShape(axShape));
                 }
 
             }
@@ -341,7 +338,6 @@ define(function (require) {
                     // 亚像素优化
                     y = self.subPixelOptimize(getCoord(data[i]), lineWidth);
                     axShape = {
-                        shape : 'line',
                         zlevel : _zlevelBase,
                         hoverable : false,
                         style : {
@@ -354,7 +350,7 @@ define(function (require) {
                             lineWidth : lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    self.shapeList.push(new LineShape(axShape));
                 }
             }
         }
@@ -366,7 +362,6 @@ define(function (require) {
             if (!(color instanceof Array)) {
                 // 非数组一律认为是单一颜色的字符串，单一颜色则用一个背景，颜色错误不负责啊！！！
                 axShape = {
-                    shape : 'rectangle',
                     zlevel : _zlevelBase,
                     hoverable : false,
                     style : {
@@ -378,7 +373,7 @@ define(function (require) {
                         // type : option.splitArea.areaStyle.type,
                     }
                 };
-                self.shapeList.push(axShape);
+                self.shapeList.push(new RectangleShape(axShape));
             }
             else {
                 // 多颜色
@@ -398,7 +393,6 @@ define(function (require) {
                                ? getCoord(data[i])
                                : grid.getXend();
                         axShape = {
-                            shape : 'rectangle',
                             zlevel : _zlevelBase,
                             hoverable : false,
                             style : {
@@ -410,7 +404,7 @@ define(function (require) {
                                 // type : option.splitArea.areaStyle.type,
                             }
                         };
-                        self.shapeList.push(axShape);
+                        self.shapeList.push(new RectangleShape(axShape));
                         lastX = curX;
                     }
                 }
@@ -426,7 +420,6 @@ define(function (require) {
                                ? getCoord(data[i])
                                : grid.getY();
                         axShape = {
-                            shape : 'rectangle',
                             zlevel : _zlevelBase,
                             hoverable : false,
                             style : {
@@ -438,7 +431,7 @@ define(function (require) {
                                 // type : option.splitArea.areaStyle.type
                             }
                         };
-                        self.shapeList.push(axShape);
+                        self.shapeList.push(new RectangleShape(axShape));
                         lastYend = curY;
                     }
                 }
@@ -858,19 +851,11 @@ define(function (require) {
                 // 通用字体设置
                 option.axisLabel.textStyle = zrUtil.merge(
                     option.axisLabel.textStyle || {},
-                    ecConfig.textStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
+                    ecConfig.textStyle
                 );
                 option.axisLabel.textStyle = zrUtil.merge(
                     option.axisLabel.textStyle || {},
-                    ecConfig.textStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
+                    ecConfig.textStyle
                 );
                 series = newSeries;
             }

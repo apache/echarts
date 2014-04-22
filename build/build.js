@@ -43,19 +43,19 @@ if (plain) {
 configTpl.out = outputFile;
 
 if (exclude) {
-    exclude.forEach(function(chartName) {
+    exclude.forEach(function (chartName) {
         if (chartName === 'map') {
-            configTpl.include = configTpl.include.filter(function(path) {
+            configTpl.include = configTpl.include.filter(function (path) {
                 return path.indexOf('map') < 0;
             });
         } else {
-            configTpl.include = configTpl.include.filter(function(path) {
+            configTpl.include = configTpl.include.filter(function (path) {
                 return path !== 'echarts/chart/' + chartName;
             });
         }
     });
-    var chartsRequire = ['define(function(require) {'];
-    configTpl.include.forEach(function(chartPath) {
+    var chartsRequire = ['define(function (require) {'];
+    configTpl.include.forEach(function (chartPath) {
         chartsRequire.push('    require("' + chartPath + '");');
     });
     chartsRequire.push('});')
@@ -66,15 +66,15 @@ if (exclude) {
 fs.writeFileSync('_config_tmp.js', JSON.stringify(configTpl), 'utf-8');
 
 var buildProcess = spawn('node', ['r.js', '-o', '_config_tmp.js']);
-buildProcess.on('close', function() {
+buildProcess.on('close', function () {
     fs.unlink('_config_tmp.js');
     fs.unlink('../src/_chart.js');
 });
 buildProcess.stdout.setEncoding('utf-8');
-buildProcess.stdout.on('data', function(data) {
+buildProcess.stdout.on('data', function (data) {
     console.log(data);
 });
 buildProcess.stderr.setEncoding('utf-8');
-buildProcess.stderr.on('data', function(data) {
+buildProcess.stderr.on('data', function (data) {
     throw new Error(data);
 });

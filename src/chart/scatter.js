@@ -6,6 +6,16 @@
  *
  */
 define(function(require) {
+    // 图形依赖
+    var SymbolShape = require('../util/shape/Symbol');
+    // 组件依赖
+    require('../component/axis');
+    require('../component/categoryAxis');
+    require('../component/valueAxis');
+    require('../component/grid');
+    require('../component/dataZoom');
+    require('../component/dataRange');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -58,7 +68,6 @@ define(function(require) {
                         iconShape = legend.getItemShape(serieName);
                         if (iconShape) {
                             // 回调legend，换一个更形象的icon
-                            iconShape.shape = 'icon';
                             var iconType = _sIndex2ShapeMap[i];
                             iconShape.style.brushType = iconType.match('empty') ? 'stroke' : 'both';
                             iconType = iconType.replace('empty', '').toLowerCase();
@@ -101,7 +110,6 @@ define(function(require) {
             _buildSeries(seriesArray);
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
         }
@@ -371,8 +379,7 @@ define(function(require) {
         }
         
         function _getLargeSymbol(pointList, nColor) {
-            return {
-                shape : 'symbol',
+            return new SymbolShape({
                 zlevel : _zlevelBase,
                 _main : true,
                 hoverable: false,
@@ -381,7 +388,7 @@ define(function(require) {
                     color : nColor,
                     strokeColor : nColor
                 }
-            };
+            });
         }
         
         // 位置转换
@@ -469,7 +476,7 @@ define(function(require) {
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
                 if (self.shapeList[i]._main) {
-                    if (self.shapeList[i].shape == 'symbol') {
+                    if (self.shapeList[i].type == 'symbol') {
                         continue;
                     }
                     serie = series[self.shapeList[i]._seriesIndex];
@@ -507,9 +514,6 @@ define(function(require) {
 
         init(option, component);
     }
-    
-    // 动态扩展zrender shape：symbol
-    require('../util/shape/symbol');
     
     // 自注册
     require('../chart').define('scatter', Scatter);

@@ -142,7 +142,7 @@ option = {
                 show : true,
                 title : '自定义扩展方法',
                 icon : 'image://../asset/ico/favicon.png',
-                onclick : function(){
+                onclick : function (){
                     alert('myToolHandler')
                 }
             }
@@ -159,7 +159,7 @@ option = {
         {
             type : 'category',
             boundaryGap : false,
-            data : function(){
+            data : function (){
                 var list = [];
                 for (var i = 1; i <= 30; i++) {
                     list.push('2013-03-' + i);
@@ -178,7 +178,7 @@ option = {
         {
             name:'最高',
             type:'line',
-            data:function(){
+            data:function (){
                 var list = [];
                 for (var i = 1; i <= 30; i++) {
                     list.push(Math.round(Math.random()* 30));
@@ -189,7 +189,7 @@ option = {
         {
             name:'最低',
             type:'line',
-            data:function(){
+            data:function (){
                 var list = [];
                 for (var i = 1; i <= 30; i++) {
                     list.push(Math.round(Math.random()* 10));

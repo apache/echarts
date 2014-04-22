@@ -88,7 +88,7 @@ option = {
         orient : 'vertical',
         x : 'left'
     },
-    series : (function(){
+    series : (function (){
         // If data have been loaded
         if (webkitDepData) {
             //webkitDepData has been required and defined in webkit-dep.js
@@ -143,7 +143,7 @@ option = {
     <script src="../asset/js/bootstrap-typeahead.js"></script>
     <script type="text/javascript">
         var webkitDepData;
-        require(['webkit-dep'], function(wd) {
+        require(['webkit-dep'], function (wd) {
             webkitDepData = wd;
             //webkitDepData has been required and defined in webkit-dep.js
             webkitDepData.minRadius = 5;

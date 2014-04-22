@@ -6,6 +6,8 @@
  *
  */
 define(function (require) {
+    var RectangleShape = require('zrender/shape/Rectangle');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -68,9 +70,7 @@ define(function (require) {
             _x = self.subPixelOptimize(_x, gridOption.borderWidth);
             _y = self.subPixelOptimize(_y, gridOption.borderWidth);
 
-            self.shapeList.push({
-                shape : 'rectangle',
-                id : zr.newShapeId('grid'),
+            self.shapeList.push(new RectangleShape({
                 zlevel : _zlevelBase,
                 hoverable : false,
                 style : {
@@ -84,7 +84,7 @@ define(function (require) {
                     lineWidth : gridOption.borderWidth
                     // type : option.splitArea.areaStyle.type,
                 }
-            });
+            }));
             zr.addShape(self.shapeList[0]);
         }
 

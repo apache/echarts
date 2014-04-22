@@ -6,6 +6,13 @@
  *
  */
 define(function(require) {
+    // 图形依赖
+    var TextShape = require('zrender/shape/Text');
+    var PathShape = require('zrender/shape/Path');
+    var CircleShape = require('zrender/shape/Circle');
+    // 组件依赖
+    require('../component/dataRange');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -91,13 +98,13 @@ define(function(require) {
                                         || {};
 
                     if (series[i].textFixed) {
-                        zrUtil.mergeFast(
-                            _textFixed, series[i].textFixed, true, false
+                        zrUtil.merge(
+                            _textFixed, series[i].textFixed, true
                         );
                     }
                     if (series[i].geoCoord) {
-                        zrUtil.mergeFast(
-                            _geoCoord, series[i].geoCoord, true, false
+                        zrUtil.merge(
+                            _geoCoord, series[i].geoCoord, true
                         );
                     }
                     
@@ -215,10 +222,9 @@ define(function(require) {
                 if (--_mapDataRequireCounter <= 0) {
                     _shapeListMap = {};
                     for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                        self.shapeList[i].id = zr.newShapeId(self.type);
                         zr.addShape(self.shapeList[i]);
                         // 通过name关联shape，用于onmouseover
-                        if (self.shapeList[i].shape == 'path' 
+                        if (self.shapeList[i].type == 'path' 
                             && typeof self.shapeList[i].style._text != 'undefined'
                         ) {
                             _shapeListMap[self.shapeList[i].style._text] = self.shapeList[i];
@@ -632,8 +638,7 @@ define(function(require) {
                             && _showLegendSymbol[mapType] 
                             && legend.hasColor(series[data.seriesIndex[j]].name)
                         ) {
-                            self.shapeList.push({
-                                shape : 'circle',
+                            self.shapeList.push(new CircleShape({
                                 zlevel : _zlevelBase + 1,
                                 position : style.position,
                                 _mapType : mapType,
@@ -646,7 +651,7 @@ define(function(require) {
                                     )
                                 },
                                 hoverable : false
-                            });
+                            }));
                         }
                     }
                     queryTarget.push(defaultOption); // level 1
@@ -823,7 +828,7 @@ define(function(require) {
                     data, 0,
                     name
                 );
-                self.shapeList.push(textShape);
+                self.shapeList.push(new TextShape(textShape));
                 
                 ecData.pack(
                     shape,
@@ -835,7 +840,7 @@ define(function(require) {
                     data, 0,
                     name
                 );
-                self.shapeList.push(shape);
+                self.shapeList.push(new PathShape(shape));
             }
             //console.log(_selected);
         }
@@ -1244,9 +1249,6 @@ define(function(require) {
             shapeList = shapeList instanceof Array
                         ? shapeList : [shapeList];
             for (var i = 0, l = shapeList.length; i < l; i++) {
-                if (typeof shapeList[i].id == 'undefined') {
-                    shapeList[i].id = zr.newShapeId(self.type);
-                }
                 if (typeof shapeList[i].zlevel == 'undefined') {
                     shapeList[i].zlevel = _zlevelBase + 1;
                 }

@@ -7,6 +7,11 @@
  */
 
  define(function(require) {
+     // 图形依赖
+    var PolygonShape = require('zrender/shape/Polygon');
+     // 组件依赖
+    require('../component/polar');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -76,7 +81,6 @@
             }
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
                 zr.addShape(self.shapeList[i]);
             }
         }
@@ -217,7 +221,6 @@
                 queryTarget, 'itemStyle.normal.areaStyle'
             );
             var shape = {
-                shape : 'polygon',
                 zlevel : _zlevelBase,
                 style : {
                     pointList   : pointList,
@@ -275,6 +278,8 @@
                 shape.draggable = true;
                 self.setCalculable(shape);
             }
+            
+            shape = new PolygonShape(shape); 
             self.shapeList.push(shape);
         }
 
@@ -424,7 +429,7 @@
             var y;
 
             for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                if (self.shapeList[i].shape == 'polygon') {
+                if (self.shapeList[i].type == 'polygon') {
                     item = self.shapeList[i];
                     seriesIndex = ecData.get(item, 'seriesIndex');
                     dataIndex = ecData.get(item, 'dataIndex');

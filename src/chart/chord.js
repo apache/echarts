@@ -6,9 +6,12 @@
  */
 
 define(function(require) {
-
-    require('../util/shape/chord');
-
+    // 图形依赖
+    var TextShape = require('zrender/shape/Text');
+    var LineShape = require('zrender/shape/Line');
+    var SectorShape = require('zrender/shape/Sector');
+    var ChordShape = require('../util/shape/Chord');
+    
     'use strict';
 
     var _devicePixelRatio = window.devicePixelRatio || 1;
@@ -63,7 +66,6 @@ define(function(require) {
         var scaleUnitAngle = 4;
 
         function _buildShape() {
-
             self.selectedMap = {};
             chordSeries = [];
             chordSerieSample = null;
@@ -377,8 +379,6 @@ define(function(require) {
                             + startAngle;
 
                 var sector = {
-                    id : zr.newShapeId(self.type),
-                    shape : 'sector',
                     zlevel : _zlevelBase,
                     style : {
                         x : center[0],
@@ -437,8 +437,6 @@ define(function(require) {
                     vec2.add(start, start, center);
 
                     var labelShape = {
-                        shape : 'text',
-                        id : zr.newShapeId(self.type),
                         zlevel : _zlevelBase - 1,
                         hoverable : false,
                         style : {
@@ -457,13 +455,15 @@ define(function(require) {
                         [group, chordSerieSample],
                         'itemStyle.normal.label.textStyle'
                     ));
-                    zr.addShape(labelShape);
+                    labelShape = new TextShape(labelShape)
                     self.shapeList.push(labelShape);
+                    zr.addShape(labelShape);
                 }
 
                 sector.onmouseover = createMouseOver(i);
                 sector.onmouseout = createMouseOut();
 
+                sector = new SectorShape(sector);
                 self.shapeList.push(sector);
                 sectorShapes.push(sector);
                 zr.addShape(sector);
@@ -516,8 +516,6 @@ define(function(require) {
                         var t0 = !clockWise ? (360 - angleJI1) : angleJI0;
                         var t1 = !clockWise ? (360 - angleJI0) : angleJI1;
                         var chord = {
-                            id : zr.newShapeId(self.type),
-                            shape : 'chord',
                             zlevel : _zlevelBase,
                             style : {
                                 center : center,
@@ -549,6 +547,7 @@ define(function(require) {
                             dataArr[j][i][k]
                         );
 
+                        chord = new ChordShape(chord);
                         chordShapes[i][j][k] = chord;
                         self.shapeList.push(chord);
                         zr.addShape(chord);
@@ -580,8 +579,6 @@ define(function(require) {
                     var end = vec2.scale([], v, outerRadius + scaleLineLength);
                     vec2.add(end, end, center);
                     var scaleShape = {
-                        shape : 'line',
-                        id : zr.newShapeId(self.type),
                         zlevel : _zlevelBase - 1,
                         hoverable : false,
                         style : {
@@ -595,6 +592,7 @@ define(function(require) {
                         }   
                     };
 
+                    scaleShape = new LineShape(scaleShape);
                     self.shapeList.push(scaleShape);
                     zr.addShape(scaleShape);
 
@@ -614,8 +612,6 @@ define(function(require) {
                     var isRightSide = thelta <= 90
                                      || thelta >= 270;
                     var textShape = {
-                        shape : 'text',
-                        id : zr.newShapeId(self.type),
                         zlevel : _zlevelBase - 1,
                         hoverable : false,
                         style : {
@@ -636,6 +632,7 @@ define(function(require) {
                               ]
                     };
 
+                    textShape = new TextShape(textShape);
                     self.shapeList.push(textShape);
                     zr.addShape(textShape);
                     scaleTextAngle += scaleUnitAngle * 5;
@@ -733,19 +730,11 @@ define(function(require) {
             var _merge = zrUtil.merge;
             opt = _merge(
                       opt || {},
-                      ecConfig.chord,
-                      {
-                          'overwrite' : false,
-                          'recursive' : true
-                      }
+                      ecConfig.chord
                   );
             opt.itemStyle.normal.label.textStyle = _merge(
                 opt.itemStyle.normal.label.textStyle || {},
-                ecConfig.textStyle,
-                {
-                    'overwrite' : false,
-                    'recursive' : true
-                }
+                ecConfig.textStyle
             );
         }
 

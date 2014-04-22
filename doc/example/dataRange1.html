@@ -110,10 +110,10 @@ option = {
         {
             name:'scatter1',
             type:'scatter',
-            symbolSize: function(value){
+            symbolSize: function (value){
                 return Math.round(value[2] / 10);
             },
-            data: (function() {
+            data: (function () {
                 var d = [];
                 var len = 500;
                 var value;
