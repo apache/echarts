@@ -269,10 +269,10 @@ define(function(require) {
                 var r = radius[i];
 
                 var initPos;
-                if (node.initial !== undefined) {
-                    initPos = node.initial;
-                } else if (nodeInitialPos[node.name] !== undefined) {
+                if (nodeInitialPos[node.name] !== undefined) {
                     initPos = nodeInitialPos[node.name];
+                } else if (node.initial !== undefined) {
+                    initPos = node.initial;
                 } else {
                     initPos = _randomInSquare(
                         viewportWidth/2, viewportHeight/2, initSize
@@ -364,10 +364,12 @@ define(function(require) {
                 }
                 
                 // 拖拽特性
-                self.setCalculable(shape);
-                shape.dragEnableTime = 0;
-                shape.ondragstart = self.shapeHandler.ondragstart;
-                shape.draggable = true;
+                if (forceSerie.draggable) {
+                    self.setCalculable(shape);
+                    shape.dragEnableTime = 0;
+                    shape.ondragstart = self.shapeHandler.ondragstart;
+                    shape.draggable = forceSerie.draggable;
+                }
                 
                 var categoryName = '';
                 if (typeof(node.category) !== 'undefined') {
@@ -624,15 +626,13 @@ define(function(require) {
             var velocity = [];
             // 计算位置(verlet积分)
             for (var i = 0, l = nodePositions.length; i < l; i++) {
+                var node = filteredNodes[i];
                 var name = filteredNodes[i].name;
                 if (filteredNodes[i].fixed) {
                     // 拖拽同步
                     vec2.set(nodePositions[i], mouseX, mouseY);
                     vec2.set(nodePrePositions[i], mouseX, mouseY);
                     vec2.set(nodeShapes[i].position, mouseX, mouseY);
-                    if (filteredNodes[i].initial !== undefined) {
-                        vec2.set(filteredNodes[i].initial, mouseX, mouseY);
-                    }
                     if (nodeInitialPos[name] !== undefined) {
                         vec2.set(nodeInitialPos[name], mouseX, mouseY);
                     }
@@ -655,18 +655,21 @@ define(function(require) {
                 velocity[1] = Math.max(Math.min(velocity[1], 100), -100);
 
                 vec2.add(p, p, velocity);
+
+                if (node.fixY && node.initial) {
+                    p[1] = node.initial[1];
+                }
+                if (node.fixX && node.initial) {
+                    p[0] = node.initial[0];
+                }
+
                 vec2.copy(nodeShapes[i].position, p);
 
                 if (name) {
-                    if (nodeInitialPos[name] === undefined) {
+                    if (!nodeInitialPos[name]) {
                         nodeInitialPos[name] = vec2.create();
                     }
                     vec2.copy(nodeInitialPos[name], p);
-                } else {
-                    if (filteredNodes[i].initial === undefined) {
-                        filteredNodes[i].initial = vec2.create();
-                    }
-                    vec2.copy(filteredNodes[i].initial, p);
                 }
 
                 // if(isNaN(p[0]) || isNaN(p[1])){
@@ -759,6 +762,9 @@ define(function(require) {
         function ondragstart(param) {
             if (!self.isDragstart || !param.target) {
                 // 没有在当前实例上发生拖拽行为则直接返回
+                return;
+            }
+            if (!(forceSerie && forceSerie.draggable)) {
                 return;
             }
             var shape = param.target;
