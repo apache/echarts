@@ -5,67 +5,68 @@
  * @author Neil (杨骥, yangji01@baidu.com)
  *
  */
-define(function(require) {
+define(function (require) {
+    var Base = require('./base');
+    
+    // 图形依赖
     var TextShape = require('zrender/shape/Text');
     var LineShape = require('zrender/shape/Line');
     var PolygonShape = require('zrender/shape/Polygon');
 
-    function Polar(ecConfig, messageCenter, zr, option, component) {
-        var Base = require('./base');
-        Base.call(this, ecConfig, zr);
+    var ecConfig = require('../config');
+    var zrUtil = require('zrender/tool/util');
+    var ecCoordinates = require('../util/coordinates');
 
-        var ecCoordinates = require('../util/coordinates');
-        var zrUtil = require('zrender/tool/util');
-
-        var self = this;
-        self.type = ecConfig.COMPONENT_TYPE_POLAR;
-
-        var polar; 
-
-        var series;
-        var _queryTarget;
-
-        function init(newOption, newComponent) {
-            component = newComponent;
-            refresh(newOption);
-        }
+    function Polar(ecTheme, messageCenter, zr, option, component) {
+        Base.call(this, ecTheme, zr, option);
+        
+        this.component = component;
+        
+        this.init(option, component);
+    }
+    
+    Polar.prototype = {
+        type : ecConfig.COMPONENT_TYPE_POLAR,
+        init : function (newOption, newComponent) {
+            this.component = newComponent;
+            this.refresh(newOption);
+        },
         
         /**
          * 绘制图形
          */
-        function _buildShape() {
-            for (var i = 0; i < polar.length; i ++) {
+        _buildShape : function () {
+            for (var i = 0; i < this.polar.length; i ++) {
+                this.reformOption(this.polar[i]);
 
-                self.reformOption(polar[i]);
+                this._queryTarget = [this.polar[i], this.option];
+                this._createVector(i);
+                this._buildSpiderWeb(i);
 
-                _queryTarget = [polar[i], option];
-                _createVector(i);
-                _buildSpiderWeb(i);
+                this._buildText(i);
 
-                _buildText(i);
-
-                _adjustIndicatorValue(i);
-                _addAxisLabel(i);
+                this._adjustIndicatorValue(i);
+                this._addAxisLabel(i);
             }
 
-            for (var i = 0; i < self.shapeList.length; i ++) {
-                zr.addShape(self.shapeList[i]);
+            for (var i = 0; i < this.shapeList.length; i ++) {
+                this.zr.addShape(this.shapeList[i]);
             }
-        }
+        },
 
         /**
          * 生成蜘蛛网顶点坐标
          * @param {number} polar的index
          */
-        function _createVector(index) {
-            var item = polar[index];
-            var indicator = self.deepQuery(_queryTarget, 'indicator');
+        _createVector : function (index) {
+            var item = this.polar[index];
+            var indicator = this.deepQuery(this._queryTarget, 'indicator');
             var length = indicator.length;
             var startAngle = item.startAngle ;
             var dStep = 2 * Math.PI / length;
-            var radius = self.parsePercent(
+            var radius = this.parsePercent(
                 item.radius,
-                Math.min(zr.getWidth(), zr.getHeight()) / 2
+                Math.min(this.zr.getWidth(), this.zr.getHeight()) / 2
             );
             var __ecIndicator = item.__ecIndicator = [];
             var vector;
@@ -79,66 +80,66 @@ define(function(require) {
                     vector : [vector[1], -vector[0]]
                 });
             }
-        }
+        },
 
         /**
          * 构建蜘蛛网
          * @param {number} polar的index
          */
-        function _buildSpiderWeb(index) {
-            var item = polar[index];
+        _buildSpiderWeb : function (index) {
+            var item = this.polar[index];
             var __ecIndicator = item.__ecIndicator;
             var splitArea = item.splitArea;
             var splitLine = item.splitLine;
 
-            var center = getCenter(index);
+            var center = this.getCenter(index);
             var splitNumber = item.splitNumber;
 
             var strokeColor = splitLine.lineStyle.color;
             var lineWidth = splitLine.lineStyle.width;
             var show = splitLine.show;
 
-            var axisLine = self.deepQuery(_queryTarget, 'axisLine');
+            var axisLine = this.deepQuery(this._queryTarget, 'axisLine');
 
-            _addArea(
+            this._addArea(
                 __ecIndicator, splitNumber, center, 
                 splitArea, strokeColor, lineWidth, show
             );
             
-            _addLine(
+            this._addLine(
                 __ecIndicator, center, axisLine
             );
-        }
+        },
 
         /**
          * 绘制axisLabel
          */
-        function _addAxisLabel(index) {
-            var item = polar[index];
-            var indicator = self.deepQuery(_queryTarget, 'indicator');
+        _addAxisLabel : function (index) {
+            var item = this.polar[index];
+            var indicator = this.deepQuery(this._queryTarget, 'indicator');
             var __ecIndicator = item.__ecIndicator;
             var axisLabel;
             var vector;
             var style;
             var newStyle;
-            var splitNumber = self.deepQuery(_queryTarget, 'splitNumber');
-            var center = getCenter(index);
+            var splitNumber = this.deepQuery(this._queryTarget, 'splitNumber');
+            var center = this.getCenter(index);
             var vector;
             var value;
             var text;
             var theta;
-            // var startAngle = self.deepQuery(_queryTarget, 'startAngle');
+            // var startAngle = this.deepQuery(this._queryTarget, 'startAngle');
             var offset;
-            var precision = self.deepQuery(_queryTarget, 'precision');
+            var precision = this.deepQuery(this._queryTarget, 'precision');
 
             for (var i = 0; i < indicator.length; i ++) {
-                axisLabel = self.deepQuery(
-                    [indicator[i], item, option], 'axisLabel'
+                axisLabel = this.deepQuery(
+                    [indicator[i], item, this.option], 'axisLabel'
                 );
 
                 if (axisLabel.show) {
                     style = {};
-                    style.textFont = self.getFont();
+                    style.textFont = this.getFont();
                     //Todo: bug fix
                     style = zrUtil.merge(style, axisLabel);
                     style.lineWidth = style.width;
@@ -156,13 +157,14 @@ define(function(require) {
                         if (precision) {
                             text  = text.toFixed(precision);
                         }
-                        newStyle.text = self.numAddCommas(text);
+                        newStyle.text = this.numAddCommas(text);
                         newStyle.x = j * vector[0] / splitNumber 
                                      + Math.cos(theta) * offset + center[0];
                         newStyle.y = j * vector[1] / splitNumber
                                      + Math.sin(theta) * offset + center[1];
 
-                        self.shapeList.push(new TextShape({
+                        this.shapeList.push(new TextShape({
+                            zlevel : this._zlevelBase,
                             style : newStyle,
                             draggable : false,
                             hoverable : false
@@ -170,18 +172,18 @@ define(function(require) {
                     }
                 }
             }
-        }
+        },
 
         /**
          * 绘制坐标头的文字
          * @param {number} polar的index
          */
-        function _buildText (index) {
-            var item = polar[index];
+        _buildText  : function (index) {
+            var item = this.polar[index];
             var __ecIndicator = item.__ecIndicator;
             var vector;
-            var indicator = self.deepQuery(_queryTarget, 'indicator');
-            var center = getCenter(index);
+            var indicator = this.deepQuery(this._queryTarget, 'indicator');
+            var center = this.getCenter(index);
             var style;
             var textAlign;
             var name;
@@ -192,21 +194,21 @@ define(function(require) {
             var textStyle;
 
             for (var i = 0; i < indicator.length; i ++) {
-                name = self.deepQuery(
-                    [indicator[i], item, option], 'name'
+                name = this.deepQuery(
+                    [indicator[i], item, this.option], 'name'
                 );
 
                 if (!name.show) {
                     continue;
                 } 
-                textStyle = self.deepQuery(
-                    [name, item, option], 
+                textStyle = this.deepQuery(
+                    [name, item, this.option], 
                     'textStyle'
                 );
 
                 style = {};
 
-                style.textFont = self.getFont(textStyle);
+                style.textFont = this.getFont(textStyle);
                 style.color = textStyle.color;
                 
                 if (typeof name.formatter == 'function') {
@@ -234,7 +236,7 @@ define(function(require) {
                 }
 
                 if (!name.margin) {
-                    vector = _mapVector(vector, center, 1.2);
+                    vector = this._mapVector(vector, center, 1.2);
                 }
                 else {
                     margin = name.margin;
@@ -243,7 +245,7 @@ define(function(require) {
 
                     x = vector[0] === 0 ? 0 : x;
                     y = vector[1] === 0 ? 0 : y;
-                    vector = _mapVector(vector, center, 1); 
+                    vector = this._mapVector(vector, center, 1); 
                 }
                 
                 
@@ -261,24 +263,25 @@ define(function(require) {
                     rotation = [0, 0, 0];
                 }
                 
-                self.shapeList.push(new TextShape({
+                this.shapeList.push(new TextShape({
+                    zlevel : this._zlevelBase,
                     style : style,
                     draggable : false,
                     hoverable : false,
                     rotation : rotation
                 }));
             }
-        }
+        },
 
         /**
          * 添加一个隐形的盒子 当做drop的容器 暴露给外部的图形类使用
          * @param {number} polar的index
          * @return {Object} 添加的盒子图形 
          */
-        function _addDropBox(index) {
+        getDropBox : function (index) {
             var index = index || 0;
-            var item = polar[index];
-            var center = getCenter(index);
+            var item = this.polar[index];
+            var center = this.getCenter(index);
             var __ecIndicator = item.__ecIndicator;
             var len = __ecIndicator.length;
             var pointList = [];
@@ -287,14 +290,14 @@ define(function(require) {
 
             for (var i = 0; i < len; i ++) {
                 vector = __ecIndicator[i].vector;
-                pointList.push(_mapVector(vector, center, 1.2));
+                pointList.push(this._mapVector(vector, center, 1.2));
             }
             
-            shape = _getShape(
+            shape = this._getShape(
                 pointList, 'fill', 'rgba(0,0,0,0)', '', 1
             );
             return shape;
-        }
+        },
 
         /**
          * 绘制蜘蛛网的正n变形
@@ -306,7 +309,7 @@ define(function(require) {
          * @param {string} 线条颜色
          * @param {number} 线条宽度
          */ 
-        function _addArea(
+        _addArea : function (
             __ecIndicator, splitNumber, center,
             splitArea, strokeColor, lineWidth, show
         ) {
@@ -317,23 +320,23 @@ define(function(require) {
 
             for (var i = 0; i < splitNumber ; i ++ ) {
                 scale = (splitNumber - i) / splitNumber;
-                pointList = _getPointList(__ecIndicator, scale, center);
+                pointList = this._getPointList(__ecIndicator, scale, center);
                 
                 if (show) {
-                    shape = _getShape(
+                    shape = this._getShape(
                         pointList, 'stroke', '', strokeColor, lineWidth
                     );
-                    self.shapeList.push(shape);
+                    this.shapeList.push(shape);
                 }
 
                 if (splitArea.show) {
                     scale1 = (splitNumber - i - 1) / splitNumber;
-                    _addSplitArea(
+                    this._addSplitArea(
                         __ecIndicator, splitArea, scale, scale1, center, i
                     ); 
                 }  
             }
-        }
+        },
 
         /**
          * 获取需要绘制的多边形的点集
@@ -343,7 +346,7 @@ define(function(require) {
          *
          * @return {Array<Array<number>>} 返回绘制的点集
          */
-        function _getPointList(__ecIndicator, scale, center) {
+        _getPointList : function (__ecIndicator, scale, center) {
             var pointList = [];
             var len = __ecIndicator.length;
             var vector;
@@ -351,10 +354,10 @@ define(function(require) {
             for (var i = 0 ; i < len ; i ++ ) {
                 vector = __ecIndicator[i].vector;
                 
-                pointList.push(_mapVector(vector, center, scale));
+                pointList.push(this._mapVector(vector, center, scale));
             }
             return pointList;
-        }
+        },
 
         /**
          * 获取绘制的图形
@@ -367,11 +370,12 @@ define(function(require) {
          * @param {boolean=} draggable
          * @return {Object} 绘制的图形对象
          */ 
-        function _getShape(
+        _getShape : function (
             pointList, brushType, color, strokeColor, lineWidth, 
             hoverable, draggable
         ) {
             return new PolygonShape({
+                zlevel : this._zlevelBase,
                 style : {
                     pointList   : pointList,
                     brushType   : brushType,
@@ -382,12 +386,12 @@ define(function(require) {
                 hoverable : hoverable || false,
                 draggable : draggable || false
             });
-        }
+        },
 
         /**
          * 绘制填充区域
          */
-        function _addSplitArea(
+        _addSplitArea : function (
             __ecIndicator, splitArea, scale, scale1, center, colorInd
         ) {
             var indLen = __ecIndicator.length;
@@ -412,18 +416,18 @@ define(function(require) {
                 vector = __ecIndicator[i].vector;
                 vector1 = __ecIndicator[(i + 1) % indLen].vector;
 
-                pointList.push(_mapVector(vector, center, scale));
-                pointList.push(_mapVector(vector, center, scale1));
-                pointList.push(_mapVector(vector1, center, scale1));
-                pointList.push(_mapVector(vector1, center, scale));
+                pointList.push(this._mapVector(vector, center, scale));
+                pointList.push(this._mapVector(vector, center, scale1));
+                pointList.push(this._mapVector(vector1, center, scale1));
+                pointList.push(this._mapVector(vector1, center, scale));
 
-                shape = _getShape(
+                shape = this._getShape(
                     pointList, 'fill', color, '', 1
                 );
-                self.shapeList.push(shape);
+                this.shapeList.push(shape);
             }
             
-        }
+        },
 
         /**
          * 转换坐标
@@ -434,21 +438,21 @@ define(function(require) {
          *
          * @return {Array<number>} 转换后的坐标
          */
-        function _mapVector(vector, center, scale) {
+        _mapVector : function (vector, center, scale) {
             return [
                 vector[0] * scale + center[0],
                 vector[1] * scale + center[1]
             ];
-        }
+        },
 
         /**
          * 获取中心点位置 暴露给外部图形类使用
          * @param {number} polar的index
          */
-        function getCenter(index) {
+        getCenter : function (index) {
             var index = index || 0;
-            return self.parseCenter(zr, polar[index].center);
-        }
+            return this.parseCenter(this.zr, this.polar[index].center);
+        },
 
         /**
          * 绘制从中点出发的线
@@ -460,7 +464,7 @@ define(function(require) {
          * @param {string} 线条绘制类型 
          *              solid | dotted | dashed 实线 | 点线 | 虚线
          */
-        function _addLine(
+        _addLine : function (
             __ecIndicator, center, axisLine
         ) {
             var indLen = __ecIndicator.length;
@@ -473,15 +477,15 @@ define(function(require) {
 
             for (var i = 0; i < indLen ; i ++ ) {
                 vector = __ecIndicator[i].vector;
-                line = _getLine(
+                line = this._getLine(
                     center[0], center[1],
                     vector[0] + center[0], 
                     vector[1] + center[1],
                     strokeColor, lineWidth, lineType
                 );
-                self.shapeList.push(line);
+                this.shapeList.push(line);
             }
-        }
+        },
 
         /** 
          * 获取线条对象
@@ -495,10 +499,11 @@ define(function(require) {
          *
          * @return {Object} 线条对象
          */
-        function _getLine(
+        _getLine : function (
             xStart, yStart, xEnd, yEnd, strokeColor, lineWidth, lineType
         ) {
             return new LineShape({
+                zlevel : this._zlevelBase,
                 style : {
                     xStart : xStart,
                     yStart : yStart,
@@ -510,27 +515,27 @@ define(function(require) {
                 },
                 hoverable : false
             });
-        }
+        },
 
         /**
          * 调整指标的值，当indicator中存在max时设置为固定值
          * @param {number} polar的index
          */
-        function _adjustIndicatorValue(index) {
-            var item = polar[index];
-            var indicator = self.deepQuery(_queryTarget, 'indicator');
+        _adjustIndicatorValue : function (index) {
+            var item = this.polar[index];
+            var indicator = this.deepQuery(this._queryTarget, 'indicator');
             var len = indicator.length;
             var __ecIndicator = item.__ecIndicator;
             var value;
             var max;
             var min;
-            var data = _getSeriesData(index);
+            var data = this._getSeriesData(index);
             var splitNumber = item.splitNumber;
 
-            var boundaryGap = self.deepQuery(_queryTarget, 'boundaryGap');
-            var precision = self.deepQuery(_queryTarget, 'precision');
-            var power = self.deepQuery(_queryTarget, 'power');
-            var scale = self.deepQuery(_queryTarget, 'scale');
+            var boundaryGap = this.deepQuery(this._queryTarget, 'boundaryGap');
+            var precision = this.deepQuery(this._queryTarget, 'precision');
+            var power = this.deepQuery(this._queryTarget, 'power');
+            var scale = this.deepQuery(this._queryTarget, 'scale');
 
             for (var i = 0; i < len ; i ++ ) {
                 if (typeof indicator[i].max == 'number') {
@@ -542,7 +547,7 @@ define(function(require) {
                     };
                 }
                 else {
-                    value = _findValue(
+                    value = this._findValue(
                         data, i, splitNumber,
                         boundaryGap, precision, power, scale
                     );
@@ -550,28 +555,28 @@ define(function(require) {
 
                 __ecIndicator[i].value = value;
             }
-        }
+        },
 
         /**
          * 将series中的数据拿出来，如果没有polarIndex属性，默认为零
          * @param {number} polar 的index
          * @param {Array<Object>} 需要处理的数据
          */
-        function _getSeriesData(index) {
+        _getSeriesData : function (index) {
             var data = [];
             var serie;
             var serieData;
-            var legend = component.legend;
+            var legend = this.component.legend;
 
-            for (var i = 0; i < series.length; i ++) {
-                serie = series[i];
+            for (var i = 0; i < this.series.length; i ++) {
+                serie = this.series[i];
                 if (serie.type != ecConfig.CHART_TYPE_RADAR) {
                     continue;
                 }
                 serieData = serie.data || [];
                 for (var j = 0; j < serieData.length; j ++) {
-                    polarIndex = self.deepQuery(
-                        [serieData[j], serie, option], 'polarIndex'
+                    polarIndex = this.deepQuery(
+                        [serieData[j], serie, this.option], 'polarIndex'
                     ) || 0;
                     if (polarIndex == index
                         && (!legend || legend.isSelected(serieData[j].name))
@@ -581,7 +586,7 @@ define(function(require) {
                 }
             }
             return data;
-        }
+        },
 
         /**
          * 查找指标合适的值
@@ -596,7 +601,7 @@ define(function(require) {
          * @param {number} power 整数精度
          * @return {Object} 指标的最大值最小值
          */ 
-        function _findValue(
+        _findValue : function (
             data, index, splitNumber, boundaryGap, precision, power, scale
         ) {
             var max;
@@ -636,7 +641,7 @@ define(function(require) {
 
             if (data.length != 1) {
                 if (scale) {
-                    delta = _getDelta(
+                    delta = this._getDelta(
                         max, min, splitNumber, precision, power
                     );
 
@@ -691,7 +696,7 @@ define(function(require) {
                 max : max,
                 min : min
             };
-        }
+        },
 
         /**
          * 获取最大值与最小值中间比较合适的差值
@@ -701,7 +706,7 @@ define(function(require) {
          * @param {number} power 整数精度
          * @return {number} delta
          */
-        function _getDelta(max , min, splitNumber, precision, power) {
+        _getDelta : function (max , min, splitNumber, precision, power) {
             var delta = (max - min) / splitNumber;
             var str;
             var n;
@@ -755,7 +760,7 @@ define(function(require) {
                         / Math.pow(10, precision);
                 }
             }
-        }
+        },
 
         /**
          * 获取每个指标上某个value对应的坐标
@@ -764,17 +769,17 @@ define(function(require) {
          * @param {number} value
          * @return {Array<number>} 对应坐标
          */
-        function getVector(polarIndex, indicatorIndex, value) {
+        getVector : function (polarIndex, indicatorIndex, value) {
             polarIndex = polarIndex || 0;
             indicatorIndex = indicatorIndex || 0;
-            var __ecIndicator = polar[polarIndex].__ecIndicator;
+            var __ecIndicator = this.polar[polarIndex].__ecIndicator;
 
             if (indicatorIndex >= __ecIndicator.length) {
                 return ;
             }
 
-            var indicator = polar[polarIndex].__ecIndicator[indicatorIndex];
-            var center = getCenter(polarIndex);
+            var indicator = this.polar[polarIndex].__ecIndicator[indicatorIndex];
+            var center = this.getCenter(polarIndex);
             var vector = indicator.vector;
             var max = indicator.value.max;
             var min = indicator.value.min;
@@ -803,22 +808,22 @@ define(function(require) {
                 alpha = 0.5;
             }
             
-            return _mapVector(vector, center, alpha);
-        }
+            return this._mapVector(vector, center, alpha);
+        },
 
         /**
          * 判断一个点是否在网内
          * @param {Array<number>} 坐标
          * @return {number} 返回polarindex  返回-1表示不在任何polar
          */ 
-        function isInside(vector) {
-            var polar = getNearestIndex(vector);
+        isInside : function (vector) {
+            var polar = this.getNearestIndex(vector);
 
             if (polar) {
                 return polar.polarIndex;
             }
             return -1;
-        }
+        },
 
         /**
          * 如果一个点在网内，返回离它最近的数据轴的index
@@ -827,7 +832,7 @@ define(function(require) {
          *      polarIndex 
          *      valueIndex
          */
-        function getNearestIndex(vector) {
+        getNearestIndex : function (vector) {
             var item;
             var center;
             var radius;
@@ -837,17 +842,17 @@ define(function(require) {
             var len;
             var angle;
             var finalAngle;
-            var zrSize = Math.min(zr.getWidth(), zr.getHeight()) / 2;
-            for (var i = 0 ; i < polar.length; i ++) {
-                item = polar[i];
-                center = getCenter(i);
+            var zrSize = Math.min(this.zr.getWidth(), this.zr.getHeight()) / 2;
+            for (var i = 0 ; i < this.polar.length; i ++) {
+                item = this.polar[i];
+                center = this.getCenter(i);
                 if (vector[0] == center[0] && vector[1] == center[1]) {
                     return {
                         polarIndex : i,
                         valueIndex : 0
                     };
                 }
-                radius = self.parsePercent(item.radius, zrSize);
+                radius = this.parsePercent(item.radius, zrSize);
                 startAngle = item.startAngle;
                 indicator = item.indicator;
                 len = indicator.length;
@@ -879,44 +884,34 @@ define(function(require) {
                     };
                 }
             }
-        }
+        },
 
         /**
          * 获取指标信息 
          * @param {number} polarIndex
          * @return {Array<Object>} indicator
          */
-        function getIndicator(index) {
+        getIndicator : function (index) {
             var index = index || 0;
-            return polar[index].indicator;
-        } 
+            return this.polar[index].indicator;
+        },
 
          /**
          * 刷新
          */
-        function refresh(newOption) {
+        refresh : function (newOption) {
             if (newOption) {
-                option = newOption;
-                polar = option.polar;
-                series = option.series;
+                this.option = newOption;
+                this.polar = this.option.polar;
+                this.series = this.option.series;
             }
-            self.clear();
-            _buildShape();
+            this.clear();
+            this._buildShape();
         }
-
-        self.refresh = refresh;
-        self.getVector = getVector;
-
-        self.getDropBox = _addDropBox;
-        self.getCenter = getCenter;
-        self.getIndicator = getIndicator;
-
-        self.isInside = isInside;
-        self.getNearestIndex = getNearestIndex;
-
-        init(option, component);
-    }
-
+    };
+    
+    zrUtil.inherits(Polar, Base);
+    
     require('../component').define('polar', Polar);
  
     return Polar;
