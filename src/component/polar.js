@@ -26,7 +26,9 @@ define(function (require) {
     Polar.prototype = {
         type : ecConfig.COMPONENT_TYPE_POLAR,
         init : function (newOption, newComponent) {
-            this.refresh(newOption, newComponent);
+            this.component = newComponent || this.component;
+            
+            this.refresh(newOption);
         },
         
         /**
@@ -896,10 +898,9 @@ define(function (require) {
          /**
          * 刷新
          */
-        refresh : function (newOption, newComponent) {
+        refresh : function (newOption) {
             if (newOption || newComponent) {
                 this.option = newOption || this.option;
-                this.component = newComponent || this.component;
                 this.polar = this.option.polar;
                 this.series = this.option.series;
             }
