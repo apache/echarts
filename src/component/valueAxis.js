@@ -27,11 +27,9 @@ define(function (require) {
     function ValueAxis(ecTheme, messageCenter, zr, option, component, series) {
         Base.call(this, ecTheme, zr, option);
 
-        this.component = component;
-        this.grid = component.grid;
         this.series = series;
         
-        this.init(option, this.grid, this.series);
+        this.init(option, component, this.series);
     }
     
     ValueAxis.prototype = {
@@ -451,23 +449,23 @@ define(function (require) {
                 var xIdx;
                 var yIdx;
                 var legend = this.component.legend;
-                for (var i = 0, l = series.length; i < l; i++) {
-                    if (series[i].type != ecConfig.CHART_TYPE_LINE
-                        && series[i].type != ecConfig.CHART_TYPE_BAR
-                        && series[i].type != ecConfig.CHART_TYPE_SCATTER
-                        && series[i].type != ecConfig.CHART_TYPE_K
+                for (var i = 0, l = this.series.length; i < l; i++) {
+                    if (this.series[i].type != ecConfig.CHART_TYPE_LINE
+                        && this.series[i].type != ecConfig.CHART_TYPE_BAR
+                        && this.series[i].type != ecConfig.CHART_TYPE_SCATTER
+                        && this.series[i].type != ecConfig.CHART_TYPE_K
                     ) {
                         // 非坐标轴支持的不算极值
                         continue;
                     }
                     // 请允许我写开，跟上面一个不是一样东西
-                    if (legend && !legend.isSelected(series[i].name)){
+                    if (legend && !legend.isSelected(this.series[i].name)){
                         continue;
                     }
 
                     // 不指定默认为第一轴线
-                    xIdx = series[i].xAxisIndex || 0;
-                    yIdx = series[i].yAxisIndex || 0;
+                    xIdx = this.series[i].xAxisIndex || 0;
+                    yIdx = this.series[i].yAxisIndex || 0;
                     if ((this.option.xAxisIndex != xIdx)
                         && (this.option.yAxisIndex != yIdx)
                     ) {
@@ -475,15 +473,15 @@ define(function (require) {
                         continue;
                     }
                     
-                    var key = series[i].name || 'kener';
-                    if (!series[i].stack) {
+                    var key = this.series[i].name || 'kener';
+                    if (!this.series[i].stack) {
                         data[key] = data[key] || [];
-                        oriData = series[i].data;
+                        oriData = this.series[i].data;
                         for (var j = 0, k = oriData.length; j < k; j++) {
                             value = typeof oriData[j].value != 'undefined'
                                     ? oriData[j].value
                                     : oriData[j];
-                            if (series[i].type == ecConfig.CHART_TYPE_SCATTER) {
+                            if (this.series[i].type == ecConfig.CHART_TYPE_SCATTER) {
                                 if (this.option.xAxisIndex != -1) {
                                     data[key].push(value[0]);
                                 }
@@ -491,7 +489,7 @@ define(function (require) {
                                     data[key].push(value[1]);
                                 }
                             }
-                            else if (series[i].type == ecConfig.CHART_TYPE_K) {
+                            else if (this.series[i].type == ecConfig.CHART_TYPE_K) {
                                 data[key].push(value[0]);
                                 data[key].push(value[1]);
                                 data[key].push(value[2]);
@@ -504,12 +502,12 @@ define(function (require) {
                     }
                     else {
                         // 堆叠数据，需要区分正负向堆叠
-                        var keyP = '__Magic_Key_Positive__' + series[i].stack;
-                        var keyN = '__Magic_Key_Negative__' + series[i].stack;
+                        var keyP = '__Magic_Key_Positive__' + this.series[i].stack;
+                        var keyN = '__Magic_Key_Negative__' + this.series[i].stack;
                         data[keyP] = data[keyP] || [];
                         data[keyN] = data[keyN] || [];
                         data[key] = data[key] || [];  // scale下还需要记录每一个量
-                        oriData = series[i].data;
+                        oriData = this.series[i].data;
                         for (var j = 0, k = oriData.length; j < k; j++) {
                             value = typeof oriData[j].value != 'undefined'
                                     ? oriData[j].value
@@ -833,11 +831,12 @@ define(function (require) {
          * @param {Object} newOption
          * @param {Object} newGrid
          */
-        init : function (newOption, newGrid, newSeries) {
+        init : function (newOption, newComponent, newSeries) {
             if (!newSeries || newSeries.length === 0) {
                 return;
             }
-            this.grid = newGrid;
+            this.component = newComponent || this.component;
+            this.grid = this.component.grid || this.grid;
             
             this.refresh(newOption, newSeries);
         },
@@ -857,7 +856,7 @@ define(function (require) {
                     this.option.axisLabel.textStyle || {},
                     this.ecTheme.textStyle
                 );
-                series = newSeries;
+                this.series = newSeries;
             }
             if (this.zr) {   // 数值轴的另外一个功能只是用来计算极值
                 this.clear();

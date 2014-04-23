@@ -38,52 +38,7 @@ define(function (require) {
          * @param {Object} newOption
          */
         init : function (newOption) {
-            this.option = newOption;
-
-            this.option.grid = this.reformOption(this.option.grid);
-
-            var gridOption = this.option.grid;
-            this._zrWidth = this.zr.getWidth();
-            this._zrHeight = this.zr.getHeight();
-            this._x = this.parsePercent(gridOption.x, this._zrWidth);
-            this._y = this.parsePercent(gridOption.y, this._zrHeight);
-            var x2 = this.parsePercent(gridOption.x2, this._zrWidth);
-            var y2 = this.parsePercent(gridOption.y2, this._zrHeight);
-            
-
-            if (typeof gridOption.width == 'undefined') {
-                this._width = this._zrWidth - this._x - x2;
-            }
-            else {
-                this._width = this.parsePercent(gridOption.width, this._zrWidth);
-            }
-
-            if (typeof gridOption.height == 'undefined') {
-                this._height = this._zrHeight - this._y - y2;
-            }
-            else {
-                this._height = this.parsePercent(gridOption.height, this._zrHeight);
-            }
-            
-            this._x = this.subPixelOptimize(this._x, gridOption.borderWidth);
-            this._y = this.subPixelOptimize(this._y, gridOption.borderWidth);
-
-            this.shapeList.push(new RectangleShape({
-                zlevel : this._zlevelBase,
-                hoverable : false,
-                style : {
-                    x : this._x,
-                    y : this._y,
-                    width : this._width,
-                    height : this._height,
-                    brushType : gridOption.borderWidth > 0 ? 'both' : 'fill',
-                    color : gridOption.backgroundColor,
-                    strokeColor: gridOption.borderColor,
-                    lineWidth : gridOption.borderWidth
-                    // type : this.option.splitArea.areaStyle.type,
-                }
-            }));
-            this.zr.addShape(this.shapeList[0]);
+            this.refresh(newOption);
         },
 
         getX : function () {
@@ -120,12 +75,57 @@ define(function (require) {
         },
         
         refresh : function (newOption) {
-            if (this._zrWidth != this.zr.getWidth() 
+            if (newOption
+                || this._zrWidth != this.zr.getWidth() 
                 || this._zrHeight != this.zr.getHeight()
-                || newOption
             ) {
                 this.clear();
-                this.init(newOption || this.option);
+                this.option = newOption || this.option;
+
+                this.option.grid = this.reformOption(this.option.grid);
+    
+                var gridOption = this.option.grid;
+                this._zrWidth = this.zr.getWidth();
+                this._zrHeight = this.zr.getHeight();
+                this._x = this.parsePercent(gridOption.x, this._zrWidth);
+                this._y = this.parsePercent(gridOption.y, this._zrHeight);
+                var x2 = this.parsePercent(gridOption.x2, this._zrWidth);
+                var y2 = this.parsePercent(gridOption.y2, this._zrHeight);
+                
+    
+                if (typeof gridOption.width == 'undefined') {
+                    this._width = this._zrWidth - this._x - x2;
+                }
+                else {
+                    this._width = this.parsePercent(gridOption.width, this._zrWidth);
+                }
+    
+                if (typeof gridOption.height == 'undefined') {
+                    this._height = this._zrHeight - this._y - y2;
+                }
+                else {
+                    this._height = this.parsePercent(gridOption.height, this._zrHeight);
+                }
+                
+                this._x = this.subPixelOptimize(this._x, gridOption.borderWidth);
+                this._y = this.subPixelOptimize(this._y, gridOption.borderWidth);
+    
+                this.shapeList.push(new RectangleShape({
+                    zlevel : this._zlevelBase,
+                    hoverable : false,
+                    style : {
+                        x : this._x,
+                        y : this._y,
+                        width : this._width,
+                        height : this._height,
+                        brushType : gridOption.borderWidth > 0 ? 'both' : 'fill',
+                        color : gridOption.backgroundColor,
+                        strokeColor: gridOption.borderColor,
+                        lineWidth : gridOption.borderWidth
+                        // type : this.option.splitArea.areaStyle.type,
+                    }
+                }));
+                this.zr.addShape(this.shapeList[0]);
             }
         }
     };

@@ -27,74 +27,16 @@ define(function (require) {
         Base.call(this, ecTheme, zr, option);
 
         this.messageCenter = messageCenter;
-        this.component = component;
 
         var self = this;
-        /**
-         * 拖拽范围控制
-         */
         self._ondrift = function (dx, dy) {
-            var e = this;
-            if (self.zoomOption.zoomLock) {
-                // zoomLock时把handle转成filler的拖拽
-                e = this._fillerShae;
-            }
-            
-            var detailSize = e._type == 'filler' ? self._handleSize : 0;
-            if (self.zoomOption.orient == 'horizontal') {
-                if (e.style.x + dx - detailSize <= self._location.x) {
-                    e.style.x = self._location.x + detailSize;
-                }
-                else if (e.style.x + dx + e.style.width + detailSize
-                         >= self._location.x + self._location.width
-                ) {
-                    e.style.x = self._location.x + self._location.width
-                                - e.style.width - detailSize;
-                }
-                else {
-                    e.style.x += dx;
-                }
-            }
-            else {
-                if (e.style.y + dy - detailSize <= self._location.y) {
-                    e.style.y = self._location.y + detailSize;
-                }
-                else if (e.style.y + dy + e.style.height + detailSize
-                         >= self._location.y + self._location.height
-                ) {
-                    e.style.y = self._location.y + self._location.height
-                                - e.style.height - detailSize;
-                }
-                else {
-                    e.style.y += dy;
-                }
-            }
-
-            if (e._type == 'filler') {
-                self._syncHandleShape();
-            }
-            else {
-                self._syncFillerShape();
-            }
-
-            if (self.zoomOption.realtime) {
-                self._syncData();
-            }
-            else {
-                clearTimeout(self._syncTicket);
-                self._syncTicket = setTimeout(function (){
-                    self._syncData()
-                }, 200);
-            }
-
-            return true;
+            return self.__ondrift(this, dx, dy);
         };
-        
         self._ondragend = function () {
-            self.isDragend = true;
+            return self.__ondragend();
         };
 
-        self.init(option);
+        self.init(option, component);
     }
     
     DataZoom.prototype = {
@@ -769,7 +711,7 @@ define(function (require) {
                     }
                     else {
                         // 散点图特殊处理
-                        this.option[key][idx].data = _synScatterData(idx, data);
+                        this.option[key][idx].data = this._synScatterData(idx, data);
                     }
                 }
             }
@@ -829,7 +771,70 @@ define(function (require) {
             
             return newData;
         },
+        /**
+         * 拖拽范围控制
+         */
+        __ondrift : function (shape, dx, dy) {
+            if (this.zoomOption.zoomLock) {
+                // zoomLock时把handle转成filler的拖拽
+                shape = this._fillerShae;
+            }
+            
+            var detailSize = shape._type == 'filler' ? this._handleSize : 0;
+            if (this.zoomOption.orient == 'horizontal') {
+                if (shape.style.x + dx - detailSize <= this._location.x) {
+                    shape.style.x = this._location.x + detailSize;
+                }
+                else if (shape.style.x + dx + shape.style.width + detailSize
+                         >= this._location.x + this._location.width
+                ) {
+                    shape.style.x = this._location.x + this._location.width
+                                - shape.style.width - detailSize;
+                }
+                else {
+                    shape.style.x += dx;
+                }
+            }
+            else {
+                if (shape.style.y + dy - detailSize <= this._location.y) {
+                    shape.style.y = this._location.y + detailSize;
+                }
+                else if (shape.style.y + dy + shape.style.height + detailSize
+                         >= this._location.y + this._location.height
+                ) {
+                    shape.style.y = this._location.y + this._location.height
+                                - shape.style.height - detailSize;
+                }
+                else {
+                    shape.style.y += dy;
+                }
+            }
 
+            if (shape._type == 'filler') {
+                this._syncHandleShape();
+            }
+            else {
+                this._syncFillerShape();
+            }
+
+            if (this.zoomOption.realtime) {
+                this._syncData();
+            }
+            else {
+                clearTimeout(this._syncTicket);
+                var self = this;
+                this._syncTicket = setTimeout(function (){
+                    self._syncData();
+                }, 200);
+            }
+
+            return true;
+        },
+        
+        __ondragend : function () {
+            this.isDragend = true;
+        },
+        
         /**
          * 数据项被拖拽出去
          */
@@ -1004,7 +1009,10 @@ define(function (require) {
             return -1;
         },
 
-        init : function (newOption) {
+        init : function (newOption, newComponent) {
+            this.option = newOption;
+            this.component = newComponent;
+            
             this._fillerSize = 28;       // 控件大小，水平布局为高，纵向布局为宽
             this._handleSize = 8;        // 手柄大小
             // this._fillerShae;            // 填充
@@ -1015,8 +1023,7 @@ define(function (require) {
             // this._syncTicket;
             this._isSilence = false;
             // this._originalData;
-        
-            this.option = newOption;
+            
             this.option.dataZoom = this.reformOption(this.option.dataZoom);
             this.zoomOption = this.option.dataZoom;
 

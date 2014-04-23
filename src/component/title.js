@@ -231,8 +231,6 @@ define(function (require) {
         },
 
         init : function (newOption) {
-            // 标题元素组的位置参数，通过计算所得x, y, width, height
-            this._itemGroupLocation = {};
             this.refresh(newOption);
         },
         
@@ -258,13 +256,11 @@ define(function (require) {
                     this.titleOption.subtextStyle,
                     this.ecTheme.textStyle
                 );
-    
-                this.clear();
-                this._buildShape();
+                
+                // 标题元素组的位置参数，通过计算所得x, y, width, height
+                this._itemGroupLocation = {};
             }
-        },
-        
-        resize : function () {
+            
             this.clear();
             this._buildShape();
         }

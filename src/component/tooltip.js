@@ -37,51 +37,28 @@ define(function (require) {
         this.dom = dom;
         this.myChart = myChart;
         
-        this._tDom = document.createElement('div');
-        
-        this._axisLineShape = new LineShape({
-            zlevel: this._zlevelBase,
-            invisible : true,
-            hoverable: false,
-            style : {
-                // lineWidth : 2,
-                // strokeColor : ecConfig.categoryAxis.axisLine.lineStyle.color
-            }
-        });
-        this._axisShadowShape = new LineShape({
-            zlevel: 1,                      // grid上，chart下
-            invisible : true,
-            hoverable: false,
-            style : {
-                // lineWidth : 10,
-                // strokeColor : ecConfig.categoryAxis.axisLine.lineStyle.color
-            }
-        });
-        this.zr.addShape(this._axisLineShape);
-        this.zr.addShape(this._axisShadowShape);
-
         var self = this;
         self._onmousemove = function (param) {
-            return self.__onmousemove.call(self, param);
+            return self.__onmousemove(param);
         };
         self._onglobalout = function (param) {
-            return self.__onglobalout.call(self, param);
+            return self.__onglobalout(param);
         };
         
         this.zr.on(zrConfig.EVENT.MOUSEMOVE, self._onmousemove);
         this.zr.on(zrConfig.EVENT.GLOBALOUT, self._onglobalout);
 
         self._hide = function (param) {
-            return self.__hide.call(self, param);
+            return self.__hide(param);
         };
         self._tryShow = function(param) {
-            return self.__tryShow.call(self, param);
-        }
+            return self.__tryShow(param);
+        };
         self._refixed = function(param) {
-            return self.__refixed.call(self, param);
-        }
+            return self.__refixed(param);
+        };
         
-        this.init(option, dom);
+        this.init(option);
     }
     
     Tooltip.prototype = {
@@ -365,7 +342,7 @@ define(function (require) {
             }
             
             if (polarIndex != -1) {
-                return _showPolarTrigger(polarIndex, valueIndex);
+                return this._showPolarTrigger(polarIndex, valueIndex);
             }
             
             return false;
@@ -1354,7 +1331,7 @@ define(function (require) {
                             zrenderX : vector[0],
                             zrenderY : vector[1]
                         };
-                        _showPolarTrigger(
+                        this._showPolarTrigger(
                             polarIndex, 
                             dataIndex
                         );
@@ -1487,70 +1464,52 @@ define(function (require) {
             this._hide();
         },
         
-        init : function (newOption, newDom) {
-            // this.component;
-            // this.grid;
-            // this.xAxis;
-            // this.yAxis;
-            // this.polar;
-    
-            this._selectedMap = {};
-            
-            // 默认样式
-            // this._defaultCssText;                    // css样式缓存
-            // this._needAxisTrigger;                   // 坐标轴触发
-            // this._curTarget;
-            // this._event;
-            // this._curTicket;                         // 异步回调标识，用来区分多个请求
-    
-            // 缓存一些高宽数据
-            this._zrHeight = this.zr.getHeight();
-            this._zrWidth = this.zr.getWidth();
-    
-            this._lastTipShape = false;
-            this._axisLineWidth = 0;
-            
-            this.option = newOption;
-            this.dom = newDom;
-
-            this.option.tooltip = this.reformOption(this.option.tooltip);
-            this.option.tooltip.textStyle = zrUtil.merge(
-                this.option.tooltip.textStyle,
-                this.ecTheme.textStyle
-            );
-            // 补全padding属性
-            this.option.tooltip.padding = this.reformCssArray(
-                this.option.tooltip.padding
-            );
-
-            this._needAxisTrigger = false;
-            if (this.option.tooltip.trigger == 'axis') {
-                this._needAxisTrigger = true;
-            }
-
-            var series = this.option.series;
-            for (var i = 0, l = series.length; i < l; i++) {
-                if (this.query(series[i], 'tooltip.trigger') == 'axis') {
-                    this._needAxisTrigger = true;
-                    break;
-                }
-            }
-            // this._hidingTicket;
-            // this._showingTicket;
-            this._showDelay = this.option.tooltip.showDelay; // 显示延迟
-            this._hideDelay = this.option.tooltip.hideDelay; // 隐藏延迟
-            this._defaultCssText = this._style(this.option.tooltip);
+        init : function (newOption) {
+            this._tDom = this._tDom || document.createElement('div');
             this._tDom.style.position = 'absolute';  // 不是多余的，别删！
             this.hasAppend = false;
-            this._setSelectedMap();
             
-            this._axisLineWidth = this.option.tooltip.axisPointer.lineStyle.width;
+            this._axisLineShape && this.zr.delShape(this._axisLineShape);
+            this._axisLineShape = new LineShape({
+                zlevel: this._zlevelBase,
+                invisible : true,
+                hoverable: false
+            });
+            this.zr.addShape(this._axisLineShape);
+            
+            this._axisShadowShape && this.zr.delShape(this._axisShadowShape);
+            this._axisShadowShape = new LineShape({
+                zlevel: 1,                      // grid上，chart下
+                invisible : true,
+                hoverable: false
+            });
+            this.zr.addShape(this._axisShadowShape);
+            
+            this.refresh(newOption);
         },
         
         /**
          * 刷新
          */
         refresh : function (newOption) {
+            // this.component;
+            // this.grid;
+            // this.xAxis;
+            // this.yAxis;
+            // this.polar;
+            // this._selectedMap;
+            // this._defaultCssText;    // css样式缓存
+            // this._needAxisTrigger;   // 坐标轴触发
+            // this._curTarget;
+            // this._event;
+            // this._curTicket;         // 异步回调标识，用来区分多个请求
+            
+            // 缓存一些高宽数据
+            this._zrHeight = this.zr.getHeight();
+            this._zrWidth = this.zr.getWidth();
+    
+            this._lastTipShape = false;
+            
             if (newOption) {
                 this.option = newOption;
                 this.option.tooltip = this.reformOption(this.option.tooltip);
@@ -1562,17 +1521,28 @@ define(function (require) {
                 this.option.tooltip.padding = this.reformCssArray(
                     this.option.tooltip.padding
                 );
+    
+                this._needAxisTrigger = false;
+                if (this.option.tooltip.trigger == 'axis') {
+                    this._needAxisTrigger = true;
+                }
+    
+                var series = this.option.series;
+                for (var i = 0, l = series.length; i < l; i++) {
+                    if (this.query(series[i], 'tooltip.trigger') == 'axis') {
+                        this._needAxisTrigger = true;
+                        break;
+                    }
+                }
+                // this._hidingTicket;
+                // this._showingTicket;
+                this._showDelay = this.option.tooltip.showDelay; // 显示延迟
+                this._hideDelay = this.option.tooltip.hideDelay; // 隐藏延迟
+                this._defaultCssText = this._style(this.option.tooltip);
+                
                 this._setSelectedMap();
                 this._axisLineWidth = this.option.tooltip.axisPointer.lineStyle.width;
             }
-        },
-
-        /**
-         * zrender事件响应：窗口大小改变
-         */
-        resize : function () {
-            this._zrHeight = this.zr.getHeight();
-            this._zrWidth = this.zr.getWidth();
         },
 
         /**

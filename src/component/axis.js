@@ -33,10 +33,7 @@ define(function (require) {
         Base.call(this, ecTheme, zr, option);
         
         this.messageCenter = messageCenter;
-        this.component = component;
-        this.axisType = axisType;
         
-        this._axisList = [];
         this.init(option, component, axisType);
     }
     
@@ -49,9 +46,7 @@ define(function (require) {
         reformOption : function (opt) {
             // 不写或传了个空数值默认为数值轴
             if (!opt || (opt instanceof Array && opt.length === 0)) {
-                opt = [{
-                    type : ecConfig.COMPONENT_TYPE_AXIS_VALUE
-                }];
+                opt = [{type : ecConfig.COMPONENT_TYPE_AXIS_VALUE}];
             }
             else if (!(opt instanceof Array)){
                 opt = [opt];
@@ -61,7 +56,6 @@ define(function (require) {
             if (opt.length > 2) {
                 opt = [opt[0],opt[1]];
             }
-
 
             if (this.axisType == 'xAxis') {
                 // 横轴位置默认配置
@@ -117,10 +111,12 @@ define(function (require) {
          * @param {Object} newCompoent
          */
         init : function (newOption, newCompoent, newAxisType) {
-            this.option = newOption;
-            this.component = newCompoent;
-            this.axisType = newAxisType;
-
+            this.option = newOption || this.option;
+            this.component = newCompoent || this.component;
+            this.axisType = newAxisType || this.axisType;
+            
+            this._axisList = [];
+            
             this.clear();
 
             var axisOption;

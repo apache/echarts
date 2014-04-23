@@ -32,14 +32,14 @@ define(function (require) {
         Base.call(this, ecTheme, zr, option);
 
         this.messageCenter = messageCenter;
-        this.selected = selected;
         
-        this.init(option);
+        this.init(option, selected);
     }
     
     Legend.prototype = {
         type : ecConfig.COMPONENT_TYPE_LEGEND,
         _buildShape : function () {
+            // 图例元素组的位置参数，通过计算所得x, y, width, height
             this._itemGroupLocation = this._getItemGroupLocation();
 
             this._buildBackground();
@@ -562,100 +562,85 @@ define(function (require) {
             );
         },
 
-        init : function (newOption) {
-            //var this.legendOption;                       // 图例选项，共享数据源
-            this._itemGroupLocation = {};    // 图例元素组的位置参数，通过计算所得x, y, width, height
-            this._colorIndex = 0;
-            this._colorMap = {};
-            this._selectedMap = {};
-    
-            for (var k in legendIcon) {
-                IconShape.prototype.iconLibrary['legendicon' + k] = legendIcon[k];
-                //console.log('legendicon' + k, legendIcon[k])
-            }
-        
+        init : function (newOption, newSelected) {
             if (!this.query(newOption, 'legend.data')) {
                 return;
             }
-
-            this.option = newOption;
-
-            this.option.legend = this.reformOption(this.option.legend);
-            // 补全padding属性
-            this.option.legend.padding = this.reformCssArray(
-                this.option.legend.padding
-            );
-
-            this.legendOption = this.option.legend;
-
-            this.clear();
-
-            var data = this.legendOption.data || [];
-            var itemName;
-            var something;
-            var color;
-            var queryTarget;
-            for (var i = 0, dataLength = data.length; i < dataLength; i++) {
-                itemName = data[i].name || data[i];
-                if (itemName === '') {
-                    continue;
-                }
-                something = this._getSomethingByName(itemName);
-                if (!something.series) {
-                    this._selectedMap[itemName] = false;
-                } 
-                else {
-                    if (something.data
-                        && (something.type == ecConfig.CHART_TYPE_PIE
-                            || something.type == ecConfig.CHART_TYPE_FORCE)
-                        
-                    ) {
-                        queryTarget = [something.data, something.series];
-                    }
-                    else {
-                        queryTarget = [something.series];
-                    }
-                    
-                    color = this.getItemStyleColor(
-                        this.deepQuery(
-                            queryTarget, 'itemStyle.normal.color'
-                        ),
-                        something.seriesIndex,
-                        something.dataIndex,
-                        something.data
-                    );
-                    if (color && something.type != ecConfig.CHART_TYPE_K) {
-                        this.setColor(itemName, color);
-                    }
-                    this._selectedMap[itemName] = true;
-                }
-            }
-            if (this.selected) {
-                for (var k in this.selected) {
-                    this._selectedMap[k] = this.selected[k];
-                }
-            }
-            this._buildShape();
+            
+            this.refresh(newOption, newSelected);
         },
 
         /**
          * 刷新
          */
-        refresh : function (newOption) {
-            if (newOption) {
-                this.option = newOption;
+        refresh : function (newOption, newSelected) {
+            if (newOption || newSelected) {
+                this.selected = newSelected || this.selected;
+                
+                this.option = newOption || this.option;
                 this.option.legend = this.reformOption(this.option.legend);
                 // 补全padding属性
                 this.option.legend.padding = this.reformCssArray(
                     this.option.legend.padding
                 );
+                this.legendOption = this.option.legend;
+                
+                this._colorIndex = 0;
+                this._colorMap = {};
+                this._selectedMap = {};
+                var data = this.legendOption.data || [];
+                var itemName;
+                var something;
+                var color;
+                var queryTarget;
+                for (var i = 0, dataLength = data.length; i < dataLength; i++) {
+                    itemName = data[i].name || data[i];
+                    if (itemName === '') {
+                        continue;
+                    }
+                    something = this._getSomethingByName(itemName);
+                    if (!something.series) {
+                        this._selectedMap[itemName] = false;
+                    } 
+                    else {
+                        if (something.data
+                            && (something.type == ecConfig.CHART_TYPE_PIE
+                                || something.type == ecConfig.CHART_TYPE_FORCE)
+                            
+                        ) {
+                            queryTarget = [something.data, something.series];
+                        }
+                        else {
+                            queryTarget = [something.series];
+                        }
+                        
+                        color = this.getItemStyleColor(
+                            this.deepQuery(
+                                queryTarget, 'itemStyle.normal.color'
+                            ),
+                            something.seriesIndex,
+                            something.dataIndex,
+                            something.data
+                        );
+                        if (color && something.type != ecConfig.CHART_TYPE_K) {
+                            this.setColor(itemName, color);
+                        }
+                        this._selectedMap[itemName] = true;
+                    }
+                }
+            
                 if (this.option.legend.selected) {
                     for (var k in this.option.legend.selected) {
                         this._selectedMap[k] = this.option.legend.selected[k];
                     }
                 }
+                if (this.selected) {
+                    for (var k in this.selected) {
+                        this._selectedMap[k] = this.selected[k];
+                    }
+                }
             }
-            this.legendOption = this.option.legend;
+            
             this.clear();
             this._buildShape();
         },
@@ -870,6 +855,11 @@ define(function (require) {
             ctx.lineTo(xStart, yStart);
         }
     };
+    
+    for (var k in legendIcon) {
+        IconShape.prototype.iconLibrary['legendicon' + k] = legendIcon[k];
+        //console.log('legendicon' + k, legendIcon[k])
+    }
     
     zrUtil.inherits(Legend, Base);
     

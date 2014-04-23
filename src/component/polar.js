@@ -20,16 +20,13 @@ define(function (require) {
     function Polar(ecTheme, messageCenter, zr, option, component) {
         Base.call(this, ecTheme, zr, option);
         
-        this.component = component;
-        
         this.init(option, component);
     }
     
     Polar.prototype = {
         type : ecConfig.COMPONENT_TYPE_POLAR,
         init : function (newOption, newComponent) {
-            this.component = newComponent;
-            this.refresh(newOption);
+            this.refresh(newOption, newComponent);
         },
         
         /**
@@ -899,9 +896,10 @@ define(function (require) {
          /**
          * 刷新
          */
-        refresh : function (newOption) {
-            if (newOption) {
-                this.option = newOption;
+        refresh : function (newOption, newComponent) {
+            if (newOption || newComponent) {
+                this.option = newOption || this.option;
+                this.component = newComponent || this.component;
                 this.polar = this.option.polar;
                 this.series = this.option.series;
             }

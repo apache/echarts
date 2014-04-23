@@ -27,9 +27,7 @@ define(function (require) {
     function CategoryAxis(ecTheme, messageCenter, zr, option, component) {
         Base.call(this, ecTheme, zr, option);
         
-        this.grid = component.grid;
-        
-        this.init(option, this.grid);
+        this.init(option, component);
     }
     
     CategoryAxis.prototype = {
@@ -293,7 +291,7 @@ define(function (require) {
                 }
             }
             else {
-                // 纵向                        
+                // 纵向
                 var xPosition = this.option.position == 'left'
                         ? (tickOption.inside ? this.grid.getX() : (this.grid.getX() - length))
                         : (tickOption.inside ? (this.grid.getXend() - length) : this.grid.getXend());
@@ -611,12 +609,12 @@ define(function (require) {
          * @param {Object} newOption
          * @param {Object} newGrid
          */
-        init :function (newOption, newGrid) {
+        init :function (newOption, newComponent) {
             if (newOption.data.length < 1) {
                 return;
             }
-            this.grid = newGrid;
-
+            this.grid = (newComponent && newComponent.grid) || this.grid;
+            
             this.refresh(newOption);
         },
 
@@ -649,10 +647,10 @@ define(function (require) {
                         || this.option.position == 'top')
                         ? this.grid.getWidth()
                         : this.grid.getHeight();
-            if (this.option.boundaryGap) {               // 留空
+            if (this.option.boundaryGap) {              // 留空
                 return total / dataLength;
             }
-            else {                                  // 顶头
+            else {                                      // 顶头
                 return total / (dataLength > 1 ? (dataLength - 1) : 1);
             }
         },
