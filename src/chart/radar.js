@@ -177,6 +177,7 @@
                     'vertical'
                 );
                 itemShape.zlevel = this._zlevelBase + 1;
+                ecData.set(itemShape, 'special', i);
                 this.shapeList.push(itemShape);
             }
         },
