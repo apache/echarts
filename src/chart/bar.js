@@ -34,13 +34,14 @@ define(function (require) {
         // 可计算特性装饰
         CalculableBase.call(this);
         
-        this.component = component;
-        
-        this.init(option);
+        this.init(option, component);
     }
     
     Bar.prototype = {
         type : ecConfig.CHART_TYPE_BAR,
+        /**
+         * 绘制图形
+         */
         _buildShape : function () {
             var series = this.series;
             this.selectedMap = {};
@@ -914,7 +915,9 @@ define(function (require) {
          * @param {Object} newSeries
          * @param {Object} newComponent
          */
-        init : function (newOption) {
+        init : function (newOption, newComponent) {
+            this.component = newComponent || this.component;
+            
             this.refresh(newOption);
         },
 
