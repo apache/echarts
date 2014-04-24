@@ -81,7 +81,6 @@ define(function (require) {
             ) {
                 this.clear();
                 this.option = newOption || this.option;
-
                 this.option.grid = this.reformOption(this.option.grid);
     
                 var gridOption = this.option.grid;

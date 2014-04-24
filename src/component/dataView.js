@@ -60,7 +60,6 @@ define(function (require) {
 
             this.option = newOption;
 
-
             this._tDom.innerHTML = '<p style="padding:8px 0;margin:0 0 10px 0;'
                               + 'border-bottom:1px solid #eee">'
                               + (lang[0] || this._lang[0])

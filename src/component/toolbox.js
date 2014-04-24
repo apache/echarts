@@ -1049,8 +1049,8 @@ define(function (require) {
             newOption.toolbox.padding = this.reformCssArray(
                 newOption.toolbox.padding
             );
-            this.option = newOption;
-            this.component = newComponent;
+            this.option = newOption || this.option;
+            this.component = newComponent || this.component;
 
             this.shapeList = [];
 

@@ -147,7 +147,10 @@ define(function (require) {
 
             return interval;
         },
-
+        
+        /**
+         * 绘制图形
+         */
         _buildShape : function () {
             // 标签文字格式化
             this._labelData = this._reformLabel();

@@ -1010,8 +1010,8 @@ define(function (require) {
         },
 
         init : function (newOption, newComponent) {
-            this.option = newOption;
-            this.component = newComponent;
+            this.option = newOption || this.option;
+            this.component = newComponent || this.component;
             
             this._fillerSize = 28;       // 控件大小，水平布局为高，纵向布局为宽
             this._handleSize = 8;        // 手柄大小

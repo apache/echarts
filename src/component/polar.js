@@ -899,8 +899,8 @@ define(function (require) {
          * 刷新
          */
         refresh : function (newOption) {
-            if (newOption || newComponent) {
-                this.option = newOption || this.option;
+            if (newOption) {
+                this.option = newOption;
                 this.polar = this.option.polar;
                 this.series = this.option.series;
             }

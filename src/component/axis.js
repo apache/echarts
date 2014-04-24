@@ -108,11 +108,11 @@ define(function (require) {
          * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
          * @param {Object} newZr
          * @param {Object} newOption
-         * @param {Object} newCompoent
+         * @param {Object} newComponent
          */
-        init : function (newOption, newCompoent, newAxisType) {
+        init : function (newOption, newComponent, newAxisType) {
             this.option = newOption || this.option;
-            this.component = newCompoent || this.component;
+            this.component = newComponent || this.component;
             this.axisType = newAxisType || this.axisType;
             
             this._axisList = [];
