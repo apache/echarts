@@ -391,9 +391,10 @@ define(function (require) {
     function _iconImage(ctx, style) {
         setTimeout(function (){
             var ImageShape = require('zrender/shape/Image');
-            ImageShape.prototype.brush(ctx, {
+            var itemShape = new ImageShape({
                 style : style
-            });                
+            });
+            itemShape.brush(ctx);
         },100);
     }
     
