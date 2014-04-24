@@ -407,11 +407,10 @@ define(function (require) {
                         - this.legendOption.borderWidth * 2;
                     break;
                 default :
-                    x = this.legendOption.x - 0;
-                    x = isNaN(x) ? 0 : x;
+                    x = this.parsePercent(this.legendOption.x, zrWidth);
                     break;
             }
-
+            
             var y;
             switch (this.legendOption.y) {
                 case 'top' :
@@ -428,8 +427,7 @@ define(function (require) {
                     y = Math.floor((zrHeight - totalHeight) / 2);
                     break;
                 default :
-                    y = this.legendOption.y - 0;
-                    y = isNaN(y) ? 0 : y;
+                    y = this.parsePercent(this.legendOption.y, zrHeight);
                     break;
             }
 
