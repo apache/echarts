@@ -106,7 +106,10 @@ define(function (require) {
         var centroid = [];
 
         var mouseX, mouseY;
-
+        
+        /**
+         * 绘制图形
+         */
         function _buildShape() {
             legend = component.legend;
             temperature = 1.0;
@@ -847,6 +850,7 @@ define(function (require) {
         }
         return result;
     }
+    
     zrUtil.inherits(Force, CalculableBase);
     zrUtil.inherits(Force, ComponentBase);
     
