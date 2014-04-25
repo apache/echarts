@@ -121,7 +121,7 @@ define(function (require) {
                                 brushType : 'stroke',
                                 lineWidth: 1,
                                 strokeColor : series[i].calculableHolderColor
-                                              || ecConfig.calculableHolderColor
+                                              || this.ecTheme.calculableHolderColor
                             }
                         };
                         ecData.pack(pieCase, series[i], i, undefined, -1);
@@ -676,17 +676,17 @@ define(function (require) {
             var _merge = zrUtil.merge;
             opt = _merge(
                       opt || {},
-                      ecConfig.pie
+                      this.ecTheme.pie
                   );
 
             // 通用字体设置
             opt.itemStyle.normal.label.textStyle = _merge(
                 opt.itemStyle.normal.label.textStyle || {},
-                ecConfig.textStyle
+                this.ecTheme.textStyle
             );
             opt.itemStyle.emphasis.label.textStyle = _merge(
                 opt.itemStyle.emphasis.label.textStyle || {},
-                ecConfig.textStyle
+                this.ecTheme.textStyle
             );
 
             return opt;

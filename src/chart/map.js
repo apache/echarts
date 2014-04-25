@@ -620,7 +620,7 @@ define(function (require) {
             var data;
             var value;
             var queryTarget;
-            var defaultOption = ecConfig.map;
+            var defaultOption = this.ecTheme.map;
             
             var color;
             var font;

@@ -43,7 +43,7 @@
          */
         _buildShape : function () {
             this.selectedMap = {};
-            this._symbol = ecConfig.symbolList;
+            this._symbol = this.ecTheme.symbolList;
             this._queryTarget;
             this._dropBoxList = [];
             this._radarDataCounter = 0;

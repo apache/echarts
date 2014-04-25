@@ -351,7 +351,7 @@ define(function (require) {
                                 [data, serie, this.option], 'calculable'
                             )
                         ) {
-                            lastYP -= ecConfig.island.r;
+                            lastYP -= this.ecTheme.island.r;
                             y = lastYP;
 
                             barShape = this._getBarItem(
@@ -359,7 +359,7 @@ define(function (require) {
                                 categoryAxis.getNameByIndex(i),
                                 x + 0.5, y + 0.5,
                                 (barWidthMap[seriesIndex] || barWidth) - 1,
-                                ecConfig.island.r - 1,
+                                this.ecTheme.island.r - 1,
                                 'vertical'
                             );
                             barShape.hoverable = false;
@@ -368,7 +368,7 @@ define(function (require) {
                             barShape.style.brushType = 'stroke';
                             barShape.style.strokeColor =
                                     serie.calculableHolderColor
-                                    || ecConfig.calculableHolderColor;
+                                    || this.ecTheme.calculableHolderColor;
 
                             this.shapeList.push(new RectangleShape(barShape));
                         }
@@ -556,14 +556,14 @@ define(function (require) {
                             )
                         ) {
                             x = lastXP;
-                            lastXP += ecConfig.island.r;
+                            lastXP += this.ecTheme.island.r;
 
                             barShape = this._getBarItem(
                                 seriesIndex,
                                 i,
                                 categoryAxis.getNameByIndex(i),
                                 x + 0.5, y + 0.5 - (barWidthMap[seriesIndex] || barWidth),
-                                ecConfig.island.r - 1,
+                                this.ecTheme.island.r - 1,
                                 (barWidthMap[seriesIndex] || barWidth) - 1,
                                 'horizontal'
                             );
@@ -573,7 +573,7 @@ define(function (require) {
                             barShape.style.brushType = 'stroke';
                             barShape.style.strokeColor =
                                     serie.calculableHolderColor
-                                    || ecConfig.calculableHolderColor;
+                                    || this.ecTheme.calculableHolderColor;
 
                             this.shapeList.push(new RectangleShape(barShape));
                         }

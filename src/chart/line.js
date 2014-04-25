@@ -47,7 +47,7 @@ define(function (require) {
             var series = this.series;
             this.finalPLMap = {}; // 完成的point list(PL)
             this._sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
-            this._symbol = ecConfig.symbolList;
+            this._symbol = this.ecTheme.symbolList;
             this._sIndex2ShapeMap = {};  // series拐点图形类型，seriesIndex索引到shape type
 
             this.selectedMap = {};
@@ -739,7 +739,7 @@ define(function (require) {
         _getCalculableItem : function (seriesIndex, dataIndex, name, x, y, orient) {
             var series = this.series;
             var color = series[seriesIndex].calculableHolderColor
-                        || ecConfig.calculableHolderColor;
+                        || this.ecTheme.calculableHolderColor;
 
             var itemShape = this._getSymbol(
                 seriesIndex, dataIndex, name,
