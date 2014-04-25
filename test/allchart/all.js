@@ -67,7 +67,7 @@ function refresh(isBtnRefresh, idd){
         myChart[idx].dispose();
     }
     myChart[idx] = echarts.init(domMain[idx]);
-    (new function (editor[idx].doc.getValue().replace(
+    (new Function (editor[idx].doc.getValue().replace(
         'option', 'option[' + idx + ']'))
     )()
     myChart[idx].setOption(option[idx], true);
@@ -76,7 +76,7 @@ function refresh(isBtnRefresh, idd){
 
 function refreshAll() {
     for (var i = 0, l = myChart.length; i < l; i++) {
-        (new function (editor[i].doc.getValue().replace(
+        (new Function (editor[i].doc.getValue().replace(
             'option', 'option[' + i + ']'))
         )();
         myChart[i].setOption(option[i], true);

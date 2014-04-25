@@ -937,7 +937,7 @@ define(function() {
             TOOLTIP_IN_GRID: 'tooltipInGrid',
             TOOLTIP_OUT_GRID: 'tooltipOutGrid'
         },
-        DRAG_ENABLE_TIME : 150,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
+        DRAG_ENABLE_TIME : 120,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
         // 主题，默认标志图形类型列表
         symbolList : [
           'circle', 'rectangle', 'triangle', 'diamond',
