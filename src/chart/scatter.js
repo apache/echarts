@@ -164,16 +164,12 @@ define(function (require) {
                     ]);
                     
                 }
-                // todo
-                this._markMap(xAxis, yAxis, serie.data, pointList[seriesIndex]);
                 this.buildMark(
                     serie,
                     seriesIndex,
                     this.component,
                     {
-                        xMarkMap : this._needMarkMap(seriesIndex) 
-                                   ? this._markMap(xAxis, yAxis, serie.data, pointList[seriesIndex])
-                                   : {}
+                        xMarkMap : this._markMap(xAxis, yAxis, serie.data, pointList[seriesIndex])
                     }
                 );
             }
@@ -182,6 +178,7 @@ define(function (require) {
             this._buildPointList(pointList);
         },
         
+        /*
         _needMarkMap : function (seriesIndex) {
             var series = this.series;
             var serie = series[seriesIndex];
@@ -208,7 +205,8 @@ define(function (require) {
             }
             return false;
         },
-        
+        */
+       
         _markMap : function (xAxis, yAxis, data, pointList) {
             var xMarkMap = {
                 min0 : Number.POSITIVE_INFINITY,
@@ -342,7 +340,7 @@ define(function (require) {
                         singlePoint[2], // dataIndex
                         singlePoint[3], // name
                         singlePoint[0], // x
-                        singlePoint[1] // y
+                        singlePoint[1]  // y
                     );
                     shape && this.shapeList.push(shape);
                 }

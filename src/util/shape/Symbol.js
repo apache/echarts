@@ -33,7 +33,7 @@
  */
 define(function (require) {
     var Base = require('zrender/shape/Base');
-    var PolygonShape = require('zrender/shape/Polygon')
+    var PolygonShape = require('zrender/shape/Polygon');
     var polygonInstance = new PolygonShape({});
     var zrUtil = require('zrender/tool/util');
     
@@ -48,6 +48,29 @@ define(function (require) {
          * @param {Context2D} ctx Canvas 2D上下文
          * @param {Object} style 样式
          */
+        buildPath : function (ctx, style) {
+            var pointList = style.pointList;
+            var len = pointList.length;
+            var subSize = 10000;
+            var subSetLength = Math.ceil(len / subSize);
+            var sub;
+            var subLen;
+            for (var j = 0; j < subSetLength; j++) {
+                ctx.beginPath();
+                sub = j * subSize;
+                subLen = sub + subSize;
+                subLen = subLen > len ? len : subLen;
+                for (var i = sub; i < subLen; i++) {
+                    ctx.rect(pointList[i][0] - 1, pointList[i][1] - 1, 2, 2);
+                }
+                ctx.closePath();
+                j < (subSetLength - 1) && ctx.fill();
+            }
+            
+            return;
+        },
+        
+        /* 像素模式
         buildPath : function (ctx, style) {
             var pointList = style.pointList;
             var rect = this.getRect(style);
@@ -87,7 +110,8 @@ define(function (require) {
             // console.log(new Date() - ti);
             return;
         },
-
+        */
+       
         /**
          * 返回矩形区域，用于局部刷新和文字定位
          * @param {Object} style
