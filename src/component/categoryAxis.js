@@ -365,8 +365,8 @@ define(function (require) {
                             color : dataTextStyle.color,
                             text : this._labelData[i].value || this._labelData[i],
                             textFont : this.getFont(dataTextStyle),
-                            textAlign : 'center',
-                            textBaseline : baseLine
+                            textAlign : dataTextStyle.align || 'center',
+                            textBaseline : dataTextStyle.baseline || baseLine
                         }
                     };
                     if (rotate) {
@@ -416,13 +416,14 @@ define(function (require) {
                             color : dataTextStyle.color,
                             text : this._labelData[i].value || this._labelData[i],
                             textFont : this.getFont(dataTextStyle),
-                            textAlign : align,
-                            textBaseline : (i === 0 && this.option.name !== '')
-                                           ? 'bottom'
-                                           : (i == (dataLength - 1) 
-                                              && this.option.name !== '')
-                                             ? 'top'
-                                             : 'middle'
+                            textAlign : dataTextStyle.align || align,
+                            textBaseline : dataTextStyle.baseline 
+                                           || (i === 0 && this.option.name !== '')
+                                               ? 'bottom'
+                                               : (i == (dataLength - 1) 
+                                                  && this.option.name !== '')
+                                                 ? 'top'
+                                                 : 'middle'
                         }
                     };
                     

@@ -224,8 +224,8 @@ define(function (require) {
                                     ? textStyle.color(data[i]) : textStyle.color,
                             text : this._valueLabel[i],
                             textFont : this.getFont(textStyle),
-                            textAlign : 'center',
-                            textBaseline : baseLine
+                            textAlign : textStyle.align || 'center',
+                            textBaseline : textStyle.baseline || baseLine
                         }
                     };
                     if (rotate) {
@@ -267,13 +267,14 @@ define(function (require) {
                                     ? textStyle.color(data[i]) : textStyle.color,
                             text : this._valueLabel[i],
                             textFont : this.getFont(textStyle),
-                            textAlign : align,
-                            textBaseline : (i === 0 && this.option.name !== '')
-                                           ? 'bottom'
-                                           : (i == (dataLength - 1) 
-                                              && this.option.name !== '')
-                                             ? 'top'
-                                             : 'middle'
+                            textAlign : textStyle.align || align,
+                            textBaseline : textStyle.baseline 
+                                           || (i === 0 && this.option.name !== '')
+                                               ? 'bottom'
+                                               : (i == (dataLength - 1) 
+                                                  && this.option.name !== '')
+                                                 ? 'top'
+                                                 : 'middle'
                         }
                     };
                     
