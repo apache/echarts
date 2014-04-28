@@ -130,7 +130,13 @@ function run(){
         //myChart.hideLoading();
         isRunning = false;
         document.getElementById('res').innerHTML +=
-            '【' + chartType + '】 : ' + (n > 10000 ? (n/10000 + '万') : n) + '个数据平均render时间:' 
+            '【' + chartType + '】 : ' +
+            (
+                (chartType == 'map' || chartType == 'radar' || chartType == 'pie' || chartType == 'chord')
+                ? (n > 200 ? 200 : n)
+                : (n >= 10000 ? (n / 10000 + '万') : n)
+            )
+            + '个数据平均render时间:'
             + Math.round(total/result.length)
             + 'ms : [' + result.join(',') + ']<br/>';
         autoCheck();

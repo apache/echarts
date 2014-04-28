@@ -52,6 +52,8 @@ function option(chartType, n) {
                             return kData(n);
                         case 'radar' :
                             return radarData(n);
+                        case 'pie' :
+                            return pieData(n);
                         case 'map' :
                             return mapData(n);
                         default :
@@ -146,8 +148,10 @@ function kData(n){
     }
     return list;
 }
+
 function radarData(n){
     var list = [];
+    n = n > 200 ? 200 : n;
     for (var i = 1; i <= n; i++) {
         list.push({
             value : [
@@ -157,6 +161,18 @@ function radarData(n){
                 randomData[(i+3) % randomDataLength],
                 randomData[(i+4) % randomDataLength]
             ],
+            name : i
+        });
+    }
+    return list;
+}
+
+function pieData(n){
+    var list = [];
+    n = n > 200 ? 200 : n;
+    for (var i = 1; i <= n; i++) {
+        list.push({
+            value : randomData[i % randomDataLength],
             name : i
         });
     }
