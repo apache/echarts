@@ -233,6 +233,11 @@ define(function (require) {
             ) {
                 serie = series[seriesIndex];
                 seriesPL = pointList[seriesIndex];
+                
+                if (this._isLarge(seriesPL)) {
+                    seriesPL = this._getLargePointList(seriesPL);
+                }
+                
                 if (serie.type == ecConfig.CHART_TYPE_K
                     && typeof seriesPL != 'undefined'
                 ) {
@@ -357,6 +362,23 @@ define(function (require) {
             // console.log(this.shapeList)
         },
 
+        _isLarge : function(singlePL) {
+            return this.component.grid.getWidth() * 2 < singlePL.length;
+        },
+        
+        /**
+         * 大规模pointList优化 
+         */
+        _getLargePointList : function(singlePL) {
+            var total = this.component.grid.getWidth();
+            var len = singlePL.length;
+            var newList = [];
+            for (var i = 0; i < total; i++) {
+                newList[i] = singlePL[Math.floor(len / total * i)];
+            }
+            return newList;
+        },
+        
         /**
          * 生成K线图上的图形
          */
