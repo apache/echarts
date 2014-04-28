@@ -123,7 +123,7 @@ function run(){
         ticket = new Date() - ticket;
         total += ticket
         result.push(ticket);
-        setTimeout(run,500);
+        setTimeout(run,200);
         //myChart.showLoading();
     }
     else {

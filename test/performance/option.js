@@ -16,7 +16,7 @@ function option(chartType, n) {
             subtext: '自动生成' + n + '数据'
         },
         tooltip : {
-            trigger: 'item'
+            trigger: 'axis'
         },
         legend: {
             data:['性能测试']
