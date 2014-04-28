@@ -588,7 +588,9 @@ define(function (require) {
             var data;
             var seriesPL;
             var singlePL;
-
+            
+            var isLarge;
+            
             // 堆叠层叠需求，反顺序构建
             for (var seriesIndex = series.length - 1;
                 seriesIndex >= 0;
@@ -622,32 +624,39 @@ define(function (require) {
 
                     for (var i = 0, l = seriesPL.length; i < l; i++) {
                         singlePL = seriesPL[i];
-                        for (var j = 0, k = singlePL.length; j < k; j++) {
-                            data = serie.data[singlePL[j][2]];
-                            if (this.deepQuery(
-                                    [data, serie], 'showAllSymbol'
-                                ) // 全显示
-                                || (categoryAxis.isMainAxis(singlePL[j][2])
-                                    && this.deepQuery(
-                                           [data, serie], 'symbol'
-                                       ) != 'none'
-                                   ) // 主轴非空
-                                || this.deepQuery(
-                                        [data, serie, this.option],
-                                        'calculable'
-                                   ) // 可计算
-                            ) {
-                                this.shapeList.push(this._getSymbol(
-                                    seriesIndex,
-                                    singlePL[j][2], // dataIndex
-                                    singlePL[j][3], // name
-                                    singlePL[j][0], // x
-                                    singlePL[j][1], // y
-                                    orient
-                                ));
+                        isLarge = this._isLarge(orient, singlePL);
+                        if (!isLarge) { // 非大数据模式才显示拐点symbol
+                            for (var j = 0, k = singlePL.length; j < k; j++) {
+                                data = serie.data[singlePL[j][2]];
+                                if (this.deepQuery(
+                                        [data, serie], 'showAllSymbol'
+                                    ) // 全显示
+                                    || (categoryAxis.isMainAxis(singlePL[j][2])
+                                        && this.deepQuery(
+                                               [data, serie], 'symbol'
+                                           ) != 'none'
+                                       ) // 主轴非空
+                                    || this.deepQuery(
+                                            [data, serie, this.option],
+                                            'calculable'
+                                       ) // 可计算
+                                ) {
+                                    this.shapeList.push(this._getSymbol(
+                                        seriesIndex,
+                                        singlePL[j][2], // dataIndex
+                                        singlePL[j][3], // name
+                                        singlePL[j][0], // x
+                                        singlePL[j][1], // y
+                                        orient
+                                    ));
+                                }
                             }
-
                         }
+                        else {
+                            // 大数据模式截取pointList
+                            singlePL = this._getLargePointList(orient, singlePL);
+                        }
+                        
                         // 折线图
                         this.shapeList.push(new BrokenLineShape({
                             zlevel : this._zlevelBase,
@@ -713,6 +722,38 @@ define(function (require) {
                     }
                 }
             }
+        },
+        
+        _isLarge : function(orient, singlePL) {
+            var len = singlePL.length;
+            if (orient == 'horizontal') {
+                var width = this.component.grid.getWidth();
+                return width * 2 < len;
+            }
+            else {
+                var height = this.component.grid.getHeight();
+                return height * 2 < len;
+            }
+        },
+        
+        /**
+         * 大规模pointList优化 
+         */
+        _getLargePointList : function(orient, singlePL) {
+            var total;
+            if (orient == 'horizontal') {
+                total = this.component.grid.getWidth();
+            }
+            else {
+                total = this.component.grid.getHeight();
+            }
+            
+            var len = singlePL.length;
+            var newList = [];
+            for (var i = 0; i < total; i++) {
+                newList[i] = singlePL[Math.floor(len / total * i)];
+            }
+            return newList;
         },
         
         _getSmooth : function (isSmooth/*, pointList, orient*/) {
