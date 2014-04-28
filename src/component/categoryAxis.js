@@ -40,28 +40,27 @@ define(function (require) {
                 formatter = data[i].formatter || axisFormatter;
                 if (formatter) {
                     if (typeof formatter == 'function') {
-                        if (typeof data[i].value != 'undefined') {
-                            data[i].value = formatter(data[i].value);
-                        }
-                        else {
-                            data[i] = formatter(data[i]);
-                        }
+                        data[i] = formatter(
+                            typeof data[i].value != 'undefined'
+                                ? data[i].value
+                                : data[i]
+                        );
                     }
                     else if (typeof formatter == 'string') {
-                        if (typeof data[i].value != 'undefined') {
-                            data[i].value = formatter.replace(
-                                '{value}',data[i].value
-                            );
-                        }
-                        else {
-                            data[i] = formatter.replace('{value}',data[i]);
-                        }
+                        data[i] = formatter.replace(
+                            '{value}',
+                            typeof data[i].value != 'undefined'
+                            ? data[i].value
+                            : data[i]
+                        );
                     }
+                }
+                else {
+                    data[i] = typeof data[i].value ? data[i].value : data[i];
                 }
             }
             return data;
         },
-
         /**
          * 计算标签显示挑选间隔
          */
@@ -81,19 +80,21 @@ define(function (require) {
                         var isEnough = false;
                         var labelSpace;
                         var labelSize;
-                        interval = 0;
+                        interval = Math.floor(15 / gap);
                         while (!isEnough && interval < dataLength) {
                             interval++;
                             isEnough = true;
                             labelSpace = gap * interval - 10; // 标签左右至少间隔为5px
-                            for (var i = 0; i < dataLength; i += interval) {
+                            for (var i = Math.floor((dataLength - 1)/ interval) * interval; 
+                                 i >= 0; i -= interval
+                             ) {
                                 if (this.option.axisLabel.rotate !== 0) {
                                     // 有旋转
                                     labelSize = fontSize;
                                 }
                                 else if (data[i].textStyle) {
                                     labelSize = zrArea.getTextWidth(
-                                        this._labelData[i].value || this._labelData[i],
+                                        this._labelData[i],
                                         this.getFont(
                                             zrUtil.merge(
                                                 data[i].textStyle,
@@ -104,7 +105,7 @@ define(function (require) {
                                 }
                                 else {
                                     labelSize = zrArea.getTextWidth(
-                                        this._labelData[i].value || this._labelData[i],
+                                        this._labelData[i],
                                         font
                                     );
                                 }
@@ -126,7 +127,7 @@ define(function (require) {
                     // 纵向
                     if (dataLength > 3) {
                         var gap = this.getGap();
-                        interval = 1;
+                        interval = Math.floor(11 / gap);
                         // 标签上下至少间隔为3px
                         while ((gap * interval - 6) < fontSize
                                 && interval < dataLength
@@ -347,7 +348,7 @@ define(function (require) {
                 }
 
                 for (var i = 0; i < dataLength; i += this._interval) {
-                    if ((this._labelData[i].value || this._labelData[i]) === '') {
+                    if (this._labelData[i] === '') {
                         // 空文本优化
                         continue;
                     }
@@ -363,7 +364,7 @@ define(function (require) {
                             x : this.getCoordByIndex(i),
                             y : yPosition,
                             color : dataTextStyle.color,
-                            text : this._labelData[i].value || this._labelData[i],
+                            text : this._labelData[i],
                             textFont : this.getFont(dataTextStyle),
                             textAlign : dataTextStyle.align || 'center',
                             textBaseline : dataTextStyle.baseline || baseLine
@@ -398,7 +399,7 @@ define(function (require) {
                 }
 
                 for (var i = 0; i < dataLength; i += this._interval) {
-                    if ((this._labelData[i].value || this._labelData[i]) === '') {
+                    if (this._labelData[i] === '') {
                         // 空文本优化
                         continue;
                     }
@@ -414,7 +415,7 @@ define(function (require) {
                             x : xPosition,
                             y : this.getCoordByIndex(i),
                             color : dataTextStyle.color,
-                            text : this._labelData[i].value || this._labelData[i],
+                            text : this._labelData[i],
                             textFont : this.getFont(dataTextStyle),
                             textAlign : dataTextStyle.align || align,
                             textBaseline : dataTextStyle.baseline 
