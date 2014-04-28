@@ -643,6 +643,7 @@ define(function (require) {
          * 图表渲染 
          */
         _render : function (magicOption) {
+            var zrUtil = require('zrender/tool/util');
             this._mergeGlobalConifg(magicOption);
             if (magicOption.backgroundColor) {
                 if (!_canvasSupported 
@@ -785,7 +786,7 @@ define(function (require) {
             }
             
             tooltip && tooltip.setComponent();
-
+            
             var ChartClass;
             var chartType;
             var chart;
@@ -1273,8 +1274,9 @@ define(function (require) {
             }
             this._island.refresh(magicOption);
             this._toolbox.refresh(magicOption);
+            var self = this;
             setTimeout(function (){
-                this._messageCenter.dispatch(
+                self._messageCenter.dispatch(
                     ecConfig.EVENT.REFRESH,
                     '',
                     {option: magicOption}
