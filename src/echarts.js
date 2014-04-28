@@ -79,7 +79,7 @@ define(function (require) {
 
         this.dom = dom;
         // this._zr;
-        this._option = {};
+        this._option;
         // this._optionBackup;              // for各种change和zoom
         // this._optionRestore;             // for restore;
         // this._selectedMap;
@@ -1031,7 +1031,7 @@ define(function (require) {
          */
         setOption : function (option, notMerge) {
             var zrUtil = require('zrender/tool/util');
-            if (!notMerge) {
+            if (!notMerge && this._option) {
                 zrUtil.merge(
                     this._option,
                     zrUtil.clone(option),
