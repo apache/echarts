@@ -225,6 +225,7 @@ define(function (require) {
             var barWidth = size.barWidth;                   // 自适应宽度
             var barMinHeightMap = size.barMinHeightMap;
             var barHeight;
+            var interval = size.interval;
 
             var xMarkMap = {}; // 为标注记录一些参数
             var x;
@@ -306,15 +307,6 @@ define(function (require) {
                             lastYP -= barHeight;
                             y = lastYP;
                         }
-
-                        barShape = this._getBarItem(
-                            seriesIndex, i,
-                            categoryAxis.getNameByIndex(i),
-                            x, y,
-                            barWidthMap[seriesIndex] || barWidth,
-                            barHeight,
-                            'vertical'
-                        );
                         xMarkMap[seriesIndex][i] = 
                             x + (barWidthMap[seriesIndex] || barWidth) / 2;
                         if (xMarkMap[seriesIndex].min > value) {
@@ -329,7 +321,18 @@ define(function (require) {
                         }
                         xMarkMap[seriesIndex].sum += value;
                         xMarkMap[seriesIndex].counter++;
-                        this.shapeList.push(new RectangleShape(barShape));
+                        
+                        if (i % interval == 0) {
+                            barShape = this._getBarItem(
+                                seriesIndex, i,
+                                categoryAxis.getNameByIndex(i),
+                                x, y,
+                                barWidthMap[seriesIndex] || barWidth,
+                                barHeight,
+                                'vertical'
+                            );
+                            this.shapeList.push(new RectangleShape(barShape));
+                        }
                     }
 
                     // 补充空数据的拖拽提示框
@@ -428,6 +431,7 @@ define(function (require) {
             var barWidth = size.barWidth;                   // 自适应宽度
             var barMinHeightMap = size.barMinHeightMap;
             var barHeight;
+            var interval = size.interval;
 
             var xMarkMap = {}; // 为标注记录一个横向偏移
             var x;
@@ -510,15 +514,6 @@ define(function (require) {
                             lastXP += barHeight;
                         }
 
-                        barShape = this._getBarItem(
-                            seriesIndex, i,
-                            categoryAxis.getNameByIndex(i),
-                            x, y - (barWidthMap[seriesIndex] || barWidth),
-                            barHeight,
-                            barWidthMap[seriesIndex] || barWidth,
-                            'horizontal'
-                        );
-                        
                         xMarkMap[seriesIndex][i] = 
                             y - (barWidthMap[seriesIndex] || barWidth) / 2;
                         if (xMarkMap[seriesIndex].min > value) {
@@ -533,7 +528,18 @@ define(function (require) {
                         }
                         xMarkMap[seriesIndex].sum += value;
                         xMarkMap[seriesIndex].counter++;
-                        this.shapeList.push(new RectangleShape(barShape));
+                        
+                        if (i % interval == 0) {
+                            barShape = this._getBarItem(
+                                seriesIndex, i,
+                                categoryAxis.getNameByIndex(i),
+                                x, y - (barWidthMap[seriesIndex] || barWidth),
+                                barHeight,
+                                barWidthMap[seriesIndex] || barWidth,
+                                'horizontal'
+                            );
+                            this.shapeList.push(new RectangleShape(barShape));
+                        }
                     }
 
                     // 补充空数据的拖拽提示框
@@ -629,6 +635,7 @@ define(function (require) {
             var barCategoryGap;
             var hasFound;
             var queryTarget;
+            var interval = 1;
 
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 hasFound = false;   // 同一堆叠第一个barWidth生效
@@ -722,6 +729,7 @@ define(function (require) {
                     barWidth = Math.floor(gap / locationMap.length);
                     // 已经忽略用户定义的宽度设定依然还无法满足显示，只能硬来了;
                     if (barWidth <= 0) {
+                        interval = Math.floor(locationMap.length / gap);
                         barWidth = 1;
                     }
                 }
@@ -759,7 +767,8 @@ define(function (require) {
                 barMinHeightMap : barMinHeightMap ,
                 gap : gap,
                 barWidth : barWidth,
-                barGap : barGap
+                barGap : barGap,
+                interval : interval
             };
         },
 
@@ -1038,7 +1047,7 @@ define(function (require) {
                             );
                             this.zr.animate(this.shapeList[i].id, 'style')
                                 .when(
-                                    duration + dataIndex * 100,
+                                    duration,
                                     {
                                         x : x,
                                         width : width
@@ -1058,7 +1067,7 @@ define(function (require) {
                             );
                             this.zr.animate(this.shapeList[i].id, 'style')
                                 .when(
-                                    duration + dataIndex * 100,
+                                    duration,
                                     {
                                         width : width
                                     }
@@ -1082,7 +1091,7 @@ define(function (require) {
                             );
                             this.zr.animate(this.shapeList[i].id, 'style')
                                 .when(
-                                    duration + dataIndex * 100,
+                                    duration,
                                     {
                                         height : height
                                     }
@@ -1102,7 +1111,7 @@ define(function (require) {
                             );
                             this.zr.animate(this.shapeList[i].id, 'style')
                                 .when(
-                                    duration + dataIndex * 100,
+                                    duration,
                                     {
                                         y : y,
                                         height : height
