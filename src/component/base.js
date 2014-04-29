@@ -45,13 +45,22 @@ define(function (require) {
         self.hoverConnect = function (param) {
             var target = (param.target || {}).hoverConnect;
             if (target) {
+                var zlevel = 10;
+                var shape;
                 if (!(target instanceof Array)) {
-                    self.zr.addHoverShape(self.getShapeById(target));
+                    shape = self.getShapeById(target);
+                    self.zr.addHoverShape(shape);
+                    zlevel = Math.min(zlevel, shape.zlevel);
                 }
                 else {
                     for (var i = 0, l = target.length; i < l; i++) {
-                        self.zr.addHoverShape(self.getShapeById(target[i]));
+                        shape = self.getShapeById(target[i]);
+                        self.zr.addHoverShape(shape);
+                        zlevel = Math.min(zlevel, shape.zlevel);
                     }
+                }
+                if (zlevel < param.target.zlevel) {
+                    self.zr.addHoverShape(param.target);
                 }
             }
         }

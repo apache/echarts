@@ -470,7 +470,7 @@ define(function (require) {
             }
             //console.log(textPosition)
             return {
-                text : this._nameChange(mapType, name),
+                name : this._nameChange(mapType, name),
                 path : path.path,
                 position : position,
                 textX : textPosition[0],
@@ -615,8 +615,12 @@ define(function (require) {
             var textShape; 
             for (var i = 0, l = mapData.length; i < l; i++) {
                 style = zrUtil.clone(mapData[i]);
-                highlightStyle = zrUtil.clone(style);
-                name = style.text;
+                highlightStyle = {
+                    name : style.name,
+                    path : style.path,
+                    position : style.position
+                };
+                name = style.name;
                 data = valueData[name]; // 多系列合并后的数据
                 if (data) {
                     queryTarget = [data]; // level 3
@@ -665,7 +669,6 @@ define(function (require) {
                         : null;
                 
                 // 常规设置
-                style.brushType = 'both';
                 style.color = color 
                               || this.getItemStyleColor(
                                      this.deepQuery(queryTarget, 'itemStyle.normal.color'),
@@ -676,50 +679,8 @@ define(function (require) {
                                  );
                 style.strokeColor = this.deepQuery(queryTarget, 'itemStyle.normal.borderColor');
                 style.lineWidth = this.deepQuery(queryTarget, 'itemStyle.normal.borderWidth');
-                style.lineJoin = 'round';
-                
-                style.text = this.getLabelText(name, value, queryTarget, 'normal');
-                style._text = name;
-                style.textAlign = 'center';
-                style.textColor = this.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.label.textStyle.color'
-                );
-                font = this.deepQuery(
-                    queryTarget,
-                    'itemStyle.normal.label.textStyle'
-                );
-                style.textFont = this.getFont(font);
-                if (!this.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {
-                    style.textColor = 'rgba(0,0,0,0)';  // 默认不呈现文字
-                }
-                
-                // 文字标签避免覆盖单独一个shape
-                textShape = {
-                    shape : 'text',
-                    zlevel : this._zlevelBase + 1,
-                    hoverable: this._hoverable[mapType],
-                    position : style.position,
-                    _mapType : mapType,
-                    style : {
-                        brushType: 'both',
-                        x : style.textX,
-                        y : style.textY,
-                        text : this.getLabelText(name, value, queryTarget, 'normal'),
-                        _text : name,
-                        textAlign : 'center',
-                        color : style.textColor,
-                        strokeColor : 'rgba(0,0,0,0)',
-                        textFont : style.textFont
-                    }
-                };
-                textShape._style = zrUtil.clone(textShape.style);
-                textShape.highlightStyle = zrUtil.clone(textShape.style);
-                // labelInteractive && (textShape.highlightStyle.strokeColor = 'yellow');
-                style.textColor = 'rgba(0,0,0,0)';  // 把图形的text隐藏
                 
                 // 高亮
-                highlightStyle.brushType = 'both';
                 highlightStyle.color = this.getItemStyleColor(
                                            this.deepQuery(queryTarget, 'itemStyle.emphasis.color'),
                                            data.seriesIndex, -1, data
@@ -729,34 +690,62 @@ define(function (require) {
                                           ) 
                                        || style.color;
                 highlightStyle.strokeColor = this.deepQuery(
-                    queryTarget,
-                    'itemStyle.emphasis.borderColor'
-                ) || style.strokeColor;
+                                                 queryTarget, 'itemStyle.emphasis.borderColor'
+                                             ) 
+                                             || style.strokeColor;
                 highlightStyle.lineWidth = this.deepQuery(
-                    queryTarget,
-                    'itemStyle.emphasis.borderWidth'
-                ) || style.lineWidth;
-                highlightStyle._text = name;
+                                               queryTarget, 'itemStyle.emphasis.borderWidth'
+                                           )
+                                           || style.lineWidth;
+                
+                style.brushType = highlightStyle.brushType = 'both';
+                style.lineJoin = highlightStyle.lineJoin = 'round';
+                style._name = highlightStyle._name = name;
+                
+                
+                font = this.deepQuery(queryTarget, 'itemStyle.normal.label.textStyle');
+                // 文字标签避免覆盖单独一个shape
+                textShape = {
+                    shape : 'text',
+                    zlevel : this._zlevelBase + 1,
+                    hoverable: this._hoverable[mapType],
+                    position : style.position,
+                    _mapType : mapType,
+                    style : {
+                        brushType : 'fill',
+                        x : style.textX,
+                        y : style.textY,
+                        text : this.getLabelText(name, value, queryTarget, 'normal'),
+                        _name : name,
+                        textAlign : 'center',
+                        color : this.deepQuery(queryTarget, 'itemStyle.normal.label.show')
+                                ? this.deepQuery(
+                                      queryTarget,
+                                      'itemStyle.normal.label.textStyle.color'
+                                  )
+                                : 'rgba(0,0,0,0)',
+                        textFont : this.getFont(font)
+                    }
+                };
+                textShape._style = zrUtil.clone(textShape.style);
+                
+                textShape.highlightStyle = zrUtil.clone(textShape.style);
                 if (this.deepQuery(queryTarget, 'itemStyle.emphasis.label.show')) {
-                    highlightStyle.text = this.getLabelText(
+                    textShape.highlightStyle.text = this.getLabelText(
                         name, value, queryTarget, 'emphasis'
                     );
-                    highlightStyle.textAlign = 'center';
-                    highlightStyle.textColor = this.deepQuery(
+                    textShape.highlightStyle.color = this.deepQuery(
                         queryTarget,
                         'itemStyle.emphasis.label.textStyle.color'
-                    ) || style.textColor;
+                    ) || textShape.style.color;
                     font = this.deepQuery(
                         queryTarget,
                         'itemStyle.emphasis.label.textStyle'
                     ) || font;
-                    highlightStyle.textFont = this.getFont(font);
-                    highlightStyle.textPosition = 'specific';
-                    textShape.highlightStyle.color = highlightStyle.textColor;
-                    textShape.highlightStyle.textFont = highlightStyle.textFont;
+                    textShape.highlightStyle.textFont = this.getFont(font);
                 }
                 else {
-                    highlightStyle.textColor = 'rgba(0,0,0,0)'; // 把图形的text隐藏
+                    textShape.highlightStyle.color = 'rgba(0,0,0,0)';
                 }
 
                 shape = {
@@ -770,46 +759,39 @@ define(function (require) {
                     _mapType: mapType
                 };
                 
+                textShape = new TextShape(textShape);
+                shape = new PathShape(shape);
+                
                 if (this._selectedMode[mapType] &&
                      this._selected[name]
                      || (data.selected && this._selected[name] !== false) 
                 ) {
-                    textShape.style = zrUtil.clone(
-                        textShape.highlightStyle
-                    );
-                    shape.style = zrUtil.clone(shape.highlightStyle);
+                    textShape.style = textShape.highlightStyle;
+                    shape.style = shape.highlightStyle;
                 }
                 
                 if (this._selectedMode[mapType]) {
                     this._selected[name] = typeof this._selected[name] != 'undefined'
-                                      ? this._selected[name]
-                                      : data.selected;
+                                           ? this._selected[name]
+                                           : data.selected;
                     this._mapTypeMap[name] = mapType;
                     
                     if (typeof data.selectable == 'undefined' || data.selectable) {
-                        textShape.clickable = true;
-                        textShape.onclick = this.shapeHandler.onclick;
-                        
-                        shape.clickable = true;
-                        shape.onclick = this.shapeHandler.onclick;
+                        shape.clickable = textShape.clickable = true;
+                        shape.onclick = textShape.onclick = this.shapeHandler.onclick;
                     }
                 }
                 
-                textShape = new TextShape(textShape);
-                shape = new PathShape(shape);
-                
-                if (typeof data.hoverable != 'undefined') {
-                    // 数据级优先
-                    textShape.hoverable = shape.hoverable = data.hoverable;
-                    if (data.hoverable) {
-                        textShape.hoverConnect = shape.id;
-                        textShape.onmouseover = this.hoverConnect;
-                    }
-                }
-                else if (this._hoverable[mapType]){
-                    // 系列级，补充一个关联响应
+                if (this._hoverable[mapType]
+                    && (typeof data.hoverable == 'undefined' || data.hoverable)
+                ) {
+                    textShape.hoverable = shape.hoverable = true;
+                    shape.hoverConnect = textShape.id;
                     textShape.hoverConnect = shape.id;
-                    textShape.onmouseover = this.hoverConnect;
+                    shape.onmouseover = textShape.onmouseover = this.hoverConnect;
+                }
+                else {
+                    textShape.hoverable = shape.hoverable = false;
                 }
                 
                 // console.log(name,shape);
@@ -1002,11 +984,12 @@ define(function (require) {
                 this._mx = mx;
                 this._my = my;
                 this._curMapType = mapType;
+                
+                this.zr.on(zrConfig.EVENT.MOUSEUP, this._onmouseup);
                 var self = this;
                 setTimeout(function (){
                     self.zr.on(zrConfig.EVENT.MOUSEMOVE, self._onmousemove);
-                    self.zr.on(zrConfig.EVENT.MOUSEUP, self._onmouseup);
-                },50);
+                },100);
             }
             
         },
@@ -1059,7 +1042,7 @@ define(function (require) {
                 self._justMove = false;
                 self.zr.un(zrConfig.EVENT.MOUSEMOVE, self._onmousemove);
                 self.zr.un(zrConfig.EVENT.MOUSEUP, self._onmouseup);
-            },100);
+            },120);
         },
         
         /**
@@ -1072,7 +1055,7 @@ define(function (require) {
             }
 
             var target = param.target;
-            var name = target.style._text;
+            var name = target.style._name;
             var len = this.shapeList.length;
             var mapType = target._mapType || '';
             if (this._selectedMode[mapType] == 'single') {
@@ -1081,9 +1064,8 @@ define(function (require) {
                     if (this._selected[p] && this._mapTypeMap[p] == mapType) {
                         // 复位那些生效shape（包括文字）
                         for (var i = 0; i < len; i++) {
-                            if (this.shapeList[i].style._text == p) {
-                                this.shapeList[i].style = 
-                                    this.shapeList[i]._style;
+                            if (this.shapeList[i].style._name == p) {
+                                this.shapeList[i].style = this.shapeList[i]._style;
                                 this.zr.modShape(this.shapeList[i].id);
                             }
                         }
@@ -1096,11 +1078,9 @@ define(function (require) {
             
             // 更新当前点击shape（包括文字）
             for (var i = 0; i < len; i++) {
-                if (this.shapeList[i].style._text == name) {
+                if (this.shapeList[i].style._name == name) {
                    if (this._selected[name]) {
-                        this.shapeList[i].style = zrUtil.clone(
-                            this.shapeList[i].highlightStyle
-                        );
+                        this.shapeList[i].style = this.shapeList[i].highlightStyle;
                     }
                     else {
                         this.shapeList[i].style = this.shapeList[i]._style;

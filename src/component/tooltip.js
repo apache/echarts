@@ -1399,7 +1399,7 @@ define(function (require) {
                         for (var i = 0, l = shapeList.length; i < l; i++) {
                             if (shapeList[i].type == 'text'
                                 && shapeList[i]._mapType == mapType
-                                && shapeList[i].style._text == name
+                                && shapeList[i].style._name == name
                             ) {
                                 this._curTarget = shapeList[i];
                                 x = this._curTarget.style.x + this._curTarget.position[0];
