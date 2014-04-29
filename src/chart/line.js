@@ -725,14 +725,13 @@ define(function (require) {
         },
         
         _isLarge : function(orient, singlePL) {
-            var len = singlePL.length;
-            if (orient == 'horizontal') {
-                var width = this.component.grid.getWidth();
-                return width * 2 < len;
+            if (singlePL.length < 2) {
+                return false;
             }
             else {
-                var height = this.component.grid.getHeight();
-                return height * 2 < len;
+                return orient == 'horizontal'
+                       ? (Math.abs(singlePL[0][0] - singlePL[1][0]) < 0.5)
+                       : (Math.abs(singlePL[0][1] - singlePL[1][1]) < 0.5);
             }
         },
         

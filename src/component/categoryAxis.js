@@ -50,13 +50,14 @@ define(function (require) {
                         data[i] = formatter.replace(
                             '{value}',
                             typeof data[i].value != 'undefined'
-                            ? data[i].value
-                            : data[i]
+                                ? data[i].value
+                                : data[i]
                         );
                     }
                 }
                 else {
-                    data[i] = typeof data[i].value ? data[i].value : data[i];
+                    data[i] = typeof data[i].value != 'undefined' 
+                              ? data[i].value : data[i];
                 }
             }
             return data;

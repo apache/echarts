@@ -17,6 +17,7 @@ define(function (require) {
             onclick : function () {
                 self.isClick = true;
             },
+            
             ondragover : function (param) {
                 // 返回触发可计算特性的图形提示
                 var calculableShape = param.target;
@@ -33,14 +34,14 @@ define(function (require) {
                     calculableShape.highlightStyle = highlightStyle;
                 },20);
             },
-
+            
             ondrop : function (param) {
                 // 排除一些非数据的拖拽进入
                 if (typeof ecData.get(param.dragged, 'data') != 'undefined') {
                     self.isDrop = true;
                 }
             },
-
+            
             ondragend : function () {
                 self.isDragend = true;
             }
