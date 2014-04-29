@@ -1553,13 +1553,11 @@ define(function (require) {
             clearTimeout(this._showingTicket);
             this.zr.un(zrConfig.EVENT.MOUSEMOVE, self._onmousemove);
             this.zr.un(zrConfig.EVENT.GLOBALOUT, self._onglobalout);
-
+            
             if (this.hasAppend) {
                 this.dom.firstChild.removeChild(this._tDom);
             }
             this._tDom = null;
-
-            // this.clear();
             this.shapeList = null;
         },
         
