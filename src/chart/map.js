@@ -43,16 +43,6 @@ define(function (require) {
         this.messageCenter = messageCenter;
 
         var self = this;
-        /**
-         * 输出关联区域
-         */
-        self.shapeHandler.onmouseover = function (param) {
-            var target = param.target;
-            var name = target.style._text;
-            if (self._shapeListMap[name]) {
-                self.zr.addHoverShape(self._shapeListMap[name]);
-            }
-        };
         self._onmousewheel = function(param){
             return self.__onmousewheel(param);
         };
@@ -229,12 +219,6 @@ define(function (require) {
                     self._shapeListMap = {};
                     for (var i = 0, l = self.shapeList.length; i < l; i++) {
                         self.zr.addShape(self.shapeList[i]);
-                        // 通过name关联shape，用于onmouseover
-                        if (self.shapeList[i].type == 'path' 
-                            && typeof self.shapeList[i].style._text != 'undefined'
-                        ) {
-                            self._shapeListMap[self.shapeList[i].style._text] = self.shapeList[i];
-                        }
                     }
                     self.zr.refresh();
                     if (!self._markAnimation) {
@@ -395,7 +379,8 @@ define(function (require) {
                 });
                 
             }
-            
+            //console.log(JSON.stringify(province));
+            //console.log(JSON.stringify(this._mapDataMap[mapType].transform));
             return province;
         },
         
@@ -811,20 +796,24 @@ define(function (require) {
                     }
                 }
                 
+                textShape = new TextShape(textShape);
+                shape = new PathShape(shape);
+                
                 if (typeof data.hoverable != 'undefined') {
                     // 数据级优先
                     textShape.hoverable = shape.hoverable = data.hoverable;
                     if (data.hoverable) {
-                        textShape.onmouseover = this.shapeHandler.onmouseover;
+                        textShape.hoverConnect = shape.id;
+                        textShape.onmouseover = this.hoverConnect;
                     }
                 }
                 else if (this._hoverable[mapType]){
                     // 系列级，补充一个关联响应
-                    textShape.onmouseover = this.shapeHandler.onmouseover;
+                    textShape.hoverConnect = shape.id;
+                    textShape.onmouseover = this.hoverConnect;
                 }
                 
                 // console.log(name,shape);
-                
                 ecData.pack(
                     textShape,
                     {
@@ -835,7 +824,7 @@ define(function (require) {
                     data, 0,
                     name
                 );
-                this.shapeList.push(new TextShape(textShape));
+                this.shapeList.push(textShape);
                 
                 ecData.pack(
                     shape,
@@ -847,7 +836,7 @@ define(function (require) {
                     data, 0,
                     name
                 );
-                this.shapeList.push(new PathShape(shape));
+                this.shapeList.push(shape);
             }
             //console.log(this._selected);
         },

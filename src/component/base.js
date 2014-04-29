@@ -40,6 +40,21 @@ define(function (require) {
         this._zlevelBase = this.getZlevelBase();
         this.shapeList = [];
         this.effectList = [];
+        
+        var self = this;
+        self.hoverConnect = function (param) {
+            var target = (param.target || {}).hoverConnect;
+            if (target) {
+                if (!(target instanceof Array)) {
+                    self.zr.addHoverShape(self.getShapeById(target));
+                }
+                else {
+                    for (var i = 0, l = target.length; i < l; i++) {
+                        self.zr.addHoverShape(self.getShapeById(target[i]));
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -129,6 +144,15 @@ define(function (require) {
             }
         },
 
+        getShapeById : function(id) {
+            for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                if (this.shapeList[i].id == id) {
+                    return this.shapeList[i];
+                }
+            }
+            return null;
+        },
+        
         /**
          * 获取自定义和默认配置合并后的字体设置
          */

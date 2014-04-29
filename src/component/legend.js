@@ -147,12 +147,7 @@ define(function (require) {
                     color
                 );
                 itemShape._name = itemName;
-                if (this.legendOption.selectedMode) {
-                    itemShape.onclick = function (param) {
-                        self._legendSelected(param);
-                    };
-                }
-                this.shapeList.push(new IconShape(itemShape));
+                itemShape = new IconShape(itemShape);
 
                 // 文字
                 textShape = {
@@ -184,12 +179,18 @@ define(function (require) {
                 }
 
                 textShape._name = itemName;
+                textShape = new TextShape(textShape);
+                
                 if (this.legendOption.selectedMode) {
-                    textShape.onclick = function (param) {
+                    itemShape.onclick = textShape.onclick = function (param) {
                         self._legendSelected(param);
                     };
+                    itemShape.onmouseover =  textShape.onmouseover = this.hoverConnect;
+                    itemShape.hoverConnect = textShape.id;
+                    textShape.hoverConnect = itemShape.id;
                 }
-                this.shapeList.push(new TextShape(textShape));
+                this.shapeList.push(itemShape);
+                this.shapeList.push(textShape);
 
                 if (this.legendOption.orient == 'horizontal') {
                     lastX += itemWidth + 5
