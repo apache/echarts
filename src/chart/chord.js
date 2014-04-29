@@ -296,10 +296,7 @@ define(function (require) {
                         for (var i = 0; i < len; i++) {
                             self.sectorShapes[i].style.opacity 
                                 = i === idx ? 1 : 0.1;
-                            self.zr.modShape(
-                                self.sectorShapes[i].id,
-                                self.sectorShapes[i]
-                            );
+                            self.zr.modShape(self.sectorShapes[i].id);
 
                             for (var j = 0; j < len; j++) {
                                 for (var k = 0; k < len2; k++) {
@@ -308,7 +305,7 @@ define(function (require) {
                                         chordShape.style.opacity 
                                             = (i === idx || j === idx)
                                                  ? 0.5 : 0.03;
-                                        self.zr.modShape(chordShape.id, chordShape);
+                                        self.zr.modShape(chordShape.id);
                                     }
                                 }
                             }
@@ -326,14 +323,14 @@ define(function (require) {
                     timeout = setTimeout(function (){
                         for (var i = 0; i < len; i++) {
                             self.sectorShapes[i].style.opacity = 1.0;
-                            self.zr.modShape(self.sectorShapes[i].id, self.sectorShapes[i]);
+                            self.zr.modShape(self.sectorShapes[i].id);
 
                             for (var j = 0; j < len; j++) {
                                 for (var k = 0; k < len2; k++) {
                                     var chordShape = self.chordShapes[i][j][k];
                                     if (chordShape) {
                                         chordShape.style.opacity = 0.5;
-                                        self.zr.modShape(chordShape.id, chordShape);
+                                        self.zr.modShape(chordShape.id);
                                     } 
                                 }
                             }

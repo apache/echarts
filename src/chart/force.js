@@ -689,25 +689,25 @@ define(function (require) {
             _update(stepTime);
             _updateLinkShapes();
 
-            var tmp = {};
+            //var tmp = {};
             for (var i = 0; i < nodeShapes.length; i++) {
-                var shape = nodeShapes[i];
-                tmp.position = shape.position;
-                zr.modShape(shape.id, tmp, true);
+                //var shape = nodeShapes[i];
+                //tmp.position = shape.position;
+                zr.modShape(nodeShapes[i].id);
             }
-            tmp = {};
+            //tmp = {};
             for (var i = 0; i < linkShapes.length; i++) {
-                var shape = linkShapes[i];
-                tmp.style = shape.style;
-                zr.modShape(shape.id, tmp, true);
+                //var shape = linkShapes[i];
+                //tmp.style = shape.style;
+                zr.modShape(linkShapes[i].id);
             }
 
-            tmp = {};
+            //tmp = {};
             for (var i = 0; i < arrowShapes.length; i++) {
-                var shape = arrowShapes[i];
-                tmp.position = shape.position;
-                tmp.rotation = shape.rotation;
-                zr.modShape(shape.id, tmp, true);
+                //var shape = arrowShapes[i];
+                //tmp.position = shape.position;
+                //tmp.rotation = shape.rotation;
+                zr.modShape(arrowShapes[i].id);
             }
 
             zr.refresh();

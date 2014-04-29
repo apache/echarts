@@ -62,7 +62,7 @@ define(function (require) {
             ecData.set(shape, 'value', value);
             ecData.set(shape, 'name', name);
 
-            self.zr.modShape(shape.id, shape);
+            self.zr.modShape(shape.id);
             self.zr.refresh();
             zrEvent.stop(event);
         };
@@ -209,7 +209,7 @@ define(function (require) {
             var dragged = param.dragged;    // 当前被拖拽的图形对象
 
             _combine(target, dragged);
-            this.zr.modShape(target.id, target);
+            this.zr.modShape(target.id);
 
             status.dragIn = true;
 

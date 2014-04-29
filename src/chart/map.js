@@ -216,7 +216,6 @@ define(function (require) {
                 );
                 self._buildMark(mt, ms);
                 if (--self._mapDataRequireCounter <= 0) {
-                    self._shapeListMap = {};
                     for (var i = 0, l = self.shapeList.length; i < l; i++) {
                         self.zr.addShape(self.shapeList[i]);
                     }
@@ -1032,7 +1031,7 @@ define(function (require) {
             for (var i = 0, l = this.shapeList.length; i < l; i++) {
                 if(this.shapeList[i]._mapType == this._curMapType) {
                     this.shapeList[i].position = position;
-                    this.zr.modShape(this.shapeList[i].id, mod, true);
+                    this.zr.modShape(this.shapeList[i].id);
                 }
             }
             
@@ -1085,9 +1084,7 @@ define(function (require) {
                             if (this.shapeList[i].style._text == p) {
                                 this.shapeList[i].style = 
                                     this.shapeList[i]._style;
-                                this.zr.modShape(
-                                    this.shapeList[i].id, this.shapeList[i]
-                                );
+                                this.zr.modShape(this.shapeList[i].id);
                             }
                         }
                         p != name && (this._selected[p] = false);
@@ -1108,10 +1105,7 @@ define(function (require) {
                     else {
                         this.shapeList[i].style = this.shapeList[i]._style;
                     }
-                    this.zr.modShape(
-                        this.shapeList[i].id, 
-                        {style : this.shapeList[i].style}
-                    );
+                    this.zr.modShape(this.shapeList[i].id);
                 }
             }
             
@@ -1140,7 +1134,6 @@ define(function (require) {
             this._selected = {};            // 地图选择状态
             this._mapTypeMap = {};          // 图例类型索引
             this._mapDataMap = {};          // 根据地图类型索引bbox,transform,path
-            this._shapeListMap = {};        // 名字到shapeList关联映射
             this._nameMap = {};             // 个性化地名
             this._specialArea = {};         // 特殊
             this._refreshDelayTicket;       // 滚轮缩放时让refresh飞一会

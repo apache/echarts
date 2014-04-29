@@ -177,12 +177,12 @@ define(function (require) {
             var needRefresh = false;
             if (!this._axisLineShape.invisible) {
                 this._axisLineShape.invisible = true;
-                this.zr.modShape(this._axisLineShape.id, this._axisLineShape);
+                this.zr.modShape(this._axisLineShape.id);
                 needRefresh = true;
             }
             if (!this._axisShadowShape.invisible) {
                 this._axisShadowShape.invisible = true;
-                this.zr.modShape(this._axisShadowShape.id, this._axisShadowShape);
+                this.zr.modShape(this._axisShadowShape.id);
                 needRefresh = true;
             }
             if (this._lastTipShape && this._lastTipShape.tipShape.length > 0) {
@@ -948,7 +948,7 @@ define(function (require) {
 
             if (!this._axisLineShape.invisible) {
                 this._axisLineShape.invisible = true;
-                this.zr.modShape(this._axisLineShape.id, this._axisLineShape);
+                this.zr.modShape(this._axisLineShape.id);
                 this.zr.refresh();
             }
             
@@ -1035,7 +1035,7 @@ define(function (require) {
                         lineType : lineType
                     };
                     this._axisLineShape.invisible = false;
-                    this.zr.modShape(this._axisLineShape.id, this._axisLineShape);
+                    this.zr.modShape(this._axisLineShape.id);
                 }
                 else if (pointType == 'shadow') {
                     if (typeof areaSize == 'undefined' 
@@ -1082,7 +1082,7 @@ define(function (require) {
                         lineWidth : lineWidth
                     };
                     this._axisShadowShape.invisible = false;
-                    this.zr.modShape(this._axisShadowShape.id, this._axisShadowShape);
+                    this.zr.modShape(this._axisShadowShape.id);
                 }
                 this.zr.refresh();
             }

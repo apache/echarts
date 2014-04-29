@@ -973,7 +973,7 @@ define(function (require) {
                         this._fillerShae.style.height = 
                             height * (this._range.start - this._range.end) / 100;
                     }
-                    this.zr.modShape(this._fillerShae.id, this._fillerShae);
+                    this.zr.modShape(this._fillerShae.id);
                     this._syncHandleShape();
                 }
             }
@@ -1096,7 +1096,7 @@ define(function (require) {
                 this._gap * this._range.start + this.dataRangeOption.min
             );
             
-            this.zr.modShape(this._startShape.id, this._startShape);
+            this.zr.modShape(this._startShape.id);
             this._endShape.position = [
                 this._endShape.style.x - this._endShape.style._x,
                 this._endShape.style.y - this._endShape.style._y
@@ -1114,12 +1114,12 @@ define(function (require) {
             this._endShape.style.color = this._endShape.highlightStyle.strokeColor = this.getColor(
                 this._gap * this._range.end + this.dataRangeOption.min
             );
-            this.zr.modShape(this._endShape.id, this._endShape);
+            this.zr.modShape(this._endShape.id);
 
-            this.zr.modShape(this._startMask.id, this._startMask);
-            this.zr.modShape(this._endMask.id, this._endMask);
+            this.zr.modShape(this._startMask.id);
+            this.zr.modShape(this._endMask.id);
             
-            needFiller && this.zr.modShape(this._fillerShae.id, this._fillerShae);
+            needFiller && this.zr.modShape(this._fillerShae.id);
              
             this.zr.refresh();
         },

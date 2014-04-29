@@ -584,8 +584,8 @@ define(function (require) {
                 );
             }
 
-            this.zr.modShape(this._startShape.id, this._startShape);
-            this.zr.modShape(this._endShape.id, this._endShape);
+            this.zr.modShape(this._startShape.id);
+            this.zr.modShape(this._endShape.id);
             
             // 同步边框
             this._syncFrameShape();
@@ -625,7 +625,7 @@ define(function (require) {
                 );
             }
 
-            this.zr.modShape(this._fillerShae.id, this._fillerShae);
+            this.zr.modShape(this._fillerShae.id);
             
             // 同步边框
             this._syncFrameShape();
@@ -651,8 +651,8 @@ define(function (require) {
                     this._location.y + this._location.height - this._endFrameShape.style.y;
             }
                     
-            this.zr.modShape(this._startFrameShape.id, this._startFrameShape);
-            this.zr.modShape(this._endFrameShape.id, this._endFrameShape);
+            this.zr.modShape(this._startFrameShape.id);
+            this.zr.modShape(this._endFrameShape.id);
         },
         
         _syncShape : function () {
@@ -685,9 +685,9 @@ define(function (require) {
                                           - this._handleSize;
             }
             
-            this.zr.modShape(this._startShape.id, this._startShape);
-            this.zr.modShape(this._endShape.id, this._endShape);
-            this.zr.modShape(this._fillerShae.id, this._fillerShae);
+            this.zr.modShape(this._startShape.id);
+            this.zr.modShape(this._endShape.id);
+            this.zr.modShape(this._fillerShae.id);
             // 同步边框
             this._syncFrameShape();
             this.zr.refresh();
