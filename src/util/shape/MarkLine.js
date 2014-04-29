@@ -79,7 +79,7 @@ define(function (require) {
             if (typeof style.pointListLength == 'undefined') {
                 style.pointListLength = pointList.length;
             }
-            var len = Math.round(style.pointListLength);
+            var len = Math.min(pointList.length, Math.round(style.pointListLength));
             if (!style.lineType || style.lineType == 'solid') {
                 //默认为实线
                 ctx.moveTo(pointList[0][0],pointList[0][1]);
@@ -106,9 +106,9 @@ define(function (require) {
                 }
                 else {
                     // 曲线
-                    for (var i = 0; i < len - 1; i += 2) {
-                        ctx.moveTo(pointList[i][0],pointList[i][1]);
-                        ctx.lineTo(pointList[i + 1][0],pointList[i + 1][1]);
+                    for (var i = 1; i < len; i += 2) {
+                        ctx.moveTo(pointList[i - 1][0],pointList[i - 1][1]);
+                        ctx.lineTo(pointList[i][0],pointList[i][1]);
                     }
                 }
             }
@@ -134,7 +134,10 @@ define(function (require) {
             }
             
             // symbolRotate
-            var len = Math.round(style.pointListLength || style.pointList.length);
+            var len = Math.min(
+                    style.pointList.length, 
+                    Math.round(style.pointListLength || style.pointList.length)
+                );
             var x = idx === 0 ? style.pointList[0][0] : style.pointList[len - 1][0];
             var y = idx === 0 ? style.pointList[0][1] : style.pointList[len - 1][1];
             var rotate = typeof style.symbolRotate[idx] != 'undefined'
@@ -177,7 +180,10 @@ define(function (require) {
         },
         
         buildArrawPath : function (ctx, style, idx) {
-            var len = Math.round(style.pointListLength || style.pointList.length);
+            var len = Math.min(
+                    style.pointList.length, 
+                    Math.round(style.pointListLength || style.pointList.length)
+                );
             var symbolSize = style.symbolSize[idx] * 2;
             var xStart = style.pointList[0][0];
             var xEnd = style.pointList[len - 1][0];
@@ -337,9 +343,40 @@ define(function (require) {
         },
         
         isCover : function (x, y) {
-            return this.style.smooth !== 'spline' 
-                   ? area.isInside(lineInstance, this.style, x, y)
-                   : area.isInside(brokenLineInstance, this.style, x, y);
+            //对鼠标的坐标也做相同的变换
+            if(this.needTransform && this._transform){
+                var inverseMatrix = [];
+                matrix.invert(inverseMatrix, this._transform);
+
+                var originPos = [x, y];
+                matrix.mulVector(originPos, inverseMatrix, [x, y, 1]);
+
+                if (x == originPos[0] && y == originPos[1]) {
+                    // 避免外部修改导致的__needTransform不准确
+                    this.updateNeedTransform();
+                }
+
+                x = originPos[0];
+                y = originPos[1];
+            }
+
+            // 快速预判并保留判断矩形
+            var rect = this.style.__rect;
+            if (!rect) {
+                rect = this.style.__rect = this.getRect(this.style);
+            }
+            if (x >= rect.x
+                && x <= (rect.x + rect.width)
+                && y >= rect.y
+                && y <= (rect.y + rect.height)
+            ) {
+                // 矩形内
+                return this.style.smooth !== 'spline' 
+                       ? area.isInside(lineInstance, this.style, x, y)
+                       : area.isInside(brokenLineInstance, this.style, x, y);
+            }
+            
+            return false;
         }
     };
 

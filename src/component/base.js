@@ -315,7 +315,7 @@ define(function (require) {
                                   + shapeList[i].style.height / 2;
                 */
                 for (var key in attachStyle) {
-                    shapeList[i][key] = attachStyle[key];
+                    shapeList[i][key] = zrUtil.clone(attachStyle[key]);
                 }
                 this.shapeList.push(shapeList[i]);
             }
@@ -377,7 +377,7 @@ define(function (require) {
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 shapeList[i].zlevel = _zlevelBase + 1;
                 for (var key in attachStyle) {
-                    shapeList[i][key] = attachStyle[key];
+                    shapeList[i][key] = zrUtil.clone(attachStyle[key]);
                 }
                 this.shapeList.push(shapeList[i]);
             }
@@ -464,6 +464,10 @@ define(function (require) {
                 );
                 if (effect.show) {
                     itemShape.effect = effect;
+                }
+                
+                if (serie.type == ecConfig.CHART_TYPE_MAP) {
+                    itemShape._geo = this.getMarkGeo(data[i].name);
                 }
                 
                 // 重新pack一下数据
@@ -575,6 +579,13 @@ define(function (require) {
                 );
                 if (effect.show) {
                     itemShape.effect = effect;
+                }
+                
+                if (serie.type == ecConfig.CHART_TYPE_MAP) {
+                    itemShape._geo = [
+                        this.getMarkGeo(data[i][0].name),
+                        this.getMarkGeo(data[i][1].name)
+                    ];
                 }
                 
                 // 重新pack一下数据
@@ -1106,10 +1117,11 @@ define(function (require) {
                 else if (shape._mark === 'line') {
                     effectShape.style.x = shape.style.xStart - Offset;
                     effectShape.style.y = shape.style.yStart - Offset;
-                    var distance = 
-                        (shape.style.xStart - shape._x) * (shape.style.xStart - shape._x)
-                        +
-                        (shape.style.yStart - shape._y) * (shape.style.yStart - shape._y);
+                    var distance = (shape.style.xStart - shape.style.xEnd) 
+                                        * (shape.style.xStart - shape.style.xEnd)
+                                    +
+                                   (shape.style.yStart - shape.style.yEnd) 
+                                        * (shape.style.yStart - shape.style.yEnd);
                     duration = Math.round(Math.sqrt(Math.round(
                                    distance * effect.period * effect.period
                                )));
@@ -1162,7 +1174,8 @@ define(function (require) {
                         var len = pointList.length;
                         duration = Math.round(duration / len);
                         var deferred = this.zr.animate(effectShape.id, 'style', true);
-                        for (var j = 0; j < len; j++) {
+                        var step = Math.ceil(len / 8);
+                        for (var j = 0; j < len - step; j+= step) {
                             deferred.when(
                                 duration * (j + 1),
                                 {
@@ -1171,7 +1184,14 @@ define(function (require) {
                                 }
                             );
                         }
-                        deferred.start();
+                        deferred.when(
+                            duration * len,
+                            {
+                                x : pointList[len - 1][0] - Offset,
+                                y : pointList[len - 1][1] - Offset
+                            }
+                        );
+                        deferred.start('spline');
                     }
                 }
             }
