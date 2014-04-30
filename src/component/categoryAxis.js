@@ -32,36 +32,23 @@ define(function (require) {
     
     CategoryAxis.prototype = {
         type : ecConfig.COMPONENT_TYPE_AXIS_CATEGORY,
-        _reformLabel : function () {
-            var data = zrUtil.clone(this.option.data);
-            var axisFormatter = this.option.axisLabel.formatter;
-            var formatter;
-            for (var i = 0, l = data.length; i < l; i++) {
-                formatter = data[i].formatter || axisFormatter;
-                if (formatter) {
-                    if (typeof formatter == 'function') {
-                        data[i] = formatter(
-                            typeof data[i].value != 'undefined'
-                                ? data[i].value
-                                : data[i]
-                        );
-                    }
-                    else if (typeof formatter == 'string') {
-                        data[i] = formatter.replace(
-                            '{value}',
-                            typeof data[i].value != 'undefined'
-                                ? data[i].value
-                                : data[i]
-                        );
-                    }
+        _getReformedLabel : function (idx) {
+            var data = typeof this.option.data[idx].value != 'undefined'
+                       ? this.option.data[idx].value
+                       : this.option.data[idx];
+            var formatter = this.option.data[idx].formatter 
+                            || this.option.axisLabel.formatter;
+            if (formatter) {
+                if (typeof formatter == 'function') {
+                    data = formatter(data);
                 }
-                else {
-                    data[i] = typeof data[i].value != 'undefined' 
-                              ? data[i].value : data[i];
+                else if (typeof formatter == 'string') {
+                    data = formatter.replace('{value}', data);
                 }
             }
             return data;
         },
+        
         /**
          * 计算标签显示挑选间隔
          */
@@ -81,11 +68,13 @@ define(function (require) {
                         var isEnough = false;
                         var labelSpace;
                         var labelSize;
+                        var step = Math.floor(1 / gap);
+                        step = step < 1 ? 1 : step;
                         interval = Math.floor(15 / gap);
                         while (!isEnough && interval < dataLength) {
                             interval++;
                             isEnough = true;
-                            labelSpace = gap * interval - 10; // 标签左右至少间隔为5px
+                            labelSpace = Math.floor(gap * interval); // 标签左右至少间隔为3px
                             for (var i = Math.floor((dataLength - 1)/ interval) * interval; 
                                  i >= 0; i -= interval
                              ) {
@@ -95,7 +84,7 @@ define(function (require) {
                                 }
                                 else if (data[i].textStyle) {
                                     labelSize = zrArea.getTextWidth(
-                                        this._labelData[i],
+                                        this._getReformedLabel(i),
                                         this.getFont(
                                             zrUtil.merge(
                                                 data[i].textStyle,
@@ -105,10 +94,17 @@ define(function (require) {
                                     );
                                 }
                                 else {
+                                    /*
                                     labelSize = zrArea.getTextWidth(
-                                        this._labelData[i],
+                                        this._getReformedLabel(i),
                                         font
                                     );
+                                    */
+                                    // 不定义data级特殊文本样式，用fontSize优化getTextWidth
+                                    var label = this._getReformedLabel(i) + '';
+                                    var wLen = (label.match(/\w/g) || '').length;
+                                    var oLen = label.length - wLen;
+                                    labelSize = wLen * fontSize / 2 + oLen * fontSize;
                                 }
 
                                 if (labelSpace < labelSize) {
@@ -155,7 +151,7 @@ define(function (require) {
          */
         _buildShape : function () {
             // 标签文字格式化
-            this._labelData = this._reformLabel();
+            // this._labelData = this._reformLabel();
             // 标签显示的挑选间隔
             this._interval = this._getInterval();
             
@@ -349,7 +345,7 @@ define(function (require) {
                 }
 
                 for (var i = 0; i < dataLength; i += this._interval) {
-                    if (this._labelData[i] === '') {
+                    if (this._getReformedLabel(i) === '') {
                         // 空文本优化
                         continue;
                     }
@@ -365,7 +361,7 @@ define(function (require) {
                             x : this.getCoordByIndex(i),
                             y : yPosition,
                             color : dataTextStyle.color,
-                            text : this._labelData[i],
+                            text : this._getReformedLabel(i),
                             textFont : this.getFont(dataTextStyle),
                             textAlign : dataTextStyle.align || 'center',
                             textBaseline : dataTextStyle.baseline || baseLine
@@ -400,7 +396,7 @@ define(function (require) {
                 }
 
                 for (var i = 0; i < dataLength; i += this._interval) {
-                    if (this._labelData[i] === '') {
+                    if (this._getReformedLabel(i) === '') {
                         // 空文本优化
                         continue;
                     }
@@ -416,7 +412,7 @@ define(function (require) {
                             x : xPosition,
                             y : this.getCoordByIndex(i),
                             color : dataTextStyle.color,
-                            text : this._labelData[i],
+                            text : this._getReformedLabel(i),
                             textFont : this.getFont(dataTextStyle),
                             textAlign : dataTextStyle.align || align,
                             textBaseline : dataTextStyle.baseline 
