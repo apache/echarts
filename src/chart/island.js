@@ -208,7 +208,7 @@ define(function (require) {
             var target = param.target;      // 拖拽安放目标
             var dragged = param.dragged;    // 当前被拖拽的图形对象
 
-            _combine(target, dragged);
+            this._combine(target, dragged);
             this.zr.modShape(target.id);
 
             status.dragIn = true;

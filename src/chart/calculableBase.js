@@ -21,17 +21,27 @@ define(function (require) {
             ondragover : function (param) {
                 // 返回触发可计算特性的图形提示
                 var calculableShape = param.target;
+                calculableShape.highlightStyle = calculableShape.highlightStyle || {};
+                
+                // 备份特此特性
                 var highlightStyle = calculableShape.highlightStyle;
-                calculableShape.highlightStyle = {
-                    text : '',
-                    r : calculableShape.style.r + 5,
-                    brushType : 'stroke',
-                    strokeColor : self.ecTheme.calculableColor,
-                    lineWidth : (calculableShape.style.lineWidth || 1) + 12
-                };
+                var brushType = highlightStyle.brushTyep;
+                var strokeColor = highlightStyle.strokeColor;
+                var lineWidth = highlightStyle.lineWidth;
+                
+                highlightStyle.brushType = 'stroke';
+                highlightStyle.strokeColor = self.ecTheme.calculableColor;
+                highlightStyle.lineWidth = calculableShape.type == 'icon' ? 30 : 10;
+                
                 self.zr.addHoverShape(calculableShape);
+                
                 setTimeout(function (){
-                    calculableShape.highlightStyle = highlightStyle;
+                    // 复位
+                    if (calculableShape.highlightStyle) {
+                        calculableShape.highlightStyle.brushType = brushType;
+                        calculableShape.highlightStyle.strokeColor = strokeColor;
+                        calculableShape.highlightStyle.lineWidth = lineWidth;
+                    }
                 },20);
             },
             
