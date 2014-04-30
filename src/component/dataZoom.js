@@ -307,6 +307,9 @@ define(function (require) {
         },
 
         _buildBackground : function () {
+            var width = this._location.width;
+            var height = this._location.height;
+            
             // 背景
             this.shapeList.push(new RectangleShape({
                 zlevel : this._zlevelBase,
@@ -314,8 +317,8 @@ define(function (require) {
                 style : {
                     x : this._location.x,
                     y : this._location.y,
-                    width : this._location.width,
-                    height : this._location.height,
+                    width : width,
+                    height : height,
                     color : this.zoomOption.backgroundColor
                 }
             }));
@@ -344,8 +347,7 @@ define(function (require) {
             var value;
             for (var i = 0, l = data.length; i < l; i++) {
                 value = typeof data[i] != 'undefined'
-                        ? (typeof data[i].value != 'undefined'
-                          ? data[i].value : data[i])
+                        ? (typeof data[i].value != 'undefined' ? data[i].value : data[i])
                         : 0;
                 if (this.option.series[seriesIndex].type == ecConfig.CHART_TYPE_K) {
                     value = value[1];   // 收盘价
@@ -356,11 +358,20 @@ define(function (require) {
                 maxValue = Math.max(maxValue, value);
                 minValue = Math.min(minValue, value);
             }
+            var valueRange = maxValue - minValue;
 
             var pointList = [];
-            var x = this._location.width / (maxLength - (maxLength > 1 ? 1 : 0));
-            var y = this._location.height / (maxLength - (maxLength > 1 ? 1 : 0));
-            for (var i = 0, l = maxLength; i < l; i++) {
+            var x = width / (maxLength - (maxLength > 1 ? 1 : 0));
+            var y = height / (maxLength - (maxLength > 1 ? 1 : 0));
+            var step = 1;
+            if (this.zoomOption.orient == 'horizontal' && x < 1) {
+                step = Math.floor(maxLength * 3 / width);
+            }
+            else if (this.zoomOption.orient == 'vertical' && y < 1){
+                step = Math.floor(maxLength * 3 / height);
+            }
+            
+            for (var i = 0, l = maxLength; i < l; i += step) {
                 value = typeof data[i] != 'undefined'
                         ? (typeof data[i].value != 'undefined'
                           ? data[i].value : data[i])
@@ -374,19 +385,15 @@ define(function (require) {
                 if (this.zoomOption.orient == 'horizontal') {
                     pointList.push([
                         this._location.x + x * i,
-                        this._location.y + this._location.height - 5 - Math.round(
-                            (value - minValue)
-                            / (maxValue - minValue)
-                            * (this._location.height - 10)
+                        this._location.y + height - 5 - Math.round(
+                            (value - minValue) / valueRange * (height - 10)
                         )
                     ]);
                 }
                 else {
                     pointList.push([
                         this._location.x + 5 + Math.round(
-                            (value - minValue)
-                            / (maxValue - minValue)
-                            * (this._location.width - 10)
+                            (value - minValue) / valueRange * (width - 10)
                         ),
                         this._location.y + y * i
                     ]);
@@ -394,16 +401,16 @@ define(function (require) {
             }
             if (this.zoomOption.orient == 'horizontal') {
                  pointList.push([
-                    this._location.x + this._location.width,
-                    this._location.y + this._location.height
+                    this._location.x + width,
+                    this._location.y + height
                 ]);
                 pointList.push([
-                    this._location.x, this._location.y + this._location.height
+                    this._location.x, this._location.y + height
                 ]);
             }
             else {
                 pointList.push([
-                    this._location.x, this._location.y + this._location.height
+                    this._location.x, this._location.y + height
                 ]);
                 pointList.push([
                     this._location.x, this._location.y
