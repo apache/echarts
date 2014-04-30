@@ -75,6 +75,13 @@ define(function (require) {
                             iconShape.style.brushType = iconType.match('empty') ? 'stroke' : 'both';
                             iconType = iconType.replace('empty', '').toLowerCase();
                             
+                            if (iconType.match('rectangle')) {
+                                iconShape.style.x += Math.round(
+                                    (iconShape.style.width - iconShape.style.height) / 2
+                                );
+                                iconShape.style.width = iconShape.style.height;
+                            }
+                            
                             if (iconType.match('star')) {
                                 iconShape.style.n = (iconType.replace('star','') - 0) || 5;
                                 iconType = 'star';
@@ -85,9 +92,7 @@ define(function (require) {
                                     new RegExp('^image:\\/\\/'), ''
                                 );
                                 iconShape.style.x += Math.round(
-                                    (iconShape.style.width 
-                                     - iconShape.style.height) 
-                                    / 2
+                                    (iconShape.style.width - iconShape.style.height) / 2
                                 );
                                 iconShape.style.width = iconShape.style.height;
                                 iconType = 'image';

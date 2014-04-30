@@ -641,7 +641,7 @@ define(function (require) {
                        ? normal.borderWidth
                        : (normal.lineStyle && normal.lineStyle.width);
             if (typeof nBorderWidth == 'undefined') {
-                nBorderWidth = 0;
+                nBorderWidth = symbol.match('empty') ? 2 : 0;
             }
             var eBorderWidth = typeof emphasis.borderWidth != 'undefined'
                        ? emphasis.borderWidth
