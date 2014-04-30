@@ -76,10 +76,11 @@ define(function (require) {
             var pointList = style.pointList || this.getPointList(style);
             style.pointList = pointList;
             
-            if (typeof style.pointListLength == 'undefined') {
-                style.pointListLength = pointList.length;
-            }
-            var len = Math.min(pointList.length, Math.round(style.pointListLength));
+            var len = Math.min(
+                    style.pointList.length, 
+                    Math.round(style.pointListLength || style.pointList.length)
+                );
+            
             if (!style.lineType || style.lineType == 'solid') {
                 //默认为实线
                 ctx.moveTo(pointList[0][0],pointList[0][1]);

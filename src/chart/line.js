@@ -1023,34 +1023,24 @@ define(function (require) {
                     dataIndex += 1;
                     x = this.shapeList[i].style.pointList[0][0];
                     y = this.shapeList[i].style.pointList[0][1];
-                    if (this.shapeList[i]._orient == 'horizontal') {
-                        this.zr.modShape(
-                            this.shapeList[i].id, 
-                            {
-                                scale : [0, 1, x, y]
-                            },
-                            true
-                        );
-                    }
-                    else {
-                        this.zr.modShape(
-                            this.shapeList[i].id, 
-                            {
-                                scale : [1, 0, x, y]
-                            },
-                            true
-                        );
-                    }
-                    this.zr.animate(this.shapeList[i].id, '')
+                    
+                    this.zr.modShape(
+                        this.shapeList[i].id, 
+                        {
+                            style : {
+                                pointListLength : 1
+                            }
+                        },
+                        true
+                    );
+                    this.zr.animate(this.shapeList[i].id, 'style')
                         .when(
-                            (this.query(serie,'animationDuration')
-                            || duration)
-                            + dataIndex * 100,
-                            {scale : [1, 1, x, y]}
+                            (this.query(serie,'animationDuration') || duration),
+                            {
+                                pointListLength : this.shapeList[i].style.pointList.length
+                            }
                         )
-                        .start(
-                            this.query(serie, 'animationEasing') || easing
-                        );
+                        .start(this.query(serie, 'animationEasing') || easing);
                 }
             }
             
