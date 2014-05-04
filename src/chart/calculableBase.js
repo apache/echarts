@@ -165,6 +165,185 @@ define(function (require) {
                 this.selectedMap[itemName] = legendSelected[itemName];
             }
             return;
+        },
+        
+        backupShapeList : function() {
+            if (this.shapeList && this.shapeList.length > 0) {
+                this.lastShapeList = this.shapeList;
+                this.shapeList = [];
+            }
+            else {
+                this.lastShapeList = [];
+            }
+        },
+        
+        addShapeList : function() {
+            var lastShapeList = this.lastShapeList;
+            var shapeList = this.shapeList;
+            var key;
+            var oldMap = {};
+            var newMap = {};
+            if (lastShapeList && lastShapeList.length > 0) {
+                // 通过已有的shape做动画过渡
+                for (var i = 0, l = this.lastShapeList.length; i < l; i++) {
+                    key = ecData.get(lastShapeList[i], 'seriesIndex') + '_'
+                          + ecData.get(lastShapeList[i], 'dataIndex');
+                    if (key.match('undefined') || lastShapeList[i]._mark) {
+                        this.zr.delShape(lastShapeList[i].id); // 非关键元素直接删除
+                    }
+                    else {
+                        key += lastShapeList[i].type;
+                        oldMap[key] = lastShapeList[i];
+                    }
+                }
+                for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                    key = ecData.get(shapeList[i], 'seriesIndex') + '_'
+                          + ecData.get(shapeList[i], 'dataIndex');
+                    if (key.match('undefined') || shapeList[i]._mark) {
+                        this.zr.addShape(shapeList[i]); // 非关键元素直接添加
+                    }
+                    else {
+                        key += shapeList[i].type;
+                        newMap[key] = shapeList[i];
+                    }
+                }
+                for (key in oldMap) {
+                    if (!newMap[key]) {
+                        // 新的没有 删除
+                        this.zr.delShape(oldMap[key].id);
+                    }
+                }
+                for (key in newMap) {
+                    if (oldMap[key]) {
+                        // 新旧都有 动画过渡
+                        this.zr.delShape(oldMap[key].id);
+                        this._animateMod(oldMap[key], newMap[key]);
+                    }
+                    else {
+                        // 新有旧没有  添加并动画过渡
+                        this._animateAdd(newMap[key]);
+                    }
+                }
+                this.animationMark(500);
+            }
+            else {
+                // 直接添加
+                for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                    this.zr.addShape(shapeList[i]);
+                }
+            }
+        },
+        
+        _animateMod : function(oldShape, newShape) {
+            switch (oldShape.type) {
+                case 'broken-line' :
+                case 'half-smooth-polygon' :
+                    var newPointList = newShape.style.pointList;
+                    if (oldShape.style.pointList.length == newPointList.length) {
+                        newShape.style.pointList = oldShape.style.pointList;
+                    }
+                    else if (oldShape.style.pointList.length < newPointList.length) {
+                        // 原来短，新的长，补全
+                        newShape.style.pointList = oldShape.style.pointList.concat(
+                            newPointList.slice(oldShape.style.pointList.length)
+                        )
+                    }
+                    else {
+                        // 原来长，新的短，截断
+                        newShape.style.pointList = oldShape.style.pointList.slice(
+                            0, newPointList.length
+                        );
+                    }
+                    this.zr.addShape(newShape);
+                    this.zr.animate(newShape.id, 'style')
+                        .when(
+                            500,
+                            {
+                                pointList: newPointList
+                            }
+                        )
+                        .start('ExponentialOut');
+                    break;
+                case 'rectangle' :
+                    var newX = newShape.style.x;
+                    var newY = newShape.style.y;
+                    var newWidth = newShape.style.width;
+                    var newHeight = newShape.style.height;
+                    newShape.style.x = oldShape.style.x;
+                    newShape.style.y = oldShape.style.y;
+                    newShape.style.width = oldShape.style.width;
+                    newShape.style.height = oldShape.style.height;
+                    this.zr.addShape(newShape);
+                    this.zr.animate(newShape.id, 'style')
+                        .when(
+                            500,
+                            {
+                                x: newX,
+                                y: newY,
+                                width: newWidth,
+                                height: newHeight
+                            }
+                        )
+                        .start('ExponentialOut');
+                    break;
+                default :
+                    this.zr.addShape(newShape);
+                    break;
+            }
+        },
+        
+        _animateAdd : function(newShape) {
+            switch (newShape.type) {
+                case 'broken-line' :
+                case 'half-smooth-polygon' :
+                    var newPointList = [];
+                    var len = newShape.style.pointList.length;
+                    if (newShape._orient != 'vertical') {
+                        var y = newShape.style.pointList[0][1];
+                        for (var i = 0; i < len; i++) {
+                            newPointList[i] = [newShape.style.pointList[i][0], y + i];
+                        };
+                    }
+                    else {
+                        var x = newShape.style.pointList[0][0];
+                        for (var i = 0; i < len; i++) {
+                            newPointList[i] = [x + i, newShape.style.pointList[i][1]];
+                        };
+                    }
+                    if (newShape.type == 'half-smooth-polygon') {
+                        newPointList[len - 1] = zrUtil.clone(newShape.style.pointList[len - 1]);
+                        newPointList[len - 2] = zrUtil.clone(newShape.style.pointList[len - 2]);
+                    }
+                    this._animateMod(
+                        {
+                            type : newShape.type,
+                            style : {
+                                pointList : newPointList
+                            }
+                        },
+                        newShape
+                    );
+                    break;
+                case 'rectangle' :
+                    this._animateMod(
+                        {
+                            type : newShape.type,
+                            style : {
+                                x : newShape.style.x,
+                                y : newShape._orient == 'vertical'
+                                    ? newShape.style.y + newShape.style.height
+                                    : newShape.style.y,
+                                width: 0,
+                                height: 0
+                            }
+                        },
+                        newShape
+                    );
+                    break;
+                default :
+                    this._animateMod({}, newShape);
+                    break;
+            }
         }
     }
 
