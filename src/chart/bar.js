@@ -993,6 +993,7 @@ define(function (require) {
                             x = aniMap[seriesIndex][2] ? dx : -dx;
                             y = 0;
                         }
+                        this.shapeList[i].position = [0, 0];
                         this.zr.animate(this.shapeList[i].id, '')
                             .when(
                                 500,

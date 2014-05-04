@@ -17,6 +17,7 @@
  */
 define(function (require) {
     var ecConfig = require('./config');
+    var zrUtil = require('zrender/tool/util');
     
     var self = {};
     
@@ -75,7 +76,7 @@ define(function (require) {
      * @param {HtmlElement} dom 必要
      */
     function Echarts(dom) {
-        this._themeConfig = require('zrender/tool/util').clone(ecConfig);
+        this._themeConfig = zrUtil.clone(ecConfig);
 
         this.dom = dom;
         // this._zr;
@@ -645,7 +646,6 @@ define(function (require) {
          * 图表渲染 
          */
         _render : function (magicOption) {
-            var zrUtil = require('zrender/tool/util');
             this._mergeGlobalConifg(magicOption);
             if (magicOption.backgroundColor) {
                 if (!_canvasSupported 
@@ -700,7 +700,7 @@ define(function (require) {
             if (magicOption.legend) {
                 var Legend = componentLibrary.get('legend');
                 legend = new Legend(
-                    this._themeConfig, this._messageCenter, this._zr, magicOption, this._selectedMap
+                    this._themeConfig, this._messageCenter, this._zr, magicOption
                 );
                 this._chartList.push(legend);
                 this.component.legend = legend;
@@ -863,7 +863,6 @@ define(function (require) {
          * 还原 
          */
         restore : function () {
-            var zrUtil = require('zrender/tool/util');
             if (this._optionRestore.legend && this._optionRestore.legend.selected) {
                 this._selectedMap = this._optionRestore.legend.selected;
             }
@@ -900,7 +899,6 @@ define(function (require) {
                     magicOption = this._getMagicOption(this._island.getOption());
                 }
                 
-                var zrUtil = require('zrender/tool/util');
                 zrUtil.merge(magicOption, param.option, true);
                 zrUtil.merge(this._optionBackup, param.option, true);
                 zrUtil.merge(this._optionRestore, param.option, true);
@@ -1013,7 +1011,6 @@ define(function (require) {
          *                   如果不需求，可以通过notMerger参数为true阻止与上次option的合并
          */
         setOption : function (option, notMerge) {
-            var zrUtil = require('zrender/tool/util');
             if (!notMerge && this._option) {
                 zrUtil.merge(
                     this._option,
@@ -1050,7 +1047,6 @@ define(function (require) {
          */
         getOption : function () {
             var ecQuery = require('./util/ecQuery');
-            var zrUtil = require('zrender/tool/util');
             if (ecQuery.query(this._optionBackup, 'toolbox.show')
                 && ecQuery.query(this._optionBackup, 'toolbox.feature.magicType.show')
             ) {
@@ -1106,7 +1102,6 @@ define(function (require) {
                 magicOption = this._getMagicOption(this._island.getOption());
             }
             
-            var zrUtil = require('zrender/tool/util');
             var params = seriesIdx instanceof Array
                          ? seriesIdx
                          : [[seriesIdx, data, isHead, dataGrow, additionData]];
@@ -1238,8 +1233,10 @@ define(function (require) {
                     }
                 }
             }
-            magicOption.legend && (magicOption.legend.selected = this._selectedMap);
+            
+            //magicOption.legend && (magicOption.legend.selected = zrUtil.clone(this._selectedMap));
             // dataZoom同步数据
+            this._zr.clearAnimation();
             for (var i = 0, l = this._chartList.length; i < l; i++) {
                 if (magicOption.addDataAnimation 
                     && this._chartList[i].addDataAnimation
@@ -1258,6 +1255,14 @@ define(function (require) {
             this._toolbox.refresh(magicOption);
             var self = this;
             setTimeout(function (){
+                self._zr.clearAnimation();
+                for (var i = 0, l = self._chartList.length; i < l; i++) {
+                    if (magicOption.addDataAnimation 
+                        && self._chartList[i].addDataAnimation
+                    ) {
+                        self._chartList[i].clear(); // 有addData动画就去掉过渡动画
+                    }
+                }
                 self._messageCenter.dispatch(
                     ecConfig.EVENT.REFRESH,
                     '',
@@ -1524,7 +1529,6 @@ define(function (require) {
                 };
             this._toolbox.hideDataView();
 
-            var zrUtil = require('zrender/tool/util');
             loadingOption = loadingOption || {};
             loadingOption.textStyle = loadingOption.textStyle || {};
 
@@ -1567,7 +1571,6 @@ define(function (require) {
          * 主题设置 
          */
         setTheme : function (theme) {
-            var zrUtil = require('zrender/tool/util');
             if (theme) {
                if (typeof theme === 'string') {
                     // 默认主题

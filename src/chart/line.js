@@ -81,7 +81,7 @@ define(function (require) {
                     }
                 }
             }
-            //console.log(_position2sIndexMap)
+            // console.log(_position2sIndexMap);
             for (var position in _position2sIndexMap) {
                 if (_position2sIndexMap[position].length > 0) {
                     this._buildSinglePosition(
@@ -89,7 +89,6 @@ define(function (require) {
                     );
                 }
             }
-
             this.addShapeList();
         },
 
@@ -107,16 +106,15 @@ define(function (require) {
             if (maxDataLength === 0 || locationMap.length === 0) {
                 return;
             }
-
             var xMarkMap = {}; // 为标注记录一些参数
             switch (position) {
                 case 'bottom' :
                 case 'top' :
-                    this._buildHorizontal(maxDataLength, locationMap, xMarkMap);
+                    this._buildHorizontal(seriesArray, maxDataLength, locationMap, xMarkMap);
                     break;
                 case 'left' :
                 case 'right' :
-                    this._buildVertical(maxDataLength, locationMap, xMarkMap);
+                    this._buildVertical(seriesArray, maxDataLength, locationMap, xMarkMap);
                     break;
             }
             
@@ -222,7 +220,7 @@ define(function (require) {
         /**
          * 构建类目轴为水平方向的折线图系列
          */
-        _buildHorizontal : function (maxDataLength, locationMap, xMarkMap) {
+        _buildHorizontal : function (seriesArray, maxDataLength, locationMap, xMarkMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
@@ -389,13 +387,13 @@ define(function (require) {
                 }
             }
             
-            this._buildBorkenLine(this.finalPLMap, categoryAxis, 'horizontal');
+            this._buildBorkenLine(seriesArray, this.finalPLMap, categoryAxis, 'horizontal');
         },
 
         /**
          * 构建类目轴为垂直方向的折线图系列
          */
-        _buildVertical : function (maxDataLength, locationMap, xMarkMap) {
+        _buildVertical : function (seriesArray, maxDataLength, locationMap, xMarkMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
@@ -563,13 +561,13 @@ define(function (require) {
                 }
             }
             
-            this._buildBorkenLine(this.finalPLMap, categoryAxis, 'vertical');
+            this._buildBorkenLine(seriesArray, this.finalPLMap, categoryAxis, 'vertical');
         },
 
         /**
          * 生成折线和折线上的拐点
          */
-        _buildBorkenLine : function (pointList, categoryAxis, orient) {
+        _buildBorkenLine : function (seriesArray, pointList, categoryAxis, orient) {
             var series = this.series;
             var defaultColor;
 
@@ -593,10 +591,9 @@ define(function (require) {
             var isLarge;
             
             // 堆叠层叠需求，反顺序构建
-            for (var seriesIndex = series.length - 1;
-                seriesIndex >= 0;
-                seriesIndex--
-            ) {
+            var seriesIndex;
+            for (var sIdx = seriesArray.length - 1; sIdx >= 0; sIdx--) {
+                seriesIndex = seriesArray[sIdx];
                 serie = series[seriesIndex];
                 seriesPL = pointList[seriesIndex];
                 if (serie.type == this.type && typeof seriesPL != 'undefined') {
@@ -982,6 +979,7 @@ define(function (require) {
                             }
                             isHorizontal ? (x = -dx, y = 0) : (x = 0, y = dy);
                         }
+                        
                         this.zr.modShape(
                             this.shapeList[i].id, 
                             {
@@ -1010,6 +1008,7 @@ define(function (require) {
                             continue;
                         }
                     }
+                    this.shapeList[i].position = [0, 0];
                     this.zr.animate(this.shapeList[i].id, '')
                         .when(
                             500,
@@ -1027,6 +1026,7 @@ define(function (require) {
             if (this.lastShapeList && this.lastShapeList.length > 0) {
                 return;
             }
+            
             var series = this.series;
             var duration = this.query(this.option, 'animationDuration');
             var easing = this.query(this.option, 'animationEasing');
