@@ -70,6 +70,7 @@ define(function (require) {
                 }
             }
 
+            // this.addShapeList();
             for (var i = 0, l = this.shapeList.length; i < l; i++) {
                 this.zr.addShape(this.shapeList[i]);
             }
@@ -89,7 +90,7 @@ define(function (require) {
             if (maxDataLength === 0 || locationMap.length === 0) {
                 return;
             }
-            this._buildHorizontal(maxDataLength, locationMap);
+            this._buildHorizontal(seriesArray, maxDataLength, locationMap);
 
             for (var i = 0, l = seriesArray.length; i < l; i++) {
                 this.buildMark(
@@ -136,7 +137,7 @@ define(function (require) {
         /**
          * 构建类目轴为水平方向的K线图系列
          */
-        _buildHorizontal : function (maxDataLength, locationMap) {
+        _buildHorizontal : function (seriesArray, maxDataLength, locationMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex;
@@ -168,9 +169,7 @@ define(function (require) {
                 
                 pointList[seriesIndex] = [];
                 for (var i = 0, l = maxDataLength; i < l; i++) {
-                    if (typeof categoryAxis.getNameByIndex(i) 
-                        == 'undefined'
-                    ) {
+                    if (typeof categoryAxis.getNameByIndex(i) == 'undefined') {
                         // 系列数据超出类目轴长度
                         break;
                     }
@@ -198,13 +197,13 @@ define(function (require) {
                 }
             }
             // console.log(pointList)
-            this._buildKLine(pointList);
+            this._buildKLine(seriesArray, pointList);
         },
 
         /**
          * 生成K线
          */
-        _buildKLine : function (pointList) {
+        _buildKLine : function (seriesArray, pointList) {
             var series = this.series;
             // normal:
             var nLineWidth;
@@ -227,10 +226,9 @@ define(function (require) {
             var singlePoint;
             var candleType;
 
-            for (var seriesIndex = 0, len = series.length;
-                seriesIndex < len;
-                seriesIndex++
-            ) {
+            var seriesIndex;
+            for (var sIdx = 0, len = seriesArray.length; sIdx < len; sIdx++) {
+                seriesIndex = seriesArray[sIdx]
                 serie = series[seriesIndex];
                 seriesPL = pointList[seriesIndex];
                 
@@ -363,7 +361,7 @@ define(function (require) {
         },
 
         _isLarge : function(singlePL) {
-            return this.component.grid.getWidth() * 2 < singlePL.length;
+            return singlePL[0][1] < 0.5;
         },
         
         /**
@@ -457,6 +455,7 @@ define(function (require) {
                 this.series = newOption.series;
             }
             this.clear();
+            // this.backupShapeList();
             this._buildShape();
         },
 
@@ -514,6 +513,11 @@ define(function (require) {
          * 动画设定
          */
         animation : function () {
+            /*
+            if (this.lastShapeList && this.lastShapeList.length > 0) {
+                return;
+            }
+            */
             var series = this.series;
             var duration = this.query(this.option, 'animationDuration');
             var easing = this.query(this.option, 'animationEasing');

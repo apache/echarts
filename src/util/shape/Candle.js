@@ -67,19 +67,19 @@ define(function (require) {
          * @param {Object} style 样式
          */
         buildPath : function (ctx, style) {
-            style.y.sort(this._numberOrder);
+            var yList = zrUtil.clone(style.y).sort(this._numberOrder);
             
-            ctx.moveTo(style.x, style.y[3]);
-            ctx.lineTo(style.x, style.y[2]);
-            ctx.moveTo(style.x - style.width / 2, style.y[2]);
+            ctx.moveTo(style.x, yList[3]);
+            ctx.lineTo(style.x, yList[2]);
+            ctx.moveTo(style.x - style.width / 2, yList[2]);
             ctx.rect(
                 style.x - style.width / 2,
-                style.y[2],
+                yList[2],
                 style.width,
-                style.y[1] - style.y[2]
+                yList[1] - yList[2]
             );
-            ctx.moveTo(style.x, style.y[1]);
-            ctx.lineTo(style.x, style.y[0]);
+            ctx.moveTo(style.x, yList[1]);
+            ctx.lineTo(style.x, yList[0]);
             return;
         },
 
@@ -98,11 +98,12 @@ define(function (require) {
             else {
                 lineWidth = 0;
             }
+            var yList = zrUtil.clone(style.y).sort(this._numberOrder);
             style.__rect = {
                 x : Math.round(style.x - style.width / 2 - lineWidth / 2),
-                y : Math.round(style.y[3] - lineWidth / 2),
+                y : Math.round(yList[3] - lineWidth / 2),
                 width : style.width + lineWidth,
-                height : style.y[0] - style.y[3] + lineWidth
+                height : yList[0] - yList[3] + lineWidth
             };
             return style.__rect;
         },

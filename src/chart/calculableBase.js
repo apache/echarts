@@ -23,7 +23,7 @@ define(function (require) {
                 var calculableShape = param.target;
                 calculableShape.highlightStyle = calculableShape.highlightStyle || {};
                 
-                // 备份特此特性
+                // 备份特出特性
                 var highlightStyle = calculableShape.highlightStyle;
                 var brushType = highlightStyle.brushTyep;
                 var strokeColor = highlightStyle.strokeColor;
@@ -288,6 +288,21 @@ define(function (require) {
                         )
                         .start('ExponentialOut');
                     break;
+                case 'candle' :
+                    /*
+                    var newY = newShape.style.y;
+                    newShape.style.y = oldShape.style.y;
+                    this.zr.addShape(newShape);
+                    this.zr.animate(newShape.id, 'style')
+                        .when(
+                            500,
+                            {
+                                y: newY
+                            }
+                        )
+                        .start('ExponentialOut');
+                    break;
+                    */
                 default :
                     this.zr.addShape(newShape);
                     break;
@@ -327,6 +342,7 @@ define(function (require) {
                     );
                     break;
                 case 'rectangle' :
+                case 'icon' :
                     this._animateMod(
                         {
                             type : newShape.type,
