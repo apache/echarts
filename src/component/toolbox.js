@@ -1051,8 +1051,8 @@ define(function (require) {
             );
             this.option = newOption || this.option;
             this.component = newComponent || this.component;
-
-            this.shapeList = [];
+            
+            this.clear();
 
             if (newOption.toolbox.show) {
                 this._buildShape();
