@@ -575,6 +575,8 @@ define(function (require) {
             while (len--) {
                 magicOption.series[len].data = this._optionBackup.series[len].data;
             }
+            
+            magicOption.legend && (magicOption.legend.selected = this._selectedMap);
             return magicOption;
         },
         
