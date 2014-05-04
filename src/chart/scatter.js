@@ -112,20 +112,19 @@ define(function (require) {
                     }
                 }
             }
-            if (seriesArray.length === 0) {
-                return;
-            }
+            
             this._buildSeries(seriesArray);
-
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                this.zr.addShape(this.shapeList[i]);
-            }
+            
+            this.addShapeList();
         },
 
         /**
          * 构建类目轴为水平方向的散点图系列
          */
         _buildSeries : function (seriesArray) {
+            if (seriesArray.length === 0) {
+                return;
+            }
             var series = this.series;
             var seriesIndex;
             var serie;
@@ -384,7 +383,6 @@ define(function (require) {
                 'vertical'
             );
             itemShape.zlevel = this._zlevelBase;
-            itemShape._mark = false; // 非mark
             itemShape._main = true;
             return itemShape;
         },
@@ -459,7 +457,7 @@ define(function (require) {
                 this.option = newOption;
                 this.series = newOption.series;
             }
-            this.clear();
+            this.backupShapeList();
             this._buildShape();
         },
         
@@ -480,6 +478,10 @@ define(function (require) {
          * 动画设定
          */
         animation : function () {
+            if (this.lastShapeList && this.lastShapeList.length > 0) {
+                return;
+            }
+            
             var series = this.series;
             var duration = this.query(this.option, 'animationDuration');
             var easing = this.query(this.option, 'animationEasing');

@@ -178,12 +178,13 @@ define(function (require) {
         },
         
         addShapeList : function() {
+            var maxLenth = this.option.animationThreshold / (this.canvasSupported ? 1 : 2);
             var lastShapeList = this.lastShapeList;
             var shapeList = this.shapeList;
             var key;
             var oldMap = {};
             var newMap = {};
-            if (lastShapeList && lastShapeList.length > 0) {
+            if (lastShapeList && lastShapeList.length > 0 && lastShapeList.length < maxLenth) {
                 // 通过已有的shape做动画过渡
                 for (var i = 0, l = this.lastShapeList.length; i < l; i++) {
                     key = ecData.get(lastShapeList[i], 'seriesIndex') + '_'
@@ -265,6 +266,7 @@ define(function (require) {
                         .start('ExponentialOut');
                     break;
                 case 'rectangle' :
+                case 'icon' :
                     var newX = newShape.style.x;
                     var newY = newShape.style.y;
                     var newWidth = newShape.style.width;
