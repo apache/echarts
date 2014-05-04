@@ -188,6 +188,7 @@ define(function (require) {
             if (this._lastTipShape && this._lastTipShape.tipShape.length > 0) {
                 this.zr.delShape(this._lastTipShape.tipShape);
                 this._lastTipShape = false;
+                this.shapeList.length = 2;
             }
             needRefresh && this.zr.refresh(); 
         },
@@ -1192,6 +1193,7 @@ define(function (require) {
             ) {
                 if (this._lastTipShape && this._lastTipShape.tipShape.length > 0) {
                     this.zr.delShape(this._lastTipShape.tipShape);
+                    this.shapeList.length = 2;
                 }
                 for (var i = 0, l = tipShape.length; i < l; i++) {
                     tipShape[i].zlevel = this._zlevelBase;
@@ -1205,6 +1207,7 @@ define(function (require) {
                     tipShape[i].ondragend = null;
                     tipShape[i].ondragover = null;
                     tipShape[i].ondrop = null;
+                    this.shapeList.push(tipShape[i]);
                     this.zr.addShape(tipShape[i]);
                 }
                 this._lastTipShape = {
@@ -1475,6 +1478,7 @@ define(function (require) {
                 invisible : true,
                 hoverable: false
             });
+            this.shapeList.push(this._axisLineShape);
             this.zr.addShape(this._axisLineShape);
             
             this._axisShadowShape && this.zr.delShape(this._axisShadowShape);
@@ -1483,6 +1487,7 @@ define(function (require) {
                 invisible : true,
                 hoverable: false
             });
+            this.shapeList.push(this._axisShadowShape);
             this.zr.addShape(this._axisShadowShape);
             
             this.refresh(newOption);
@@ -1507,8 +1512,12 @@ define(function (require) {
             // 缓存一些高宽数据
             this._zrHeight = this.zr.getHeight();
             this._zrWidth = this.zr.getWidth();
-    
+            
+            if (this._lastTipShape && this._lastTipShape.tipShape.length > 0) {
+                this.zr.delShape(this._lastTipShape.tipShape);
+            }
             this._lastTipShape = false;
+            this.shapeList.length = 2;
             
             if (newOption) {
                 this.option = newOption;
@@ -1549,6 +1558,11 @@ define(function (require) {
          * 释放后实例不可用，重载基类方法
          */
         dispose : function () {
+            if (this._lastTipShape && this._lastTipShape.tipShape.length > 0) {
+                this.zr.delShape(this._lastTipShape.tipShape);
+            }
+            this.clear();
+            
             clearTimeout(this._hidingTicket);
             clearTimeout(this._showingTicket);
             this.zr.un(zrConfig.EVENT.MOUSEMOVE, self._onmousemove);
