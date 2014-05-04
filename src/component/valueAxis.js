@@ -593,7 +593,7 @@ define(function (require) {
                 this._min = this.option.min - 0;    // 指定min忽略boundaryGay[0]
                 this._max = this.option.max - 0;    // 指定max忽略boundaryGay[1]
                 customerDefine = true;
-                _customerValue();
+                this._customerValue();
             }
         },
 

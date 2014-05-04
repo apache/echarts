@@ -528,8 +528,7 @@ define(function (require) {
                     y = this.shapeList[i].style.y[0];
                     this.zr.modShape(
                         this.shapeList[i].id,
-                        { scale : [1, 0, x, y] },
-                        true
+                        { scale : [1, 0, x, y] }
                     );
                     this.zr.animate(this.shapeList[i].id, '')
                         .when(

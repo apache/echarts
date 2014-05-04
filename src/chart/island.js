@@ -141,8 +141,7 @@ define(function (require) {
                             x: Math.round(this.shapeList[i].style.x * xScale),
                             y: Math.round(this.shapeList[i].style.y * yScale)
                         }
-                    },
-                    true
+                    }
                 );
             }
         },

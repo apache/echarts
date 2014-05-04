@@ -104,7 +104,7 @@ define(function (require) {
                                     var label = this._getReformedLabel(i) + '';
                                     var wLen = (label.match(/\w/g) || '').length;
                                     var oLen = label.length - wLen;
-                                    labelSize = wLen * fontSize / 2 + oLen * fontSize;
+                                    labelSize = wLen * fontSize * 2 / 3 + oLen * fontSize;
                                 }
 
                                 if (labelSpace < labelSize) {

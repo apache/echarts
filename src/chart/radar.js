@@ -448,8 +448,7 @@
                         this.shapeList[i].id, 
                         {
                             scale : [0.1, 0.1, x, y]
-                        },
-                        true
+                        }
                     );
                     
                     this.zr.animate(item.id, '')

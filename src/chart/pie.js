@@ -905,8 +905,7 @@ define(function (require) {
                                 r0 : 0,
                                 r : 0
                             }
-                        },
-                        true
+                        }
                     );
 
                     serie = ecData.get(this.shapeList[i], 'series');
@@ -939,8 +938,7 @@ define(function (require) {
                         this.shapeList[i].id, 
                         {
                             scale : [0, 0, x, y]
-                        },
-                        true
+                        }
                     );
                     this.zr.animate(this.shapeList[i].id, '')
                         .when(

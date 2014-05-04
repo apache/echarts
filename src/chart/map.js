@@ -1005,7 +1005,7 @@ define(function (require) {
                 clearTimeout(this._refreshDelayTicket);
                 this._refreshDelayTicket = setTimeout(
                     function(){
-                        self.animationEffect();
+                        self && self.shapeList && self.animationEffect();
                     },
                     100
                 );
