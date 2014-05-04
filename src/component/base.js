@@ -927,8 +927,7 @@ define(function (require) {
                         this.shapeList[i].id, 
                         {
                             scale : [0, 0, x, y]
-                        },
-                        true
+                        }
                     );
                     this.zr.animate(this.shapeList[i].id, '')
                         .when(
@@ -954,8 +953,7 @@ define(function (require) {
                                         ]
                                     ]
                                 }
-                            },
-                            true
+                            }
                         );
                         this.zr.animate(this.shapeList[i].id, 'style')
                             .when(
@@ -982,8 +980,7 @@ define(function (require) {
                                 style : {
                                     pointListLength : 1
                                 }
-                            },
-                            true
+                            }
                         );
                         this.zr.animate(this.shapeList[i].id, 'style')
                             .when(
@@ -1133,8 +1130,7 @@ define(function (require) {
                 if (shape._mark === 'point') {
                     this.zr.modShape(
                         shape.id, 
-                        { invisible : true},
-                        true
+                        { invisible : true}
                     );
                     var centerX = effectShape.style.x + (effectShape.style.width) /2;
                     var centerY = effectShape.style.y + (effectShape.style.height) / 2;
@@ -1142,8 +1138,7 @@ define(function (require) {
                         effectShape.id, 
                         {
                             scale : [0.1, 0.1, centerX, centerY]
-                        },
-                        true
+                        }
                     );
                     
                     this.zr.animate(effectShape.id, '', true)
