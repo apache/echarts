@@ -19,6 +19,7 @@ define(function (require) {
     require('../component/dataZoom');
     
     var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
     
@@ -89,9 +90,7 @@ define(function (require) {
                 }
             }
 
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                this.zr.addShape(this.shapeList[i]);
-            }
+            this.addShapeList();
         },
 
         /**
@@ -588,6 +587,8 @@ define(function (require) {
             var data;
             var seriesPL;
             var singlePL;
+            var brokenLineShape;
+            var halfSmoothPolygonShape;
             
             var isLarge;
             
@@ -658,7 +659,7 @@ define(function (require) {
                         }
                         
                         // 折线图
-                        this.shapeList.push(new BrokenLineShape({
+                        brokenLineShape = new BrokenLineShape({
                             zlevel : this._zlevelBase,
                             style : {
                                 miterLimit: lineWidth,
@@ -690,21 +691,29 @@ define(function (require) {
                             _main : true,
                             _seriesIndex : seriesIndex,
                             _orient : orient
-                        }));
+                        });
+                        
+                        ecData.pack(
+                            brokenLineShape,
+                            series[seriesIndex], seriesIndex,
+                            0, 0, series[seriesIndex].name
+                        );
+                        
+                        this.shapeList.push(brokenLineShape);
                         
                         if (isFill) {
-                            this.shapeList.push(new HalfSmoothPolygonShape({
+                            halfSmoothPolygonShape = new HalfSmoothPolygonShape({
                                 zlevel : this._zlevelBase,
                                 style : {
                                     miterLimit: lineWidth,
-                                    pointList : singlePL.concat([
+                                    pointList : zrUtil.clone(singlePL).concat([
                                         [
                                             singlePL[singlePL.length - 1][4],
-                                            singlePL[singlePL.length - 1][5] - 2
+                                            singlePL[singlePL.length - 1][5] - 1
                                         ],
                                         [
                                             singlePL[0][4],
-                                            singlePL[0][5] - 2
+                                            singlePL[0][5] - 1
                                         ]
                                     ]),
                                     brushType : 'fill',
@@ -717,7 +726,13 @@ define(function (require) {
                                 _main : true,
                                 _seriesIndex : seriesIndex,
                                 _orient : orient
-                            }));
+                            });
+                            ecData.pack(
+                                halfSmoothPolygonShape,
+                                series[seriesIndex], seriesIndex,
+                                0, 0, series[seriesIndex].name
+                            );
+                            this.shapeList.push(halfSmoothPolygonShape);
                         }
                     }
                 }
@@ -870,7 +885,7 @@ define(function (require) {
                 this.option = newOption;
                 this.series = newOption.series;
             }
-            this.clear();
+            this.backupShapeList();
             this._buildShape();
         },
         
@@ -1009,6 +1024,9 @@ define(function (require) {
          * 动画设定
          */
         animation : function () {
+            if (this.lastShapeList && this.lastShapeList.length > 0) {
+                return;
+            }
             var series = this.series;
             var duration = this.query(this.option, 'animationDuration');
             var easing = this.query(this.option, 'animationEasing');
@@ -1016,28 +1034,48 @@ define(function (require) {
             var y;
             var serie;
             var dataIndex = 0;
+            var oriPointList;
+            var newPointList;
+            var len;
 
             for (var i = 0, l = this.shapeList.length; i < l; i++) {
                 if (this.shapeList[i]._main) {
                     serie = series[this.shapeList[i]._seriesIndex];
                     dataIndex += 1;
-                    x = this.shapeList[i].style.pointList[0][0];
-                    y = this.shapeList[i].style.pointList[0][1];
+                    
+                    oriPointList = zrUtil.clone(this.shapeList[i].style.pointList);
+                    len = oriPointList.length;
+                    newPointList = [];
+                    if (this.shapeList[i]._orient != 'vertical') {
+                        y = oriPointList[0][1];
+                        for (var j = 0; j < len; j++) {
+                            newPointList[j] = [oriPointList[j][0], y + j];
+                        };
+                    }
+                    else {
+                        x = oriPointList[0][0];
+                        for (var j = 0; j < len; i++) {
+                            newPointList[j] = [x + j, oriPointList[j][1]];
+                        };
+                    }
+                    if (this.shapeList[i].type == 'half-smooth-polygon') {
+                        newPointList[len - 1] = zrUtil.clone(oriPointList[len - 1]);
+                        newPointList[len - 2] = zrUtil.clone(oriPointList[len - 2]);
+                    }
                     
                     this.zr.modShape(
                         this.shapeList[i].id, 
                         {
                             style : {
-                                pointListLength : 1
+                                pointList : newPointList
                             }
-                        },
-                        true
+                        }
                     );
                     this.zr.animate(this.shapeList[i].id, 'style')
                         .when(
                             (this.query(serie,'animationDuration') || duration),
                             {
-                                pointListLength : this.shapeList[i].style.pointList.length
+                                pointList: oriPointList
                             }
                         )
                         .start(this.query(serie, 'animationEasing') || easing);
