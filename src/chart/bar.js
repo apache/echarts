@@ -86,9 +86,7 @@ define(function (require) {
                 }
             }
 
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                this.zr.addShape(this.shapeList[i]);
-            }
+            this.addShapeList();
         },
 
         /**
@@ -938,7 +936,8 @@ define(function (require) {
                 this.option = newOption;
                 this.series = newOption.series;
             }
-            this.clear();
+            
+            this.backupShapeList();
             this._buildShape();
         },
         
@@ -1009,6 +1008,9 @@ define(function (require) {
          * 动画设定
          */
         animation : function () {
+            if (this.lastShapeList && this.lastShapeList.length > 0) {
+                return;
+            }
             var duration;
             var easing;
             var width;
@@ -1042,8 +1044,7 @@ define(function (require) {
                                         x : x + width,
                                         width: 0
                                     }
-                                },
-                                true
+                                }
                             );
                             this.zr.animate(this.shapeList[i].id, 'style')
                                 .when(
@@ -1062,8 +1063,7 @@ define(function (require) {
                                     style: {
                                         width: 0
                                     }
-                                },
-                                true
+                                }
                             );
                             this.zr.animate(this.shapeList[i].id, 'style')
                                 .when(
@@ -1086,8 +1086,7 @@ define(function (require) {
                                     style: {
                                         height: 0
                                     }
-                                },
-                                true
+                                }
                             );
                             this.zr.animate(this.shapeList[i].id, 'style')
                                 .when(
@@ -1106,8 +1105,7 @@ define(function (require) {
                                         y: y + height,
                                         height: 0
                                     }
-                                },
-                                true
+                                }
                             );
                             this.zr.animate(this.shapeList[i].id, 'style')
                                 .when(
