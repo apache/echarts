@@ -693,7 +693,7 @@ define(function (require) {
                         ecData.pack(
                             brokenLineShape,
                             series[seriesIndex], seriesIndex,
-                            0, 0, series[seriesIndex].name
+                            0, i, series[seriesIndex].name
                         );
                         
                         this.shapeList.push(brokenLineShape);
@@ -727,7 +727,7 @@ define(function (require) {
                             ecData.pack(
                                 halfSmoothPolygonShape,
                                 series[seriesIndex], seriesIndex,
-                                0, 0, series[seriesIndex].name
+                                0, i, series[seriesIndex].name
                             );
                             this.shapeList.push(halfSmoothPolygonShape);
                         }
@@ -1079,6 +1079,26 @@ define(function (require) {
                             }
                         )
                         .start(this.query(serie, 'animationEasing') || easing);
+                }
+                else if (this.shapeList[i].type == 'icon' && !this.shapeList[i]._mark){
+                    serie = series[this.shapeList[i]._seriesIndex];
+                    x = this.shapeList[i]._x || 0;
+                    y = this.shapeList[i]._y || 0;
+                    this.zr.modShape(
+                        this.shapeList[i].id, 
+                        {
+                            scale : [0, 0, x, y]
+                        }
+                    );
+                    this.zr.animate(this.shapeList[i].id, '')
+                        .when(
+                            (this.query(serie,'animationDuration')
+                            || duration),
+                            {scale : [1, 1, x, y]}
+                        )
+                        .start(
+                            this.query(serie, 'animationEasing') || easing
+                        );
                 }
             }
             

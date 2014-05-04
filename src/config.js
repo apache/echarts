@@ -952,7 +952,7 @@ define(function() {
         valueConnector: ' : ',
         animation: true,
         addDataAnimation: true,         // 动态数据接口是否开启动画效果
-        animationThreshold: 2500,       // 动画元素阀值，产生的图形原素超过2500不出动画
+        animationThreshold: 2000,       // 动画元素阀值，产生的图形原素超过2000不出动画
         animationDuration: 2000,
         animationEasing: 'ExponentialOut'    //BounceOut
     };

@@ -457,6 +457,7 @@ define(function (require) {
                     'rgba(0,0,0,0)',
                     'horizontal'                // 走向，用于默认文字定位
                 );
+                itemShape._mark = 'point';
                 
                 effect = this.deepMerge(
                     [data[i], mpOption],
@@ -737,7 +738,7 @@ define(function (require) {
                 name
             );
 
-            itemShape._mark = 'point'; // 复用animationMark
+            // itemShape._mark = 'point'; // 复用animationMark
             itemShape._x = x;
             itemShape._y = y;
             
