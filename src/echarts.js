@@ -663,14 +663,16 @@ define(function (require) {
                 }
             }
             
-            this._disposeChartList();
-            this._zr.clear();
+            // this._disposeChartList();
+            // this._zr.clear();
+            this._zr.clearAnimation();
+            this._chartList = [];
 
             var chartLibrary = require('./chart');
             var componentLibrary = require('./component');
 
             // 标题
-            var title;
+            var title = this.component.title && this.component.title.dispose();
             if (magicOption.title) {
                 var Title = componentLibrary.get('title');
                 title = new Title(
@@ -681,7 +683,7 @@ define(function (require) {
             }
 
             // 提示
-            var tooltip;
+            var tooltip = this.component.tooltip && this.component.tooltip.dispose();
             if (magicOption.tooltip) {
                 var Tooltip = componentLibrary.get('tooltip');
                 tooltip = new Tooltip(
@@ -692,7 +694,7 @@ define(function (require) {
             }
 
             // 图例
-            var legend;
+            var legend = this.component.legend && this.component.legend.dispose();
             if (magicOption.legend) {
                 var Legend = componentLibrary.get('legend');
                 legend = new Legend(
@@ -703,7 +705,7 @@ define(function (require) {
             }
 
             // 值域控件
-            var dataRange;
+            var dataRange = this.component.dataRange && this.component.dataRange.dispose();
             if (magicOption.dataRange) {
                 var DataRange = componentLibrary.get('dataRange');
                 dataRange = new DataRange(
@@ -714,10 +716,10 @@ define(function (require) {
             }
 
             // 直角坐标系
-            var grid;
-            var dataZoom;
-            var xAxis;
-            var yAxis;
+            var grid = this.component.grid && this.component.grid.dispose();
+            var dataZoom = this.component.dataZoom && this.component.dataZoom.dispose();
+            var xAxis = this.component.xAxis && this.component.xAxis.dispose();
+            var yAxis = this.component.yAxis && this.component.yAxis.dispose();
             if (magicOption.grid || magicOption.xAxis || magicOption.yAxis) {
                 var Grid = componentLibrary.get('grid');
                 grid = new Grid(this._themeConfig, this._messageCenter, this._zr, magicOption);
@@ -726,60 +728,35 @@ define(function (require) {
 
                 var DataZoom = componentLibrary.get('dataZoom');
                 dataZoom = new DataZoom(
-                    this._themeConfig, 
-                    this._messageCenter,
-                    this._zr,
-                    magicOption,
-                    {
-                        'legend' : legend,
-                        'grid' : grid
-                    }
+                    this._themeConfig, this._messageCenter, this._zr,
+                    magicOption, this.component
                 );
                 this._chartList.push(dataZoom);
                 this.component.dataZoom = dataZoom;
 
                 var Axis = componentLibrary.get('axis');
                 xAxis = new Axis(
-                    this._themeConfig,
-                    this._messageCenter,
-                    this._zr,
-                    magicOption,
-                    {
-                        'legend' : legend,
-                        'grid' : grid
-                    },
-                    'xAxis'
+                    this._themeConfig, this._messageCenter, this._zr,
+                    magicOption, this.component, 'xAxis'
                 );
                 this._chartList.push(xAxis);
                 this.component.xAxis = xAxis;
 
                 yAxis = new Axis(
-                    this._themeConfig,
-                    this._messageCenter,
-                    this._zr,
-                    magicOption,
-                    {
-                        'legend' : legend,
-                        'grid' : grid
-                    },
-                    'yAxis'
+                    this._themeConfig, this._messageCenter, this._zr,
+                    magicOption, this.component, 'yAxis'
                 );
                 this._chartList.push(yAxis);
                 this.component.yAxis = yAxis;
             }
 
             // 极坐标系
-            var polar;
+            var polar = this.component.polar && this.component.polar.dispose();
             if (magicOption.polar) {
                 var Polar = componentLibrary.get('polar');
                 polar = new Polar(
-                    this._themeConfig,
-                    this._messageCenter,
-                    this._zr,
-                    magicOption,
-                    {
-                        'legend' : legend
-                    }
+                    this._themeConfig, this._messageCenter, this._zr,
+                    magicOption, this.component
                 );
                 this._chartList.push(polar);
                 this.component.polar = polar;
@@ -801,21 +778,16 @@ define(function (require) {
                     chartMap[chartType] = true;
                     ChartClass = chartLibrary.get(chartType);
                     if (ChartClass) {
-                        chart = new ChartClass(
-                            this._themeConfig,
-                            this._messageCenter,
-                            this._zr,
-                            magicOption,
-                            {
-                                'tooltip' : tooltip,
-                                'legend' : legend,
-                                'dataRange' : dataRange,
-                                'grid' : grid,
-                                'xAxis' : xAxis,
-                                'yAxis' : yAxis,
-                                'polar' : polar
-                            }
-                        );
+                        if (this.chart[chartType]) {
+                            chart = this.chart[chartType];
+                            chart.refresh(magicOption);
+                        }
+                        else {
+                            chart = new ChartClass(
+                                this._themeConfig, this._messageCenter, this._zr,
+                                magicOption, this.component
+                            );
+                        }
                         this._chartList.push(chart);
                         this.chart[chartType] = chart;
                     }
@@ -824,10 +796,18 @@ define(function (require) {
                     }
                 }
             }
+            // 已有实例但新option不带这类图表的实例释放
+            for (chartType in this.chart) {
+                if (chartType != ecConfig.CHART_TYPE_ISLAND  && !chartMap[chartType]) {
+                    this.chart[chartType].dispose();
+                    this.chart[chartType] = null;
+                    delete this.chart[chartType];
+                }
+            }
 
             this._island.render(magicOption);
 
-            this._toolbox.render(magicOption, {dataZoom: dataZoom});
+            this._toolbox.render(magicOption, this.component);
             
             if (magicOption.animation && !magicOption.renderAsImage) {
                 var len = this._chartList.length;
