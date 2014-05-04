@@ -26,14 +26,13 @@ define(function (require) {
      * @param {Object} messageCenter echart消息中心
      * @param {ZRender} zr zrender实例
      * @param {Object} option 图表参数
-     * @param {Object=} selected 用于状态保持
      */
-    function Legend(ecTheme, messageCenter, zr, option, selected) {
+    function Legend(ecTheme, messageCenter, zr, option) {
         Base.call(this, ecTheme, zr, option);
 
         this.messageCenter = messageCenter;
         
-        this.init(option, selected);
+        this.init(option);
     }
     
     Legend.prototype = {
@@ -561,21 +560,19 @@ define(function (require) {
             );
         },
 
-        init : function (newOption, newSelected) {
+        init : function (newOption) {
             if (!this.query(newOption, 'legend.data')) {
                 return;
             }
             
-            this.refresh(newOption, newSelected);
+            this.refresh(newOption);
         },
 
         /**
          * 刷新
          */
-        refresh : function (newOption, newSelected) {
-            if (newOption || newSelected) {
-                this.selected = newSelected || this.selected;
-                
+        refresh : function (newOption) {
+            if (newOption) {
                 this.option = newOption || this.option;
                 this.option.legend = this.reformOption(this.option.legend);
                 // 补全padding属性
@@ -631,11 +628,6 @@ define(function (require) {
                 if (this.option.legend.selected) {
                     for (var k in this.option.legend.selected) {
                         this._selectedMap[k] = this.option.legend.selected[k];
-                    }
-                }
-                if (this.selected) {
-                    for (var k in this.selected) {
-                        this._selectedMap[k] = this.selected[k];
                     }
                 }
             }
