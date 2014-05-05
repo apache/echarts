@@ -58,7 +58,7 @@ define(function (require) {
             var height = this._itemGroupLocation.height;
             
             var textShape = {
-                shape : 'text',
+                // shape : 'text',
                 zlevel : this._zlevelBase,
                 style : {
                     y : y,
@@ -81,7 +81,7 @@ define(function (require) {
             }
             
             var subtextShape = {
-                shape : 'text',
+                // shape : 'text',
                 zlevel : this._zlevelBase,
                 style : {
                     y : y + height,

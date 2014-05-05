@@ -171,7 +171,7 @@ define(function (require) {
             var lineWidth = this.option.axisLine.lineStyle.width;
             var halfLineWidth = lineWidth / 2;
             var axShape = {
-                shape : 'line',
+                // shape : 'line',
                 zlevel : this._zlevelBase + 1,
                 hoverable : false
             };
@@ -276,7 +276,7 @@ define(function (require) {
                         this.getCoordByIndex(i) + (i >= 0 ? optGap : 0), lineWidth
                     );
                     axShape = {
-                        shape : 'line',
+                        // shape : 'line',
                         zlevel : this._zlevelBase,
                         hoverable : false,
                         style : {
@@ -304,7 +304,7 @@ define(function (require) {
                         this.getCoordByIndex(i) - (i >= 0 ? optGap : 0), lineWidth
                     );
                     axShape = {
-                        shape : 'line',
+                        // shape : 'line',
                         zlevel : this._zlevelBase,
                         hoverable : false,
                         style : {
@@ -354,7 +354,7 @@ define(function (require) {
                         textStyle
                     );
                     axShape = {
-                        shape : 'text',
+                        // shape : 'text',
                         zlevel : this._zlevelBase,
                         hoverable : false,
                         style : {
@@ -405,7 +405,7 @@ define(function (require) {
                         textStyle
                     );
                     axShape = {
-                        shape : 'text',
+                        // shape : 'text',
                         zlevel : this._zlevelBase,
                         hoverable : false,
                         style : {
@@ -467,7 +467,7 @@ define(function (require) {
                         this.getCoordByIndex(i) + optGap, lineWidth
                     );
                     axShape = {
-                        shape : 'line',
+                        // shape : 'line',
                         zlevel : this._zlevelBase,
                         hoverable : false,
                         style : {
@@ -496,7 +496,7 @@ define(function (require) {
                         this.getCoordByIndex(i) - optGap, lineWidth
                     );
                     axShape = {
-                        shape : 'line',
+                        // shape : 'line',
                         zlevel : this._zlevelBase,
                         hoverable : false,
                         style : {
@@ -521,7 +521,7 @@ define(function (require) {
             if (!(color instanceof Array)) {
                 // 非数组一律认为是单一颜色的字符串，单一颜色则用一个背景，颜色错误不负责啊！！！
                 axShape = {
-                    shape : 'rectangle',
+                    // shape : 'rectangle',
                     zlevel : this._zlevelBase,
                     hoverable : false,
                     style : {
@@ -558,7 +558,7 @@ define(function (require) {
                                ? (this.getCoordByIndex(i) + optGap)
                                : this.grid.getXend();
                         axShape = {
-                            shape : 'rectangle',
+                            // shape : 'rectangle',
                             zlevel : this._zlevelBase,
                             hoverable : false,
                             style : {
@@ -586,7 +586,7 @@ define(function (require) {
                                ? (this.getCoordByIndex(i) - optGap)
                                : this.grid.getY();
                         axShape = {
-                            shape : 'rectangle',
+                            // shape : 'rectangle',
                             zlevel : this._zlevelBase,
                             hoverable : false,
                             style : {

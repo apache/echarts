@@ -150,7 +150,7 @@ define(function (require) {
 
                 // 文字
                 textShape = {
-                    shape : 'text',
+                    // shape : 'text',
                     zlevel : this._zlevelBase,
                     style : {
                         x : lastX + itemWidth + 5,
