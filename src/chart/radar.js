@@ -76,9 +76,7 @@
                 }
             }
 
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                this.zr.addShape(this.shapeList[i]);
-            }
+            this.addShapeList();
         },
 
         /**
@@ -336,6 +334,7 @@
          * 数据项被拖拽进来， 重载基类方法
          */
         ondrop : function (param, status) {
+            var series = this.series;
             if (!this.isDrop || !param.target) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
@@ -411,60 +410,9 @@
                 this.option = newOption;
                 this.series = newOption.series;
             }
-            this.clear();
-            this._buildShape();
-        },
-
-        animation : function () {
-            var series = this.series;
-            var duration = this.query(this.option, 'animationDuration');
-            var easing = this.query(this.option, 'animationEasing');
-            var dataIndex;
-            var seriesIndex;
-            var data;
-            var serie;
-            var polarIndex;
-            var polar = this.component.polar;
-            var center;
-            var item;
-            var x;
-            var y;
-
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                if (this.shapeList[i].type == 'polygon') {
-                    item = this.shapeList[i];
-                    seriesIndex = ecData.get(item, 'seriesIndex');
-                    dataIndex = ecData.get(item, 'dataIndex');
-
-                    serie = series[seriesIndex];
-                    data = serie.data[dataIndex];
-
-                    polarIndex = this.deepQuery(
-                        [data, serie, this.option], 'polarIndex');
-                    center = polar.getCenter(polarIndex);
-                    x = center[0];
-                    y = center[1];
-                    this.zr.modShape(
-                        this.shapeList[i].id, 
-                        {
-                            scale : [0.1, 0.1, x, y]
-                        }
-                    );
-                    
-                    this.zr.animate(item.id, '')
-                        .when(
-                            (this.query(serie,'animationDuration')
-                            || duration)
-                            + dataIndex * 100,
-                            {scale : [1, 1, x, y]}
-                        )
-                        .start(
-                            this.query(serie, 'animationEasing') || easing
-                        );
-                }
-            }
             
-            this.animationMark(duration, easing);
+            this.backupShapeList();
+            this._buildShape();
         }
     };
     

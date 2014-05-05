@@ -6,6 +6,7 @@
  *
  */
 define(function (require) {
+    var ecConfig = require('../config');
     var ecData = require('../util/ecData');
     var accMath = require('../util/accMath');
     var zrUtil = require('zrender/tool/util');
@@ -192,9 +193,12 @@ define(function (require) {
                 && shapeList.length < maxLenth
             ) {
                 // 通过已有的shape做动画过渡
-                for (var i = 0, l = this.lastShapeList.length; i < l; i++) {
+                for (var i = 0, l = lastShapeList.length; i < l; i++) {
                     key = ecData.get(lastShapeList[i], 'seriesIndex') + '_'
-                          + ecData.get(lastShapeList[i], 'dataIndex');
+                          + ecData.get(lastShapeList[i], 'dataIndex')
+                          + (this.type == ecConfig.CHART_TYPE_RADAR
+                             ? ecData.get(lastShapeList[i], 'special')
+                             : '');
                     if (key.match('undefined') || lastShapeList[i]._mark) {
                         this.zr.delShape(lastShapeList[i].id); // 非关键元素直接删除
                     }
@@ -203,9 +207,12 @@ define(function (require) {
                         oldMap[key] = lastShapeList[i];
                     }
                 }
-                for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                for (var i = 0, l = shapeList.length; i < l; i++) {
                     key = ecData.get(shapeList[i], 'seriesIndex') + '_'
-                          + ecData.get(shapeList[i], 'dataIndex');
+                          + ecData.get(shapeList[i], 'dataIndex')
+                          + (this.type == ecConfig.CHART_TYPE_RADAR
+                             ? ecData.get(shapeList[i], 'special')
+                             : '');
                     if (key.match('undefined') || shapeList[i]._mark) {
                         this.zr.addShape(shapeList[i]); // 非关键元素直接添加
                     }
@@ -275,9 +282,20 @@ define(function (require) {
                     else if (newShape.type == 'sector') {
                         this._animationSector(oldShape, newShape, duration, easing);
                     }
+                    else {
+                        this.zr.addShape(newShape);
+                    }
                     break;
                 case 'text' :
                     this._animationText(oldShape, newShape, duration, easing);
+                    break;
+                case 'polygon' :
+                    if (duration > 500) {
+                        this._animationPolygon(oldShape, newShape, duration, easing);
+                    }
+                    else {
+                        this._animationPointList(oldShape, newShape, duration, easing);
+                    }
                     break;
                 default :
                     this.zr.addShape(newShape);
@@ -369,6 +387,23 @@ define(function (require) {
                                     : newShape.style.x - 100,
                                 y : newShape.style.y
                             }
+                        },
+                        newShape,
+                        duration,
+                        easing
+                    );
+                    break;
+                case 'polygon' :
+                    var rect = require('zrender/shape/Polygon').prototype.getRect(newShape.style);
+                    var x = rect.x + rect.width / 2;
+                    var y = rect.y + rect.height / 2;
+                    var newPointList = [];
+                    for (var i = 0, len = newShape.style.pointList.length; i < len; i++) {
+                        newPointList.push([x + i, y + i]);
+                    }
+                    this._animateMod(
+                        {
+                            style : { pointList : newPointList }
                         },
                         newShape,
                         duration,
@@ -503,6 +538,24 @@ define(function (require) {
                     {
                         x : x,
                         y : y
+                    }
+                )
+                .start(easing);
+        },
+        
+        _animationPolygon : function (oldShape, newShape, duration, easing) {
+            var rect = require('zrender/shape/Polygon').prototype.getRect(newShape.style);
+            var x = rect.x + rect.width / 2;
+            var y = rect.y + rect.height / 2;
+            
+            newShape.scale = [0.1, 0.1, x, y];
+            
+            this.zr.addShape(newShape);
+            this.zr.animate(newShape.id, '')
+                .when(
+                    duration,
+                    {
+                        scale : [1, 1, x, y]
                     }
                 )
                 .start(easing);
