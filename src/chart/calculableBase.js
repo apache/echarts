@@ -181,10 +181,16 @@ define(function (require) {
             var maxLenth = this.option.animationThreshold / (this.canvasSupported ? 1 : 2);
             var lastShapeList = this.lastShapeList;
             var shapeList = this.shapeList;
+            var duration = lastShapeList.length > 0
+                           ? 500 : this.query(this.option, 'animationDuration');
+            var easing = this.query(this.option, 'animationEasing');
             var key;
             var oldMap = {};
             var newMap = {};
-            if (lastShapeList && lastShapeList.length > 0 && lastShapeList.length < maxLenth) {
+            if (this.option.animation 
+                && !this.option.renderAsImage 
+                && shapeList.length < maxLenth
+            ) {
                 // 通过已有的shape做动画过渡
                 for (var i = 0, l = this.lastShapeList.length; i < l; i++) {
                     key = ecData.get(lastShapeList[i], 'seriesIndex') + '_'
@@ -218,25 +224,27 @@ define(function (require) {
                     if (oldMap[key]) {
                         // 新旧都有 动画过渡
                         this.zr.delShape(oldMap[key].id);
-                        this._animateMod(oldMap[key], newMap[key]);
+                        this._animateMod(oldMap[key], newMap[key], duration, easing);
                     }
                     else {
                         // 新有旧没有  添加并动画过渡
-                        this._animateAdd(newMap[key]);
+                        this._animateAdd(newMap[key], duration, easing);
                     }
                 }
-                this.animationMark(500);
+                this.animationMark(duration, easing);
             }
             else {
+                // clear old
+                this.zr.delShape(lastShapeList);
                 // 直接添加
-                for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                for (var i = 0, l = shapeList.length; i < l; i++) {
                     this.zr.addShape(shapeList[i]);
                 }
             }
         },
         
-        _animateMod : function(oldShape, newShape) {
-            switch (oldShape.type) {
+        _animateMod : function(oldShape, newShape, duration, easing) {
+            switch (newShape.type) {
                 case 'broken-line' :
                 case 'half-smooth-polygon' :
                     var newPointList = newShape.style.pointList;
@@ -258,12 +266,10 @@ define(function (require) {
                     this.zr.addShape(newShape);
                     this.zr.animate(newShape.id, 'style')
                         .when(
-                            500,
-                            {
-                                pointList: newPointList
-                            }
+                            duration,
+                            { pointList: newPointList }
                         )
-                        .start('ExponentialOut');
+                        .start(easing);
                     break;
                 case 'rectangle' :
                 case 'icon' :
@@ -278,7 +284,7 @@ define(function (require) {
                     this.zr.addShape(newShape);
                     this.zr.animate(newShape.id, 'style')
                         .when(
-                            500,
+                            duration,
                             {
                                 x: newX,
                                 y: newY,
@@ -286,30 +292,33 @@ define(function (require) {
                                 height: newHeight
                             }
                         )
-                        .start('ExponentialOut');
+                        .start(easing);
                     break;
                 case 'candle' :
-                    /*
-                    var newY = newShape.style.y;
-                    newShape.style.y = oldShape.style.y;
-                    this.zr.addShape(newShape);
-                    this.zr.animate(newShape.id, 'style')
-                        .when(
-                            500,
-                            {
-                                y: newY
-                            }
-                        )
-                        .start('ExponentialOut');
+                    if (duration > 500) {
+                        var newY = newShape.style.y;
+                        newShape.style.y = oldShape.style.y;
+                        this.zr.addShape(newShape);
+                        this.zr.animate(newShape.id, 'style')
+                            .when(
+                                duration,
+                                {
+                                    y: newY
+                                }
+                            )
+                            .start(easing);
+                    }
+                    else {
+                        this.zr.addShape(newShape);
+                    }
                     break;
-                    */
                 default :
                     this.zr.addShape(newShape);
                     break;
             }
         },
         
-        _animateAdd : function(newShape) {
+        _animateAdd : function(newShape, duration, easing) {
             switch (newShape.type) {
                 case 'broken-line' :
                 case 'half-smooth-polygon' :
@@ -334,11 +343,11 @@ define(function (require) {
                     this._animateMod(
                         {
                             type : newShape.type,
-                            style : {
-                                pointList : newPointList
-                            }
+                            style : { pointList : newPointList }
                         },
-                        newShape
+                        newShape,
+                        duration,
+                        easing
                     );
                     break;
                 case 'rectangle' :
@@ -355,11 +364,27 @@ define(function (require) {
                                 height: 0
                             }
                         },
-                        newShape
+                        newShape,
+                        duration,
+                        easing
+                    );
+                    break;
+                case 'candle' :
+                    var y = newShape.style.y;
+                    this._animateMod(
+                        {
+                            type : newShape.type,
+                            style : {
+                                y : [y[0], y[0], y[0], y[0]]
+                            }
+                        },
+                        newShape,
+                        duration,
+                        easing
                     );
                     break;
                 default :
-                    this._animateMod({}, newShape);
+                    this._animateMod({}, newShape, duration, easing);
                     break;
             }
         }

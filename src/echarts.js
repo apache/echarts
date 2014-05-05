@@ -812,18 +812,6 @@ define(function (require) {
             this._toolbox.render(magicOption, this.component);
             
             if (magicOption.animation && !magicOption.renderAsImage) {
-                var len = this._chartList.length;
-                while (len--) {
-                    chart = this._chartList[len];                 
-                    if (chart 
-                        && chart.animation 
-                        && chart.shapeList 
-                        && chart.shapeList.length 
-                           < magicOption.animationThreshold
-                    ) {
-                        chart.animation();
-                    }
-                }
                 this._zr.refresh();
             }
             else {
