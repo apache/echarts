@@ -70,10 +70,12 @@ define(function (require) {
                 }
             }
 
-            // this.addShapeList();
+            this.addShapeList();
+            /*
             for (var i = 0, l = this.shapeList.length; i < l; i++) {
                 this.zr.addShape(this.shapeList[i]);
             }
+            */
         },
 
         /**
@@ -454,8 +456,8 @@ define(function (require) {
                 this.option = newOption;
                 this.series = newOption.series;
             }
-            this.clear();
-            // this.backupShapeList();
+            // this.clear();
+            this.backupShapeList();
             this._buildShape();
         },
 
@@ -507,46 +509,6 @@ define(function (require) {
                     }
                 }
             }
-        },
-        
-        /**
-         * 动画设定
-         */
-        animation : function () {
-            /*
-            if (this.lastShapeList && this.lastShapeList.length > 0) {
-                return;
-            }
-            */
-            var series = this.series;
-            var duration = this.query(this.option, 'animationDuration');
-            var easing = this.query(this.option, 'animationEasing');
-            var x;
-            var y;
-            var serie;
-
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                if (this.shapeList[i].type == 'candle') {
-                    serie = series[this.shapeList[i]._seriesIndex];
-                    x = this.shapeList[i].style.x;
-                    y = this.shapeList[i].style.y[0];
-                    this.zr.modShape(
-                        this.shapeList[i].id,
-                        { scale : [1, 0, x, y] }
-                    );
-                    this.zr.animate(this.shapeList[i].id, '')
-                        .when(
-                            (this.query(serie,'animationDuration')
-                            || duration),
-                            {scale : [1, 1, x, y]}
-                        )
-                        .start(
-                            this.query(serie, 'animationEasing') || easing
-                        );
-                }
-            }
-            
-            this.animationMark(duration, easing);
         }
     };
     
