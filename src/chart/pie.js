@@ -1014,7 +1014,11 @@ define(function (require) {
 
             // 处理完拖拽事件后复位
             this.isDrop = false;
-
+            
+            var self = this;
+            setTimeout(function(){
+                self.zr.trigger('mousemove', param.event);
+            }, 300);
             return;
         },
 
@@ -1045,7 +1049,11 @@ define(function (require) {
 
             // 处理完拖拽事件后复位
             this.isDragend = false;
-
+            
+            var self = this;
+            setTimeout(function(){
+                self.zr.trigger('mousemove', param.event);
+            }, 300);
             return;
         }
     };
