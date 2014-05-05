@@ -472,50 +472,6 @@ define(function (require) {
                 status.needRefresh = true;
             }
             return;
-        },
-
-        /**
-         * 动画设定
-         */
-        animation : function () {
-            if (this.lastShapeList && this.lastShapeList.length > 0) {
-                return;
-            }
-            
-            var series = this.series;
-            var duration = this.query(this.option, 'animationDuration');
-            var easing = this.query(this.option, 'animationEasing');
-            var x;
-            var y;
-            var serie;
-
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                if (this.shapeList[i]._main) {
-                    if (this.shapeList[i].type == 'symbol') {
-                        continue;
-                    }
-                    serie = series[this.shapeList[i]._seriesIndex];
-                    x = this.shapeList[i]._x || 0;
-                    y = this.shapeList[i]._y || 0;
-                    this.zr.modShape(
-                        this.shapeList[i].id, 
-                        {
-                            scale : [0, 0, x, y]
-                        }
-                    );
-                    this.zr.animate(this.shapeList[i].id, '')
-                        .when(
-                            (this.query(serie,'animationDuration')
-                            || duration),
-                            {scale : [1, 1, x, y]}
-                        )
-                        .start(
-                            this.query(serie, 'animationEasing') || easing
-                        );
-                }
-            }
-            
-            this.animationMark(duration, easing);
         }
     };
     
