@@ -229,6 +229,8 @@ define(function (require) {
                     new NDArray(res[0]).sum() / (360 - this.padding * groupNumber)
                 );
             }
+            
+            this.addShapeList();
         },
 
         _filterData : function  (dataMat, groups) {
@@ -389,7 +391,7 @@ define(function (require) {
                     sector,
                     this.chordSeries[0],
                     0,
-                    data[i], 0,
+                    data[i], i,
                     group.name
                 );
                 if (showLabel) {
@@ -425,7 +427,7 @@ define(function (require) {
                     ));
                     labelShape = new TextShape(labelShape)
                     this.shapeList.push(labelShape);
-                    this.zr.addShape(labelShape);
+                    //this.zr.addShape(labelShape);
                 }
 
                 sector.onmouseover = createMouseOver(i);
@@ -434,7 +436,7 @@ define(function (require) {
                 sector = new SectorShape(sector);
                 this.shapeList.push(sector);
                 this.sectorShapes.push(sector);
-                this.zr.addShape(sector);
+                //this.zr.addShape(sector);
             }
         },
 
@@ -509,7 +511,7 @@ define(function (require) {
                             chord,
                             this.chordSeries[k],
                             k,
-                            dataArr[i][j][k], 0,
+                            dataArr[i][j][k], i + '-' +j,
                             this.groups[i].name,
                             this.groups[j].name,
                             dataArr[j][i][k]
@@ -518,7 +520,7 @@ define(function (require) {
                         chord = new ChordShape(chord);
                         this.chordShapes[i][j][k] = chord;
                         this.shapeList.push(chord);
-                        this.zr.addShape(chord);
+                        //this.zr.addShape(chord);
                     }
                 }
             }
@@ -562,7 +564,7 @@ define(function (require) {
 
                     scaleShape = new LineShape(scaleShape);
                     this.shapeList.push(scaleShape);
-                    this.zr.addShape(scaleShape);
+                    //this.zr.addShape(scaleShape);
 
                     scaleAngle += this.scaleUnitAngle;
                 }
@@ -602,7 +604,7 @@ define(function (require) {
 
                     textShape = new TextShape(textShape);
                     this.shapeList.push(textShape);
-                    this.zr.addShape(textShape);
+                    //this.zr.addShape(textShape);
                     scaleTextAngle += this.scaleUnitAngle * 5;
                 }
             }
@@ -674,7 +676,6 @@ define(function (require) {
             this.scaleLineLength = 4;
             this.scaleUnitAngle = 4;
             
-            this.clear();
             this.legend = this.component.legend;
             if (this.legend) {
                 this.getColor = function(param) {
@@ -727,6 +728,8 @@ define(function (require) {
                     return true;
                 };
             }
+            
+            this.backupShapeList();
             this._buildShape();
         },
 

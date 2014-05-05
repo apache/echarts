@@ -773,7 +773,7 @@ define(function() {
                     chordStyle : {
                         lineStyle : {
                             width : 1,
-                            color : '#666'
+                            color : '#999'
                         }
                     }
                 },
@@ -784,8 +784,8 @@ define(function() {
                     },
                     chordStyle : {
                         lineStyle : {
-                            width : 2,
-                            color : '#333'
+                            width : 1,
+                            color : '#666'
                         }
                     }
                 }

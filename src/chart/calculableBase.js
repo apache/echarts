@@ -297,6 +297,9 @@ define(function (require) {
                         this._animationPointList(oldShape, newShape, duration, easing);
                     }
                     break;
+                case 'chord' :
+                    this._animationChord(oldShape, newShape, duration, easing);
+                    break;
                 default :
                     this.zr.addShape(newShape);
                     break;
@@ -404,6 +407,21 @@ define(function (require) {
                     this._animateMod(
                         {
                             style : { pointList : newPointList }
+                        },
+                        newShape,
+                        duration,
+                        easing
+                    );
+                    break;
+                case 'chord' :
+                    this._animateMod(
+                        {
+                            style : {
+                                source0 : 0,
+                                source1 : 360,
+                                target0 : 0,
+                                target1 : 360
+                            }
                         },
                         newShape,
                         duration,
@@ -556,6 +574,34 @@ define(function (require) {
                     duration,
                     {
                         scale : [1, 1, x, y]
+                    }
+                )
+                .start(easing);
+        },
+        
+        _animationChord : function (oldShape, newShape, duration, easing) {
+            //var rect = require('zrender/shape/Polygon').prototype.getRect(newShape.style);
+            var source0 = newShape.style.source0;
+            var source1 = newShape.style.source1;
+            var target0 = newShape.style.target0;
+            var target1 = newShape.style.target1;
+            
+            if (oldShape.style) {
+                newShape.style.source0 = oldShape.style.source0;
+                newShape.style.source1 = oldShape.style.source1;
+                newShape.style.target0 = oldShape.style.target0;
+                newShape.style.target1 = oldShape.style.target1;
+            }
+            
+            this.zr.addShape(newShape);
+            this.zr.animate(newShape.id, 'style')
+                .when(
+                    duration,
+                    {
+                        source0 : source0,
+                        source1 : source1,
+                        target0 : target0,
+                        target1 : target1
                     }
                 )
                 .start(easing);
