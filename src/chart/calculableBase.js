@@ -167,7 +167,7 @@ define(function (require) {
             return;
         },
         
-        backupShapeList : function() {
+        backupShapeList : function () {
             if (this.shapeList && this.shapeList.length > 0) {
                 this.lastShapeList = this.shapeList;
                 this.shapeList = [];
@@ -177,7 +177,7 @@ define(function (require) {
             }
         },
         
-        addShapeList : function() {
+        addShapeList : function () {
             var maxLenth = this.option.animationThreshold / (this.canvasSupported ? 1 : 2);
             var lastShapeList = this.lastShapeList;
             var shapeList = this.shapeList;
@@ -243,74 +243,41 @@ define(function (require) {
             }
         },
         
-        _animateMod : function(oldShape, newShape, duration, easing) {
+        _animateMod : function (oldShape, newShape, duration, easing) {
             switch (newShape.type) {
                 case 'broken-line' :
                 case 'half-smooth-polygon' :
-                    var newPointList = newShape.style.pointList;
-                    if (oldShape.style.pointList.length == newPointList.length) {
-                        newShape.style.pointList = oldShape.style.pointList;
-                    }
-                    else if (oldShape.style.pointList.length < newPointList.length) {
-                        // 原来短，新的长，补全
-                        newShape.style.pointList = oldShape.style.pointList.concat(
-                            newPointList.slice(oldShape.style.pointList.length)
-                        )
-                    }
-                    else {
-                        // 原来长，新的短，截断
-                        newShape.style.pointList = oldShape.style.pointList.slice(
-                            0, newPointList.length
-                        );
-                    }
-                    this.zr.addShape(newShape);
-                    this.zr.animate(newShape.id, 'style')
-                        .when(
-                            duration,
-                            { pointList: newPointList }
-                        )
-                        .start(easing);
+                    this._animationPointList(oldShape, newShape, duration, easing);
                     break;
                 case 'rectangle' :
                 case 'icon' :
-                    var newX = newShape.style.x;
-                    var newY = newShape.style.y;
-                    var newWidth = newShape.style.width;
-                    var newHeight = newShape.style.height;
-                    newShape.style.x = oldShape.style.x;
-                    newShape.style.y = oldShape.style.y;
-                    newShape.style.width = oldShape.style.width;
-                    newShape.style.height = oldShape.style.height;
-                    this.zr.addShape(newShape);
-                    this.zr.animate(newShape.id, 'style')
-                        .when(
-                            duration,
-                            {
-                                x: newX,
-                                y: newY,
-                                width: newWidth,
-                                height: newHeight
-                            }
-                        )
-                        .start(easing);
+                    this._animationRectangle(oldShape, newShape, duration, easing);
                     break;
                 case 'candle' :
                     if (duration > 500) {
-                        var newY = newShape.style.y;
-                        newShape.style.y = oldShape.style.y;
-                        this.zr.addShape(newShape);
-                        this.zr.animate(newShape.id, 'style')
-                            .when(
-                                duration,
-                                {
-                                    y: newY
-                                }
-                            )
-                            .start(easing);
+                        this._animationCandle(oldShape, newShape, duration, easing);
                     }
                     else {
                         this.zr.addShape(newShape);
                     }
+                    break;
+                case 'ring' :
+                case 'sector' :
+                case 'circle' :
+                    if (duration > 500) {
+                        this._animationRing(
+                            oldShape,
+                            newShape, 
+                            duration + ((ecData.get(newShape, 'dataIndex') || 0) % 20 * 100), 
+                            easing
+                        );
+                    }
+                    else if (newShape.type == 'sector') {
+                        this._animationSector(oldShape, newShape, duration, easing);
+                    }
+                    break;
+                case 'text' :
+                    this._animationText(oldShape, newShape, duration, easing);
                     break;
                 default :
                     this.zr.addShape(newShape);
@@ -318,7 +285,7 @@ define(function (require) {
             }
         },
         
-        _animateAdd : function(newShape, duration, easing) {
+        _animateAdd : function (newShape, duration, easing) {
             switch (newShape.type) {
                 case 'broken-line' :
                 case 'half-smooth-polygon' :
@@ -342,7 +309,6 @@ define(function (require) {
                     }
                     this._animateMod(
                         {
-                            type : newShape.type,
                             style : { pointList : newPointList }
                         },
                         newShape,
@@ -354,7 +320,6 @@ define(function (require) {
                 case 'icon' :
                     this._animateMod(
                         {
-                            type : newShape.type,
                             style : {
                                 x : newShape.style.x,
                                 y : newShape._orient == 'vertical'
@@ -373,9 +338,36 @@ define(function (require) {
                     var y = newShape.style.y;
                     this._animateMod(
                         {
-                            type : newShape.type,
                             style : {
                                 y : [y[0], y[0], y[0], y[0]]
+                            }
+                        },
+                        newShape,
+                        duration,
+                        easing
+                    );
+                    break;
+                case 'sector' :
+                    this._animateMod(
+                        {
+                            style : {
+                                startAngle : newShape.style.startAngle,
+                                endAngle : newShape.style.startAngle
+                            }
+                        },
+                        newShape,
+                        duration,
+                        easing
+                    );
+                    break;
+                case 'text' :
+                    this._animateMod(
+                        {
+                            style : {
+                                x : newShape.style.textAlign == 'left' 
+                                    ? newShape.style.x + 100
+                                    : newShape.style.x - 100,
+                                y : newShape.style.y
                             }
                         },
                         newShape,
@@ -387,6 +379,133 @@ define(function (require) {
                     this._animateMod({}, newShape, duration, easing);
                     break;
             }
+        },
+        
+        _animationPointList : function (oldShape, newShape, duration, easing) {
+            var newPointList = newShape.style.pointList;
+            if (oldShape.style.pointList.length == newPointList.length) {
+                newShape.style.pointList = oldShape.style.pointList;
+            }
+            else if (oldShape.style.pointList.length < newPointList.length) {
+                // 原来短，新的长，补全
+                newShape.style.pointList = oldShape.style.pointList.concat(
+                    newPointList.slice(oldShape.style.pointList.length)
+                )
+            }
+            else {
+                // 原来长，新的短，截断
+                newShape.style.pointList = oldShape.style.pointList.slice(
+                    0, newPointList.length
+                );
+            }
+            this.zr.addShape(newShape);
+            this.zr.animate(newShape.id, 'style')
+                .when(
+                    duration,
+                    { pointList: newPointList }
+                )
+                .start(easing);
+        },
+        
+        _animationRectangle : function (oldShape, newShape, duration, easing) {
+            var newX = newShape.style.x;
+            var newY = newShape.style.y;
+            var newWidth = newShape.style.width;
+            var newHeight = newShape.style.height;
+            newShape.style.x = oldShape.style.x;
+            newShape.style.y = oldShape.style.y;
+            newShape.style.width = oldShape.style.width;
+            newShape.style.height = oldShape.style.height;
+            this.zr.addShape(newShape);
+            this.zr.animate(newShape.id, 'style')
+                .when(
+                    duration,
+                    {
+                        x: newX,
+                        y: newY,
+                        width: newWidth,
+                        height: newHeight
+                    }
+                )
+                .start(easing);
+        },
+        
+        _animationCandle : function (oldShape, newShape, duration, easing) {
+            var newY = newShape.style.y;
+            newShape.style.y = oldShape.style.y;
+            this.zr.addShape(newShape);
+            this.zr.animate(newShape.id, 'style')
+                .when(
+                    duration,
+                    { y: newY }
+                )
+                .start(easing);
+        },
+        
+        _animationRing : function (oldShape, newShape, duration, easing) {
+            var x = newShape.style.x;
+            var y = newShape.style.y;
+            var r0 = newShape.style.r0;
+            var r = newShape.style.r;
+            
+            newShape.style.r0 = 0;
+            newShape.style.r = 0;
+            newShape.rotation = [Math.PI*2, x, y];
+            
+            this.zr.addShape(newShape);
+            this.zr.animate(newShape.id, 'style')
+                .when(
+                    duration,
+                    {
+                        r0 : r0,
+                        r : r
+                    }
+                )
+                .start(easing);
+            this.zr.animate(newShape.id, '')
+                .when(
+                    Math.round(duration / 3 * 2),
+                    { rotation : [0, x, y] }
+                )
+                .start(easing);
+        },
+        
+        _animationSector : function (oldShape, newShape, duration, easing) {
+            var startAngle = newShape.style.startAngle;
+            var endAngle = newShape.style.endAngle;
+            
+            newShape.style.startAngle = oldShape.style.startAngle;
+            newShape.style.endAngle = oldShape.style.endAngle;
+            
+            this.zr.addShape(newShape);
+            this.zr.animate(newShape.id, 'style')
+                .when(
+                    duration,
+                    {
+                        startAngle : startAngle,
+                        endAngle : endAngle
+                    }
+                )
+                .start(easing);
+        },
+        
+        _animationText : function (oldShape, newShape, duration, easing) {
+            var x = newShape.style.x;
+            var y = newShape.style.y;
+            
+            newShape.style.x = oldShape.style.x;
+            newShape.style.y = oldShape.style.y;
+            
+            this.zr.addShape(newShape);
+            this.zr.animate(newShape.id, 'style')
+                .when(
+                    duration,
+                    {
+                        x : x,
+                        y : y
+                    }
+                )
+                .start(easing);
         }
     }
 

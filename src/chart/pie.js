@@ -141,9 +141,7 @@ define(function (require) {
                 }
             }
 
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                this.zr.addShape(this.shapeList[i]);
-            }
+            this.addShapeList();
         },
 
         /**
@@ -309,6 +307,13 @@ define(function (require) {
                     false
                 );
             if (label) {
+                ecData.pack(
+                    label,
+                    series[seriesIndex], seriesIndex,
+                    series[seriesIndex].data[dataIndex], dataIndex,
+                    series[seriesIndex].data[dataIndex].name,
+                    percent
+                );
                 label._dataIndex = dataIndex;
                 this.shapeList.push(label);
             }
@@ -321,6 +326,13 @@ define(function (require) {
                     false
                 );
             if (labelLine) {
+                ecData.pack(
+                    labelLine,
+                    series[seriesIndex], seriesIndex,
+                    series[seriesIndex].data[dataIndex], dataIndex,
+                    series[seriesIndex].data[dataIndex].name,
+                    percent
+                );
                 labelLine._dataIndex = dataIndex;
                 this.shapeList.push(labelLine);
             }
@@ -602,7 +614,7 @@ define(function (require) {
                 var sinValue = zrMath.sin(midAngle, true);
                 // 三角函数缓存已在zrender/tool/math中做了
                 return new BrokenLineShape({
-                    shape : 'brokenLine',
+                    // shape : 'brokenLine',
                     zlevel : this._zlevelBase + 1,
                     hoverable : false,
                     style : {
@@ -711,7 +723,8 @@ define(function (require) {
                 this.option = newOption;
                 this.series = newOption.series;
             }
-            this.clear();
+            
+            this.backupShapeList();
             this._buildShape();
         },
         
@@ -872,84 +885,6 @@ define(function (require) {
                 }
             }
             this.shapeList = backupShapeList;
-        },
-
-        /**
-         * 动画设定
-         */
-        animation :function () {
-            var duration = this.query(this.option, 'animationDuration');
-            var easing = this.query(this.option, 'animationEasing');
-            var x;
-            var y;
-            var r0;
-            var r;
-            var serie;
-            var dataIndex;
-
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                if (this.shapeList[i].type == 'sector'
-                    || this.shapeList[i].type == 'circle'
-                    || this.shapeList[i].type == 'ring'
-                ) {
-                    x = this.shapeList[i].style.x;
-                    y = this.shapeList[i].style.y;
-                    r0 = this.shapeList[i].style.r0;
-                    r = this.shapeList[i].style.r;
-
-                    this.zr.modShape(
-                        this.shapeList[i].id, 
-                        {
-                            rotation : [Math.PI*2, x, y],
-                            style : {
-                                r0 : 0,
-                                r : 0
-                            }
-                        }
-                    );
-
-                    serie = ecData.get(this.shapeList[i], 'series');
-                    dataIndex = ecData.get(this.shapeList[i], 'dataIndex');
-                    this.zr.animate(this.shapeList[i].id, 'style')
-                        .when(
-                            (this.query(serie,'animationDuration')
-                            || duration)
-                            + dataIndex * 10,
-                            {
-                                r0 : r0,
-                                r : r
-                            }
-                        )
-                        .start('QuinticOut');
-                    this.zr.animate(this.shapeList[i].id, '')
-                        .when(
-                            (this.query(serie,'animationDuration')
-                            || duration)
-                            + dataIndex * 100,
-                            {rotation : [0, x, y]}
-                        )
-                        .start(
-                            this.query(serie, 'animationEasing') || easing
-                        );
-                }
-                else if (!this.shapeList[i]._mark){
-                    dataIndex = this.shapeList[i]._dataIndex;
-                    this.zr.modShape(
-                        this.shapeList[i].id, 
-                        {
-                            scale : [0, 0, x, y]
-                        }
-                    );
-                    this.zr.animate(this.shapeList[i].id, '')
-                        .when(
-                            duration + dataIndex * 100,
-                            {scale : [1, 1, x, y]}
-                        )
-                        .start('QuinticOut');
-                }
-            }
-            
-            this.animationMark(duration, easing);
         },
 
         onclick : function (param) {
