@@ -1198,7 +1198,7 @@ define(function (require) {
         },
 
         clearAnimationShape : function () {
-            if (this.zr && this.effectList.length > 0) {
+            if (this.zr && this.effectList && this.effectList.length > 0) {
                 this.zr.modLayer(
                     EFFECT_ZLEVEL, 
                     { motionBlur : false}

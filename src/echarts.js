@@ -673,11 +673,19 @@ define(function (require) {
             var chartLibrary = require('./chart');
             var componentLibrary = require('./component');
 
+            // 组件无需保存过渡状态，走新实例，先释放已有的
+            for (var componentType in this.component) {
+                if (componentType != ecConfig.COMPONENT_TYPE_TOOLBOX){
+                    this.component[componentType].dispose();
+                    this.component[componentType] = null;
+                    delete this.component[componentType];
+                }
+            }
+            
             // 标题
-            var title = this.component.title && this.component.title.dispose();
             if (magicOption.title) {
                 var Title = componentLibrary.get('title');
-                title = new Title(
+                var title = new Title(
                     this._themeConfig, this._messageCenter, this._zr, magicOption
                 );
                 this._chartList.push(title);
@@ -685,10 +693,9 @@ define(function (require) {
             }
 
             // 提示
-            var tooltip = this.component.tooltip && this.component.tooltip.dispose();
             if (magicOption.tooltip) {
                 var Tooltip = componentLibrary.get('tooltip');
-                tooltip = new Tooltip(
+                var tooltip = new Tooltip(
                     this._themeConfig, this._messageCenter, this._zr, magicOption, this.dom, this
                 );
                 this._chartList.push(tooltip);
@@ -696,10 +703,9 @@ define(function (require) {
             }
 
             // 图例
-            var legend = this.component.legend && this.component.legend.dispose();
             if (magicOption.legend) {
                 var Legend = componentLibrary.get('legend');
-                legend = new Legend(
+                var legend = new Legend(
                     this._themeConfig, this._messageCenter, this._zr, magicOption
                 );
                 this._chartList.push(legend);
@@ -707,10 +713,9 @@ define(function (require) {
             }
 
             // 值域控件
-            var dataRange = this.component.dataRange && this.component.dataRange.dispose();
             if (magicOption.dataRange) {
                 var DataRange = componentLibrary.get('dataRange');
-                dataRange = new DataRange(
+                var dataRange = new DataRange(
                     this._themeConfig, this._messageCenter, this._zr, magicOption
                 );
                 this._chartList.push(dataRange);
@@ -718,18 +723,14 @@ define(function (require) {
             }
 
             // 直角坐标系
-            var grid = this.component.grid && this.component.grid.dispose();
-            var dataZoom = this.component.dataZoom && this.component.dataZoom.dispose();
-            var xAxis = this.component.xAxis && this.component.xAxis.dispose();
-            var yAxis = this.component.yAxis && this.component.yAxis.dispose();
             if (magicOption.grid || magicOption.xAxis || magicOption.yAxis) {
                 var Grid = componentLibrary.get('grid');
-                grid = new Grid(this._themeConfig, this._messageCenter, this._zr, magicOption);
+                var grid = new Grid(this._themeConfig, this._messageCenter, this._zr, magicOption);
                 this._chartList.push(grid);
                 this.component.grid = grid;
 
                 var DataZoom = componentLibrary.get('dataZoom');
-                dataZoom = new DataZoom(
+                var dataZoom = new DataZoom(
                     this._themeConfig, this._messageCenter, this._zr,
                     magicOption, this.component
                 );
@@ -737,14 +738,14 @@ define(function (require) {
                 this.component.dataZoom = dataZoom;
 
                 var Axis = componentLibrary.get('axis');
-                xAxis = new Axis(
+                var xAxis = new Axis(
                     this._themeConfig, this._messageCenter, this._zr,
                     magicOption, this.component, 'xAxis'
                 );
                 this._chartList.push(xAxis);
                 this.component.xAxis = xAxis;
 
-                yAxis = new Axis(
+                var yAxis = new Axis(
                     this._themeConfig, this._messageCenter, this._zr,
                     magicOption, this.component, 'yAxis'
                 );
@@ -753,10 +754,9 @@ define(function (require) {
             }
 
             // 极坐标系
-            var polar = this.component.polar && this.component.polar.dispose();
             if (magicOption.polar) {
                 var Polar = componentLibrary.get('polar');
-                polar = new Polar(
+                var polar = new Polar(
                     this._themeConfig, this._messageCenter, this._zr,
                     magicOption, this.component
                 );
@@ -764,7 +764,7 @@ define(function (require) {
                 this.component.polar = polar;
             }
             
-            tooltip && tooltip.setComponent();
+            this.component.tooltip && this.component.tooltip.setComponent();
             
             var ChartClass;
             var chartType;

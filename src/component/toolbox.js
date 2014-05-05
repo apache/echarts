@@ -1086,7 +1086,7 @@ define(function (require) {
                 this._dataView.dispose();
                 this._dataView = null;
             }
-
+            this.clear();
             this.shapeList = null;
         },
         

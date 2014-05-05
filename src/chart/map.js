@@ -1305,7 +1305,9 @@ define(function (require) {
          * 释放后实例不可用
          */
         dispose : function () {
+            this.clear();
             this.shapeList = null;
+            this.effectList = null;
             this._isAlive = false;
             if (this._needRoam) {
                 this.zr.un(zrConfig.EVENT.MOUSEWHEEL, this._onmousewheel);

@@ -1562,6 +1562,7 @@ define(function (require) {
                 this.zr.delShape(this._lastTipShape.tipShape);
             }
             this.clear();
+            this.shapeList = null;
             
             clearTimeout(this._hidingTicket);
             clearTimeout(this._showingTicket);
@@ -1572,7 +1573,6 @@ define(function (require) {
                 this.dom.firstChild.removeChild(this._tDom);
             }
             this._tDom = null;
-            this.shapeList = null;
         },
         
         /**
