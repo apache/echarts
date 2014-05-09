@@ -578,8 +578,8 @@ var optionMap = {
         dataZoom : {
             show : true,
             realtime: true,
-            start : 50,
-            end : 100
+            start : 0,
+            end : 50
         },
         xAxis : [
             {
@@ -712,8 +712,8 @@ var optionMap = {
                 dataZoom : {
                     show : true,
                     realtime: true,
-                    start : 50,
-                    end : 100
+                    start : 0,
+                    end : 50
                 },
                 grid: {
                     x: 80,
@@ -803,8 +803,8 @@ var optionMap = {
                     y:200,
                     show : true,
                     realtime: true,
-                    start : 50,
-                    end : 100
+                    start : 0,
+                    end : 50
                 },
                 grid: {
                     x: 80,
@@ -904,8 +904,8 @@ var optionMap = {
                 y: 250,
                 show : true,
                 realtime: true,
-                start : 50,
-                end : 100
+                start : 0,
+                end : 50
             },
             grid: {
                 x: 80,
@@ -1200,8 +1200,8 @@ var optionMap = {
             dataZoom : {
                 show : false,
                 realtime: true,
-                start : 50,
-                end : 100
+                start : 0,
+                end : 50
             },
             xAxis : [
                 {

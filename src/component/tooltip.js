@@ -246,14 +246,14 @@ define(function (require) {
             }
             else {
                 // 数据项事件
-                if (this._curTarget._type == 'island' && option.tooltip.show) {
+                if (this._curTarget._type == 'island' && this.option.tooltip.show) {
                     this._showItemTrigger();
                     return;
                 }
                 var serie = ecData.get(this._curTarget, 'series');
                 var data = ecData.get(this._curTarget, 'data');
                 needShow = this.deepQuery(
-                    [data, serie, option],
+                    [data, serie, this.option],
                     'tooltip.show'
                 );
                 if (typeof serie == 'undefined'
@@ -267,7 +267,7 @@ define(function (require) {
                 }
                 else {
                     trigger = this.deepQuery(
-                        [data, serie, option],
+                        [data, serie, this.option],
                         'tooltip.trigger'
                     );
                     trigger == 'axis'

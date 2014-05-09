@@ -1248,7 +1248,8 @@ define(function (require) {
                     if (magicOption.addDataAnimation 
                         && self._chartList[i].addDataAnimation
                     ) {
-                        self._chartList[i].clear(); // 有addData动画就去掉过渡动画
+                        self._chartList[i].motionlessOnce = true;
+                        //self._chartList[i].clear(); // 有addData动画就去掉过渡动画
                     }
                 }
                 self._messageCenter.dispatch(

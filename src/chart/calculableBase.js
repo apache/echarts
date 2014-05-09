@@ -191,6 +191,7 @@ define(function (require) {
             if (this.option.animation 
                 && !this.option.renderAsImage 
                 && shapeList.length < maxLenth
+                && !this.motionlessOnce
             ) {
                 // 通过已有的shape做动画过渡
                 for (var i = 0, l = lastShapeList.length; i < l; i++) {
@@ -241,6 +242,7 @@ define(function (require) {
                 this.animationMark(duration, easing);
             }
             else {
+                this.motionlessOnce = false;
                 // clear old
                 this.zr.delShape(lastShapeList);
                 // 直接添加

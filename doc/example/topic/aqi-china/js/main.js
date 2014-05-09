@@ -174,14 +174,14 @@ function extMark() {
     var pos;
     var city;
     var len = dataWorst.length;
+    var lineShape = require('zrender/shape/Line');
     for (var i = len - 1, l = len - 2; i > l; i--) {
         // 最差10位
         city = dataWorst[i].name;
         pos = map.getPosByGeo('china', cityGeo[city]);
         //pos = map.geo2pos('china', cityGeo[city]);
-        shapeList.push({
+        shapeList.push(new lineShape({
             shape : 'line',
-            id : zr.newShapeId(),
             zlevel : 5,
             style : {
                 xStart : pos[0],
@@ -196,7 +196,7 @@ function extMark() {
                 text : city + ' : ' + dataWorst[i].value,
                 textPosition: 'end'//'specific'
             }
-        });
+        }));
         y += 30;
     }
     for (var i = 0, l = shapeList.length; i < l; i++) {
