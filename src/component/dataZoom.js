@@ -252,7 +252,6 @@ define(function (require) {
             this._zoom.scatterMap = this._zoom.scatterMap || {};
             this._zoom.scatterMap[seriesIndex] = this._zoom.scatterMap[seriesIndex] || {};
             var componentLibrary = require('../component');
-            var zrUtil = require('zrender/tool/util');
             // x轴极值
             var Axis = componentLibrary.get('axis');
             var axisOption = zrUtil.clone(this.option.xAxis);
@@ -489,7 +488,6 @@ define(function (require) {
          * 构建拖拽手柄
          */
         _buildHandle : function () {
-            var zrUtil = require('zrender/tool/util');
             this._startShape = {
                 zlevel : this._zlevelBase,
                 draggable : true,
@@ -536,7 +534,6 @@ define(function (require) {
          * 构建特效边框
          */
         _buildFrame : function () {
-            var zrUtil = require('zrender/tool/util');
             // 特效框线，亚像素优化
             var x = this.subPixelOptimize(this._location.x, 1);
             var y = this.subPixelOptimize(this._location.y, 1);

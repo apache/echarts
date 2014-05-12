@@ -20,7 +20,6 @@ define(function (require) {
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrConfig = require('zrender/config');
-    var zrUtil = require('zrender/tool/util');
     var zrEvent = require('zrender/tool/event');
     
     var _mapParams = require('../util/mapData/params').params;
