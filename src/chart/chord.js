@@ -391,6 +391,7 @@ define(function(require) {
                         opacity: 1,
                         color : getColor(group.name)
                     },
+                    clickable: true,
                     highlightStyle : {
                         brushType : 'fill'
                     }
@@ -532,6 +533,7 @@ define(function(require) {
                                 lineWidth : chordLineStyle.width,
                                 strokeColor : chordLineStyle.color
                             },
+                            clickable: true,
                             highlightStyle : {
                                 brushType : 'both',
                                 lineWidth : chordLineStyleEmphsis.width,
