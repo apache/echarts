@@ -361,6 +361,7 @@ define(function (require) {
                         opacity: 1,
                         color : this.getColor(group.name)
                     },
+                    clickable: true,
                     highlightStyle : {
                         brushType : 'fill'
                     }
@@ -500,6 +501,7 @@ define(function (require) {
                                 lineWidth : chordLineStyle.width,
                                 strokeColor : chordLineStyle.color
                             },
+                            clickable: true,
                             highlightStyle : {
                                 brushType : 'both',
                                 lineWidth : chordLineStyleEmphsis.width,
@@ -559,7 +561,7 @@ define(function (require) {
                             lineCap : 'round',
                             brushType : 'stroke',
                             strokeColor : '#666'
-                        }   
+                        }
                     };
 
                     scaleShape = new LineShape(scaleShape);
