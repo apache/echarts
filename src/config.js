@@ -35,6 +35,7 @@ define(function() {
         COMPONENT_TYPE_Y_AXIS: 'yAxis',
         COMPONENT_TYPE_AXIS_CATEGORY: 'categoryAxis',
         COMPONENT_TYPE_AXIS_VALUE: 'valueAxis',
+        COMPONENT_TYPE_TIMELINE: 'timeline',
 
         // 全图默认背景
         // backgroundColor: 'rgba(0,0,0,0)',
@@ -425,6 +426,36 @@ define(function() {
             //indicator : []
         },
 
+        timeline : {
+            type : 'time',  // 模式是时间类型，支持 number
+            show: true,
+            notMerge : false,
+            realtime : true,
+            x: 80,
+            //y: {number},
+            x2: 80,
+            y2: 5,
+            // width: {totalWidth} - x - x2,
+            height: 50,
+            controlPosition : 'left',           // 'right' | 'none'
+            autoPlay : false,
+            loop : true,
+            playInterval : 1000,                // 播放时间间隔，单位ms
+            backgroundColor: 'rgba(0,0,0,0)',   // 工具箱背景颜色
+            borderColor : '#ccc',               // 工具箱边框颜色
+            borderWidth : 1,                    // 工具箱边框线宽，单位px，默认为0（无边框）
+            padding : 5,                        // 工具箱内边距，单位px，默认各方向内边距为5，
+            lineStyle : {
+                width : 1,
+                color : '#666',
+                type : 'dashed'
+            },
+            symbol : 'emptyDiamond',
+            symbolSize : 4,
+            currentIndex : 0
+            // data : []
+        },
+        
         // 柱形图默认参数
         bar: {
             // stack: null

@@ -53,7 +53,9 @@ function refresh(isBtnRefresh){
     myChart = echarts.init(domMain);
     window.onresize = myChart.resize;
     (new Function(editor.doc.getValue()))();
-    myChart.setOption(option, true);
+    !option.timeline 
+        ? myChart.setOption(option, true)
+        : myChart.setTimelineOption(option);
     domMessage.innerHTML = '';
 }
 

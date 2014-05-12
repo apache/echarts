@@ -417,6 +417,7 @@ define(function (require) {
                 && this._chartList[len].ondragend
                 && this._chartList[len].ondragend(param, this._status);
             }
+            this._timeline && this._timeline.ondragend(param, this._status);
             this._island.ondragend(param, this._status);
 
             // 发生过重计算
@@ -443,6 +444,7 @@ define(function (require) {
                 && this._chartList[len].onlegendSelected
                 && this._chartList[len].onlegendSelected(param, this._status);
             }
+            this._timeline && this._timeline.onlegendSelected(param, this._status);
             
             this._selectedMap = param.selected;
 
@@ -675,7 +677,9 @@ define(function (require) {
 
             // 组件无需保存过渡状态，走新实例，先释放已有的
             for (var componentType in this.component) {
-                if (componentType != ecConfig.COMPONENT_TYPE_TOOLBOX){
+                if (componentType != ecConfig.COMPONENT_TYPE_TOOLBOX
+                    && componentType != ecConfig.COMPONENT_TYPE_TIMELINE
+                ){
                     this.component[componentType].dispose();
                     this.component[componentType] = null;
                     delete this.component[componentType];
@@ -921,7 +925,8 @@ define(function (require) {
                 island : this._island
             };
             this.component = {
-                toolbox : this._toolbox
+                toolbox : this._toolbox,
+                timeline : this._timeline
             };
         },
 
@@ -1016,9 +1021,16 @@ define(function (require) {
 
             this._optionBackup = zrUtil.clone(this._option);
             this._optionRestore = zrUtil.clone(this._option);
-            
-            if (this._option.legend && this._option.legend.selected) {
-                this._selectedMap = this._option.legend.selected;
+            if (this._option.legend) {
+                if (this._option.legend.selected) {
+                    this._selectedMap = this._option.legend.selected;
+                }
+                else if (notMerge) {
+                    this._selectedMap = {};
+                }
+                else {
+                    this._option.legend.selected = this._selectedMap;
+                }
             }
             else {
                 this._selectedMap = {};
@@ -1067,6 +1079,19 @@ define(function (require) {
          */
         getSeries : function () {
             return this.getOption().series;
+        },
+        
+        setTimelineOption : function(option) {
+            if (this._timeline) {
+                this._timeline.dispose();
+            }
+            require('./component/timeline');
+            var componentLibrary = require('./component');
+            var Timeline = componentLibrary.get('timeline');
+            var timeline = new Timeline(
+                this._themeConfig, this._messageCenter, this._zr, option, this
+            );
+            this._timeline = timeline;
         },
         
         /**
@@ -1622,6 +1647,7 @@ define(function (require) {
                 self._zr.clearAnimation();
                 self._island.resize();
                 self._toolbox.resize();
+                self._timeline.resize();
                 // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
                 // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
                 for (var i = 0, l = self._chartList.length; i < l; i++) {
@@ -1656,6 +1682,7 @@ define(function (require) {
         
             this._island.dispose();
             this._toolbox.dispose();
+            this._timeline && this._timeline.dispose();
             this._messageCenter.unbind();
             this.clear();
             this._zr.dispose();

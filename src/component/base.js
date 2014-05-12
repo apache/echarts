@@ -98,6 +98,7 @@ define(function (require) {
                 case ecConfig.COMPONENT_TYPE_LEGEND :
                 case ecConfig.COMPONENT_TYPE_DATARANGE:
                 case ecConfig.COMPONENT_TYPE_DATAZOOM :
+                case ecConfig.COMPONENT_TYPE_TIMELINE :
                     return 4;
 
                 case ecConfig.CHART_TYPE_ISLAND :
