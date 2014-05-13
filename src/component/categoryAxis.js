@@ -68,11 +68,11 @@ define(function (require) {
                         var isEnough = false;
                         var labelSpace;
                         var labelSize;
-                        var step = Math.floor(1 / gap);
+                        var step = Math.floor(0.5 / gap);
                         step = step < 1 ? 1 : step;
                         interval = Math.floor(15 / gap);
                         while (!isEnough && interval < dataLength) {
-                            interval++;
+                            interval += step;
                             isEnough = true;
                             labelSpace = Math.floor(gap * interval); // 标签左右至少间隔为3px
                             for (var i = Math.floor((dataLength - 1)/ interval) * interval; 
@@ -627,10 +627,6 @@ define(function (require) {
             if (newOption) {
                 this.option = this.reformOption(newOption);
                 // 通用字体设置
-                this.option.axisLabel.textStyle = zrUtil.merge(
-                    this.option.axisLabel.textStyle || {},
-                    this.ecTheme.textStyle
-                );
                 this.option.axisLabel.textStyle = zrUtil.merge(
                     this.option.axisLabel.textStyle || {},
                     this.ecTheme.textStyle

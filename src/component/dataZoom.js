@@ -824,13 +824,6 @@ define(function (require) {
             if (this.zoomOption.realtime) {
                 this._syncData();
             }
-            else {
-                clearTimeout(this._syncTicket);
-                var self = this;
-                this._syncTicket = setTimeout(function (){
-                    self._syncData();
-                }, 200);
-            }
 
             return true;
         },
@@ -848,7 +841,7 @@ define(function (require) {
                 return;
             }
 
-             this._syncData();
+            !this.zoomOption.realtime && this._syncData();
 
             // 别status = {}赋值啊！！
             status.dragOut = true;

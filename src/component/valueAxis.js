@@ -853,10 +853,6 @@ define(function (require) {
                     this.option.axisLabel.textStyle || {},
                     this.ecTheme.textStyle
                 );
-                this.option.axisLabel.textStyle = zrUtil.merge(
-                    this.option.axisLabel.textStyle || {},
-                    this.ecTheme.textStyle
-                );
                 this.series = newSeries;
             }
             if (this.zr) {   // 数值轴的另外一个功能只是用来计算极值

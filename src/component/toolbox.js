@@ -373,8 +373,7 @@ define(function (require) {
                         break;
                     case 'dataView' :
                         if (!this._dataView) {
-                            var componentLibrary = require('../component');
-                            var DataView = componentLibrary.get('dataView');
+                            var DataView = require('./dataView');;
                             this._dataView = new DataView(
                                 this.ecTheme, this.messageCenter, this.zr, this.option, this.dom
                             );
