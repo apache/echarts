@@ -8,11 +8,10 @@
 define(function (require) {
     var Base = require('zrender/shape/Base');
     var IconShape = require('./Icon');
-    var LineShape = require('zrender/shape/Line');
 
     var dashedLineTo = require('zrender/shape/util/dashedLineTo');
     var zrUtil = require('zrender/tool/util');
-    
+    var matrix = require('zrender/tool/matrix');
     
     function Chain(options) {
         Base.call(this, options);
@@ -62,9 +61,9 @@ define(function (require) {
          */
         buildLinePath : function (ctx, style) {
             var x = style.x;
-            var y = style.y + 4;
+            var y = style.y + 5;
             var width = style.width;
-            var height = style.height - 8;
+            var height = style.height - 10;
             
             ctx.moveTo(x, y);
             ctx.lineTo(x, y + height);
@@ -90,94 +89,74 @@ define(function (require) {
             ctx.save();
             
             var chainPoint = style.chainPoint;
+            var curPoint;
             for (var idx = 0, l = chainPoint.length; idx < l; idx++) {
-                if (chainPoint[idx] == 'none') {
+                curPoint = chainPoint[idx];
+                if (curPoint == 'none') {
                     continue;
                 }
                 ctx.beginPath();
                 
-                var symbolSize = chainPoint[idx].symbolSize;
+                var symbolSize = curPoint.symbolSize;
                 IconShape.prototype.buildPath(
                     ctx, 
                     {
-                        iconType : chainPoint[idx].symbol,
-                        x : chainPoint[idx].x - symbolSize,
+                        iconType : curPoint.symbol,
+                        x : curPoint.x - symbolSize,
                         y : y - symbolSize,
                         width : symbolSize * 2,
                         height : symbolSize * 2,
-                        n : chainPoint[idx].n
+                        n : curPoint.n
                     }
                 );
-                ctx.fillStyle = chainPoint[idx].isEmpty ? '#fff' : style.strokeColor;
+                ctx.fillStyle = curPoint.isEmpty ? '#fff' : style.strokeColor;
                 
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
+                
+                if (curPoint.showLabel) {
+                    ctx.font = curPoint.font;
+                    ctx.fillStyle = curPoint.textColor;
+                    ctx.textAlign = curPoint.textAlign;
+                    ctx.textBaseline = curPoint.textBaseline;
+                    if (curPoint.rotation) {
+                        ctx.save();
+                        this._updateTextTransform(ctx, curPoint.rotation);
+                        ctx.fillText(curPoint.name, curPoint.textX, curPoint.textY);
+                        ctx.restore();
+                    }
+                    else {
+                        ctx.fillText(curPoint.name, curPoint.textX, curPoint.textY);
+                    }
+                }
             }
             
             ctx.restore();
         },
         
-        getPointList : function (style) {
-            var pointList = [
-                [style.xStart, style.yStart],
-                [style.xEnd, style.yEnd]
-            ];
-            if (style.smooth === 'spline') {
-                var lastPointX = pointList[1][0];
-                var lastPointY = pointList[1][1];
-                pointList[3] = [lastPointX, lastPointY];
-                pointList[1] = this.getOffetPoint(pointList[0], pointList[3]);
-                pointList[2] = this.getOffetPoint(pointList[3], pointList[0]);
-                pointList = smoothSpline(pointList, false);
-                // 修正最后一点在插值产生的偏移
-                pointList[pointList.length - 1] = [lastPointX, lastPointY];
+        _updateTextTransform : function (ctx, rotation) {
+            var _transform = matrix.create();
+            matrix.identity(_transform);
+
+            if (rotation[0] !== 0) {
+                var originX = rotation[1] || 0;
+                var originY = rotation[2] || 0;
+                if (originX || originY) {
+                    matrix.translate(
+                        _transform, _transform, [-originX, -originY]
+                    );
+                }
+                matrix.rotate(_transform, _transform, rotation[0]);
+                if (originX || originY) {
+                    matrix.translate(
+                        _transform, _transform, [originX, originY]
+                    );
+                }
             }
-            return pointList;
-        },
-        
-        /**
-         * {Array} start point
-         * {Array} end point
-         */
-        getOffetPoint : function (sp, ep) {
-            var distance = Math.sqrt(Math.round(
-                    (sp[0] - ep[0]) * (sp[0] - ep[0]) + (sp[1] - ep[1]) * (sp[1] - ep[1])
-                )) / 3;
-            //console.log(delta);
-            var mp = [sp[0], sp[1]];
-            var angle;
-            var deltaAngle = 0.2; // 偏移0.2弧度
-            if (sp[0] != ep[0] && sp[1] != ep[1]) {
-                // 斜率存在
-                var k = (ep[1] - sp[1]) / (ep[0] - sp[0]);
-                angle = Math.atan(k);
-            }
-            else if (sp[0] == ep[0]){
-                // 垂直线
-                angle = (sp[1] <= ep[1] ? 1 : -1) * Math.PI / 2;
-            }
-            else {
-                // 水平线
-                angle = 0;
-            }
-            var dX;
-            var dY;
-            if (sp[0] <= ep[0]) {
-                angle -= deltaAngle;
-                dX = Math.round(Math.cos(angle) * distance);
-                dY = Math.round(Math.sin(angle) * distance);
-                mp[0] += dX;
-                mp[1] += dY;
-            }
-            else {
-                angle += deltaAngle;
-                dX = Math.round(Math.cos(angle) * distance);
-                dY = Math.round(Math.sin(angle) * distance);
-                mp[0] -= dX;
-                mp[1] -= dY;
-            }
-            return mp;
+
+            // 保存这个变换矩阵
+            ctx.transform.apply(ctx, _transform);
         },
         
         isCover : function (x, y) {

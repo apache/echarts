@@ -138,23 +138,14 @@ define(function (require) {
             _zr.on(zrConfig.EVENT.DRAGLEAVE, this._onzrevent);
             _zr.on(zrConfig.EVENT.DROP, this._onzrevent);
 
-            // 内置图表注册
-            var chartLibrary = require('./chart');
-            require('./chart/island');
+            // 内置图表
             // 孤岛
-            var Island = chartLibrary.get('island');
+            var Island = require('./chart/island');
             this._island = new Island(this._themeConfig, this._messageCenter, _zr);
             
             // 内置通用组件
-            var componentLibrary = require('./component');
-            require('./component/title');
-            require('./component/legend');
-            require('./component/tooltip');
-            require('./component/toolbox');
-            require('./component/dataView');
-            
             // 工具箱
-            var Toolbox = componentLibrary.get('toolbox');
+            var Toolbox = require('./component/toolbox');
             this._toolbox = new Toolbox(
                 this._themeConfig, this._messageCenter, _zr, this.dom, this
             );
@@ -688,7 +679,7 @@ define(function (require) {
             
             // 标题
             if (magicOption.title) {
-                var Title = componentLibrary.get('title');
+                var Title = require('./component/title');
                 var title = new Title(
                     this._themeConfig, this._messageCenter, this._zr, magicOption
                 );
@@ -698,7 +689,7 @@ define(function (require) {
 
             // 提示
             if (magicOption.tooltip) {
-                var Tooltip = componentLibrary.get('tooltip');
+                var Tooltip = require('./component/tooltip');
                 var tooltip = new Tooltip(
                     this._themeConfig, this._messageCenter, this._zr, magicOption, this.dom, this
                 );
@@ -708,7 +699,7 @@ define(function (require) {
 
             // 图例
             if (magicOption.legend) {
-                var Legend = componentLibrary.get('legend');
+                var Legend = require('./component/legend');
                 var legend = new Legend(
                     this._themeConfig, this._messageCenter, this._zr, magicOption
                 );
@@ -1004,6 +995,21 @@ define(function (require) {
          *                   如果不需求，可以通过notMerger参数为true阻止与上次option的合并
          */
         setOption : function (option, notMerge) {
+            if (!option.timeline) {
+                return this._setOption(option, notMerge);
+            }
+            else {
+                return this._setTimelineOption(option);
+            }
+        },
+        
+        /**
+         * 万能接口，配置图表实例任何可配置选项，多次调用时option选项做merge处理
+         * @param {Object} option
+         * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
+         *                   如果不需求，可以通过notMerger参数为true阻止与上次option的合并
+         */
+        _setOption : function (option, notMerge) {
             if (!notMerge && this._option) {
                 zrUtil.merge(
                     this._option,
@@ -1081,17 +1087,18 @@ define(function (require) {
             return this.getOption().series;
         },
         
-        setTimelineOption : function(option) {
-            if (this._timeline) {
-                this._timeline.dispose();
-            }
-            require('./component/timeline');
-            var componentLibrary = require('./component');
-            var Timeline = componentLibrary.get('timeline');
+        /**
+         * timelineOption接口，配置图表实例任何可配置选项
+         * @param {Object} option
+         */
+        _setTimelineOption : function(option) {
+            this._timeline && this._timeline.dispose();
+            var Timeline = require('./component/timeline');
             var timeline = new Timeline(
                 this._themeConfig, this._messageCenter, this._zr, option, this
             );
             this._timeline = timeline;
+            return this;
         },
         
         /**
@@ -1647,7 +1654,7 @@ define(function (require) {
                 self._zr.clearAnimation();
                 self._island.resize();
                 self._toolbox.resize();
-                self._timeline.resize();
+                self._timeline && self._timeline.resize();
                 // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
                 // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
                 for (var i = 0, l = self._chartList.length; i < l; i++) {

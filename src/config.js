@@ -440,7 +440,7 @@ define(function() {
             controlPosition : 'left',           // 'right' | 'none'
             autoPlay : false,
             loop : true,
-            playInterval : 1000,                // 播放时间间隔，单位ms
+            playInterval : 2000,                // 播放时间间隔，单位ms
             backgroundColor: 'rgba(0,0,0,0)',   // 工具箱背景颜色
             borderColor : '#ccc',               // 工具箱边框颜色
             borderWidth : 1,                    // 工具箱边框线宽，单位px，默认为0（无边框）
@@ -449,6 +449,15 @@ define(function() {
                 width : 1,
                 color : '#666',
                 type : 'dashed'
+            },
+            label: {                            // 文本标签
+                show: true,
+                interval: 'auto',
+                rotate: 0,
+                // formatter: null,
+                textStyle: {                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: '#333'
+                }
             },
             symbol : 'emptyDiamond',
             symbolSize : 4,
@@ -962,6 +971,7 @@ define(function() {
             PIE_SELECTED: 'pieSelected',
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',
             DATA_VIEW_CHANGED: 'dataViewChanged',
+            TIMELINE_CHANGED: 'timelineChanged',
             MAP_ROAM : 'mapRoam',
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover',
