@@ -58,7 +58,7 @@ define(function (require) {
             this.brushSymbol(ctx, style, 0);
             this.brushSymbol(ctx, style, 1);
 
-            if (typeof style.text != 'undefined') {
+            if (style.text) {
                 this.drawText(ctx, style, this.style);
             }
 

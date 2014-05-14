@@ -140,7 +140,7 @@ define(function (require) {
             }
             else {
                 // 用户自定义间隔
-                interval += 1;
+                interval = interval - 0 + 1;
             }
 
             return interval;
