@@ -49,6 +49,11 @@ define(function (require) {
                 curOption.legend = curOption.legend || {};
                 curOption.legend.selected = self.selectedMap;
             }
+            if (self.range) {
+                curOption.dataRange = curOption.dataRange || {};
+                curOption.dataRange.range = self.range;
+            }
+            
             self.myChart.setOption(curOption, self.timelineOption.notMerge);
             self.messageCenter.dispatch(
                 ecConfig.EVENT.TIMELINE_CHANGED,
@@ -678,8 +683,12 @@ define(function (require) {
         /**
          * 图例选择
          */
-        onlegendSelected : function (param, status) {
+        onlegendSelected : function (param) {
             this.selectedMap = zrUtil.clone(param.selected);
+        },
+        
+        ondataRange : function(param) {
+            this.range = zrUtil.clone(param.range);
         },
         
         last : function () {
@@ -778,6 +787,7 @@ define(function (require) {
             }
             
             this.selectedMap = false;
+            this.range = false;
         },
         
         /**
@@ -818,6 +828,7 @@ define(function (require) {
             ctx.lineTo(x + width - 2, y + height);
             ctx.lineTo(x + width - 2, y + height / 3 * 2);
             ctx.moveTo(x, y);
+            ctx.lineTo(x, y);
         } 
         else if (symbol == 'next') {
             ctx.moveTo(x + 2, y + height / 3);
@@ -826,6 +837,7 @@ define(function (require) {
             ctx.lineTo(x + 2, y + height);
             ctx.lineTo(x + 2, y + height / 3 * 2);
             ctx.moveTo(x, y);
+            ctx.lineTo(x, y);
         }
         else if (symbol == 'play') {
             if (style.status == 'stop') {

@@ -474,6 +474,9 @@ define(function (require) {
                 && this._chartList[len].ondataRange
                 && this._chartList[len].ondataRange(param, this._status);
             }
+            this._timeline && this._timeline.ondataRange(param, this._status);
+            
+            this._range = param.range;
 
             // 没有相互影响，直接刷新即可
             if (this._status.needRefresh) {
@@ -571,6 +574,7 @@ define(function (require) {
             }
             
             magicOption.legend && (magicOption.legend.selected = this._selectedMap);
+            magicOption.dataRange && (magicOption.dataRange.range = this._range);
             return magicOption;
         },
         
@@ -852,6 +856,14 @@ define(function (require) {
             else {
                 this._selectedMap = {};
             }
+            
+            if (this._optionRestore.dataRange && this._optionRestore.dataRange.range) {
+                this._range = this._optionRestore.dataRange.range;
+            }
+            else {
+                this._range = {};
+            }
+            
             this._optionBackup = zrUtil.clone(this._optionRestore);
             this._option = zrUtil.clone(this._optionRestore);
             this._island.clear();
@@ -1040,6 +1052,21 @@ define(function (require) {
             }
             else {
                 this._selectedMap = {};
+            }
+            
+            if (this._option.dataRange) {
+                if (this._option.dataRange.range) {
+                    this._range = this._option.dataRange.range;
+                }
+                else if (notMerge) {
+                    this._range = {};
+                }
+                else {
+                    this._option.dataRange.range = this._range;
+                }
+            }
+            else {
+                this.range = {};
             }
 
             this._island.clear();

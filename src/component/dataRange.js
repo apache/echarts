@@ -125,7 +125,7 @@ define(function (require) {
                 );
                 itemShape._idx = i;
                 itemShape.onclick = this._dataRangeSelected;
-                this.shapeList.push(new RectangleShapeShape(itemShape));
+                this.shapeList.push(new RectangleShape(itemShape));
                 
                 if (needValueText) {
                     // 文字
@@ -1213,7 +1213,6 @@ define(function (require) {
                         )
                     );
                 }
-                
                 this._range = {
                     start: 100,
                     end: 0
@@ -1221,7 +1220,7 @@ define(function (require) {
             }
             
             // 做一个反转
-            this.dataRangeOption.range = {
+            this.dataRangeOption.range = this.dataRangeOption.range || {
                 start: this._range.end,
                 end: this._range.start
             };
