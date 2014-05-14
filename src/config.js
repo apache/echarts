@@ -432,19 +432,19 @@ define(function() {
             notMerge : false,
             realtime : true,
             x: 80,
-            //y: {number},
+            // y: {number},
             x2: 80,
-            y2: 5,
+            y2: 0,
             // width: {totalWidth} - x - x2,
             height: 50,
             controlPosition : 'left',           // 'right' | 'none'
             autoPlay : false,
             loop : true,
             playInterval : 2000,                // 播放时间间隔，单位ms
-            backgroundColor: 'rgba(0,0,0,0)',   // 工具箱背景颜色
-            borderColor : '#ccc',               // 工具箱边框颜色
-            borderWidth : 1,                    // 工具箱边框线宽，单位px，默认为0（无边框）
-            padding : 5,                        // 工具箱内边距，单位px，默认各方向内边距为5，
+            backgroundColor: 'rgba(0,0,0,0)',   // 时间轴背景颜色
+            borderColor : '#ccc',               // 时间轴边框颜色
+            borderWidth : 0,                    // 时间轴边框线宽，单位px，默认为0（无边框）
+            padding : 5,                        // 时间轴内边距，单位px，默认各方向内边距为5，
             lineStyle : {
                 width : 1,
                 color : '#666',
@@ -458,6 +458,23 @@ define(function() {
                 textStyle: {                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
                     color: '#333'
                 }
+            },
+            checkpointStyle : {
+                symbol : 'auto',
+                symbolSize : 'auto',
+                color : 'auto',
+                borderColor : 'auto',
+                borderWidth : 'auto',
+                label: {                            // 文本标签
+                    show: false,
+                    textStyle: {                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                        color: 'auto'
+                    }
+                }
+            },
+            controlStyle : {
+                normal : { color : '#333'},
+                emphasis : { color : '#1e90ff'}
             },
             symbol : 'emptyDiamond',
             symbolSize : 4,

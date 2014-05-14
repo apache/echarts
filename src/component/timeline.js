@@ -16,6 +16,8 @@ define(function (require) {
     
     var ecConfig = require('../config');
     var zrUtil = require('zrender/tool/util');
+    var zrArea = require('zrender/tool/area');
+    var zrEvent = require('zrender/tool/event');
 
     /**
      * 构造函数
@@ -30,6 +32,9 @@ define(function (require) {
         this.myChart = myChart;
 
         var self = this;
+        self._onclick = function(param) {
+            return self.__onclick(param);
+        }
         self._ondrift = function (dx, dy) {
             return self.__ondrift(this, dx, dy);
         };
@@ -37,14 +42,19 @@ define(function (require) {
             return self.__ondragend();
         };
         self._setCurrentOption = function() {
-            self.currentIndex %= self.options.length;
-            console.log(self.currentIndex);
-            var curOption = self.options[self.currentIndex];
+            self.currentIndex %= self.timelineOption.data.length;
+            //console.log(self.currentIndex);
+            var curOption = self.options[self.currentIndex] || {};
             if (self.selectedMap) {
                 curOption.legend = curOption.legend || {};
                 curOption.legend.selected = self.selectedMap;
             }
             self.myChart.setOption(curOption, self.timelineOption.notMerge);
+            self.messageCenter.dispatch(
+                ecConfig.EVENT.TIMELINE_CHANGED,
+                null,
+                {currentIndex: self.currentIndex}
+            );
         };
         self._onFrame = function() {
             self._setCurrentOption();
@@ -54,8 +64,10 @@ define(function (require) {
                 self.playTicket = setTimeout(
                     function() {
                         self.currentIndex += 1;
-                        if (!self.timelineOption.loop && self.currentIndex >= self.options.length) {
-                            self.currentIndex = self.options.length - 1;
+                        if (!self.timelineOption.loop
+                            && self.currentIndex >= self.timelineOption.data.length
+                        ) {
+                            self.currentIndex = self.timelineOption.data.length - 1;
                             self.stop();
                             return;
                         }
@@ -164,7 +176,7 @@ define(function (require) {
             if (interval == 'auto') {
                 // 麻烦的自适应计算
                 var fontSize = timelineOption.label.textStyle.fontSize;
-                var font = this.getFont(timelineOption.label.textStyle);
+                var textFont = this.getFont(timelineOption.label.textStyle);
                 var data = timelineOption.data;
                 var dataLength = timelineOption.data.length;
 
@@ -187,7 +199,7 @@ define(function (require) {
                             else if (data[i].textStyle) {
                                 labelSize = zrArea.getTextWidth(
                                     chainPoint[i].name,
-                                    chainPoint[i].font
+                                    chainPoint[i].textFont
                                 );
                             }
                             else {
@@ -213,7 +225,7 @@ define(function (require) {
             }
             else {
                 // 用户自定义间隔
-                interval += 1;
+                interval = interval - 0 + 1;
             }
 
             return interval;
@@ -228,7 +240,7 @@ define(function (require) {
             var symbolSize = timelineOption.symbolSize;
             var rotate = timelineOption.label.rotate;
             var textStyle = timelineOption.label.textStyle;
-            var font = this.getFont(textStyle);
+            var textFont = this.getFont(textStyle);
             var dataTextStyle;
             var data = timelineOption.data;
             var x = this._location.x;
@@ -236,11 +248,39 @@ define(function (require) {
             var width = this._location.x2 - this._location.x;
             var len = data.length;
             
-            if (timelineOption.type) {
-                
+            var xList = [];
+            if (len > 1) {
+                var boundaryGap = width / len;
+                boundaryGap = boundaryGap > 50 ? 50 : (boundaryGap < 20 ? 5 : boundaryGap);
+                width -= boundaryGap * 2;
+                if (timelineOption.type == 'number') {
+                    // 平均分布
+                    for (var i = 0; i < len; i++) {
+                        xList.push(x + boundaryGap + width / (len - 1) * i)
+                    }
+                }
+                else {
+                    // 时间比例
+                    function _getName(i) {
+                        return typeof data[i].name != 'undefined'
+                               ? data[i].name : data[i]
+                    }
+                    xList[0] = new Date(_getName(0).replace(/-/g, '/'));
+                    xList[len - 1] = new Date(_getName(len - 1).replace(/-/g, '/')) - xList[0];
+                    for (var i = 1; i < len; i++) {
+                        xList[i] =  x + boundaryGap 
+                                    + width 
+                                      * (new Date(_getName(i).replace(/-/g, '/')) - xList[0]) 
+                                      / xList[len - 1]
+                        
+                    }
+                    xList[0] = x + boundaryGap;
+                }
             }
-            width = width / len;
-            x += width / 2;
+            else {
+                xList.push(x + width / 2);
+            }
+            
             var list = [];
             var curSymbol;
             var n;
@@ -248,6 +288,7 @@ define(function (require) {
             var textAlign;
             var rotation;
             for (var i = 0; i < len; i++) {
+                x = xList[i];
                 curSymbol = (data[i].symbol && data[i].symbol.toLowerCase()) || symbol;
                 if (curSymbol.match('empty')) {
                     curSymbol = curSymbol.replace('empty', '');
@@ -262,7 +303,7 @@ define(function (require) {
                 }
                 
                 dataTextStyle = data[i].textStyle 
-                                ? zrUtil.merge(data[i].textStyle || {},textStyle)
+                                ? zrUtil.merge(data[i].textStyle || {}, textStyle)
                                 : textStyle;
                 
                 textAlign = dataTextStyle.align || 'center';
@@ -274,26 +315,26 @@ define(function (require) {
                 else {
                     rotation = false;
                 }
-                    
+                
                 list.push({
                     x : x,
                     n : n,
                     isEmpty : isEmpty,
                     symbol : curSymbol,
                     symbolSize : data[i].symbolSize || symbolSize,
+                    color : data[i].color,
+                    borderColor : data[i].borderColor,
+                    borderWidth : data[i].borderWidth,
                     name : this._getReformedLabel(i),
                     textColor : dataTextStyle.color,
                     textAlign : textAlign,
                     textBaseline : dataTextStyle.baseline || 'middle',
                     textX : x,
                     textY : y - (rotate ? 5 : 0),
+                    textFont : data[i].textStyle ? this.getFont(dataTextStyle) : textFont,
                     rotation : rotation,
-                    font : data[i].textStyle 
-                           ? this.getFont(dataTextStyle)
-                           : font,
                     showLabel : false
                 });
-                x += width;
             }
             
             return list;
@@ -331,6 +372,7 @@ define(function (require) {
             var self = this;
             var timelineOption = this.timelineOption;
             var lineStyle = timelineOption.lineStyle;
+            var controlStyle = timelineOption.controlStyle;
             if (timelineOption.controlPosition == 'none') {
                 return;
             }
@@ -357,13 +399,13 @@ define(function (require) {
                     width : iconSize,
                     height : iconSize,
                     brushType : 'stroke',
-                    color: lineStyle.color,
-                    strokeColor : lineStyle.color,
+                    color: controlStyle.normal.color,
+                    strokeColor : controlStyle.normal.color,
                     lineWidth : lineStyle.width
                 },
                 highlightStyle : {
-                    color : '#1e90ff',
-                    strokeColor : '#1e90ff',
+                    color : controlStyle.emphasis.color,
+                    strokeColor : controlStyle.emphasis.color,
                     lineWidth : lineStyle.width + 1
                 },
                 clickable : true
@@ -413,168 +455,49 @@ define(function (require) {
                     x : this._location.x,
                     y : this.subPixelOptimize(this._location.y, lineStyle.width),
                     width : this._location.x2 - this._location.x,
-                    height : this._location.height / 2,
+                    height : this._location.height,
                     chainPoint : this._chainPoint,
                     brushType:'both',
                     strokeColor : lineStyle.color,
                     lineWidth : lineStyle.width,
                     lineType : lineStyle.type
-                }
+                },
+                hoverable : false,
+                clickable : true,
+                onclick : this._onclick
             };
 
             this._timelineShae = new ChainShape(this._timelineShae);
             this.shapeList.push(this._timelineShae);
         },
 
-        // 坐标轴文本
-        _buildLabel : function () {
-            var axShape;
-            var data       = this.option.data;
-            var dataLength = this.option.data.length;
-            var rotate     = this.option.label.rotate;
-            var margin     = this.option.label.margin;
-            var textStyle  = this.option.label.textStyle;
-            var dataTextStyle;
-
-            if (this.option.position == 'bottom' || this.option.position == 'top') {
-                // 横向
-                var yPosition;
-                var baseLine;
-                if (this.option.position == 'bottom') {
-                    yPosition = this.grid.getYend() + margin;
-                    baseLine = 'top';
-                }
-                else {
-                    yPosition = this.grid.getY() - margin;
-                    baseLine = 'bottom';
-                }
-
-                for (var i = 0; i < dataLength; i += this._interval) {
-                    if (this._getReformedLabel(i) === '') {
-                        // 空文本优化
-                        continue;
-                    }
-                    dataTextStyle = zrUtil.merge(
-                        data[i].textStyle || {},
-                        textStyle
-                    );
-                    axShape = {
-                        // shape : 'text',
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            x : this.getCoordByIndex(i),
-                            y : yPosition,
-                            color : dataTextStyle.color,
-                            text : this._getReformedLabel(i),
-                            textFont : this.getFont(dataTextStyle),
-                            textAlign : dataTextStyle.align || 'center',
-                            textBaseline : dataTextStyle.baseline || baseLine
-                        }
-                    };
-                    if (rotate) {
-                        axShape.style.textAlign = rotate > 0
-                                                  ? (this.option.position == 'bottom'
-                                                    ? 'right' : 'left')
-                                                  : (this.option.position == 'bottom'
-                                                    ? 'left' : 'right');
-                        axShape.rotation = [
-                            rotate * Math.PI / 180,
-                            axShape.style.x,
-                            axShape.style.y
-                        ];
-                    }
-                    this.shapeList.push(new TextShape(axShape));
-                }
-            }
-            else {
-                // 纵向
-                var xPosition;
-                var align;
-                if (this.option.position == 'left') {
-                    xPosition = this.grid.getX() - margin;
-                    align = 'right';
-                }
-                else {
-                    xPosition = this.grid.getXend() + margin;
-                    align = 'left';
-                }
-
-                for (var i = 0; i < dataLength; i += this._interval) {
-                    if (this._getReformedLabel(i) === '') {
-                        // 空文本优化
-                        continue;
-                    }
-                    dataTextStyle = zrUtil.merge(
-                        data[i].textStyle || {},
-                        textStyle
-                    );
-                    axShape = {
-                        // shape : 'text',
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            x : xPosition,
-                            y : this.getCoordByIndex(i),
-                            color : dataTextStyle.color,
-                            text : this._getReformedLabel(i),
-                            textFont : this.getFont(dataTextStyle),
-                            textAlign : dataTextStyle.align || align,
-                            textBaseline : dataTextStyle.baseline 
-                                           || (i === 0 && this.option.name !== '')
-                                               ? 'bottom'
-                                               : (i == (dataLength - 1) 
-                                                  && this.option.name !== '')
-                                                 ? 'top'
-                                                 : 'middle'
-                        }
-                    };
-                    
-                    if (rotate) {
-                        axShape.rotation = [
-                            rotate * Math.PI / 180,
-                            axShape.style.x,
-                            axShape.style.y
-                        ];
-                    }
-                    this.shapeList.push(new TextShape(axShape));
-                }
-            }
-        },
-        
         /**
          * 构建拖拽手柄
          */
         _buildHandle : function () {
-            var timelineOption = this.timelineOption;
-            var data = timelineOption.data;
-            var lineStyle = timelineOption.lineStyle;
             var curPoint = this._chainPoint[this.currentIndex];
             var symbolSize = curPoint.symbolSize + 1;
             symbolSize = symbolSize < 5 ? 5 : symbolSize;
-            console.log(symbolSize)
+            
             this._handleShape = {
                 zlevel : this._zlevelBase + 1,
+                hoverable : false,
                 draggable : true,
                 style : {
-                    iconType: curPoint.symbol,
+                    iconType : 'diamond',
+                    n : curPoint.n,
                     x : curPoint.x - symbolSize,
                     y : this._location.y + this._location.height / 4 - symbolSize,
                     width : symbolSize * 2,
                     height : symbolSize * 2,
-                    brushType:'fill',
-                    color : '#1e90ff',
-                    text : curPoint.name,
+                    brushType:'both',
                     textPosition : 'specific',
                     textX : curPoint.x,
                     textY : this._location.y - this._location.height / 4,
                     textAlign : 'center',
                     textBaseline : 'middle'
                 },
-                highlightStyle : {
-                    strokeColor : '#1e90ff',
-                    lineWidth : lineStyle.width,
-                },
+                highlightStyle : {},
                 ondrift : this._ondrift,
                 ondragend : this._ondragend
             };
@@ -587,12 +510,54 @@ define(function (require) {
          * 同步拖拽图形样式 
          */
         _syncHandleShape : function() {
+            if (!this.timelineOption.show) {
+                return;
+            }
+            
+            var timelineOption = this.timelineOption;
+            var cpStyle = timelineOption.checkpointStyle;
             var curPoint = this._chainPoint[this.currentIndex];
-            var symbolSize = curPoint.symbolSize + 1;
-            symbolSize = symbolSize < 5 ? 5 : symbolSize;
-            this._handleShape.style.iconType = curPoint.symbol;
-            this._handleShape.style.text = curPoint.name;
+
+            this._handleShape.style.text = cpStyle.label.show ? curPoint.name : '';
+            this._handleShape.style.textFont = curPoint.textFont;
+            
             this._handleShape.style.n = curPoint.n;
+            if (cpStyle.symbol == 'auto') {
+                this._handleShape.style.iconType = curPoint.symbol != 'none' 
+                                                   ? curPoint.symbol : 'diamond';
+            }
+            else {
+                this._handleShape.style.iconType = cpStyle.symbol;
+                if (cpStyle.symbol.match('star')) {
+                    this._handleShape.style.n = (cpStyle.symbol.replace('star','') - 0) || 5;
+                    this._handleShape.style.iconType = 'star';
+                }
+            }
+            
+            var symbolSize;
+            if (cpStyle.symbolSize == 'auto') {
+                symbolSize = curPoint.symbolSize + 2;
+                symbolSize = symbolSize < 5 ? 5 : symbolSize;
+            }
+            else {
+                symbolSize = cpStyle.symbolSize - 0;
+            }
+            
+            this._handleShape.style.color = cpStyle.color == 'auto'
+                                            ? (curPoint.color ? curPoint.color : '#1e90ff')
+                                            : cpStyle.color;
+            this._handleShape.style.textColor = cpStyle.label.textStyle.color == 'auto'
+                                                ? this._handleShape.style.color
+                                                : cpStyle.label.textStyle.color;
+            this._handleShape.highlightStyle.strokeColor = 
+            this._handleShape.style.strokeColor = cpStyle.borderColor == 'auto'
+                                ? (curPoint.borderColor ? curPoint.borderColor : '#fff')
+                                : cpStyle.borderColor;
+            this._handleShape.style.lineWidth = cpStyle.borderWidth == 'auto'
+                                ? (curPoint.borderWidth ? curPoint.borderWidth : 0)
+                                : (cpStyle.borderWidth - 0);
+            this._handleShape.highlightStyle.lineWidth = this._handleShape.style.lineWidth + 1;
+            
             this.zr.animate(this._handleShape.id, 'style')
                 .when(
                     500,
@@ -607,6 +572,37 @@ define(function (require) {
                 .start('ExponentialOut');
         },
 
+        _findChainIndex : function(x) {
+            var chainPoint = this._chainPoint;
+            var len = chainPoint.length;
+            if (x <= chainPoint[0].x) {
+                return 0;
+            }
+            else if (x >= chainPoint[len - 1].x) {
+                return len - 1;
+            }
+            for (var i = 0; i < len - 1; i++) {
+                if (x >= chainPoint[i].x && x <= chainPoint[i + 1].x) {
+                    // catch you！
+                    return (Math.abs(x - chainPoint[i].x) < Math.abs(x - chainPoint[i + 1].x))
+                           ? i : (i + 1);
+                }
+            }
+        },
+        
+        __onclick : function(param) {
+            var x = zrEvent.getX(param.event);
+            var newIndex =  this._findChainIndex(x)
+            if (newIndex == this.currentIndex) {
+                return true; // 啥事都没发生
+            }
+            
+            this.currentIndex = newIndex;
+            this.timelineOption.autoPlay && this.stop(); // 停止自动播放
+            clearTimeout(this.playTicket);
+            this._onFrame();
+        },
+        
         /**
          * 拖拽范围控制
          */
@@ -616,31 +612,23 @@ define(function (require) {
             var chainPoint = this._chainPoint;
             var len = chainPoint.length;
             var newIndex;
-            if (shape.style.x + dx <= chainPoint[0].x) {
-                shape.style.x = chainPoint[0].x;
+            if (shape.style.x + dx <= chainPoint[0].x - chainPoint[0].symbolSize) {
+                shape.style.x = chainPoint[0].x - chainPoint[0].symbolSize;
                 newIndex = 0;
             }
-            else if (shape.style.x + dx >= chainPoint[len - 1].x) {
-                shape.style.x = chainPoint[len - 1].x;
+            else if (shape.style.x + dx >= chainPoint[len - 1].x - chainPoint[len - 1].symbolSize) {
+                shape.style.x = chainPoint[len - 1].x - chainPoint[len - 1].symbolSize;
                 newIndex = len - 1;
             }
             else {
                 shape.style.x += dx;
-                for (var i = 0; i < len - 1; i++) {
-                    if (shape.style.x >= chainPoint[i].x && shape.style.x <= chainPoint[i + 1].x) {
-                        // catch you！
-                        newIndex = (Math.abs(shape.style.x - chainPoint[i].x)
-                                   < Math.abs(shape.style.x - chainPoint[i + 1].x))
-                                   ? i : (i + 1);
-                        break;
-                    }
-                }
+                newIndex = this._findChainIndex(shape.style.x);
             }
             var curPoint = chainPoint[newIndex];
-            var symbolSize = curPoint.symbolSize + 1;
+            var symbolSize = curPoint.symbolSize + 2;
             shape.style.iconType = curPoint.symbol;
             shape.style.n = curPoint.n;
-            shape.style.textX = shape.style.x + shape.style.width / 2;
+            shape.style.textX = shape.style.x + symbolSize / 2;
             shape.style.y = this._location.y + this._location.height / 4 - symbolSize;
             shape.style.width = symbolSize * 2;
             shape.style.height = symbolSize * 2;
@@ -680,13 +668,6 @@ define(function (require) {
             // 别status = {}赋值啊！！
             status.dragOut = true;
             status.dragIn = true;
-            if (!this._isSilence && !this.timelineOption.realtime) {
-                this.messageCenter.dispatch(
-                    ecConfig.EVENT.TIMELINE_CHANGED,
-                    null,
-                    {zoom: this._zoom}
-                );
-            }
             status.needRefresh = false; // 会有消息触发fresh，不用再刷一遍
             // 处理完拖拽事件后复位
             this.isDragend = false;
@@ -702,30 +683,26 @@ define(function (require) {
         },
         
         last : function () {
-            console.log('last');
             this.timelineOption.autoPlay && this.stop(); // 停止自动播放
             
             this.currentIndex -= 1;
             if (this.currentIndex < 0) {
-                this.currentIndex = this.options.length - 1;
+                this.currentIndex = this.timelineOption.data.length - 1;
             }
             this._onFrame();
         },
         
         next : function () {
-            console.log('next');
             this.timelineOption.autoPlay && this.stop(); // 停止自动播放
             
             this.currentIndex += 1;
-            if (this.currentIndex >= this.options.length) {
+            if (this.currentIndex >= this.timelineOption.data.length) {
                 this.currentIndex = 0;
             }
             this._onFrame();
         },
         
         play : function (startIdx, autoPlay) {
-            console.log('play');
-            
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'playing') {
                 this._ctrPlayShape.style.status = 'playing';
                 this.zr.modShape(this._ctrPlayShape.id);
@@ -735,15 +712,13 @@ define(function (require) {
             this.timelineOption.autoPlay = true;
             
             this.currentIndex += 1;
-            if (this.currentIndex >= this.options.length) {
+            if (this.currentIndex >= this.timelineOption.data.length) {
                 this.currentIndex = 0;
             }
             this._onFrame();
         },
         
         stop : function () {
-            console.log('stop');
-            
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'stop') {
                 this._ctrPlayShape.style.status = 'stop';
                 this.zr.modShape(this._ctrPlayShape.id);
@@ -767,13 +742,17 @@ define(function (require) {
                 this.timelineOption.label.textStyle || {},
                 this.ecTheme.textStyle
             );
+            this.timelineOption.checkpointStyle.label.textStyle = zrUtil.merge(
+                this.timelineOption.checkpointStyle.label.textStyle || {},
+                this.ecTheme.textStyle
+            );
                 
             this.options = this.option.options;
-            this.currentIndex = this.timelineOption.currentIndex % this.options.length;
+            this.currentIndex = this.timelineOption.currentIndex % this.timelineOption.data.length;
             
             /*
             if (!this.timelineOption.notMerge) {
-                for (var i = 1, l = this.options.length; i < l; i++) {
+                for (var i = 1, l = this.timelineOption.data.length; i < l; i++) {
                     this.options[i] = zrUtil.merge(
                         this.options[i], this.options[i - 1]
                     );
@@ -783,9 +762,10 @@ define(function (require) {
             
             if (this.timelineOption.show) {
                 this._buildShape();
+                this._syncHandleShape();
             }
             
-            this.myChart.setOption(this.options[this.currentIndex], this.timelineOption.notMerge);
+            this._setCurrentOption();
             
             if (this.timelineOption.autoPlay) {
                 var self = this;
@@ -807,6 +787,7 @@ define(function (require) {
             if (this.timelineOption.show) {
                 this.clear();
                 this._buildShape();
+                this._syncHandleShape();
             }
         },
         
@@ -822,7 +803,7 @@ define(function (require) {
     };
     
     function timelineControl(ctx, style) {
-        var lineWidth = style.lineWidth;
+        var lineWidth = 2;//style.lineWidth;
         var x = style.x + lineWidth;
         var y = style.y + lineWidth + 2;
         var width = style.width - lineWidth;

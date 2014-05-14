@@ -63,7 +63,7 @@ define(function (require) {
             var x = style.x;
             var y = style.y + 5;
             var width = style.width;
-            var height = style.height - 10;
+            var height = style.height / 2 - 10;
             
             ctx.moveTo(x, y);
             ctx.lineTo(x, y + height);
@@ -85,38 +85,35 @@ define(function (require) {
          * 标线始末标注 
          */
         brushSymbol : function (ctx, style) {
-            var y = style.y + style.height / 2;
+            var y = style.y + style.height / 4;
             ctx.save();
             
             var chainPoint = style.chainPoint;
             var curPoint;
             for (var idx = 0, l = chainPoint.length; idx < l; idx++) {
                 curPoint = chainPoint[idx];
-                if (curPoint == 'none') {
-                    continue;
+                if (curPoint.symbol != 'none') {
+                    ctx.beginPath();
+                    var symbolSize = curPoint.symbolSize;
+                    IconShape.prototype.buildPath(
+                        ctx, 
+                        {
+                            iconType : curPoint.symbol,
+                            x : curPoint.x - symbolSize,
+                            y : y - symbolSize,
+                            width : symbolSize * 2,
+                            height : symbolSize * 2,
+                            n : curPoint.n
+                        }
+                    );
+                    ctx.fillStyle = curPoint.isEmpty ? '#fff' : style.strokeColor;
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
                 }
-                ctx.beginPath();
-                
-                var symbolSize = curPoint.symbolSize;
-                IconShape.prototype.buildPath(
-                    ctx, 
-                    {
-                        iconType : curPoint.symbol,
-                        x : curPoint.x - symbolSize,
-                        y : y - symbolSize,
-                        width : symbolSize * 2,
-                        height : symbolSize * 2,
-                        n : curPoint.n
-                    }
-                );
-                ctx.fillStyle = curPoint.isEmpty ? '#fff' : style.strokeColor;
-                
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
                 
                 if (curPoint.showLabel) {
-                    ctx.font = curPoint.font;
+                    ctx.font = curPoint.textFont;
                     ctx.fillStyle = curPoint.textColor;
                     ctx.textAlign = curPoint.textAlign;
                     ctx.textBaseline = curPoint.textBaseline;
@@ -160,7 +157,18 @@ define(function (require) {
         },
         
         isCover : function (x, y) {
-            return false;
+            var rect = this.style;
+            if (x >= rect.x
+                && x <= (rect.x + rect.width)
+                && y >= rect.y
+                && y <= (rect.y + rect.height)
+            ) {
+                // 矩形内
+                return true;
+            }
+            else {
+                return false;
+            }
         }
     };
 
