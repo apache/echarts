@@ -71,11 +71,16 @@ var idx = 1;
 option = {
     timeline : {
         data : [
-            '2013-01', '2013-02', '2013-03', '2013-04', '2013-05',
-            { name:'2013-06', symbol:'emptyStar6', symbolSize:8 },
-            '2013-07', '2013-08', '2013-09', '2013-10', '2013-11',
-            { name:'2013-12', symbol:'star6', symbolSize:8 }
-        ]
+            '2013-01-01', '2013-02-01', '2013-03-01', '2013-04-01', '2013-05-01',
+            { name:'2013-06-01', symbol:'emptyStar6', symbolSize:8 },
+            '2013-07-01', '2013-08-01', '2013-09-01', '2013-10-01', '2013-11-01',
+            { name:'2013-12-01', symbol:'star6', symbolSize:8 }
+        ],
+        label : {
+            formatter : function(s) {
+                return s.slice(0, 7);
+            }
+        }
     },
     options : [
         {

@@ -9,7 +9,7 @@ var eNameMap = {
 };
 //颜色映射
 var eColorMap = {
-    'GDP' : '#87cefa',
+    'GDP' : '#1e90ff',
     'Financial' : '#ff7f50',
     'Estate' : '#da70d6',
     'PI' : '#32cd32',
@@ -18,21 +18,43 @@ var eColorMap = {
 };
 //---------
 
-var fileLocation = '../../www/js/echarts-map';
-require.config({
-    paths:{ 
-        echarts:fileLocation,
-        'echarts/chart/bar' : fileLocation,
-        'echarts/chart/line': fileLocation,
-        'echarts/chart/scatter': fileLocation,
-        'echarts/chart/k': fileLocation,
-        'echarts/chart/pie': fileLocation,
-        'echarts/chart/radar': fileLocation,
-        'echarts/chart/map': fileLocation,
-        'echarts/chart/chord': fileLocation,
-        'echarts/chart/force': fileLocation
-    }
-});
+var developMode = true;
+if (developMode) {
+    // for develop
+    require.config({
+        packages: [
+            {
+                name: 'echarts',
+                location: '../../../../src',
+                main: 'echarts'
+            },
+            {
+                name: 'zrender',
+                //location: 'http://ecomfe.github.io/zrender/src',
+                location: '../../../../../zrender/src',
+                main: 'zrender'
+            }
+        ]
+    });
+}
+else {
+    var fileLocation = '../../www/js/echarts-map';
+    require.config({
+        paths:{ 
+            echarts:fileLocation,
+            'echarts/chart/bar' : fileLocation,
+            'echarts/chart/line': fileLocation,
+            'echarts/chart/scatter': fileLocation,
+            'echarts/chart/k': fileLocation,
+            'echarts/chart/pie': fileLocation,
+            'echarts/chart/radar': fileLocation,
+            'echarts/chart/map': fileLocation,
+            'echarts/chart/chord': fileLocation,
+            'echarts/chart/force': fileLocation
+        }
+    });
+}
+
 
 var EC_READY = false;
 var myChart0;
@@ -91,7 +113,7 @@ function hideTabContent(idx) {
     functionMap['chart' + idx + 'dispose'](idx);
 }
 
-// first chart
+// last chart
 var myChart3;
 var curSelected = {
     'GDP' : true,
@@ -158,23 +180,13 @@ functionMap.chart2dispose = function () {
     }
 }
 
-// third chart
+// first chart
 var myChart1;
 var curRange = false;
 functionMap.chart1 = function (idx) {
     functionMap.chart1dispose(idx);
     myChart1 = require('echarts').init(document.getElementById('g' + idx));
-    //$('input:radio[name="optionsRadios"]:checked').val()
     myChart1.setOption(option3(curEIndex));
-    // 值域状态保持
-    myChart1.on(require('echarts/config').EVENT.DATA_RANGE, function (param){
-        var max = dataMap['dataA' + curEIndex][curYear + 'max'];
-        curRange = {
-            start : param.range.start / 100 * max,
-            end : param.range.end == 100 
-                  ? -1 : (param.range.end / 100 * max),
-        }
-    });
 }
 functionMap.chart1dispose = function () {
     if (myChart1) {

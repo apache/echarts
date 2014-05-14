@@ -10,6 +10,7 @@ function option3 (name) {
         },
         dataRange: {
             min: 0,
+            max : dataMap['dataA' + name][2011 + 'max'],
             text:['高','低'],           // 文本，默认为数值文本
             calculable : true,
             x: 'left'
@@ -18,6 +19,10 @@ function option3 (name) {
             {
                 type: 'map',
                 mapType: 'china',
+                mapLocation: {
+                    y: 'top',
+                    height : 340
+                },
                 itemStyle:{
                     normal:{label:{show:true}}
                 }
@@ -30,37 +35,47 @@ function option3 (name) {
     option.title.textStyle.color = color;
     option.dataRange.color = [
         color, 
-        require('zrender/tool/color').lift(color, -0.8)
+        require('zrender/tool/color').lift(color, -0.9)
     ];
-//    console.log(option.dataRange.color,name)
+    // console.log(option.dataRange.color,name)
     
-    var max = dataMap['dataA' + name][curYear + 'max'];
-    option.dataRange.max = max;
-    var newRange = {
-        start : 0,
-        end : 100
+    var timelineOption = {
+        timeline : {
+            data : (function(){
+                var a = [];
+                for (var i = 2002; i <= 2011; i++) {
+                    a.push(i + '-01-01');
+                }
+                return a;
+            })(),
+            label : {
+                formatter : function(s) {
+                    return s.slice(0, 4);
+                }
+            },
+            playInterval : 1000
+        },
+        options : []
     };
-    if (curRange) {
-        if (curRange.start != 0) {
-            // 不是最低
-            newRange.start = curRange.start < max
-                             ? (curRange.start / max * 100)
-                             : 99;
-        }
-        if (curRange.end > 0) {
-            // 不是最高
-            newRange.end = curRange.end < max
-                           ? (curRange.end / max * 100)
-                           : 99;
-        } 
+    
+    var curYear = 2002;
+    option.series[0].name = '人均' + eNameMap[name] + '(' + curYear + ')';
+    option.series[0].data =  dataMap['dataA' + name][curYear]
+    
+    timelineOption.options.push(option);
+    for (curYear = 2003; curYear <= 2011; curYear++) {
+        var newSeries = {
+                type: 'map',
+                mapType: 'china',
+                itemStyle:{
+                    normal:{label:{show:true}}
+                }
+            };
+        newSeries.name = '人均' + eNameMap[name] + '(' + curYear + ')';
+        newSeries.data =  dataMap['dataA' + name][curYear]
+        timelineOption.options.push({
+            series : [newSeries]
+        })
     }
-    //console.log(newRange,curRange)
-    option.dataRange.range = newRange;
-
-    for (var i = 0, l = option.series.length; i < l; i++) {
-        option.series[i].name = '人均' + eNameMap[name] + '(' + curYear + ')';
-        option.series[i].data = 
-            dataMap['dataA' + name][curYear]
-    }
-    return option;
+    return timelineOption;
 }
