@@ -81,9 +81,7 @@ define(function (require) {
         this.dom = dom;
         // this._zr;
         this._option;
-        // this._optionBackup;              // for各种change和zoom
         // this._optionRestore;             // for restore;
-        // this._selectedMap;
         // this._island;
         // this._toolbox;
         // this._refreshInside;             // 内部刷新标志位
@@ -138,19 +136,25 @@ define(function (require) {
             _zr.on(zrConfig.EVENT.DRAGLEAVE, this._onzrevent);
             _zr.on(zrConfig.EVENT.DROP, this._onzrevent);
 
+            this.chart = {};            // 图表索引
+            this.component = {};        // 组件索引
+            
             // 内置图表
             // 孤岛
             var Island = require('./chart/island');
-            this._island = new Island(this._themeConfig, this._messageCenter, _zr);
+            this._island = new Island(this._themeConfig, this._messageCenter, _zr, {}, this);
+            this.chart.island = this._island;
             
             // 内置通用组件
             // 工具箱
             var Toolbox = require('./component/toolbox');
-            this._toolbox = new Toolbox(
-                this._themeConfig, this._messageCenter, _zr, this.dom, this
-            );
+            this._toolbox = new Toolbox(this._themeConfig, this._messageCenter, _zr, {}, this);
+            this.component.toolbox = this._toolbox;
             
-            this._disposeChartList();
+            var componentLibrary = require('./component');
+            componentLibrary.define('title', require('./component/title'));
+            componentLibrary.define('tooltip', require('./component/tooltip'));
+            componentLibrary.define('legend', require('./component/legend'));
         },
         
         __onzrevent : function(param){
@@ -413,7 +417,7 @@ define(function (require) {
 
             // 发生过重计算
             if (this._status.needRefresh) {
-                this._syncBackupData(this._island.getOption());
+                this._syncBackupData(this._option);
                 this._messageCenter.dispatch(
                     ecConfig.EVENT.DATA_CHANGED,
                     param.event,
@@ -437,8 +441,6 @@ define(function (require) {
             }
             this._timeline && this._timeline.onlegendSelected(param, this._status);
             
-            this._selectedMap = param.selected;
-
             if (this._status.needRefresh) {
                 this._messageCenter.dispatch(ecConfig.EVENT.REFRESH);
             }
@@ -476,8 +478,6 @@ define(function (require) {
             }
             this._timeline && this._timeline.ondataRange(param, this._status);
             
-            this._range = param.range;
-
             // 没有相互影响，直接刷新即可
             if (this._status.needRefresh) {
                 this._zr.refresh();
@@ -488,7 +488,7 @@ define(function (require) {
          * 动态类型切换响应 
          */
         _onmagicTypeChanged : function () {
-            this._render(this._getMagicOption());
+            this._render(this._toolbox.getMagicOption());
         },
 
         /**
@@ -534,81 +534,10 @@ define(function (require) {
         },
         
         /**
-         * 当前正在使用的option，还原可能存在的dataZoom
-         */
-        _getMagicOption : function (targetOption) {
-            var magicOption = targetOption || this._toolbox.getMagicOption();
-            var len;
-            // 横轴数据还原
-            if (this._optionBackup.xAxis) {
-                if (this._optionBackup.xAxis instanceof Array) {
-                    len = this._optionBackup.xAxis.length;
-                    while (len--) {
-                        magicOption.xAxis[len].data =
-                            this._optionBackup.xAxis[len].data;
-                    }
-                }
-                else {
-                    magicOption.xAxis.data = this._optionBackup.xAxis.data;
-                }
-            }
-            
-            // 纵轴数据还原
-            if (this._optionBackup.yAxis) {
-                if (this._optionBackup.yAxis instanceof Array) {
-                    len = this._optionBackup.yAxis.length;
-                    while (len--) {
-                        magicOption.yAxis[len].data =
-                            this._optionBackup.yAxis[len].data;
-                    }
-                }
-                else {
-                    magicOption.yAxis.data = this._optionBackup.yAxis.data;
-                }
-            }
-
-            // 系列数据还原
-            len = magicOption.series.length;
-            while (len--) {
-                magicOption.series[len].data = this._optionBackup.series[len].data;
-            }
-            
-            magicOption.legend && (magicOption.legend.selected = this._selectedMap);
-            magicOption.dataRange && (magicOption.dataRange.range = this._range);
-            return magicOption;
-        },
-        
-        /**
-         * 数据修改后的反向同步备份数据 
+         * 数据修改后的反向同步dataZoom持有的备份数据 
          */
         _syncBackupData : function (curOption) {
-            var ecQuery = require('./util/ecQuery');
-            if (ecQuery.query(curOption, 'dataZoom.show')
-                || (
-                    ecQuery.query(curOption, 'toolbox.show')
-                    && ecQuery.query(curOption, 'toolbox.feature.dataZoom.show')
-                )
-            ) {
-                // 有dataZoom就dataZoom做同步
-                for (var i = 0, l = this._chartList.length; i < l; i++) {
-                    if (this._chartList[i].type == ecConfig.COMPONENT_TYPE_DATAZOOM
-                    ) {
-                        this._chartList[i].syncBackupData(curOption, this._optionBackup);
-                        return;
-                    }
-                }
-            }
-            else {
-                // 没有就ECharts做
-                var curSeries = curOption.series;
-                var curData;
-                for (var i = 0, l = curSeries.length; i < l; i++) {
-                    curData = curSeries[i].data;
-                    for (var j = 0, k = curData.length; j < k; j++) {
-                        this._optionBackup.series[i].data[j] = curData[j];
-                    }
-                }
-            }
+            this.component.dataZoom && this.component.dataZoom.syncBackupData(curOption);
         },
 
         /**
@@ -662,109 +591,53 @@ define(function (require) {
                 }
             }
             
-            // this._disposeChartList();
-            // this._zr.clear();
             this._zr.clearAnimation();
             this._chartList = [];
 
             var chartLibrary = require('./chart');
             var componentLibrary = require('./component');
-
-            // 组件无需保存过渡状态，走新实例，先释放已有的
-            for (var componentType in this.component) {
-                if (componentType != ecConfig.COMPONENT_TYPE_TOOLBOX
-                    && componentType != ecConfig.COMPONENT_TYPE_TIMELINE
-                ){
+            
+            if (magicOption.xAxis || magicOption.yAxis) {
+                magicOption.grid = magicOption.grid || {};
+                magicOption.dataZoom = magicOption.dataZoom || {};
+            }
+            
+            var componentList = [
+                'title', 'tooltip', 'legend', 'dataRange',
+                'grid', 'dataZoom', 'xAxis', 'yAxis', 'polar'
+            ];
+            
+            var ComponentClass;
+            var componentType;
+            var component;
+            for (var i = 0, l = componentList.length; i < l; i++) {
+                componentType = componentList[i];
+                if (magicOption[componentType]) {
+                    if (this.component[componentType]) {
+                        this.component[componentType].refresh &&
+                        this.component[componentType].refresh(magicOption)
+                    }
+                    else {
+                        ComponentClass = componentLibrary.get(
+                            (componentType == 'xAxis' || componentType == 'yAxis')
+                            ? 'axis'
+                            : componentType
+                        );
+                        component = new ComponentClass(
+                            this._themeConfig, this._messageCenter, this._zr,
+                            magicOption, this, componentType
+                        );
+                        this.component[componentType] = component;
+                    }
+                    this._chartList.push(this.component[componentType]);
+                }
+                else if (this.component[componentType]) {
                     this.component[componentType].dispose();
                     this.component[componentType] = null;
-                    delete this.component[componentType];
+                    delete this.component[componentType]
                 }
             }
-            
-            // 标题
-            if (magicOption.title) {
-                var Title = require('./component/title');
-                var title = new Title(
-                    this._themeConfig, this._messageCenter, this._zr, magicOption
-                );
-                this._chartList.push(title);
-                this.component.title = title;
-            }
 
-            // 提示
-            if (magicOption.tooltip) {
-                var Tooltip = require('./component/tooltip');
-                var tooltip = new Tooltip(
-                    this._themeConfig, this._messageCenter, this._zr, magicOption, this.dom, this
-                );
-                this._chartList.push(tooltip);
-                this.component.tooltip = tooltip;
-            }
-
-            // 图例
-            if (magicOption.legend) {
-                var Legend = require('./component/legend');
-                var legend = new Legend(
-                    this._themeConfig, this._messageCenter, this._zr, magicOption
-                );
-                this._chartList.push(legend);
-                this.component.legend = legend;
-            }
-
-            // 值域控件
-            if (magicOption.dataRange) {
-                var DataRange = componentLibrary.get('dataRange');
-                var dataRange = new DataRange(
-                    this._themeConfig, this._messageCenter, this._zr, magicOption
-                );
-                this._chartList.push(dataRange);
-                this.component.dataRange = dataRange;
-            }
-
-            // 直角坐标系
-            if (magicOption.grid || magicOption.xAxis || magicOption.yAxis) {
-                var Grid = componentLibrary.get('grid');
-                var grid = new Grid(this._themeConfig, this._messageCenter, this._zr, magicOption);
-                this._chartList.push(grid);
-                this.component.grid = grid;
-
-                var DataZoom = componentLibrary.get('dataZoom');
-                var dataZoom = new DataZoom(
-                    this._themeConfig, this._messageCenter, this._zr,
-                    magicOption, this.component
-                );
-                this._chartList.push(dataZoom);
-                this.component.dataZoom = dataZoom;
-
-                var Axis = componentLibrary.get('axis');
-                var xAxis = new Axis(
-                    this._themeConfig, this._messageCenter, this._zr,
-                    magicOption, this.component, 'xAxis'
-                );
-                this._chartList.push(xAxis);
-                this.component.xAxis = xAxis;
-
-                var yAxis = new Axis(
-                    this._themeConfig, this._messageCenter, this._zr,
-                    magicOption, this.component, 'yAxis'
-                );
-                this._chartList.push(yAxis);
-                this.component.yAxis = yAxis;
-            }
-
-            // 极坐标系
-            if (magicOption.polar) {
-                var Polar = componentLibrary.get('polar');
-                var polar = new Polar(
-                    this._themeConfig, this._messageCenter, this._zr,
-                    magicOption, this.component
-                );
-                this._chartList.push(polar);
-                this.component.polar = polar;
-            }
-            
-            this.component.tooltip && this.component.tooltip.setComponent();
-            
             var ChartClass;
             var chartType;
             var chart;
@@ -786,7 +659,7 @@ define(function (require) {
                         else {
                             chart = new ChartClass(
                                 this._themeConfig, this._messageCenter, this._zr,
-                                magicOption, this.component
+                                magicOption, this
                             );
                         }
                         this._chartList.push(chart);
@@ -797,6 +670,7 @@ define(function (require) {
                     }
                 }
             }
+            
             // 已有实例但新option不带这类图表的实例释放
             for (chartType in this.chart) {
                 if (chartType != ecConfig.CHART_TYPE_ISLAND  && !chartMap[chartType]) {
@@ -808,7 +682,7 @@ define(function (require) {
 
             this._island.render(magicOption);
 
-            this._toolbox.render(magicOption, this.component);
+            this._toolbox.render(magicOption);
             
             if (magicOption.animation && !magicOption.renderAsImage) {
                 this._zr.refresh();
@@ -844,27 +718,14 @@ define(function (require) {
                 img.parentNode.removeChild(img);
             }
             img = null;
+            
+            this._option = magicOption;
         },
 
         /**
          * 还原 
          */
         restore : function () {
-            if (this._optionRestore.legend && this._optionRestore.legend.selected) {
-                this._selectedMap = this._optionRestore.legend.selected;
-            }
-            else {
-                this._selectedMap = {};
-            }
-            
-            if (this._optionRestore.dataRange && this._optionRestore.dataRange.range) {
-                this._range = this._optionRestore.dataRange.range;
-            }
-            else {
-                this._range = {};
-            }
-            
-            this._optionBackup = zrUtil.clone(this._optionRestore);
             this._option = zrUtil.clone(this._optionRestore);
             this._island.clear();
             this._toolbox.reset(this._option);
@@ -884,18 +745,8 @@ define(function (require) {
                 // 做简单的差异合并去同步内部持有的数据克隆，不建议带入数据
                 // 开启数据区域缩放、拖拽重计算、数据视图可编辑模式情况下，当用户产生了数据变化后无法同步
                 // 如有带入option存在数据变化，请重新setOption
-                var ecQuery = require('./util/ecQuery');
-                if (ecQuery.query(this._optionBackup, 'toolbox.show')
-                    && ecQuery.query(this._optionBackup, 'toolbox.feature.magicType.show')
-                ) {
-                    magicOption = this._getMagicOption();
-                }
-                else {
-                    magicOption = this._getMagicOption(this._island.getOption());
-                }
-                
+                magicOption = this.getOption();
                 zrUtil.merge(magicOption, param.option, true);
-                zrUtil.merge(this._optionBackup, param.option, true);
                 zrUtil.merge(this._optionRestore, param.option, true);
                 this._island.refresh(magicOption);
                 this._toolbox.refresh(magicOption);
@@ -918,72 +769,50 @@ define(function (require) {
             this._zr.clearAnimation();
             var len = this._chartList.length;
             while (len--) {
-                this._chartList[len]
-                && this._chartList[len].dispose 
-                && this._chartList[len].dispose();
+                if (this._chartList[len]) {
+                    this.chart[this._chartList[len].type] 
+                    && delete this.chart[this._chartList[len].type];
+                    
+                    this.component[this._chartList[len].type] 
+                    && delete this.component[this._chartList[len].type];
+                    
+                    this._chartList[len].dispose 
+                    && this._chartList[len].dispose();
+                }
             }
             this._chartList = [];
-            
-            this.chart = {
-                island : this._island
-            };
-            this.component = {
-                toolbox : this._toolbox,
-                timeline : this._timeline
-            };
         },
 
         /**
          * 非图表全局属性merge~~ 
          */
         _mergeGlobalConifg : function (magicOption) {
-            // 背景
-            if (typeof magicOption.backgroundColor == 'undefined') {
-                magicOption.backgroundColor = this._themeConfig.backgroundColor;
+            var mergeList = [
+                // 背景颜色
+                'backgroundColor',
+                
+                // 拖拽重计算相关
+                'calculable', 'calculableColor', 'calculableHolderColor',
+                
+                // 孤岛显示连接符
+                'nameConnector', 'valueConnector',
+                
+                // 动画相关
+                'animation', 'animationThreshold', 'animationDuration',
+                'animationEasing', 'addDataAnimation',
+                
+                // 默认标志图形类型列表
+                'symbolList',
+                
+                // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
+                'DRAG_ENABLE_TIME'
+            ];
+            var len = mergeList.length
+            while (len--) {
+                if (typeof magicOption[mergeList[len]] == 'undefined') {
+                    magicOption[mergeList[len]] = this._themeConfig[mergeList[len]];
+                }
             }
-            
-            // 拖拽重计算相关
-            if (typeof magicOption.calculable == 'undefined') {
-                magicOption.calculable = this._themeConfig.calculable;
-            }
-            if (typeof magicOption.calculableColor == 'undefined') {
-                magicOption.calculableColor = this._themeConfig.calculableColor;
-            }
-            if (typeof magicOption.calculableHolderColor == 'undefined') {
-                magicOption.calculableHolderColor = this._themeConfig.calculableHolderColor;
-            }
-            
-            // 孤岛显示连接符
-            if (typeof magicOption.nameConnector == 'undefined') {
-                magicOption.nameConnector = this._themeConfig.nameConnector;
-            }
-            if (typeof magicOption.valueConnector == 'undefined') {
-                magicOption.valueConnector = this._themeConfig.valueConnector;
-            }
-            
-            // 动画相关
-            if (typeof magicOption.animation == 'undefined') {
-                magicOption.animation = this._themeConfig.animation;
-            }
-            if (typeof magicOption.animationThreshold == 'undefined') {
-                magicOption.animationThreshold = this._themeConfig.animationThreshold;
-            }
-            if (typeof magicOption.animationDuration == 'undefined') {
-                magicOption.animationDuration = this._themeConfig.animationDuration;
-            }
-            if (typeof magicOption.animationEasing == 'undefined') {
-                magicOption.animationEasing = this._themeConfig.animationEasing;
-            }
-            if (typeof magicOption.addDataAnimation == 'undefined') {
-                magicOption.addDataAnimation = this._themeConfig.addDataAnimation;
-            }
-            
-            // 默认标志图形类型列表
-            /*
-            if (typeof magicOption.symbolList == 'undefined') {
-                magicOption.symbolList = this._themeConfig.symbolList;
-            }
-            */
             
             // 数值系列的颜色列表，不传则采用内置颜色，可配数组，借用zrender实例注入，会有冲突风险，先这样
             var themeColor = (magicOption.color && magicOption.color.length > 0)
@@ -993,11 +822,6 @@ define(function (require) {
                 var zrColor = require('zrender/tool/color');
                 return zrColor.getColor(idx, themeColor);
             };
-            
-            // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
-            if (typeof magicOption.DRAG_ENABLE_TIME == 'undefined') {
-                magicOption.DRAG_ENABLE_TIME = this._themeConfig.DRAG_ENABLE_TIME;
-            }
         },
         
         /**
@@ -1037,39 +861,7 @@ define(function (require) {
                 return;
             }
 
-            this._optionBackup = zrUtil.clone(this._option);
             this._optionRestore = zrUtil.clone(this._option);
-            if (this._option.legend) {
-                if (this._option.legend.selected) {
-                    this._selectedMap = this._option.legend.selected;
-                }
-                else if (notMerge) {
-                    this._selectedMap = {};
-                }
-                else {
-                    this._option.legend.selected = this._selectedMap;
-                }
-            }
-            else {
-                this._selectedMap = {};
-            }
-            
-            if (this._option.dataRange) {
-                if (this._option.dataRange.range) {
-                    this._range = this._option.dataRange.range;
-                }
-                else if (notMerge) {
-                    this._range = {};
-                }
-                else {
-                    this._option.dataRange.range = this._range;
-                }
-            }
-            else {
-                this.range = {};
-            }
-
-            this._island.clear();
             this._toolbox.reset(this._option);
             this._render(this._option);
             return this;
@@ -1079,15 +871,46 @@ define(function (require) {
          * 返回内部持有的当前显示option克隆 
          */
         getOption : function () {
-            var ecQuery = require('./util/ecQuery');
-            if (ecQuery.query(this._optionBackup, 'toolbox.show')
-                && ecQuery.query(this._optionBackup, 'toolbox.feature.magicType.show')
-            ) {
-                 return zrUtil.clone(this._getMagicOption());
+            var magicOption = zrUtil.clone(this._option);
+            
+            var len;
+            // 横轴数据还原
+            if (this._optionRestore.xAxis) {
+                if (this._optionRestore.xAxis instanceof Array) {
+                    len = this._optionRestore.xAxis.length;
+                    while (len--) {
+                        magicOption.xAxis[len].data = zrUtil.clone(
+                            this._optionRestore.xAxis[len].data
+                        );
+                    }
+                }
+                else {
+                    magicOption.xAxis.data = zrUtil.clone(this._optionRestore.xAxis.data);
+                }
             }
-            else {
-                 return zrUtil.clone(this._getMagicOption(this._island.getOption()));
+            
+            // 纵轴数据还原
+            if (this._optionRestore.yAxis) {
+                if (this._optionRestore.yAxis instanceof Array) {
+                    len = this._optionRestore.yAxis.length;
+                    while (len--) {
+                        magicOption.yAxis[len].data = zrUtil.clone(
+                            this._optionRestore.yAxis[len].data
+                        );
+                    }
+                }
+                else {
+                    magicOption.yAxis.data = zrUtil.clone(this._optionRestore.yAxis.data);
+                }
             }
+
+            // 系列数据还原
+            len = this._optionRestore.series.length;
+            while (len--) {
+                magicOption.series[len].data = zrUtil.clone(this._optionRestore.series[len].data);
+            }
+            
+            return magicOption;
         },
 
         /**
@@ -1125,6 +948,8 @@ define(function (require) {
                 this._themeConfig, this._messageCenter, this._zr, option, this
             );
             this._timeline = timeline;
+            this.component.timeline = this._timeline;
+            
             return this;
         },
         
@@ -1138,23 +963,13 @@ define(function (require) {
          * @param {string=} additionData 是否增加类目轴(饼图为图例)数据，附加操作同isHead和dataGrow
          */
         addData : function (seriesIdx, data, isHead, dataGrow, additionData) {
-            var ecQuery = require('./util/ecQuery');
-            var magicOption;
-            if (ecQuery.query(this._optionBackup, 'toolbox.show')
-                && ecQuery.query(this._optionBackup, 'toolbox.feature.magicType.show')
-            ) {
-                magicOption = this._getMagicOption();
-            }
-            else {
-                magicOption = this._getMagicOption(this._island.getOption());
-            }
-            
+            var magicOption = this.getOption();
             var params = seriesIdx instanceof Array
                          ? seriesIdx
                          : [[seriesIdx, data, isHead, dataGrow, additionData]];
             var axisIdx;
             var legendDataIdx;
-            //this._optionRestore 和 _optionBackup都要同步
+            //this._optionRestore 和 magicOption 都要同步
             for (var i = 0, l = params.length; i < l; i++) {
                 seriesIdx = params[i][0];
                 data = params[i][1];
@@ -1164,125 +979,101 @@ define(function (require) {
                 if (this._optionRestore.series[seriesIdx]) {
                     if (isHead) {
                         this._optionRestore.series[seriesIdx].data.unshift(data);
-                        this._optionBackup.series[seriesIdx].data.unshift(data);
+                        magicOption.series[seriesIdx].data.unshift(data);
                         if (!dataGrow) {
                             this._optionRestore.series[seriesIdx].data.pop();
-                            data = this._optionBackup.series[seriesIdx].data.pop();
+                            data = magicOption.series[seriesIdx].data.pop();
                         }
                     }
                     else {
                         this._optionRestore.series[seriesIdx].data.push(data);
-                        this._optionBackup.series[seriesIdx].data.push(data);
+                        magicOption.series[seriesIdx].data.push(data);
                         if (!dataGrow) {
                             this._optionRestore.series[seriesIdx].data.shift();
-                            data = this._optionBackup.series[seriesIdx].data.shift();
+                            data = magicOption.series[seriesIdx].data.shift();
                         }
                     }
                     
                     if (typeof additionData != 'undefined'
-                        && this._optionRestore.series[seriesIdx].type 
-                           == ecConfig.CHART_TYPE_PIE
-                        && this._optionBackup.legend 
-                        && this._optionBackup.legend.data
+                        && this._optionRestore.series[seriesIdx].type == ecConfig.CHART_TYPE_PIE
+                        && this._optionRestore.legend 
+                        && this._optionRestore.legend.data
                     ) {
-                        magicOption.legend.data = this._optionBackup.legend.data;
                         if (isHead) {
                             this._optionRestore.legend.data.unshift(additionData);
-                            this._optionBackup.legend.data.unshift(additionData);
+                            magicOption.legend.data.unshift(additionData);
                         }
                         else {
                             this._optionRestore.legend.data.push(additionData);
-                            this._optionBackup.legend.data.push(additionData);
+                            magicOption.legend.data.push(additionData);
                         }
                         if (!dataGrow) {
                             legendDataIdx = zrUtil.indexOf(
-                                this._optionBackup.legend.data,
-                                data.name
+                                this._optionRestore.legend.data, data.name
                             );
-                            legendDataIdx != -1
-                            && (
-                                this._optionRestore.legend.data.splice(
-                                    legendDataIdx, 1
-                                ),
-                                this._optionBackup.legend.data.splice(
-                                    legendDataIdx, 1
-                                )
+                            legendDataIdx != -1 
+                            && this._optionRestore.legend.data.splice(legendDataIdx, 1);
+                            
+                            legendDataIdx = zrUtil.indexOf(
+                                magicOption.legend.data, data.name
                             );
+                            legendDataIdx != -1 
+                            && magicOption.legend.data.splice(legendDataIdx, 1);
                         }
-                        this._selectedMap[additionData] = true;
                     } 
-                    else  if (typeof additionData != 'undefined'
-                        && typeof this._optionRestore.xAxis != 'undefined'
-                        && typeof this._optionRestore.yAxis != 'undefined'
+                    else if (typeof additionData != 'undefined'
+                             && typeof this._optionRestore.xAxis != 'undefined'
+                             && typeof this._optionRestore.yAxis != 'undefined'
                     ) {
                         // x轴类目
-                        axisIdx = this._optionRestore.series[seriesIdx].xAxisIndex
-                                  || 0;
-                        if (typeof this._optionRestore.xAxis[axisIdx].type 
-                            == 'undefined'
+                        axisIdx = this._optionRestore.series[seriesIdx].xAxisIndex || 0;
+                        if (typeof this._optionRestore.xAxis[axisIdx].type == 'undefined'
                             || this._optionRestore.xAxis[axisIdx].type == 'category'
                         ) {
                             if (isHead) {
-                                this._optionRestore.xAxis[axisIdx].data.unshift(
-                                    additionData
-                                );
-                                this._optionBackup.xAxis[axisIdx].data.unshift(
-                                    additionData
-                                );
+                                this._optionRestore.xAxis[axisIdx].data.unshift(additionData);
+                                magicOption.xAxis[axisIdx].data.unshift(additionData);
                                 if (!dataGrow) {
                                     this._optionRestore.xAxis[axisIdx].data.pop();
-                                    this._optionBackup.xAxis[axisIdx].data.pop();
+                                    magicOption.xAxis[axisIdx].data.pop();
                                 }
                             }
                             else {
-                                this._optionRestore.xAxis[axisIdx].data.push(
-                                    additionData
-                                );
-                                this._optionBackup.xAxis[axisIdx].data.push(
-                                    additionData
-                                );
+                                this._optionRestore.xAxis[axisIdx].data.push(additionData);
+                                magicOption.xAxis[axisIdx].data.push(additionData);
                                 if (!dataGrow) {
                                     this._optionRestore.xAxis[axisIdx].data.shift();
-                                    this._optionBackup.xAxis[axisIdx].data.shift();
+                                    magicOption.xAxis[axisIdx].data.shift();
                                 }
                             }
                         }
                         
                         // y轴类目
-                        axisIdx = this._optionRestore.series[seriesIdx].yAxisIndex
-                                  || 0;
+                        axisIdx = this._optionRestore.series[seriesIdx].yAxisIndex || 0;
                         if (this._optionRestore.yAxis[axisIdx].type == 'category') {
                             if (isHead) {
-                                this._optionRestore.yAxis[axisIdx].data.unshift(
-                                    additionData
-                                );
-                                this._optionBackup.yAxis[axisIdx].data.unshift(
-                                    additionData
-                                );
+                                this._optionRestore.yAxis[axisIdx].data.unshift(additionData);
+                                magicOption.yAxis[axisIdx].data.unshift(additionData);
                                 if (!dataGrow) {
                                     this._optionRestore.yAxis[axisIdx].data.pop();
-                                    this._optionBackup.yAxis[axisIdx].data.pop();
+                                    magicOption.yAxis[axisIdx].data.pop();
                                 }
                             }
                             else {
-                                this._optionRestore.yAxis[axisIdx].data.push(
-                                    additionData
-                                );
-                                this._optionBackup.yAxis[axisIdx].data.push(
-                                    additionData
-                                );
+                                this._optionRestore.yAxis[axisIdx].data.push(additionData);
+                                magicOption.yAxis[axisIdx].data.push(additionData);
                                 if (!dataGrow) {
                                     this._optionRestore.yAxis[axisIdx].data.shift();
-                                    this._optionBackup.yAxis[axisIdx].data.shift();
+                                    magicOption.yAxis[axisIdx].data.shift();
                                 }
                             }
                         }
                     }
+                    // 同步图表内状态，动画需要
+                    this._option.series[seriesIdx].data = magicOption.series[seriesIdx].data;
                 }
             }
             
-            //magicOption.legend && (magicOption.legend.selected = zrUtil.clone(this._selectedMap));
-            // dataZoom同步数据
             this._zr.clearAnimation();
             for (var i = 0, l = this._chartList.length; i < l; i++) {
                 if (magicOption.addDataAnimation 
@@ -1290,26 +1081,23 @@ define(function (require) {
                 ) {
                     this._chartList[i].addDataAnimation(params);
                 }
-                if (this._chartList[i].type 
-                    == ecConfig.COMPONENT_TYPE_DATAZOOM
-                ) {
-                    this._chartList[i].silence(true);
-                    this._chartList[i].init(magicOption);
-                    this._chartList[i].silence(false);
-                }
             }
+            // dataZoom同步数据
+            this.component.dataZoom && this.component.dataZoom.syncOption(magicOption);
             this._island.refresh(magicOption);
             this._toolbox.refresh(magicOption);
+            
+            this._option = magicOption;
             var self = this;
             setTimeout(function (){
+                if (!self._zr) {
+                    return; // 已经被释放
+                }
                 self._zr.clearAnimation();
                 for (var i = 0, l = self._chartList.length; i < l; i++) {
-                    if (magicOption.addDataAnimation 
-                        && self._chartList[i].addDataAnimation
-                    ) {
-                        self._chartList[i].motionlessOnce = true;
-                        //self._chartList[i].clear(); // 有addData动画就去掉过渡动画
-                    }
+                    // 有addData动画就去掉过渡动画
+                    self._chartList[i].motionlessOnce = magicOption.addDataAnimation 
+                                                        && self._chartList[i].addDataAnimation;
                 }
                 self._messageCenter.dispatch(
                     ecConfig.EVENT.REFRESH,
@@ -1360,7 +1148,7 @@ define(function (require) {
             }
             var bgColor = this._option.backgroundColor
                           && this._option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
-                              ? '#fff' : this._option.backgroundColor;
+                             ? '#fff' : this._option.backgroundColor;
             return this._zr.toDataURL('image/' + imgType, bgColor); 
         },
 
@@ -1641,25 +1429,19 @@ define(function (require) {
                 for (var key in ecConfig) {
                     this._themeConfig[key] = zrUtil.clone(ecConfig[key]);
                 }
-                if (theme.color) {
-                    // 颜色数组随theme，不merge
-                    this._themeConfig.color = [];
-                }
                 
-                if (theme.symbolList) {
-                    // 默认标志图形类型列表，不merge
-                    this._themeConfig.symbolList = [];
-                }
+                // 颜色数组随theme，不merge
+                theme.color && (this._themeConfig.color = []);
+                
+                // 默认标志图形类型列表，不merge
+                theme.symbolList && (this._themeConfig.symbolList = []);
                 
                 // 应用新主题
-                zrUtil.merge(
-                    this._themeConfig, zrUtil.clone(theme), true
-                );
+                zrUtil.merge(this._themeConfig, zrUtil.clone(theme), true);
             }
             
             if (!_canvasSupported) {   // IE8-
-                this._themeConfig.textStyle.fontFamily = 
-                    this._themeConfig.textStyle.fontFamily2;
+                this._themeConfig.textStyle.fontFamily = this._themeConfig.textStyle.fontFamily2;
             }
             
             this._optionRestore && this.restore();
@@ -1688,9 +1470,7 @@ define(function (require) {
                     self._chartList[i].resize && self._chartList[i].resize();
                 }
                 self._zr.refresh();
-                self._messageCenter.dispatch(
-                    ecConfig.EVENT.RESIZE
-                );
+                self._messageCenter.dispatch(ecConfig.EVENT.RESIZE);
                 return self;
             }
         },
@@ -1702,7 +1482,6 @@ define(function (require) {
             this._disposeChartList();
             this._zr.clear();
             this._option = {};
-            this._optionBackup = {};
             this._optionRestore = {};
             return this;
         },
