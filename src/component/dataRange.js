@@ -25,10 +25,15 @@ define(function (require) {
      * @param {Object} option 图表参数
      * @param {Object=} selected 用于状态保持
      */
-    function DataRange(ecTheme, messageCenter, zr, option) {
-        Base.call(this, ecTheme, zr, option);
+    function DataRange(ecTheme, messageCenter, zr, option, myChart) {
+        if (typeof this.query(option, 'dataRange.min') == 'undefined'
+            || typeof this.query(option, 'dataRange.max') == 'undefined'
+        ) {
+            console.error('option.dataRange.min or option.dataRange.max has not been defined.');
+            return;
+        }
         
-        this.messageCenter = messageCenter;
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
         
         var self = this;
         self._ondrift = function(dx, dy) {
@@ -37,8 +42,13 @@ define(function (require) {
         self._ondragend = function() {
             return self.__ondragend();
         };
+        this._selectedMap = {};
+        this._range = {
+            start: 100,
+            end: 0
+        };
         
-        this.init(option);
+        this.refresh(option);
     }
     
     DataRange.prototype = {
@@ -948,27 +958,27 @@ define(function (require) {
                 if (typeof this.dataRangeOption.range.end != 'undefined') {
                     this._range.start = this.dataRangeOption.range.end;
                 }
-                if (this._range.start != 100 || this._range.end !== 0) {
-                    // 非默认满值同步一下图形
-                    if (this.dataRangeOption.orient == 'horizontal') {
-                        // 横向
-                        var width = this._fillerShae.style.width;
-                        this._fillerShae.style.x +=
-                            width * (100 - this._range.start) / 100;
-                        this._fillerShae.style.width = 
-                            width * (this._range.start - this._range.end) / 100;
-                    }
-                    else {
-                        // 纵向
-                        var height = this._fillerShae.style.height;
-                        this._fillerShae.style.y +=
-                            height * (100 - this._range.start) / 100;
-                        this._fillerShae.style.height = 
-                            height * (this._range.start - this._range.end) / 100;
-                    }
-                    this.zr.modShape(this._fillerShae.id);
-                    this._syncHandleShape();
+            }
+            if (this._range.start != 100 || this._range.end !== 0) {
+                // 非默认满值同步一下图形
+                if (this.dataRangeOption.orient == 'horizontal') {
+                    // 横向
+                    var width = this._fillerShae.style.width;
+                    this._fillerShae.style.x +=
+                        width * (100 - this._range.start) / 100;
+                    this._fillerShae.style.width = 
+                        width * (this._range.start - this._range.end) / 100;
                 }
+                else {
+                    // 纵向
+                    var height = this._fillerShae.style.height;
+                    this._fillerShae.style.y +=
+                        height * (100 - this._range.start) / 100;
+                    this._fillerShae.style.height = 
+                        height * (this._range.start - this._range.end) / 100;
+                }
+                this.zr.modShape(this._fillerShae.id);
+                this._syncHandleShape();
             }
         },
         
@@ -1139,16 +1149,6 @@ define(function (require) {
             this.messageCenter.dispatch(ecConfig.EVENT.REFRESH);
         },
 
-        init : function (newOption) {
-            if (typeof this.query(newOption, 'dataRange.min') == 'undefined'
-                || typeof this.query(newOption, 'dataRange.max') == 'undefined'
-            ) {
-                return;
-            }
-
-            this.refresh(newOption);
-        },
-
         /**
          * 刷新
          */
@@ -1162,8 +1162,6 @@ define(function (require) {
                 );
                 this.dataRangeOption = this.option.dataRange;
                 
-                this._selectedMap = {};
-
                 var splitNumber = this.dataRangeOption.splitNumber <= 0 
                                   || this.dataRangeOption.calculable
                                   ? 100
@@ -1195,8 +1193,7 @@ define(function (require) {
                         / splitNumber
                     ) || 1;
                 } else {
-                    this._gap = (this.dataRangeOption.max - this.dataRangeOption.min)
-                            / splitNumber;
+                    this._gap = (this.dataRangeOption.max - this.dataRangeOption.min) / splitNumber;
                     this._gap = this._gap.toFixed(this.dataRangeOption.precision) - 0;
                 }
                 
@@ -1204,26 +1201,16 @@ define(function (require) {
                 for (var i = 0; i < splitNumber; i++) {
                     this._selectedMap[i] = true;
                     this._valueTextList.unshift(
-                        (i * this._gap + this.dataRangeOption.min).toFixed(
-                            this.dataRangeOption.precision
-                        )
+                        (i * this._gap + this.dataRangeOption.min)
+                            .toFixed(this.dataRangeOption.precision)
                         + ' - ' 
                         + ((i + 1) * this._gap + this.dataRangeOption.min).toFixed(
                             this.dataRangeOption.precision
                         )
                     );
                 }
-                this._range = {
-                    start: 100,
-                    end: 0
-                };
             }
             
-            // 做一个反转
-            this.dataRangeOption.range = this.dataRangeOption.range || {
-                start: this._range.end,
-                end: this._range.start
-            };
             this.clear();
             this._buildShape();
         },

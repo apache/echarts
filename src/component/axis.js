@@ -29,12 +29,46 @@ define(function (require) {
      * @param {Object} component 组件
      * @param {string} axisType 横走or纵轴
      */
-    function Axis(ecTheme, messageCenter, zr, option, component, axisType) {
-        Base.call(this, ecTheme, zr, option);
+    function Axis(ecTheme, messageCenter, zr, option, myChart, axisType) {
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
         
-        this.messageCenter = messageCenter;
+        this.axisType = axisType;
+        this._axisList = [];
         
-        this.init(option, component, axisType);
+        this.clear();
+
+        var axisOption;
+        if (this.axisType == 'xAxis') {
+            this.option.xAxis = this.reformOption(option.xAxis);
+            axisOption = this.option.xAxis;
+        }
+        else {
+            this.option.yAxis = this.reformOption(option.yAxis);
+            axisOption = this.option.yAxis;
+        }
+
+        var CategoryAxis = require('./categoryAxis');
+        var ValueAxis = require('./valueAxis');
+        for (var i = 0, l = axisOption.length; i < l; i++) {
+            this._axisList.push(
+                axisOption[i].type == 'category'
+                ? new CategoryAxis(
+                      this.ecTheme, 
+                      this.messageCenter,
+                      this.zr,
+                      axisOption[i], 
+                      myChart
+                  )
+                : new ValueAxis(
+                      this.ecTheme, 
+                      this.messageCenter,
+                      this.zr,
+                      axisOption[i],
+                      myChart,
+                      this.series
+                  )
+            );
+        }
     }
     
     Axis.prototype = {
@@ -102,55 +136,6 @@ define(function (require) {
             }
 
             return opt;
-        },
-
-        /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
-         * @param {Object} newOption
-         * @param {Object} newComponent
-         */
-        init : function (newOption, newComponent, newAxisType) {
-            this.option = newOption || this.option;
-            this.component = newComponent || this.component;
-            this.axisType = newAxisType || this.axisType;
-            
-            this._axisList = [];
-            
-            this.clear();
-
-            var axisOption;
-            if (this.axisType == 'xAxis') {
-                this.option.xAxis = this.reformOption(newOption.xAxis);
-                axisOption = this.option.xAxis;
-            }
-            else {
-                this.option.yAxis = this.reformOption(newOption.yAxis);
-                axisOption = this.option.yAxis;
-            }
-
-            var CategoryAxis = require('./categoryAxis');
-            var ValueAxis = require('./valueAxis');
-            for (var i = 0, l = axisOption.length; i < l; i++) {
-                this._axisList.push(
-                    axisOption[i].type == 'category'
-                    ? new CategoryAxis(
-                          this.ecTheme, 
-                          this.messageCenter,
-                          this.zr,
-                          axisOption[i], 
-                          this.component
-                      )
-                    : new ValueAxis(
-                          this.ecTheme, 
-                          this.messageCenter,
-                          this.zr,
-                          axisOption[i],
-                          this.component,
-                          this.series
-                      )
-                );
-            }
         },
 
         /**

@@ -24,22 +24,14 @@ define(function (require) {
      *      @param {number=} option.grid.width 直角坐标系内绘图网格宽度，数值单位px
      *      @param {number=} option.grid.height 直角坐标系内绘图网格高度，数值单位px
      */
-    function Grid(ecTheme, messageCenter, zr, option) {
-        Base.call(this, ecTheme, zr, option);
+    function Grid(ecTheme, messageCenter, zr, option, myChart) {
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
 
-        this.init(option);
+        this.refresh(option);
     }
     
     Grid.prototype = {
         type : ecConfig.COMPONENT_TYPE_GRID,
-        /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
-         * @param {Object} newOption
-         */
-        init : function (newOption) {
-            this.refresh(newOption);
-        },
 
         getX : function () {
             return this._x;

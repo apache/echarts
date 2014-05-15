@@ -24,12 +24,18 @@ define(function (require) {
      * @param {Object} component 组件
      * @param {Array} series 数据对象
      */
-    function ValueAxis(ecTheme, messageCenter, zr, option, component, series) {
-        Base.call(this, ecTheme, zr, option);
+    function ValueAxis(ecTheme, messageCenter, zr, option, myChart, series) {
+        if (!series || series.length === 0) {
+            console.err('option.series.length == 0.')
+            return;
+        }
+        
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
 
         this.series = series;
+        this.grid = this.component.grid;
         
-        this.init(option, component, this.series);
+        this.refresh(option, series);
     }
     
     ValueAxis.prototype = {
@@ -502,7 +508,7 @@ define(function (require) {
                         }
                     }
                     else {
-                        // 堆叠数据，需要区分正负向堆叠
+                        // 堆积数据，需要区分正负向堆积
                         var keyP = '__Magic_Key_Positive__' + this.series[i].stack;
                         var keyN = '__Magic_Key_Negative__' + this.series[i].stack;
                         data[keyP] = data[keyP] || [];
@@ -824,22 +830,6 @@ define(function (require) {
                 min: this._min,
                 max: this._max
             };
-        },
-
-        /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
-         * @param {Object} newOption
-         * @param {Object} newGrid
-         */
-        init : function (newOption, newComponent, newSeries) {
-            if (!newSeries || newSeries.length === 0) {
-                return;
-            }
-            this.component = newComponent || this.component;
-            this.grid = this.component.grid || this.grid;
-            
-            this.refresh(newOption, newSeries);
         },
 
         /**

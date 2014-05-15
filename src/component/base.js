@@ -32,11 +32,15 @@ define(function (require) {
     _aniMap[ecConfig.CHART_TYPE_K] = true;
     _aniMap[ecConfig.CHART_TYPE_CHORD] = true;
     
-    function Base(ecTheme, zr, option){
+    function Base(ecTheme, messageCenter, zr, option, myChart){
         this.ecTheme = ecTheme;
+        this.messageCenter = messageCenter;
         this.zr =zr;
         this.option = option;
         this.series = option.series;
+        this.myChart = myChart;
+        this.component = myChart.component;
+        
         this._zlevelBase = this.getZlevelBase();
         this.shapeList = [];
         this.effectList = [];

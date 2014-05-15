@@ -22,15 +22,16 @@ define(function (require) {
      * @param {ZRender} zr zrender实例
      * @param {Object} option 图表参数
      */
-    function Title(ecTheme, messageCenter, zr, option) {
-        Base.call(this, ecTheme, zr, option);
+    function Title(ecTheme, messageCenter, zr, option, myChart) {
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
         
-        this.init(option);
+        this.refresh(option);
     }
     
     Title.prototype = {
         type : ecConfig.COMPONENT_TYPE_TITLE,
         _buildShape : function () {
+            // 标题元素组的位置参数，通过计算所得x, y, width, height
             this._itemGroupLocation = this._getItemGroupLocation();
 
             this._buildBackground();
@@ -229,10 +230,6 @@ define(function (require) {
                 height : totalHeight
             };
         },
-
-        init : function (newOption) {
-            this.refresh(newOption);
-        },
         
         /**
          * 刷新
@@ -256,9 +253,6 @@ define(function (require) {
                     this.titleOption.subtextStyle,
                     this.ecTheme.textStyle
                 );
-                
-                // 标题元素组的位置参数，通过计算所得x, y, width, height
-                this._itemGroupLocation = {};
             }
             
             this.clear();

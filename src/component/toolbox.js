@@ -29,12 +29,10 @@ define(function (require) {
      * @param {HtmlElement} dom 目标对象
      * @param {ECharts} myChart 当前图表实例
      */
-    function Toolbox(ecTheme, messageCenter, zr, dom, myChart) {
-        Base.call(this, ecTheme, zr, {});
+    function Toolbox(ecTheme, messageCenter, zr, option, myChart) {
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
 
-        this.messageCenter = messageCenter;
-        this.dom = dom;
-        this.myChart = myChart;
+        this.dom = myChart.dom;
         
         this._magicType = {};
         //this._magicMap;
@@ -375,7 +373,7 @@ define(function (require) {
                         if (!this._dataView) {
                             var DataView = require('./dataView');;
                             this._dataView = new DataView(
-                                this.ecTheme, this.messageCenter, this.zr, this.option, this.dom
+                                this.ecTheme, this.messageCenter, this.zr, this.option, this.myChart
                             );
                         }
                         itemShape.onclick = function (param) {
@@ -836,7 +834,7 @@ define(function (require) {
                 else if (itemName == ecConfig.CHART_TYPE_BAR) {
                     this._magicType[ecConfig.CHART_TYPE_LINE] = false;
                 }
-                // 堆叠平铺互斥
+                // 堆积平铺互斥
                 if (itemName == _MAGICTYPE_STACK) {
                     this._magicType[_MAGICTYPE_TILED] = false;
                 }
@@ -1014,10 +1012,10 @@ define(function (require) {
             }
             
             if (this._magicType[_MAGICTYPE_STACK] || this._magicType[_MAGICTYPE_TILED]) {
-                // 有堆叠平铺切换
+                // 有堆积平铺切换
                 for (var i = 0, l = this.option.series.length; i < l; i++) {
                     if (this._magicType[_MAGICTYPE_STACK]) {
-                        // 启用堆叠
+                        // 启用堆积
                         this.option.series[i].stack = '_ECHARTS_STACK_KENER_2014_';
                     }
                     else if (this._magicType[_MAGICTYPE_TILED]) {
@@ -1027,7 +1025,7 @@ define(function (require) {
                 }
             }
             else {
-                // 无堆叠平铺切换
+                // 无堆积平铺切换
                 for (var i = 0, l = this.option.series.length; i < l; i++) {
                     this.option.series[i].stack = this.option.series[i].__stack;
                 }
@@ -1040,7 +1038,7 @@ define(function (require) {
             this._isSilence = s;
         },
         
-        render : function (newOption, newComponent){
+        render : function (newOption){
             this._resetMark();
             this._resetZoom();
             newOption.toolbox = this.reformOption(newOption.toolbox);
@@ -1049,7 +1047,6 @@ define(function (require) {
                 newOption.toolbox.padding
             );
             this.option = newOption || this.option;
-            this.component = newComponent || this.component;
             
             this.clear();
 

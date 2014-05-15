@@ -24,10 +24,17 @@ define(function (require) {
      * @param {Object} option 类目轴参数
      * @param {Grid} component 组件
      */
-    function CategoryAxis(ecTheme, messageCenter, zr, option, component) {
-        Base.call(this, ecTheme, zr, option);
+    function CategoryAxis(ecTheme, messageCenter, zr, option, myChart) {
+        if (option.data.length < 1) {
+            console.error('option.data.length < 1.');
+            return;
+        }
         
-        this.init(option, component);
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
+        
+        this.grid = this.component.grid;
+        
+        this.refresh(option);
     }
     
     CategoryAxis.prototype = {
@@ -603,21 +610,6 @@ define(function (require) {
                     }
                 }
             }
-        },
-
-        /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
-         * @param {Object} newOption
-         * @param {Object} newGrid
-         */
-        init :function (newOption, newComponent) {
-            if (newOption.data.length < 1) {
-                return;
-            }
-            this.grid = (newComponent && newComponent.grid) || this.grid;
-            
-            this.refresh(newOption);
         },
 
         /**

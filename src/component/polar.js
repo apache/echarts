@@ -17,19 +17,14 @@ define(function (require) {
     var zrUtil = require('zrender/tool/util');
     var ecCoordinates = require('../util/coordinates');
 
-    function Polar(ecTheme, messageCenter, zr, option, component) {
-        Base.call(this, ecTheme, zr, option);
+    function Polar(ecTheme, messageCenter, zr, option, myChart) {
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
         
-        this.init(option, component);
+        this.refresh(option);
     }
     
     Polar.prototype = {
         type : ecConfig.COMPONENT_TYPE_POLAR,
-        init : function (newOption, newComponent) {
-            this.component = newComponent || this.component;
-            
-            this.refresh(newOption);
-        },
         
         /**
          * 绘制图形

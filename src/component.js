@@ -5,10 +5,10 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function (/*require*/) {    //component
+define(function (require) {    // component
     var self = {};
 
-    var _componentLibrary = {};     //echart组件库
+    var _componentLibrary = {};  // echart组件库
 
     /**
      * 定义图形实现
@@ -27,6 +27,6 @@ define(function (/*require*/) {    //component
     self.get = function (name) {
         return _componentLibrary[name];
     };
-
+    
     return self;
 });

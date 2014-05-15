@@ -18,19 +18,50 @@ define(function (require) {
      * @param {Object} option 提示框参数
      * @param {HtmlElement} dom 目标对象
      */
-    function DataView(ecTheme, messageCenter, zr, option, dom) {
-        Base.call(this, ecTheme, zr, option);
+    function DataView(ecTheme, messageCenter, zr, option, myChart) {
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
 
-        this.messageCenter = messageCenter;
-        this.dom = dom;
+        this.dom = myChart.dom;
         
-        this._init();
+        // dataview dom & css
+        this._tDom = document.createElement('div');
+        this._textArea = document.createElement('textArea');
+        this._buttonRefresh = document.createElement('button');
+        this._buttonClose = document.createElement('button');
+        this._hasShow = false;
+
+        // 缓存一些高宽数据
+        this._zrHeight = zr.getHeight();
+        this._zrWidth = zr.getWidth();
+    
+        this._tDom.className = 'echarts-dataview',
+        this.hide();
+        this.dom.firstChild.appendChild(this._tDom);
+
+        if (window.addEventListener) {
+            this._tDom.addEventListener('click', this._stop);
+            this._tDom.addEventListener('mousewheel', this._stop);
+            this._tDom.addEventListener('mousemove', this._stop);
+            this._tDom.addEventListener('mousedown', this._stop);
+            this._tDom.addEventListener('mouseup', this._stop);
+
+            // mobile支持
+            this._tDom.addEventListener('touchstart', this._stop);
+            this._tDom.addEventListener('touchmove', this._stop);
+            this._tDom.addEventListener('touchend', this._stop);
+        }
+        else {
+            this._tDom.attachEvent('onclick', this._stop);
+            this._tDom.attachEvent('onmousewheel', this._stop);
+            this._tDom.attachEvent('onmousemove', this._stop);
+            this._tDom.attachEvent('onmousedown', this._stop);
+            this._tDom.attachEvent('onmouseup', this._stop);
+        }
     }
     
     DataView.prototype = {
         type : ecConfig.COMPONENT_TYPE_DATAVIEW,
         _lang : ['Data View', 'close', 'refresh'],
-        _cssName : 'echarts-dataview',
         // 通用样式
         _gCssText : 'position:absolute;'
                     + 'display:block;'
@@ -358,43 +389,6 @@ define(function (require) {
             }
             else {
                 e.cancelBubble = true;
-            }
-        },
-
-        _init : function () {
-            // dataview dom & css
-            this._tDom = document.createElement('div');
-            this._textArea = document.createElement('textArea');
-            this._buttonRefresh = document.createElement('button');
-            this._buttonClose = document.createElement('button');
-            this._hasShow = false;
-    
-            // 缓存一些高宽数据
-            this._zrHeight = this.zr.getHeight();
-            this._zrWidth = this.zr.getWidth();
-        
-            this._tDom.className = this._cssName;
-            this.hide();
-            this.dom.firstChild.appendChild(this._tDom);
-
-            if (window.addEventListener) {
-                this._tDom.addEventListener('click', this._stop);
-                this._tDom.addEventListener('mousewheel', this._stop);
-                this._tDom.addEventListener('mousemove', this._stop);
-                this._tDom.addEventListener('mousedown', this._stop);
-                this._tDom.addEventListener('mouseup', this._stop);
-
-                // mobile支持
-                this._tDom.addEventListener('touchstart', this._stop);
-                this._tDom.addEventListener('touchmove', this._stop);
-                this._tDom.addEventListener('touchend', this._stop);
-            }
-            else {
-                this._tDom.attachEvent('onclick', this._stop);
-                this._tDom.attachEvent('onmousewheel', this._stop);
-                this._tDom.attachEvent('onmousemove', this._stop);
-                this._tDom.attachEvent('onmousedown', this._stop);
-                this._tDom.attachEvent('onmouseup', this._stop);
             }
         },
 

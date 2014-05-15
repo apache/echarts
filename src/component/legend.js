@@ -27,12 +27,19 @@ define(function (require) {
      * @param {ZRender} zr zrender实例
      * @param {Object} option 图表参数
      */
-    function Legend(ecTheme, messageCenter, zr, option) {
-        Base.call(this, ecTheme, zr, option);
-
-        this.messageCenter = messageCenter;
+    function Legend(ecTheme, messageCenter, zr, option, myChart) {
+        if (!this.query(option, 'legend.data')) {
+            console.error('option.legend.data has not been defined.')
+            return;
+        }
         
-        this.init(option);
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
+        
+        this._colorIndex = 0;
+        this._colorMap = {};
+        this._selectedMap = {};
+        
+        this.refresh(option);
     }
     
     Legend.prototype = {
@@ -560,14 +567,6 @@ define(function (require) {
             );
         },
 
-        init : function (newOption) {
-            if (!this.query(newOption, 'legend.data')) {
-                return;
-            }
-            
-            this.refresh(newOption);
-        },
-
         /**
          * 刷新
          */
@@ -581,9 +580,6 @@ define(function (require) {
                 );
                 this.legendOption = this.option.legend;
                 
-                this._colorIndex = 0;
-                this._colorMap = {};
-                this._selectedMap = {};
                 var data = this.legendOption.data || [];
                 var itemName;
                 var something;
@@ -621,7 +617,9 @@ define(function (require) {
                         if (color && something.type != ecConfig.CHART_TYPE_K) {
                             this.setColor(itemName, color);
                         }
-                        this._selectedMap[itemName] = true;
+                        this._selectedMap[itemName] = 
+                            typeof this._selectedMap[itemName] != 'undefined'
+                            ? this._selectedMap[itemName] : true; 
                     }
                 }
             

@@ -26,10 +26,7 @@ define(function (require) {
      * @param {Object} option 图表参数
      */
     function Timeline(ecTheme, messageCenter, zr, option, myChart) {
-        Base.call(this, ecTheme, zr, option);
-
-        this.messageCenter = messageCenter;
-        this.myChart = myChart;
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
 
         var self = this;
         self._onclick = function(param) {
@@ -83,7 +80,53 @@ define(function (require) {
             }
         };
 
-        this.init(option);
+        this.timelineOption = this.option.timeline = this.reformOption(this.option.timeline);
+        // 补全padding属性
+        this.timelineOption.padding = this.reformCssArray(
+            this.timelineOption.padding
+        );
+        // 通用字体设置
+        this.timelineOption.label.textStyle = zrUtil.merge(
+            this.timelineOption.label.textStyle || {},
+            this.ecTheme.textStyle
+        );
+        this.timelineOption.checkpointStyle.label.textStyle = zrUtil.merge(
+            this.timelineOption.checkpointStyle.label.textStyle || {},
+            this.ecTheme.textStyle
+        );
+            
+        this.options = this.option.options;
+        this.currentIndex = this.timelineOption.currentIndex % this.timelineOption.data.length;
+        
+        /*
+        if (!this.timelineOption.notMerge) {
+            for (var i = 1, l = this.timelineOption.data.length; i < l; i++) {
+                this.options[i] = zrUtil.merge(
+                    this.options[i], this.options[i - 1]
+                );
+            }
+        }
+        */
+        
+        if (this.timelineOption.show) {
+            this._buildShape();
+            this._syncHandleShape();
+        }
+        
+        this._setCurrentOption();
+        
+        if (this.timelineOption.autoPlay) {
+            var self = this;
+            this.playTicket = setTimeout(
+                function() {
+                    self.play();
+                },
+                this.ecTheme.animationDuration
+            );
+        }
+        
+        this.selectedMap = false;
+        this.range = false;
     }
     
     Timeline.prototype = {
@@ -737,57 +780,6 @@ define(function (require) {
             this.timelineOption.autoPlay = false;
             
             clearTimeout(this.playTicket);
-        },
-        
-        init : function (newOption) {
-            this.option = newOption || this.option;
-            this.timelineOption = this.option.timeline = this.reformOption(this.option.timeline);
-            // 补全padding属性
-            this.timelineOption.padding = this.reformCssArray(
-                this.timelineOption.padding
-            );
-            // 通用字体设置
-            this.timelineOption.label.textStyle = zrUtil.merge(
-                this.timelineOption.label.textStyle || {},
-                this.ecTheme.textStyle
-            );
-            this.timelineOption.checkpointStyle.label.textStyle = zrUtil.merge(
-                this.timelineOption.checkpointStyle.label.textStyle || {},
-                this.ecTheme.textStyle
-            );
-                
-            this.options = this.option.options;
-            this.currentIndex = this.timelineOption.currentIndex % this.timelineOption.data.length;
-            
-            /*
-            if (!this.timelineOption.notMerge) {
-                for (var i = 1, l = this.timelineOption.data.length; i < l; i++) {
-                    this.options[i] = zrUtil.merge(
-                        this.options[i], this.options[i - 1]
-                    );
-                }
-            }
-            */
-            
-            if (this.timelineOption.show) {
-                this._buildShape();
-                this._syncHandleShape();
-            }
-            
-            this._setCurrentOption();
-            
-            if (this.timelineOption.autoPlay) {
-                var self = this;
-                this.playTicket = setTimeout(
-                    function() {
-                        self.play();
-                    },
-                    this.ecTheme.animationDuration
-                );
-            }
-            
-            this.selectedMap = false;
-            this.range = false;
         },
         
         /**

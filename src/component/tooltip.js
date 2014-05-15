@@ -30,12 +30,10 @@ define(function (require) {
      * @param {HtmlElement} dom 目标对象
      * @param {ECharts} myChart 当前图表实例
      */
-    function Tooltip(ecTheme, messageCenter, zr, option, dom, myChart) {
-        Base.call(this, ecTheme, zr, option);
+    function Tooltip(ecTheme, messageCenter, zr, option, myChart) {
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
         
-        this.messageCenter = messageCenter;
-        this.dom = dom;
-        this.myChart = myChart;
+        this.dom = myChart.dom;
         
         var self = this;
         self._onmousemove = function (param) {
@@ -58,7 +56,29 @@ define(function (require) {
             return self.__refixed(param);
         };
         
-        this.init(option);
+        this._tDom = this._tDom || document.createElement('div');
+        this._tDom.style.position = 'absolute';  // 不是多余的，别删！
+        this.hasAppend = false;
+        
+        this._axisLineShape && this.zr.delShape(this._axisLineShape);
+        this._axisLineShape = new LineShape({
+            zlevel: this._zlevelBase,
+            invisible : true,
+            hoverable: false
+        });
+        this.shapeList.push(this._axisLineShape);
+        this.zr.addShape(this._axisLineShape);
+        
+        this._axisShadowShape && this.zr.delShape(this._axisShadowShape);
+        this._axisShadowShape = new LineShape({
+            zlevel: 1,                      // grid上，chart下
+            invisible : true,
+            hoverable: false
+        });
+        this.shapeList.push(this._axisShadowShape);
+        this.zr.addShape(this._axisShadowShape);
+        
+        this.refresh(option);
     }
     
     Tooltip.prototype = {
@@ -284,7 +304,7 @@ define(function (require) {
          * 直角系 
          */
         _findAxisTrigger : function () {
-            if (!this.xAxis || !this.yAxis) {
+            if (!this.component.xAxis || !this.component.yAxis) {
                 this._hidingTicket = setTimeout(this._hide, this._hideDelay);
                 return;
             }
@@ -299,23 +319,27 @@ define(function (require) {
                 ) {
                     xAxisIndex = series[i].xAxisIndex || 0;
                     yAxisIndex = series[i].yAxisIndex || 0;
-                    if (this.xAxis.getAxis(xAxisIndex)
-                        && this.xAxis.getAxis(xAxisIndex).type
+                    if (this.component.xAxis.getAxis(xAxisIndex)
+                        && this.component.xAxis.getAxis(xAxisIndex).type
                            == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         // 横轴为类目轴
                         this._showAxisTrigger(xAxisIndex, yAxisIndex,
-                            this._getNearestDataIndex('x', this.xAxis.getAxis(xAxisIndex))
+                            this._getNearestDataIndex(
+                                'x', this.component.xAxis.getAxis(xAxisIndex)
+                            )
                         );
                         return;
                     } 
-                    else if (this.yAxis.getAxis(yAxisIndex)
-                             && this.yAxis.getAxis(yAxisIndex).type
+                    else if (this.component.yAxis.getAxis(yAxisIndex)
+                             && this.component.yAxis.getAxis(yAxisIndex).type
                                 == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         // 纵轴为类目轴
                         this._showAxisTrigger(xAxisIndex, yAxisIndex,
-                            this._getNearestDataIndex('y', this.yAxis.getAxis(yAxisIndex))
+                            this._getNearestDataIndex(
+                                'y', this.component.yAxis.getAxis(yAxisIndex)
+                            )
                         );
                         return;
                     }
@@ -327,12 +351,12 @@ define(function (require) {
          * 极坐标 
          */
         _findPolarTrigger : function () {
-            if (!this.polar) {
+            if (!this.component.polar) {
                 return false;
             }
             var x = zrEvent.getX(this._event);
             var y = zrEvent.getY(this._event);
-            var polarIndex = this.polar.getNearestIndex([x, y]);
+            var polarIndex = this.component.polar.getNearestIndex([x, y]);
             var valueIndex;
             if (polarIndex) {
                 valueIndex = polarIndex.valueIndex;
@@ -360,7 +384,7 @@ define(function (require) {
                 // 横轴为类目轴
                 var left;
                 var right;
-                var xEnd = this.grid.getXend();
+                var xEnd = this.component.grid.getXend();
                 var curCoord = categoryAxis.getCoordByIndex(dataIndex);
                 while (curCoord < xEnd) {
                     if (curCoord <= x) {
@@ -389,7 +413,7 @@ define(function (require) {
                 // 纵轴为类目轴
                 var top;
                 var bottom;
-                var yStart = this.grid.getY();
+                var yStart = this.component.grid.getY();
                 var curCoord = categoryAxis.getCoordByIndex(dataIndex);
                 while (curCoord > yStart) {
                     if (curCoord >= y) {
@@ -426,8 +450,8 @@ define(function (require) {
                 ecConfig.EVENT.TOOLTIP_IN_GRID,
                 this._event
             );
-            if (typeof this.xAxis == 'undefined'
-                || typeof this.yAxis == 'undefined'
+            if (typeof this.component.xAxis == 'undefined'
+                || typeof this.component.yAxis == 'undefined'
                 || typeof xAxisIndex == 'undefined'
                 || typeof yAxisIndex == 'undefined'
                 || dataIndex < 0
@@ -456,11 +480,11 @@ define(function (require) {
             }
 
             if (xAxisIndex != -1
-                && this.xAxis.getAxis(xAxisIndex).type
+                && this.component.xAxis.getAxis(xAxisIndex).type
                    == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
             ) {
                 // 横轴为类目轴，找到所有用这条横轴并且axis触发的系列数据
-                categoryAxis = this.xAxis.getAxis(xAxisIndex);
+                categoryAxis = this.component.xAxis.getAxis(xAxisIndex);
                 for (var i = 0, l = series.length; i < l; i++) {
                     if (!this._isSelected(series[i].name)) {
                         continue;
@@ -506,18 +530,18 @@ define(function (require) {
                 );
                 this._styleAxisPointer(
                     seriesArray,
-                    x, this.grid.getY(), 
-                    x, this.grid.getYend(),
+                    x, this.component.grid.getY(), 
+                    x, this.component.grid.getYend(),
                     categoryAxis.getGap()
                 );
                 x += 10;
             }
             else if (yAxisIndex != -1
-                     && this.yAxis.getAxis(yAxisIndex).type
+                     && this.component.yAxis.getAxis(yAxisIndex).type
                         == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
             ) {
                 // 纵轴为类目轴，找到所有用这条纵轴并且axis触发的系列数据
-                categoryAxis = this.yAxis.getAxis(yAxisIndex);
+                categoryAxis = this.component.yAxis.getAxis(yAxisIndex);
                 for (var i = 0, l = series.length; i < l; i++) {
                     if (!this._isSelected(series[i].name)) {
                         continue;
@@ -563,8 +587,8 @@ define(function (require) {
                 );
                 this._styleAxisPointer(
                     seriesArray,
-                    this.grid.getX(), y, 
-                    this.grid.getXend(), y,
+                    this.component.grid.getX(), y, 
+                    this.component.grid.getXend(), y,
                     categoryAxis.getGap()
                 );
                 y += 10;
@@ -662,7 +686,7 @@ define(function (require) {
          * 极坐标 
          */
         _showPolarTrigger : function (polarIndex, dataIndex) {
-            if (typeof this.polar == 'undefined'
+            if (typeof this.component.polar == 'undefined'
                 || typeof polarIndex == 'undefined'
                 || typeof dataIndex == 'undefined'
                 || dataIndex < 0
@@ -1050,12 +1074,12 @@ define(function (require) {
                     }
                     if (xStart == xEnd) {
                         // 纵向
-                        if (Math.abs(this.grid.getX() - xStart) < 2) {
+                        if (Math.abs(this.component.grid.getX() - xStart) < 2) {
                             // 最左边
                             lineWidth /= 2;
                             xStart = xEnd = xEnd + lineWidth / 2;
                         }
-                        else if (Math.abs(this.grid.getXend() - xStart) < 2) {
+                        else if (Math.abs(this.component.grid.getXend() - xStart) < 2) {
                             // 最右边
                             lineWidth /= 2;
                             xStart = xEnd = xEnd - lineWidth / 2;
@@ -1063,12 +1087,12 @@ define(function (require) {
                     }
                     else if (yStart == yEnd) {
                         // 横向
-                        if (Math.abs(this.grid.getY() - yStart) < 2) {
+                        if (Math.abs(this.component.grid.getY() - yStart) < 2) {
                             // 最上边
                             lineWidth /= 2;
                             yStart = yEnd = yEnd + lineWidth / 2;
                         }
-                        else if (Math.abs(this.grid.getYend() - yStart) < 2) {
+                        else if (Math.abs(this.component.grid.getYend() - yStart) < 2) {
                             // 最右边
                             lineWidth /= 2;
                             yStart = yEnd = yEnd - lineWidth / 2;
@@ -1103,10 +1127,10 @@ define(function (require) {
                 this._event.zrenderX = mx;
                 this._event.zrenderY = my;
                 if (this._needAxisTrigger 
-                    && this.grid 
+                    && this.component.grid 
                     && zrArea.isInside(
                         rectangleInstance,
-                        this.grid.getArea(),
+                        this.component.grid.getArea(),
                         mx,
                         my
                     )
@@ -1114,8 +1138,8 @@ define(function (require) {
                     this._showingTicket = setTimeout(this._tryShow, this._showDelay);
                 }
                 else if (this._needAxisTrigger 
-                        && this.polar 
-                        && this.polar.isInside([mx, my]) != -1
+                        && this.component.polar 
+                        && this.component.polar.isInside([mx, my]) != -1
                 ) {
                     this._showingTicket = setTimeout(this._tryShow, this._showDelay);
                 }
@@ -1135,8 +1159,8 @@ define(function (require) {
                 this._event.zrenderY = my;
                 var polarIndex;
                 if (this._needAxisTrigger 
-                    && this.polar 
-                    && (polarIndex = this.polar.isInside([mx, my])) != -1
+                    && this.component.polar 
+                    && (polarIndex = this.component.polar.isInside([mx, my])) != -1
                 ) {
                     // 看用这个polar的系列数据是否是axis触发，如果是设置_curTarget为nul
                     var series = this.option.series;
@@ -1179,14 +1203,6 @@ define(function (require) {
             setTimeout(this._refixed, 20);
         },
 
-        setComponent : function () {
-            this.component = this.myChart.component;
-            this.grid = this.component.grid;
-            this.xAxis = this.component.xAxis;
-            this.yAxis = this.component.yAxis;
-            this.polar = this.component.polar;
-        },
-        
         ontooltipHover : function (param, tipShape) {
             if (!this._lastTipShape // 不存在或者存在但dataIndex发生变化才需要重绘
                 || (this._lastTipShape && this._lastTipShape.dataIndex != param.dataIndex)
@@ -1292,28 +1308,36 @@ define(function (require) {
                     case ecConfig.CHART_TYPE_LINE :
                     case ecConfig.CHART_TYPE_BAR :
                     case ecConfig.CHART_TYPE_K :
-                        if (typeof this.xAxis == 'undefined' 
-                            || typeof this.yAxis == 'undefined'
+                        if (typeof this.component.xAxis == 'undefined' 
+                            || typeof this.component.yAxis == 'undefined'
                             || serie.data.length <= dataIndex
                         ) {
                             return;
                         }
                         var xAxisIndex = serie.xAxisIndex || 0;
                         var yAxisIndex = serie.yAxisIndex || 0;
-                        if (this.xAxis.getAxis(xAxisIndex).type 
+                        if (this.component.xAxis.getAxis(xAxisIndex).type 
                             == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                         ) {
                             // 横轴是类目
                             this._event = {
-                                zrenderX : this.xAxis.getAxis(xAxisIndex).getCoordByIndex(dataIndex),
-                                zrenderY : this.grid.getY() + (this.grid.getYend() - this.grid.getY()) / 4
+                                zrenderX : this.component.xAxis.getAxis(xAxisIndex)
+                                           .getCoordByIndex(dataIndex),
+                                zrenderY : this.component.grid.getY() 
+                                           + (this.component.grid.getYend() 
+                                              - this.component.grid.getY()
+                                             ) / 4
                             };
                         }
                         else {
                             // 纵轴是类目
                             this._event = {
-                                zrenderX : this.grid.getX() + (this.grid.getXend() - this.grid.getX()) / 4,
-                                zrenderY : this.yAxis.getAxis(yAxisIndex).getCoordByIndex(dataIndex)
+                                zrenderX : this.component.grid.getX() 
+                                           + (this.component.grid.getXend() 
+                                              - this.component.grid.getX()
+                                             ) / 4,
+                                zrenderY : this.component.yAxis.getAxis(yAxisIndex)
+                                           .getCoordByIndex(dataIndex)
                             };
                         }
                         this._showAxisTrigger(
@@ -1323,13 +1347,15 @@ define(function (require) {
                         );
                         break;
                     case ecConfig.CHART_TYPE_RADAR :
-                        if (typeof this.polar == 'undefined' 
+                        if (typeof this.component.polar == 'undefined' 
                             || serie.data[0].value.length <= dataIndex
                         ) {
                             return;
                         }
                         var polarIndex = serie.polarIndex || 0;
-                        var vector = this.polar.getVector(polarIndex, dataIndex, 'max');
+                        var vector = this.component.polar.getVector(
+                            polarIndex, dataIndex, 'max'
+                        );
                         this._event = {
                             zrenderX : vector[0],
                             zrenderY : vector[1]
@@ -1372,7 +1398,9 @@ define(function (require) {
                                 && ecData.get(shapeList[i], 'dataIndex') == dataIndex
                             ) {
                                 this._curTarget = shapeList[i];
-                                var vector = this.polar.getCenter(serie.polarIndex || 0);
+                                var vector = this.component.polar.getCenter(
+                                    serie.polarIndex || 0
+                                );
                                 x = vector[0];
                                 y = vector[1];
                                 break;
@@ -1467,41 +1495,10 @@ define(function (require) {
             this._hide();
         },
         
-        init : function (newOption) {
-            this._tDom = this._tDom || document.createElement('div');
-            this._tDom.style.position = 'absolute';  // 不是多余的，别删！
-            this.hasAppend = false;
-            
-            this._axisLineShape && this.zr.delShape(this._axisLineShape);
-            this._axisLineShape = new LineShape({
-                zlevel: this._zlevelBase,
-                invisible : true,
-                hoverable: false
-            });
-            this.shapeList.push(this._axisLineShape);
-            this.zr.addShape(this._axisLineShape);
-            
-            this._axisShadowShape && this.zr.delShape(this._axisShadowShape);
-            this._axisShadowShape = new LineShape({
-                zlevel: 1,                      // grid上，chart下
-                invisible : true,
-                hoverable: false
-            });
-            this.shapeList.push(this._axisShadowShape);
-            this.zr.addShape(this._axisShadowShape);
-            
-            this.refresh(newOption);
-        },
-        
         /**
          * 刷新
          */
         refresh : function (newOption) {
-            // this.component;
-            // this.grid;
-            // this.xAxis;
-            // this.yAxis;
-            // this.polar;
             // this._selectedMap;
             // this._defaultCssText;    // css样式缓存
             // this._needAxisTrigger;   // 坐标轴触发
