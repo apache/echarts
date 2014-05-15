@@ -25,11 +25,13 @@ define(function (require) {
     
     var _devicePixelRatio = window.devicePixelRatio || 1;
     
-    function Chord(ecTheme, messageCenter, zr, option, component) {
-        ComponentBase.call(this, ecTheme, zr, option);
+    function Chord(ecTheme, messageCenter, zr, option, myChart) {
+        // 基类
+        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
+        // 可计算特性装饰
         CalculableBase.call(this);
 
-        this.init(option, component);
+        this.refresh(option);
     }
     
     Chord.prototype = {
@@ -634,12 +636,6 @@ define(function (require) {
                 result[i] = values[i] * unitScale;
             }
             return [result, unitPostfix];
-        },
-
-        init : function (newOption, newComponent) {
-            this.component = newComponent;
-            
-            this.refresh(newOption);
         },
 
         refresh : function (newOption) {

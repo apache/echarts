@@ -28,13 +28,13 @@ define(function (require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Scatter(ecTheme, messageCenter, zr, option, component){
+    function Scatter(ecTheme, messageCenter, zr, option, myChart){
         // 基类
-        ComponentBase.call(this, ecTheme, zr, option);
+        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 可计算特性装饰
         CalculableBase.call(this);
 
-        this.init(option, component);
+        this.refresh(option);
     }
     
     Scatter.prototype = {
@@ -45,7 +45,7 @@ define(function (require) {
         _buildShape : function () {
             var series = this.series;
             this._sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
-            this._symbol = ecConfig.symbolList;
+            this._symbol = this.option.symbolList;
             this._sIndex2ShapeMap = {};  // series图形类型，seriesIndex索引到_symbol
             
             this.selectedMap = {};
@@ -438,18 +438,6 @@ define(function (require) {
         },
 
         /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
-         * @param {Object} newSeries
-         * @param {Object} newComponent
-         */
-        init : function (newOption, newComponent) {
-            this.component = newComponent;
-            
-            this.refresh(newOption);
-        },
-
-        /**
          * 刷新
          */
         refresh : function (newOption) {
@@ -457,6 +445,7 @@ define(function (require) {
                 this.option = newOption;
                 this.series = newOption.series;
             }
+            
             this.backupShapeList();
             this._buildShape();
         },

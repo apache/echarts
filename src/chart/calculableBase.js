@@ -317,13 +317,13 @@ define(function (require) {
                     if (newShape._orient != 'vertical') {
                         var y = newShape.style.pointList[0][1];
                         for (var i = 0; i < len; i++) {
-                            newPointList[i] = [newShape.style.pointList[i][0], y + i];
+                            newPointList[i] = [newShape.style.pointList[i][0], y];
                         };
                     }
                     else {
                         var x = newShape.style.pointList[0][0];
                         for (var i = 0; i < len; i++) {
-                            newPointList[i] = [x + i, newShape.style.pointList[i][1]];
+                            newPointList[i] = [x, newShape.style.pointList[i][1]];
                         };
                     }
                     if (newShape.type == 'half-smooth-polygon') {

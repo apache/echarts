@@ -28,13 +28,13 @@ define(function (require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Bar(ecTheme, messageCenter, zr, option, component){
+    function Bar(ecTheme, messageCenter, zr, option, myChart){
         // 基类
-        ComponentBase.call(this, ecTheme, zr, option);
+        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 可计算特性装饰
         CalculableBase.call(this);
         
-        this.init(option, component);
+        this.refresh(option);
     }
     
     Bar.prototype = {
@@ -122,9 +122,9 @@ define(function (require) {
         _mapData : function (seriesArray) {
             var series = this.series;
             var serie;                              // 临时映射变量
-            var dataIndex = 0;                      // 堆叠数据所在位置映射
-            var stackMap = {};                      // 堆叠数据位置映射，堆叠组在二维中的第几项
-            var magicStackKey = '__kener__stack__'; // 堆叠命名，非堆叠数据安单一堆叠处理
+            var dataIndex = 0;                      // 堆积数据所在位置映射
+            var stackMap = {};                      // 堆积数据位置映射，堆积组在二维中的第几项
+            var magicStackKey = '__kener__stack__'; // 堆积命名，非堆积数据安单一堆积处理
             var stackKey;                           // 临时映射变量
             var serieName;                          // 临时映射变量
             var legend = this.component.legend;
@@ -228,9 +228,9 @@ define(function (require) {
             var xMarkMap = {}; // 为标注记录一些参数
             var x;
             var y;
-            var lastYP; // 正向堆叠处理
+            var lastYP; // 正向堆积处理
             var baseYP;
-            var lastYN; // 负向堆叠处理
+            var lastYN; // 负向堆积处理
             var baseYN;
             var barShape;
             var data;
@@ -242,7 +242,7 @@ define(function (require) {
                 }
                 x = categoryAxis.getCoordByIndex(i) - gap / 2;
                 for (var j = 0, k = locationMap.length; j < k; j++) {
-                    // 堆叠数据用第一条valueAxis
+                    // 堆积数据用第一条valueAxis
                     yAxisIndex = series[locationMap[j][0]].yAxisIndex || 0;
                     valueAxis = this.component.yAxis.getAxis(yAxisIndex);
                     baseYP = lastYP = baseYN = lastYN = valueAxis.getCoord(0);
@@ -269,12 +269,12 @@ define(function (require) {
                         }
                         //y = valueAxis.getCoord(value);
                         if (value > 0) {
-                            // 正向堆叠
+                            // 正向堆积
                             //barHeight = baseYP - y;
                             barHeight = m > 0 
                                         ? valueAxis.getCoordSize(value)
                                         : (baseYP - valueAxis.getCoord(value));
-                            // 非堆叠数据最小高度有效
+                            // 非堆积数据最小高度有效
                             if (n == 1
                                 && barMinHeightMap[seriesIndex] > barHeight
                             ) {
@@ -284,12 +284,12 @@ define(function (require) {
                             y = lastYP;
                         }
                         else if (value < 0){
-                            // 负向堆叠
+                            // 负向堆积
                             //barHeight = y - baseYN;
                             barHeight = m > 0 
                                         ? valueAxis.getCoordSize(value)
                                         : (valueAxis.getCoord(value) - baseYN);
-                            // 非堆叠数据最小高度有效
+                            // 非堆积数据最小高度有效
                             if (n == 1
                                 && barMinHeightMap[seriesIndex] > barHeight
                             ) {
@@ -434,9 +434,9 @@ define(function (require) {
             var xMarkMap = {}; // 为标注记录一个横向偏移
             var x;
             var y;
-            var lastXP; // 正向堆叠处理
+            var lastXP; // 正向堆积处理
             var baseXP;
-            var lastXN; // 负向堆叠处理
+            var lastXN; // 负向堆积处理
             var baseXN;
             var barShape;
             var data;
@@ -448,7 +448,7 @@ define(function (require) {
                 }
                 y = categoryAxis.getCoordByIndex(i) + gap / 2;
                 for (var j = 0, k = locationMap.length; j < k; j++) {
-                    // 堆叠数据用第一条valueAxis
+                    // 堆积数据用第一条valueAxis
                     xAxisIndex = series[locationMap[j][0]].xAxisIndex || 0;
                     valueAxis = this.component.xAxis.getAxis(xAxisIndex);
                     baseXP = lastXP = baseXN = lastXN = valueAxis.getCoord(0);
@@ -475,12 +475,12 @@ define(function (require) {
                         }
                         //x = valueAxis.getCoord(value);
                         if (value > 0) {
-                            // 正向堆叠
+                            // 正向堆积
                             //barHeight = x - baseXP;
                             barHeight = m > 0 
                                         ? valueAxis.getCoordSize(value)
                                         : (valueAxis.getCoord(value) - baseXP);
-                            // 非堆叠数据最小高度有效
+                            // 非堆积数据最小高度有效
                             if (n == 1
                                 && barMinHeightMap[seriesIndex] > barHeight
                             ) {
@@ -490,12 +490,12 @@ define(function (require) {
                             lastXP += barHeight;
                         }
                         else if (value < 0){
-                            // 负向堆叠
+                            // 负向堆积
                             //barHeight = baseXN - x;
                             barHeight = m > 0 
                                         ? valueAxis.getCoordSize(value)
                                         : (baseXN - valueAxis.getCoord(value));
-                            // 非堆叠数据最小高度有效
+                            // 非堆积数据最小高度有效
                             if (n == 1
                                 && barMinHeightMap[seriesIndex] > barHeight
                             ) {
@@ -636,7 +636,7 @@ define(function (require) {
             var interval = 1;
 
             for (var j = 0, k = locationMap.length; j < k; j++) {
-                hasFound = false;   // 同一堆叠第一个barWidth生效
+                hasFound = false;   // 同一堆积第一个barWidth生效
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     seriesIndex = locationMap[j][m];
                     queryTarget = series[seriesIndex];
@@ -647,12 +647,12 @@ define(function (require) {
                                 'barWidth'
                             );
                             if (typeof sBarWidth != 'undefined') {
-                                // 同一堆叠第一个生效barWidth
+                                // 同一堆积第一个生效barWidth
                                 barWidthMap[seriesIndex] = sBarWidth;
                                 sBarWidthTotal += sBarWidth;
                                 sBarWidthCounter++;
                                 hasFound = true;
-                                // 复位前面同一堆叠但没被定义的
+                                // 复位前面同一堆积但没被定义的
                                 for (var ii = 0, ll = m; ii < ll; ii++) {
                                     var pSeriesIndex = locationMap[j][ii];
                                     barWidthMap[pSeriesIndex] = sBarWidth;
@@ -917,17 +917,6 @@ define(function (require) {
             return pos;
         },
         
-        /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newSeries
-         * @param {Object} newComponent
-         */
-        init : function (newOption, newComponent) {
-            this.component = newComponent || this.component;
-            
-            this.refresh(newOption);
-        },
-
         /**
          * 刷新
          */

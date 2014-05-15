@@ -33,14 +33,12 @@ define(function (require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Map(ecTheme, messageCenter, zr, option, component){
+    function Map(ecTheme, messageCenter, zr, option, myChart){
         // 基类
-        ComponentBase.call(this, ecTheme, zr, option);
+        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 可计算特性装饰
         CalculableBase.call(this);
         
-        this.messageCenter = messageCenter;
-
         var self = this;
         self._onmousewheel = function(param){
             return self.__onmousewheel(param);
@@ -55,7 +53,33 @@ define(function (require) {
             return self.__onmouseup(param);
         };
         
-        this.init(option, component);
+        this._isAlive = true;           // 活着标记
+        this._selectedMode = {};        // 选择模式
+        this._hoverable = {};           // 悬浮高亮模式，索引到图表
+        this._showLegendSymbol = {};    // 显示图例颜色标识
+        this._selected = {};            // 地图选择状态
+        this._mapTypeMap = {};          // 图例类型索引
+        this._mapDataMap = {};          // 根据地图类型索引bbox,transform,path
+        this._nameMap = {};             // 个性化地名
+        this._specialArea = {};         // 特殊
+        this._refreshDelayTicket;       // 滚轮缩放时让refresh飞一会
+        this._mapDataRequireCounter;    // 异步回调计数器
+        this._markAnimation = false;
+        
+        // 漫游相关信息
+        this._roamMap = {};
+        this._needRoam;
+        this._mx;
+        this._my;
+        this._mousedown;
+        this._justMove;   // 避免移动响应点击
+        this._curMapType; // 当前移动的地图类型
+        
+        this.refresh(option);
+        if (this._needRoam) {
+            this.zr.on(zrConfig.EVENT.MOUSEWHEEL, this._onmousewheel);
+            this.zr.on(zrConfig.EVENT.MOUSEDOWN, this._onmousedown);
+        }
     }
     
     Map.prototype = {
@@ -1145,46 +1169,6 @@ define(function (require) {
             this.zr.refresh();
         },
 
-        
-        /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newSeries
-         * @param {Object} newComponent
-         */
-        init : function (newOption, newComponent) {
-            this.component = newComponent;
-            this._isAlive = true;           // 活着标记
-            
-            this._selectedMode = {};        // 选择模式
-            this._hoverable = {};           // 悬浮高亮模式，索引到图表
-            this._showLegendSymbol = {};    // 显示图例颜色标识
-            this._selected = {};            // 地图选择状态
-            this._mapTypeMap = {};          // 图例类型索引
-            this._mapDataMap = {};          // 根据地图类型索引bbox,transform,path
-            this._nameMap = {};             // 个性化地名
-            this._specialArea = {};         // 特殊
-            this._refreshDelayTicket;       // 滚轮缩放时让refresh飞一会
-            this._mapDataRequireCounter;
-            
-            // 漫游相关信息
-            this._roamMap = {};
-            this._needRoam;
-            this._mx;
-            this._my;
-            this._mousedown;
-            this._justMove;   // 避免移动响应点击
-            this._curMapType; // 当前移动的地图类型
-            
-            this._markAnimation = false;
-
-            this.refresh(newOption);
-            
-            if (this._needRoam) {
-                this.zr.on(zrConfig.EVENT.MOUSEWHEEL, this._onmousewheel);
-                this.zr.on(zrConfig.EVENT.MOUSEDOWN, this._onmousedown);
-            }
-        },
-
         /**
          * 刷新
          */
@@ -1193,6 +1177,7 @@ define(function (require) {
                 this.option = newOption;
                 this.series = newOption.series;
             }
+            
             this.clear();
             this._buildShape();
             this.zr.refreshHover();

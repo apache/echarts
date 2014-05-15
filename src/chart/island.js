@@ -23,9 +23,9 @@ define(function (require) {
      * @param {ZRender} zr zrender实例
      * @param {Object} option 图表选项
      */
-    function Island(ecTheme, messageCenter, zr) {
+    function Island(ecTheme, messageCenter, zr, option, myChart) {
         // 基类
-        ComponentBase.call(this, ecTheme, zr, {});
+        ComponentBase.call(this, ecTheme, messageCenter, zr, {}, myChart);
         // 可计算特性装饰
         CalculableBase.call(this);
 

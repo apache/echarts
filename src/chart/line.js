@@ -30,13 +30,13 @@ define(function (require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Line(ecTheme, messageCenter, zr, option, component){
+    function Line(ecTheme, messageCenter, zr, option, myChart){
         // 基类
-        ComponentBase.call(this, ecTheme, zr, option);
+        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 可计算特性装饰
         CalculableBase.call(this);
 
-        this.init(option, component);
+        this.refresh(option);
     }
     
     Line.prototype = {
@@ -48,7 +48,7 @@ define(function (require) {
             var series = this.series;
             this.finalPLMap = {}; // 完成的point list(PL)
             this._sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
-            this._symbol = this.ecTheme.symbolList;
+            this._symbol = this.option.symbolList;
             this._sIndex2ShapeMap = {};  // series拐点图形类型，seriesIndex索引到shape type
 
             this.selectedMap = {};
@@ -137,9 +137,9 @@ define(function (require) {
         _mapData : function (seriesArray) {
             var series = this.series;
             var serie;                              // 临时映射变量
-            var dataIndex = 0;                      // 堆叠数据所在位置映射
-            var stackMap = {};                      // 堆叠数据位置映射，堆叠组在二维中的第几项
-            var magicStackKey = '__kener__stack__'; // 堆叠命名，非堆叠数据安单一堆叠处理
+            var dataIndex = 0;                      // 堆积数据所在位置映射
+            var stackMap = {};                      // 堆积数据位置映射，堆积组在二维中的第几项
+            var magicStackKey = '__kener__stack__'; // 堆积命名，非堆积数据安单一堆积处理
             var stackKey;                           // 临时映射变量
             var serieName;                          // 临时映射变量
             var legend = this.component.legend;
@@ -232,9 +232,9 @@ define(function (require) {
 
             var x;
             var y;
-            var lastYP; // 正向堆叠处理
+            var lastYP; // 正向堆积处理
             var baseYP;
-            var lastYN; // 负向堆叠处理
+            var lastYN; // 负向堆积处理
             var baseYN;
             //var this.finalPLMap = {}; // 完成的point list(PL)
             var curPLMap = {};   // 正在记录的point list(PL)
@@ -247,7 +247,7 @@ define(function (require) {
                 }
                 x = categoryAxis.getCoordByIndex(i);
                 for (var j = 0, k = locationMap.length; j < k; j++) {
-                    // 堆叠数据用第一条valueAxis
+                    // 堆积数据用第一条valueAxis
                     yAxisIndex = series[locationMap[j][0]].yAxisIndex || 0;
                     valueAxis = this.component.yAxis.getAxis(yAxisIndex);
                     baseYP = lastYP = baseYN = lastYN = valueAxis.getCoord(0);
@@ -285,14 +285,14 @@ define(function (require) {
                         }
                         //y = valueAxis.getCoord(value);
                         if (value >= 0) {
-                            // 正向堆叠
+                            // 正向堆积
                             lastYP -= m > 0
                                       ? valueAxis.getCoordSize(value)
                                       : (baseYP - valueAxis.getCoord(value));
                             y = lastYP;
                         }
                         else if (value < 0){
-                            // 负向堆叠
+                            // 负向堆积
                             lastYN += m > 0 
                                       ? valueAxis.getCoordSize(value)
                                       : (valueAxis.getCoord(value) - baseYN);
@@ -405,9 +405,9 @@ define(function (require) {
 
             var x;
             var y;
-            var lastXP; // 正向堆叠处理
+            var lastXP; // 正向堆积处理
             var baseXP;
-            var lastXN; // 负向堆叠处理
+            var lastXN; // 负向堆积处理
             var baseXN;
             //var this.finalPLMap = {}; // 完成的point list(PL)
             var curPLMap = {};   // 正在记录的point list(PL)
@@ -420,7 +420,7 @@ define(function (require) {
                 }
                 y = categoryAxis.getCoordByIndex(i);
                 for (var j = 0, k = locationMap.length; j < k; j++) {
-                    // 堆叠数据用第一条valueAxis
+                    // 堆积数据用第一条valueAxis
                     xAxisIndex = series[locationMap[j][0]].xAxisIndex || 0;
                     valueAxis = this.component.xAxis.getAxis(xAxisIndex);
                     baseXP = lastXP = baseXN = lastXN = valueAxis.getCoord(0);
@@ -458,14 +458,14 @@ define(function (require) {
                         }
                         //x = valueAxis.getCoord(value);
                         if (value >= 0) {
-                            // 正向堆叠
+                            // 正向堆积
                             lastXP += m > 0
                                       ? valueAxis.getCoordSize(value)
                                       : (valueAxis.getCoord(value) - baseXP);
                             x = lastXP;
                         }
                         else if (value < 0){
-                            // 负向堆叠
+                            // 负向堆积
                             lastXN -= m > 0
                                       ? valueAxis.getCoordSize(value)
                                       : (baseXN - valueAxis.getCoord(value));
@@ -590,7 +590,7 @@ define(function (require) {
             
             var isLarge;
             
-            // 堆叠层叠需求，反顺序构建
+            // 堆积层叠需求，反顺序构建
             var seriesIndex;
             for (var sIdx = seriesArray.length - 1; sIdx >= 0; sIdx--) {
                 seriesIndex = seriesArray[sIdx];
@@ -864,17 +864,6 @@ define(function (require) {
         },
         
         /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newSeries
-         * @param {Object} newComponent
-         */
-        init : function (newOption, newComponent) {
-            this.component = newComponent || this.component;
-            
-            this.refresh(newOption);
-        },
-
-        /**
          * 刷新
          */
         refresh : function (newOption) {
@@ -882,6 +871,7 @@ define(function (require) {
                 this.option = newOption;
                 this.series = newOption.series;
             }
+            
             this.backupShapeList();
             this._buildShape();
         },

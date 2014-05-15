@@ -27,13 +27,13 @@ define(function (require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function K(ecTheme, messageCenter, zr, option, component){
+    function K(ecTheme, messageCenter, zr, option, myChart){
         // 基类
-        ComponentBase.call(this, ecTheme, zr, option);
+        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 可计算特性装饰
         CalculableBase.call(this);
 
-        this.init(option, component);
+        this.refresh(option);
     }
     
     K.prototype = {
@@ -438,17 +438,6 @@ define(function (require) {
         },
         
         /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newSeries
-         * @param {Object} newComponent
-         */
-        init : function (newOption, newComponent) {
-            this.component = newComponent || this.component;
-            
-            this.refresh(newOption);
-        },
-
-        /**
          * 刷新
          */
         refresh : function (newOption) {
@@ -456,7 +445,7 @@ define(function (require) {
                 this.option = newOption;
                 this.series = newOption.series;
             }
-            // this.clear();
+            
             this.backupShapeList();
             this._buildShape();
         },

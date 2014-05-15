@@ -29,14 +29,12 @@ define(function (require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Pie(ecTheme, messageCenter, zr, option, component){
+    function Pie(ecTheme, messageCenter, zr, option, myChart){
         // 基类
-        ComponentBase.call(this, ecTheme, zr, option);
+        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 可计算特性装饰
         CalculableBase.call(this);
 
-        this.messageCenter = messageCenter;
-        
         var self = this;
         /**
          * 输出动态视觉引导线
@@ -74,7 +72,7 @@ define(function (require) {
             }
         };
         
-        this.init(option, component);
+        this.refresh(option);
     }
     
     Pie.prototype = {
@@ -705,17 +703,6 @@ define(function (require) {
         },
 
         /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newSeries
-         * @param {Object} newComponent
-         */
-        init : function (newOption, newComponent) {
-            this.component = newComponent || this.component;
-            
-            this.refresh(newOption);
-        },
-
-        /**
          * 刷新
          */
         refresh : function (newOption) {
@@ -742,7 +729,7 @@ define(function (require) {
             var sectorMap = {};
             var textMap = {};
             var lineMap = {};
-            var backupShapeList = zrUtil.clone(this.shapeList);
+            var backupShapeList = this.shapeList;
             this.shapeList = [];
             
             var seriesIndex;
@@ -792,7 +779,7 @@ define(function (require) {
                     case 'text' :
                         textMap[key] = this.shapeList[i];
                         break;
-                    case 'line' :
+                    case 'broken-line' :
                         lineMap[key] = this.shapeList[i];
                         break;
                 }
@@ -831,11 +818,11 @@ define(function (require) {
                                     400,
                                     deltaIdxMap[seriesIndex] < 0
                                     ? {
-                                        endAngle : 
+                                        startAngle : 
                                             backupShapeList[i].style.startAngle
                                       }
                                     : {
-                                        startAngle :
+                                        endAngle :
                                             backupShapeList[i].style.endAngle
                                       }
                                 )
@@ -843,7 +830,7 @@ define(function (require) {
                         }
                     }
                     else if (backupShapeList[i].type == 'text'
-                             || backupShapeList[i].type == 'line'
+                             || backupShapeList[i].type == 'broken-line'
                     ) {
                         if (targeSector == 'delete') {
                             // 删除逻辑一样
@@ -851,7 +838,7 @@ define(function (require) {
                         }
                         else {
                             // 懒得新建变量了，借用一下
-                            switch (backupShapeList[i].shape) {
+                            switch (backupShapeList[i].type) {
                                 case 'text':
                                     targeSector = textMap[key];
                                     this.zr.animate(backupShapeList[i].id, 'style')
@@ -864,16 +851,13 @@ define(function (require) {
                                         )
                                         .start();
                                     break;
-                                case 'line':
+                                case 'broken-line':
                                     targeSector = lineMap[key];
                                     this.zr.animate(backupShapeList[i].id, 'style')
                                         .when(
                                             400,
                                             {
-                                                xStart:targeSector.style.xStart,
-                                                yStart:targeSector.style.yStart,
-                                                xEnd : targeSector.style.xEnd,
-                                                yEnd : targeSector.style.yEnd
+                                                pointList:targeSector.style.pointList
                                             }
                                         )
                                         .start();

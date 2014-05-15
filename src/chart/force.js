@@ -41,12 +41,13 @@ define(function (require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Force(ecTheme, messageCenter, zr, option, component) {
+    function Force(ecTheme, messageCenter, zr, option, myChart) {
         // 基类
-        ComponentBase.call(this, ecTheme, zr, option);
+        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 可计算特性装饰
         CalculableBase.call(this);
 
+        var component = myChart.component;
         var legend;
         var self = this;
         self.type = ecConfig.CHART_TYPE_FORCE;

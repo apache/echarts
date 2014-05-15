@@ -27,13 +27,13 @@
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Radar(ecTheme, messageCenter, zr, option, component) {
+    function Radar(ecTheme, messageCenter, zr, option, myChart) {
         // 基类
-        ComponentBase.call(this, ecTheme, zr, option);
+        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 可计算特性装饰
         CalculableBase.call(this);
 
-        this.init(option, component);
+        this.refresh(option);
     }
     
     Radar.prototype = {
@@ -43,7 +43,7 @@
          */
         _buildShape : function () {
             this.selectedMap = {};
-            this._symbol = this.ecTheme.symbolList;
+            this._symbol = this.option.symbolList;
             this._queryTarget;
             this._dropBoxList = [];
             this._radarDataCounter = 0;
@@ -388,18 +388,6 @@
             this.isDrop = false;
 
             return;
-        },
-
-        /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
-         * @param {Object} newSeries
-         * @param {Object} newComponent
-         */
-        init : function (newOption, newComponent) {
-            this.component = newComponent || this.component;
-            
-            this.refresh(newOption);
         },
 
         /**
