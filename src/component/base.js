@@ -1218,9 +1218,7 @@ define(function (require) {
          */
         clear :function () {
             this.clearAnimationShape();
-            if (this.zr) {
-                this.zr.delShape(this.shapeList);
-            }
+            this.zr && this.zr.delShape(this.shapeList);
             this.shapeList = [];
         },
 

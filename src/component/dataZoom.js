@@ -896,7 +896,6 @@ define(function (require) {
             this._zoom.start2 = param.start2;
             //this.zoomOption.end2 = 
             this._zoom.end2 = param.end2;
-            console.log(this._zoom,1111)
             this._syncShape();
             this._syncData(true);
             return;

@@ -111,14 +111,6 @@ define(function (require) {
             }
         },
         
-        render : function (newOption) {
-            this.refresh(newOption);
-
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                this.zr.addShape(this.shapeList[i]);
-            }
-        },
-        
         getOption : function () {
             return this.option;
         },

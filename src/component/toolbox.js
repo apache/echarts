@@ -54,6 +54,7 @@ define(function (require) {
         // this._zoomShape;
         // this._zoomQueue;
         // this._dataView;
+        this._markShapeList = [];
         var self = this;
         self._onmousemove = function (param) {
             if (self._marking) {
@@ -138,7 +139,7 @@ define(function (require) {
             }
             if (self._marking) {
                 self._marking = false;
-                self.shapeList.push(self._markShape);
+                self._markShapeList.push(self._markShape);
                 self._iconEnable(self._iconShapeMap['markUndo']);
                 self._iconEnable(self._iconShapeMap['markClear']);
                 self.zr.addShape(self._markShape);
@@ -580,16 +581,16 @@ define(function (require) {
             if (this._marking) {
                 this._marking = false;
             } else {
-                var len = this.shapeList.length - 1;    // 有一个是背景shape
-                if (this._iconList.length == len - 1) {
-                    this._iconDisable(this._iconShapeMap['markUndo']);
-                    this._iconDisable(this._iconShapeMap['markClear']);
-                }
-                if (this._iconList.length < len) {
-                    var target = this.shapeList[this.shapeList.length - 1];
+                var len = this._markShapeList.length;
+                if (len >= 1) {
+                    var target = this._markShapeList[len - 1];
                     this.zr.delShape(target.id);
                     this.zr.refresh();
-                    this.shapeList.pop();
+                    this._markShapeList.pop();
+                    if (len == 1) {
+                        this._iconDisable(this._iconShapeMap['markUndo']);
+                        this._iconDisable(this._iconShapeMap['markClear']);
+                    }
                 }
             }
             return true;
@@ -599,14 +600,11 @@ define(function (require) {
             if (this._marking) {
                 this._marking = false;
             }
-            // 有一个是背景shape
-            var len = this.shapeList.length - this._iconList.length - 1;
-            var hasClear = false;
-            while(len--) {
-                this.zr.delShape(this.shapeList.pop().id);
-                hasClear = true;
-            }
-            if (hasClear) {
+            var len = this._markShapeList.length;
+            if (len > 0) {
+                while(len--) {
+                    this.zr.delShape(this._markShapeList.pop().id);
+                }
                 this._iconDisable(this._iconShapeMap['markUndo']);
                 this._iconDisable(this._iconShapeMap['markClear']);
                 this.zr.refresh();
@@ -870,7 +868,9 @@ define(function (require) {
         },
 
         // 重置备份还原状态等
-        reset : function (newOption) {
+        reset : function (newOption, needClear) {
+            needClear && this.clear();
+            
             if (this.query(newOption, 'toolbox.show')
                 && this.query(newOption, 'toolbox.feature.magicType.show')
             ) {
@@ -998,25 +998,6 @@ define(function (require) {
             this._isSilence = s;
         },
         
-        render : function (newOption){
-            this._resetMark();
-            this._resetZoom();
-            newOption.toolbox = this.reformOption(newOption.toolbox);
-            // 补全padding属性
-            newOption.toolbox.padding = this.reformCssArray(
-                newOption.toolbox.padding
-            );
-            this.option = newOption || this.option;
-            
-            this.clear();
-
-            if (newOption.toolbox.show) {
-                this._buildShape();
-            }
-
-            this.hideDataView();
-        },
-
         resize : function () {
             this._resetMark();
             this.clear();
@@ -1033,7 +1014,19 @@ define(function (require) {
                 this._dataView.hide();
             }
         },
-
+        
+        clear : function(notMark) {
+            if (this.zr) {
+                this.zr.delShape(this.shapeList);
+                this.shapeList = [];
+                
+                if (!notMark) {
+                    this.zr.delShape(this._markShapeList);
+                    this._markShapeList = [];
+                }
+            }
+        },
+        
         /**
          * 释放后实例不可用
          */
@@ -1044,6 +1037,7 @@ define(function (require) {
             }
             this.clear();
             this.shapeList = null;
+            this._markShapeList = null;
         },
         
         /**
@@ -1051,12 +1045,23 @@ define(function (require) {
          */
         refresh : function (newOption) {
             if (newOption) {
+                this._resetMark();
+                this._resetZoom();
+                
                 newOption.toolbox = this.reformOption(newOption.toolbox);
                 // 补全padding属性
                 newOption.toolbox.padding = this.reformCssArray(
                     newOption.toolbox.padding
                 );
                 this.option = newOption;
+                
+                this.clear(true);
+    
+                if (newOption.toolbox.show) {
+                    this._buildShape();
+                }
+    
+                this.hideDataView();
             }
         }
     };

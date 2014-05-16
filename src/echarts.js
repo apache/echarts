@@ -680,16 +680,12 @@ define(function (require) {
                 }
             }
 
-            this._island.render(magicOption);
-
-            this._toolbox.render(magicOption);
+            this._island.refresh(magicOption);
+            this._toolbox.refresh(magicOption);
             
-            if (magicOption.animation && !magicOption.renderAsImage) {
-                this._zr.refresh();
-            }
-            else {
-                this._zr.render();
-            }
+            magicOption.animation && !magicOption.renderAsImage
+                ? this._zr.refresh()
+                : this._zr.render()
             
             var imgId = 'IMG' + this.id;
             var img = document.getElementById(imgId);
@@ -727,8 +723,9 @@ define(function (require) {
          */
         restore : function () {
             this._option = zrUtil.clone(this._optionRestore);
+            this._disposeChartList();
             this._island.clear();
-            this._toolbox.reset(this._option);
+            this._toolbox.reset(this._option, true);
             this._render(this._option);
         },
 
@@ -748,9 +745,11 @@ define(function (require) {
                 magicOption = this.getOption();
                 zrUtil.merge(magicOption, param.option, true);
                 zrUtil.merge(this._optionRestore, param.option, true);
-                this._island.refresh(magicOption);
-                this._toolbox.refresh(magicOption);
+                this._toolbox.reset(magicOption);
             }
+            
+            this._island.refresh(magicOption);
+            this._toolbox.refresh(magicOption);
             
             // 停止动画
             this._zr.clearAnimation();
@@ -1084,8 +1083,6 @@ define(function (require) {
             }
             // dataZoom同步数据
             this.component.dataZoom && this.component.dataZoom.syncOption(magicOption);
-            this._island.refresh(magicOption);
-            this._toolbox.refresh(magicOption);
             
             this._option = magicOption;
             var self = this;
