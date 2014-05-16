@@ -894,26 +894,35 @@ define(function (require) {
             }
             else if (markCoordParams.isHorizontal) {
                 // 横向
-                dataIndex = typeof mpData.xAxis == 'string'
-                            && xAxis.getIndexByName
+                dataIndex = typeof mpData.xAxis == 'string' && xAxis.getIndexByName
                             ? xAxis.getIndexByName(mpData.xAxis)
                             : (mpData.xAxis || 0);
-                pos = [
-                    markCoordParams.xMarkMap[seriesIndex][dataIndex],
-                    yAxis.getCoord(mpData.yAxis || 0)
-                ];
+                
+                var x = markCoordParams.xMarkMap[seriesIndex][dataIndex];
+                x = typeof x != 'undefined'
+                    ? x 
+                    : typeof mpData.xAxis != 'string' && xAxis.getCoordByIndex
+                      ? xAxis.getCoordByIndex(mpData.xAxis || 0)
+                      : xAxis.getCoord(mpData.xAxis || 0);
+                
+                pos = [x, yAxis.getCoord(mpData.yAxis || 0)];
             }
             else {
                 // 纵向
-                dataIndex = typeof mpData.yAxis == 'string'
-                            && yAxis.getIndexByName
+                dataIndex = typeof mpData.yAxis == 'string' && yAxis.getIndexByName
                             ? yAxis.getIndexByName(mpData.yAxis)
                             : (mpData.yAxis || 0);
-                pos = [
-                    xAxis.getCoord(mpData.xAxis || 0),
-                    markCoordParams.xMarkMap[seriesIndex][dataIndex]
-                ];
+                
+                var y = markCoordParams.xMarkMap[seriesIndex][dataIndex];
+                y = typeof y != 'undefined'
+                    ? y
+                    : typeof mpData.yAxis != 'string' && yAxis.getCoordByIndex
+                      ? yAxis.getCoordByIndex(mpData.yAxis || 0)
+                      : yAxis.getCoord(mpData.yAxis || 0);
+                
+                pos = [xAxis.getCoord(mpData.xAxis || 0), y];
             }
+            
             return pos;
         },
         
