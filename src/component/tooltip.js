@@ -78,6 +78,7 @@ define(function (require) {
         this.shapeList.push(this._axisShadowShape);
         this.zr.addShape(this._axisShadowShape);
         
+        this.showing = false;
         this.refresh(option);
     }
     
@@ -210,7 +211,8 @@ define(function (require) {
                 this._lastTipShape = false;
                 this.shapeList.length = 2;
             }
-            needRefresh && this.zr.refresh(); 
+            needRefresh && this.zr.refresh();
+            this.showing = false;
         },
         
         _show : function (x, y, specialCssText) {
@@ -238,6 +240,7 @@ define(function (require) {
                 // this._zrWidth - x < 100 || this._zrHeight - y < 100
                 setTimeout(this._refixed, 20);
             }
+            this.showing = true;
         },
         
         __refixed : function () {
@@ -515,12 +518,15 @@ define(function (require) {
                     this._event,
                     {
                         seriesIndex : seriesIndex,
+                        dataIndex : dataIndex
+                        /*
                         dataIndex : this.component.dataZoom
                                     ? this.component.dataZoom.getRealDataIndex(
-                                        seriesIndex,
+                                        seriesIndex[0],
                                         dataIndex
                                       )
                                     : dataIndex
+                                    */
                     }
                 );
                 y = zrEvent.getY(this._event) + 10;
@@ -572,12 +578,15 @@ define(function (require) {
                     this._event,
                     {
                         seriesIndex : seriesIndex,
+                        dataIndex : dataIndex
+                        /*
                         dataIndex : this.component.dataZoom
                                     ? this.component.dataZoom.getRealDataIndex(
-                                        seriesIndex,
+                                        seriesIndex[0],
                                         dataIndex
                                       )
                                     : dataIndex
+                                    */
                     }
                 );
                 x = zrEvent.getX(this._event) + 10;
@@ -1548,6 +1557,9 @@ define(function (require) {
                 
                 this._setSelectedMap();
                 this._axisLineWidth = this.option.tooltip.axisPointer.lineStyle.width;
+            }
+            if (this.showing) {
+                this._tryShow();
             }
         },
 
