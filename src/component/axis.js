@@ -35,40 +35,7 @@ define(function (require) {
         this.axisType = axisType;
         this._axisList = [];
         
-        this.clear();
-
-        var axisOption;
-        if (this.axisType == 'xAxis') {
-            this.option.xAxis = this.reformOption(option.xAxis);
-            axisOption = this.option.xAxis;
-        }
-        else {
-            this.option.yAxis = this.reformOption(option.yAxis);
-            axisOption = this.option.yAxis;
-        }
-
-        var CategoryAxis = require('./categoryAxis');
-        var ValueAxis = require('./valueAxis');
-        for (var i = 0, l = axisOption.length; i < l; i++) {
-            this._axisList.push(
-                axisOption[i].type == 'category'
-                ? new CategoryAxis(
-                      this.ecTheme, 
-                      this.messageCenter,
-                      this.zr,
-                      axisOption[i], 
-                      myChart
-                  )
-                : new ValueAxis(
-                      this.ecTheme, 
-                      this.messageCenter,
-                      this.zr,
-                      axisOption[i],
-                      myChart,
-                      this.series
-                  )
-            );
-        }
+        this.refresh(option);
     }
     
     Axis.prototype = {
@@ -144,6 +111,7 @@ define(function (require) {
         refresh : function (newOption) {
             var axisOption;
             if (newOption) {
+                this.option = newOption;
                 if (this.axisType == 'xAxis') {
                     this.option.xAxis = this.reformOption(newOption.xAxis);
                     axisOption = this.option.xAxis;
@@ -154,12 +122,36 @@ define(function (require) {
                 }
                 this.series = newOption.series;
             }
-            
-            for (var i = 0, l = this._axisList.length; i < l; i++) {
-                this._axisList[i].refresh && this._axisList[i].refresh(
-                    axisOption ? axisOption[i] : false,
-                    this.series
-                );
+    
+            var CategoryAxis = require('./categoryAxis');
+            var ValueAxis = require('./valueAxis');
+            var len = Math.max((axisOption && axisOption.length || 0), this._axisList.length);
+            for (var i = 0; i < len; i++) {
+                if (this._axisList[i]   // 已有实例
+                    && newOption        // 非空刷新
+                    && (!axisOption[i] || this._axisList[i].type != axisOption[i].type) // 类型不匹配
+                ) {
+                    this._axisList[i].dispose && this._axisList[i].dispose();
+                    this._axisList[i] = false;
+                }
+                
+                if (this._axisList[i]) {
+                    this._axisList[i].refresh && this._axisList[i].refresh(
+                        axisOption ? axisOption[i] : false,
+                        this.series
+                    );
+                }
+                else if (axisOption && axisOption[i]) {
+                    this._axisList[i] =  axisOption[i].type == 'category'
+                                         ? new CategoryAxis(
+                                               this.ecTheme, this.messageCenter, this.zr,
+                                               axisOption[i], this.myChart
+                                           )
+                                         : new ValueAxis(
+                                               this.ecTheme, this.messageCenter, this.zr,
+                                               axisOption[i], this.myChart, this.series
+                                           );
+                }
             }
         },
 
@@ -171,9 +163,6 @@ define(function (require) {
             return this._axisList[idx];
         },
 
-        /**
-         * 清除坐标轴子对象，实例仍可用，重载基类方法
-         */
         clear : function () {
             for (var i = 0, l = this._axisList.length; i < l; i++) {
                 this._axisList[i].dispose && this._axisList[i].dispose();
