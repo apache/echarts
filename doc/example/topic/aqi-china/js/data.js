@@ -40,7 +40,7 @@ var data = {
     so2 : [],   so2Min:0,   so2Max:500,
     geoCoord : {}
 };
-data.format = function(oriData) {
+data.format = function (oriData) {
     data.oriData = oriData;
     var city;
     var cityToData = {};

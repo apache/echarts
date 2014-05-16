@@ -35,6 +35,7 @@ define(function() {
         COMPONENT_TYPE_Y_AXIS: 'yAxis',
         COMPONENT_TYPE_AXIS_CATEGORY: 'categoryAxis',
         COMPONENT_TYPE_AXIS_VALUE: 'valueAxis',
+        COMPONENT_TYPE_TIMELINE: 'timeline',
 
         // 全图默认背景
         // backgroundColor: 'rgba(0,0,0,0)',
@@ -63,7 +64,7 @@ define(function() {
             borderWidth: 0,            // 标题边框线宽，单位px，默认为0（无边框）
             padding: 5,                // 标题内边距，单位px，默认各方向内边距为5，
                                        // 接受数组分别设定上右下左边距，同css
-            itemGap: 10,               // 主副标题纵向间隔，单位px，默认为10，
+            itemGap: 5,               // 主副标题纵向间隔，单位px，默认为10，
             textStyle: {
                 fontSize: 18,
                 fontWeight: 'bolder',
@@ -425,6 +426,62 @@ define(function() {
             //indicator : []
         },
 
+        timeline : {
+            type : 'time',  // 模式是时间类型，支持 number
+            show: true,
+            notMerge : false,
+            realtime : true,
+            x: 80,
+            // y: {number},
+            x2: 80,
+            y2: 0,
+            // width: {totalWidth} - x - x2,
+            height: 50,
+            controlPosition : 'left',           // 'right' | 'none'
+            autoPlay : false,
+            loop : true,
+            playInterval : 2000,                // 播放时间间隔，单位ms
+            backgroundColor: 'rgba(0,0,0,0)',   // 时间轴背景颜色
+            borderColor : '#ccc',               // 时间轴边框颜色
+            borderWidth : 0,                    // 时间轴边框线宽，单位px，默认为0（无边框）
+            padding : 5,                        // 时间轴内边距，单位px，默认各方向内边距为5，
+            lineStyle : {
+                width : 1,
+                color : '#666',
+                type : 'dashed'
+            },
+            label: {                            // 文本标签
+                show: true,
+                interval: 'auto',
+                rotate: 0,
+                // formatter: null,
+                textStyle: {                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: '#333'
+                }
+            },
+            checkpointStyle : {
+                symbol : 'auto',
+                symbolSize : 'auto',
+                color : 'auto',
+                borderColor : 'auto',
+                borderWidth : 'auto',
+                label: {                            // 文本标签
+                    show: false,
+                    textStyle: {                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                        color: 'auto'
+                    }
+                }
+            },
+            controlStyle : {
+                normal : { color : '#333'},
+                emphasis : { color : '#1e90ff'}
+            },
+            symbol : 'emptyDiamond',
+            symbolSize : 4,
+            currentIndex : 0
+            // data : []
+        },
+        
         // 柱形图默认参数
         bar: {
             // stack: null
@@ -544,7 +601,7 @@ define(function() {
                     label: {
                         show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        formatter : function(a, b, c) {
+                        formatter : function (a, b, c) {
                             if (typeof c[2] != 'undefined') {
                                 return c[2];
                             }
@@ -562,7 +619,7 @@ define(function() {
                     label: {
                         show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        formatter : function(a, b, c) {
+                        formatter : function (a, b, c) {
                             if (typeof c[2] != 'undefined') {
                                 return c[2];
                             }
@@ -719,6 +776,7 @@ define(function() {
             coolDown : 0.99,
             linkSymbol: null,
             linkSymbolSize: [10, 15],
+            draggable: true,
             // 分类里如果有样式会覆盖节点默认样式
             categories : [],
             itemStyle: {
@@ -772,7 +830,7 @@ define(function() {
                     chordStyle : {
                         lineStyle : {
                             width : 1,
-                            color : '#666'
+                            color : '#999'
                         }
                     }
                 },
@@ -783,8 +841,8 @@ define(function() {
                     },
                     chordStyle : {
                         lineStyle : {
-                            width : 2,
-                            color : '#333'
+                            width : 1,
+                            color : '#666'
                         }
                     }
                 }
@@ -930,13 +988,14 @@ define(function() {
             PIE_SELECTED: 'pieSelected',
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',
             DATA_VIEW_CHANGED: 'dataViewChanged',
+            TIMELINE_CHANGED: 'timelineChanged',
             MAP_ROAM : 'mapRoam',
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover',
             TOOLTIP_IN_GRID: 'tooltipInGrid',
             TOOLTIP_OUT_GRID: 'tooltipOutGrid'
         },
-        DRAG_ENABLE_TIME : 150,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
+        DRAG_ENABLE_TIME : 120,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
         // 主题，默认标志图形类型列表
         symbolList : [
           'circle', 'rectangle', 'triangle', 'diamond',
@@ -951,7 +1010,7 @@ define(function() {
         valueConnector: ' : ',
         animation: true,
         addDataAnimation: true,         // 动态数据接口是否开启动画效果
-        animationThreshold: 2500,       // 动画元素阀值，产生的图形原素超过2500不出动画
+        animationThreshold: 2000,       // 动画元素阀值，产生的图形原素超过2000不出动画
         animationDuration: 2000,
         animationEasing: 'ExponentialOut'    //BounceOut
     };

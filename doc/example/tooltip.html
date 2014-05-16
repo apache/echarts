@@ -87,12 +87,12 @@ option = {
             fontStyle: 'italic',
             fontWeight: 'bold'
         },
-        formatter: function(params,ticket,callback) {
+        formatter: function (params,ticket,callback) {
             var res = 'Function formatter : <br/>' + params[0][1];
             for (var i = 0, l = params.length; i < l; i++) {
                 res += '<br/>' + params[i][0] + ' : ' + params[i][2];
             }
-            setTimeout(function(){
+            setTimeout(function (){
                 // 仅为了模拟异步回调
                 callback(ticket, res);
             }, 1000)

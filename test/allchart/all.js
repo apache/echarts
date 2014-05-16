@@ -52,7 +52,7 @@ for (var i = 0, l = domTextarea.length; i < l; i++) {
         { lineNumbers: true }
     );
     editor[i].setOption("theme", 'monokai');
-    editor[i].on('change', function(){needRefresh = true;});
+    editor[i].on('change', function (){needRefresh = true;});
 }
 
 function refresh(isBtnRefresh, idd){
@@ -67,7 +67,7 @@ function refresh(isBtnRefresh, idd){
         myChart[idx].dispose();
     }
     myChart[idx] = echarts.init(domMain[idx]);
-    (new Function(editor[idx].doc.getValue().replace(
+    (new Function (editor[idx].doc.getValue().replace(
         'option', 'option[' + idx + ']'))
     )()
     myChart[idx].setOption(option[idx], true);
@@ -76,7 +76,7 @@ function refresh(isBtnRefresh, idd){
 
 function refreshAll() {
     for (var i = 0, l = myChart.length; i < l; i++) {
-        (new Function(editor[i].doc.getValue().replace(
+        (new Function (editor[i].doc.getValue().replace(
             'option', 'option[' + i + ']'))
         )();
         myChart[i].setOption(option[i], true);
@@ -84,7 +84,7 @@ function refreshAll() {
     }
 }
 
-var developMode = false;
+var developMode = true;
 if (developMode) {
     // for develop
     require.config({
@@ -154,7 +154,7 @@ function requireCallback (ec) {
     }
     refreshAll();
     
-    window.onresize = function(){
+    window.onresize = function (){
         for (var i = 0, l = myChart.length; i < l; i++) {
             myChart[i].resize && myChart[i].resize();
         }

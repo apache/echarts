@@ -51,7 +51,7 @@ function option2 (idx, selected) {
                 name:'城市',
                 type:'scatter',
                 
-                symbolSize: function(value){
+                symbolSize: function (value){
                     return Math.round(value[2] / sizeCtrl);
                 }
             }
@@ -64,7 +64,7 @@ function option2 (idx, selected) {
     switch(idx+'') {
         case '0':
             sizeCtrl = 10;
-            tipFormatter = function(v) {
+            tipFormatter = function (v) {
                 return v[1] + '<br>'
                        + 'GDP : ' + v[2][0] + '（亿元）<br/>'
                        + '人口 : ' + v[2][1] + '（万人）<br/>'
@@ -86,7 +86,7 @@ function option2 (idx, selected) {
             break;
         case '1':
             sizeCtrl = 80;
-            tipFormatter = function(v) {
+            tipFormatter = function (v) {
                 return v[1] + '<br>'
                        + 'PM2.5 : ' + v[2][0] + '<br/>'
                        + 'GDP : ' + v[2][1] + '（亿元）<br/>'
@@ -108,7 +108,7 @@ function option2 (idx, selected) {
             break;
         case '2':
             sizeCtrl = 500;
-            tipFormatter = function(v) {
+            tipFormatter = function (v) {
                 return v[1] + '<br>'
                        + 'PM2.5  : ' + v[2][0] + '<br/>'
                        + '人口  : ' + v[2][1] + '（万人）<br/>'

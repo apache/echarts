@@ -93,7 +93,7 @@ option = {
         {
             type : 'category',
             boundaryGap : false,
-            data : function(){
+            data : function (){
                 var list = [];
                 for (var i = 1; i <= 30; i++) {
                     list.push('2013-03-' + i);
@@ -125,7 +125,7 @@ option = {
             type:'scatter',
             tooltip : {
                 trigger: 'item',
-                formatter : function(value) {
+                formatter : function (value) {
                     return '2013-03-' + value[2][0] + '<br/>'
                            + value[0] + ' : ' 
                            + value[2][1] + ', ' 
@@ -135,10 +135,10 @@ option = {
             yAxisIndex:1,
             xAxisIndex:1,
             symbol: 'circle',
-            symbolSize: function(value){
+            symbolSize: function (value){
                 return Math.round(value[2]/10);
             },
-            data: (function() {
+            data: (function () {
                 var d = [];
                 var len = 200;
                 var value;
@@ -155,7 +155,7 @@ option = {
         {
             name:'折线',
             type:'line',
-            data:function(){
+            data:function (){
                 var list = [];
                 for (var i = 1; i <= 30; i++) {
                     list.push(Math.round(Math.random()* 30));

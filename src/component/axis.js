@@ -14,6 +14,11 @@
  *
  */
 define(function (require) {
+    var Base = require('./base');
+    
+    var ecConfig = require('../config');
+    var zrUtil = require('zrender/tool/util');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -24,27 +29,58 @@ define(function (require) {
      * @param {Object} component 组件
      * @param {string} axisType 横走or纵轴
      */
-    function Axis(ecConfig, messageCenter, zr, option, component, axisType) {
-        var Base = require('./base');
-        Base.call(this, ecConfig, zr);
+    function Axis(ecTheme, messageCenter, zr, option, myChart, axisType) {
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
+        
+        this.axisType = axisType;
+        this._axisList = [];
+        
+        this.clear();
 
-        var self = this;
-        self.type = ecConfig.COMPONENT_TYPE_AXIS;
+        var axisOption;
+        if (this.axisType == 'xAxis') {
+            this.option.xAxis = this.reformOption(option.xAxis);
+            axisOption = this.option.xAxis;
+        }
+        else {
+            this.option.yAxis = this.reformOption(option.yAxis);
+            axisOption = this.option.yAxis;
+        }
 
-        var _axisList = [];
-
+        var CategoryAxis = require('./categoryAxis');
+        var ValueAxis = require('./valueAxis');
+        for (var i = 0, l = axisOption.length; i < l; i++) {
+            this._axisList.push(
+                axisOption[i].type == 'category'
+                ? new CategoryAxis(
+                      this.ecTheme, 
+                      this.messageCenter,
+                      this.zr,
+                      axisOption[i], 
+                      myChart
+                  )
+                : new ValueAxis(
+                      this.ecTheme, 
+                      this.messageCenter,
+                      this.zr,
+                      axisOption[i],
+                      myChart,
+                      this.series
+                  )
+            );
+        }
+    }
+    
+    Axis.prototype = {
+        type : ecConfig.COMPONENT_TYPE_AXIS,
         /**
          * 参数修正&默认值赋值，重载基类方法
          * @param {Object} opt 参数
          */
-        function reformOption(opt) {
+        reformOption : function (opt) {
             // 不写或传了个空数值默认为数值轴
-            if (!opt
-                || (opt instanceof Array && opt.length === 0)
-            ) {
-                opt = [{
-                    type : ecConfig.COMPONENT_TYPE_AXIS_VALUE
-                }];
+            if (!opt || (opt instanceof Array && opt.length === 0)) {
+                opt = [{type : ecConfig.COMPONENT_TYPE_AXIS_VALUE}];
             }
             else if (!(opt instanceof Array)){
                 opt = [opt];
@@ -55,8 +91,7 @@ define(function (require) {
                 opt = [opt[0],opt[1]];
             }
 
-
-            if (axisType == 'xAxis') {
+            if (this.axisType == 'xAxis') {
                 // 横轴位置默认配置
                 if (!opt[0].position            // 没配置或配置错
                     || (opt[0].position != 'bottom'
@@ -101,104 +136,54 @@ define(function (require) {
             }
 
             return opt;
-        }
-
-        /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
-         * @param {Object} newOption
-         * @param {Object} newCompoent
-         */
-        function init(newOption, newCompoent, newAxisType) {
-            component = newCompoent;
-            axisType = newAxisType;
-
-            self.clear();
-
-            var axisOption;
-            if (axisType == 'xAxis') {
-                option.xAxis = self.reformOption(newOption.xAxis);
-                axisOption = option.xAxis;
-            }
-            else {
-                option.yAxis = self.reformOption(newOption.yAxis);
-                axisOption = option.yAxis;
-            }
-
-            var CategoryAxis = require('./categoryAxis');
-            var ValueAxis = require('./valueAxis');
-            for (var i = 0, l = axisOption.length; i < l; i++) {
-                _axisList.push(
-                    axisOption[i].type == 'category'
-                    ? new CategoryAxis(
-                          ecConfig, 
-                          messageCenter, zr,
-                          axisOption[i], component
-                      )
-                    : new ValueAxis(
-                          ecConfig, 
-                          messageCenter, zr,
-                          axisOption[i], component,
-                          option.series
-                      )
-                );
-            }
-        }
+        },
 
         /**
          * 刷新
          */
-        function refresh(newOption) {
+        refresh : function (newOption) {
             var axisOption;
-            var series;
             if (newOption) {
-                if (axisType == 'xAxis') {
-                    option.xAxis =self.reformOption(newOption.xAxis);
-                    axisOption = option.xAxis;
+                if (this.axisType == 'xAxis') {
+                    this.option.xAxis = this.reformOption(newOption.xAxis);
+                    axisOption = this.option.xAxis;
                 }
                 else {
-                    option.yAxis = reformOption(newOption.yAxis);
-                    axisOption = option.yAxis;
+                    this.option.yAxis = this.reformOption(newOption.yAxis);
+                    axisOption = this.option.yAxis;
                 }
-                series = newOption.series;
+                this.series = newOption.series;
             }
             
-            for (var i = 0, l = _axisList.length; i < l; i++) {
-                _axisList[i].refresh && _axisList[i].refresh(
-                    axisOption ? axisOption[i] : false, series
+            for (var i = 0, l = this._axisList.length; i < l; i++) {
+                this._axisList[i].refresh && this._axisList[i].refresh(
+                    axisOption ? axisOption[i] : false,
+                    this.series
                 );
             }
-        }
+        },
 
         /**
          * 根据值换算位置
          * @param {number} idx 坐标轴索引0~1
          */
-        function getAxis(idx) {
-            return _axisList[idx];
-        }
+        getAxis : function (idx) {
+            return this._axisList[idx];
+        },
 
         /**
          * 清除坐标轴子对象，实例仍可用，重载基类方法
          */
-        function clear() {
-            for (var i = 0, l = _axisList.length; i < l; i++) {
-                _axisList[i].dispose && _axisList[i].dispose();
+        clear : function () {
+            for (var i = 0, l = this._axisList.length; i < l; i++) {
+                this._axisList[i].dispose && this._axisList[i].dispose();
             }
-            _axisList = [];
+            this._axisList = [];
         }
-
-        // 重载基类方法
-        self.clear = clear;
-        self.reformOption = reformOption;
-
-        self.init = init;
-        self.refresh = refresh;
-        self.getAxis = getAxis;
-
-        init(option, component, axisType);
     }
-
+    
+    zrUtil.inherits(Axis, Base);
+    
     require('../component').define('axis', Axis);
      
     return Axis;

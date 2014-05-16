@@ -1,4 +1,4 @@
-define(function(){
+define(function (){
     function kwargs(func, defaults) {
         /*jshint maxlen : 200*/
         var removeComments = new RegExp('(\\/\\*[\\w\\\'\\,\\(\\)\\s\\r\\n\\*]*\\*\\/)|(\\/\\/[\\w\\s\\\'][^\\n\\r]*$)|(<![\\-\\-\\s\\w\\>\\/]*>)', 'gim');
@@ -16,7 +16,7 @@ define(function(){
             defaults = {};
         }
 
-        return function() {
+        return function () {
             var args = Array.prototype.slice.call(arguments);
             var kwargs = args[args.length - 1];
 

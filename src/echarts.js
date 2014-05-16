@@ -1,7 +1,7 @@
 /*!
  * ECharts, a javascript interactive chart library.
  *  
- * Copyright (c) 2013, Baidu Inc.
+ * Copyright (c) 2014, Baidu Inc.
  * All rights reserved.
  * 
  * LICENSE
@@ -15,9 +15,11 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function(require) {
+define(function (require) {
+    var ecConfig = require('./config');
+    var zrUtil = require('zrender/tool/util');
+    
     var self = {};
-    var echarts = self;     // 提供内部反向使用静态方法；
     
     var _canvasSupported = require('zrender/tool/env').canvasSupported;
     var _idBase = new Date() - 0;
@@ -31,7 +33,19 @@ define(function(require) {
     /**
      * 入口方法 
      */
-    self.init = function(dom, theme) {
+    self.init = function (dom, theme) {
+        var zrender = require('zrender');
+        if (((zrender.version || '1.0.3').replace('.', '') - 0)
+            < (self.dependencies.zrender.replace('.', '') - 0)
+        ) {
+            console.error(
+                'ZRender ' + (zrender.version || '1.0.3-') 
+                + ' is too old for ECharts ' + self.version 
+                + '. Current version need ZRender ' 
+                + self.dependencies.zrender + '+'
+            );
+        }
+            
         dom = dom instanceof Array ? dom[0] : dom;
         // dom与echarts实例映射索引
         var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
@@ -53,7 +67,7 @@ define(function(require) {
     /**
      * 通过id获得ECharts实例，id可在实例化后读取 
      */
-    self.getInstanceById = function(key) {
+    self.getInstanceById = function (key) {
         return _instances[key];
     };
 
@@ -62,169 +76,175 @@ define(function(require) {
      * @param {HtmlElement} dom 必要
      */
     function Echarts(dom) {
-        var ecConfig = require('./config');
-        var _themeConfig = require('zrender/tool/util').clone(ecConfig);
+        this._themeConfig = zrUtil.clone(ecConfig);
 
-        var self = this;
-        var _zr;
-        var _option;
-        var _optionBackup;          // for各种change和zoom
-        var _optionRestore;         // for restore;
-        var _chartList;             // 图表实例
-        var _messageCenter;         // Echarts层的消息中心，做zrender原始事件转换
-        var _connected = false;
-
-        var _status = {         // 用于图表间通信
+        this.dom = dom;
+        // this._zr;
+        this._option;
+        // this._optionRestore;             // for restore;
+        // this._island;
+        // this._toolbox;
+        // this._refreshInside;             // 内部刷新标志位
+        
+        this._connected = false;
+        this._status = {                    // 用于图表间通信
             dragIn : false,
             dragOut : false,
             needRefresh : false
         };
-
-        var _selectedMap;
-        var _island;
-        var _toolbox;
+        this._curEventType = null;          // 破循环信号灯
+        this._chartList = [];               // 图表实例
+        this._messageCenter = {};           // Echarts层的消息中心，做zrender原始事件转换
         
-        var _refreshInside;     // 内部刷新标志位
-
+        // resize方法经常被绑定到window.resize上，闭包一个this
+        this.resize = this.resize();
+        
         // 初始化::构造函数
-        _init();
-        function _init() {
-            var zrender = require('zrender');
-            if (((zrender.version || '1.0.3').replace('.', '') - 0)
-                < (echarts.dependencies.zrender.replace('.', '') - 0)
-            ) {
-                console.error(
-                    'ZRender ' + (zrender.version || '1.0.3-') 
-                    + ' is too old for ECharts ' + echarts.version 
-                    + '. Current version need ZRender ' 
-                    + echarts.dependencies.zrender + '+'
-                );
-            }
-            _zr = zrender.init(dom);
+        this._init();
+    }
+    
+    Echarts.prototype = {
+        _init : function () {
+            var _zr = require('zrender').init(this.dom);
+            this._zr = _zr;
 
-            _option = {};
-
-            _chartList = [];            // 图表实例
-
-            _messageCenter = {};        // Echarts层的消息中心，做zrender原始事件转换
             // 添加消息中心的事件分发器特性
+            var self = this;
+            this._onevent = function(param){
+                return self.__onevent(param);
+            };
             var zrEvent = require('zrender/tool/event');
-            zrEvent.Dispatcher.call(_messageCenter);
+            zrEvent.Dispatcher.call(this._messageCenter);
             for (var e in ecConfig.EVENT) {
                 if (e != 'CLICK' && e != 'HOVER' && e != 'MAP_ROAM') {
-                    _messageCenter.bind(ecConfig.EVENT[e], _onevent);
+                    this._messageCenter.bind(ecConfig.EVENT[e], this._onevent);
                 }
             }
-            
 
             var zrConfig = require('zrender/config');
-            _zr.on(zrConfig.EVENT.CLICK, _onclick);
-            _zr.on(zrConfig.EVENT.MOUSEOVER, _onhover);
-            //_zr.on(zrConfig.EVENT.MOUSEWHEEL, _onmousewheel);
-            _zr.on(zrConfig.EVENT.DRAGSTART, _ondragstart);
-            _zr.on(zrConfig.EVENT.DRAGEND, _ondragend);
-            _zr.on(zrConfig.EVENT.DRAGENTER, _ondragenter);
-            _zr.on(zrConfig.EVENT.DRAGOVER, _ondragover);
-            _zr.on(zrConfig.EVENT.DRAGLEAVE, _ondragleave);
-            _zr.on(zrConfig.EVENT.DROP, _ondrop);
+            this._onzrevent = function(param){
+                return self.__onzrevent(param);
+            };
+            // 只关心这些事件
+            _zr.on(zrConfig.EVENT.CLICK, this._onzrevent);
+            _zr.on(zrConfig.EVENT.MOUSEOVER, this._onzrevent);
+            //_zr.on(zrConfig.EVENT.MOUSEWHEEL, this._onzrevent);
+            _zr.on(zrConfig.EVENT.DRAGSTART, this._onzrevent);
+            _zr.on(zrConfig.EVENT.DRAGEND, this._onzrevent);
+            _zr.on(zrConfig.EVENT.DRAGENTER, this._onzrevent);
+            _zr.on(zrConfig.EVENT.DRAGOVER, this._onzrevent);
+            _zr.on(zrConfig.EVENT.DRAGLEAVE, this._onzrevent);
+            _zr.on(zrConfig.EVENT.DROP, this._onzrevent);
 
-            // 动态扩展zrender shape：icon、markLine
-            require('./util/shape/icon');
-            require('./util/shape/markLine');
-
-            // 内置图表注册
-            var chartLibrary = require('./chart');
-            require('./chart/island');
+            this.chart = {};            // 图表索引
+            this.component = {};        // 组件索引
+            
+            // 内置图表
             // 孤岛
-            var Island = chartLibrary.get('island');
-            _island = new Island(_themeConfig, _messageCenter, _zr);
+            var Island = require('./chart/island');
+            this._island = new Island(this._themeConfig, this._messageCenter, _zr, {}, this);
+            this.chart.island = this._island;
             
-            // 内置组件注册
-            var componentLibrary = require('./component');
-            require('./component/title');
-            require('./component/axis');
-            require('./component/categoryAxis');
-            require('./component/valueAxis');
-            require('./component/grid');
-            require('./component/dataZoom');
-            require('./component/legend');
-            require('./component/dataRange');
-            require('./component/tooltip');
-            require('./component/toolbox');
-            require('./component/dataView');
-            require('./component/polar');
+            // 内置通用组件
             // 工具箱
-            var Toolbox = componentLibrary.get('toolbox');
-            _toolbox = new Toolbox(_themeConfig, _messageCenter, _zr, dom, self);
+            var Toolbox = require('./component/toolbox');
+            this._toolbox = new Toolbox(this._themeConfig, this._messageCenter, _zr, {}, this);
+            this.component.toolbox = this._toolbox;
             
-            _disposeChartList();
-        }
+            var componentLibrary = require('./component');
+            componentLibrary.define('title', require('./component/title'));
+            componentLibrary.define('tooltip', require('./component/tooltip'));
+            componentLibrary.define('legend', require('./component/legend'));
+        },
+        
+        __onzrevent : function(param){
+            var zrConfig = require('zrender/config');
+            switch (param.type) {
+                case zrConfig.EVENT.CLICK :
+                    return this._onclick(param);
+                case zrConfig.EVENT.MOUSEOVER :
+                    return this._onhover(param);
+                case zrConfig.EVENT.DRAGSTART :
+                    return this._ondragstart(param);
+                case zrConfig.EVENT.DRAGEND :
+                    return this._ondragend(param);
+                case zrConfig.EVENT.DRAGENTER :
+                    return this._ondragenter(param);
+                case zrConfig.EVENT.DRAGOVER :
+                    return this._ondragover(param);
+                case zrConfig.EVENT.DRAGLEAVE :
+                    return this._ondragleave(param);
+                case zrConfig.EVENT.DROP :
+                    return this._ondrop(param);
+                case zrConfig.EVENT.MOUSEWHEEL :
+                    return this._onmousewheel(param);
+            }
+        },
 
         /**
          * ECharts事件处理中心 
          */
-        var _curEventType = null; // 破循环信号灯
-        function _onevent(param){
-            param.__echartsId = param.__echartsId || self.id;
+        __onevent : function (param){
+            param.__echartsId = param.__echartsId || this.id;
             var fromMyself = true;
-            if (param.__echartsId != self.id) {
+            if (param.__echartsId != this.id) {
                 // 来自其他联动图表的事件
                 fromMyself = false;
             }
             
-            if (!_curEventType) {
-                _curEventType = param.type;
+            if (!this._curEventType) {
+                this._curEventType = param.type;
             }
             
             switch(param.type) {
                 case ecConfig.EVENT.LEGEND_SELECTED :
-                    _onlegendSelected(param);
+                    this._onlegendSelected(param);
                     break;
                 case ecConfig.EVENT.DATA_ZOOM :
                     if (!fromMyself) {
-                        var dz = self.component.dataZoom;
+                        var dz = this.component.dataZoom;
                         if (dz) {
                             dz.silence(true);
                             dz.absoluteZoom(param.zoom);
                             dz.silence(false);
                         }
                     }
-                    _ondataZoom(param);
+                    this._ondataZoom(param);
                     break;        
                 case ecConfig.EVENT.DATA_RANGE :
-                    fromMyself && _ondataRange(param);
+                    fromMyself && this._ondataRange(param);
                     break;        
                 case ecConfig.EVENT.MAGIC_TYPE_CHANGED :
                     if (!fromMyself) {
-                        var tb = self.component.toolbox;
+                        var tb = this.component.toolbox;
                         if (tb) {
                             tb.silence(true);
                             tb.setMagicType(param.magicType);
                             tb.silence(false);
                         }
                     }
-                    _onmagicTypeChanged(param);
+                    this._onmagicTypeChanged(param);
                     break;        
                 case ecConfig.EVENT.DATA_VIEW_CHANGED :
-                    fromMyself && _ondataViewChanged(param);
+                    fromMyself && this._ondataViewChanged(param);
                     break;        
                 case ecConfig.EVENT.TOOLTIP_HOVER :
-                    fromMyself && _tooltipHover(param);
+                    fromMyself && this._tooltipHover(param);
                     break;        
                 case ecConfig.EVENT.RESTORE :
-                    _onrestore();
+                    this._onrestore();
                     break;        
                 case ecConfig.EVENT.REFRESH :
-                    fromMyself && _onrefresh(param);
+                    fromMyself && this._onrefresh(param);
                     break;
                 // 鼠标同步
                 case ecConfig.EVENT.TOOLTIP_IN_GRID :
                 case ecConfig.EVENT.TOOLTIP_OUT_GRID :
                     if (!fromMyself) {
                         // 只处理来自外部的鼠标同步
-                        var grid = self.component.grid;
+                        var grid = this.component.grid;
                         if (grid) {
-                            _zr.trigger(
+                            this._zr.trigger(
                                 'mousemove',
                                 {
                                     connectTrigger : true,
@@ -234,9 +254,9 @@ define(function(require) {
                             );
                         }
                     } 
-                    else if (_connected) {
+                    else if (this._connected) {
                         // 来自自己，并且存在多图联动，空间坐标映射修改参数分发
-                        var grid = self.component.grid;
+                        var grid = this.component.grid;
                         if (grid) {
                             param.x = (param.event.zrenderX - grid.getX()) / grid.getWidth();
                             param.y = (param.event.zrenderY - grid.getY()) / grid.getHeight();
@@ -253,352 +273,285 @@ define(function(require) {
             }
             
             // 多图联动，只做自己的一级事件分发，避免级联事件循环
-            if (_connected && fromMyself && _curEventType == param.type) { 
-                for (var c in _connected) {
-                    _connected[c].connectedEventHandler(param);
+            if (this._connected && fromMyself && this._curEventType == param.type) { 
+                for (var c in this._connected) {
+                    this._connected[c].connectedEventHandler(param);
                 }
                 // 分发完毕后复位
-                _curEventType = null;
+                this._curEventType = null;
             }
             
-            if (!fromMyself || (!_connected && fromMyself)) {  // 处理了完联动事件复位
-                _curEventType = null;
+            if (!fromMyself || (!this._connected && fromMyself)) {  // 处理了完联动事件复位
+                this._curEventType = null;
             }
-        }
+        },
         
         /**
          * 点击事件，响应zrender事件，包装后分发到Echarts层
          */
-        function _onclick(param) {
-            var len = _chartList.length;
+        _onclick : function (param) {
+            var len = this._chartList.length;
             while (len--) {
-                _chartList[len]
-                && _chartList[len].onclick
-                && _chartList[len].onclick(param);
+                this._chartList[len]
+                && this._chartList[len].onclick
+                && this._chartList[len].onclick(param);
             }
             if (param.target) {
-                var ecData = _eventPackage(param.target);
+                var ecData = this._eventPackage(param.target);
                 if (ecData && typeof ecData.seriesIndex != 'undefined') {
-                    _messageCenter.dispatch(
+                    this._messageCenter.dispatch(
                         ecConfig.EVENT.CLICK,
                         param.event,
                         ecData
                     );
                 }
             }
-        }
+        },
 
          /**
          * 悬浮事件，响应zrender事件，包装后分发到Echarts层
          */
-        function _onhover(param) {
+        _onhover : function (param) {
             if (param.target) {
-                var ecData = _eventPackage(param.target);
+                var ecData = this._eventPackage(param.target);
                 if (ecData && typeof ecData.seriesIndex != 'undefined') {
-                    _messageCenter.dispatch(
+                    this._messageCenter.dispatch(
                         ecConfig.EVENT.HOVER,
                         param.event,
                         ecData
                     );
                 }
             }
-        }
+        },
 
         /**
          * 滚轮回调，孤岛可计算特性
-        function _onmousewheel(param) {
-            _messageCenter.dispatch(
+        _onmousewheel : function (param) {
+            this._messageCenter.dispatch(
                 ecConfig.EVENT.MOUSEWHEEL,
                 param.event,
-                _eventPackage(param.target)
+                this._eventPackage(param.target)
             );
-        }
+        },
         */
 
         /**
          * dragstart回调，可计算特性实现
          */
-        function _ondragstart(param) {
+        _ondragstart : function (param) {
             // 复位用于图表间通信拖拽标识
-            _status = {
+            this._status = {
                 dragIn : false,
                 dragOut : false,
                 needRefresh : false
             };
-            var len = _chartList.length;
+            var len = this._chartList.length;
             while (len--) {
-                _chartList[len]
-                && _chartList[len].ondragstart
-                && _chartList[len].ondragstart(param);
+                this._chartList[len]
+                && this._chartList[len].ondragstart
+                && this._chartList[len].ondragstart(param);
             }
-
-        }
+        },
 
         /**
          * dragging回调，可计算特性实现
          */
-        function _ondragenter(param) {
-            var len = _chartList.length;
+        _ondragenter : function (param) {
+            var len = this._chartList.length;
             while (len--) {
-                _chartList[len]
-                && _chartList[len].ondragenter
-                && _chartList[len].ondragenter(param);
+                this._chartList[len]
+                && this._chartList[len].ondragenter
+                && this._chartList[len].ondragenter(param);
             }
-        }
+        },
 
         /**
          * dragstart回调，可计算特性实现
          */
-        function _ondragover(param) {
-            var len = _chartList.length;
+        _ondragover : function (param) {
+            var len = this._chartList.length;
             while (len--) {
-                _chartList[len]
-                && _chartList[len].ondragover
-                && _chartList[len].ondragover(param);
+                this._chartList[len]
+                && this._chartList[len].ondragover
+                && this._chartList[len].ondragover(param);
             }
-        }
+        },
+        
         /**
          * dragstart回调，可计算特性实现
          */
-        function _ondragleave(param) {
-            var len = _chartList.length;
+        _ondragleave : function (param) {
+            var len = this._chartList.length;
             while (len--) {
-                _chartList[len]
-                && _chartList[len].ondragleave
-                && _chartList[len].ondragleave(param);
+                this._chartList[len]
+                && this._chartList[len].ondragleave
+                && this._chartList[len].ondragleave(param);
             }
-        }
+        },
 
         /**
          * dragstart回调，可计算特性实现
          */
-        function _ondrop(param) {
-            var len = _chartList.length;
+        _ondrop : function (param) {
+            var len = this._chartList.length;
             while (len--) {
-                _chartList[len]
-                && _chartList[len].ondrop
-                && _chartList[len].ondrop(param, _status);
+                this._chartList[len]
+                && this._chartList[len].ondrop
+                && this._chartList[len].ondrop(param, this._status);
             }
-            _island.ondrop(param, _status);
-        }
+            this._island.ondrop(param, this._status);
+        },
 
         /**
          * dragdone回调 ，可计算特性实现
          */
-        function _ondragend(param) {
-            var len = _chartList.length;
+        _ondragend : function (param) {
+            var len = this._chartList.length;
             while (len--) {
-                _chartList[len]
-                && _chartList[len].ondragend
-                && _chartList[len].ondragend(param, _status);
+                this._chartList[len]
+                && this._chartList[len].ondragend
+                && this._chartList[len].ondragend(param, this._status);
             }
-            _island.ondragend(param, _status);
+            this._timeline && this._timeline.ondragend(param, this._status);
+            this._island.ondragend(param, this._status);
 
             // 发生过重计算
-            if (_status.needRefresh) {
-                _syncBackupData(_island.getOption());
-                _messageCenter.dispatch(
+            if (this._status.needRefresh) {
+                this._syncBackupData(this._option);
+                this._messageCenter.dispatch(
                     ecConfig.EVENT.DATA_CHANGED,
                     param.event,
-                    _eventPackage(param.target)
+                    this._eventPackage(param.target)
                 );
-                _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+                this._messageCenter.dispatch(ecConfig.EVENT.REFRESH);
             }
-        }
+        },
 
         /**
          * 图例选择响应
          */
-        function _onlegendSelected(param) {
+        _onlegendSelected : function (param) {
             // 用于图表间通信
-            _status.needRefresh = false;
-            var len = _chartList.length;
+            this._status.needRefresh = false;
+            var len = this._chartList.length;
             while (len--) {
-                _chartList[len]
-                && _chartList[len].onlegendSelected
-                && _chartList[len].onlegendSelected(param, _status);
+                this._chartList[len]
+                && this._chartList[len].onlegendSelected
+                && this._chartList[len].onlegendSelected(param, this._status);
             }
+            this._timeline && this._timeline.onlegendSelected(param, this._status);
             
-            _selectedMap = param.selected;
-
-            if (_status.needRefresh) {
-                _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+            if (this._status.needRefresh) {
+                this._messageCenter.dispatch(ecConfig.EVENT.REFRESH);
             }
-        }
+        },
 
         /**
          * 数据区域缩放响应 
          */
-        function _ondataZoom(param) {
+        _ondataZoom : function (param) {
             // 用于图表间通信
-            _status.needRefresh = false;
-            var len = _chartList.length;
+            this._status.needRefresh = false;
+            var len = this._chartList.length;
             while (len--) {
-                _chartList[len]
-                && _chartList[len].ondataZoom
-                && _chartList[len].ondataZoom(param, _status);
+                this._chartList[len]
+                && this._chartList[len].ondataZoom
+                && this._chartList[len].ondataZoom(param, this._status);
             }
 
-            if (_status.needRefresh) {
-                _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+            if (this._status.needRefresh) {
+                this._messageCenter.dispatch(ecConfig.EVENT.REFRESH);
             }
-        }
+        },
 
         /**
          * 值域漫游响应 
          */
-        function _ondataRange(param) {
+        _ondataRange : function (param) {
             // 用于图表间通信
-            _status.needRefresh = false;
-            var len = _chartList.length;
+            this._status.needRefresh = false;
+            var len = this._chartList.length;
             while (len--) {
-                _chartList[len]
-                && _chartList[len].ondataRange
-                && _chartList[len].ondataRange(param, _status);
+                this._chartList[len]
+                && this._chartList[len].ondataRange
+                && this._chartList[len].ondataRange(param, this._status);
             }
-
+            this._timeline && this._timeline.ondataRange(param, this._status);
+            
             // 没有相互影响，直接刷新即可
-            if (_status.needRefresh) {
-                _zr.refresh();
+            if (this._status.needRefresh) {
+                this._zr.refresh();
             }
-        }
+        },
 
         /**
          * 动态类型切换响应 
          */
-        function _onmagicTypeChanged() {
-            _render(_getMagicOption());
-        }
+        _onmagicTypeChanged : function () {
+            this._render(this._toolbox.getMagicOption());
+        },
 
         /**
          * 数据视图修改响应 
          */
-        function _ondataViewChanged(param) {
-            _syncBackupData(param.option);
-            _messageCenter.dispatch(
+        _ondataViewChanged : function (param) {
+            this._syncBackupData(param.option);
+            this._messageCenter.dispatch(
                 ecConfig.EVENT.DATA_CHANGED,
                 null,
                 param
             );
-            _messageCenter.dispatch(ecConfig.EVENT.REFRESH);
-        }
+            this._messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+        },
         
         /**
          * tooltip与图表间通信 
          */
-        function _tooltipHover(param) {
-            var len = _chartList.length;
+        _tooltipHover : function (param) {
+            var len = this._chartList.length;
             var tipShape = [];
             while (len--) {
-                _chartList[len]
-                && _chartList[len].ontooltipHover
-                && _chartList[len].ontooltipHover(param, tipShape);
+                this._chartList[len]
+                && this._chartList[len].ontooltipHover
+                && this._chartList[len].ontooltipHover(param, tipShape);
             }
-        }
+        },
 
         /**
          * 还原 
          */
-        function _onrestore() {
-            self.restore();
-        }
+        _onrestore : function () {
+            this.restore();
+        },
 
         /**
          * 刷新 
          */
-        function _onrefresh(param) {
-            _refreshInside = true;
-            self.refresh(param);
-            _refreshInside = false;
-        }
+        _onrefresh : function (param) {
+            this._refreshInside = true;
+            this.refresh(param);
+            this._refreshInside = false;
+        },
         
         /**
-         * 当前正在使用的option，还原可能存在的dataZoom
+         * 数据修改后的反向同步dataZoom持有的备份数据 
          */
-        function _getMagicOption(targetOption) {
-            var magicOption = targetOption || _toolbox.getMagicOption();
-            var len;
-            // 横轴数据还原
-            if (_optionBackup.xAxis) {
-                if (_optionBackup.xAxis instanceof Array) {
-                    len = _optionBackup.xAxis.length;
-                    while (len--) {
-                        magicOption.xAxis[len].data =
-                            _optionBackup.xAxis[len].data;
-                    }
-                }
-                else {
-                    magicOption.xAxis.data = _optionBackup.xAxis.data;
-                }
-            }
-            
-            // 纵轴数据还原
-            if (_optionBackup.yAxis) {
-                if (_optionBackup.yAxis instanceof Array) {
-                    len = _optionBackup.yAxis.length;
-                    while (len--) {
-                        magicOption.yAxis[len].data =
-                            _optionBackup.yAxis[len].data;
-                    }
-                }
-                else {
-                    magicOption.yAxis.data = _optionBackup.yAxis.data;
-                }
-            }
-
-            // 系列数据还原
-            len = magicOption.series.length;
-            while (len--) {
-                magicOption.series[len].data = _optionBackup.series[len].data;
-            }
-            return magicOption;
-        }
-        
-        /**
-         * 数据修改后的反向同步备份数据 
-         */
-        function _syncBackupData(curOption) {
-            var ecQuery = require('./util/ecQuery');
-            if (ecQuery.query(curOption, 'dataZoom.show')
-                || (
-                    ecQuery.query(curOption, 'toolbox.show')
-                    && ecQuery.query(curOption, 'toolbox.feature.dataZoom.show')
-                )
-            ) {
-                // 有dataZoom就dataZoom做同步
-                for (var i = 0, l = _chartList.length; i < l; i++) {
-                    if (_chartList[i].type == ecConfig.COMPONENT_TYPE_DATAZOOM
-                    ) {
-                        _chartList[i].syncBackupData(curOption, _optionBackup);
-                        return;
-                    }
-                }
-            }
-            else {
-                // 没有就ECharts做
-                var curSeries = curOption.series;
-                var curData;
-                for (var i = 0, l = curSeries.length; i < l; i++) {
-                    curData = curSeries[i].data;
-                    for (var j = 0, k = curData.length; j < k; j++) {
-                        _optionBackup.series[i].data[j] = curData[j];
-                    }
-                }
-            }
-        }
+        _syncBackupData : function (curOption) {
+            this.component.dataZoom && this.component.dataZoom.syncBackupData(curOption);
+        },
 
         /**
          * 打包Echarts层的事件附件
          */
-        function _eventPackage(target) {
+        _eventPackage : function (target) {
             if (target) {
                 var ecData = require('./util/ecData');
                 
                 var seriesIndex = ecData.get(target, 'seriesIndex');
                 var dataIndex = ecData.get(target, 'dataIndex');
                 
-                dataIndex = self.component.dataZoom
-                            ? self.component.dataZoom.getRealDataIndex(
+                dataIndex = this.component.dataZoom
+                            ? this.component.dataZoom.getRealDataIndex(
                                 seriesIndex,
                                 dataIndex
                               )
@@ -608,158 +561,82 @@ define(function(require) {
                     dataIndex : dataIndex,
                     data : ecData.get(target, 'data'),
                     name : ecData.get(target, 'name'),
-                    value : ecData.get(target, 'value')
+                    value : ecData.get(target, 'value'),
+                    special : ecData.get(target, 'special')
                 };
             }
             return;
-        }
+        },
 
         /**
          * 图表渲染 
          */
-        function _render(magicOption) {
-            _mergeGlobalConifg(magicOption);
+        _render : function (magicOption) {
+            this._mergeGlobalConifg(magicOption);
             if (magicOption.backgroundColor) {
                 if (!_canvasSupported 
                     && magicOption.backgroundColor.indexOf('rgba') != -1
                 ) {
                     // IE6~8对RGBA的处理，filter会带来其他颜色的影响
                     var cList = magicOption.backgroundColor.split(',');
-                    dom.style.filter = 'alpha(opacity=' +
+                    this.dom.style.filter = 'alpha(opacity=' +
                         cList[3].substring(0, cList[3].lastIndexOf(')')) * 100
                         + ')';
                     cList.length = 3;
                     cList[0] = cList[0].replace('a', '');
-                    dom.style.backgroundColor = cList.join(',') + ')';
+                    this.dom.style.backgroundColor = cList.join(',') + ')';
                 }
                 else {
-                    dom.style.backgroundColor = magicOption.backgroundColor;
+                    this.dom.style.backgroundColor = magicOption.backgroundColor;
                 }
             }
             
-            _disposeChartList();
-            _zr.clear();
+            this._zr.clearAnimation();
+            this._chartList = [];
 
             var chartLibrary = require('./chart');
             var componentLibrary = require('./component');
-
-            // 标题
-            var title;
-            if (magicOption.title) {
-                var Title = componentLibrary.get('title');
-                title = new Title(
-                    _themeConfig, _messageCenter, _zr, magicOption
-                );
-                _chartList.push(title);
-                self.component.title = title;
-            }
-
-            // 提示
-            var tooltip;
-            if (magicOption.tooltip) {
-                var Tooltip = componentLibrary.get('tooltip');
-                tooltip = new Tooltip(
-                    _themeConfig, _messageCenter, _zr, magicOption, dom, self
-                );
-                _chartList.push(tooltip);
-                self.component.tooltip = tooltip;
-            }
-
-            // 图例
-            var legend;
-            if (magicOption.legend) {
-                var Legend = componentLibrary.get('legend');
-                legend = new Legend(
-                    _themeConfig, _messageCenter, _zr, magicOption, _selectedMap
-                );
-                _chartList.push(legend);
-                self.component.legend = legend;
-            }
-
-            // 值域控件
-            var dataRange;
-            if (magicOption.dataRange) {
-                var DataRange = componentLibrary.get('dataRange');
-                dataRange = new DataRange(
-                    _themeConfig, _messageCenter, _zr, magicOption
-                );
-                _chartList.push(dataRange);
-                self.component.dataRange = dataRange;
-            }
-
-            // 直角坐标系
-            var grid;
-            var dataZoom;
-            var xAxis;
-            var yAxis;
-            if (magicOption.grid || magicOption.xAxis || magicOption.yAxis) {
-                var Grid = componentLibrary.get('grid');
-                grid = new Grid(_themeConfig, _messageCenter, _zr, magicOption);
-                _chartList.push(grid);
-                self.component.grid = grid;
-
-                var DataZoom = componentLibrary.get('dataZoom');
-                dataZoom = new DataZoom(
-                    _themeConfig, 
-                    _messageCenter,
-                    _zr,
-                    magicOption,
-                    {
-                        'legend' : legend,
-                        'grid' : grid
-                    }
-                );
-                _chartList.push(dataZoom);
-                self.component.dataZoom = dataZoom;
-
-                var Axis = componentLibrary.get('axis');
-                xAxis = new Axis(
-                    _themeConfig,
-                    _messageCenter,
-                    _zr,
-                    magicOption,
-                    {
-                        'legend' : legend,
-                        'grid' : grid
-                    },
-                    'xAxis'
-                );
-                _chartList.push(xAxis);
-                self.component.xAxis = xAxis;
-
-                yAxis = new Axis(
-                    _themeConfig,
-                    _messageCenter,
-                    _zr,
-                    magicOption,
-                    {
-                        'legend' : legend,
-                        'grid' : grid
-                    },
-                    'yAxis'
-                );
-                _chartList.push(yAxis);
-                self.component.yAxis = yAxis;
-            }
-
-            // 极坐标系
-            var polar;
-            if (magicOption.polar) {
-                var Polar = componentLibrary.get('polar');
-                polar = new Polar(
-                    _themeConfig,
-                    _messageCenter,
-                    _zr,
-                    magicOption,
-                    {
-                        'legend' : legend
-                    }
-                );
-                _chartList.push(polar);
-                self.component.polar = polar;
+            
+            if (magicOption.xAxis || magicOption.yAxis) {
+                magicOption.grid = magicOption.grid || {};
+                magicOption.dataZoom = magicOption.dataZoom || {};
             }
             
-            tooltip && tooltip.setComponent();
+            var componentList = [
+                'title', 'tooltip', 'legend', 'dataRange',
+                'grid', 'dataZoom', 'xAxis', 'yAxis', 'polar'
+            ];
+            
+            var ComponentClass;
+            var componentType;
+            var component;
+            for (var i = 0, l = componentList.length; i < l; i++) {
+                componentType = componentList[i];
+                if (magicOption[componentType]) {
+                    if (this.component[componentType]) {
+                        this.component[componentType].refresh &&
+                        this.component[componentType].refresh(magicOption)
+                    }
+                    else {
+                        ComponentClass = componentLibrary.get(
+                            (componentType == 'xAxis' || componentType == 'yAxis')
+                            ? 'axis'
+                            : componentType
+                        );
+                        component = new ComponentClass(
+                            this._themeConfig, this._messageCenter, this._zr,
+                            magicOption, this, componentType
+                        );
+                        this.component[componentType] = component;
+                    }
+                    this._chartList.push(this.component[componentType]);
+                }
+                else if (this.component[componentType]) {
+                    this.component[componentType].dispose();
+                    this.component[componentType] = null;
+                    delete this.component[componentType]
+                }
+            }
 
             var ChartClass;
             var chartType;
@@ -775,241 +652,177 @@ define(function(require) {
                     chartMap[chartType] = true;
                     ChartClass = chartLibrary.get(chartType);
                     if (ChartClass) {
-                        chart = new ChartClass(
-                            _themeConfig,
-                            _messageCenter,
-                            _zr,
-                            magicOption,
-                            {
-                                'tooltip' : tooltip,
-                                'legend' : legend,
-                                'dataRange' : dataRange,
-                                'grid' : grid,
-                                'xAxis' : xAxis,
-                                'yAxis' : yAxis,
-                                'polar' : polar
-                            }
-                        );
-                        _chartList.push(chart);
-                        self.chart[chartType] = chart;
+                        if (this.chart[chartType]) {
+                            chart = this.chart[chartType];
+                            chart.refresh(magicOption);
+                        }
+                        else {
+                            chart = new ChartClass(
+                                this._themeConfig, this._messageCenter, this._zr,
+                                magicOption, this
+                            );
+                        }
+                        this._chartList.push(chart);
+                        this.chart[chartType] = chart;
                     }
                     else {
                         console.error(chartType + ' has not been required.');
                     }
                 }
             }
+            
+            // 已有实例但新option不带这类图表的实例释放
+            for (chartType in this.chart) {
+                if (chartType != ecConfig.CHART_TYPE_ISLAND  && !chartMap[chartType]) {
+                    this.chart[chartType].dispose();
+                    this.chart[chartType] = null;
+                    delete this.chart[chartType];
+                }
+            }
 
-            _island.render(magicOption);
+            this._island.render(magicOption);
 
-            _toolbox.render(magicOption, {dataZoom: dataZoom});
+            this._toolbox.render(magicOption);
             
             if (magicOption.animation && !magicOption.renderAsImage) {
-                var len = _chartList.length;
-                while (len--) {
-                    chart = _chartList[len];                 
-                    if (chart 
-                        && chart.animation 
-                        && chart.shapeList 
-                        && chart.shapeList.length 
-                           < magicOption.animationThreshold
-                    ) {
-                        chart.animation();
-                    }
-                }
-                _zr.refresh();
+                this._zr.refresh();
             }
             else {
-                _zr.render();
+                this._zr.render();
             }
             
-            var imgId = 'IMG' + self.id;
+            var imgId = 'IMG' + this.id;
             var img = document.getElementById(imgId);
             if (magicOption.renderAsImage && _canvasSupported) {
                 // IE8- 不支持图片渲染形式
                 if (img) {
                     // 已经渲染过则更新显示
-                    img.src = getDataURL(magicOption.renderAsImage);
+                    img.src = this.getDataURL(magicOption.renderAsImage);
                 }
                 else {
                     // 没有渲染过插入img dom
-                    img = getImage(magicOption.renderAsImage);
+                    img = this.getImage(magicOption.renderAsImage);
                     img.id = imgId;
                     img.style.position = 'absolute';
                     img.style.left = 0;
                     img.style.top = 0;
-                    dom.firstChild.appendChild(img);
+                    this.dom.firstChild.appendChild(img);
                 }
-                un();
-                _zr.un();
-                _disposeChartList();
-                _zr.clear();
+                this.un();
+                this._zr.un();
+                this._disposeChartList();
+                this._zr.clear();
             }
             else if (img) {
                 // 删除可能存在的img
                 img.parentNode.removeChild(img);
             }
             img = null;
-        }
+            
+            this._option = magicOption;
+        },
 
         /**
          * 还原 
          */
-        function restore() {
-            var zrUtil = require('zrender/tool/util');
-            if (_optionRestore.legend && _optionRestore.legend.selected) {
-                _selectedMap = _optionRestore.legend.selected;
-            }
-            else {
-                _selectedMap = {};
-            }
-            _optionBackup = zrUtil.clone(_optionRestore);
-            _option = zrUtil.clone(_optionRestore);
-            _island.clear();
-            _toolbox.reset(_option);
-            _render(_option);
-        }
+        restore : function () {
+            this._option = zrUtil.clone(this._optionRestore);
+            this._island.clear();
+            this._toolbox.reset(this._option);
+            this._render(this._option);
+        },
 
         /**
          * 刷新 
          * @param {Object=} param，可选参数，用于附带option，内部同步用，外部不建议带入数据修改，无法同步 
          */
-        function refresh(param) {
+        refresh : function (param) {
             param = param || {};
             var magicOption = param.option;
             
             // 外部调用的refresh且有option带入
-            if (!_refreshInside && param.option) {
+            if (!this._refreshInside && param.option) {
                 // 做简单的差异合并去同步内部持有的数据克隆，不建议带入数据
                 // 开启数据区域缩放、拖拽重计算、数据视图可编辑模式情况下，当用户产生了数据变化后无法同步
                 // 如有带入option存在数据变化，请重新setOption
-                var ecQuery = require('./util/ecQuery');
-                if (ecQuery.query(_optionBackup, 'toolbox.show')
-                    && ecQuery.query(_optionBackup, 'toolbox.feature.magicType.show')
-                ) {
-                    magicOption = _getMagicOption();
-                }
-                else {
-                    magicOption = _getMagicOption(_island.getOption());
-                }
-                
-                var zrUtil = require('zrender/tool/util');
-                zrUtil.merge(
-                    magicOption, param.option,
-                    { 'overwrite': true, 'recursive': true }
-                );
-                zrUtil.merge(
-                    _optionBackup, param.option,
-                    { 'overwrite': true, 'recursive': true }
-                );
-                zrUtil.merge(
-                    _optionRestore, param.option,
-                    { 'overwrite': true, 'recursive': true }
-                );
-                _island.refresh(magicOption);
-                _toolbox.refresh(magicOption);
+                magicOption = this.getOption();
+                zrUtil.merge(magicOption, param.option, true);
+                zrUtil.merge(this._optionRestore, param.option, true);
+                this._island.refresh(magicOption);
+                this._toolbox.refresh(magicOption);
             }
             
             // 停止动画
-            _zr.clearAnimation();
+            this._zr.clearAnimation();
             // 先来后到，安顺序刷新各种图表，图表内部refresh优化检查magicOption，无需更新则不更新~
-            for (var i = 0, l = _chartList.length; i < l; i++) {
-                _chartList[i].refresh && _chartList[i].refresh(magicOption);
+            for (var i = 0, l = this._chartList.length; i < l; i++) {
+                this._chartList[i].refresh && this._chartList[i].refresh(magicOption);
             }
-            _zr.refresh();
-        }
+            this._zr.refresh();
+        },
 
         /**
          * 释放图表实例
          */
-        function _disposeChartList() {
+        _disposeChartList : function () {
             // 停止动画
-            _zr.clearAnimation();
-            var len = _chartList.length;
+            this._zr.clearAnimation();
+            var len = this._chartList.length;
             while (len--) {
-                _chartList[len]
-                && _chartList[len].dispose 
-                && _chartList[len].dispose();
+                if (this._chartList[len]) {
+                    this.chart[this._chartList[len].type] 
+                    && delete this.chart[this._chartList[len].type];
+                    
+                    this.component[this._chartList[len].type] 
+                    && delete this.component[this._chartList[len].type];
+                    
+                    this._chartList[len].dispose 
+                    && this._chartList[len].dispose();
+                }
             }
-            _chartList = [];
-            
-            self.chart = {
-                island : _island
-            };
-            self.component = {
-                toolbox : _toolbox
-            };
-        }
+            this._chartList = [];
+        },
 
         /**
          * 非图表全局属性merge~~ 
          */
-        function _mergeGlobalConifg(magicOption) {
-            // 背景
-            if (typeof magicOption.backgroundColor == 'undefined') {
-                magicOption.backgroundColor = _themeConfig.backgroundColor;
+        _mergeGlobalConifg : function (magicOption) {
+            var mergeList = [
+                // 背景颜色
+                'backgroundColor',
+                
+                // 拖拽重计算相关
+                'calculable', 'calculableColor', 'calculableHolderColor',
+                
+                // 孤岛显示连接符
+                'nameConnector', 'valueConnector',
+                
+                // 动画相关
+                'animation', 'animationThreshold', 'animationDuration',
+                'animationEasing', 'addDataAnimation',
+                
+                // 默认标志图形类型列表
+                'symbolList',
+                
+                // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
+                'DRAG_ENABLE_TIME'
+            ];
+            var len = mergeList.length
+            while (len--) {
+                if (typeof magicOption[mergeList[len]] == 'undefined') {
+                    magicOption[mergeList[len]] = this._themeConfig[mergeList[len]];
+                }
             }
             
-            // 拖拽重计算相关
-            if (typeof magicOption.calculable == 'undefined') {
-                magicOption.calculable = _themeConfig.calculable;
-            }
-            if (typeof magicOption.calculableColor == 'undefined') {
-                magicOption.calculableColor = _themeConfig.calculableColor;
-            }
-            if (typeof magicOption.calculableHolderColor == 'undefined') {
-                magicOption.calculableHolderColor = _themeConfig.calculableHolderColor;
-            }
-            
-            // 孤岛显示连接符
-            if (typeof magicOption.nameConnector == 'undefined') {
-                magicOption.nameConnector = _themeConfig.nameConnector;
-            }
-            if (typeof magicOption.valueConnector == 'undefined') {
-                magicOption.valueConnector = _themeConfig.valueConnector;
-            }
-            
-            // 动画相关
-            if (typeof magicOption.animation == 'undefined') {
-                magicOption.animation = _themeConfig.animation;
-            }
-            if (typeof magicOption.animationThreshold == 'undefined') {
-                magicOption.animationThreshold = _themeConfig.animationThreshold;
-            }
-            if (typeof magicOption.animationDuration == 'undefined') {
-                magicOption.animationDuration = _themeConfig.animationDuration;
-            }
-            if (typeof magicOption.animationEasing == 'undefined') {
-                magicOption.animationEasing = _themeConfig.animationEasing;
-            }
-            if (typeof magicOption.addDataAnimation == 'undefined') {
-                magicOption.addDataAnimation = _themeConfig.addDataAnimation;
-            }
-            
-            // 默认标志图形类型列表
-            /*
-            if (typeof magicOption.symbolList == 'undefined') {
-                magicOption.symbolList = _themeConfig.symbolList;
-            }
-            */
-
-            var zrColor = require('zrender/tool/color');
             // 数值系列的颜色列表，不传则采用内置颜色，可配数组，借用zrender实例注入，会有冲突风险，先这样
-            if (magicOption.color && magicOption.color.length > 0) {
-                _zr.getColor = function(idx) {
-                    return zrColor.getColor(idx, magicOption.color);
-                };
-            }
-            else {
-                _zr.getColor = function(idx) {
-                    return zrColor.getColor(idx, _themeConfig.color);
-                };
-            }
-            
-            // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
-            if (typeof magicOption.DRAG_ENABLE_TIME == 'undefined') {
-                magicOption.DRAG_ENABLE_TIME = _themeConfig.DRAG_ENABLE_TIME;
-            }
-        }
+            var themeColor = (magicOption.color && magicOption.color.length > 0)
+                             ? magicOption.color
+                             : this._themeConfig.color
+            this._zr.getColor = function (idx) {
+                var zrColor = require('zrender/tool/color');
+                return zrColor.getColor(idx, themeColor);
+            };
+        },
         
         /**
          * 万能接口，配置图表实例任何可配置选项，多次调用时option选项做merge处理
@@ -1017,57 +830,88 @@ define(function(require) {
          * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
          *                   如果不需求，可以通过notMerger参数为true阻止与上次option的合并
          */
-        function setOption(option, notMerge) {
-            var zrUtil = require('zrender/tool/util');
-            if (!notMerge) {
+        setOption : function (option, notMerge) {
+            if (!option.timeline) {
+                return this._setOption(option, notMerge);
+            }
+            else {
+                return this._setTimelineOption(option);
+            }
+        },
+        
+        /**
+         * 万能接口，配置图表实例任何可配置选项，多次调用时option选项做merge处理
+         * @param {Object} option
+         * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
+         *                   如果不需求，可以通过notMerger参数为true阻止与上次option的合并
+         */
+        _setOption : function (option, notMerge) {
+            if (!notMerge && this._option) {
                 zrUtil.merge(
-                    _option,
+                    this._option,
                     zrUtil.clone(option),
-                    {
-                        'overwrite': true,
-                        'recursive': true
-                    }
+                    true
                 );
             }
             else {
-                _option = zrUtil.clone(option);
+                this._option = zrUtil.clone(option);
             }
 
-            if (!_option.series || _option.series.length === 0) {
+            if (!this._option.series || this._option.series.length === 0) {
                 return;
             }
 
-            _optionBackup = zrUtil.clone(_option);
-            _optionRestore = zrUtil.clone(_option);
-            
-            if (_option.legend && _option.legend.selected) {
-                _selectedMap = _option.legend.selected;
-            }
-            else {
-                _selectedMap = {};
-            }
-
-            _island.clear();
-            _toolbox.reset(_option);
-            _render(_option);
-            return self;
-        }
+            this._optionRestore = zrUtil.clone(this._option);
+            this._toolbox.reset(this._option);
+            this._render(this._option);
+            return this;
+        },
 
         /**
          * 返回内部持有的当前显示option克隆 
          */
-        function getOption() {
-            var ecQuery = require('./util/ecQuery');
-            var zrUtil = require('zrender/tool/util');
-            if (ecQuery.query(_optionBackup, 'toolbox.show')
-                && ecQuery.query(_optionBackup, 'toolbox.feature.magicType.show')
-            ) {
-                 return zrUtil.clone(_getMagicOption());
+        getOption : function () {
+            var magicOption = zrUtil.clone(this._option);
+            
+            var len;
+            // 横轴数据还原
+            if (this._optionRestore.xAxis) {
+                if (this._optionRestore.xAxis instanceof Array) {
+                    len = this._optionRestore.xAxis.length;
+                    while (len--) {
+                        magicOption.xAxis[len].data = zrUtil.clone(
+                            this._optionRestore.xAxis[len].data
+                        );
+                    }
+                }
+                else {
+                    magicOption.xAxis.data = zrUtil.clone(this._optionRestore.xAxis.data);
+                }
             }
-            else {
-                 return zrUtil.clone(_getMagicOption(_island.getOption()));
+            
+            // 纵轴数据还原
+            if (this._optionRestore.yAxis) {
+                if (this._optionRestore.yAxis instanceof Array) {
+                    len = this._optionRestore.yAxis.length;
+                    while (len--) {
+                        magicOption.yAxis[len].data = zrUtil.clone(
+                            this._optionRestore.yAxis[len].data
+                        );
+                    }
+                }
+                else {
+                    magicOption.yAxis.data = zrUtil.clone(this._optionRestore.yAxis.data);
+                }
             }
-        }
+
+            // 系列数据还原
+            len = this._optionRestore.series.length;
+            while (len--) {
+                magicOption.series[len].data = zrUtil.clone(this._optionRestore.series[len].data);
+            }
+            
+            return magicOption;
+        },
 
         /**
          * 数据设置快捷接口
@@ -1075,23 +919,39 @@ define(function(require) {
          * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
          *                   如果不需求，可以通过notMerger参数为true阻止与上次option的合并。
          */
-        function setSeries(series, notMerge) {
+        setSeries : function (series, notMerge) {
             if (!notMerge) {
-                self.setOption({series: series});
+                this.setOption({series: series});
             }
             else {
-                _option.series = series;
-                self.setOption(_option, notMerge);
+                this._option.series = series;
+                this.setOption(this._option, notMerge);
             }
-            return self;
-        }
+            return this;
+        },
 
         /**
          * 返回内部持有的当前显示series克隆 
          */
-        function getSeries() {
-            return getOption().series;
-        }
+        getSeries : function () {
+            return this.getOption().series;
+        },
+        
+        /**
+         * timelineOption接口，配置图表实例任何可配置选项
+         * @param {Object} option
+         */
+        _setTimelineOption : function(option) {
+            this._timeline && this._timeline.dispose();
+            var Timeline = require('./component/timeline');
+            var timeline = new Timeline(
+                this._themeConfig, this._messageCenter, this._zr, option, this
+            );
+            this._timeline = timeline;
+            this.component.timeline = this._timeline;
+            
+            return this;
+        },
         
         /**
          * 动态数据添加
@@ -1102,253 +962,227 @@ define(function(require) {
          * @param {boolean=} dataGrow 是否增长数据队列长度，默认，不指定或false时移出目标数组对位数据
          * @param {string=} additionData 是否增加类目轴(饼图为图例)数据，附加操作同isHead和dataGrow
          */
-        function addData(seriesIdx, data, isHead, dataGrow, additionData) {
-            var ecQuery = require('./util/ecQuery');
-            var magicOption;
-            if (ecQuery.query(_optionBackup, 'toolbox.show')
-                && ecQuery.query(_optionBackup, 'toolbox.feature.magicType.show')
-            ) {
-                magicOption = _getMagicOption();
-            }
-            else {
-                magicOption = _getMagicOption(_island.getOption());
-            }
-            
-            var zrUtil = require('zrender/tool/util');
+        addData : function (seriesIdx, data, isHead, dataGrow, additionData) {
+            var magicOption = this.getOption();
             var params = seriesIdx instanceof Array
                          ? seriesIdx
                          : [[seriesIdx, data, isHead, dataGrow, additionData]];
             var axisIdx;
             var legendDataIdx;
-            //_optionRestore 和 _optionBackup都要同步
+            //this._optionRestore 和 magicOption 都要同步
             for (var i = 0, l = params.length; i < l; i++) {
                 seriesIdx = params[i][0];
                 data = params[i][1];
                 isHead = params[i][2];
                 dataGrow = params[i][3];
                 additionData = params[i][4];
-                if (_optionRestore.series[seriesIdx]) {
+                if (this._optionRestore.series[seriesIdx]) {
                     if (isHead) {
-                        _optionRestore.series[seriesIdx].data.unshift(data);
-                        _optionBackup.series[seriesIdx].data.unshift(data);
+                        this._optionRestore.series[seriesIdx].data.unshift(data);
+                        magicOption.series[seriesIdx].data.unshift(data);
                         if (!dataGrow) {
-                            _optionRestore.series[seriesIdx].data.pop();
-                            data = _optionBackup.series[seriesIdx].data.pop();
+                            this._optionRestore.series[seriesIdx].data.pop();
+                            data = magicOption.series[seriesIdx].data.pop();
                         }
                     }
                     else {
-                        _optionRestore.series[seriesIdx].data.push(data);
-                        _optionBackup.series[seriesIdx].data.push(data);
+                        this._optionRestore.series[seriesIdx].data.push(data);
+                        magicOption.series[seriesIdx].data.push(data);
                         if (!dataGrow) {
-                            _optionRestore.series[seriesIdx].data.shift();
-                            data = _optionBackup.series[seriesIdx].data.shift();
+                            this._optionRestore.series[seriesIdx].data.shift();
+                            data = magicOption.series[seriesIdx].data.shift();
                         }
                     }
                     
                     if (typeof additionData != 'undefined'
-                        && _optionRestore.series[seriesIdx].type 
-                           == ecConfig.CHART_TYPE_PIE
-                        && _optionBackup.legend 
-                        && _optionBackup.legend.data
+                        && this._optionRestore.series[seriesIdx].type == ecConfig.CHART_TYPE_PIE
+                        && this._optionRestore.legend 
+                        && this._optionRestore.legend.data
                     ) {
-                        magicOption.legend.data = _optionBackup.legend.data;
                         if (isHead) {
-                            _optionRestore.legend.data.unshift(additionData);
-                            _optionBackup.legend.data.unshift(additionData);
+                            this._optionRestore.legend.data.unshift(additionData);
+                            magicOption.legend.data.unshift(additionData);
                         }
                         else {
-                            _optionRestore.legend.data.push(additionData);
-                            _optionBackup.legend.data.push(additionData);
+                            this._optionRestore.legend.data.push(additionData);
+                            magicOption.legend.data.push(additionData);
                         }
                         if (!dataGrow) {
                             legendDataIdx = zrUtil.indexOf(
-                                _optionBackup.legend.data,
-                                data.name
+                                this._optionRestore.legend.data, data.name
                             );
-                            legendDataIdx != -1
-                            && (
-                                _optionRestore.legend.data.splice(
-                                    legendDataIdx, 1
-                                ),
-                                _optionBackup.legend.data.splice(
-                                    legendDataIdx, 1
-                                )
+                            legendDataIdx != -1 
+                            && this._optionRestore.legend.data.splice(legendDataIdx, 1);
+                            
+                            legendDataIdx = zrUtil.indexOf(
+                                magicOption.legend.data, data.name
                             );
+                            legendDataIdx != -1 
+                            && magicOption.legend.data.splice(legendDataIdx, 1);
                         }
-                        _selectedMap[additionData] = true;
                     } 
-                    else  if (typeof additionData != 'undefined'
-                        && typeof _optionRestore.xAxis != 'undefined'
-                        && typeof _optionRestore.yAxis != 'undefined'
+                    else if (typeof additionData != 'undefined'
+                             && typeof this._optionRestore.xAxis != 'undefined'
+                             && typeof this._optionRestore.yAxis != 'undefined'
                     ) {
                         // x轴类目
-                        axisIdx = _optionRestore.series[seriesIdx].xAxisIndex
-                                  || 0;
-                        if (typeof _optionRestore.xAxis[axisIdx].type 
-                            == 'undefined'
-                            || _optionRestore.xAxis[axisIdx].type == 'category'
+                        axisIdx = this._optionRestore.series[seriesIdx].xAxisIndex || 0;
+                        if (typeof this._optionRestore.xAxis[axisIdx].type == 'undefined'
+                            || this._optionRestore.xAxis[axisIdx].type == 'category'
                         ) {
                             if (isHead) {
-                                _optionRestore.xAxis[axisIdx].data.unshift(
-                                    additionData
-                                );
-                                _optionBackup.xAxis[axisIdx].data.unshift(
-                                    additionData
-                                );
+                                this._optionRestore.xAxis[axisIdx].data.unshift(additionData);
+                                magicOption.xAxis[axisIdx].data.unshift(additionData);
                                 if (!dataGrow) {
-                                    _optionRestore.xAxis[axisIdx].data.pop();
-                                    _optionBackup.xAxis[axisIdx].data.pop();
+                                    this._optionRestore.xAxis[axisIdx].data.pop();
+                                    magicOption.xAxis[axisIdx].data.pop();
                                 }
                             }
                             else {
-                                _optionRestore.xAxis[axisIdx].data.push(
-                                    additionData
-                                );
-                                _optionBackup.xAxis[axisIdx].data.push(
-                                    additionData
-                                );
+                                this._optionRestore.xAxis[axisIdx].data.push(additionData);
+                                magicOption.xAxis[axisIdx].data.push(additionData);
                                 if (!dataGrow) {
-                                    _optionRestore.xAxis[axisIdx].data.shift();
-                                    _optionBackup.xAxis[axisIdx].data.shift();
+                                    this._optionRestore.xAxis[axisIdx].data.shift();
+                                    magicOption.xAxis[axisIdx].data.shift();
                                 }
                             }
                         }
                         
                         // y轴类目
-                        axisIdx = _optionRestore.series[seriesIdx].yAxisIndex
-                                  || 0;
-                        if (_optionRestore.yAxis[axisIdx].type == 'category') {
+                        axisIdx = this._optionRestore.series[seriesIdx].yAxisIndex || 0;
+                        if (this._optionRestore.yAxis[axisIdx].type == 'category') {
                             if (isHead) {
-                                _optionRestore.yAxis[axisIdx].data.unshift(
-                                    additionData
-                                );
-                                _optionBackup.yAxis[axisIdx].data.unshift(
-                                    additionData
-                                );
+                                this._optionRestore.yAxis[axisIdx].data.unshift(additionData);
+                                magicOption.yAxis[axisIdx].data.unshift(additionData);
                                 if (!dataGrow) {
-                                    _optionRestore.yAxis[axisIdx].data.pop();
-                                    _optionBackup.yAxis[axisIdx].data.pop();
+                                    this._optionRestore.yAxis[axisIdx].data.pop();
+                                    magicOption.yAxis[axisIdx].data.pop();
                                 }
                             }
                             else {
-                                _optionRestore.yAxis[axisIdx].data.push(
-                                    additionData
-                                );
-                                _optionBackup.yAxis[axisIdx].data.push(
-                                    additionData
-                                );
+                                this._optionRestore.yAxis[axisIdx].data.push(additionData);
+                                magicOption.yAxis[axisIdx].data.push(additionData);
                                 if (!dataGrow) {
-                                    _optionRestore.yAxis[axisIdx].data.shift();
-                                    _optionBackup.yAxis[axisIdx].data.shift();
+                                    this._optionRestore.yAxis[axisIdx].data.shift();
+                                    magicOption.yAxis[axisIdx].data.shift();
                                 }
                             }
                         }
                     }
+                    // 同步图表内状态，动画需要
+                    this._option.series[seriesIdx].data = magicOption.series[seriesIdx].data;
                 }
             }
-            magicOption.legend && (magicOption.legend.selected = _selectedMap);
-            // dataZoom同步数据
-            for (var i = 0, l = _chartList.length; i < l; i++) {
+            
+            this._zr.clearAnimation();
+            for (var i = 0, l = this._chartList.length; i < l; i++) {
                 if (magicOption.addDataAnimation 
-                    && _chartList[i].addDataAnimation
+                    && this._chartList[i].addDataAnimation
                 ) {
-                    _chartList[i].addDataAnimation(params);
-                }
-                if (_chartList[i].type 
-                    == ecConfig.COMPONENT_TYPE_DATAZOOM
-                ) {
-                    _chartList[i].silence(true);
-                    _chartList[i].init(magicOption);
-                    _chartList[i].silence(false);
+                    this._chartList[i].addDataAnimation(params);
                 }
             }
-            _island.refresh(magicOption);
-            _toolbox.refresh(magicOption);
-            setTimeout(function(){
-                _messageCenter.dispatch(
+            // dataZoom同步数据
+            this.component.dataZoom && this.component.dataZoom.syncOption(magicOption);
+            this._island.refresh(magicOption);
+            this._toolbox.refresh(magicOption);
+            
+            this._option = magicOption;
+            var self = this;
+            setTimeout(function (){
+                if (!self._zr) {
+                    return; // 已经被释放
+                }
+                self._zr.clearAnimation();
+                for (var i = 0, l = self._chartList.length; i < l; i++) {
+                    // 有addData动画就去掉过渡动画
+                    self._chartList[i].motionlessOnce = magicOption.addDataAnimation 
+                                                        && self._chartList[i].addDataAnimation;
+                }
+                self._messageCenter.dispatch(
                     ecConfig.EVENT.REFRESH,
                     '',
                     {option: magicOption}
                 );
             }, magicOption.addDataAnimation ? 500 : 0);
-            return self;
-        }
+            return this;
+        },
 
         /**
          * 获取当前dom 
          */
-        function getDom() {
-            return dom;
-        }
+        getDom : function () {
+            return this.dom;
+        },
         
         /**
          * 获取当前zrender实例，可用于添加额为的shape和深度控制 
          */
-        function getZrender() {
-            return _zr;
-        }
+        getZrender : function () {
+            return this._zr;
+        },
 
         /**
          * 获取Base64图片dataURL
          * @param {string} imgType 图片类型，支持png|jpeg，默认为png
          * @return imgDataURL
          */
-        function getDataURL(imgType) {
+        getDataURL : function (imgType) {
             if (!_canvasSupported) {
                 return '';
             }
-            if (_chartList.length === 0) {
+            if (this._chartList.length === 0) {
                 // 渲染为图片
-                var imgId = 'IMG' + self.id;
+                var imgId = 'IMG' + this.id;
                 var img = document.getElementById(imgId);
                 if (img) {
                     return img.src;
                 }
             }
             // 清除可能存在的tooltip元素
-            self.component.tooltip && self.component.tooltip.hideTip();
+            this.component.tooltip && this.component.tooltip.hideTip();
                 
             imgType = imgType || 'png';
             if (imgType != 'png' && imgType != 'jpeg') {
                 imgType = 'png';
             }
-            var bgColor = _option.backgroundColor
-                          && _option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
-                              ? '#fff' : _option.backgroundColor;
-            return _zr.toDataURL('image/' + imgType, bgColor); 
-        }
+            var bgColor = this._option.backgroundColor
+                          && this._option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
+                             ? '#fff' : this._option.backgroundColor;
+            return this._zr.toDataURL('image/' + imgType, bgColor); 
+        },
 
         /**
          * 获取img
          * @param {string} imgType 图片类型，支持png|jpeg，默认为png
          * @return img dom
          */
-        function getImage(imgType) {
+        getImage : function (imgType) {
             var imgDom = document.createElement('img');
-            imgDom.src = getDataURL(imgType);
-            imgDom.title = (_optionRestore.title && _optionRestore.title.text)
+            imgDom.src = this.getDataURL(imgType);
+            imgDom.title = (this._optionRestore.title && this._optionRestore.title.text)
                            || 'ECharts';
             return imgDom;
-        }
+        },
         
         /**
          * 获取多图联动的Base64图片dataURL
          * @param {string} imgType 图片类型，支持png|jpeg，默认为png
          * @return imgDataURL
          */
-        function getConnectedDataURL(imgType) {
-            if (!isConnected()) {
-                return getDataURL(imgType);
+        getConnectedDataURL : function (imgType) {
+            if (!this.isConnected()) {
+                return this.getDataURL(imgType);
             }
             
             var tempDom;
             var domSize = [
-                dom.offsetLeft, dom.offsetTop, 
-                dom.offsetWidth, dom.offsetHeight
+                this.dom.offsetLeft, this.dom.offsetTop, 
+                this.dom.offsetWidth, this.dom.offsetHeight
             ];
             var imgList = {
                 'self' : {
-                    img : self.getDataURL(imgType),
+                    img : this.getDataURL(imgType),
                     left : domSize[0],
                     top : domSize[1],
                     right : domSize[0] + domSize[2],
@@ -1359,14 +1193,14 @@ define(function(require) {
             var minTop = imgList.self.top;
             var maxRight = imgList.self.right;
             var maxBottom = imgList.self.bottom;
-            for (var c in _connected) {
-                tempDom = _connected[c].getDom();
+            for (var c in this._connected) {
+                tempDom = this._connected[c].getDom();
                 domSize = [
                     tempDom.offsetLeft, tempDom.offsetTop, 
                     tempDom.offsetWidth, tempDom.offsetHeight
                 ];
                 imgList[c] = {
-                    img : _connected[c].getDataURL(imgType),
+                    img : this._connected[c].getDataURL(imgType),
                     left : domSize[0],
                     top : domSize[1],
                     right : domSize[0] + domSize[2],
@@ -1387,150 +1221,156 @@ define(function(require) {
             
             var zrImg = require('zrender').init(zrDom);
             
+            var ImageShape = require('zrender/shape/Image');
             for (var c in imgList) {
-                zrImg.addShape({
-                    shape:'image',
+                zrImg.addShape(new ImageShape({
                     style : {
                         x : imgList[c].left - minLeft,
                         y : imgList[c].top - minTop,
                         image : imgList[c].img
                     }
-                });
+                }));
             }
             
             zrImg.render();
-            var bgColor = _option.backgroundColor 
-                          && _option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
-                          ? '#fff' : _option.backgroundColor;
+            var bgColor = this._option.backgroundColor 
+                          && this._option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
+                          ? '#fff' : this._option.backgroundColor;
                           
             var image = zrImg.toDataURL('image/png', bgColor);
             
-            setTimeout(function(){
+            setTimeout(function (){
                 zrImg.dispose();
                 zrDom.parentNode.removeChild(zrDom);
                 zrDom = null;
             },100);
             
             return image;
-        }
+        },
         
         /**
          * 获取多图联动的img
          * @param {string} imgType 图片类型，支持png|jpeg，默认为png
          * @return img dom
          */
-        function getConnectedImage(imgType) {
+        getConnectedImage : function (imgType) {
             var imgDom = document.createElement('img');
-            imgDom.src = getConnectedDataURL(imgType);
-            imgDom.title = (_optionRestore.title && _optionRestore.title.text)
+            imgDom.src = this.getConnectedDataURL(imgType);
+            imgDom.title = (this._optionRestore.title && this._optionRestore.title.text)
                            || 'ECharts';
             return imgDom;
-        }
+        },
 
         /**
          * 绑定事件
          * @param {Object} eventName 事件名称
          * @param {Object} eventListener 事件响应函数
          */
-        function on(eventName, eventListener) {
-            _messageCenter.bind(eventName, eventListener);
-            return self;
-        }
+        on : function (eventName, eventListener) {
+            this._messageCenter.bind(eventName, eventListener);
+            return this;
+        },
 
         /**
          * 解除事件绑定
          * @param {Object} eventName 事件名称
          * @param {Object} eventListener 事件响应函数
          */
-        function un(eventName, eventListener) {
-            _messageCenter.unbind(eventName, eventListener);
-            return self;
-        }
+        un : function (eventName, eventListener) {
+            this._messageCenter.unbind(eventName, eventListener);
+            return this;
+        },
         
         /**
          * 多图联动 
          * @param connectTarget{ECharts | Array <ECharts>} connectTarget 联动目标
          */
-        function connect(connectTarget) {
+        connect : function (connectTarget) {
             if (!connectTarget) {
-                return self;
+                return this;
             }
             
-            if (!_connected) {
-                _connected = {};
+            if (!this._connected) {
+                this._connected = {};
             }
             
             if (connectTarget instanceof Array) {
                 for (var i = 0, l = connectTarget.length; i < l; i++) {
-                    _connected[connectTarget[i].id] = connectTarget[i];
+                    this._connected[connectTarget[i].id] = connectTarget[i];
                 }
             }
             else {
-                _connected[connectTarget.id] = connectTarget;
+                this._connected[connectTarget.id] = connectTarget;
             }
             
-            return self;
-        }
+            return this;
+        },
         
         /**
          * 解除多图联动 
          * @param connectTarget{ECharts | Array <ECharts>} connectTarget 解除联动目标
          */
-        function disConnect(connectTarget) {
-            if (!connectTarget || !_connected) {
-                return self;
+        disConnect : function (connectTarget) {
+            if (!connectTarget || !this._connected) {
+                return this;
             }
             
             if (connectTarget instanceof Array) {
                 for (var i = 0, l = connectTarget.length; i < l; i++) {
-                    delete _connected[connectTarget[i].id];
+                    delete this._connected[connectTarget[i].id];
                 }
             }
             else {
-                delete _connected[connectTarget.id];
+                delete this._connected[connectTarget.id];
             }
             
-            for (var k in _connected) {
-                return k, self; // 非空
+            for (var k in this._connected) {
+                return k, this; // 非空
             }
             
             // 空，转为标志位
-            _connected = false;
-            return self;
-        }
+            this._connected = false;
+            return this;
+        },
         
         /**
          * 联动事件响应 
          */
-        function connectedEventHandler(param) {
-            if (param.__echartsId != self.id) {
+        connectedEventHandler : function (param) {
+            if (param.__echartsId != this.id) {
                 // 来自其他联动图表的事件
-                _onevent(param);
+                this._onevent(param);
             }
-        }
+        },
         
         /**
          * 是否存在多图联动 
          */
-        function isConnected() {
-            return !!_connected;
-        }
+        isConnected : function () {
+            return !!this._connected;
+        },
         
         /**
          * 显示loading过渡 
          * @param {Object} loadingOption
          */
-        function showLoading(loadingOption) {
-            _toolbox.hideDataView();
+        showLoading : function (loadingOption) {
+            var effectList = {
+                    bar : require('zrender/loadingEffect/Bar'),
+                    bubble : require('zrender/loadingEffect/Bubble'),
+                    dynamicLine : require('zrender/loadingEffect/DynamicLine'),
+                    ring : require('zrender/loadingEffect/Ring'),
+                    spin : require('zrender/loadingEffect/Spin'),
+                    whirling : require('zrender/loadingEffect/Whirling')
+                };
+            this._toolbox.hideDataView();
 
-            var zrUtil = require('zrender/tool/util');
             loadingOption = loadingOption || {};
             loadingOption.textStyle = loadingOption.textStyle || {};
 
             var finalTextStyle = zrUtil.merge(
                 zrUtil.clone(loadingOption.textStyle),
-                _themeConfig.textStyle,
-                { 'overwrite': false}
+                this._themeConfig.textStyle
             );
             loadingOption.textStyle.textFont = finalTextStyle.fontStyle + ' '
                                             + finalTextStyle.fontWeight + ' '
@@ -1538,7 +1378,7 @@ define(function(require) {
                                             + finalTextStyle.fontFamily;
 
             loadingOption.textStyle.text = loadingOption.text 
-                                           || _themeConfig.loadingText;
+                                           || this._themeConfig.loadingText;
 
             if (typeof loadingOption.x != 'undefined') {
                 loadingOption.textStyle.x = loadingOption.x;
@@ -1547,24 +1387,26 @@ define(function(require) {
             if (typeof loadingOption.y != 'undefined') {
                 loadingOption.textStyle.y = loadingOption.y;
             }
-            _zr.showLoading(loadingOption);
-
-            return self;
-        }
+            loadingOption.effectOption = loadingOption.effectOption || {};
+            loadingOption.effectOption.textStyle = loadingOption.textStyle;
+            this._zr.showLoading(new effectList[loadingOption.effect || 'spin'](
+                loadingOption.effectOption
+            ));
+            return this;
+        },
 
         /**
          * 隐藏loading过渡 
          */
-        function hideLoading() {
-            _zr.hideLoading();
-            return self;
-        }
+        hideLoading : function () {
+            this._zr.hideLoading();
+            return this;
+        },
         
         /**
          * 主题设置 
          */
-        function setTheme(theme) {
-            var zrUtil = require('zrender/tool/util');
+        setTheme : function (theme) {
             if (theme) {
                if (typeof theme === 'string') {
                     // 默认主题
@@ -1581,119 +1423,86 @@ define(function(require) {
                 }
                 
                 // 复位默认配置，别好心帮我改成_themeConfig = {};
-                for (var key in _themeConfig) {
-                    delete _themeConfig[key];
+                for (var key in this._themeConfig) {
+                    delete this._themeConfig[key];
                 }
                 for (var key in ecConfig) {
-                    _themeConfig[key] = zrUtil.clone(ecConfig[key]);
-                }
-                if (theme.color) {
-                    // 颜色数组随theme，不merge
-                    _themeConfig.color = [];
+                    this._themeConfig[key] = zrUtil.clone(ecConfig[key]);
                 }
                 
-                if (theme.symbolList) {
-                    // 默认标志图形类型列表，不merge
-                    _themeConfig.symbolList = [];
-                }
+                // 颜色数组随theme，不merge
+                theme.color && (this._themeConfig.color = []);
+                
+                // 默认标志图形类型列表，不merge
+                theme.symbolList && (this._themeConfig.symbolList = []);
                 
                 // 应用新主题
-                zrUtil.merge(
-                    _themeConfig, zrUtil.clone(theme),
-                    { 'overwrite': true, 'recursive': true }
-                );
+                zrUtil.merge(this._themeConfig, zrUtil.clone(theme), true);
             }
             
             if (!_canvasSupported) {   // IE8-
-                _themeConfig.textStyle.fontFamily = 
-                    _themeConfig.textStyle.fontFamily2;
+                this._themeConfig.textStyle.fontFamily = this._themeConfig.textStyle.fontFamily2;
             }
             
-            _optionRestore && self.restore();
-        }
+            this._optionRestore && this.restore();
+        },
 
         /**
          * 视图区域大小变化更新，不默认绑定，供使用方按需调用 
          */
-        function resize() {
-            _zr.resize();
-            if (_option.renderAsImage && _canvasSupported) {
-                // 渲染为图片重走render模式
-                _render(_option);
+        resize : function () {
+            var self = this;
+            return function(){
+                self._zr.resize();
+                if (self._option.renderAsImage && _canvasSupported) {
+                    // 渲染为图片重走render模式
+                    self._render(self._option);
+                    return self;
+                }
+                // 停止动画
+                self._zr.clearAnimation();
+                self._island.resize();
+                self._toolbox.resize();
+                self._timeline && self._timeline.resize();
+                // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
+                // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
+                for (var i = 0, l = self._chartList.length; i < l; i++) {
+                    self._chartList[i].resize && self._chartList[i].resize();
+                }
+                self._zr.refresh();
+                self._messageCenter.dispatch(ecConfig.EVENT.RESIZE);
                 return self;
             }
-            // 停止动画
-            _zr.clearAnimation();
-            _island.resize();
-            _toolbox.resize();
-            // 先来后到，不能仅刷新自己，也不能在上一个循环中刷新，如坐标系数据改变会影响其他图表的大小
-            // 所以安顺序刷新各种图表，图表内部refresh优化无需更新则不更新~
-            for (var i = 0, l = _chartList.length; i < l; i++) {
-                _chartList[i].resize && _chartList[i].resize();
-            }
-            _zr.refresh();
-            _messageCenter.dispatch(
-                ecConfig.EVENT.RESIZE
-            );
-            return self;
-        }
+        },
         
         /**
          * 清楚已渲染内容 ，clear后echarts实例可用
          */
-        function clear() {
-            _disposeChartList();
-            _zr.clear();
-            _option = {};
-            _optionBackup = {};
-            _optionRestore = {};
-            return self;
-        }
+        clear : function () {
+            this._disposeChartList();
+            this._zr.clear();
+            this._option = {};
+            this._optionRestore = {};
+            return this;
+        },
 
         /**
          * 释放，dispose后echarts实例不可用
          */
-        function dispose() {
-            var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
+        dispose : function () {
+            var key = this.dom.getAttribute(DOM_ATTRIBUTE_KEY);
             key && delete _instances[key];
         
-            _island.dispose();
-            _toolbox.dispose();
-            _messageCenter.unbind();
-            self.clear();
-            _zr.dispose();
-            _zr = null;
-            self = null;
+            this._island.dispose();
+            this._toolbox.dispose();
+            this._timeline && this._timeline.dispose();
+            this._messageCenter.unbind();
+            this.clear();
+            this._zr.dispose();
+            this._zr = null;
             return;
         }
-
-        // 接口方法暴漏
-        self.setOption = setOption;
-        self.setSeries = setSeries;
-        self.addData = addData;
-        self.getOption = getOption;
-        self.getSeries = getSeries;
-        self.getDom = getDom;
-        self.getZrender = getZrender;
-        self.getDataURL = getDataURL;
-        self.getImage =  getImage;
-        self.getConnectedDataURL = getConnectedDataURL;
-        self.getConnectedImage = getConnectedImage;
-        self.on = on;
-        self.un = un;
-        self.connect = connect;
-        self.disConnect = disConnect;
-        self.connectedEventHandler = connectedEventHandler;
-        self.isConnected = isConnected;
-        self.showLoading = showLoading;
-        self.hideLoading = hideLoading;
-        self.setTheme = setTheme;
-        self.resize = resize;
-        self.refresh = refresh;
-        self.restore = restore;
-        self.clear = clear;
-        self.dispose = dispose;
-    }
+    };
 
     return self;
 });

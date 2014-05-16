@@ -53,7 +53,7 @@ function refresh(isBtnRefresh){
     myChart = echarts.init(domMain);
     window.onresize = myChart.resize;
     (new Function(editor.doc.getValue()))();
-    myChart.setOption(option, true);
+    myChart.setOption(option, true)
     domMessage.innerHTML = '';
 }
 
@@ -66,7 +66,7 @@ function needMap() {
 }
 
 var echarts;
-var developMode = false;
+var developMode = true;
 
 if (developMode) {
     // for develop

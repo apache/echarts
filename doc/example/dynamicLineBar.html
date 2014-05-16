@@ -91,15 +91,14 @@ option = {
     },
     dataZoom : {
         show : false,
-        realtime: true,
-        start : 50,
+        start : 0,
         end : 100
     },
     xAxis : [
         {
             type : 'category',
             boundaryGap : true,
-            data : (function(){
+            data : (function (){
                 var now = new Date();
                 var res = [];
                 var len = 10;
@@ -114,7 +113,7 @@ option = {
             type : 'category',
             boundaryGap : true,
             splitline : {show : false},
-            data : (function(){
+            data : (function (){
                 var res = [];
                 var len = 10;
                 while (len--) {
@@ -152,7 +151,7 @@ option = {
                     color : 'rgba(135,206,205,0.4)'
                 }
             },
-            data:(function(){
+            data:(function (){
                 var res = [];
                 var len = 10;
                 while (len--) {
@@ -172,7 +171,7 @@ option = {
                     }
                 }
             },
-            data:(function(){
+            data:(function (){
                 var res = [];
                 var len = 10;
                 while (len--) {
@@ -186,7 +185,7 @@ option = {
 var lastData = 11;
 var axisData;
 clearInterval(timeTicket);
-timeTicket = setInterval(function(){
+timeTicket = setInterval(function (){
     lastData += Math.random() * ((Math.round(Math.random() * 10) % 2) == 0 ? 1 : -1);
     lastData = lastData.toFixed(1) - 0;
     axisData = (new Date()).toLocaleTimeString().replace(/^\D*/,'');

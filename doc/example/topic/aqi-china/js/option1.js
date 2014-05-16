@@ -24,7 +24,7 @@ function option1 (name) {
         },
         tooltip : {
             trigger: 'axis',
-            formatter: function(v) {
+            formatter: function (v) {
                 var res = v[0][1] + '<br/>';
                 if (v.length < 5) {
                     for (var i = 0, l = v.length; i < l; i++) {
@@ -98,7 +98,7 @@ function option1 (name) {
             type: 'radar',
             tooltip: {
                 trigger:'axis',
-                formatter: function(v) {
+                formatter: function (v) {
                     var res = v[0][3] + '<br/>';
                     if (v.length < 5) {
                         for (var i = 0, l = v.length; i < l; i++) {

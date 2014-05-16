@@ -60,7 +60,7 @@ function refreshAll() {
     }
 }
 
-var developMode = false;
+var developMode = true;
 if (developMode) {
     // for develop
     require.config({
@@ -158,15 +158,15 @@ function requireCallback (ec) {
         */
         var domGLeft = domG.offsetLeft;
         var domGTop = domG.offsetTop;
+        var ImageShape = require('zrender/shape/Image');
         for (var i = 0, l = domMain.length; i < l; i++) {
-            _zr.addShape({
-                shape:'image',
+            _zr.addShape(new ImageShape({
                 style : {
                     x : domMain[i].offsetLeft - domGLeft + (i < 6 ? 0: domGWidth),
                     y : domMain[i].offsetTop - domGTop - (i < 6 ? 0: 1200),
                     image : myChart[i].getDataURL()
                 }
-            });
+            }));
         }
         _zr.render();
         
@@ -645,7 +645,7 @@ var option = {
                 ]
             }
         ],
-        animation: false
+        animation: true
     },
     4 : {
         title : {
@@ -815,7 +815,7 @@ var option = {
                 ]
             }
         ],
-        animation: false
+        animation: true
     },
     5 : {
         title : {
@@ -898,7 +898,7 @@ var option = {
                 })()
             }
         ],
-        animation: false
+        animation: true
     },
     6 : {
         title : {
@@ -970,7 +970,7 @@ var option = {
                 ]
             }
         ],
-        animation: false
+        animation: true
     },
     7 : {
         title : {
@@ -999,7 +999,7 @@ var option = {
                 ]
             }
         ],
-        animation: false
+        animation: true
     },
     8 : {
         title : {
@@ -1041,7 +1041,7 @@ var option = {
                 ]
             }
         ],
-        animation: false
+        animation: true
     },
     9 : {
         title : {
@@ -1161,7 +1161,7 @@ var option = {
                     links : links
                 }
             ],
-            animation: false
+            animation: true
         } 
     })()
 };

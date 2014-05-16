@@ -73,7 +73,7 @@
                     <textarea id="code" name="code">
 // 自定义扩展图表类型：mapType = continent 大洲地图
 require('echarts/util/mapData/params').params.continent = {
-    getGeoJson: function(callback) {
+    getGeoJson: function (callback) {
         $.getJSON('geoJson/continent_geo.json',callback);
     }
 }
@@ -86,7 +86,7 @@ option = {
     },
     tooltip : {
         trigger: 'item',
-        formatter: function(a){
+        formatter: function (a){
             var sName = a[0];
             var pName = a[1];
             var value = a[2] + '万人次 （' + (a[2]/98.19).toFixed(2) + '%）';

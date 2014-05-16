@@ -108,7 +108,7 @@ option = {
             type:'pie',
             radius : [0, 110],
             center: [250, 225],
-            data: (function(){
+            data: (function (){
                 var res = [];
                 var len = 0;
                 while (len++ < 5) {
@@ -124,7 +124,7 @@ option = {
             name: 'radar',
             type: 'radar',
             itemStyle: {normal: {areaStyle: {type: 'default'}}},
-            data: (function(){
+            data: (function (){
                 var res = [];
                 var len = 0;
                 while (len++ < 3) {
@@ -147,7 +147,7 @@ option = {
 var lastIndex = 5;
 var axisData;
 clearInterval(timeTicket);
-timeTicket = setInterval(function(){
+timeTicket = setInterval(function (){
     lastIndex += 1;
     // 动态数据接口 addData
     myChart.addData([

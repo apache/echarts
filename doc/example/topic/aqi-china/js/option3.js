@@ -82,7 +82,7 @@ function option3 (name) {
                 max: 0,
                 axisLabel:{
                     show:false,
-                    formatter: function(v){
+                    formatter: function (v){
                         return -v;
                     }
                 }
@@ -156,7 +156,7 @@ function option3 (name) {
                 type: 'bar',
                 itemStyle : {
                     normal : {
-                        color : (function(){
+                        color : (function (){
                             var zrColor = require('zrender/tool/color');
                             return zrColor.getLinearGradient(
                                 0, 80, 0, 700,
@@ -178,7 +178,7 @@ function option3 (name) {
                 type: 'bar',
                 tooltip:{
                     trigger: 'item',
-                    formatter : function(v) {
+                    formatter : function (v) {
                         return v[0] + '<br/>' + v[1] + ' : ' + (-v[2]);
                     }
                 },
@@ -187,7 +187,7 @@ function option3 (name) {
                 barMinHeight: 5,
                 itemStyle : {
                     normal : {
-                        color : (function(){
+                        color : (function (){
                             var zrColor = require('zrender/tool/color');
                             return zrColor.getLinearGradient(
                                 0, 80, 0, 700,
@@ -198,7 +198,7 @@ function option3 (name) {
                         label : {
                             show : true,
                             position: 'left',
-                            formatter: function(a,b,c) {
+                            formatter: function (a,b,c) {
                                 return b + ' : ' + (-c);
                             }
                         }

@@ -100,7 +100,7 @@ option = {
             name:'scatter1',
             type:'scatter',
             symbol: 'emptyCircle', //'circle', 'rectangle', 'triangle', 'diamond', 'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
-            symbolSize: function(value){
+            symbolSize: function (value){
                 if (value[0] < 2) {
                     return 2;
                 }
@@ -121,7 +121,7 @@ option = {
                     color: 'lightgreen',
                 }
             },
-            data: (function() {
+            data: (function () {
                 var d = [];
                 var len = 20;
                 while (len--) {
@@ -152,7 +152,7 @@ option = {
             name:'scatter2',
             type:'scatter',
             symbol: 'image://../asset/ico/favicon.png',     // 系列级个性化拐点图形
-            symbolSize: function(value){
+            symbolSize: function (value){
                 return Math.round(value[2] * 3);
             },
             itemStyle: {
@@ -160,7 +160,7 @@ option = {
                     label : {show: true}
                 }
             },
-            data: (function() {
+            data: (function () {
                 var d = [];
                 var len = 20;
                 while (len--) {

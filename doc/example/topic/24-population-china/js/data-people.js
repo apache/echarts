@@ -98,7 +98,7 @@ var option = {
         {
             type : 'category',
             boundaryGap : false,
-            data : function(){
+            data : function (){
                 var list = [];
                 for (var i = 1987; i <= 2011; i++) {
                     list.push(i);
