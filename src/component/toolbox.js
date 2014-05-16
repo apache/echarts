@@ -393,9 +393,11 @@ define(function (require) {
                     default:
                         if (this._iconList[i].match('Chart')) {
                             itemShape._name = this._iconList[i].replace('Chart', '');
+                            /*
                             if (this._magicType[itemShape._name]) {
                                 itemShape.style.strokeColor = this._enableColor;
                             }
+                            */
                             itemShape.onclick = function (param) {
                                 self._onMagicType(param);
                             };
@@ -820,11 +822,7 @@ define(function (require) {
         _onMagicType : function (param) {
             this._resetMark();
             var itemName = param.target._name;
-            if (this._magicType[itemName]) {
-                // 取消
-                this._magicType[itemName] = false;
-            }
-            else {
+            if (!this._magicType[itemName]) {
                 // 启用
                 this._magicType[itemName] = true;
                 // 折柱互斥
@@ -841,12 +839,13 @@ define(function (require) {
                 else if (itemName == _MAGICTYPE_TILED) {
                     this._magicType[_MAGICTYPE_STACK] = false;
                 }
+                this.messageCenter.dispatch(
+                    ecConfig.EVENT.MAGIC_TYPE_CHANGED,
+                    param.event,
+                    {magicType : this._magicType}
+                );
             }
-            this.messageCenter.dispatch(
-                ecConfig.EVENT.MAGIC_TYPE_CHANGED,
-                param.event,
-                {magicType : this._magicType}
-            );
+            
             return true;
         },
         
@@ -889,33 +888,24 @@ define(function (require) {
                     oriType = newOption.series[len].type;
                     if (this._magicMap[oriType]) {
                         axis = newOption.xAxis instanceof Array
-                               ? newOption.xAxis[
-                                     newOption.series[len].xAxisIndex || 0
-                                 ]
+                               ? newOption.xAxis[newOption.series[len].xAxisIndex || 0]
                                : newOption.xAxis;
                         if (axis && (axis.type || 'category') == 'category') {
-                            axis.__boundaryGap =
-                                typeof axis.boundaryGap != 'undefined'
-                                ? axis.boundaryGap : true;
+                            axis.__boundaryGap = typeof axis.boundaryGap != 'undefined'
+                                                 ? axis.boundaryGap : true;
                         }
                         axis = newOption.yAxis instanceof Array
-                               ? newOption.yAxis[
-                                     newOption.series[len].yAxisIndex || 0
-                                 ]
+                               ? newOption.yAxis[newOption.series[len].yAxisIndex || 0]
                                : newOption.yAxis;
                         if (axis && axis.type == 'category') {
-                            axis.__boundaryGap =
-                                typeof axis.boundaryGap != 'undefined'
-                                ? axis.boundaryGap : true;
+                            axis.__boundaryGap = typeof axis.boundaryGap != 'undefined'
+                                                 ? axis.boundaryGap : true;
                         }
                         newOption.series[len].__type = oriType;
                         // 避免不同类型图表类型的样式污染
-                        newOption.series[len].__itemStyle = 
-                            newOption.series[len].itemStyle
-                            ? zrUtil.clone(
-                                  newOption.series[len].itemStyle
-                              )
-                            : {};
+                        newOption.series[len].__itemStyle = zrUtil.clone(
+                            newOption.series[len].itemStyle || {}
+                        );
                     }
                     
                     if (this._magicMap[_MAGICTYPE_STACK] || this._magicMap[_MAGICTYPE_TILED]) {
@@ -956,14 +946,16 @@ define(function (require) {
         
         getMagicOption : function (){
             var axis;
-            if (this._magicType[ecConfig.CHART_TYPE_LINE] || this._magicType[ecConfig.CHART_TYPE_BAR]) {
+            if (this._magicType[ecConfig.CHART_TYPE_LINE] 
+                || this._magicType[ecConfig.CHART_TYPE_BAR]
+            ) {
                 // 图表类型有切换
                 var boundaryGap = this._magicType[ecConfig.CHART_TYPE_LINE] ? false : true;
                 for (var i = 0, l = this.option.series.length; i < l; i++) {
                     if (this._magicMap[this.option.series[i].type]) {
                         this.option.series[i].type = this._magicType[ecConfig.CHART_TYPE_LINE]
-                                                ? ecConfig.CHART_TYPE_LINE
-                                                : ecConfig.CHART_TYPE_BAR;
+                                                     ? ecConfig.CHART_TYPE_LINE
+                                                     : ecConfig.CHART_TYPE_BAR;
                         // 避免不同类型图表类型的样式污染
                         this.option.series[i].itemStyle = zrUtil.clone(
                             this.option.series[i].__itemStyle
@@ -973,44 +965,18 @@ define(function (require) {
                                ? this.option.xAxis[this.option.series[i].xAxisIndex || 0]
                                : this.option.xAxis;
                         if (axis && (axis.type || 'category') == 'category') {
-                            axis.boundaryGap = 
-                                boundaryGap ? true : axis.__boundaryGap;
+                            axis.boundaryGap = boundaryGap ? true : axis.__boundaryGap;
                         }
                         axis = this.option.yAxis instanceof Array
                                ? this.option.yAxis[this.option.series[i].yAxisIndex || 0]
                                : this.option.yAxis;
                         if (axis && axis.type == 'category') {
-                            axis.boundaryGap = 
-                                boundaryGap ? true : axis.__boundaryGap;
+                            axis.boundaryGap = boundaryGap ? true : axis.__boundaryGap;
                         }
                     }
                 }
             }
-            else {
-                // 图表类型无切换
-                for (var i = 0, l = this.option.series.length; i < l; i++) {
-                    if (this._magicMap[this.option.series[i].type]) {
-                        this.option.series[i].type = this.option.series[i].__type;
-                        // 避免不同类型图表类型的样式污染
-                        this.option.series[i].itemStyle = 
-                            this.option.series[i].__itemStyle;
-                        
-                        axis = this.option.xAxis instanceof Array
-                               ? this.option.xAxis[this.option.series[i].xAxisIndex || 0]
-                               : this.option.xAxis;
-                        if (axis && (axis.type || 'category') == 'category') {
-                            axis.boundaryGap = axis.__boundaryGap;
-                        }
-                        axis = this.option.yAxis instanceof Array
-                               ? this.option.yAxis[this.option.series[i].yAxisIndex || 0]
-                               : this.option.yAxis;
-                        if (axis && axis.type == 'category') {
-                            axis.boundaryGap = axis.__boundaryGap;
-                        }
-                    }
-                }
-            }
-            
+           
             if (this._magicType[_MAGICTYPE_STACK] || this._magicType[_MAGICTYPE_TILED]) {
                 // 有堆积平铺切换
                 for (var i = 0, l = this.option.series.length; i < l; i++) {
@@ -1024,13 +990,7 @@ define(function (require) {
                     }
                 }
             }
-            else {
-                // 无堆积平铺切换
-                for (var i = 0, l = this.option.series.length; i < l; i++) {
-                    this.option.series[i].stack = this.option.series[i].__stack;
-                }
-            }
-
+            
             return this.option;
         },
 
