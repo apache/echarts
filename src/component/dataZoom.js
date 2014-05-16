@@ -1038,13 +1038,12 @@ define(function (require) {
         },
         
         getRealDataIndex : function (sIdx, dIdx) {
-            if (!this._originalData) {
+            if (!this._originalData || (this._zoom.start == 0 && this._zoom.end == 100)) {
                 return dIdx;
             }
             var sreies = this._originalData.series;
             if (sreies[sIdx]) {
-                return Math.floor(this._zoom.start / 100 * sreies[sIdx].length) 
-                       + dIdx;
+                return Math.floor(this._zoom.start / 100 * sreies[sIdx].length) + dIdx;
             }
             return -1;
         },

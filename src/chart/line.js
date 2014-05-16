@@ -851,15 +851,13 @@ define(function (require) {
             }
             
             return [
-                typeof mpData.xAxis != 'string' 
-                && xAxis.getCoordByIndex
-                ? xAxis.getCoordByIndex(mpData.xAxis || 0)
-                : xAxis.getCoord(mpData.xAxis || 0),
+                typeof mpData.xAxis != 'string' && xAxis.getCoordByIndex
+                    ? xAxis.getCoordByIndex(mpData.xAxis || 0)
+                    : xAxis.getCoord(mpData.xAxis || 0),
                 
-                typeof mpData.yAxis != 'string' 
-                && yAxis.getCoordByIndex
-                ? yAxis.getCoordByIndex(mpData.yAxis || 0)
-                : yAxis.getCoord(mpData.yAxis || 0)
+                typeof mpData.yAxis != 'string' && yAxis.getCoordByIndex
+                    ? yAxis.getCoordByIndex(mpData.yAxis || 0)
+                    : yAxis.getCoord(mpData.yAxis || 0)
             ];
         },
         

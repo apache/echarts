@@ -187,7 +187,7 @@ define(function() {
                     title : {
                         line : '折线图切换',
                         bar : '柱形图切换',
-                        stack : '堆叠',
+                        stack : '堆积',
                         tiled : '平铺'
                     },
                     type : [] // 'line', 'bar', 'stack', 'tiled'

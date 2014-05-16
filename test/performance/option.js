@@ -124,7 +124,6 @@ function option(chartType, n) {
     else if (chartType == 'chord') {
         opt.series = chordSeries();
     }
-    
     return opt;
 }
 
@@ -183,7 +182,7 @@ function pieData(n){
 function chordSeries() {
     return [
         {
-            "name": "支持",
+            "name": "性能测试",
             "type": "chord",
             "showScaleText": false,
             "data": [
