@@ -1679,6 +1679,9 @@ var optionMap = {
 		    var len = sData1.length;
 		    var option = myChart.getOption();
 		    option.series = option.series.slice(0,2);
+		    option.legend = {
+                data : ['系列1', '系列2']
+            };
 		    while (len--) {
 		        option.series.push({
 		            type: 'pie',
@@ -1717,9 +1720,6 @@ var optionMap = {
 		    tooltip : {
 		        trigger: 'item',
 		         formatter: "{b} : {c} ({d}%)"
-		    },
-		    legend : {
-		        data : ['系列1', '系列2']
 		    },
 		    toolbox: {
 		        show : true,

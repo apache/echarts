@@ -868,8 +868,8 @@ define(function (require) {
         },
 
         // 重置备份还原状态等
-        reset : function (newOption, needClear) {
-            needClear && this.clear();
+        reset : function (newOption, isRestore) {
+            isRestore && this.clear();
             
             if (this.query(newOption, 'toolbox.show')
                 && this.query(newOption, 'toolbox.feature.magicType.show')
@@ -913,7 +913,15 @@ define(function (require) {
                     }
                 }
             }
-            this._magicType = {};
+            
+            this._magicType = isRestore ? {} : (this._magicType || {});
+            for (itemName in this._magicType) {
+                if (this._magicType[itemName]) {
+                    this.option = newOption;
+                    this.getMagicOption();
+                    break;
+                }
+            }
             
             // 框选缩放
             var zoomOption = newOption.dataZoom;

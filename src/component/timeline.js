@@ -40,17 +40,8 @@ define(function (require) {
         };
         self._setCurrentOption = function() {
             self.currentIndex %= self.timelineOption.data.length;
-            //console.log(self.currentIndex);
+            // console.log(self.currentIndex);
             var curOption = self.options[self.currentIndex] || {};
-            if (self.selectedMap) {
-                curOption.legend = curOption.legend || {};
-                curOption.legend.selected = self.selectedMap;
-            }
-            if (self.range) {
-                curOption.dataRange = curOption.dataRange || {};
-                curOption.dataRange.range = self.range;
-            }
-            
             self.myChart.setOption(curOption, self.timelineOption.notMerge);
             self.messageCenter.dispatch(
                 ecConfig.EVENT.TIMELINE_CHANGED,
@@ -124,9 +115,6 @@ define(function (require) {
                 this.ecTheme.animationDuration
             );
         }
-        
-        this.selectedMap = false;
-        this.range = false;
     }
     
     Timeline.prototype = {
@@ -721,17 +709,6 @@ define(function (require) {
             this.isDragend = false;
             this._syncHandleShape();
             return;
-        },
-
-        /**
-         * 图例选择
-         */
-        onlegendSelected : function (param) {
-            this.selectedMap = zrUtil.clone(param.selected);
-        },
-        
-        ondataRange : function(param) {
-            this.range = zrUtil.clone(param.range);
         },
         
         last : function () {
