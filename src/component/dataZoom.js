@@ -43,6 +43,7 @@ define(function (require) {
         // this._endFrameShape;         // 结束特效边框
         // this._syncTicket;
         this._isSilence = false;
+        this._zoom = {};
         // this._originalData;
         
         this.option.dataZoom = this.reformOption(this.option.dataZoom);
@@ -208,6 +209,13 @@ define(function (require) {
                 }
             }
 
+            var start = typeof this._zoom.start != 'undefined'
+                        ? this._zoom.start
+                        : (typeof this.zoomOption.start != 'undefined' ? this.zoomOption.start : 0);
+            var end = typeof this._zoom.end != 'undefined'
+                      ? this._zoom.end
+                      : (typeof this.zoomOption.end != 'undefined' ? this.zoomOption.end : 100);
+            /*
             var start = typeof this.zoomOption.start != 'undefined'
                         && this.zoomOption.start >= 0
                         && this.zoomOption.start <= 100
@@ -216,6 +224,7 @@ define(function (require) {
                       && this.zoomOption.end >= 0
                       && this.zoomOption.end <= 100
                       ? this.zoomOption.end : 100;
+            */
             if (start > end) {
                 // 大小颠倒自动翻转
                 start = start + end;
@@ -750,8 +759,8 @@ define(function (require) {
                 );
             }
 
-            this.zoomOption.start = this._zoom.start;
-            this.zoomOption.end = this._zoom.end;
+            //this.zoomOption.start = this._zoom.start;
+            //this.zoomOption.end = this._zoom.end;
         },
         
         _synScatterData : function (seriesIndex, data) {

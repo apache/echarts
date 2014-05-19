@@ -43,10 +43,7 @@ define(function (require) {
             return self.__ondragend();
         };
         this._selectedMap = {};
-        this._range = {
-            start: 100,
-            end: 0
-        };
+        this._range = {};
         
         this.refresh(option);
     }
@@ -321,8 +318,8 @@ define(function (require) {
                 ondragend : this._ondragend,
                 _type : 'filler'
             };
-
-            this.shapeList.push(new RectangleShape(this._fillerShae));
+            this._fillerShae = new RectangleShape(this._fillerShae);
+            this.shapeList.push(this._fillerShae);
         },
         
         /**
@@ -950,15 +947,15 @@ define(function (require) {
         
         // 外部传入range
         _syncShapeFromRange : function () {
-            if (this.dataRangeOption.range) {
-                // 做一个反转
-                if (typeof this.dataRangeOption.range.start != 'undefined') {
-                    this._range.end = this.dataRangeOption.range.start;
-                }
-                if (typeof this.dataRangeOption.range.end != 'undefined') {
-                    this._range.start = this.dataRangeOption.range.end;
-                }
-            }
+            var range = this.dataRangeOption.range || {};
+            // 做一个反转
+            this._range.end = typeof this._range.end != 'undefined'
+                              ? this._range.end
+                              : (typeof range.start != 'undefined' ? range.start : 0);
+            this._range.start = typeof this._range.start != 'undefined'
+                                ? this._range.start
+                                : (typeof range.end != 'undefined' ? range.end : 100);
+            
             if (this._range.start != 100 || this._range.end !== 0) {
                 // 非默认满值同步一下图形
                 if (this.dataRangeOption.orient == 'horizontal') {
@@ -1021,7 +1018,7 @@ define(function (require) {
                 );
             }
             
-            this._syncShape(false);
+            this._syncShape();
         },
 
         _syncFillerShape : function (e) {
@@ -1077,10 +1074,10 @@ define(function (require) {
                 this._range.end = Math.floor(100 - (b - y) / height * 100);
             }
             
-            this._syncShape(true);
+            this._syncShape();
         },
         
-        _syncShape : function (needFiller) {
+        _syncShape : function () {
             this._startShape.position = [
                 this._startShape.style.x - this._startShape.style._x,
                 this._startShape.style.y - this._startShape.style._y
@@ -1095,11 +1092,12 @@ define(function (require) {
                     this._gap * this._range.start + this.dataRangeOption.min
                 ).toFixed(this.dataRangeOption.precision);
             }
-            this._startShape.style.color = this._startShape.highlightStyle.strokeColor = this.getColor(
+            this._startShape.style.color 
+            = this._startShape.highlightStyle.strokeColor
+            = this.getColor(
                 this._gap * this._range.start + this.dataRangeOption.min
             );
             
-            this.zr.modShape(this._startShape.id);
             this._endShape.position = [
                 this._endShape.style.x - this._endShape.style._x,
                 this._endShape.style.y - this._endShape.style._y
@@ -1117,13 +1115,12 @@ define(function (require) {
             this._endShape.style.color = this._endShape.highlightStyle.strokeColor = this.getColor(
                 this._gap * this._range.end + this.dataRangeOption.min
             );
+            
+            this.zr.modShape(this._startShape.id);
             this.zr.modShape(this._endShape.id);
-
             this.zr.modShape(this._startMask.id);
             this.zr.modShape(this._endMask.id);
-            
-            needFiller && this.zr.modShape(this._fillerShae.id);
-             
+            this.zr.modShape(this._fillerShae.id);
             this.zr.refresh();
         },
 

@@ -179,7 +179,7 @@ define(function (require) {
         },
         
         addShapeList : function () {
-            var maxLenth = this.option.animationThreshold / (this.canvasSupported ? 1 : 2);
+            var maxLenth = this.option.animationThreshold / (this.canvasSupported ? 2 : 4);
             var lastShapeList = this.lastShapeList;
             var shapeList = this.shapeList;
             var duration = lastShapeList.length > 0
@@ -239,7 +239,7 @@ define(function (require) {
                         this._animateAdd(newMap[key], duration, easing);
                     }
                 }
-                this.animationMark(duration, easing);
+                //this.animationMark(duration, easing);
             }
             else {
                 this.motionlessOnce = false;

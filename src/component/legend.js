@@ -585,6 +585,13 @@ define(function (require) {
                 var something;
                 var color;
                 var queryTarget;
+                if (this.legendOption.selected) {
+                    for (var k in this.legendOption.selected) {
+                        this._selectedMap[k] = typeof this._selectedMap[k] != 'undefined'
+                                               ? this._selectedMap[k]
+                                               : this.legendOption.selected[k];
+                    }
+                }
                 for (var i = 0, dataLength = data.length; i < dataLength; i++) {
                     itemName = data[i].name || data[i];
                     if (itemName === '') {
@@ -622,14 +629,7 @@ define(function (require) {
                             ? this._selectedMap[itemName] : true; 
                     }
                 }
-            
-                if (this.option.legend.selected) {
-                    for (var k in this.option.legend.selected) {
-                        this._selectedMap[k] = this.option.legend.selected[k];
-                    }
-                }
             }
-            
             this.clear();
             this._buildShape();
         },
@@ -722,12 +722,29 @@ define(function (require) {
             return this._selectedMap;
         },
         
+        setSelected : function(itemName, selectStatus) {
+            if (this.legendOption.selectedMode === 'single') {
+                for (var k in this._selectedMap) {
+                    this._selectedMap[k] = false;
+                }
+            }
+            this._selectedMap[itemName] = selectStatus;
+            this.messageCenter.dispatch(
+                ecConfig.EVENT.LEGEND_SELECTED,
+                param.event,
+                {
+                    selected : this._selectedMap,
+                    target : itemName
+                }
+            );
+        },
+        
         /**
          * 图例选择
          */
         onlegendSelected : function (param, status) {
             var legendSelected = param.selected;
-            for (var itemName in this._selectedMap) {
+            for (var itemName in legendSelected) {
                 if (this._selectedMap[itemName] != legendSelected[itemName]) {
                     // 有一项不一致都需要重绘
                     status.needRefresh = true;
@@ -847,7 +864,6 @@ define(function (require) {
     
     for (var k in legendIcon) {
         IconShape.prototype.iconLibrary['legendicon' + k] = legendIcon[k];
-        //console.log('legendicon' + k, legendIcon[k])
     }
     
     zrUtil.inherits(Legend, Base);
