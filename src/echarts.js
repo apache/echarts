@@ -439,8 +439,6 @@ define(function (require) {
                 && this._chartList[len].onlegendSelected
                 && this._chartList[len].onlegendSelected(param, this._status);
             }
-            this._timeline && this._timeline.onlegendSelected(param, this._status);
-            
             if (this._status.needRefresh) {
                 this._messageCenter.dispatch(ecConfig.EVENT.REFRESH);
             }
@@ -476,7 +474,6 @@ define(function (require) {
                 && this._chartList[len].ondataRange
                 && this._chartList[len].ondataRange(param, this._status);
             }
-            this._timeline && this._timeline.ondataRange(param, this._status);
             
             // 没有相互影响，直接刷新即可
             if (this._status.needRefresh) {
@@ -846,8 +843,8 @@ define(function (require) {
          */
         _setOption : function (option, notMerge) {
             if (!notMerge && this._option) {
-                zrUtil.merge(
-                    this._option,
+                this._option = zrUtil.merge(
+                    this.getOption(),
                     zrUtil.clone(option),
                     true
                 );
@@ -861,6 +858,11 @@ define(function (require) {
             }
 
             this._optionRestore = zrUtil.clone(this._option);
+            
+            if (this.component.dataZoom && this._option.dataZoom) {
+                // dataZoom同步数据
+                this.component.dataZoom.syncOption(this._option);
+            }
             this._toolbox.reset(this._option);
             this._render(this._option);
             return this;
