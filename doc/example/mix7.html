@@ -104,9 +104,6 @@ option = {
         trigger: 'item',
          formatter: "{b} : {c} ({d}%)"
     },
-    legend : {
-        data : ['系列1', '系列2']
-    },
     toolbox: {
         show : true,
         feature : {
@@ -150,6 +147,9 @@ function buildPieSeries(){
     var yAxis = myChart.component.yAxis.getAxis(0);
     var len = sData1.length;
     option.series = option.series.slice(0,2);
+    option.legend = {
+        data : ['系列1', '系列2']
+    };
     while (len--) {
         option.series.push({
             type: 'pie',

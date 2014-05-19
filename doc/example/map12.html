@@ -76,8 +76,8 @@ var effect = {
     scaleSize: require('zrender/tool/env').canvasSupported ? 1 : 2,
     period: 30,             // 运动周期，无单位，值越大越慢
     color: '#fff',
-    shadowColor: 'rgba(220,220,220,0.8)',
-    shadowBlur : 15 
+    shadowColor: 'rgba(220,220,220,0.4)',
+    shadowBlur : 5 
 };
 function itemStyle(idx) {
     return {
@@ -86,11 +86,11 @@ function itemStyle(idx) {
             borderWidth:1,
             borderColor:['rgba(30,144,255,1)','lime'][idx],
             lineStyle: {
-                type: 'solid',
-                shadowColor : ['rgba(30,144,255,1)','lime'][idx], //默认透明
-                shadowBlur: 10,
-                shadowOffsetX: 0,
-                shadowOffsetY: 0
+                //shadowColor : ['rgba(30,144,255,1)','lime'][idx], //默认透明
+                //shadowBlur: 10,
+                //shadowOffsetX: 0,
+                //shadowOffsetY: 0,
+                type: 'solid'
             }
         }
     }

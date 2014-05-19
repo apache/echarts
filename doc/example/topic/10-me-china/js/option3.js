@@ -2,6 +2,7 @@ function option3 (name) {
     var option = {
         title : {
             text: 'GDP',
+            subtext: '数据来自国家统计局',
             x:'right',
             textStyle:{}
         },
