@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+
+    <script src="../asset/js/esl/esl.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+</head>
+
+<body>
+    <!-- NAVBAR
+    ================================================== -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="../../index.html">ECharts</a>
+          <div class="nav-collapse collapse">
+              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
+              <ul class="nav">
+                <li><a href="../../index.html"><i class="icon-home icon-white"></i> Home</a></li>
+                <li class="active"><a href="../example.html" class="active">Example</a></li>
+                <li><a href="../doc.html" >API &amp; Doc</a></li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a id="last-release-link" href=""> </a></li>
+                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
+                  </ul>
+                </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
+                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
+                    <li class="divider"></li>
+                    <!--li class="nav-header">Library</li-->
+                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
+                    
+                  </ul>
+                </li>
+              </ul>
+           </div><!--/.nav-collapse -->
+        </div><!-- /.container -->
+      </div><!-- /.navbar-inner -->
+    </div><!-- /.navbar-wrapper -->
+
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div id="sidebar-code" class="span4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+option = {
+    timeline:{
+        data:[
+            '2002-01-01','2003-01-01','2004-01-01','2005-01-01','2006-01-01',
+            '2007-01-01','2008-01-01','2009-01-01','2010-01-01','2011-01-01'
+        ],
+        label : {
+            formatter : function(s) {
+                return s.slice(0, 4);
+            }
+        },
+        autoPlay : true,
+        playInterval : 1000
+    },
+    options:[
+        {
+            title : {
+                'text':'2002全国宏观经济指标',
+                'subtext':'数据来自国家统计局'
+            },
+            tooltip : {'trigger':'axis'},
+            legend : {
+                x:'right',
+                'data':['GDP','金融','房地产','第一产业','第二产业','第三产业'],
+                'selected':{
+                    'GDP':true,
+                    '金融':false,
+                    '房地产':true,
+                    '第一产业':false,
+                    '第二产业':false,
+                    '第三产业':false
+                }
+            },
+            toolbox : {
+                'show':true, 
+                orient : 'vertical',
+                x: 'right', 
+                y: 'center',
+                'feature':{
+                    'mark':{'show':true},
+                    'dataView':{'show':true,'readOnly':false},
+                    'magicType':{'show':true,'type':['line','bar','stack','tiled']},
+                    'restore':{'show':true},
+                    'saveAsImage':{'show':true}
+                }
+            },
+            calculable : true,
+            grid : {'y':80,'y2':100},
+            xAxis : [{
+                'type':'category',
+                'axisLabel':{'interval':0},
+                'data':[
+                    '北京','\n天津','河北','\n山西','内蒙古','\n辽宁','吉林','\n黑龙江',
+                    '上海','\n江苏','浙江','\n安徽','福建','\n江西','山东','\n河南',
+                    '湖北','\n湖南','广东','\n广西','海南','\n重庆','四川','\n贵州',
+                    '云南','\n西藏','陕西','\n甘肃','青海','\n宁夏','新疆'
+                ]
+            }],
+            yAxis : [
+                {
+                    'type':'value',
+                    'name':'GDP（亿元）',
+                    'max':53500,
+                    'splitArea':{'show':true}
+                },
+                {
+                    'type':'value',
+                    'name':'其他（亿元）',
+                    'splitArea':{'show':true}
+                }
+            ],
+            series : [
+                {
+                    'name':'GDP',
+                    'type':'bar',
+                    'markLine':{
+                        symbol : ['arrow','none'],
+                        symbolSize : [4, 2],
+                        itemStyle : {
+                            normal: {
+                                lineStyle: {color:'orange'},
+                                borderColor:'orange',
+                                label:{
+                                    position:'left',
+                                    formatter:function(a,b,c){return Math.round(c)},
+                                    textStyle:{color:'orange'}
+                                }
+                            }
+                        },
+                        'data':[{'type':'average','name':'平均值'}]
+                    },
+                    'data': dataMap.dataGDP['2002']
+                },
+                {
+                    'name':'金融','yAxisIndex':1,'type':'bar',
+                    'data': dataMap.dataFinancial['2002']
+                },
+                {
+                    'name':'房地产','yAxisIndex':1,'type':'bar',
+                    'data': dataMap.dataEstate['2002']
+                },
+                {
+                    'name':'第一产业','yAxisIndex':1,'type':'bar',
+                    'data': dataMap.dataPI['2002']
+                },
+                {
+                    'name':'第二产业','yAxisIndex':1,'type':'bar',
+                    'data': dataMap.dataSI['2002']
+                },
+                {
+                    'name':'第三产业','yAxisIndex':1,'type':'bar',
+                    'data': dataMap.dataTI['2002']
+                }
+            ]
+        },
+        {
+            title : {'text':'2003全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2003']},
+                {'data': dataMap.dataFinancial['2003']},
+                {'data': dataMap.dataEstate['2003']},
+                {'data': dataMap.dataPI['2003']},
+                {'data': dataMap.dataSI['2003']},
+                {'data': dataMap.dataTI['2003']}
+            ]
+        },
+        {
+            title : {'text':'2004全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2004']},
+                {'data': dataMap.dataFinancial['2004']},
+                {'data': dataMap.dataEstate['2004']},
+                {'data': dataMap.dataPI['2004']},
+                {'data': dataMap.dataSI['2004']},
+                {'data': dataMap.dataTI['2004']}
+            ]
+        },
+        {
+            title : {'text':'2005全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2005']},
+                {'data': dataMap.dataFinancial['2005']},
+                {'data': dataMap.dataEstate['2005']},
+                {'data': dataMap.dataPI['2005']},
+                {'data': dataMap.dataSI['2005']},
+                {'data': dataMap.dataTI['2005']}
+            ]
+        },
+        {
+            title : {'text':'2006全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2006']},
+                {'data': dataMap.dataFinancial['2006']},
+                {'data': dataMap.dataEstate['2006']},
+                {'data': dataMap.dataPI['2006']},
+                {'data': dataMap.dataSI['2006']},
+                {'data': dataMap.dataTI['2006']}
+            ]
+        },
+        {
+            title : {'text':'2007全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2007']},
+                {'data': dataMap.dataFinancial['2007']},
+                {'data': dataMap.dataEstate['2007']},
+                {'data': dataMap.dataPI['2007']},
+                {'data': dataMap.dataSI['2007']},
+                {'data': dataMap.dataTI['2007']}
+            ]
+        },
+        {
+            title : {'text':'2008全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2008']},
+                {'data': dataMap.dataFinancial['2008']},
+                {'data': dataMap.dataEstate['2008']},
+                {'data': dataMap.dataPI['2008']},
+                {'data': dataMap.dataSI['2008']},
+                {'data': dataMap.dataTI['2008']}
+            ]
+        },
+        {
+            title : {'text':'2009全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2009']},
+                {'data': dataMap.dataFinancial['2009']},
+                {'data': dataMap.dataEstate['2009']},
+                {'data': dataMap.dataPI['2009']},
+                {'data': dataMap.dataSI['2009']},
+                {'data': dataMap.dataTI['2009']}
+            ]
+        },
+        {
+            title : {'text':'2010全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2010']},
+                {'data': dataMap.dataFinancial['2010']},
+                {'data': dataMap.dataEstate['2010']},
+                {'data': dataMap.dataPI['2010']},
+                {'data': dataMap.dataSI['2010']},
+                {'data': dataMap.dataTI['2010']}
+            ]
+        },
+        {
+            title : {'text':'2011全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2011']},
+                {'data': dataMap.dataFinancial['2011']},
+                {'data': dataMap.dataEstate['2011']},
+                {'data': dataMap.dataPI['2011']},
+                {'data': dataMap.dataSI['2011']},
+                {'data': dataMap.dataTI['2011']}
+            ]
+        }
+    ]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="span8">
+                <div id="main" class="main"></div>
+                <div>
+                    <button onclick="refresh(true)">Refresh ~</button>
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        <hr>
+        <!-- FOOTER -->
+        <footer>
+          <p class="pull-right"><a href="#">Back to top</a></p>
+          <p>&copy; 2014 <a href="http://efe.baidu.com" target="_blank">EFE</a> &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">License</a> &middot; <a href="../changelog.html" target="_blank">Changelog</a></p>
+        </footer>
+    </div><!--/.fluid-container-->
+
+    <script src="../asset/js/jquery.js"></script>
+    <script src="../asset/js/bootstrap-transition.js"></script>
+    <script src="../asset/js/bootstrap-alert.js"></script>
+    <script src="../asset/js/bootstrap-modal.js"></script>
+    <script src="../asset/js/bootstrap-dropdown.js"></script>
+    <script src="../asset/js/bootstrap-scrollspy.js"></script>
+    <script src="../asset/js/bootstrap-tab.js"></script>
+    <script src="../asset/js/bootstrap-tooltip.js"></script>
+    <script src="../asset/js/bootstrap-popover.js"></script>
+    <script src="../asset/js/bootstrap-button.js"></script>
+    <script src="../asset/js/bootstrap-collapse.js"></script>
+    <script src="../asset/js/bootstrap-carousel.js"></script>
+    <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <script src="timelineOption.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>
