@@ -266,9 +266,7 @@ define(function (require) {
             }
         },
         
-        buildMark : function (
-            serie, seriesIndex, component, markCoordParams, attachStyle
-        ) {
+        buildMark : function (serie, seriesIndex, component, markCoordParams, attachStyle) {
             if (this.selectedMap[serie.name]) {
                 serie.markPoint && this._buildMarkPoint(
                     serie, seriesIndex, component, markCoordParams, attachStyle
@@ -279,9 +277,7 @@ define(function (require) {
             }
         },
         
-        _buildMarkPoint : function (
-            serie, seriesIndex, component, markCoordParams, attachStyle
-        ) {
+        _buildMarkPoint : function (serie, seriesIndex, component, markCoordParams, attachStyle) {
             var _zlevelBase = this.getZlevelBase();
             var mpData;
             var pos;
@@ -306,9 +302,7 @@ define(function (require) {
                 }
             }
             
-            var shapeList = this._markPoint(
-                serie, seriesIndex, markPoint, component
-            );
+            var shapeList = this._markPoint(serie, seriesIndex, markPoint, component);
             
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 shapeList[i].zlevel = _zlevelBase + 1;
@@ -334,9 +328,7 @@ define(function (require) {
             }
         },
         
-        _buildMarkLine : function (
-            serie, seriesIndex, component, markCoordParams, attachStyle
-        ) {
+        _buildMarkLine : function (serie, seriesIndex, component, markCoordParams, attachStyle) {
             var _zlevelBase = this.getZlevelBase();
             var mlData;
             var pos;

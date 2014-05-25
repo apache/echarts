@@ -51,6 +51,9 @@ define(function (require) {
         buildPath : function (ctx, style) {
             var pointList = style.pointList;
             var len = pointList.length;
+            if (len == 0) {
+                return;
+            }
             var subSize = 10000;
             var subSetLength = Math.ceil(len / subSize);
             var sub;
@@ -117,10 +120,24 @@ define(function (require) {
          * @param {Object} style
          */
         getRect : function (style) {
-            return polygonInstance.getRect(style);
+            return style.__rect || polygonInstance.getRect(style);
         },
         
-        isCover : function () {
+        isCover : function (x, y) {
+            // 快速预判并保留判断矩形
+            var rect = this.style.__rect;
+            if (!rect) {
+                rect = this.style.__rect = this.getRect(this.style);
+            }
+            if (x >= rect.x
+                && x <= (rect.x + rect.width)
+                && y >= rect.y
+                && y <= (rect.y + rect.height)
+            ) {
+                // 矩形内
+                return true;
+            }
+            
             return false;
         }
     };
