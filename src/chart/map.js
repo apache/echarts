@@ -872,9 +872,9 @@ define(function (require) {
         
         // 位置转换
         getMarkCoord : function (serie, seriesIndex, mpData, markCoordParams) {
-            return _geoCoord[mpData.name]
+            return (mpData.geoCoord || _geoCoord[mpData.name])
                    ? this.geo2pos(
-                         markCoordParams.mapType, _geoCoord[mpData.name]
+                         markCoordParams.mapType, mpData.geoCoord || _geoCoord[mpData.name]
                      )
                    : [0, 0];
         },
@@ -906,7 +906,6 @@ define(function (require) {
                                          .replace('{b}','{b0}');
                     formatter = formatter.replace('{a0}', name)
                                          .replace('{b0}', value);
-    
                     return formatter;
                 }
             }
