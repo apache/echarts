@@ -182,35 +182,6 @@ define(function (require) {
             this._buildPointList(pointList);
         },
         
-        /*
-        _needMarkMap : function (seriesIndex) {
-            var series = this.series;
-            var serie = series[seriesIndex];
-            var mark = [];
-            if (serie.markPoint && serie.markPoint.data) {
-                mark.push(serie.markPoint.data);
-            }
-            if (serie.markLine && serie.markLine.data) {
-                mark.push(serie.markLine.data);
-            }
-            
-            var data;
-            var len = mark.length;
-            while (len--) {
-                data = mark[len];
-                for (var i = 0, l = data.length; i < l; i++) {
-                    if (data[i].type == 'max' 
-                        || data[i].type == 'min' 
-                        || data[i].type == 'average'
-                    ) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        },
-        */
-       
         _markMap : function (xAxis, yAxis, data, pointList) {
             var xMarkMap = {
                 min0 : Number.POSITIVE_INFINITY,
@@ -396,6 +367,9 @@ define(function (require) {
                     pointList : pointList,
                     color : nColor,
                     strokeColor : nColor
+                },
+                highlightStyle : {
+                    pointList : []
                 }
             });
         },
