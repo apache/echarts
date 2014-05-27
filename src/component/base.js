@@ -1160,7 +1160,8 @@ define(function (require) {
             this.effectList.push(effectShape);
             this.zr.addShape(effectShape);
             
-            var offset = (effectShape.style.width - shape.style.width) / 2;
+            var devicePixelRatio = window.devicePixelRatio || 1;
+            var offset = (effectShape.style.width / devicePixelRatio - shape.style.width) / 2;
             effectShape.style.x = shape.style.x - offset;
             effectShape.style.y = shape.style.y - offset;
             var duration = (effect.period + Math.random() * 10) * 100;
@@ -1170,8 +1171,8 @@ define(function (require) {
                 { invisible : true}
             );
             
-            var centerX = effectShape.style.x + (effectShape.style.width) /2;
-            var centerY = effectShape.style.y + (effectShape.style.height) / 2;
+            var centerX = effectShape.style.x + (effectShape.style.width) / 2 / devicePixelRatio;
+            var centerY = effectShape.style.y + (effectShape.style.height) / 2 / devicePixelRatio;
             this.zr.modShape(
                 effectShape.id, 
                 {
