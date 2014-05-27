@@ -504,9 +504,7 @@ define(function (require) {
             var itemShape = {
                 zlevel : this._zlevelBase,
                 style : {
-                    iconType : 'legendicon' 
-                               + (itemType != ecConfig.CHART_TYPE_CHORD   // 和弦复用饼图
-                                  ? itemType : ecConfig.CHART_TYPE_PIE),
+                    iconType : 'legendicon' + itemType,
                     x : x,
                     y : y,
                     width : width,
@@ -861,6 +859,8 @@ define(function (require) {
             ctx.lineTo(xStart, yStart);
         }
     };
+    legendIcon.chord = legendIcon.pie;
+    legendIcon.map = legendIcon.bar;
     
     for (var k in legendIcon) {
         IconShape.prototype.iconLibrary['legendicon' + k] = legendIcon[k];

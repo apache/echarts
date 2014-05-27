@@ -39,14 +39,21 @@ define(function (require) {
             return self.__ondragend();
         };
         self._setCurrentOption = function() {
-            self.currentIndex %= self.timelineOption.data.length;
+            var timelineOption = self.timelineOption;
+            self.currentIndex %= timelineOption.data.length;
             // console.log(self.currentIndex);
             var curOption = self.options[self.currentIndex] || {};
-            self.myChart.setOption(curOption, self.timelineOption.notMerge);
+            self.myChart.setOption(curOption, timelineOption.notMerge);
+            
             self.messageCenter.dispatch(
                 ecConfig.EVENT.TIMELINE_CHANGED,
                 null,
-                {currentIndex: self.currentIndex}
+                {
+                    currentIndex: self.currentIndex,
+                    data : typeof timelineOption.data[self.currentIndex].name != 'undefined'
+                           ? timelineOption.data[self.currentIndex].name
+                           : timelineOption.data[self.currentIndex]
+                }
             );
         };
         self._onFrame = function() {
