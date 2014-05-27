@@ -11,6 +11,7 @@ define(function (require) {
     var ImageShape = require('zrender/shape/Image');
     var IconShape = require('../util/shape/Icon');
     var MarkLineShape = require('../util/shape/MarkLine');
+    var SymbolShape = require('../util/shape/Symbol');
     
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
@@ -409,73 +410,82 @@ define(function (require) {
             var effect;
             var zrWidth = this.zr.getWidth();
             var zrHeight = this.zr.getHeight();
-            for (var i = 0, l = data.length; i < l; i++) {
-                // 图例
-                if (legend) {
-                    color = legend.getColor(serie.name);
-                }
-                // 值域
-                if (dataRange) {
-                    value = typeof data[i] != 'undefined'
-                            ? (typeof data[i].value != 'undefined'
-                              ? data[i].value
-                              : data[i])
-                            : '-';
-                    color = isNaN(value) ? color : dataRange.getColor(value);
-                    
-                    queryTarget = [data[i], mpOption];
-                    nColor = this.deepQuery(
-                        queryTarget, 'itemStyle.normal.color'
-                    ) || color;
-                    eColor = this.deepQuery(
-                        queryTarget, 'itemStyle.emphasis.color'
-                    ) || nColor;
-                    // 有值域，并且值域返回null且用户没有自己定义颜色，则隐藏这个mark
-                    if (nColor == null && eColor == null) {
-                        continue;
+            
+            if (!mpOption.large) {
+                for (var i = 0, l = data.length; i < l; i++) {
+                    // 图例
+                    if (legend) {
+                        color = legend.getColor(serie.name);
                     }
+                    // 值域
+                    if (dataRange) {
+                        value = typeof data[i] != 'undefined'
+                                ? (typeof data[i].value != 'undefined'
+                                  ? data[i].value
+                                  : data[i])
+                                : '-';
+                        color = isNaN(value) ? color : dataRange.getColor(value);
+                        
+                        queryTarget = [data[i], mpOption];
+                        nColor = this.deepQuery(
+                            queryTarget, 'itemStyle.normal.color'
+                        ) || color;
+                        eColor = this.deepQuery(
+                            queryTarget, 'itemStyle.emphasis.color'
+                        ) || nColor;
+                        // 有值域，并且值域返回null且用户没有自己定义颜色，则隐藏这个mark
+                        if (nColor == null && eColor == null) {
+                            continue;
+                        }
+                    }
+                    
+                    // 标准化一些参数
+                    data[i].tooltip = data[i].tooltip 
+                                      || {trigger:'item'}; // tooltip.trigger指定为item
+                    data[i].name = typeof data[i].name != 'undefined'
+                                   ? data[i].name : '';
+                    data[i].value = typeof data[i].value != 'undefined'
+                                    ? data[i].value : '';
+                    
+                    // 复用getSymbolShape
+                    itemShape = this.getSymbolShape(
+                        mpOption, seriesIndex,      // 系列 
+                        data[i], i, data[i].name,   // 数据
+                        this.parsePercent(data[i].x, zrWidth),   // 坐标
+                        this.parsePercent(data[i].y, zrHeight),  // 坐标
+                        'pin', color,               // 默认symbol和color
+                        'rgba(0,0,0,0)',
+                        'horizontal'                // 走向，用于默认文字定位
+                    );
+                    itemShape._mark = 'point';
+                    
+                    effect = this.deepMerge(
+                        [data[i], mpOption],
+                        'effect'
+                    );
+                    if (effect.show) {
+                        itemShape.effect = effect;
+                    }
+                    
+                    if (serie.type == ecConfig.CHART_TYPE_MAP) {
+                        itemShape._geo = this.getMarkGeo(data[i].name);
+                    }
+                    
+                    // 重新pack一下数据
+                    ecData.pack(
+                        itemShape,
+                        serie, seriesIndex,
+                        data[i], 0,
+                        data[i].name
+                    );
+                    pList.push(itemShape);
                 }
-                
-                // 标准化一些参数
-                data[i].tooltip = data[i].tooltip 
-                                  || {trigger:'item'}; // tooltip.trigger指定为item
-                data[i].name = typeof data[i].name != 'undefined'
-                               ? data[i].name : '';
-                data[i].value = typeof data[i].value != 'undefined'
-                                ? data[i].value : '';
-                
-                // 复用getSymbolShape
-                itemShape = this.getSymbolShape(
-                    mpOption, seriesIndex,      // 系列 
-                    data[i], i, data[i].name,   // 数据
-                    this.parsePercent(data[i].x, zrWidth),   // 坐标
-                    this.parsePercent(data[i].y, zrHeight),  // 坐标
-                    'pin', color,               // 默认symbol和color
-                    'rgba(0,0,0,0)',
-                    'horizontal'                // 走向，用于默认文字定位
+            }
+            else {
+                // 大规模MarkPoint
+                pList.push(
+                    this.getLargeMarkPoingShape(serie, seriesIndex, mpOption, component)
                 );
-                itemShape._mark = 'point';
-                
-                effect = this.deepMerge(
-                    [data[i], mpOption],
-                    'effect'
-                );
-                if (effect.show) {
-                    itemShape.effect = effect;
-                }
-                
-                if (serie.type == ecConfig.CHART_TYPE_MAP) {
-                    itemShape._geo = this.getMarkGeo(data[i].name);
-                }
-                
-                // 重新pack一下数据
-                ecData.pack(
-                    itemShape,
-                    serie, seriesIndex,
-                    data[i], 0,
-                    data[i].name
-                );
-                pList.push(itemShape);
             }
             //console.log(pList);
             return pList;
@@ -881,6 +891,71 @@ define(function (require) {
             return itemShape;
         },
         
+        getLargeMarkPoingShape : function(serie, seriesIndex, mpOption, component) {
+            var data = mpOption.data;
+            var itemShape;
+            
+            var dataRange = component.dataRange;
+            var legend = component.legend;
+            var color;
+            var value;
+            var queryTarget = [data[0], mpOption];
+            var nColor;
+            var eColor;
+            var effect;
+            
+            // 图例
+            if (legend) {
+                color = legend.getColor(serie.name);
+            }
+            // 值域
+            if (dataRange) {
+                value = typeof data[0] != 'undefined'
+                        ? (typeof data[0].value != 'undefined'
+                          ? data[0].value
+                          : data[0])
+                        : '-';
+                color = isNaN(value) ? color : dataRange.getColor(value);
+                
+                nColor = this.deepQuery(
+                    queryTarget, 'itemStyle.normal.color'
+                ) || color;
+                eColor = this.deepQuery(
+                    queryTarget, 'itemStyle.emphasis.color'
+                ) || nColor;
+                // 有值域，并且值域返回null且用户没有自己定义颜色，则隐藏这个mark
+                if (nColor == null && eColor == null) {
+                    return;
+                }
+            }
+            
+            symbol = this.deepQuery(queryTarget, 'symbol') || 'circle';
+            symbol = symbol.replace('empty', '').replace(/\d/g, '');
+            
+            //console.log(data)
+            itemShape = new SymbolShape({
+                style : {
+                    pointList : data,
+                    color : color,
+                    size : this.deepQuery(queryTarget, 'symbolSize'),
+                    symbol : symbol
+                },
+                draggable : false,
+                hoverable : false
+            });
+            itemShape._mark = 'largePoint';
+            
+            effect = this.deepMerge(
+                [data[0], mpOption],
+                'effect'
+            );
+            if (effect.show) {
+                itemShape.effect = effect;
+            }
+            
+            return itemShape;
+        },
+        
         getItemStyleColor : function (itemColor, seriesIndex, dataIndex, data) {
             return typeof itemColor == 'function'
                    ? itemColor(seriesIndex, dataIndex, data) : itemColor;
@@ -1007,186 +1082,250 @@ define(function (require) {
                 );
             }
             
-            var color;
-            var shadowColor;
-            var size;
-            var effect;
+            var shape;
             for (var i = 0, l = this.shapeList.length; i < l; i++) {
                 shape = this.shapeList[i];
                 if (!shape._mark || !shape.effect || !shape.effect.show) {
                     continue;
                 }
                 //console.log(shape)
-                effect = shape.effect;
-                color = effect.color || shape.style.strokeColor || shape.style.color;
-                shadowColor = effect.shadowColor || color;
-                var effectShape;
-                var Offset;
                 switch (shape._mark) {
                     case 'point':
-                        size = effect.scaleSize;
-                        shadowBlur = typeof effect.shadowBlur != 'undefined'
-                                     ? effect.shadowBlur : size;
-                        effectShape = new IconShape({
-                            zlevel : zlevel,
-                            style : {
-                                brushType : 'stroke',
-                                iconType : (shape.style.iconType != 'pin' 
-                                            && shape.style.iconType != 'droplet')
-                                           ? shape.style.iconType
-                                           : 'circle',
-                                x : shadowBlur + 1, // 线宽
-                                y : shadowBlur + 1,
-                                n : shape.style.n,
-                                width : shape.style.width * size,
-                                height : shape.style.height * size,
-                                lineWidth : 1,
-                                strokeColor : color,
-                                shadowColor : shadowColor,
-                                shadowBlur : shadowBlur
-                            },
-                            draggable : false,
-                            hoverable : false
-                        });
-                        if (this.canvasSupported) {  // 提高性能，换成image
-                            effectShape.style.image = this.zr.shapeToImage(
-                                effectShape, 
-                                effectShape.style.width + shadowBlur * 2 + 2, 
-                                effectShape.style.height + shadowBlur * 2 + 2
-                            ).style.image;
-                            
-                            effectShape = new ImageShape({
-                                zlevel : effectShape.zlevel,
-                                style : effectShape.style,
-                                draggable : false,
-                                hoverable : false
-                            });
-                        }
-                        Offset = (effectShape.style.width - shape.style.width) / 2;
-                        break; 
+                        this._pointEffect(shape, zlevel);
+                        break;
+                    case 'largePoint' :
+                        this._largePointEffect(shape, zlevel);
+                        break;
                     case 'line':
-                        size = shape.style.lineWidth * effect.scaleSize;
-                        shadowBlur = typeof effect.shadowBlur != 'undefined'
-                                     ? effect.shadowBlur : size;
-                        effectShape = new CircleShape({
-                            zlevel : zlevel,
-                            style : {
-                                x : shadowBlur,
-                                y : shadowBlur,
-                                r : size,
-                                color : color,
-                                shadowColor : shadowColor,
-                                shadowBlur : shadowBlur
-                            },
-                            draggable : false,
-                            hoverable : false
-                        });
-                        if (this.canvasSupported) {  // 提高性能，换成image
-                            effectShape.style.image = this.zr.shapeToImage(
-                                effectShape, 
-                                (size + shadowBlur) * 2,
-                                (size + shadowBlur) * 2
-                            ).style.image;
-                            effectShape = new ImageShape({
-                                zlevel : effectShape.zlevel,
-                                style : effectShape.style,
-                                draggable : false,
-                                hoverable : false
-                            });
-                            Offset = shadowBlur;
-                        }
-                        else {
-                            Offset = 0;
-                        }
+                        this._lineEffect(shape, zlevel);
                         break;
                 }
+            }
+        },
+        
+        _pointEffect : function(shape, zlevel) {
+            var effect = shape.effect;
+            var color = effect.color || shape.style.strokeColor || shape.style.color;
+            var shadowColor = effect.shadowColor || color;
+            var size = effect.scaleSize;
+            var shadowBlur = typeof effect.shadowBlur != 'undefined'
+                             ? effect.shadowBlur : size;
+
+            var effectShape = new IconShape({
+                zlevel : zlevel,
+                style : {
+                    brushType : 'stroke',
+                    iconType : (shape.style.iconType != 'pin' 
+                                && shape.style.iconType != 'droplet')
+                               ? shape.style.iconType
+                               : 'circle',
+                    x : shadowBlur + 1, // 线宽
+                    y : shadowBlur + 1,
+                    n : shape.style.n,
+                    width : shape.style.width * size,
+                    height : shape.style.height * size,
+                    lineWidth : 1,
+                    strokeColor : color,
+                    shadowColor : shadowColor,
+                    shadowBlur : shadowBlur
+                },
+                draggable : false,
+                hoverable : false
+            });
+            
+            if (this.canvasSupported) {  // 提高性能，换成image
+                effectShape.style.image = this.zr.shapeToImage(
+                    effectShape, 
+                    effectShape.style.width + shadowBlur * 2 + 2, 
+                    effectShape.style.height + shadowBlur * 2 + 2
+                ).style.image;
                 
-                var duration;
-                // 改变坐标
-                effectShape.position = shape.position;
-                if (shape._mark === 'point') {
-                    effectShape.style.x = shape.style.x - Offset;
-                    effectShape.style.y = shape.style.y - Offset;
-                    duration = (effect.period + Math.random() * 10) * 100;
+                effectShape = new ImageShape({
+                    zlevel : effectShape.zlevel,
+                    style : effectShape.style,
+                    draggable : false,
+                    hoverable : false
+                });
+            }
+            
+            // 改变坐标，不能移到前面
+            effectShape.position = shape.position;
+            this.effectList.push(effectShape);
+            this.zr.addShape(effectShape);
+            
+            var offset = (effectShape.style.width - shape.style.width) / 2;
+            effectShape.style.x = shape.style.x - offset;
+            effectShape.style.y = shape.style.y - offset;
+            var duration = (effect.period + Math.random() * 10) * 100;
+            
+            this.zr.modShape(
+                shape.id, 
+                { invisible : true}
+            );
+            
+            var centerX = effectShape.style.x + (effectShape.style.width) /2;
+            var centerY = effectShape.style.y + (effectShape.style.height) / 2;
+            this.zr.modShape(
+                effectShape.id, 
+                {
+                    scale : [0.1, 0.1, centerX, centerY]
                 }
-                else if (shape._mark === 'line') {
-                    effectShape.style.x = shape.style.xStart - Offset;
-                    effectShape.style.y = shape.style.yStart - Offset;
-                    var distance = (shape.style.xStart - shape.style.xEnd) 
-                                        * (shape.style.xStart - shape.style.xEnd)
-                                    +
-                                   (shape.style.yStart - shape.style.yEnd) 
-                                        * (shape.style.yStart - shape.style.yEnd);
-                    duration = Math.round(Math.sqrt(Math.round(
-                                   distance * effect.period * effect.period
-                               )));
-                }
-                
-                this.effectList.push(effectShape);
-                this.zr.addShape(effectShape);
-                
-                if (shape._mark === 'point') {
-                    this.zr.modShape(
-                        shape.id, 
-                        { invisible : true}
-                    );
-                    var centerX = effectShape.style.x + (effectShape.style.width) /2;
-                    var centerY = effectShape.style.y + (effectShape.style.height) / 2;
-                    this.zr.modShape(
-                        effectShape.id, 
+            );
+            
+            this.zr.animate(effectShape.id, '', true)
+                .when(
+                    duration,
+                    {
+                        scale : [1, 1, centerX, centerY]
+                    }
+                )
+                .start();
+        },
+        
+        _largePointEffect : function(shape, zlevel) {
+            var effect = shape.effect;
+            var color = effect.color || shape.style.strokeColor || shape.style.color;
+            var size = effect.scaleSize;
+            var shadowColor = effect.shadowColor || color;
+            var shadowBlur = typeof effect.shadowBlur != 'undefined'
+                             ? effect.shadowBlur : size;
+
+            var effectShape = new SymbolShape({
+                zlevel : zlevel,
+                position : shape.position,
+                scale : shape.scale,
+                style : {
+                    pointList : shape.style.pointList,
+                    iconType : shape.style.symbol,
+                    color : color,
+                    strokeColor : color,
+                    shadowColor : shadowColor,
+                    shadowBlur : shadowBlur,
+                    random : true,
+                    brushType: 'fill',
+                    lineWidth:1,
+                    size : shape.style.size
+                },
+                draggable : false,
+                hoverable : false
+            });
+            
+            this.effectList.push(effectShape);
+            this.zr.addShape(effectShape);
+            this.zr.modShape(
+                shape.id, 
+                { invisible : true}
+            );
+            
+            var duration = Math.round(effect.period * 100);
+            var clip1 = {};
+            var clip2 = {};
+            for (var i = 0; i < 15; i++) {
+                effectShape.style['randomMap' + i] = 0;
+                clip1 = {};
+                clip1['randomMap' + i] = 100;
+                clip2 = {};
+                clip2['randomMap' + i] = 0;
+                this.zr.animate(effectShape.id, 'style', true)
+                    .when(duration, clip1)
+                    .when(duration * 2, clip2)
+                    .delay(Math.random() * duration * 2)
+                    .start();
+            }
+        },
+        
+        _lineEffect : function(shape, zlevel) {
+            var effect = shape.effect;
+            var color = effect.color || shape.style.strokeColor || shape.style.color;
+            var shadowColor = effect.shadowColor || color;
+            var size = shape.style.lineWidth * effect.scaleSize;
+            var shadowBlur = typeof effect.shadowBlur != 'undefined'
+                             ? effect.shadowBlur : size;
+                         
+            var effectShape = new CircleShape({
+                zlevel : zlevel,
+                style : {
+                    x : shadowBlur,
+                    y : shadowBlur,
+                    r : size,
+                    color : color,
+                    shadowColor : shadowColor,
+                    shadowBlur : shadowBlur
+                },
+                draggable : false,
+                hoverable : false
+            });
+            
+            var offset;
+            if (this.canvasSupported) {  // 提高性能，换成image
+                effectShape.style.image = this.zr.shapeToImage(
+                    effectShape, 
+                    (size + shadowBlur) * 2,
+                    (size + shadowBlur) * 2
+                ).style.image;
+                effectShape = new ImageShape({
+                    zlevel : effectShape.zlevel,
+                    style : effectShape.style,
+                    draggable : false,
+                    hoverable : false
+                });
+                offset = shadowBlur;
+            }
+            else {
+                offset = 0;
+            }
+            
+            // 改变坐标， 不能移到前面
+            effectShape.position = shape.position;
+            this.effectList.push(effectShape);
+            this.zr.addShape(effectShape);
+            
+            effectShape.style.x = shape.style.xStart - offset;
+            effectShape.style.y = shape.style.yStart - offset;
+            var distance = (shape.style.xStart - shape.style.xEnd) 
+                                * (shape.style.xStart - shape.style.xEnd)
+                            +
+                           (shape.style.yStart - shape.style.yEnd) 
+                                * (shape.style.yStart - shape.style.yEnd);
+            var duration = Math.round(Math.sqrt(Math.round(
+                               distance * effect.period * effect.period
+                           )));
+            if (!shape.style.smooth) {
+                // 直线
+                this.zr.animate(effectShape.id, 'style', true)
+                    .when(
+                        duration,
                         {
-                            scale : [0.1, 0.1, centerX, centerY]
+                            x : shape._x - offset,
+                            y : shape._y - offset
+                        }
+                    )
+                    .start();
+            }
+            else {
+                // 曲线
+                var pointList = shape.style.pointList;
+                var len = pointList.length;
+                duration = Math.round(duration / len);
+                var deferred = this.zr.animate(effectShape.id, 'style', true);
+                var step = Math.ceil(len / 8);
+                for (var j = 0; j < len - step; j+= step) {
+                    deferred.when(
+                        duration * (j + 1),
+                        {
+                            x : pointList[j][0] - offset,
+                            y : pointList[j][1] - offset
                         }
                     );
-                    
-                    this.zr.animate(effectShape.id, '', true)
-                        .when(
-                            duration,
-                            {
-                                scale : [1, 1, centerX, centerY]
-                            }
-                        )
-                        .start();
                 }
-                else if (shape._mark === 'line') {
-                    if (!shape.style.smooth) {
-                        // 直线
-                        this.zr.animate(effectShape.id, 'style', true)
-                            .when(
-                                duration,
-                                {
-                                    x : shape._x - Offset,
-                                    y : shape._y - Offset
-                                }
-                            )
-                            .start();
+                deferred.when(
+                    duration * len,
+                    {
+                        x : pointList[len - 1][0] - offset,
+                        y : pointList[len - 1][1] - offset
                     }
-                    else {
-                        // 曲线
-                        var pointList = shape.style.pointList;
-                        var len = pointList.length;
-                        duration = Math.round(duration / len);
-                        var deferred = this.zr.animate(effectShape.id, 'style', true);
-                        var step = Math.ceil(len / 8);
-                        for (var j = 0; j < len - step; j+= step) {
-                            deferred.when(
-                                duration * (j + 1),
-                                {
-                                    x : pointList[j][0] - Offset,
-                                    y : pointList[j][1] - Offset
-                                }
-                            );
-                        }
-                        deferred.when(
-                            duration * len,
-                            {
-                                x : pointList[len - 1][0] - Offset,
-                                y : pointList[len - 1][1] - Offset
-                            }
-                        );
-                        deferred.start('spline');
-                    }
-                }
+                );
+                deferred.start('spline');
             }
         },
         

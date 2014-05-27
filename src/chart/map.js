@@ -983,7 +983,9 @@ define(function (require) {
                     if(this.shapeList[i]._mapType == mapType) {
                         this.shapeList[i].position[0] = transform.left;
                         this.shapeList[i].position[1] = transform.top;
-                        if (this.shapeList[i].type == 'path') {
+                        if (this.shapeList[i].type == 'path' 
+                            || this.shapeList[i].type == 'symbol'
+                        ) {
                             this.shapeList[i].scale[0] *= delta;
                             this.shapeList[i].scale[1] *= delta;
                         }

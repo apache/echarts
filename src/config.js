@@ -222,7 +222,7 @@ define(function() {
             padding: 5,                // 提示内边距，单位px，默认各方向内边距为5，
                                        // 接受数组分别设定上右下左边距，同css
             axisPointer : {            // 坐标轴指示器，坐标轴触发有效
-                type : 'line',         // 默认为直线，可选为：'line' | 'shadow'
+                type : 'line',         // 默认为直线，可选为：'line' | 'shadow' | 'cross'
                 lineStyle : {          // 直线指示器样式设置
                     color: '#48b',
                     width: 2,
@@ -873,6 +873,7 @@ define(function() {
         markPoint : {
             symbol: 'pin',         // 标注类型
             symbolSize: 10,        // 标注大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            large : false,
             //symbolRotate : null, // 标注旋转控制
             effect : {
                 show: false,
@@ -916,6 +917,7 @@ define(function() {
             // 标线起始和结束的symbol旋转控制
             //symbolRotate : null,
             //smooth : false,
+            large : false,
             effect : {
                 show: false,
                 period: 15,             // 运动周期，无单位，值越大越慢

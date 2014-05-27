@@ -54,20 +54,78 @@ define(function (require) {
             if (len == 0) {
                 return;
             }
+            
             var subSize = 10000;
             var subSetLength = Math.ceil(len / subSize);
             var sub;
             var subLen;
+            var isArray = pointList[0] instanceof Array;
+            var persent;
+            var size = style.size ? style.size : 2;
+            var curSize = size;
+            var halfSize = size / 2;
+            var PI2 = Math.PI * 2;
+            var percent;
+            var x;
+            var y;
             for (var j = 0; j < subSetLength; j++) {
                 ctx.beginPath();
                 sub = j * subSize;
                 subLen = sub + subSize;
                 subLen = subLen > len ? len : subLen;
                 for (var i = sub; i < subLen; i++) {
-                    ctx.rect(pointList[i][0] - 1, pointList[i][1] - 1, 2, 2);
+                    if (style.random) {
+                        percent = style['randomMap' + (i % 15)] / 100;
+                        curSize = size * percent;
+                        halfSize = curSize / 2;
+                    }
+                    if (isArray) {
+                        x = pointList[i][0];
+                        y = pointList[i][1];
+                    }
+                    else {
+                        x = pointList[i].x;
+                        y = pointList[i].y;
+                    }
+                    if (curSize < 3) {
+                        // 小于3像素视觉误差
+                        ctx.rect(x - halfSize, y - halfSize, curSize, curSize);
+                    }
+                    else {
+                        // 大于3像素才考虑图形
+                        switch (style.iconType) {
+                            case 'circle' :
+                                ctx.moveTo(x, y);
+                                ctx.arc(x, y, halfSize, 0, PI2, true);
+                                break;
+                            case 'diamond' :
+                                ctx.moveTo(x, y - halfSize);
+                                ctx.lineTo(x + halfSize / 3, y - halfSize / 3);
+                                ctx.lineTo(x + halfSize, y);
+                                ctx.lineTo(x + halfSize / 3, y + halfSize / 3);
+                                ctx.lineTo(x, y + halfSize);
+                                ctx.lineTo(x - halfSize / 3, y + halfSize / 3);
+                                ctx.lineTo(x - halfSize, y);
+                                ctx.lineTo(x - halfSize / 3, y - halfSize / 3);
+                                ctx.lineTo(x, y - halfSize);
+                                break;
+                            default :
+                                ctx.rect(x - halfSize, y - halfSize, curSize, curSize);
+                        }
+                    }
                 }
                 ctx.closePath();
-                j < (subSetLength - 1) && ctx.fill();
+                if (j < (subSetLength - 1)) {
+                    switch (style.brushType) {
+                        case 'both':
+                            ctx.fill();
+                        case 'stroke':
+                            style.lineWidth > 0 && ctx.stroke();
+                            break;
+                        default:
+                            ctx.fill();
+                    }
+                }
             }
             
             return;
