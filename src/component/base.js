@@ -932,13 +932,20 @@ define(function (require) {
             symbol = this.deepQuery(queryTarget, 'symbol') || 'circle';
             symbol = symbol.replace('empty', '').replace(/\d/g, '');
             
+            var devicePixelRatio = window.devicePixelRatio || 1;
+            
             //console.log(data)
             itemShape = new SymbolShape({
                 style : {
                     pointList : data,
                     color : color,
+                    strokeColor: color,
+                    shadowColor : color,
+                    shadowBlur : 8 * devicePixelRatio,
                     size : this.deepQuery(queryTarget, 'symbolSize'),
-                    symbol : symbol
+                    iconType : symbol,
+                    brushType: 'fill',
+                    lineWidth:1
                 },
                 draggable : false,
                 hoverable : false
@@ -1188,19 +1195,19 @@ define(function (require) {
             var size = effect.scaleSize;
             var shadowColor = effect.shadowColor || color;
             var shadowBlur = typeof effect.shadowBlur != 'undefined'
-                             ? effect.shadowBlur : size;
-
+                             ? effect.shadowBlur : size * 2;
+            var devicePixelRatio = window.devicePixelRatio || 1;
             var effectShape = new SymbolShape({
                 zlevel : zlevel,
                 position : shape.position,
                 scale : shape.scale,
                 style : {
                     pointList : shape.style.pointList,
-                    iconType : shape.style.symbol,
+                    iconType : shape.style.iconType,
                     color : color,
                     strokeColor : color,
                     shadowColor : shadowColor,
-                    shadowBlur : shadowBlur,
+                    shadowBlur : shadowBlur * devicePixelRatio,
                     random : true,
                     brushType: 'fill',
                     lineWidth:1,

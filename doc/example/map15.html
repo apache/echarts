@@ -329,22 +329,6 @@ option = {
                 },
                 data : (function(){
                     var data = [];
-                    var len = 2000;
-                    var geoCoord
-                    while(len--) {
-                        data.push({
-                            name : len,
-                            value : 10,
-                            geoCoord : [
-                                80 + Math.random() * (130 - 80), //经度范围：73°33′E至135°05′E
-                                5 + Math.random() * (50 - 6),    //纬度范围：3°51′N至53°33′N
-                            ]
-                        })
-                    }
-                    return data;
-                })(),
-                data : (function(){
-                    var data = [];
                     var len = 3000;
                     var geoCoord
                     while(len--) {
