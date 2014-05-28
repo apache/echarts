@@ -413,17 +413,17 @@ define(function (require) {
             
             if (!mpOption.large) {
                 for (var i = 0, l = data.length; i < l; i++) {
+                    value = typeof data[i] != 'undefined'
+                            ? (typeof data[i].value != 'undefined'
+                              ? data[i].value
+                              : data[i])
+                            : '-';
                     // 图例
                     if (legend) {
                         color = legend.getColor(serie.name);
                     }
                     // 值域
                     if (dataRange) {
-                        value = typeof data[i] != 'undefined'
-                                ? (typeof data[i].value != 'undefined'
-                                  ? data[i].value
-                                  : data[i])
-                                : '-';
                         color = isNaN(value) ? color : dataRange.getColor(value);
                         
                         queryTarget = [data[i], mpOption];
@@ -444,8 +444,7 @@ define(function (require) {
                                       || {trigger:'item'}; // tooltip.trigger指定为item
                     data[i].name = typeof data[i].name != 'undefined'
                                    ? data[i].name : '';
-                    data[i].value = typeof data[i].value != 'undefined'
-                                    ? data[i].value : '';
+                    data[i].value = value;
                     
                     // 复用getSymbolShape
                     itemShape = this.getSymbolShape(
@@ -476,7 +475,8 @@ define(function (require) {
                         itemShape,
                         serie, seriesIndex,
                         data[i], 0,
-                        data[i].name
+                        data[i].name,
+                        value
                     );
                     pList.push(itemShape);
                 }
@@ -537,13 +537,13 @@ define(function (require) {
                 }
                 // 组装一个mergeData
                 mergeData = this.deepMerge(data[i]);
+                value = typeof mergeData != 'undefined'
+                        ? (typeof mergeData.value != 'undefined'
+                          ? mergeData.value
+                          : mergeData)
+                        : '-';
                 // 值域
                 if (dataRange) {
-                    value = typeof mergeData != 'undefined'
-                            ? (typeof mergeData.value != 'undefined'
-                              ? mergeData.value
-                              : mergeData)
-                            : '-';
                     color = isNaN(value) ? color : dataRange.getColor(value);
                     
                     queryTarget = [mergeData, mlOption];
@@ -602,7 +602,8 @@ define(function (require) {
                     serie, seriesIndex,
                     data[i][0], 0,
                     data[i][0].name + (data[i][1].name !== '' 
-                                      ? (' > ' + data[i][1].name) : '')
+                                      ? (' > ' + data[i][1].name) : ''),
+                    value
                 );
                 pList.push(itemShape);
             }
