@@ -79,9 +79,11 @@ define(function (require) {
                            + 'background-color:#f0ffff;';
             this._tDom.style.cssText = this._gCssText + this._sizeCssText;
             // 这是个很恶心的事情
+            /*
             this.dom.onselectstart = function () {
                 return false;
             };
+            */
         },
 
         show : function (newOption) {
@@ -141,11 +143,12 @@ define(function (require) {
                            + 'height:' + this._zrHeight + 'px;'
                            + 'background-color:#fff;';
             this._tDom.style.cssText = this._gCssText + this._sizeCssText;
-
             // 这是个很恶心的事情
+            /*
             this.dom.onselectstart = function () {
                 return true;
             };
+            */
         },
 
         _optionToContent : function () {
