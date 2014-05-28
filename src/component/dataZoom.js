@@ -732,21 +732,19 @@ define(function (require) {
             var length;
             var data;
             
-            if (this._zoom.start > 0 || this._zoom.end < 100) {
-                for (var key in this._originalData) {
-                    target = this._originalData[key];
-                    for (var idx in target) {
-                        data = target[idx];
-                        length = data.length;
-                        start = Math.floor(this._zoom.start / 100 * length);
-                        end = Math.ceil(this._zoom.end / 100 * length);
-                        if (this.option[key][idx].type != ecConfig.CHART_TYPE_SCATTER) {
-                            this.option[key][idx].data = data.slice(start, end);
-                        }
-                        else {
-                            // 散点图特殊处理
-                            this.option[key][idx].data = this._synScatterData(idx, data);
-                        }
+            for (var key in this._originalData) {
+                target = this._originalData[key];
+                for (var idx in target) {
+                    data = target[idx];
+                    length = data.length;
+                    start = Math.floor(this._zoom.start / 100 * length);
+                    end = Math.ceil(this._zoom.end / 100 * length);
+                    if (this.option[key][idx].type != ecConfig.CHART_TYPE_SCATTER) {
+                        this.option[key][idx].data = data.slice(start, end);
+                    }
+                    else {
+                        // 散点图特殊处理
+                        this.option[key][idx].data = this._synScatterData(idx, data);
                     }
                 }
             }
@@ -764,6 +762,13 @@ define(function (require) {
         },
         
         _synScatterData : function (seriesIndex, data) {
+            if (this._zoom.start == 0 
+                && this._zoom.end == 100
+                && this._zoom.start2 == 0 
+                && this._zoom.end2 == 100
+            ) {
+                return data;
+            }
             var newData = [];
             var scale = this._zoom.scatterMap[seriesIndex];
             var total;
@@ -1033,7 +1038,7 @@ define(function (require) {
             this._location = this._getLocation();
             // 缩放参数
             this._zoom =  this._getZoom();
-            if (this.option.dataZoom.show) {
+            if (this.option.dataZoom && this.option.dataZoom.show) {
                 this._buildShape();
             }
             this._syncData();

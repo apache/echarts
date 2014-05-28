@@ -549,34 +549,6 @@ define(function (require) {
             return true; // 阻塞全局事件
         },
         
-        _onDataZoom : function (param) {
-            var target = param.target;
-            if (this._zooming || this._zoomStart) {
-                // 取消
-                this._resetZoom();
-                this.zr.refresh();
-                this.dom.style.cursor = 'default';
-            }
-            else {
-                // 启用Zoom
-                this._resetMark();   // mark与dataZoom互斥
-                
-                this.zr.modShape(target.id, {style: {strokeColor: this._enableColor}});
-                this.zr.refresh();
-                this._zoomStart = true;
-                var self = this;
-                setTimeout(function (){
-                    self.zr
-                    && self.zr.on(zrConfig.EVENT.MOUSEDOWN, self._onmousedown)
-                    && self.zr.on(zrConfig.EVENT.MOUSEUP, self._onmouseup)
-                    && self.zr.on(zrConfig.EVENT.MOUSEMOVE, self._onmousemove);
-                }, 10);
-                
-                this.dom.style.cursor = 'crosshair';
-            }
-            return true; // 阻塞全局事件
-        },
-
         _onMarkUndo : function () {
             if (this._marking) {
                 this._marking = false;
@@ -610,6 +582,34 @@ define(function (require) {
                 this.zr.refresh();
             }
             return true;
+        },
+        
+        _onDataZoom : function (param) {
+            var target = param.target;
+            if (this._zooming || this._zoomStart) {
+                // 取消
+                this._resetZoom();
+                this.zr.refresh();
+                this.dom.style.cursor = 'default';
+            }
+            else {
+                // 启用Zoom
+                this._resetMark();   // mark与dataZoom互斥
+                
+                this.zr.modShape(target.id, {style: {strokeColor: this._enableColor}});
+                this.zr.refresh();
+                this._zoomStart = true;
+                var self = this;
+                setTimeout(function (){
+                    self.zr
+                    && self.zr.on(zrConfig.EVENT.MOUSEDOWN, self._onmousedown)
+                    && self.zr.on(zrConfig.EVENT.MOUSEUP, self._onmouseup)
+                    && self.zr.on(zrConfig.EVENT.MOUSEMOVE, self._onmousemove);
+                }, 10);
+                
+                this.dom.style.cursor = 'crosshair';
+            }
+            return true; // 阻塞全局事件
         },
         
         _onDataZoomReset : function () {

@@ -858,8 +858,15 @@ define(function (require) {
             }
 
             this._optionRestore = zrUtil.clone(this._option);
-            
-            if (this.component.dataZoom && this._option.dataZoom) {
+            if (this.component.dataZoom                         // 存在dataZoom控件
+                && (this._option.dataZoom                       // 并且新option也存在
+                    || (this._option.toolbox
+                        && this._option.toolbox.feature
+                        && this._option.toolbox.feature.dataZoom
+                        && this._option.toolbox.feature.dataZoom.show
+                    )
+                )
+            ) {
                 // dataZoom同步数据
                 this.component.dataZoom.syncOption(this._option);
             }
