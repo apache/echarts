@@ -1240,6 +1240,7 @@ define(function (require) {
                     .when(duration * 2, clip2)
                     .delay(Math.random() * duration * 2)
                     .start();
+                effectShape.style['randomMap' + i] = Math.random() * 100;
             }
         },
         
@@ -1344,10 +1345,12 @@ define(function (require) {
 
         clearAnimationShape : function () {
             if (this.zr && this.effectList && this.effectList.length > 0) {
+                /*
                 this.zr.modLayer(
                     EFFECT_ZLEVEL, 
                     { motionBlur : false}
                 );
+                */
                 this.zr.delShape(this.effectList);
             }
             this.effectList = [];
