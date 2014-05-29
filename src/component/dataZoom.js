@@ -244,7 +244,8 @@ define(function (require) {
                 size : size,
                 xAxisIndex : xAxisIndex,
                 yAxisIndex : yAxisIndex,
-                seriesIndex : zoomSeriesIndex
+                seriesIndex : zoomSeriesIndex,
+                scatterMap : this._zoom.scatterMap || {}
             };
         },
 
@@ -736,6 +737,9 @@ define(function (require) {
                 target = this._originalData[key];
                 for (var idx in target) {
                     data = target[idx];
+                    if (typeof data == 'undefined') {
+                        continue;
+                    }
                     length = data.length;
                     start = Math.floor(this._zoom.start / 100 * length);
                     end = Math.ceil(this._zoom.end / 100 * length);
@@ -1033,11 +1037,12 @@ define(function (require) {
             this.option = magicOption;
             
             this.clear();
-            this._backupData();
             // 位置参数，通过计算所得x, y, width, height
             this._location = this._getLocation();
             // 缩放参数
             this._zoom =  this._getZoom();
+            
+            this._backupData();
             if (this.option.dataZoom && this.option.dataZoom.show) {
                 this._buildShape();
             }
