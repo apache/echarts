@@ -16,6 +16,8 @@
 define(function (require) {
     var Base = require('./base');
     
+    var LineShape = require('zrender/shape/Line');
+    
     var ecConfig = require('../config');
     var zrUtil = require('zrender/tool/util');
     
@@ -40,6 +42,142 @@ define(function (require) {
     
     Axis.prototype = {
         type : ecConfig.COMPONENT_TYPE_AXIS,
+        axisBase : {
+            // 轴线
+            _buildAxisLine : function () {
+                var lineWidth = this.option.axisLine.lineStyle.width;
+                var halfLineWidth = lineWidth / 2;
+                var axShape = {
+                    _axisShape : 'axisLine',
+                    zlevel : this._zlevelBase + 1,
+                    hoverable : false
+                };
+                switch (this.option.position) {
+                    case 'left' :
+                        axShape.style = {
+                            xStart : this.grid.getX() - halfLineWidth,
+                            yStart : this.grid.getYend() + halfLineWidth,
+                            xEnd : this.grid.getX() - halfLineWidth,
+                            yEnd : this.grid.getY() - halfLineWidth
+                        };
+                        break;
+                    case 'right' :
+                        axShape.style = {
+                            xStart : this.grid.getXend() + halfLineWidth,
+                            yStart : this.grid.getYend() + halfLineWidth,
+                            xEnd : this.grid.getXend() + halfLineWidth,
+                            yEnd : this.grid.getY() - halfLineWidth
+                        };
+                        break;
+                    case 'bottom' :
+                        axShape.style = {
+                            xStart : this.grid.getX() - halfLineWidth,
+                            yStart : this.grid.getYend() + halfLineWidth,
+                            xEnd : this.grid.getXend() + halfLineWidth,
+                            yEnd : this.grid.getYend() + halfLineWidth
+                        };
+                        break;
+                    case 'top' :
+                        axShape.style = {
+                            xStart : this.grid.getX() - halfLineWidth,
+                            yStart : this.grid.getY() - halfLineWidth,
+                            xEnd : this.grid.getXend() + halfLineWidth,
+                            yEnd : this.grid.getY() - halfLineWidth
+                        };
+                        break;
+                }
+                if (this.option.name !== '') {
+                    axShape.style.text = this.option.name;
+                    axShape.style.textPosition = this.option.nameLocation;
+                    axShape.style.textFont = this.getFont(this.option.nameTextStyle);
+                    if (this.option.nameTextStyle.align) {
+                        axShape.style.textAlign = this.option.nameTextStyle.align;
+                    }
+                    if (this.option.nameTextStyle.baseline) {
+                        axShape.style.textBaseline = this.option.nameTextStyle.baseline;
+                    }
+                    if (this.option.nameTextStyle.color) {
+                        axShape.style.textColor = this.option.nameTextStyle.color;
+                    }
+                }
+                axShape.style.strokeColor = this.option.axisLine.lineStyle.color;
+                
+                axShape.style.lineWidth = lineWidth;
+                // 亚像素优化
+                if (this.isHorizontal()) {
+                    // 横向布局，优化y
+                    axShape.style.yStart 
+                        = axShape.style.yEnd 
+                        = this.subPixelOptimize(axShape.style.yEnd, lineWidth);
+                }
+                else {
+                    // 纵向布局，优化x
+                    axShape.style.xStart 
+                        = axShape.style.xEnd 
+                        = this.subPixelOptimize(axShape.style.xEnd, lineWidth);
+                }
+                
+                axShape.style.lineType = this.option.axisLine.lineStyle.type;
+                
+                axShape = new LineShape(axShape);
+                this.shapeList.push(axShape);
+            },
+            
+            refixAxisShape : function(zeroX, zeroY) {
+                if (!this.option.axisLine.onZero) {
+                    return;
+                }
+                var tickLength;
+                if (this.isHorizontal() && typeof zeroY != 'undefined') {
+                    // 横向布局调整纵向y
+                    for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                        if (this.shapeList[i]._axisShape == 'axisLine') {
+                            this.shapeList[i].style.yStart 
+                                = this.shapeList[i].style.yEnd 
+                                = this.subPixelOptimize(
+                                    zeroY, this.shapeList[i].stylelineWidth
+                                );
+                            this.zr.modShape(this.shapeList[i].id);
+                        }
+                        else if (this.shapeList[i]._axisShape == 'axisTick') {
+                            tickLength = this.shapeList[i].style.yEnd 
+                                         - this.shapeList[i].style.yStart;
+                            this.shapeList[i].style.yStart = zeroY - tickLength;
+                            this.shapeList[i].style.yEnd = zeroY;
+                            this.zr.modShape(this.shapeList[i].id);
+                        }
+                    }
+                }
+                if (!this.isHorizontal() && typeof zeroX != 'undefined') {
+                    // 纵向布局调整横向x
+                    for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                        if (this.shapeList[i]._axisShape == 'axisLine') {
+                            this.shapeList[i].style.xStart 
+                                = this.shapeList[i].style.xEnd 
+                                = this.subPixelOptimize(
+                                    zeroX, this.shapeList[i].stylelineWidth
+                                );
+                            this.zr.modShape(this.shapeList[i].id);
+                        }
+                        else if (this.shapeList[i]._axisShape == 'axisTick') {
+                            tickLength = this.shapeList[i].style.xEnd 
+                                         - this.shapeList[i].style.xStart;
+                            this.shapeList[i].style.xStart = zeroX;
+                            this.shapeList[i].style.xEnd = zeroX + tickLength;
+                            this.zr.modShape(this.shapeList[i].id);
+                        }
+                    }
+                }
+            },
+            
+            getPosition : function () {
+                return this.option.position;
+            },
+            
+            isHorizontal : function() {
+                return this.option.position == 'bottom' || this.option.position == 'top'
+            }
+        },
         /**
          * 参数修正&默认值赋值，重载基类方法
          * @param {Object} opt 参数
@@ -104,7 +242,7 @@ define(function (require) {
 
             return opt;
         },
-
+        
         /**
          * 刷新
          */
@@ -145,12 +283,14 @@ define(function (require) {
                     this._axisList[i] =  axisOption[i].type == 'category'
                                          ? new CategoryAxis(
                                                this.ecTheme, this.messageCenter, this.zr,
-                                               axisOption[i], this.myChart
+                                               axisOption[i], this.myChart, this.axisBase
                                            )
                                          : new ValueAxis(
                                                this.ecTheme, this.messageCenter, this.zr,
-                                               axisOption[i], this.myChart, this.series
+                                               axisOption[i], this.myChart, this.axisBase,
+                                               this.series
                                            );
+                    
                 }
             }
         },

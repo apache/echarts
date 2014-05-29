@@ -676,6 +676,8 @@ define(function (require) {
                     delete this.chart[chartType];
                 }
             }
+            
+            this.component.grid && this.component.grid.refixAxisShape(this.component);
 
             this._island.refresh(magicOption);
             this._toolbox.refresh(magicOption);
@@ -754,6 +756,7 @@ define(function (require) {
             for (var i = 0, l = this._chartList.length; i < l; i++) {
                 this._chartList[i].refresh && this._chartList[i].refresh(magicOption);
             }
+            this.component.grid && this.component.grid.refixAxisShape(this.component);
             this._zr.refresh();
         },
 
@@ -1475,6 +1478,7 @@ define(function (require) {
                 for (var i = 0, l = self._chartList.length; i < l; i++) {
                     self._chartList[i].resize && self._chartList[i].resize();
                 }
+                self.component.grid && self.component.grid.refixAxisShape(self.component);
                 self._zr.refresh();
                 self._messageCenter.dispatch(ecConfig.EVENT.RESIZE);
                 return self;
