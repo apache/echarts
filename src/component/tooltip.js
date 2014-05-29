@@ -9,6 +9,7 @@ define(function (require) {
     var Base = require('./base');
     
     // 图形依赖
+    var CrossShape = require('../util/shape/Cross');
     var LineShape = require('zrender/shape/Line');
     var RectangleShape = require('zrender/shape/Rectangle');
     var rectangleInstance = new RectangleShape({});
@@ -56,11 +57,19 @@ define(function (require) {
             return self.__refixed(param);
         };
         
+        self._setContent = function(ticket, res) {
+            return self.__setContent(ticket, res);
+        }
+        
         this._tDom = this._tDom || document.createElement('div');
+        // 避免拖拽时页面选中的尴尬
+        this._tDom.onselectstart = function() {
+            return false;
+        };
         this._tDom.style.position = 'absolute';  // 不是多余的，别删！
         this.hasAppend = false;
         
-        this._axisLineShape && this.zr.delShape(this._axisLineShape);
+        this._axisLineShape && this.zr.delShape(this._axisLineShape.id);
         this._axisLineShape = new LineShape({
             zlevel: this._zlevelBase,
             invisible : true,
@@ -69,7 +78,7 @@ define(function (require) {
         this.shapeList.push(this._axisLineShape);
         this.zr.addShape(this._axisLineShape);
         
-        this._axisShadowShape && this.zr.delShape(this._axisShadowShape);
+        this._axisShadowShape && this.zr.delShape(this._axisShadowShape.id);
         this._axisShadowShape = new LineShape({
             zlevel: 1,                      // grid上，chart下
             invisible : true,
@@ -77,6 +86,15 @@ define(function (require) {
         });
         this.shapeList.push(this._axisShadowShape);
         this.zr.addShape(this._axisShadowShape);
+        
+        this._axisCrossShape && this.zr.delShape(this._axisCrossShape.id);
+        this._axisCrossShape = new CrossShape({
+            zlevel: this._zlevelBase,
+            invisible : true,
+            hoverable: false
+        });
+        this.shapeList.push(this._axisCrossShape);
+        this.zr.addShape(this._axisCrossShape);
         
         this.showing = false;
         this.refresh(option);
@@ -206,6 +224,11 @@ define(function (require) {
                 this.zr.modShape(this._axisShadowShape.id);
                 needRefresh = true;
             }
+            if (!this._axisCrossShape.invisible) {
+                this._axisCrossShape.invisible = true;
+                this.zr.modShape(this._axisCrossShape.id);
+                needRefresh = true;
+            }
             if (this._lastTipShape && this._lastTipShape.tipShape.length > 0) {
                 this.zr.delShape(this._lastTipShape.tipShape);
                 this._lastTipShape = false;
@@ -213,6 +236,11 @@ define(function (require) {
             }
             needRefresh && this.zr.refresh();
             this.showing = false;
+        },
+        
+        // 显示十字准星
+        showCross : function(x, y) {
+            
         },
         
         _show : function (x, y, specialCssText) {
@@ -293,6 +321,7 @@ define(function (require) {
                         [data, serie, this.option],
                         'tooltip.trigger'
                     );
+                    
                     trigger == 'axis'
                                ? this._showAxisTrigger(
                                      serie.xAxisIndex, serie.yAxisIndex,
@@ -345,6 +374,10 @@ define(function (require) {
                             )
                         );
                         return;
+                    }
+                    else {
+                        // 双数值轴
+                        this._showAxisTrigger(xAxisIndex, yAxisIndex, -1);
                     }
                 }
             }
@@ -457,7 +490,7 @@ define(function (require) {
                 || typeof this.component.yAxis == 'undefined'
                 || typeof xAxisIndex == 'undefined'
                 || typeof yAxisIndex == 'undefined'
-                || dataIndex < 0
+                // || dataIndex < 0
             ) {
                 // 不响应tooltip的数据对象延时隐藏
                 clearTimeout(this._hidingTicket);
@@ -493,21 +526,15 @@ define(function (require) {
                         continue;
                     }
                     if (series[i].xAxisIndex == xAxisIndex
-                        && this.deepQuery(
-                               [series[i], this.option], 'tooltip.trigger'
-                           ) == 'axis'
+                        && this.deepQuery([series[i], this.option], 'tooltip.trigger') == 'axis'
                     ) {
                         showContent = this.query(
-                            series[i],
-                            'tooltip.showContent'
+                            series[i], 'tooltip.showContent'
                         ) || showContent;
                         formatter = this.query(
-                            series[i],
-                            'tooltip.formatter'
+                            series[i], 'tooltip.formatter'
                         ) || formatter;
-                        specialCssText += this._style(this.query(
-                                              series[i], 'tooltip'
-                                          ));
+                        specialCssText += this._style(this.query(series[i], 'tooltip'));
                         seriesArray.push(series[i]);
                         seriesIndex.push(i);
                     }
@@ -519,17 +546,9 @@ define(function (require) {
                     {
                         seriesIndex : seriesIndex,
                         dataIndex : dataIndex
-                        /*
-                        dataIndex : this.component.dataZoom
-                                    ? this.component.dataZoom.getRealDataIndex(
-                                        seriesIndex[0],
-                                        dataIndex
-                                      )
-                                    : dataIndex
-                                    */
                     }
                 );
-                y = zrEvent.getY(this._event) + 10;
+                y = zrEvent.getY(this._event);
                 x = this.subPixelOptimize(
                     categoryAxis.getCoordByIndex(dataIndex),
                     this._axisLineWidth
@@ -538,9 +557,8 @@ define(function (require) {
                     seriesArray,
                     x, this.component.grid.getY(), 
                     x, this.component.grid.getYend(),
-                    categoryAxis.getGap()
+                    categoryAxis.getGap(), x, y
                 );
-                x += 10;
             }
             else if (yAxisIndex != -1
                      && this.component.yAxis.getAxis(yAxisIndex).type
@@ -553,21 +571,15 @@ define(function (require) {
                         continue;
                     }
                     if (series[i].yAxisIndex == yAxisIndex
-                        && this.deepQuery(
-                               [series[i], this.option], 'tooltip.trigger'
-                           ) == 'axis'
+                        && this.deepQuery([series[i], this.option], 'tooltip.trigger') == 'axis'
                     ) {
                         showContent = this.query(
-                            series[i],
-                            'tooltip.showContent'
+                            series[i], 'tooltip.showContent'
                         ) || showContent;
                         formatter = this.query(
-                            series[i],
-                            'tooltip.formatter'
+                            series[i], 'tooltip.formatter'
                         ) || formatter;
-                        specialCssText += this._style(this.query(
-                                              series[i], 'tooltip'
-                                          ));
+                        specialCssText += this._style(this.query(series[i], 'tooltip'));
                         seriesArray.push(series[i]);
                         seriesIndex.push(i);
                     }
@@ -579,17 +591,9 @@ define(function (require) {
                     {
                         seriesIndex : seriesIndex,
                         dataIndex : dataIndex
-                        /*
-                        dataIndex : this.component.dataZoom
-                                    ? this.component.dataZoom.getRealDataIndex(
-                                        seriesIndex[0],
-                                        dataIndex
-                                      )
-                                    : dataIndex
-                                    */
                     }
                 );
-                x = zrEvent.getX(this._event) + 10;
+                x = zrEvent.getX(this._event);
                 y = this.subPixelOptimize(
                     categoryAxis.getCoordByIndex(dataIndex),
                     this._axisLineWidth
@@ -598,9 +602,27 @@ define(function (require) {
                     seriesArray,
                     this.component.grid.getX(), y, 
                     this.component.grid.getXend(), y,
-                    categoryAxis.getGap()
+                    categoryAxis.getGap(), x, y
                 );
-                y += 10;
+            }
+            else {
+                // 双数值轴
+                x = zrEvent.getX(this._event);
+                y = zrEvent.getY(this._event);
+                this._styleAxisPointer(
+                    series,
+                    this.component.grid.getX(), y, 
+                    this.component.grid.getXend(), y,
+                    0, x, y
+                );
+                if (dataIndex >= 0) {
+                    this._showItemTrigger()
+                }
+                else {
+                    clearTimeout(this._hidingTicket);
+                    clearTimeout(this._showingTicket);
+                    this._tDom.style.display = 'none';
+                };
             }
 
             if (seriesArray.length > 0) {
@@ -687,7 +709,7 @@ define(function (require) {
                     this.dom.firstChild.appendChild(this._tDom);
                     this.hasAppend = true;
                 }
-                this._show(x, y, specialCssText);
+                this._show(x + 10, y + 10, specialCssText);
             }
         },
         
@@ -833,6 +855,9 @@ define(function (require) {
         },
         
         _showItemTrigger : function () {
+            if (!this._curTarget) {
+                return;
+            }
             var serie = ecData.get(this._curTarget, 'series');
             var data = ecData.get(this._curTarget, 'data');
             var name = ecData.get(this._curTarget, 'name');
@@ -980,9 +1005,13 @@ define(function (require) {
                 }
             }
 
-            if (!this._axisLineShape.invisible) {
+            if (!this._axisLineShape.invisible 
+                || !this._axisShadowShape.invisible
+            ) {
                 this._axisLineShape.invisible = true;
                 this.zr.modShape(this._axisLineShape.id);
+                this._axisShadowShape.invisible = true;
+                this.zr.modShape(this._axisShadowShape.id);
                 this.zr.refresh();
             }
             
@@ -997,7 +1026,7 @@ define(function (require) {
                 this.dom.firstChild.appendChild(this._tDom);
                 this.hasAppend = true;
             }
-
+            
             this._show(
                 zrEvent.getX(this._event) + 20,
                 zrEvent.getY(this._event) - 20,
@@ -1008,52 +1037,43 @@ define(function (require) {
         /**
          * 设置坐标轴指示器样式 
          */
-        _styleAxisPointer : function (seriesArray, xStart, yStart, xEnd, yEnd, gap) {
+        _styleAxisPointer : function (seriesArray, xStart, yStart, xEnd, yEnd, gap, x, y) {
             if (seriesArray.length > 0) {
                 var queryTarget;
                 var curType;
                 var axisPointer = this.option.tooltip.axisPointer;
                 var pointType = axisPointer.type;
-                var lineColor = axisPointer.lineStyle.color;
-                var lineWidth = axisPointer.lineStyle.width;
-                var lineType = axisPointer.lineStyle.type;
-                var areaSize = axisPointer.areaStyle.size;
-                var areaColor = axisPointer.areaStyle.color;
-                
+                var style = {
+                    line : {},
+                    cross : {},
+                    shadow : {}
+                };
+                for (var pType in style) {
+                    style[pType].color = axisPointer[pType + 'Style'].color;
+                    style[pType].width = axisPointer[pType + 'Style'].width;
+                    style[pType].type = axisPointer[pType + 'Style'].type;
+                }
                 for (var i = 0, l = seriesArray.length; i < l; i++) {
                     if (this.deepQuery(
                            [seriesArray[i], this.option], 'tooltip.trigger'
                        ) == 'axis'
                     ) {
                         queryTarget = seriesArray[i];
-                        curType = this.query(
-                            queryTarget,
-                            'tooltip.axisPointer.type'
-                        );
+                        curType = this.query(queryTarget, 'tooltip.axisPointer.type');
                         pointType = curType || pointType; 
-                        if (curType == 'line') {
-                            lineColor = this.query(
+                        if (curType) {
+                            style[curType].color = this.query(
                                 queryTarget,
-                                'tooltip.axisPointer.lineStyle.color'
-                            ) || lineColor;
-                            lineWidth = this.query(
+                                'tooltip.axisPointer.' + curType + 'Style.color'
+                            ) || style[curType].color;
+                            style[curType].width = this.query(
                                 queryTarget,
-                                'tooltip.axisPointer.lineStyle.width'
-                            ) || lineWidth;
-                            lineType = this.query(
+                                'tooltip.axisPointer.' + curType + 'Style.width'
+                            ) || style[curType].width;
+                            style[curType].type = this.query(
                                 queryTarget,
-                                'tooltip.axisPointer.lineStyle.type'
-                            ) || lineType;
-                        }
-                        else if (curType == 'shadow') {
-                            areaSize = this.query(
-                                queryTarget,
-                                'tooltip.axisPointer.areaStyle.size'
-                            ) || areaSize;
-                            areaColor = this.query(
-                                queryTarget,
-                                'tooltip.axisPointer.areaStyle.color'
-                            ) || areaColor;
+                                'tooltip.axisPointer.' + curType + 'Style.type'
+                            ) || style[curType].type;
                         }
                     }
                 }
@@ -1064,47 +1084,80 @@ define(function (require) {
                         yStart : yStart,
                         xEnd : xEnd,
                         yEnd : yEnd,
-                        strokeColor : lineColor,
-                        lineWidth : lineWidth,
-                        lineType : lineType
+                        strokeColor : style.line.color,
+                        lineWidth : style.line.width,
+                        lineType : style.line.type
                     };
                     this._axisLineShape.invisible = false;
                     this.zr.modShape(this._axisLineShape.id);
                 }
-                else if (pointType == 'shadow') {
-                    if (typeof areaSize == 'undefined' 
-                        || areaSize == 'auto'
-                        || isNaN(areaSize)
-                    ) {
-                        lineWidth = gap;
+                else if (pointType == 'cross') {
+                    this._axisCrossShape.style = {
+                        brushType: 'stroke',
+                        rect : this.component.grid.getArea(),
+                        x : x,
+                        y : y,
+                        text : ('( ' 
+                               + this.component.xAxis.getAxis(0).getValueFromCoord(x)
+                               + ' , '
+                               + this.component.yAxis.getAxis(0).getValueFromCoord(y) 
+                               + ' )'
+                               ).replace('  , ', ' ').replace(' ,  ', ' '),
+                        textPosition : 'specific',
+                        strokeColor : style.cross.color,
+                        lineWidth : style.cross.width,
+                        lineType : style.cross.type
+                    };
+                    if (this.component.grid.getXend() - x > 100) {          // 右侧有空间
+                        this._axisCrossShape.style.textAlign = 'left';
+                        this._axisCrossShape.style.textX = x + 10;
                     }
                     else {
-                        lineWidth = areaSize;
+                        this._axisCrossShape.style.textAlign = 'right';
+                        this._axisCrossShape.style.textX = x - 10;
+                    }
+                    if (y - this.component.grid.getY() > 50) {             // 上方有空间
+                        this._axisCrossShape.style.textBaseline = 'bottom';
+                        this._axisCrossShape.style.textY = y - 10;
+                    }
+                    else {
+                        this._axisCrossShape.style.textBaseline = 'top';
+                        this._axisCrossShape.style.textY = y + 10;
+                    }
+                    this._axisCrossShape.invisible = false;
+                    this.zr.modShape(this._axisCrossShape.id);
+                }
+                else if (pointType == 'shadow') {
+                    if (typeof style.shadow.width == 'undefined' 
+                        || style.shadow.width == 'auto'
+                        || isNaN(style.shadow.width)
+                    ) {
+                        style.shadow.width = gap;
                     }
                     if (xStart == xEnd) {
                         // 纵向
                         if (Math.abs(this.component.grid.getX() - xStart) < 2) {
                             // 最左边
-                            lineWidth /= 2;
-                            xStart = xEnd = xEnd + lineWidth / 2;
+                            style.shadow.width /= 2;
+                            xStart = xEnd = xEnd + style.shadow.width / 2;
                         }
                         else if (Math.abs(this.component.grid.getXend() - xStart) < 2) {
                             // 最右边
-                            lineWidth /= 2;
-                            xStart = xEnd = xEnd - lineWidth / 2;
+                            style.shadow.width /= 2;
+                            xStart = xEnd = xEnd - style.shadow.width / 2;
                         }
                     }
                     else if (yStart == yEnd) {
                         // 横向
                         if (Math.abs(this.component.grid.getY() - yStart) < 2) {
                             // 最上边
-                            lineWidth /= 2;
-                            yStart = yEnd = yEnd + lineWidth / 2;
+                            style.shadow.width /= 2;
+                            yStart = yEnd = yEnd + style.shadow.width / 2;
                         }
                         else if (Math.abs(this.component.grid.getYend() - yStart) < 2) {
                             // 最右边
-                            lineWidth /= 2;
-                            yStart = yEnd = yEnd - lineWidth / 2;
+                            style.shadow.width /= 2;
+                            yStart = yEnd = yEnd - style.shadow.width / 2;
                         }
                     }
                     this._axisShadowShape.style = {
@@ -1112,8 +1165,8 @@ define(function (require) {
                         yStart : yStart,
                         xEnd : xEnd,
                         yEnd : yEnd,
-                        strokeColor : areaColor,
-                        lineWidth : lineWidth
+                        strokeColor : style.shadow.color,
+                        lineWidth : style.shadow.width
                     };
                     this._axisShadowShape.invisible = false;
                     this.zr.modShape(this._axisShadowShape.id);
@@ -1137,12 +1190,7 @@ define(function (require) {
                 this._event.zrenderY = my;
                 if (this._needAxisTrigger 
                     && this.component.grid 
-                    && zrArea.isInside(
-                        rectangleInstance,
-                        this.component.grid.getArea(),
-                        mx,
-                        my
-                    )
+                    && zrArea.isInside(rectangleInstance, this.component.grid.getArea(), mx, my)
                 ) {
                     this._showingTicket = setTimeout(this._tryShow, this._showDelay);
                 }
@@ -1201,7 +1249,7 @@ define(function (require) {
         /**
          * 异步回调填充内容
          */
-        _setContent : function (ticket, content) {
+        __setContent : function (ticket, content) {
             if (!this._tDom) {
                 return;
             }

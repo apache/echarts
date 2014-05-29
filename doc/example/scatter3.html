@@ -69,7 +69,15 @@
                     <textarea id="code" name="code">
 option = {
     tooltip : {
-        trigger: 'item'
+        trigger: 'axis',
+        showDelay : 0,
+        axisPointer:{
+            type : 'cross',
+            lineStyle: {
+                type : 'dashed',
+                width : 1
+            }
+        }
     },
     legend: {
         data:['sin','cos']

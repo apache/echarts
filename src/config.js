@@ -228,9 +228,15 @@ define(function() {
                     width: 2,
                     type: 'solid'
                 },
-                areaStyle : {                       // 阴影指示器样式设置
-                    size: 'auto',                   // 阴影大小
-                    color: 'rgba(150,150,150,0.3)'  // 阴影颜色
+                crossStyle: {
+                    color: '#1e90ff',
+                    width: 1,
+                    type: 'dashed'
+                },
+                shadowStyle : {                     // 阴影指示器样式设置
+                    color: 'rgba(150,150,150,0.3)', // 阴影颜色
+                    width: 'auto',                  // 阴影大小
+                    type: 'default'
                 }
             },
             textStyle: {
@@ -283,6 +289,7 @@ define(function() {
             boundaryGap: true,     // 类目起始和结束两端空白策略
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
+                onZero: true,
                 lineStyle: {       // 属性lineStyle控制线条样式
                     color: '#48b',
                     width: 2,
@@ -343,6 +350,7 @@ define(function() {
             splitNumber: 5,        // 分割段数，默认为5
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
+                onZero: true,
                 lineStyle: {       // 属性lineStyle控制线条样式
                     color: '#48b',
                     width: 2,
@@ -730,6 +738,7 @@ define(function() {
             // selectedMode: false,        // 选择模式，默认关闭，可选single，multiple
             hoverable: true,
             // roam : false,               // 是否开启缩放及漫游模式
+            // scaleLimit : null,
             itemStyle: {
                 normal: {
                     // color: 各异,

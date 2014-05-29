@@ -783,18 +783,20 @@ define(function (require) {
             value = value < this._min ? this._min : value;
             value = value > this._max ? this._max : value;
 
-            var valueRange = this._max - this._min;
-            var total;
             var result;
             if (!this.isHorizontal()) {
                 // 纵向
-                total = this.grid.getHeight();
-                result = this.grid.getYend() - (value - this._min) / valueRange * total;
+                result = this.grid.getYend() 
+                         - (value - this._min) 
+                           / (this._max - this._min) 
+                           * this.grid.getHeight();
             }
             else {
                 // 横向
-                total = this.grid.getWidth();
-                result = (value - this._min) / valueRange * total + this.grid.getX();
+                result = this.grid.getX() 
+                         + (value - this._min) 
+                           / (this._max - this._min) 
+                           * this.grid.getWidth();
             }
 
             return result;
@@ -816,6 +818,31 @@ define(function (require) {
                 // 横向
                 return Math.abs(value / (this._max - this._min) * this.grid.getWidth());
             }
+        },
+        
+        // 根据位置换算值
+        getValueFromCoord : function(coord) {
+            var result;
+            if (!this.isHorizontal()) {
+                // 纵向
+                coord = coord < this.grid.getY() ? this.grid.getY() : coord;
+                coord = coord > this.grid.getYend() ? this.grid.getYend() : coord;
+                result = this._max 
+                         - (coord - this.grid.getY()) 
+                           / this.grid.getHeight() 
+                           * (this._max - this._min);
+            }
+            else {
+                // 横向
+                coord = coord < this.grid.getX() ? this.grid.getX() : coord;
+                coord = coord > this.grid.getXend() ? this.grid.getXend() : coord;
+                result = this._min 
+                         + (coord - this.grid.getX()) 
+                           / this.grid.getWidth() 
+                           * (this._max - this._min);
+            }
+            
+            return result.toFixed(2) - 0;
         }
     };
 

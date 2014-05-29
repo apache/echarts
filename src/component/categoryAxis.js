@@ -671,6 +671,11 @@ define(function (require) {
             
             return -1;
         },
+        
+        // 根据位置换算值
+        getValueFromCoord : function(coord) {
+            return ''
+        },
 
         /**
          * 根据类目轴数据索引返回是否为主轴线
