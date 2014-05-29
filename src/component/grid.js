@@ -66,6 +66,34 @@ define(function (require) {
             };
         },
         
+        /**
+         * 实在找不到合适的地方做了，各种粗暴的写法~ -_-
+         */
+        refixAxisShape : function(component) {
+            var zeroX;
+            var zeroY;
+            var axisList = component.xAxis._axisList.concat(component.yAxis._axisList);
+            var len = axisList.length;
+            var axis;
+            while (len--) {
+                axis = axisList[len];
+                if (axis.type == ecConfig.COMPONENT_TYPE_AXIS_VALUE 
+                    && axis._min < 0  
+                    && axis._max >= 0
+                ) {
+                    axis.isHorizontal()
+                    ? (zeroX = axis.getCoord(0))
+                    : (zeroY = axis.getCoord(0));
+                }
+            }
+            if (typeof zeroX != 'undefined' || typeof zeroY != 'undefined') {
+                len = axisList.length
+                while (len--) {
+                    axisList[len].refixAxisShape(zeroX, zeroY);
+                }
+            }
+        },
+        
         refresh : function (newOption) {
             if (newOption
                 || this._zrWidth != this.zr.getWidth() 
