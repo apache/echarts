@@ -413,11 +413,9 @@ define(function (require) {
             
             if (!mpOption.large) {
                 for (var i = 0, l = data.length; i < l; i++) {
-                    value = typeof data[i] != 'undefined'
-                            ? (typeof data[i].value != 'undefined'
-                              ? data[i].value
-                              : data[i])
-                            : '-';
+                    value = typeof data[i] != 'undefined' && typeof data[i].value != 'undefined'
+                            ? data[i].value
+                            : '';
                     // 图例
                     if (legend) {
                         color = legend.getColor(serie.name);
@@ -537,11 +535,9 @@ define(function (require) {
                 }
                 // 组装一个mergeData
                 mergeData = this.deepMerge(data[i]);
-                value = typeof mergeData != 'undefined'
-                        ? (typeof mergeData.value != 'undefined'
-                          ? mergeData.value
-                          : mergeData)
-                        : '-';
+                value = typeof mergeData != 'undefined' && typeof mergeData.value != 'undefined'
+                        ? mergeData.value
+                        : '';
                 // 值域
                 if (dataRange) {
                     color = isNaN(value) ? color : dataRange.getColor(value);
@@ -929,6 +925,8 @@ define(function (require) {
                     return;
                 }
             }
+            color = this.deepMerge(queryTarget, 'itemStyle.normal').color 
+                    || color;
             
             symbol = this.deepQuery(queryTarget, 'symbol') || 'circle';
             symbol = symbol.replace('empty', '').replace(/\d/g, '');
