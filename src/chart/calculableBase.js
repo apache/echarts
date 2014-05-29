@@ -239,7 +239,7 @@ define(function (require) {
                         this._animateAdd(newMap[key], duration, easing);
                     }
                 }
-                //this.animationMark(duration, easing);
+                lastShapeList.length == 0 && this.animationMark(duration, easing);
             }
             else {
                 this.motionlessOnce = false;
