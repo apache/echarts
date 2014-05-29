@@ -136,8 +136,8 @@ var theme = {
                 width: 2,
                 type: 'solid'
             },
-            areaStyle : {                       // 阴影指示器样式设置
-                size: 'auto',                   // 阴影大小
+            shadowStyle : {                       // 阴影指示器样式设置
+                width: 'auto',                   // 阴影大小
                 color: 'rgba(150,150,150,0.3)'  // 阴影颜色
             }
         },

@@ -1139,7 +1139,7 @@ define(function (require) {
          * 点击响应 
          */
         onclick : function (param) {
-            if (!this.isClick || !param.target || this._justMove) {
+            if (!this.isClick || !param.target || this._justMove || param.target.type == 'icon') {
                 // 没有在当前实例上发生点击直接返回
                 return;
             }
@@ -1148,6 +1148,7 @@ define(function (require) {
             var name = target.style._name;
             var len = this.shapeList.length;
             var mapType = target._mapType || '';
+            
             if (this._selectedMode[mapType] == 'single') {
                 for (var p in this._selected) {
                     // 同一地图类型
