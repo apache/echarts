@@ -1343,14 +1343,12 @@ define(function (require) {
             this.refresh && this.refresh();
         },
 
-        clearAnimationShape : function () {
+        clearAnimationShape : function (clearMotionBlur) {
             if (this.zr && this.effectList && this.effectList.length > 0) {
-                /*
-                this.zr.modLayer(
+                clearMotionBlur && this.zr.modLayer(
                     EFFECT_ZLEVEL, 
                     { motionBlur : false}
                 );
-                */
                 this.zr.delShape(this.effectList);
             }
             this.effectList = [];

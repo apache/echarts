@@ -68,6 +68,7 @@ define(function (require) {
         
         // 漫游相关信息
         this._roamMap = {};
+        this._scaleLimitMap = {};
         this._needRoam;
         this._mx;
         this._my;
@@ -109,11 +110,17 @@ define(function (require) {
                     mapSeries[mapType][i] = true;
                     mapValuePrecision[mapType] = mapValuePrecision[mapType]
                                                  || series[i].mapValuePrecision;
+                    this._scaleLimitMap[mapType] = this._scaleLimitMap[mapType] || {};
+                    series[i].scaleLimit 
+                    && zrUtil.merge(this._scaleLimitMap[mapType], series[i].scaleLimit, true);
+                    
                     this._roamMap[mapType] = series[i].roam || this._roamMap[mapType];
                     this._needRoam = this._needRoam || this._roamMap[mapType];
-                    this._nameMap[mapType] = series[i].nameMap 
-                                        || this._nameMap[mapType] 
-                                        || {};
+                    
+                    this._nameMap[mapType] = this._nameMap[mapType] || {};
+                    series[i].nameMap 
+                    && zrUtil.merge(this._nameMap[mapType], series[i].nameMap, true);
+                    
 
                     if (series[i].textFixed) {
                         zrUtil.merge(
@@ -602,6 +609,7 @@ define(function (require) {
                 width: width,
                 height: height,
                 //scale : minScale * 50,  // wtf 50
+                baseScale : 1,
                 scale : {
                     x : xScale,
                     y : yScale
@@ -951,6 +959,7 @@ define(function (require) {
             //delta = delta > 0 ? (-1) : 1;
             var mapType = this._findMapTypeByPos(mx, my);
             if (mapType) {
+                zrEvent.stop(event);
                 var transform = this._mapDataMap[mapType].transform;
                 var left = transform.left;
                 var top = transform.top;
@@ -960,10 +969,21 @@ define(function (require) {
                 geoAndPos = this.pos2geo(mapType, [mx - left, my - top]);
                 if (delta > 0) {
                     delta = 1.2;        // 放大
+                    if (typeof this._scaleLimitMap[mapType].max != 'undeined'
+                        && transform.baseScale >= this._scaleLimitMap[mapType].max
+                    ) {
+                        return;     // 缩放限制
+                    }
                 }
                 else {
                     delta = 1 / 1.2;    // 缩小
+                    if (typeof this._scaleLimitMap[mapType].min != 'undeined'
+                        && transform.baseScale <= this._scaleLimitMap[mapType].min
+                    ) {
+                        return;     // 缩放限制
+                    }
                 }
+                transform.baseScale *= delta;
                 transform.scale.x *= delta;
                 transform.scale.y *= delta;
                 transform.width = width * delta;
@@ -978,7 +998,7 @@ define(function (require) {
                 transform.top -= geoAndPos[1] - (my - top);
                 this._mapDataMap[mapType].transform = transform;
                 
-                this.clearAnimationShape();
+                this.clearAnimationShape(true);
                 for (var i = 0, l = this.shapeList.length; i < l; i++) {
                     if(this.shapeList[i]._mapType == mapType) {
                         this.shapeList[i].position[0] = transform.left;
@@ -1022,7 +1042,6 @@ define(function (require) {
                     }
                 }
                 
-                this.clearAnimationShape();
                 this.zr.refresh();
                 
                 var self = this;
@@ -1039,7 +1058,6 @@ define(function (require) {
                     param.event,
                     {type : 'scale'}
                 );
-                zrEvent.stop(event);
             }
         },
         
@@ -1096,7 +1114,7 @@ define(function (require) {
                 {type : 'move'}
             );
             
-            this.clearAnimationShape();
+            this.clearAnimationShape(true);
             this.zr.refresh();
             
             this._justMove = true;
