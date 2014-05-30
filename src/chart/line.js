@@ -706,11 +706,11 @@ define(function (require) {
                                     pointList : zrUtil.clone(singlePL).concat([
                                         [
                                             singlePL[singlePL.length - 1][4],
-                                            singlePL[singlePL.length - 1][5] - 1
+                                            singlePL[singlePL.length - 1][5]
                                         ],
                                         [
                                             singlePL[0][4],
-                                            singlePL[0][5] - 1
+                                            singlePL[0][5]
                                         ]
                                     ]),
                                     brushType : 'fill',
