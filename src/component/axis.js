@@ -56,33 +56,37 @@ define(function (require) {
                     case 'left' :
                         axShape.style = {
                             xStart : this.grid.getX() - halfLineWidth,
-                            yStart : this.grid.getYend() + halfLineWidth,
+                            yStart : this.grid.getYend(),
                             xEnd : this.grid.getX() - halfLineWidth,
-                            yEnd : this.grid.getY() - halfLineWidth
+                            yEnd : this.grid.getY(),
+                            lineCap : 'round'
                         };
                         break;
                     case 'right' :
                         axShape.style = {
                             xStart : this.grid.getXend() + halfLineWidth,
-                            yStart : this.grid.getYend() + halfLineWidth,
+                            yStart : this.grid.getYend(),
                             xEnd : this.grid.getXend() + halfLineWidth,
-                            yEnd : this.grid.getY() - halfLineWidth
+                            yEnd : this.grid.getY(),
+                            lineCap : 'round'
                         };
                         break;
                     case 'bottom' :
                         axShape.style = {
-                            xStart : this.grid.getX() - halfLineWidth,
+                            xStart : this.grid.getX(),
                             yStart : this.grid.getYend() + halfLineWidth,
-                            xEnd : this.grid.getXend() + halfLineWidth,
-                            yEnd : this.grid.getYend() + halfLineWidth
+                            xEnd : this.grid.getXend(),
+                            yEnd : this.grid.getYend() + halfLineWidth,
+                            lineCap : 'round'
                         };
                         break;
                     case 'top' :
                         axShape.style = {
-                            xStart : this.grid.getX() - halfLineWidth,
+                            xStart : this.grid.getX(),
                             yStart : this.grid.getY() - halfLineWidth,
-                            xEnd : this.grid.getXend() + halfLineWidth,
-                            yEnd : this.grid.getY() - halfLineWidth
+                            xEnd : this.grid.getXend(),
+                            yEnd : this.grid.getY() - halfLineWidth,
+                            lineCap : 'round'
                         };
                         break;
                 }
