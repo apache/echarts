@@ -15,6 +15,7 @@ define(function (require) {
     var ecConfig = require('../config');
     var zrUtil = require('zrender/tool/util');
     var zrArea = require('zrender/tool/area');
+    var zrColor = require('zrender/tool/color');
     
     /**
      * 构造函数
@@ -48,8 +49,10 @@ define(function (require) {
         _buildItem : function () {
             var text = this.titleOption.text;
             var link = this.titleOption.link;
+            var target = this.titleOption.target;
             var subtext = this.titleOption.subtext;
             var sublink = this.titleOption.sublink;
+            var subtarget = this.titleOption.subtarget;
             var font = this.getFont(this.titleOption.textStyle);
             var subfont = this.getFont(this.titleOption.subtextStyle);
             
@@ -59,7 +62,6 @@ define(function (require) {
             var height = this._itemGroupLocation.height;
             
             var textShape = {
-                // shape : 'text',
                 zlevel : this._zlevelBase,
                 style : {
                     y : y,
@@ -69,6 +71,7 @@ define(function (require) {
                     textBaseline: 'top'
                 },
                 highlightStyle: {
+                    color : zrColor.lift(this.titleOption.textStyle.color, 1),
                     brushType: 'fill'
                 },
                 hoverable: false
@@ -77,12 +80,16 @@ define(function (require) {
                 textShape.hoverable = true;
                 textShape.clickable = true;
                 textShape.onclick = function (){
-                    window.open(link);
+                    if (!target || target != 'self') {
+                        window.open(link);
+                    }
+                    else {
+                        window.location = link;
+                    }
                 };
             }
             
             var subtextShape = {
-                // shape : 'text',
                 zlevel : this._zlevelBase,
                 style : {
                     y : y + height,
@@ -92,6 +99,7 @@ define(function (require) {
                     textBaseline: 'bottom'
                 },
                 highlightStyle: {
+                    color : zrColor.lift(this.titleOption.subtextStyle.color, 1),
                     brushType: 'fill'
                 },
                 hoverable: false
@@ -100,11 +108,14 @@ define(function (require) {
                 subtextShape.hoverable = true;
                 subtextShape.clickable = true;
                 subtextShape.onclick = function (){
-                    window.open(sublink);
+                    if (!subtarget || subtarget != 'self') {
+                        window.open(sublink);
+                    }
+                    else {
+                        window.location = sublink;
+                    }
                 };
             }
-
-            
 
             switch (this.titleOption.x) {
                 case 'center' :

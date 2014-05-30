@@ -50,8 +50,10 @@ define(function() {
         title: {
             text: '',
             //link: null,              // 超链接跳转
+            //target: null,            // 仅支持self | blank
             subtext: '',
             //sublink: null,           // 超链接跳转
+            //subtarget: null,         // 仅支持self | blank
             x: 'left',                 // 水平安放位置，默认为左对齐，可选为：
                                        // 'center' ¦ 'left' ¦ 'right'
                                        // ¦ {number}（x坐标，单位px）
