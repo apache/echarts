@@ -216,6 +216,7 @@ define(function (require) {
                 else {
                     style.text = indicator[i].text;
                 }
+                __ecIndicator[i].text = style.text;
                 
                 vector = __ecIndicator[i].vector;
 
@@ -265,6 +266,12 @@ define(function (require) {
                     rotation : rotation
                 }));
             }
+        },
+        
+        getIndicatorText : function(polarIndex, indicatorIndex) {
+            return this.polar[polarIndex]
+                   && this.polar[polarIndex].__ecIndicator[indicatorIndex]
+                   && this.polar[polarIndex].__ecIndicator[indicatorIndex].text;
         },
 
         /**
@@ -622,14 +629,18 @@ define(function (require) {
             }
             if (data.length != 1) {
                 for (var i = 0; i < data.length; i ++) {
-                    value = data[i].value[index];
+                    value = typeof data[i].value[index].value != 'undefined'
+                            ? data[i].value[index].value : data[i].value[index];
                     _compare(value);
                 }
             }
             else {
                 one = data[0];
                 for (var i = 0; i < one.value.length; i ++) {
-                    _compare(one.value[i]);
+                    _compare(
+                        typeof one.value[i].value != 'undefined' 
+                        ? one.value[i].value : one.value[i]
+                    );
                 }
             }
 

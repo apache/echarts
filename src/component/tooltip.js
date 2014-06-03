@@ -782,7 +782,8 @@ define(function (require) {
                         params.push([
                             seriesArray[i].name || '',
                             data.name,
-                            data.value[dataIndex],
+                            typeof data.value[dataIndex].value != 'undefined'
+                                ? data.value[dataIndex].value : data.value[dataIndex],
                             indicatorName
                         ]);
                     }

@@ -214,6 +214,17 @@ option = {
                     name : '张三',
                     itemStyle: {
                         normal: {
+                            color: function(seriesIndex, dataIndex, value) {
+                                return isNaN(value) 
+                                       ? undefined
+                                       : (value >= 120 ? 'green' : 'red')
+                            },
+                            label: {
+                                show: true,
+                                formatter:function(seriesName, indicatorName, value) {
+                                    return value;
+                                }
+                            },
                             areaStyle: {
                                 color: (function (){
                                     var zrColor = require('zrender/tool/color');
