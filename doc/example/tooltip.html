@@ -79,6 +79,11 @@ option = {
         borderRadius : 8,
         borderWidth: 2,
         padding: 10,    // [5, 10, 15, 20]
+        position : function(p) {
+            // 位置回调
+            console.log && console.log(p);
+            return [p[0] + 10, p[1] - 10];
+        },
         textStyle : {
             color: 'yellow',
             decoration: 'none',
@@ -134,6 +139,7 @@ option = {
             tooltip : {             // Series config.
                 trigger: 'item',
                 backgroundColor: 'black',
+                position : [0, 0],
                 formatter: "Series formatter: <br/>{a}<br/>{b}:{c}"
             },
             stack: '数据项',

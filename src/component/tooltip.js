@@ -243,9 +243,18 @@ define(function (require) {
             
         },
         
-        _show : function (x, y, specialCssText) {
+        _show : function (position, x, y, specialCssText) {
             var domHeight = this._tDom.offsetHeight;
             var domWidth = this._tDom.offsetWidth;
+            if (position) {
+                if (typeof position == 'function') {
+                    position = position([x, y]);
+                }
+                if (position instanceof Array) {
+                    x = position[0];
+                    y = position[1];
+                }
+            }
             if (x + domWidth > this._zrWidth) {
                 // 太靠右
                 //x = this._zrWidth - domWidth;
@@ -506,6 +515,7 @@ define(function (require) {
             var y;
 
             var formatter;
+            var position;
             var showContent;
             var specialCssText = '';
             if (this.option.tooltip.trigger == 'axis') {
@@ -513,6 +523,7 @@ define(function (require) {
                     return;
                 }
                 formatter = this.option.tooltip.formatter;
+                position = this.option.tooltip.position;
             }
 
             if (xAxisIndex != -1
@@ -528,12 +539,13 @@ define(function (require) {
                     if (series[i].xAxisIndex == xAxisIndex
                         && this.deepQuery([series[i], this.option], 'tooltip.trigger') == 'axis'
                     ) {
-                        showContent = this.query(
-                            series[i], 'tooltip.showContent'
-                        ) || showContent;
-                        formatter = this.query(
-                            series[i], 'tooltip.formatter'
-                        ) || formatter;
+                        showContent = this.query(series[i], 'tooltip.showContent') 
+                                      || showContent;
+                        formatter = this.query(series[i], 'tooltip.formatter') 
+                                    || formatter;
+                        position = this.query(series[i], 'tooltip.position') 
+                                   || position;
+                        
                         specialCssText += this._style(this.query(series[i], 'tooltip'));
                         seriesArray.push(series[i]);
                         seriesIndex.push(i);
@@ -573,12 +585,12 @@ define(function (require) {
                     if (series[i].yAxisIndex == yAxisIndex
                         && this.deepQuery([series[i], this.option], 'tooltip.trigger') == 'axis'
                     ) {
-                        showContent = this.query(
-                            series[i], 'tooltip.showContent'
-                        ) || showContent;
-                        formatter = this.query(
-                            series[i], 'tooltip.formatter'
-                        ) || formatter;
+                        showContent = this.query(series[i], 'tooltip.showContent') 
+                                      || showContent;
+                        formatter = this.query(series[i], 'tooltip.formatter') 
+                                    || formatter;
+                        position = this.query(series[i], 'tooltip.position') 
+                                   || position;
                         specialCssText += this._style(this.query(series[i], 'tooltip'));
                         seriesArray.push(series[i]);
                         seriesIndex.push(i);
@@ -709,7 +721,7 @@ define(function (require) {
                     this.dom.firstChild.appendChild(this._tDom);
                     this.hasAppend = true;
                 }
-                this._show(x + 10, y + 10, specialCssText);
+                this._show(position, x + 10, y + 10, specialCssText);
             }
         },
         
@@ -728,6 +740,7 @@ define(function (require) {
             var seriesArray = [];
 
             var formatter;
+            var position;
             var showContent;
             var specialCssText = '';
             if (this.option.tooltip.trigger == 'axis') {
@@ -735,9 +748,9 @@ define(function (require) {
                     return false;
                 }
                 formatter = this.option.tooltip.formatter;
+                position = this.option.tooltip.position;
             }
-            var indicatorName = 
-                    this.option.polar[polarIndex].indicator[dataIndex].text;
+            var indicatorName = this.option.polar[polarIndex].indicator[dataIndex].text;
 
             // 找到所有用这个极坐标并且axis触发的系列数据
             for (var i = 0, l = series.length; i < l; i++) {
@@ -745,21 +758,15 @@ define(function (require) {
                     continue;
                 }
                 if (series[i].polarIndex == polarIndex
-                    && this.deepQuery(
-                           [series[i], this.option], 'tooltip.trigger'
-                       ) == 'axis'
+                    && this.deepQuery([series[i], this.option], 'tooltip.trigger') == 'axis'
                 ) {
-                    showContent = this.query(
-                        series[i],
-                        'tooltip.showContent'
-                    ) || showContent;
-                    formatter = this.query(
-                        series[i],
-                        'tooltip.formatter'
-                    ) || formatter;
-                    specialCssText += this._style(this.query(
-                                          series[i], 'tooltip'
-                                      ));
+                    showContent = this.query(series[i], 'tooltip.showContent') 
+                                  || showContent;
+                    formatter = this.query(series[i], 'tooltip.formatter') 
+                                || formatter;
+                    position = this.query(series[i], 'tooltip.position') 
+                               || position;
+                    specialCssText += this._style(this.query(series[i], 'tooltip'));
                     seriesArray.push(series[i]);
                 }
             }
@@ -847,6 +854,7 @@ define(function (require) {
                     this.hasAppend = true;
                 }
                 this._show(
+                    position,
                     zrEvent.getX(this._event), 
                     zrEvent.getY(this._event), 
                     specialCssText
@@ -867,6 +875,7 @@ define(function (require) {
             var special2 = ecData.get(this._curTarget, 'special2');
             // 从低优先级往上找到trigger为item的formatter和样式
             var formatter;
+            var position;
             var showContent;
             var specialCssText = '';
             var indicator;
@@ -875,43 +884,37 @@ define(function (require) {
                 // 全局
                 if (this.option.tooltip.trigger == 'item') {
                     formatter = this.option.tooltip.formatter;
+                    position = this.option.tooltip.position;
                 }
                 // 系列
                 if (this.query(serie, 'tooltip.trigger') == 'item') {
-                    showContent = this.query(
-                                      serie, 'tooltip.showContent'
-                                  ) || showContent;
-                    formatter = this.query(
-                                    serie, 'tooltip.formatter'
-                                ) || formatter;
-                    specialCssText += this._style(this.query(
-                                          serie, 'tooltip'
-                                      ));
+                    showContent = this.query(serie, 'tooltip.showContent') 
+                                  || showContent;
+                    formatter = this.query(serie, 'tooltip.formatter') 
+                                || formatter;
+                    position = this.query(serie, 'tooltip.position') 
+                               || position;
+                    specialCssText += this._style(this.query(serie, 'tooltip'));
                 }
                 // 数据项
-                showContent = this.query(
-                                  data, 'tooltip.showContent'
-                              ) || showContent;
-                formatter = this.query(
-                                data, 'tooltip.formatter'
-                            ) || formatter;
+                showContent = this.query(data, 'tooltip.showContent') 
+                              || showContent;
+                formatter = this.query(data, 'tooltip.formatter') 
+                            || formatter;
+                position = this.query(data, 'tooltip.position') 
+                           || position;
                 specialCssText += this._style(this.query(data, 'tooltip'));
             }
             else {
-                showContent = this.deepQuery(
-                    [data, serie, this.option],
-                    'tooltip.showContent'
-                );
-                formatter = this.deepQuery(
-                    [data, serie, this.option],
-                    'tooltip.islandFormatter'
-                );
+                showContent = this.deepQuery([data, serie, this.option], 'tooltip.showContent');
+                formatter = this.deepQuery([data, serie, this.option], 'tooltip.islandFormatter');
+                position = this.deepQuery([data, serie, this.option], 'tooltip.islandPosition');
             }
 
             if (typeof formatter == 'function') {
                 this._curTicket = (serie.name || '')
-                             + ':'
-                             + ecData.get(this._curTarget, 'dataIndex');
+                                  + ':'
+                                  + ecData.get(this._curTarget, 'dataIndex');
                 this._tDom.innerHTML = formatter(
                     [
                         serie.name || '',
@@ -929,20 +932,17 @@ define(function (require) {
                 formatter = formatter.replace('{a}','{a0}')
                                      .replace('{b}','{b0}')
                                      .replace('{c}','{c0}');
-                formatter = formatter.replace(
-                                          '{a0}', this._encodeHTML(serie.name || '')
-                                      )
+                formatter = formatter.replace('{a0}', this._encodeHTML(serie.name || ''))
                                      .replace('{b0}', this._encodeHTML(name))
                                      .replace(
                                          '{c0}', 
-                                         value instanceof Array
-                                         ? value : this.numAddCommas(value)
+                                         value instanceof Array ? value : this.numAddCommas(value)
                                      );
 
                 formatter = formatter.replace('{d}','{d0}')
                                      .replace('{d0}', special || '');
                 formatter = formatter.replace('{e}','{e0}')
-                    .replace('{e0}', ecData.get(this._curTarget, 'special2') || '');
+                            .replace('{e0}', ecData.get(this._curTarget, 'special2') || '');
 
                 this._tDom.innerHTML = formatter;
             }
@@ -953,19 +953,15 @@ define(function (require) {
                                           ? (this._encodeHTML(serie.name) + '<br/>')
                                           : ''
                                       ) 
-                                      + (name === '' 
-                                            ? '' : (this._encodeHTML(name) + ' : ')
-                                      ) 
+                                      + (name === '' ? '' : (this._encodeHTML(name) + ' : ')) 
                                       + value 
                                       + (typeof special == 'undefined'
-                                          ? ''
-                                          : (' (' + special + ')'));
+                                             ? '' : (' (' + special + ')')
+                                        );
                 }
                 else if (serie.type == ecConfig.CHART_TYPE_RADAR && special) {
                     indicator = special;
-                    html += this._encodeHTML(
-                        name === '' ? (serie.name || '') : name
-                    );
+                    html += this._encodeHTML(name === '' ? (serie.name || '') : name);
                     html += html === '' ? '' : '<br />';
                     for (var i = 0 ; i < indicator.length; i ++) {
                         html += this._encodeHTML(indicator[i].text) + ' : ' 
@@ -977,32 +973,31 @@ define(function (require) {
                     if (typeof special2 == 'undefined') {
                         // 外环上
                         this._tDom.innerHTML = this._encodeHTML(name) + ' (' 
-                                          + this.numAddCommas(value) + ')';
+                                               + this.numAddCommas(value) + ')';
                     }
                     else {
                         var name1 = this._encodeHTML(name);
                         var name2 = this._encodeHTML(special);
                         // 内部弦上
                         this._tDom.innerHTML = (typeof serie.name != 'undefined'
-                                          ? (this._encodeHTML(serie.name) + '<br/>')
-                                          : '')
-                              + name1 + ' -> ' + name2 
-                              + ' (' + this.numAddCommas(value) + ')'
-                              + '<br />'
-                              + name2 + ' -> ' + name1
-                              + ' (' + this.numAddCommas(special2) + ')';
+                                                ? (this._encodeHTML(serie.name) + '<br/>') : ''
+                                               )
+                                               + name1 + ' -> ' + name2 
+                                               + ' (' + this.numAddCommas(value) + ')'
+                                               + '<br />'
+                                               + name2 + ' -> ' + name1
+                                               + ' (' + this.numAddCommas(special2) + ')';
                     }
                 }
                 else {
                     this._tDom.innerHTML = (typeof serie.name != 'undefined'
-                                      ? (this._encodeHTML(serie.name) + '<br/>')
-                                      : '')
-                                      + this._encodeHTML(name) + ' : ' 
-                                      + this.numAddCommas(value) +
-                                      (typeof special == 'undefined'
-                                      ? ''
-                                      : (' ('+ this.numAddCommas(special) +')')
-                                      );
+                                                ? (this._encodeHTML(serie.name) + '<br/>') : ''
+                                           )
+                                           + this._encodeHTML(name) + ' : ' 
+                                           + this.numAddCommas(value) +
+                                           (typeof special == 'undefined'
+                                               ? '' : (' ('+ this.numAddCommas(special) +')')
+                                           );
                 }
             }
 
@@ -1029,6 +1024,7 @@ define(function (require) {
             }
             
             this._show(
+                position,
                 zrEvent.getX(this._event) + 20,
                 zrEvent.getY(this._event) - 20,
                 specialCssText
