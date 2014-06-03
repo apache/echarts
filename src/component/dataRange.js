@@ -1184,26 +1184,25 @@ define(function (require) {
                 }
                 // console.log(this._colorList.length)
                 
-                if (this.dataRangeOption.precision === 0) {
-                    this._gap = Math.round(
-                        (this.dataRangeOption.max - this.dataRangeOption.min)
-                        / splitNumber
-                    ) || 1;
-                } else {
-                    this._gap = (this.dataRangeOption.max - this.dataRangeOption.min) / splitNumber;
-                    this._gap = this._gap.toFixed(this.dataRangeOption.precision) - 0;
+                var precision = this.dataRangeOption.precision;
+                this._gap = (this.dataRangeOption.max - this.dataRangeOption.min) / splitNumber;
+                while (this._gap.toFixed(precision) - 0 != this._gap && precision < 5) {
+                    // 精度自适应
+                    precision++;
                 }
+                this.dataRangeOption.precision = precision;
+                
+                this._gap = (
+                    (this.dataRangeOption.max - this.dataRangeOption.min) / splitNumber
+                ).toFixed(precision) - 0;
                 
                 this._valueTextList = [];
                 for (var i = 0; i < splitNumber; i++) {
                     this._selectedMap[i] = true;
                     this._valueTextList.unshift(
-                        (i * this._gap + this.dataRangeOption.min)
-                            .toFixed(this.dataRangeOption.precision)
+                        (i * this._gap + this.dataRangeOption.min).toFixed(precision)
                         + ' - ' 
-                        + ((i + 1) * this._gap + this.dataRangeOption.min).toFixed(
-                            this.dataRangeOption.precision
-                        )
+                        + ((i + 1) * this._gap + this.dataRangeOption.min).toFixed(precision)
                     );
                 }
             }
