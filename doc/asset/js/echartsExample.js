@@ -61,7 +61,8 @@ function needMap() {
     var href = location.href;
     return href.indexOf('map') != -1
            || href.indexOf('mix3') != -1
-           || href.indexOf('mix5') != -1;
+           || href.indexOf('mix5') != -1
+           || href.indexOf('dataRange') != -1;
 
 }
 

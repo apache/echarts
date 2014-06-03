@@ -42,6 +42,9 @@ define(function (require) {
         self._ondragend = function() {
             return self.__ondragend();
         };
+        self._dataRangeSelected = function(param) {
+            return self.__dataRangeSelected(param);
+        }
         this._selectedMap = {};
         this._range = {};
         
@@ -334,17 +337,8 @@ define(function (require) {
             var font = this.getFont(this.dataRangeOption.textStyle);
             var textHeight = zrArea.getTextHeight('国', font);
             var textWidth = Math.max(
-                    zrArea.getTextWidth(
-                        this.dataRangeOption.max.toFixed(
-                            this.dataRangeOption.precision
-                        ),
-                        font),
-                    zrArea.getTextWidth(
-                        this.dataRangeOption.min.toFixed(
-                            this.dataRangeOption.precision
-                        ), 
-                        font
-                    )
+                    zrArea.getTextWidth(this._textFormat(this.dataRangeOption.max), font),
+                    zrArea.getTextWidth(this._textFormat(this.dataRangeOption.min), font)
                 ) + 2;
             
             var pointListStart;
@@ -504,9 +498,7 @@ define(function (require) {
             this._startShape = {
                 style : {
                     pointList : pointListStart,
-                    text : this.dataRangeOption.max.toFixed(
-                               this.dataRangeOption.precision
-                           ),
+                    text : this._textFormat(this.dataRangeOption.max),
                     textX : textXStart,
                     textY : textYStart,
                     color : this.getColor(this.dataRangeOption.max),
@@ -525,9 +517,7 @@ define(function (require) {
             this._endShape = {
                 style : {
                     pointList : pointListEnd,
-                    text : this.dataRangeOption.min.toFixed(
-                               this.dataRangeOption.precision
-                           ),
+                    text : this._textFormat(this.dataRangeOption.min),
                     textX : textXEnd,
                     textY : textYEnd,
                     color : this.getColor(this.dataRangeOption.min),
@@ -1083,38 +1073,30 @@ define(function (require) {
                 this._startShape.style.y - this._startShape.style._y
             ];
             
-            if (this.dataRangeOption.precision === 0) {
-                this._startShape.style.text = Math.round(
-                    this._gap * this._range.start + this.dataRangeOption.min
-                ) + '';
-            } else {
-                this._startShape.style.text =(
-                    this._gap * this._range.start + this.dataRangeOption.min
-                ).toFixed(this.dataRangeOption.precision);
-            }
-            this._startShape.style.color 
-            = this._startShape.highlightStyle.strokeColor
-            = this.getColor(
+            this._startShape.style.text = this._textFormat(
                 this._gap * this._range.start + this.dataRangeOption.min
             );
+            
+            this._startShape.style.color 
+                = this._startShape.highlightStyle.strokeColor
+                = this.getColor(
+                    this._gap * this._range.start + this.dataRangeOption.min
+                );
             
             this._endShape.position = [
                 this._endShape.style.x - this._endShape.style._x,
                 this._endShape.style.y - this._endShape.style._y
             ];
             
-            if (this.dataRangeOption.precision === 0) {
-                this._endShape.style.text = Math.round(
-                    this._gap * this._range.end + this.dataRangeOption.min
-                ) + '';
-            } else {
-                this._endShape.style.text = (
-                    this._gap * this._range.end + this.dataRangeOption.min
-                ).toFixed(this.dataRangeOption.precision);
-            }
-            this._endShape.style.color = this._endShape.highlightStyle.strokeColor = this.getColor(
+            this._endShape.style.text = this._textFormat(
                 this._gap * this._range.end + this.dataRangeOption.min
             );
+            
+            this._endShape.style.color 
+                = this._endShape.highlightStyle.strokeColor 
+                = this.getColor(
+                    this._gap * this._range.end + this.dataRangeOption.min
+                );
             
             this.zr.modShape(this._startShape.id);
             this.zr.modShape(this._endShape.id);
@@ -1140,12 +1122,33 @@ define(function (require) {
         },
 
 
-        _dataRangeSelected : function (param) {
+        __dataRangeSelected : function (param) {
             var idx = param.target._idx;
             this._selectedMap[idx] = !this._selectedMap[idx];
             this.messageCenter.dispatch(ecConfig.EVENT.REFRESH);
         },
 
+        _textFormat : function(valueStart, valueEnd) {
+            valueStart = valueStart.toFixed(this.dataRangeOption.precision);
+            valueEnd = typeof valueEnd != 'undefined' 
+                       ? valueEnd.toFixed(this.dataRangeOption.precision) : ''
+            if (this.dataRangeOption.formatter) {
+                if (typeof this.dataRangeOption.formatter == 'string') {
+                    return this.dataRangeOption.formatter.replace('{value}', valueStart)
+                                                         .replace('{value2}', valueEnd);
+                }
+                else if (typeof this.dataRangeOption.formatter == 'function') {
+                    return this.dataRangeOption.formatter(valueStart, valueEnd);
+                }
+            }
+            
+            if (valueEnd != '') {
+                return valueStart + ' - ' + valueEnd;
+            }
+
+            return valueStart;
+        },
+        
         /**
          * 刷新
          */
@@ -1200,9 +1203,10 @@ define(function (require) {
                 for (var i = 0; i < splitNumber; i++) {
                     this._selectedMap[i] = true;
                     this._valueTextList.unshift(
-                        (i * this._gap + this.dataRangeOption.min).toFixed(precision)
-                        + ' - ' 
-                        + ((i + 1) * this._gap + this.dataRangeOption.min).toFixed(precision)
+                        this._textFormat(
+                            i * this._gap + this.dataRangeOption.min,
+                            (i + 1) * this._gap + this.dataRangeOption.min
+                        )
                     );
                 }
             }

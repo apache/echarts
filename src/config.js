@@ -130,6 +130,7 @@ define(function() {
             calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
             realtime: true,
             color:['#006edd','#e0ffff'],//颜色 
+            //formatter: null,
             //text:['高','低'],           // 文本，默认为数值文本
             textStyle: {
                 color: '#333'          // 值域文字颜色

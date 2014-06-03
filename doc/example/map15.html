@@ -286,14 +286,6 @@ option = {
             color: '#fff'
         }
     },
-    dataRangde: {
-        min : 0,
-        max : 100,
-        color: ['#fff','#1e90ff'],
-        textStyle : {
-            color: '#fff'
-        }
-    },
     toolbox: {
         show : true,
         orient : 'vertical',
@@ -335,7 +327,7 @@ option = {
                         geoCoord = placeList[len % placeList.length].geoCoord;
                         data.push({
                             name : placeList[len % placeList.length].name + len,
-                            value : 50,
+                            value : 10,
                             geoCoord : [
                                 geoCoord[0] + Math.random() * 5 * -1,
                                 geoCoord[1] + Math.random() * 3 * -1

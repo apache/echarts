@@ -75,13 +75,19 @@ dataRangeStyle = [
 // 0
     {
         min: 0,
-        max: 2000
+        max: 2000,
+        formatter : function(v, v2){
+            if (v2 < 1000) { return '低于' + v2}
+            else if (v > 1000) { return '高于' + v}
+            else { return '中' }
+        }
     },
 // 1
     {
         orient: 'horizontal', // 'vertical'
         min: 0,
-        max: 2000
+        max: 2000,
+        formatter : '{value} 到 {value2}'
     },
 // 2
     {
@@ -128,7 +134,12 @@ dataRangeStyle = [
     {
         calculable : true,
         min: 0,
-        max: 2000
+        max: 2000,
+        formatter : function(v) {
+            if (v > 1500) {return v + ' (高)'}
+            else if (v < 500) {return v + ' (低)'}
+            else {return v + ' (中)'};
+        }
     },
 // 9
     {
