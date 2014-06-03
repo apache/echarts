@@ -547,7 +547,7 @@ define(function (require) {
                 var seriesIndex = ecData.get(target, 'seriesIndex');
                 var dataIndex = ecData.get(target, 'dataIndex');
                 
-                dataIndex = this.component.dataZoom
+                dataIndex = seriesIndex != -1 && this.component.dataZoom
                             ? this.component.dataZoom.getRealDataIndex(
                                 seriesIndex,
                                 dataIndex

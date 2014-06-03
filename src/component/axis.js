@@ -19,7 +19,9 @@ define(function (require) {
     var LineShape = require('zrender/shape/Line');
     
     var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
+    var zrColor = require('zrender/tool/color');
     
     /**
      * 构造函数
@@ -125,6 +127,24 @@ define(function (require) {
                 
                 axShape = new LineShape(axShape);
                 this.shapeList.push(axShape);
+            },
+            
+            _axisLabelClickable : function(clickable, axShape) {
+                if (clickable) {
+                    ecData.pack(
+                        axShape, undefined, -1, undefined, -1, axShape.style.text
+                    );
+                    axShape.hoverable = true;
+                    axShape.clickable = true;
+                    axShape.highlightStyle = {
+                        color : zrColor.lift(axShape.style.color, 1),
+                        brushType: 'fill'
+                    };
+                    return axShape;
+                }
+                else {
+                    return axShape;
+                }
             },
             
             refixAxisShape : function(zeroX, zeroY) {

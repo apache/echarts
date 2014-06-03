@@ -260,6 +260,7 @@ define(function (require) {
             var dataLength = this.option.data.length;
             var rotate     = this.option.axisLabel.rotate;
             var margin     = this.option.axisLabel.margin;
+            var clickable  = this.option.axisLabel.clickable;
             var textStyle  = this.option.axisLabel.textStyle;
             var dataTextStyle;
 
@@ -311,7 +312,9 @@ define(function (require) {
                             axShape.style.y
                         ];
                     }
-                    this.shapeList.push(new TextShape(axShape));
+                    this.shapeList.push(new TextShape(
+                        this._axisLabelClickable(clickable, axShape)
+                    ));
                 }
             }
             else {
@@ -364,11 +367,13 @@ define(function (require) {
                             axShape.style.y
                         ];
                     }
-                    this.shapeList.push(new TextShape(axShape));
+                    this.shapeList.push(new TextShape(
+                        this._axisLabelClickable(clickable, axShape)
+                    ));
                 }
             }
         },
-
+        
         _buildSplitLine : function () {
             var axShape;
             //var data       = this.option.data;
