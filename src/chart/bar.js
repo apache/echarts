@@ -843,6 +843,43 @@ define(function (require) {
             barShape.highlightStyle.textColor = barShape.highlightStyle.color;
             
             barShape = this.addLabel(barShape, serie, data, name, orient);
+            if (barShape.style.textPosition == 'insideLeft'
+                || barShape.style.textPosition == 'insideRight'
+                || barShape.style.textPosition == 'insideTop'
+                || barShape.style.textPosition == 'insideBottom'
+            ) {
+                var gap = 5;
+                switch (barShape.style.textPosition) {
+                    case 'insideLeft' : 
+                        barShape.style.textX = barShape.style.x + gap;
+                        barShape.style.textY = barShape.style.y + barShape.style.height / 2;
+                        barShape.style.textAlign = 'left';
+                        barShape.style.textBaseline = 'middle';
+                        break;
+                    case 'insideRight' : 
+                        barShape.style.textX = barShape.style.x + barShape.style.width - gap;
+                        barShape.style.textY = barShape.style.y + barShape.style.height / 2;
+                        barShape.style.textAlign = 'right';
+                        barShape.style.textBaseline = 'middle';
+                        break;
+                    case 'insideTop' : 
+                        barShape.style.textX = barShape.style.x + barShape.style.width / 2;
+                        barShape.style.textY = barShape.style.y + gap / 2;
+                        barShape.style.textAlign = 'center';
+                        barShape.style.textBaseline = 'top';
+                        break;
+                    case 'insideBottom' : 
+                        barShape.style.textX = barShape.style.x + barShape.style.width / 2;
+                        barShape.style.textY = barShape.style.y + barShape.style.height - gap / 2;
+                        barShape.style.textAlign = 'center';
+                        barShape.style.textBaseline = 'bottom';
+                        break;
+                }
+                barShape.style.textPosition = 'specific';
+                barShape.style.textColor = barShape.style.textColor || '#fff';
+            }
+            
+            
 
             if (this.deepQuery([data, serie, this.option],'calculable')) {
                 this.setCalculable(barShape);
