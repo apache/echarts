@@ -288,10 +288,12 @@ define(function (require) {
             var axisOption = zrUtil.clone(this.option.xAxis);
             if (axisOption instanceof Array) {
                 axisOption[0].type = 'value';
-                axisOption[1] && (axisOption[1].type = 'value');
+                axisOption[0].boundary = [0, 0];
+                axisOption[1] && (axisOption[1].type = 'value', axisOption[1].boundary = [0, 0]);
             }
             else {
                 axisOption.type = 'value';
+                axisOption.boundary = [0, 0];
             }
             var vAxis = new Axis(
                 this.ecTheme,
@@ -312,10 +314,11 @@ define(function (require) {
             axisOption = zrUtil.clone(this.option.yAxis);
             if (axisOption instanceof Array) {
                 axisOption[0].type = 'value';
-                axisOption[1] && (axisOption[1].type = 'value');
+                axisOption[1] && (axisOption[1].type = 'value', axisOption[1].boundary = [0, 0]);
             }
             else {
                 axisOption.type = 'value';
+                axisOption.boundary = [0, 0];
             }
             vAxis = new Axis(
                 this.ecTheme,
