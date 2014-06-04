@@ -7,7 +7,7 @@
  */
 define(function (require) {
     var ComponentBase = require('../component/base');
-    var CalculableBase = require('./calculableBase');
+    var ChartBase = require('./base');
     
     // 图形依赖
     var BrokenLineShape = require('zrender/shape/BrokenLine');
@@ -33,8 +33,8 @@ define(function (require) {
     function Line(ecTheme, messageCenter, zr, option, myChart){
         // 基类
         ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-        // 可计算特性装饰
-        CalculableBase.call(this);
+        // 图表基类
+        ChartBase.call(this);
 
         this.refresh(option);
     }
@@ -1068,7 +1068,7 @@ define(function (require) {
     }
     IconShape.prototype.iconLibrary['legendLineIcon'] = legendLineIcon;
     
-    zrUtil.inherits(Line, CalculableBase);
+    zrUtil.inherits(Line, ChartBase);
     zrUtil.inherits(Line, ComponentBase);
     
     // 图表注册

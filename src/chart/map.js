@@ -7,7 +7,7 @@
  */
 define(function (require) {
     var ComponentBase = require('../component/base');
-    var CalculableBase = require('./calculableBase');
+    var ChartBase = require('./base');
     
     // 图形依赖
     var TextShape = require('zrender/shape/Text');
@@ -36,8 +36,8 @@ define(function (require) {
     function Map(ecTheme, messageCenter, zr, option, myChart){
         // 基类
         ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-        // 可计算特性装饰
-        CalculableBase.call(this);
+        // 图表基类
+        ChartBase.call(this);
         
         var self = this;
         self._onmousewheel = function(param){
@@ -1319,7 +1319,7 @@ define(function (require) {
         }
     };
     
-    zrUtil.inherits(Map, CalculableBase);
+    zrUtil.inherits(Map, ChartBase);
     zrUtil.inherits(Map, ComponentBase);
     
     // 图表注册

@@ -7,7 +7,7 @@
  */
 define(function (require) {
     var ComponentBase = require('../component/base');
-    var CalculableBase = require('./calculableBase');
+    var ChartBase = require('./base');
     
     // 图形依赖
     var CircleShape = require('zrender/shape/Circle');
@@ -26,8 +26,8 @@ define(function (require) {
     function Island(ecTheme, messageCenter, zr, option, myChart) {
         // 基类
         ComponentBase.call(this, ecTheme, messageCenter, zr, {}, myChart);
-        // 可计算特性装饰
-        CalculableBase.call(this);
+        // 图表基类
+        ChartBase.call(this);
 
         this._nameConnector;
         this._valueConnector;
@@ -239,7 +239,7 @@ define(function (require) {
         }
     }
     
-    zrUtil.inherits(Island, CalculableBase);
+    zrUtil.inherits(Island, ChartBase);
     zrUtil.inherits(Island, ComponentBase);
     
     // 图表注册

@@ -7,7 +7,7 @@
  */
 define(function (require) {
     var ComponentBase = require('../component/base');
-    var CalculableBase = require('./calculableBase');
+    var ChartBase = require('./base');
     
     // 图形依赖
     var CandleShape = require('../util/shape/Candle');
@@ -30,8 +30,8 @@ define(function (require) {
     function K(ecTheme, messageCenter, zr, option, myChart){
         // 基类
         ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-        // 可计算特性装饰
-        CalculableBase.call(this);
+        // 图表基类
+        ChartBase.call(this);
 
         this.refresh(option);
     }
@@ -499,7 +499,7 @@ define(function (require) {
         }
     };
     
-    zrUtil.inherits(K, CalculableBase);
+    zrUtil.inherits(K, ChartBase);
     zrUtil.inherits(K, ComponentBase);
     
     // 图表注册

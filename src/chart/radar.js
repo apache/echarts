@@ -8,7 +8,7 @@
 
  define(function (require) {
     var ComponentBase = require('../component/base');
-    var CalculableBase = require('./calculableBase');
+    var ChartBase = require('./base');
     
      // 图形依赖
     var PolygonShape = require('zrender/shape/Polygon');
@@ -30,8 +30,8 @@
     function Radar(ecTheme, messageCenter, zr, option, myChart) {
         // 基类
         ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-        // 可计算特性装饰
-        CalculableBase.call(this);
+        // 图表基类
+        ChartBase.call(this);
 
         this.refresh(option);
     }
@@ -418,7 +418,7 @@
         }
     };
     
-    zrUtil.inherits(Radar, CalculableBase);
+    zrUtil.inherits(Radar, ChartBase);
     zrUtil.inherits(Radar, ComponentBase);
     
     // 图表注册
