@@ -522,7 +522,7 @@ define(function (require) {
             //上下左右留空
             var padding = Math.round(Math.min(zrWidth, zrHeight) * 0.02);
             for (var key in mapSeries) {
-                mapLocation = series[key].mapLocation;
+                mapLocation = series[key].mapLocation || {};
                 cusX = mapLocation.x || cusX;
                 cusY = mapLocation.y || cusY;
                 width = mapLocation.width || width;
@@ -536,18 +536,14 @@ define(function (require) {
             y = this.parsePercent(cusY, zrHeight);
             y = isNaN(y) ? padding : y;
             if (typeof width == 'undefined') {
-                width = isNaN(cusX) 
-                        ? zrWidth - 2 * padding
-                        : zrWidth - x - 2 * padding;
+                width = zrWidth - x - 2 * padding;
             }
             else {
                 width = this.parsePercent(width, zrWidth);
             }
             
             if (typeof height == 'undefined') {
-                height = isNaN(cusY) 
-                         ? zrHeight - 2 * padding
-                         : zrHeight - y - 2 * padding;
+                height = zrHeight - y - 2 * padding;
             }
             else {
                 height = this.parsePercent(height, zrHeight);
@@ -574,6 +570,7 @@ define(function (require) {
             //height = mapHeight * minScale;
             
             if (isNaN(cusX)) {
+                cusX = cusX || 'center';
                 switch (cusX + '') {
                     case 'center' :
                         x = Math.floor((zrWidth - width) / 2);
@@ -582,13 +579,12 @@ define(function (require) {
                         x = zrWidth - width;
                         break;
                     //case 'left' :
-                    default:
                         //x = padding;
-                        break;
                 }
             }
             //console.log(cusX,x,zrWidth,width,'kener')
             if (isNaN(cusY)) {
+                cusY = cusY || 'center';
                 switch (cusY + '') {
                     case 'center' :
                         y = Math.floor((zrHeight - height) / 2);
@@ -597,9 +593,7 @@ define(function (require) {
                         y = zrHeight - height;
                         break;
                     //case 'top' :
-                    default:
                         //y = padding;
-                        break;
                 }
             }
             //console.log(x,y,width,height)
@@ -863,9 +857,7 @@ define(function (require) {
             ];
             for (var sIdx in mapSeries) {
                 this.buildMark(
-                    series[sIdx],
                     sIdx,
-                    this.component,
                     {
                         mapType : mapType
                     },

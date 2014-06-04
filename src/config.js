@@ -730,12 +730,12 @@ define(function() {
         
         map: {
             mapType: 'china',   // 各省的mapType暂时都用中文
-            mapLocation: {
-                x : 'center',
-                y : 'center'
+            //mapLocation: {
+                // x : 'center' | 'left' | 'right' | 'x%' | {number},
+                // y : 'center' | 'top' | 'bottom' | 'x%' | {number}
                 // width    // 自适应
                 // height   // 自适应
-            },
+            //},
             // mapValueCalculation: 'sum', // 数值合并方式，默认加和，可选为：
                                            // 'sum' | 'average' | 'max' | 'min' 
             mapValuePrecision : 0,         // 地图数值计算结果小数精度
