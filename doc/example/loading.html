@@ -160,7 +160,8 @@ loadingTicket = setTimeout(function (){
         var effectIndex = -1;
         var effect = ['spin' , 'bar' , 'ring' , 'whirling' , 'dynamicLine' , 'bubble'];
         function refresh(isBtnRefresh){
-            (new function (editor.doc.getValue()))();
+            //(new function (editor.doc.getValue()))();
+            (new Function (editor.doc.getValue()))();
             domMessage.innerHTML = '';
         }
     </script>

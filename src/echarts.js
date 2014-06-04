@@ -80,10 +80,11 @@ define(function (require) {
 
         this.dom = dom;
         // this._zr;
-        this._option;
+        // this._option;                    // curOption clone
         // this._optionRestore;             // for restore;
         // this._island;
         // this._toolbox;
+        // this._timeline;
         // this._refreshInside;             // 内部刷新标志位
         
         this._connected = false;
@@ -92,7 +93,7 @@ define(function (require) {
             dragOut : false,
             needRefresh : false
         };
-        this._curEventType = null;          // 破循环信号灯
+        this._curEventType = false;         // 破循环信号灯
         this._chartList = [];               // 图表实例
         this._messageCenter = {};           // Echarts层的消息中心，做zrender原始事件转换
         
@@ -105,16 +106,18 @@ define(function (require) {
     
     Echarts.prototype = {
         _init : function () {
+            var self = this;
             var _zr = require('zrender').init(this.dom);
             this._zr = _zr;
 
             // 添加消息中心的事件分发器特性
-            var self = this;
+            var zrEvent = require('zrender/tool/event');
+            zrEvent.Dispatcher.call(this._messageCenter);
+            
+            
             this._onevent = function(param){
                 return self.__onevent(param);
             };
-            var zrEvent = require('zrender/tool/event');
-            zrEvent.Dispatcher.call(this._messageCenter);
             for (var e in ecConfig.EVENT) {
                 if (e != 'CLICK' && e != 'HOVER' && e != 'MAP_ROAM') {
                     this._messageCenter.bind(ecConfig.EVENT[e], this._onevent);
@@ -157,6 +160,9 @@ define(function (require) {
             componentLibrary.define('legend', require('./component/legend'));
         },
         
+        /**
+         * zrender事件内部分发器
+         */
         __onzrevent : function(param){
             var zrConfig = require('zrender/config');
             switch (param.type) {
@@ -323,17 +329,6 @@ define(function (require) {
                 }
             }
         },
-
-        /**
-         * 滚轮回调，孤岛可计算特性
-        _onmousewheel : function (param) {
-            this._messageCenter.dispatch(
-                ecConfig.EVENT.MOUSEWHEEL,
-                param.event,
-                this._eventPackage(param.target)
-            );
-        },
-        */
 
         /**
          * dragstart回调，可计算特性实现
@@ -1248,7 +1243,7 @@ define(function (require) {
                           
             var image = zrImg.toDataURL('image/png', bgColor);
             
-            setTimeout(function (){
+            setTimeout(function () {
                 zrImg.dispose();
                 zrDom.parentNode.removeChild(zrDom);
                 zrDom = null;
@@ -1382,9 +1377,9 @@ define(function (require) {
                 this._themeConfig.textStyle
             );
             loadingOption.textStyle.textFont = finalTextStyle.fontStyle + ' '
-                                            + finalTextStyle.fontWeight + ' '
-                                            + finalTextStyle.fontSize + 'px '
-                                            + finalTextStyle.fontFamily;
+                                             + finalTextStyle.fontWeight + ' '
+                                             + finalTextStyle.fontSize + 'px '
+                                             + finalTextStyle.fontFamily;
 
             loadingOption.textStyle.text = loadingOption.text 
                                            || this._themeConfig.loadingText;
@@ -1392,15 +1387,18 @@ define(function (require) {
             if (typeof loadingOption.x != 'undefined') {
                 loadingOption.textStyle.x = loadingOption.x;
             }
-
             if (typeof loadingOption.y != 'undefined') {
                 loadingOption.textStyle.y = loadingOption.y;
             }
+            
             loadingOption.effectOption = loadingOption.effectOption || {};
             loadingOption.effectOption.textStyle = loadingOption.textStyle;
-            this._zr.showLoading(new effectList[loadingOption.effect || 'spin'](
-                loadingOption.effectOption
-            ));
+            
+            var effect = loadingOption.effect;
+            if (typeof effect == 'string' || typeof effect == 'undefined') {
+                effect =  effectList[loadingOption.effect || 'spin'];
+            }
+            this._zr.showLoading(new effect(loadingOption.effectOption));
             return this;
         },
 
