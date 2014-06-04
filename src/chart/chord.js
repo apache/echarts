@@ -61,11 +61,7 @@ define(function (require) {
                         continue;
                     }
                     this.chordSeries.push(series[i]);
-                    this.buildMark(
-                        series[i],
-                        i,
-                        this.component
-                    );
+                    this.buildMark(i);
                     matrix.push(series[i].matrix);
                     serieNumber++;
                 }

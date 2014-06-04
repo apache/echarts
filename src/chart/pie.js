@@ -131,11 +131,7 @@ define(function (require) {
                         this.shapeList.push(pieCase);
                     }
                     this._buildSinglePie(i);
-                    this.buildMark(
-                        series[i],
-                        i,
-                        this.component
-                    );
+                    this.buildMark(i);
                 }
             }
 

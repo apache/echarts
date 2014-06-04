@@ -45,6 +45,7 @@ define(function (require) {
         _buildShape : function () {
             var series = this.series;
             this.selectedMap = {};
+            this.xMarkMap = {};
             
             // series默认颜色索引，seriesIndex索引到color
             this._sIndex2colorMap = {};
@@ -81,7 +82,7 @@ define(function (require) {
             for (var position in _position2sIndexMap) {
                 if (_position2sIndexMap[position].length > 0) {
                     this._buildSinglePosition(
-                        position, _position2sIndexMap[position]
+                        position, _position2sIndexMap[position], this.xMarkMap
                     );
                 }
             }
@@ -94,7 +95,7 @@ define(function (require) {
          *
          * @param {number} seriesIndex 系列索引
          */
-        _buildSinglePosition : function (position, seriesArray) {
+        _buildSinglePosition : function (position, seriesArray, xMarkMap) {
             var mapData = this._mapData(seriesArray);
             var locationMap = mapData.locationMap;
             var maxDataLength = mapData.maxDataLength;
@@ -106,11 +107,11 @@ define(function (require) {
             switch (position) {
                 case 'bottom' :
                 case 'top' :
-                    this._buildHorizontal(maxDataLength, locationMap, seriesArray);
+                    this._buildHorizontal(maxDataLength, locationMap, seriesArray, xMarkMap);
                     break;
                 case 'left' :
                 case 'right' :
-                    this._buildVertical(maxDataLength, locationMap, seriesArray);
+                    this._buildVertical(maxDataLength, locationMap, seriesArray, xMarkMap);
                     break;
             }
         },
@@ -206,7 +207,7 @@ define(function (require) {
         /**
          * 构建类目轴为水平方向的柱形图系列
          */
-        _buildHorizontal : function (maxDataLength, locationMap, seriesArray) {
+        _buildHorizontal : function (maxDataLength, locationMap, seriesArray, xMarkMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
@@ -225,7 +226,6 @@ define(function (require) {
             var barHeight;
             var interval = size.interval;
 
-            var xMarkMap = {}; // 为标注记录一些参数
             var x;
             var y;
             var lastYP; // 正向堆积处理
@@ -403,16 +403,17 @@ define(function (require) {
                         [this.component.grid.getX(), xMarkMap[seriesIndex].maxY],
                         [this.component.grid.getXend(), xMarkMap[seriesIndex].maxY]
                     ];
+                    
+                    xMarkMap[seriesIndex].isHorizontal = true;
+                    this.buildMark(seriesIndex);
                 }
             }
-            
-            this._buildMark(seriesArray, xMarkMap, true);
         },
 
         /**
          * 构建类目轴为垂直方向的柱形图系列
          */
-        _buildVertical : function (maxDataLength, locationMap, seriesArray) {
+        _buildVertical : function (maxDataLength, locationMap, seriesArray, xMarkMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
@@ -431,7 +432,6 @@ define(function (require) {
             var barHeight;
             var interval = size.interval;
 
-            var xMarkMap = {}; // 为标注记录一个横向偏移
             var x;
             var y;
             var lastXP; // 正向堆积处理
@@ -611,10 +611,11 @@ define(function (require) {
                         [xMarkMap[seriesIndex].maxX, this.component.grid.getYend()],
                         [xMarkMap[seriesIndex].maxX, this.component.grid.getY()]
                     ];
+                    
+                    xMarkMap[seriesIndex].isHorizontal = false;
+                    this.buildMark(seriesIndex);
                 }
             }
-            
-            this._buildMark(seriesArray, xMarkMap, false);
         },
         
         /**
@@ -896,24 +897,10 @@ define(function (require) {
             return barShape;
         },
 
-        // 添加标注
-        _buildMark : function (seriesArray, xMarkMap ,isHorizontal) {
-            var series = this.series;
-            for (var i = 0, l = seriesArray.length; i < l; i++) {
-                this.buildMark(
-                    series[seriesArray[i]],
-                    seriesArray[i],
-                    this.component,
-                    {
-                        isHorizontal : isHorizontal,
-                        xMarkMap : xMarkMap
-                    }
-                );
-            }
-        },
-        
         // 位置转换
-        getMarkCoord : function (serie, seriesIndex, mpData, markCoordParams) {
+        getMarkCoord : function (seriesIndex, mpData) {
+            var serie = this.series[seriesIndex];
+            var xMarkMap = this.xMarkMap[seriesIndex];
             var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex);
             var yAxis = this.component.yAxis.getAxis(serie.yAxisIndex);
             var dataIndex;
@@ -923,19 +910,19 @@ define(function (require) {
             ) {
                 // 特殊值内置支持
                 pos = [
-                    markCoordParams.xMarkMap[seriesIndex][mpData.type + 'X'],
-                    markCoordParams.xMarkMap[seriesIndex][mpData.type + 'Y'],
-                    markCoordParams.xMarkMap[seriesIndex][mpData.type + 'Line'],
-                    markCoordParams.xMarkMap[seriesIndex][mpData.type]
+                    xMarkMap[mpData.type + 'X'],
+                    xMarkMap[mpData.type + 'Y'],
+                    xMarkMap[mpData.type + 'Line'],
+                    xMarkMap[mpData.type]
                 ];
             }
-            else if (markCoordParams.isHorizontal) {
+            else if (xMarkMap.isHorizontal) {
                 // 横向
                 dataIndex = typeof mpData.xAxis == 'string' && xAxis.getIndexByName
                             ? xAxis.getIndexByName(mpData.xAxis)
                             : (mpData.xAxis || 0);
                 
-                var x = markCoordParams.xMarkMap[seriesIndex][dataIndex];
+                var x = xMarkMap[dataIndex];
                 x = typeof x != 'undefined'
                     ? x 
                     : typeof mpData.xAxis != 'string' && xAxis.getCoordByIndex
@@ -950,7 +937,7 @@ define(function (require) {
                             ? yAxis.getIndexByName(mpData.yAxis)
                             : (mpData.yAxis || 0);
                 
-                var y = markCoordParams.xMarkMap[seriesIndex][dataIndex];
+                var y = xMarkMap[dataIndex];
                 y = typeof y != 'undefined'
                     ? y
                     : typeof mpData.yAxis != 'string' && yAxis.getCoordByIndex

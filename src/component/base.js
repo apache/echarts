@@ -181,6 +181,7 @@ define(function (require) {
         
         resize : function () {
             this.refresh && this.refresh();
+            this.animationEffect && this.animationEffect();
         },
 
         /**

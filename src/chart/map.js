@@ -850,33 +850,33 @@ define(function (require) {
         
         // 添加标注
         _buildMark : function (mapType, mapSeries) {
+            this._seriesIndexToMapType = this._seriesIndexToMapType || {};
+            this.markAttachStyle = this.markAttachStyle || {};
             var series = this.series;
             var position = [
                 this._mapDataMap[mapType].transform.left,
                 this._mapDataMap[mapType].transform.top
             ];
             for (var sIdx in mapSeries) {
-                this.buildMark(
-                    sIdx,
-                    {
-                        mapType : mapType
-                    },
-                    {
-                        position : position,
-                        _mapType : mapType
-                    }
-                );
+                this._seriesIndexToMapType[sIdx] = mapType;
+                this.markAttachStyle[sIdx] = {
+                    position : position,
+                    _mapType : mapType
+                };
+                this.buildMark(sIdx);
             }
         },
         
         // 位置转换
-        getMarkCoord : function (serie, seriesIndex, mpData, markCoordParams) {
+        getMarkCoord : function (seriesIndex, mpData) {
             return (mpData.geoCoord || _geoCoord[mpData.name])
                    ? this.geo2pos(
-                         markCoordParams.mapType, mpData.geoCoord || _geoCoord[mpData.name]
+                         this._seriesIndexToMapType[seriesIndex], 
+                         mpData.geoCoord || _geoCoord[mpData.name]
                      )
                    : [0, 0];
         },
+        
         getMarkGeo : function(name) {
             return _geoCoord[name];
         },

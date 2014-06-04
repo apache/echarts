@@ -95,11 +95,7 @@ define(function (require) {
             this._buildHorizontal(seriesArray, maxDataLength, locationMap);
 
             for (var i = 0, l = seriesArray.length; i < l; i++) {
-                this.buildMark(
-                    series[seriesArray[i]],
-                    seriesArray[i],
-                    this.component
-                );
+                this.buildMark(seriesArray[i]);
             }
         },
 
@@ -420,7 +416,8 @@ define(function (require) {
         },
 
         // 位置转换
-        getMarkCoord : function (serie, seriesIndex, mpData) {
+        getMarkCoord : function (seriesIndex, mpData) {
+            var serie = this.series[seriesIndex];
             var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex);
             var yAxis = this.component.yAxis.getAxis(serie.yAxisIndex);
             

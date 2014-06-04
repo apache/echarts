@@ -130,11 +130,7 @@ define(function (require) {
                     if (!self.selectedMap[serieName]) {
                         continue;
                     }
-                    self.buildMark(
-                        series[i],
-                        i,
-                        component
-                    );
+                    self.buildMark(i);
                     
                     forceSerie = serie;
 

@@ -264,27 +264,24 @@ define(function (require) {
             }
         },
         
-        buildMark : function (serie, seriesIndex, component, markCoordParams, attachStyle) {
+        buildMark : function (seriesIndex) {
+            var serie = this.series[seriesIndex];
             if (this.selectedMap[serie.name]) {
-                serie.markPoint && this._buildMarkPoint(
-                    serie, seriesIndex, component, markCoordParams, attachStyle
-                );
-                serie.markLine && this._buildMarkLine(
-                    serie, seriesIndex, component, markCoordParams, attachStyle
-                );
+                serie.markPoint && this._buildMarkPoint(seriesIndex);
+                serie.markLine && this._buildMarkLine(seriesIndex);
             }
         },
         
-        _buildMarkPoint : function (serie, seriesIndex, component, markCoordParams, attachStyle) {
+        _buildMarkPoint : function (seriesIndex) {
+            var attachStyle =  (this.markAttachStyle || {})[seriesIndex];
+            var serie = this.series[seriesIndex];
             var _zlevelBase = this.getZlevelBase();
             var mpData;
             var pos;
             var markPoint = zrUtil.clone(serie.markPoint);
             for (var i = 0, l = markPoint.data.length; i < l; i++) {
                 mpData = markPoint.data[i];
-                pos = this.getMarkCoord(
-                          serie, seriesIndex, mpData, markCoordParams
-                      );
+                pos = this.getMarkCoord(seriesIndex, mpData);
                 markPoint.data[i].x = typeof mpData.x != 'undefined'
                                       ? mpData.x : pos[0];
                 markPoint.data[i].y = typeof mpData.y != 'undefined'
@@ -300,7 +297,7 @@ define(function (require) {
                 }
             }
             
-            var shapeList = this._markPoint(serie, seriesIndex, markPoint, component);
+            var shapeList = this._markPoint(seriesIndex, markPoint);
             
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 shapeList[i].zlevel = _zlevelBase + 1;
@@ -326,7 +323,9 @@ define(function (require) {
             }
         },
         
-        _buildMarkLine : function (serie, seriesIndex, component, markCoordParams, attachStyle) {
+        _buildMarkLine : function (seriesIndex) {
+            var attachStyle =  (this.markAttachStyle || {})[seriesIndex];
+            var serie = this.series[seriesIndex];
             var _zlevelBase = this.getZlevelBase();
             var mlData;
             var pos;
@@ -337,7 +336,7 @@ define(function (require) {
                     && (mlData.type == 'max' || mlData.type == 'min' || mlData.type == 'average')
                 ) {
                     // 特殊值内置支持
-                    pos = this.getMarkCoord(serie, seriesIndex, mlData, markCoordParams);
+                    pos = this.getMarkCoord(seriesIndex, mlData);
                     markLine.data[i] = [zrUtil.clone(mlData), {}];
                     markLine.data[i][0].name = mlData.name || mlData.type;
                     markLine.data[i][0].value = pos[3];
@@ -346,12 +345,8 @@ define(function (require) {
                 }
                 else {
                     pos = [
-                        this.getMarkCoord(
-                            serie, seriesIndex, mlData[0], markCoordParams
-                        ),
-                        this.getMarkCoord(
-                            serie, seriesIndex, mlData[1], markCoordParams
-                        )
+                        this.getMarkCoord(seriesIndex, mlData[0]),
+                        this.getMarkCoord(seriesIndex, mlData[1])
                     ];
                 }
                 
@@ -365,9 +360,7 @@ define(function (require) {
                                       ? mlData[1].y : pos[1][1];
             }
             
-            var shapeList = this._markLine(
-                serie, seriesIndex, markLine, component
-            );
+            var shapeList = this._markLine(seriesIndex, markLine);
             
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 shapeList[i].zlevel = _zlevelBase + 1;
@@ -386,7 +379,9 @@ define(function (require) {
             }
         },
         
-        _markPoint : function (serie, seriesIndex, mpOption, component) {
+        _markPoint : function (seriesIndex, mpOption) {
+            var serie = this.series[seriesIndex];
+            var component = this.component;
             zrUtil.merge(
                 mpOption,
                 this.ecTheme.markPoint
@@ -478,13 +473,15 @@ define(function (require) {
             }
             else {
                 // 大规模MarkPoint
-                itemShape = this.getLargeMarkPoingShape(serie, seriesIndex, mpOption, component);
+                itemShape = this.getLargeMarkPoingShape(seriesIndex, mpOption);
                 itemShape && pList.push(itemShape);
             }
             return pList;
         },
         
-        _markLine : function (serie, seriesIndex, mlOption, component) {
+        _markLine : function (seriesIndex, mlOption) {
+            var serie = this.series[seriesIndex];
+            var component = this.component;
             zrUtil.merge(
                 mlOption,
                 this.ecTheme.markLine
@@ -883,7 +880,9 @@ define(function (require) {
             return itemShape;
         },
         
-        getLargeMarkPoingShape : function(serie, seriesIndex, mpOption, component) {
+        getLargeMarkPoingShape : function(seriesIndex, mpOption) {
+            var serie = this.series[seriesIndex];
+            var component = this.component;
             var data = mpOption.data;
             var itemShape;
             
@@ -1228,56 +1227,57 @@ define(function (require) {
             }
         },
         
-        animationMark : function (duration , easing) {
+        animationMark : function (duration , easing, addShapeList) {
+            shapeList = addShapeList || this.shapeList;
             var x;
             var y;
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                if (!this.shapeList[i]._mark) {
+            for (var i = 0, l = shapeList.length; i < l; i++) {
+                if (!shapeList[i]._mark) {
                     continue;
                 }
-                x = this.shapeList[i]._x || 0;
-                y = this.shapeList[i]._y || 0;
-                if (this.shapeList[i]._mark == 'point') {
+                x = shapeList[i]._x || 0;
+                y = shapeList[i]._y || 0;
+                if (shapeList[i]._mark == 'point') {
                     this.zr.modShape(
-                        this.shapeList[i].id, 
+                        shapeList[i].id, 
                         {
                             scale : [0, 0, x, y]
                         }
                     );
-                    this.zr.animate(this.shapeList[i].id, '')
+                    this.zr.animate(shapeList[i].id, '')
                         .when(
                             duration,
                             {scale : [1, 1, x, y]}
                         )
                         .start(easing || 'QuinticOut');
                 }
-                else if (this.shapeList[i]._mark == 'line') {
-                    if (!this.shapeList[i].style.smooth) {
+                else if (shapeList[i]._mark == 'line') {
+                    if (!shapeList[i].style.smooth) {
                         this.zr.modShape(
-                            this.shapeList[i].id, 
+                            shapeList[i].id, 
                             {
                                 style : {
                                     pointList : [
                                         [
-                                            this.shapeList[i].style.xStart,
-                                            this.shapeList[i].style.yStart
+                                            shapeList[i].style.xStart,
+                                            shapeList[i].style.yStart
                                         ],
                                         [
-                                            this.shapeList[i].style.xStart,
-                                            this.shapeList[i].style.yStart
+                                            shapeList[i].style.xStart,
+                                            shapeList[i].style.yStart
                                         ]
                                     ]
                                 }
                             }
                         );
-                        this.zr.animate(this.shapeList[i].id, 'style')
+                        this.zr.animate(shapeList[i].id, 'style')
                             .when(
                                 duration,
                                 {
                                     pointList : [
                                         [
-                                            this.shapeList[i].style.xStart,
-                                            this.shapeList[i].style.yStart
+                                            shapeList[i].style.xStart,
+                                            shapeList[i].style.yStart
                                         ],
                                         [
                                             x, y
@@ -1290,29 +1290,30 @@ define(function (require) {
                     else {
                         // 曲线动画
                         this.zr.modShape(
-                            this.shapeList[i].id, 
+                            shapeList[i].id, 
                             {
                                 style : {
                                     pointListLength : 1
                                 }
                             }
                         );
-                        this.zr.animate(this.shapeList[i].id, 'style')
+                        this.zr.animate(shapeList[i].id, 'style')
                             .when(
                                 duration,
                                 {
-                                    pointListLength : this.shapeList[i].style.pointList.length
+                                    pointListLength : shapeList[i].style.pointList.length
                                 }
                             )
                             .start(easing || 'QuinticOut');
                     }
                 }
             }
-            this.animationEffect();
+            this.animationEffect(addShapeList);
         },
 
-        animationEffect : function () {
-            this.clearAnimationShape();
+        animationEffect : function (addShapeList) {
+            !addShapeList && this.clearAnimationShape();
+            shapeList = addShapeList || this.shapeList;
             var zlevel = EFFECT_ZLEVEL;
             if (this.canvasSupported) {
                 this.zr.modLayer(
@@ -1323,15 +1324,13 @@ define(function (require) {
                     }
                 );
             }
-            
             var shape;
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                shape = this.shapeList[i];
+            for (var i = 0, l = shapeList.length; i < l; i++) {
+                shape = shapeList[i];
                 if (!(shape._mark && shape.effect && shape.effect.show && effectBase[shape._mark])
                 ) {
                     continue;
                 }
-                //console.log(shape)
                 effectBase[shape._mark](this.zr, this.effectList, shape, zlevel);
             }
         },
@@ -1345,6 +1344,36 @@ define(function (require) {
                 this.zr.delShape(this.effectList);
             }
             this.effectList = [];
+        },
+        
+        /**
+         * 动态标线标注添加
+         * @param {number} seriesIndex 系列索引
+         * @param {Object} markData 标线标注对象，支持多个
+         * @param {string} markType 标线标注类型
+         */
+        addMark : function (seriesIndex, markData, markType) {
+            var serie = this.series[seriesIndex];
+            if (this.selectedMap[serie.name]) {
+                var duration = 500;
+                var easing = this.query(this.option, 'animationEasing');
+                // 备份，复用_buildMarkX
+                var oriMarkData = serie[markType].data;
+                var lastLength = this.shapeList.length;
+                
+                serie[markType].data = markData.data;
+                this['_build' + markType.replace('m', 'M')](seriesIndex);
+                for (var i = lastLength, l = this.shapeList.length; i < l; i++) {
+                    this.zr.addShape(this.shapeList[i]);
+                }
+                this.zr.refresh();
+                
+                if (this.option.animation && !this.option.renderAsImage) {
+                    this.animationMark(duration, easing, this.shapeList.slice(lastLength));
+                }
+                // 还原，复用_buildMarkX
+                serie[markType].data = oriMarkData;
+            }
         }
     }
 

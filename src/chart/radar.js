@@ -67,11 +67,7 @@
                             this._addDropBox(i);
                         }
                         this._buildSingleRadar(i);
-                        this.buildMark(
-                            series[i],
-                            i,
-                            this.component
-                        );
+                        this.buildMark(i);
                     }
                 }
             }

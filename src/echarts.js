@@ -1113,6 +1113,59 @@ define(function (require) {
         },
 
         /**
+         * 动态[标注 | 标线]添加
+         * @param {number} seriesIdx 系列索引
+         * @param {Object} markData [标注 | 标线]对象，支持多个
+         */
+        addMarkPoint : function (seriesIdx, markData) {
+            return this._addMark(seriesIdx, markData, 'markPoint');
+        },
+        
+        addMarkLine : function (seriesIdx, markData) {
+            return this._addMark(seriesIdx, markData, 'markLine');
+        },
+        
+        _addMark : function (seriesIdx, markData, markType) {
+            if (!(this._option.series && this._option.series[seriesIdx])) {
+                return this;
+            }
+            this._option.series[seriesIdx][markType] 
+                =  this._option.series[seriesIdx][markType] || {data: []};
+            this._optionRestore.series[seriesIdx][markType] 
+                =  this._optionRestore.series[seriesIdx][markType] || {data: []};
+            for (var key in markData) {
+                if (key == 'data') {
+                    // 数据concat
+                    this._option.series[seriesIdx][markType].data = 
+                        this._option.series[seriesIdx][markType].data.concat(markData.data);
+                    this._optionRestore.series[seriesIdx][markType].data = 
+                        this._optionRestore.series[seriesIdx][markType].data.concat(markData.data);
+                }
+                else if (typeof markData[key] != 'object'
+                      || typeof this._option.series[seriesIdx][markType][key] == 'undefined'
+                ) {
+                    // 简单类型或新值直接赋值
+                    this._option.series[seriesIdx][markType][key] 
+                        = this._optionRestore.series[seriesIdx][markType][key]
+                        = markData[key];
+                }
+                else {
+                    // 非数据的复杂对象merge
+                    zrUtil.merge(
+                        this._option.series[seriesIdx][markType][key], markData[key], true
+                    );
+                    zrUtil.merge(
+                        this._optionRestore.series[seriesIdx][markType][key], markData[key], true
+                    );
+                }
+            }
+            
+            var chart = this.chart[this._option.series[seriesIdx].type];
+            chart && chart.addMark(seriesIdx, markData, markType);
+            return this;
+        },
+        
+        /**
          * 获取当前dom 
          */
         getDom : function () {

@@ -52,6 +52,7 @@ define(function (require) {
             this._sIndex2ShapeMap = {};  // series拐点图形类型，seriesIndex索引到shape type
 
             this.selectedMap = {};
+            this.xMarkMap = {};
 
             // 水平垂直双向series索引 ，position索引到seriesIndex
             var _position2sIndexMap = {
@@ -106,27 +107,19 @@ define(function (require) {
             if (maxDataLength === 0 || locationMap.length === 0) {
                 return;
             }
-            var xMarkMap = {}; // 为标注记录一些参数
             switch (position) {
                 case 'bottom' :
                 case 'top' :
-                    this._buildHorizontal(seriesArray, maxDataLength, locationMap, xMarkMap);
+                    this._buildHorizontal(seriesArray, maxDataLength, locationMap, this.xMarkMap);
                     break;
                 case 'left' :
                 case 'right' :
-                    this._buildVertical(seriesArray, maxDataLength, locationMap, xMarkMap);
+                    this._buildVertical(seriesArray, maxDataLength, locationMap, this.xMarkMap);
                     break;
             }
             
             for (var i = 0, l = seriesArray.length; i < l; i++) {
-                this.buildMark(
-                    series[seriesArray[i]],
-                    seriesArray[i],
-                    this.component,
-                    {
-                        xMarkMap : xMarkMap
-                    }
-                );
+                this.buildMark(seriesArray[i]);
             }
         },
 
@@ -834,7 +827,9 @@ define(function (require) {
         },
 
         // 位置转换
-        getMarkCoord : function (serie, seriesIndex, mpData, markCoordParams) {
+        getMarkCoord : function (seriesIndex, mpData) {
+            var serie = this.series[seriesIndex];
+            var xMarkMap = this.xMarkMap[seriesIndex];
             var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex);
             var yAxis = this.component.yAxis.getAxis(serie.yAxisIndex);
             
@@ -843,10 +838,10 @@ define(function (require) {
             ) {
                 // 特殊值内置支持
                 return [
-                    markCoordParams.xMarkMap[seriesIndex][mpData.type + 'X'],
-                    markCoordParams.xMarkMap[seriesIndex][mpData.type + 'Y'],
-                    markCoordParams.xMarkMap[seriesIndex][mpData.type + 'Line'],
-                    markCoordParams.xMarkMap[seriesIndex][mpData.type]
+                    xMarkMap[mpData.type + 'X'],
+                    xMarkMap[mpData.type + 'Y'],
+                    xMarkMap[mpData.type + 'Line'],
+                    xMarkMap[mpData.type]
                 ];
             }
             
