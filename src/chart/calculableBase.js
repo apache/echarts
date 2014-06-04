@@ -348,8 +348,10 @@ define(function (require) {
                                 y : newShape._orient == 'vertical'
                                     ? newShape.style.y + newShape.style.height
                                     : newShape.style.y,
-                                width: 0,
-                                height: 0
+                                width: newShape._orient == 'vertical' 
+                                       ? newShape.style.width : 0,
+                                height: newShape._orient != 'vertical' 
+                                       ? newShape.style.height : 0
                             }
                         },
                         newShape,

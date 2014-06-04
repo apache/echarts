@@ -130,6 +130,9 @@ function option1 (name) {
     for (var i = 0, l = keyCity.length; i < l; i++) {
         city = keyCity[i];
         singleData = cityToData[city];
+        if (typeof singleData == 'undefined') {
+            continue;
+        }
         seriesData = [
             singleData.aqi, 
             singleData.pm2_5, 

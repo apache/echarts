@@ -147,7 +147,7 @@ define(function (require) {
                     }
                     
                     valueCalculation[mapType] = valueCalculation[mapType] 
-                                               || series[i].mapValueCalculation;
+                                                || series[i].mapValueCalculation;
                     
                     seriesName = series[i].name;
                     this.selectedMap[seriesName] = legend
@@ -732,7 +732,6 @@ define(function (require) {
                 style.brushType = highlightStyle.brushType = 'both';
                 style.lineJoin = highlightStyle.lineJoin = 'round';
                 style._name = highlightStyle._name = name;
-                
                 
                 font = this.deepQuery(queryTarget, 'itemStyle.normal.label.textStyle');
                 // 文字标签避免覆盖单独一个shape

@@ -198,10 +198,9 @@ define(function (require) {
                 tarShape.style.text = this._getLabelText(
                     serie, data, name, 'normal'
                 );
-                tarShape.style.textPosition = 
-                    typeof nLabel.position == 'undefined'
-                        ? (orient == 'horizontal' ? 'right' : 'top')
-                        : nLabel.position;
+                tarShape.style.textPosition = typeof nLabel.position == 'undefined'
+                                              ? (orient == 'horizontal' ? 'right' : 'top')
+                                              : nLabel.position;
                 tarShape.style.textColor = nTextStyle.color;
                 tarShape.style.textFont = this.getFont(nTextStyle);
             }
@@ -481,11 +480,9 @@ define(function (require) {
             }
             else {
                 // 大规模MarkPoint
-                pList.push(
-                    this.getLargeMarkPoingShape(serie, seriesIndex, mpOption, component)
-                );
+                itemShape = this.getLargeMarkPoingShape(serie, seriesIndex, mpOption, component);
+                itemShape && pList.push(itemShape);
             }
-            //console.log(pList);
             return pList;
         },
         

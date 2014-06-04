@@ -136,7 +136,7 @@ function option3 (name) {
                     {name:'黑龙江', value:data.cityToData['哈尔滨'][key]},
                     {name:'内蒙古', value:data.cityToData['呼和浩特'][key]},
                     {name:'安徽', value:data.cityToData['合肥'][key]},
-                    {name:'北京', value:data.cityToData['北京'][key]},
+                    {name:'北京', value:(data.cityToData['北京'] || {})[key]},
                     {name:'福建', value:data.cityToData['福州'][key]},
                     {name:'上海', value:data.cityToData['上海'][key]},
                     {name:'湖北', value:data.cityToData['武汉'][key]},
