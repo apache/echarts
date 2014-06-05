@@ -105,6 +105,9 @@ define(function (require) {
     }
     
     Echarts.prototype = {
+        /**
+         * 初始化::构造函数
+         */ 
         _init : function () {
             var self = this;
             var _zr = require('zrender').init(this.dom);
@@ -113,7 +116,6 @@ define(function (require) {
             // 添加消息中心的事件分发器特性
             var zrEvent = require('zrender/tool/event');
             zrEvent.Dispatcher.call(this._messageCenter);
-            
             
             this._onevent = function(param){
                 return self.__onevent(param);
@@ -1585,7 +1587,7 @@ define(function (require) {
         },
         
         /**
-         * 清楚已渲染内容 ，clear后echarts实例可用
+         * 清除已渲染内容 ，clear后echarts实例可用
          */
         clear : function () {
             this._disposeChartList();

@@ -50,7 +50,9 @@ define(function() {
         ];
     }
     
-    // 每三位默认加,格式化
+    /**
+     * 每三位默认加,格式化
+     */
     function addCommas(x){
         if (isNaN(x)) {
             return '-';

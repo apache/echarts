@@ -14,12 +14,11 @@ define(function (require) {
     
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
+    var ecAnimation = require('../util/ecAnimation');
+    var ecEffect = require('../util/ecEffect');
     var accMath = require('../util/accMath');
     var zrUtil = require('zrender/tool/util');
     var zrArea = require('zrender/tool/area');
-    
-    var animationBase = require('./animationBase');
-    var effectBase = require('./effectBase');
     
     var EFFECT_ZLEVEL = 7;
     
@@ -1064,15 +1063,15 @@ define(function (require) {
             switch (newShape.type) {
                 case 'broken-line' :
                 case 'half-smooth-polygon' :
-                    animationBase.pointList(this.zr, oldShape, newShape, duration, easing);
+                    ecAnimation.pointList(this.zr, oldShape, newShape, duration, easing);
                     break;
                 case 'rectangle' :
                 case 'icon' :
-                    animationBase.rectangle(this.zr, oldShape, newShape, duration, easing);
+                    ecAnimation.rectangle(this.zr, oldShape, newShape, duration, easing);
                     break;
                 case 'candle' :
                     if (duration > 500) {
-                        animationBase.candle(this.zr, oldShape, newShape, duration, easing);
+                        ecAnimation.candle(this.zr, oldShape, newShape, duration, easing);
                     }
                     else {
                         this.zr.addShape(newShape);
@@ -1082,7 +1081,7 @@ define(function (require) {
                 case 'sector' :
                 case 'circle' :
                     if (duration > 500) {
-                        animationBase.ring(
+                        ecAnimation.ring(
                             this.zr,
                             oldShape,
                             newShape, 
@@ -1091,25 +1090,25 @@ define(function (require) {
                         );
                     }
                     else if (newShape.type == 'sector') {
-                        animationBase.sector(this.zr, oldShape, newShape, duration, easing);
+                        ecAnimation.sector(this.zr, oldShape, newShape, duration, easing);
                     }
                     else {
                         this.zr.addShape(newShape);
                     }
                     break;
                 case 'text' :
-                    animationBase.text(this.zr, oldShape, newShape, duration, easing);
+                    ecAnimation.text(this.zr, oldShape, newShape, duration, easing);
                     break;
                 case 'polygon' :
                     if (duration > 500) {
-                        animationBase.polygon(this.zr, oldShape, newShape, duration, easing);
+                        ecAnimation.polygon(this.zr, oldShape, newShape, duration, easing);
                     }
                     else {
-                        animationBase.pointList(this.zr, oldShape, newShape, duration, easing);
+                        ecAnimation.pointList(this.zr, oldShape, newShape, duration, easing);
                     }
                     break;
                 case 'chord' :
-                    animationBase.chord(this.zr, oldShape, newShape, duration, easing);
+                    ecAnimation.chord(this.zr, oldShape, newShape, duration, easing);
                     break;
                 default :
                     this.zr.addShape(newShape);
@@ -1360,11 +1359,11 @@ define(function (require) {
             var shape;
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 shape = shapeList[i];
-                if (!(shape._mark && shape.effect && shape.effect.show && effectBase[shape._mark])
+                if (!(shape._mark && shape.effect && shape.effect.show && ecEffect[shape._mark])
                 ) {
                     continue;
                 }
-                effectBase[shape._mark](this.zr, this.effectList, shape, zlevel);
+                ecEffect[shape._mark](this.zr, this.effectList, shape, zlevel);
                 this.effectList[this.effectList.length - 1]._mark = shape._mark;
             }
         },

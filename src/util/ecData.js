@@ -112,6 +112,11 @@ define(function() {
         }
     }
     
+    /**
+     * 私有数据克隆，把source拷贝到target上
+     * @param {shape} source 源
+     * @param {shape} target 目标
+     */
     function clone(source, target) {
         target._echartsData =  {
             '_series' : source._echartsData._series,
