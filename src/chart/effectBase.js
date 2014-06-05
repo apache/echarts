@@ -6,6 +6,8 @@
  *
  */
 define(function (require) {
+    var ecData = require('../util/ecData');
+    
     var CircleShape = require('zrender/shape/Circle');
     var ImageShape = require('zrender/shape/Image');
     var IconShape = require('../util/shape/Icon');
@@ -58,6 +60,8 @@ define(function (require) {
                     hoverable : false
                 });
             }
+            
+            ecData.clone(shape, effectShape);
             
             // 改变坐标，不能移到前面
             effectShape.position = shape.position;
@@ -121,6 +125,8 @@ define(function (require) {
                 draggable : false,
                 hoverable : false
             });
+            
+            ecData.clone(shape, effectShape);
             
             effectList.push(effectShape);
             zr.addShape(effectShape);
@@ -187,6 +193,8 @@ define(function (require) {
             else {
                 offset = 0;
             }
+            
+            ecData.clone(shape, effectShape);
             
             // 改变坐标， 不能移到前面
             effectShape.position = shape.position;

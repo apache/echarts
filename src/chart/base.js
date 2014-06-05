@@ -264,6 +264,9 @@ define(function (require) {
             }
         },
         
+        /**
+         * 标线标注 
+         */
         buildMark : function (seriesIndex) {
             var serie = this.series[seriesIndex];
             if (this.selectedMap[serie.name]) {
@@ -272,6 +275,9 @@ define(function (require) {
             }
         },
         
+        /**
+         * 标注逻辑
+         */
         _buildMarkPoint : function (seriesIndex) {
             var attachStyle =  (this.markAttachStyle || {})[seriesIndex];
             var serie = this.series[seriesIndex];
@@ -301,13 +307,6 @@ define(function (require) {
             
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 shapeList[i].zlevel = _zlevelBase + 1;
-                /*
-                shapeList[i]._mark = 'point';
-                shapeList[i]._x = shapeList[i].style.x 
-                                  + shapeList[i].style.width / 2;
-                shapeList[i]._y = shapeList[i].style.y 
-                                  + shapeList[i].style.height / 2;
-                */
                 for (var key in attachStyle) {
                     shapeList[i][key] = zrUtil.clone(attachStyle[key]);
                 }
@@ -323,6 +322,9 @@ define(function (require) {
             }
         },
         
+        /**
+         * 标线逻辑
+         */
         _buildMarkLine : function (seriesIndex) {
             var attachStyle =  (this.markAttachStyle || {})[seriesIndex];
             var serie = this.series[seriesIndex];
@@ -379,6 +381,9 @@ define(function (require) {
             }
         },
         
+        /**
+         * 标注多级控制构造
+         */
         _markPoint : function (seriesIndex, mpOption) {
             var serie = this.series[seriesIndex];
             var component = this.component;
@@ -474,11 +479,15 @@ define(function (require) {
             else {
                 // 大规模MarkPoint
                 itemShape = this.getLargeMarkPoingShape(seriesIndex, mpOption);
+                itemShape._mark = 'largePoint';
                 itemShape && pList.push(itemShape);
             }
             return pList;
         },
         
+        /**
+         * 标线多级控制构造
+         */
         _markLine : function (seriesIndex, mlOption) {
             var serie = this.series[seriesIndex];
             var component = this.component;
@@ -568,6 +577,7 @@ define(function (require) {
                     this.parsePercent(data[i][1].y, zrHeight),  // 坐标
                     color                       // 默认symbol和color
                 );
+                itemShape._mark = 'line';
                 
                 effect = this.deepMerge(
                     [mergeData, mlOption],
@@ -590,7 +600,8 @@ define(function (require) {
                     serie, seriesIndex,
                     data[i][0], 0,
                     data[i][0].name + (data[i][1].name !== '' 
-                                      ? (' > ' + data[i][1].name) : ''),
+                                      ? (' > ' + data[i][1].name) 
+                                      : ''),
                     value
                 );
                 pList.push(itemShape);
@@ -604,6 +615,9 @@ define(function (require) {
             return [0, 0];
         },
         
+        /**
+         * symbol构造器 
+         */
         getSymbolShape : function (
             serie, seriesIndex,     // 系列 
             data, dataIndex, name,  // 数据
@@ -734,7 +748,6 @@ define(function (require) {
                 name
             );
 
-            // itemShape._mark = 'point'; // 复用animationMark
             itemShape._x = x;
             itemShape._y = y;
             
@@ -744,6 +757,9 @@ define(function (require) {
             return itemShape;
         },
         
+        /**
+         * 标线构造器 
+         */
         getLineMarkShape : function (
             mlOption,               // 系列 
             seriesIndex,            // 系列索引
@@ -873,13 +889,15 @@ define(function (require) {
                 data[0].name + ' : ' + data[1].name
             );
             
-           itemShape._mark = 'line';
            itemShape._x = xEnd;
            itemShape._y = yEnd;
             
             return itemShape;
         },
         
+        /**
+         * 大规模标注构造器 
+         */
         getLargeMarkPoingShape : function(seriesIndex, mpOption) {
             var serie = this.series[seriesIndex];
             var component = this.component;
@@ -943,7 +961,6 @@ define(function (require) {
                 draggable : false,
                 hoverable : false
             });
-            itemShape._mark = 'largePoint';
             
             effect = this.deepMerge(
                 [data[0], mpOption],
@@ -1040,6 +1057,9 @@ define(function (require) {
             }
         },
         
+        /**
+         * 动画过渡 
+         */
         _animateMod : function (oldShape, newShape, duration, easing) {
             switch (newShape.type) {
                 case 'broken-line' :
@@ -1097,6 +1117,9 @@ define(function (require) {
             }
         },
         
+        /**
+         * 动画进入 
+         */
         _animateAdd : function (newShape, duration, easing) {
             switch (newShape.type) {
                 case 'broken-line' :
@@ -1227,6 +1250,12 @@ define(function (require) {
             }
         },
         
+        /**
+         * 标注动画
+         * @param {number} duration 时长
+         * @param {string=} easing 缓动效果
+         * @param {Array=} addShapeList 指定特效对象，不知道默认使用this.shapeList
+         */
         animationMark : function (duration , easing, addShapeList) {
             shapeList = addShapeList || this.shapeList;
             var x;
@@ -1311,6 +1340,10 @@ define(function (require) {
             this.animationEffect(addShapeList);
         },
 
+        /**
+         * 特效动画
+         * @param {Array=} addShapeList 指定特效对象，不知道默认使用this.shapeList
+         */
         animationEffect : function (addShapeList) {
             !addShapeList && this.clearAnimationShape();
             shapeList = addShapeList || this.shapeList;
@@ -1332,6 +1365,7 @@ define(function (require) {
                     continue;
                 }
                 effectBase[shape._mark](this.zr, this.effectList, shape, zlevel);
+                this.effectList[this.effectList.length - 1]._mark = shape._mark;
             }
         },
         
@@ -1373,6 +1407,37 @@ define(function (require) {
                 }
                 // 还原，复用_buildMarkX
                 serie[markType].data = oriMarkData;
+            }
+        },
+        
+        /**
+         * 动态标线标注删除
+         * @param {number} seriesIndex 系列索引
+         * @param {string} markName 标线标注名称
+         * @param {string} markType 标线标注类型
+         */
+        delMark : function (seriesIndex, markName, markType) {
+            markType = markType.replace('mark', '').replace('large', '').toLowerCase();
+            var serie = this.series[seriesIndex];
+            if (this.selectedMap[serie.name]) {
+                var needRefresh = false;
+                var shapeList = [this.shapeList, this.effectList];
+                var len = 2;
+                while(len--) {
+                    for (var i = 0, l = shapeList[len].length; i < l; i++) {
+                        if (shapeList[len][i]._mark == markType
+                            && ecData.get(shapeList[len][i], 'seriesIndex') == seriesIndex
+                            && ecData.get(shapeList[len][i], 'name') == markName
+                        ) {
+                            this.zr.delShape(shapeList[len][i].id);
+                            shapeList[len].splice(i, 1);
+                            needRefresh = true;
+                            break;
+                        }
+                    }
+                }
+                
+                needRefresh && this.zr.refresh();
             }
         }
     }

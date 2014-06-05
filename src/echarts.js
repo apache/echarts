@@ -1166,6 +1166,54 @@ define(function (require) {
         },
         
         /**
+         * 动态[标注 | 标线]删除
+         * @param {number} seriesIdx 系列索引
+         * @param {string} markName [标注 | 标线]名称
+         */
+        delMarkPoint : function (seriesIdx, markName) {
+            return this._delMark(seriesIdx, markName, 'markPoint');
+        },
+        
+        delMarkLine : function (seriesIdx, markName) {
+            return this._delMark(seriesIdx, markName, 'markLine');
+        },
+        
+        _delMark : function (seriesIdx, markName, markType) {
+            if (!(this._option.series 
+                  && this._option.series[seriesIdx] 
+                  && this._option.series[seriesIdx][markType]
+                  && this._option.series[seriesIdx][markType].data)
+            ) {
+                return this;
+            }
+            markName = markName.split(' > ');
+            var targetIndex = -1;
+            var dataArray =  this._option.series[seriesIdx][markType].data;
+            for (var i = 0, l = dataArray.length; i < l; i++) {
+                if (dataArray[i] instanceof Array) {
+                    targetIndex = dataArray[i][0].name == markName[0] 
+                                  && dataArray[i][1].name == markName[1] 
+                                  ? i : -1;
+                }
+                else {
+                    targetIndex = dataArray[i].name == markName[0] ? i : -1
+                }
+                if (targetIndex != -1) {
+                    break;
+                }
+            }
+            
+            if (targetIndex != -1) {
+                this._option.series[seriesIdx][markType].data.splice(targetIndex, 1);
+                this._optionRestore.series[seriesIdx][markType].data.splice(targetIndex, 1);
+                var chart = this.chart[this._option.series[seriesIdx].type];
+                chart && chart.delMark(seriesIdx, markName.join(' > '), markType);
+            }
+            
+            return this;
+        },
+        
+        /**
          * 获取当前dom 
          */
         getDom : function () {
