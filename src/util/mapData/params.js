@@ -5,7 +5,7 @@
  * } 
  */
 define(function (require) {
-    function decode(json){
+    function decode(json) {
         if (!json.UTF8Encoding) {
             return json;
         }

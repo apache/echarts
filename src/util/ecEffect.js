@@ -15,241 +15,243 @@ define(function (require) {
     
     var canvasSupported = require('zrender/tool/env').canvasSupported;
     
-    var effectBase = {
-        point : function(zr, effectList, shape, zlevel) {
-            var effect = shape.effect;
-            var color = effect.color || shape.style.strokeColor || shape.style.color;
-            var shadowColor = effect.shadowColor || color;
-            var size = effect.scaleSize;
-            var shadowBlur = typeof effect.shadowBlur != 'undefined'
-                             ? effect.shadowBlur : size;
+    function point(zr, effectList, shape, zlevel) {
+        var effect = shape.effect;
+        var color = effect.color || shape.style.strokeColor || shape.style.color;
+        var shadowColor = effect.shadowColor || color;
+        var size = effect.scaleSize;
+        var shadowBlur = typeof effect.shadowBlur != 'undefined'
+                         ? effect.shadowBlur : size;
 
-            var effectShape = new IconShape({
-                zlevel : zlevel,
-                style : {
-                    brushType : 'stroke',
-                    iconType : (shape.style.iconType != 'pin' 
-                                && shape.style.iconType != 'droplet')
-                               ? shape.style.iconType
-                               : 'circle',
-                    x : shadowBlur + 1, // 线宽
-                    y : shadowBlur + 1,
-                    n : shape.style.n,
-                    width : shape.style.width * size,
-                    height : shape.style.height * size,
-                    lineWidth : 1,
-                    strokeColor : color,
-                    shadowColor : shadowColor,
-                    shadowBlur : shadowBlur
-                },
+        var effectShape = new IconShape({
+            zlevel : zlevel,
+            style : {
+                brushType : 'stroke',
+                iconType : (shape.style.iconType != 'pin' 
+                            && shape.style.iconType != 'droplet')
+                           ? shape.style.iconType
+                           : 'circle',
+                x : shadowBlur + 1, // 线宽
+                y : shadowBlur + 1,
+                n : shape.style.n,
+                width : shape.style.width * size,
+                height : shape.style.height * size,
+                lineWidth : 1,
+                strokeColor : color,
+                shadowColor : shadowColor,
+                shadowBlur : shadowBlur
+            },
+            draggable : false,
+            hoverable : false
+        });
+        
+        if (canvasSupported) {  // 提高性能，换成image
+            effectShape.style.image = zr.shapeToImage(
+                effectShape, 
+                effectShape.style.width + shadowBlur * 2 + 2, 
+                effectShape.style.height + shadowBlur * 2 + 2
+            ).style.image;
+            
+            effectShape = new ImageShape({
+                zlevel : effectShape.zlevel,
+                style : effectShape.style,
                 draggable : false,
                 hoverable : false
             });
-            
-            if (canvasSupported) {  // 提高性能，换成image
-                effectShape.style.image = zr.shapeToImage(
-                    effectShape, 
-                    effectShape.style.width + shadowBlur * 2 + 2, 
-                    effectShape.style.height + shadowBlur * 2 + 2
-                ).style.image;
-                
-                effectShape = new ImageShape({
-                    zlevel : effectShape.zlevel,
-                    style : effectShape.style,
-                    draggable : false,
-                    hoverable : false
-                });
+        }
+        
+        ecData.clone(shape, effectShape);
+        
+        // 改变坐标，不能移到前面
+        effectShape.position = shape.position;
+        effectList.push(effectShape);
+        zr.addShape(effectShape);
+        
+        var devicePixelRatio = window.devicePixelRatio || 1;
+        var offset = (effectShape.style.width / devicePixelRatio - shape.style.width) / 2;
+        effectShape.style.x = shape.style.x - offset;
+        effectShape.style.y = shape.style.y - offset;
+        var duration = (effect.period + Math.random() * 10) * 100;
+        
+        zr.modShape(
+            shape.id, 
+            { invisible : true}
+        );
+        
+        var centerX = effectShape.style.x + (effectShape.style.width) / 2 / devicePixelRatio;
+        var centerY = effectShape.style.y + (effectShape.style.height) / 2 / devicePixelRatio;
+        zr.modShape(
+            effectShape.id, 
+            {
+                scale : [0.1, 0.1, centerX, centerY]
             }
-            
-            ecData.clone(shape, effectShape);
-            
-            // 改变坐标，不能移到前面
-            effectShape.position = shape.position;
-            effectList.push(effectShape);
-            zr.addShape(effectShape);
-            
-            var devicePixelRatio = window.devicePixelRatio || 1;
-            var offset = (effectShape.style.width / devicePixelRatio - shape.style.width) / 2;
-            effectShape.style.x = shape.style.x - offset;
-            effectShape.style.y = shape.style.y - offset;
-            var duration = (effect.period + Math.random() * 10) * 100;
-            
-            zr.modShape(
-                shape.id, 
-                { invisible : true}
-            );
-            
-            var centerX = effectShape.style.x + (effectShape.style.width) / 2 / devicePixelRatio;
-            var centerY = effectShape.style.y + (effectShape.style.height) / 2 / devicePixelRatio;
-            zr.modShape(
-                effectShape.id, 
+        );
+        
+        zr.animate(effectShape.id, '', true)
+            .when(
+                duration,
                 {
-                    scale : [0.1, 0.1, centerX, centerY]
+                    scale : [1, 1, centerX, centerY]
                 }
-            );
-            
-            zr.animate(effectShape.id, '', true)
+            )
+            .start();
+    }
+    
+    function largePoint(zr, effectList, shape, zlevel) {
+        var effect = shape.effect;
+        var color = effect.color || shape.style.strokeColor || shape.style.color;
+        var size = effect.scaleSize;
+        var shadowColor = effect.shadowColor || color;
+        var shadowBlur = typeof effect.shadowBlur != 'undefined'
+                         ? effect.shadowBlur : size * 2;
+        var devicePixelRatio = window.devicePixelRatio || 1;
+        var effectShape = new SymbolShape({
+            zlevel : zlevel,
+            position : shape.position,
+            scale : shape.scale,
+            style : {
+                pointList : shape.style.pointList,
+                iconType : shape.style.iconType,
+                color : color,
+                strokeColor : color,
+                shadowColor : shadowColor,
+                shadowBlur : shadowBlur * devicePixelRatio,
+                random : true,
+                brushType: 'fill',
+                lineWidth:1,
+                size : shape.style.size
+            },
+            draggable : false,
+            hoverable : false
+        });
+        
+        ecData.clone(shape, effectShape);
+        
+        effectList.push(effectShape);
+        zr.addShape(effectShape);
+        zr.modShape(
+            shape.id, 
+            { invisible : true}
+        );
+        
+        var duration = Math.round(effect.period * 100);
+        var clip1 = {};
+        var clip2 = {};
+        for (var i = 0; i < 15; i++) {
+            effectShape.style['randomMap' + i] = 0;
+            clip1 = {};
+            clip1['randomMap' + i] = 100;
+            clip2 = {};
+            clip2['randomMap' + i] = 0;
+            zr.animate(effectShape.id, 'style', true)
+                .when(duration, clip1)
+                .when(duration * 2, clip2)
+                .delay(Math.random() * duration * 2)
+                .start();
+            effectShape.style['randomMap' + i] = Math.random() * 100;
+        }
+    }
+    
+    function line(zr, effectList, shape, zlevel) {
+        var effect = shape.effect;
+        var color = effect.color || shape.style.strokeColor || shape.style.color;
+        var shadowColor = effect.shadowColor || color;
+        var size = shape.style.lineWidth * effect.scaleSize;
+        var shadowBlur = typeof effect.shadowBlur != 'undefined'
+                         ? effect.shadowBlur : size;
+                     
+        var effectShape = new CircleShape({
+            zlevel : zlevel,
+            style : {
+                x : shadowBlur,
+                y : shadowBlur,
+                r : size,
+                color : color,
+                shadowColor : shadowColor,
+                shadowBlur : shadowBlur
+            },
+            draggable : false,
+            hoverable : false
+        });
+        
+        var offset;
+        if (canvasSupported) {  // 提高性能，换成image
+            effectShape.style.image = zr.shapeToImage(
+                effectShape, 
+                (size + shadowBlur) * 2,
+                (size + shadowBlur) * 2
+            ).style.image;
+            effectShape = new ImageShape({
+                zlevel : effectShape.zlevel,
+                style : effectShape.style,
+                draggable : false,
+                hoverable : false
+            });
+            offset = shadowBlur;
+        }
+        else {
+            offset = 0;
+        }
+        
+        ecData.clone(shape, effectShape);
+        
+        // 改变坐标， 不能移到前面
+        effectShape.position = shape.position;
+        effectList.push(effectShape);
+        zr.addShape(effectShape);
+        
+        effectShape.style.x = shape.style.xStart - offset;
+        effectShape.style.y = shape.style.yStart - offset;
+        var distance = (shape.style.xStart - shape.style.xEnd) 
+                            * (shape.style.xStart - shape.style.xEnd)
+                        +
+                       (shape.style.yStart - shape.style.yEnd) 
+                            * (shape.style.yStart - shape.style.yEnd);
+        var duration = Math.round(Math.sqrt(Math.round(
+                           distance * effect.period * effect.period
+                       )));
+        if (!shape.style.smooth) {
+            // 直线
+            zr.animate(effectShape.id, 'style', true)
                 .when(
                     duration,
                     {
-                        scale : [1, 1, centerX, centerY]
+                        x : shape._x - offset,
+                        y : shape._y - offset
                     }
                 )
                 .start();
-        },
-        
-        largePoint : function(zr, effectList, shape, zlevel) {
-            var effect = shape.effect;
-            var color = effect.color || shape.style.strokeColor || shape.style.color;
-            var size = effect.scaleSize;
-            var shadowColor = effect.shadowColor || color;
-            var shadowBlur = typeof effect.shadowBlur != 'undefined'
-                             ? effect.shadowBlur : size * 2;
-            var devicePixelRatio = window.devicePixelRatio || 1;
-            var effectShape = new SymbolShape({
-                zlevel : zlevel,
-                position : shape.position,
-                scale : shape.scale,
-                style : {
-                    pointList : shape.style.pointList,
-                    iconType : shape.style.iconType,
-                    color : color,
-                    strokeColor : color,
-                    shadowColor : shadowColor,
-                    shadowBlur : shadowBlur * devicePixelRatio,
-                    random : true,
-                    brushType: 'fill',
-                    lineWidth:1,
-                    size : shape.style.size
-                },
-                draggable : false,
-                hoverable : false
-            });
-            
-            ecData.clone(shape, effectShape);
-            
-            effectList.push(effectShape);
-            zr.addShape(effectShape);
-            zr.modShape(
-                shape.id, 
-                { invisible : true}
-            );
-            
-            var duration = Math.round(effect.period * 100);
-            var clip1 = {};
-            var clip2 = {};
-            for (var i = 0; i < 15; i++) {
-                effectShape.style['randomMap' + i] = 0;
-                clip1 = {};
-                clip1['randomMap' + i] = 100;
-                clip2 = {};
-                clip2['randomMap' + i] = 0;
-                zr.animate(effectShape.id, 'style', true)
-                    .when(duration, clip1)
-                    .when(duration * 2, clip2)
-                    .delay(Math.random() * duration * 2)
-                    .start();
-                effectShape.style['randomMap' + i] = Math.random() * 100;
-            }
-        },
-        
-        line : function(zr, effectList, shape, zlevel) {
-            var effect = shape.effect;
-            var color = effect.color || shape.style.strokeColor || shape.style.color;
-            var shadowColor = effect.shadowColor || color;
-            var size = shape.style.lineWidth * effect.scaleSize;
-            var shadowBlur = typeof effect.shadowBlur != 'undefined'
-                             ? effect.shadowBlur : size;
-                         
-            var effectShape = new CircleShape({
-                zlevel : zlevel,
-                style : {
-                    x : shadowBlur,
-                    y : shadowBlur,
-                    r : size,
-                    color : color,
-                    shadowColor : shadowColor,
-                    shadowBlur : shadowBlur
-                },
-                draggable : false,
-                hoverable : false
-            });
-            
-            var offset;
-            if (canvasSupported) {  // 提高性能，换成image
-                effectShape.style.image = zr.shapeToImage(
-                    effectShape, 
-                    (size + shadowBlur) * 2,
-                    (size + shadowBlur) * 2
-                ).style.image;
-                effectShape = new ImageShape({
-                    zlevel : effectShape.zlevel,
-                    style : effectShape.style,
-                    draggable : false,
-                    hoverable : false
-                });
-                offset = shadowBlur;
-            }
-            else {
-                offset = 0;
-            }
-            
-            ecData.clone(shape, effectShape);
-            
-            // 改变坐标， 不能移到前面
-            effectShape.position = shape.position;
-            effectList.push(effectShape);
-            zr.addShape(effectShape);
-            
-            effectShape.style.x = shape.style.xStart - offset;
-            effectShape.style.y = shape.style.yStart - offset;
-            var distance = (shape.style.xStart - shape.style.xEnd) 
-                                * (shape.style.xStart - shape.style.xEnd)
-                            +
-                           (shape.style.yStart - shape.style.yEnd) 
-                                * (shape.style.yStart - shape.style.yEnd);
-            var duration = Math.round(Math.sqrt(Math.round(
-                               distance * effect.period * effect.period
-                           )));
-            if (!shape.style.smooth) {
-                // 直线
-                zr.animate(effectShape.id, 'style', true)
-                    .when(
-                        duration,
-                        {
-                            x : shape._x - offset,
-                            y : shape._y - offset
-                        }
-                    )
-                    .start();
-            }
-            else {
-                // 曲线
-                var pointList = shape.style.pointList;
-                var len = pointList.length;
-                duration = Math.round(duration / len);
-                var deferred = zr.animate(effectShape.id, 'style', true);
-                var step = Math.ceil(len / 8);
-                for (var j = 0; j < len - step; j+= step) {
-                    deferred.when(
-                        duration * (j + 1),
-                        {
-                            x : pointList[j][0] - offset,
-                            y : pointList[j][1] - offset
-                        }
-                    );
-                }
+        }
+        else {
+            // 曲线
+            var pointList = shape.style.pointList;
+            var len = pointList.length;
+            duration = Math.round(duration / len);
+            var deferred = zr.animate(effectShape.id, 'style', true);
+            var step = Math.ceil(len / 8);
+            for (var j = 0; j < len - step; j+= step) {
                 deferred.when(
-                    duration * len,
+                    duration * (j + 1),
                     {
-                        x : pointList[len - 1][0] - offset,
-                        y : pointList[len - 1][1] - offset
+                        x : pointList[j][0] - offset,
+                        y : pointList[j][1] - offset
                     }
                 );
-                deferred.start('spline');
             }
+            deferred.when(
+                duration * len,
+                {
+                    x : pointList[len - 1][0] - offset,
+                    y : pointList[len - 1][1] - offset
+                }
+            );
+            deferred.start('spline');
         }
-    };
+    }
 
-    return effectBase;
+    return {
+        point : point,
+        largePoint : largePoint,
+        line : line
+    };
 });

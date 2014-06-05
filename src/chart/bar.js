@@ -320,7 +320,7 @@ define(function (require) {
                         xMarkMap[seriesIndex].sum += value;
                         xMarkMap[seriesIndex].counter++;
                         
-                        if (i % interval == 0) {
+                        if (i % interval === 0) {
                             barShape = this._getBarItem(
                                 seriesIndex, i,
                                 categoryAxis.getNameByIndex(i),
@@ -527,7 +527,7 @@ define(function (require) {
                         xMarkMap[seriesIndex].sum += value;
                         xMarkMap[seriesIndex].counter++;
                         
-                        if (i % interval == 0) {
+                        if (i % interval === 0) {
                             barShape = this._getBarItem(
                                 seriesIndex, i,
                                 categoryAxis.getNameByIndex(i),
@@ -1026,7 +1026,7 @@ define(function (require) {
                 }
             }
         }
-    }
+    };
     
     zrUtil.inherits(Bar, ChartBase);
     zrUtil.inherits(Bar, ComponentBase);
