@@ -10,7 +10,6 @@ define(function (require) {
     
     // 图形依赖
     var RectangleShape = require('zrender/shape/Rectangle');
-    var PolygonShape = require('zrender/shape/Polygon');
     var IconShape = require('../util/shape/Icon');
     var ChainShape = require('../util/shape/Chain');
     
@@ -31,7 +30,7 @@ define(function (require) {
         var self = this;
         self._onclick = function(param) {
             return self.__onclick(param);
-        }
+        };
         self._ondrift = function (dx, dy) {
             return self.__ondrift(this, dx, dy);
         };
@@ -219,13 +218,11 @@ define(function (require) {
             if (interval == 'auto') {
                 // 麻烦的自适应计算
                 var fontSize = timelineOption.label.textStyle.fontSize;
-                var textFont = this.getFont(timelineOption.label.textStyle);
                 var data = timelineOption.data;
                 var dataLength = timelineOption.data.length;
 
                 // 横向
                 if (dataLength > 3) {
-                    var gap;
                     var isEnough = false;
                     var labelSpace;
                     var labelSize;
@@ -291,6 +288,9 @@ define(function (require) {
             var width = this._location.x2 - this._location.x;
             var len = data.length;
             
+            function _getName(i) {
+                return typeof data[i].name != 'undefined' ? data[i].name : data[i];
+            }
             var xList = [];
             if (len > 1) {
                 var boundaryGap = width / len;
@@ -299,23 +299,18 @@ define(function (require) {
                 if (timelineOption.type == 'number') {
                     // 平均分布
                     for (var i = 0; i < len; i++) {
-                        xList.push(x + boundaryGap + width / (len - 1) * i)
+                        xList.push(x + boundaryGap + width / (len - 1) * i);
                     }
                 }
                 else {
                     // 时间比例
-                    function _getName(i) {
-                        return typeof data[i].name != 'undefined'
-                               ? data[i].name : data[i]
-                    }
                     xList[0] = new Date(_getName(0).replace(/-/g, '/'));
                     xList[len - 1] = new Date(_getName(len - 1).replace(/-/g, '/')) - xList[0];
                     for (var i = 1; i < len; i++) {
                         xList[i] =  x + boundaryGap 
                                     + width 
                                       * (new Date(_getName(i).replace(/-/g, '/')) - xList[0]) 
-                                      / xList[len - 1]
-                        
+                                      / xList[len - 1];
                     }
                     xList[0] = x + boundaryGap;
                 }
@@ -389,7 +384,7 @@ define(function (require) {
             var width = this._location.width;
             var height = this._location.height;
             
-            if (timelineOption.borderWidth != 0 
+            if (timelineOption.borderWidth !== 0 
                 || timelineOption.backgroundColor.replace(/\s/g,'') != 'rgba(0,0,0,0)'
             ) {
                 // 背景
@@ -635,7 +630,7 @@ define(function (require) {
         
         __onclick : function(param) {
             var x = zrEvent.getX(param.event);
-            var newIndex =  this._findChainIndex(x)
+            var newIndex =  this._findChainIndex(x);
             if (newIndex == this.currentIndex) {
                 return true; // 啥事都没发生
             }
@@ -649,7 +644,7 @@ define(function (require) {
         /**
          * 拖拽范围控制
          */
-        __ondrift : function (shape, dx, dy) {
+        __ondrift : function (shape, dx) {
             this.timelineOption.autoPlay && this.stop(); // 停止自动播放
             
             var chainPoint = this._chainPoint;
@@ -738,7 +733,7 @@ define(function (require) {
             this._onFrame();
         },
         
-        play : function (startIdx, autoPlay) {
+        play : function () {
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'playing') {
                 this._ctrPlayShape.style.status = 'playing';
                 this.zr.modShape(this._ctrPlayShape.id);

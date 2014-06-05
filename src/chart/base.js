@@ -67,7 +67,7 @@ define(function (require) {
             ondragend : function () {
                 self.isDragend = true;
             }
-        }
+        };
     }
     
     /**
@@ -1043,7 +1043,7 @@ define(function (require) {
                         this._animateAdd(newMap[key], duration, easing);
                     }
                 }
-                lastShapeList.length == 0 && this.animationMark(duration, easing);
+                lastShapeList.length === 0 && this.animationMark(duration, easing);
             }
             else {
                 this.motionlessOnce = false;
@@ -1129,13 +1129,13 @@ define(function (require) {
                         var y = newShape.style.pointList[0][1];
                         for (var i = 0; i < len; i++) {
                             newPointList[i] = [newShape.style.pointList[i][0], y];
-                        };
+                        }
                     }
                     else {
                         var x = newShape.style.pointList[0][0];
                         for (var i = 0; i < len; i++) {
                             newPointList[i] = [x, newShape.style.pointList[i][1]];
-                        };
+                        }
                     }
                     if (newShape.type == 'half-smooth-polygon') {
                         newPointList[len - 1] = zrUtil.clone(newShape.style.pointList[len - 1]);
@@ -1439,7 +1439,7 @@ define(function (require) {
                 needRefresh && this.zr.refresh();
             }
         }
-    }
+    };
 
     return Base;
 });

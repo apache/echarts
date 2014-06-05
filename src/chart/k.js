@@ -84,7 +84,6 @@ define(function (require) {
          * @param {number} seriesIndex 系列索引
          */
         _buildSinglePosition : function (position, seriesArray) {
-            var series = this.series;
             var mapData = this._mapData(seriesArray);
             var locationMap = mapData.locationMap;
             var maxDataLength = mapData.maxDataLength;
@@ -226,7 +225,7 @@ define(function (require) {
 
             var seriesIndex;
             for (var sIdx = 0, len = seriesArray.length; sIdx < len; sIdx++) {
-                seriesIndex = seriesArray[sIdx]
+                seriesIndex = seriesArray[sIdx];
                 serie = series[seriesIndex];
                 seriesPL = pointList[seriesIndex];
                 

@@ -49,7 +49,6 @@
  */
 define(function (require) {
     var Base = require('zrender/shape/Base');
-    var matrix = require('zrender/tool/matrix');
     var zrUtil = require('zrender/tool/util');
 
     function Candle(options) {

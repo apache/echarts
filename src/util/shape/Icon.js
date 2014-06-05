@@ -399,7 +399,6 @@ define(function (require) {
     }
     
     var Base = require('zrender/shape/Base');
-    var matrix = require('zrender/tool/matrix');
     
     function Icon(options) {
         Base.call(this, options);

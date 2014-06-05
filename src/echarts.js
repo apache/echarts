@@ -609,7 +609,7 @@ define(function (require) {
                 if (magicOption[componentType]) {
                     if (this.component[componentType]) {
                         this.component[componentType].refresh &&
-                        this.component[componentType].refresh(magicOption)
+                        this.component[componentType].refresh(magicOption);
                     }
                     else {
                         ComponentClass = componentLibrary.get(
@@ -628,7 +628,7 @@ define(function (require) {
                 else if (this.component[componentType]) {
                     this.component[componentType].dispose();
                     this.component[componentType] = null;
-                    delete this.component[componentType]
+                    delete this.component[componentType];
                 }
             }
 
@@ -681,7 +681,7 @@ define(function (require) {
             
             magicOption.animation && !magicOption.renderAsImage
                 ? this._zr.refresh()
-                : this._zr.render()
+                : this._zr.render();
             
             var imgId = 'IMG' + this.id;
             var img = document.getElementById(imgId);
@@ -803,7 +803,7 @@ define(function (require) {
                 // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
                 'DRAG_ENABLE_TIME'
             ];
-            var len = mergeList.length
+            var len = mergeList.length;
             while (len--) {
                 if (typeof magicOption[mergeList[len]] == 'undefined') {
                     magicOption[mergeList[len]] = this._themeConfig[mergeList[len]];
@@ -813,7 +813,7 @@ define(function (require) {
             // 数值系列的颜色列表，不传则采用内置颜色，可配数组，借用zrender实例注入，会有冲突风险，先这样
             var themeColor = (magicOption.color && magicOption.color.length > 0)
                              ? magicOption.color
-                             : this._themeConfig.color
+                             : this._themeConfig.color;
             this._zr.getColor = function (idx) {
                 var zrColor = require('zrender/tool/color');
                 return zrColor.getColor(idx, themeColor);
@@ -1198,7 +1198,7 @@ define(function (require) {
                                   ? i : -1;
                 }
                 else {
-                    targetIndex = dataArray[i].name == markName[0] ? i : -1
+                    targetIndex = dataArray[i].name == markName[0] ? i : -1;
                 }
                 if (targetIndex != -1) {
                     break;
@@ -1497,11 +1497,11 @@ define(function (require) {
             loadingOption.effectOption = loadingOption.effectOption || {};
             loadingOption.effectOption.textStyle = loadingOption.textStyle;
             
-            var effect = loadingOption.effect;
-            if (typeof effect == 'string' || typeof effect == 'undefined') {
-                effect =  effectList[loadingOption.effect || 'spin'];
+            var Effect = loadingOption.effect;
+            if (typeof Effect == 'string' || typeof Effect == 'undefined') {
+                Effect =  effectList[loadingOption.effect || 'spin'];
             }
-            this._zr.showLoading(new effect(loadingOption.effectOption));
+            this._zr.showLoading(new Effect(loadingOption.effectOption));
             return this;
         },
 
@@ -1583,7 +1583,7 @@ define(function (require) {
                 self._zr.refresh();
                 self._messageCenter.dispatch(ecConfig.EVENT.RESIZE);
                 return self;
-            }
+            };
         },
         
         /**

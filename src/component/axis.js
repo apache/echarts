@@ -199,7 +199,7 @@ define(function (require) {
             },
             
             isHorizontal : function() {
-                return this.option.position == 'bottom' || this.option.position == 'top'
+                return this.option.position == 'bottom' || this.option.position == 'top';
             }
         },
         /**
@@ -333,7 +333,7 @@ define(function (require) {
             }
             this._axisList = [];
         }
-    }
+    };
     
     zrUtil.inherits(Axis, Base);
     

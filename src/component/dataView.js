@@ -117,7 +117,7 @@ define(function (require) {
             this._buttonClose.innerHTML = lang[1] || this._lang[1];
             var self = this;
             this._buttonClose.onclick = function (){
-                self.hide()
+                self.hide();
             };
             this._tDom.appendChild(this._buttonClose);
 
@@ -128,7 +128,7 @@ define(function (require) {
                     'float:right;margin-right:10px;padding:1px 6px;';
                 this._buttonRefresh.innerHTML = lang[2] || this._lang[2];
                 this._buttonRefresh.onclick = function (){
-                    self._save()
+                    self._save();
                 };
                 this._tDom.appendChild(this._buttonRefresh);
                 this._textArea.readOnly = false;

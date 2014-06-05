@@ -364,12 +364,12 @@ define(function (require) {
                 }
                 
                 // 拖拽特性
-				if (forceSerie.draggable) {
-	                self.setCalculable(shape);
-	                shape.dragEnableTime = 0;
-	                shape.ondragstart = self.shapeHandler.ondragstart;
-	                shape.draggable = forceSerie.draggable;
-				}
+                if (forceSerie.draggable) {
+                    self.setCalculable(shape);
+                    shape.dragEnableTime = 0;
+                    shape.ondragstart = self.shapeHandler.ondragstart;
+                    shape.draggable = forceSerie.draggable;
+                }
                 
                 var categoryName = '';
                 if (typeof(node.category) !== 'undefined') {

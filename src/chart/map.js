@@ -852,7 +852,6 @@ define(function (require) {
         _buildMark : function (mapType, mapSeries) {
             this._seriesIndexToMapType = this._seriesIndexToMapType || {};
             this.markAttachStyle = this.markAttachStyle || {};
-            var series = this.series;
             var position = [
                 this._mapDataMap[mapType].transform.left,
                 this._mapDataMap[mapType].transform.top

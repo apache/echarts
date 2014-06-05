@@ -8,7 +8,6 @@
 define(function (require) {
     var Base = require('zrender/shape/Base');
     var PolygonShape = require('zrender/shape/Polygon');
-    var matrix = require('zrender/tool/matrix');
     var zrUtil = require('zrender/tool/util');
     
     function HandlePolygon(options) {

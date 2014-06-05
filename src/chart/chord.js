@@ -424,7 +424,7 @@ define(function (require) {
                         [group, this.chordSerieSample],
                         'itemStyle.normal.label.textStyle'
                     ));
-                    labelShape = new TextShape(labelShape)
+                    labelShape = new TextShape(labelShape);
                     this.shapeList.push(labelShape);
                     //this.zr.addShape(labelShape);
                 }

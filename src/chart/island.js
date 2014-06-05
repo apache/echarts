@@ -237,7 +237,7 @@ define(function (require) {
 
             return;
         }
-    }
+    };
     
     zrUtil.inherits(Island, ChartBase);
     zrUtil.inherits(Island, ComponentBase);

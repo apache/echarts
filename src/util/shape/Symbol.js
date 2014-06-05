@@ -51,7 +51,7 @@ define(function (require) {
         buildPath : function (ctx, style) {
             var pointList = style.pointList;
             var len = pointList.length;
-            if (len == 0) {
+            if (len === 0) {
                 return;
             }
             
@@ -60,7 +60,6 @@ define(function (require) {
             var sub;
             var subLen;
             var isArray = pointList[0] instanceof Array;
-            var persent;
             var size = style.size ? style.size : 2;
             var curSize = size;
             var halfSize = size / 2;

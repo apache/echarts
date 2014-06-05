@@ -5,7 +5,7 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function (require) {         // component
+define(function (/*require*/) {     // component
     var self = {};
 
     var _componentLibrary = {};     // echart组件库

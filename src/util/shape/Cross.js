@@ -46,7 +46,7 @@ define(function (require) {
          * @param {Object} style 样式
          */
         buildPath : function (ctx, style) {
-            var rect = style.rect
+            var rect = style.rect;
             style.xStart = rect.x;
             style.xEnd = rect.x + rect.width;
             style.yStart = style.yEnd = style.y;

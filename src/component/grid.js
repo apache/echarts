@@ -87,7 +87,7 @@ define(function (require) {
                 }
             }
             if (typeof zeroX != 'undefined' || typeof zeroY != 'undefined') {
-                len = axisList.length
+                len = axisList.length;
                 while (len--) {
                     axisList[len].refixAxisShape(zeroX, zeroY);
                 }

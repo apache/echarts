@@ -59,7 +59,7 @@ define(function (require) {
         
         self._setContent = function(ticket, res) {
             return self.__setContent(ticket, res);
-        }
+        };
         
         this._tDom = this._tDom || document.createElement('div');
         // 避免拖拽时页面选中的尴尬
@@ -236,11 +236,6 @@ define(function (require) {
             }
             needRefresh && this.zr.refresh();
             this.showing = false;
-        },
-        
-        // 显示十字准星
-        showCross : function(x, y) {
-            
         },
         
         _show : function (position, x, y, specialCssText) {
@@ -628,13 +623,13 @@ define(function (require) {
                     0, x, y
                 );
                 if (dataIndex >= 0) {
-                    this._showItemTrigger()
+                    this._showItemTrigger();
                 }
                 else {
                     clearTimeout(this._hidingTicket);
                     clearTimeout(this._showingTicket);
                     this._tDom.style.display = 'none';
-                };
+                }
             }
 
             if (seriesArray.length > 0) {

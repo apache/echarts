@@ -769,9 +769,9 @@ define(function (require) {
         },
         
         _synScatterData : function (seriesIndex, data) {
-            if (this._zoom.start == 0 
+            if (this._zoom.start === 0 
                 && this._zoom.end == 100
-                && this._zoom.start2 == 0 
+                && this._zoom.start2 === 0 
                 && this._zoom.end2 == 100
             ) {
                 return data;
@@ -1059,7 +1059,7 @@ define(function (require) {
         },
         
         getRealDataIndex : function (sIdx, dIdx) {
-            if (!this._originalData || (this._zoom.start == 0 && this._zoom.end == 100)) {
+            if (!this._originalData || (this._zoom.start === 0 && this._zoom.end == 100)) {
                 return dIdx;
             }
             var sreies = this._originalData.series;

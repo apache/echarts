@@ -46,7 +46,7 @@ define(function (require) {
                     self.zr.addHoverShape(param.target);
                 }
             }
-        }
+        };
     }
 
     /**
@@ -210,7 +210,7 @@ define(function (require) {
         parseCenter : number.parseCenter,
         parseRadius : number.parseRadius,
         numAddCommas : number.addCommas
-    }
+    };
     
     return Base;
 });

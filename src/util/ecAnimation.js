@@ -24,7 +24,7 @@ define(function (require) {
             // 原来短，新的长，补全
             newShape.style.pointList = oldShape.style.pointList.concat(
                 newPointList.slice(oldShape.style.pointList.length)
-            )
+            );
         }
         else {
             // 原来长，新的短，截断

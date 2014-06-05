@@ -44,7 +44,7 @@ define(function (require) {
         };
         self._dataRangeSelected = function(param) {
             return self.__dataRangeSelected(param);
-        }
+        };
         this._selectedMap = {};
         this._range = {};
         
@@ -1131,7 +1131,7 @@ define(function (require) {
         _textFormat : function(valueStart, valueEnd) {
             valueStart = valueStart.toFixed(this.dataRangeOption.precision);
             valueEnd = typeof valueEnd != 'undefined' 
-                       ? valueEnd.toFixed(this.dataRangeOption.precision) : ''
+                       ? valueEnd.toFixed(this.dataRangeOption.precision) : '';
             if (this.dataRangeOption.formatter) {
                 if (typeof this.dataRangeOption.formatter == 'string') {
                     return this.dataRangeOption.formatter.replace('{value}', valueStart)
@@ -1142,7 +1142,7 @@ define(function (require) {
                 }
             }
             
-            if (valueEnd != '') {
+            if (valueEnd !== '') {
                 return valueStart + ' - ' + valueEnd;
             }
 

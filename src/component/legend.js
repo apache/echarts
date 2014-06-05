@@ -19,7 +19,6 @@ define(function (require) {
     var ecConfig = require('../config');
     var zrUtil = require('zrender/tool/util');
     var zrArea = require('zrender/tool/area');
-    var zrColor = require('zrender/tool/color');
 
     /**
      * 构造函数
@@ -29,11 +28,16 @@ define(function (require) {
      */
     function Legend(ecTheme, messageCenter, zr, option, myChart) {
         if (!this.query(option, 'legend.data')) {
-            console.error('option.legend.data has not been defined.')
+            console.error('option.legend.data has not been defined.');
             return;
         }
         
         Base.call(this, ecTheme, messageCenter, zr, option, myChart);
+        
+        var self = this;
+        self._legendSelected = function (param) {
+            self.__legendSelected(param);
+        };
         
         this._colorIndex = 0;
         this._colorMap = {};
@@ -60,7 +64,6 @@ define(function (require) {
          * 构建所有图例元素
          */
         _buildItem : function () {
-            var self = this;
             var data = this.legendOption.data;
             var dataLength = data.length;
             var itemName;
@@ -180,9 +183,7 @@ define(function (require) {
                 textShape = new TextShape(textShape);
                 
                 if (this.legendOption.selectedMode) {
-                    itemShape.onclick = textShape.onclick = function (param) {
-                        self._legendSelected(param);
-                    };
+                    itemShape.onclick = textShape.onclick = this._legendSelected;
                     itemShape.onmouseover =  textShape.onmouseover = this.hoverConnect;
                     itemShape.hoverConnect = textShape.id;
                     textShape.hoverConnect = itemShape.id;
@@ -548,7 +549,7 @@ define(function (require) {
             return itemShape;
         },
 
-        _legendSelected : function (param) {
+        __legendSelected : function (param) {
             var itemName = param.target._name;
             if (this.legendOption.selectedMode === 'single') {
                 for (var k in this._selectedMap) {
@@ -749,7 +750,7 @@ define(function (require) {
             }
             return;
         }
-    }
+    };
     
     var legendIcon = {
         line : function (ctx, style) {

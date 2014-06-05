@@ -68,7 +68,6 @@ define(function (require) {
             if (interval == 'auto') {
                 // 麻烦的自适应计算
                 var fontSize = this.option.axisLabel.textStyle.fontSize;
-                var font = this.getFont(this.option.axisLabel.textStyle);
                 var data = this.option.data;
                 var dataLength = this.option.data.length;
 
@@ -226,8 +225,8 @@ define(function (require) {
             else {
                 // 纵向
                 var xPosition = this.option.position == 'left'
-                        ? (tickOption.inside ? this.grid.getX() : (this.grid.getX() - length))
-                        : (tickOption.inside ? (this.grid.getXend() - length) : this.grid.getXend());
+                    ? (tickOption.inside ? this.grid.getX() : (this.grid.getX() - length))
+                    : (tickOption.inside ? (this.grid.getXend() - length) : this.grid.getXend());
                         
                 var y;
                 for (var i = startIndex; i < dataLength; i += interval) {
@@ -391,7 +390,8 @@ define(function (require) {
                              : typeof onGap == 'undefined'
                                    ? (this.option.boundaryGap ? (this.getGap() / 2) : 0)
                                    : 0;
-            dataLength -= (onGap || (typeof onGap == 'undefined' && this.option.boundaryGap)) ? 1 : 0;
+            dataLength -= (onGap || (typeof onGap == 'undefined' && this.option.boundaryGap)) 
+                          ? 1 : 0;
             if (this.isHorizontal()) {
                 // 横向
                 var sy = this.grid.getY();
@@ -678,8 +678,8 @@ define(function (require) {
         },
         
         // 根据位置换算值
-        getValueFromCoord : function(coord) {
-            return ''
+        getValueFromCoord : function() {
+            return '';
         },
 
         /**

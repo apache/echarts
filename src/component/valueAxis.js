@@ -26,7 +26,7 @@ define(function (require) {
      */
     function ValueAxis(ecTheme, messageCenter, zr, option, myChart, axisBase, series) {
         if (!series || series.length === 0) {
-            console.err('option.series.length == 0.')
+            console.err('option.series.length == 0.');
             return;
         }
         
@@ -99,8 +99,8 @@ define(function (require) {
             else {
                 // 纵向
                 var xPosition = this.option.position == 'left'
-                        ? (tickOption.inside ? this.grid.getX() : (this.grid.getX() - length))
-                        : (tickOption.inside ? (this.grid.getXend() - length) : this.grid.getXend());
+                    ? (tickOption.inside ? this.grid.getX() : (this.grid.getX() - length))
+                    : (tickOption.inside ? (this.grid.getXend() - length) : this.grid.getXend());
 
                 var y;
                 for (var i = 0; i < dataLength; i++) {
@@ -544,70 +544,70 @@ define(function (require) {
          *
          * by linzhifeng@baidu.com 2013-1-8
          * --------
-             this._valueList = [];
-             this.option = {splitNumber:5,power:100,precision:0};
-             this._min = 1; this._max = 123; console.log(this._min, this._max); this._reformValue();
-             console.log('result is :', this._min, this._max, this._valueList);
-             console.log('should be : 0 150 [0, 30, 60, 90, 120, 150]',
-                        (this._min == 0 && this._max == 150) ? 'success' : 'failed');
+         this._valueList = [];
+         this.option = {splitNumber:5,power:100,precision:0};
+         this._min = 1; this._max = 123; console.log(this._min, this._max); this._reformValue();
+         console.log('result is :', this._min, this._max, this._valueList);
+         console.log('should be : 0 150 [0, 30, 60, 90, 120, 150]',
+                    (this._min == 0 && this._max == 150) ? 'success' : 'failed');
 
-             this._min = 10; this._max = 1923; console.log(this._min, this._max); this._reformValue();
-             console.log('result is :', this._min, this._max, this._valueList);
-             console.log('should be : 0 2000 [0, 400, 800, 1200, 1600, 2000]',
-                        (this._min == 0 && this._max == 2000) ? 'success' : 'failed');
+         this._min = 10; this._max = 1923; console.log(this._min, this._max); this._reformValue();
+         console.log('result is :', this._min, this._max, this._valueList);
+         console.log('should be : 0 2000 [0, 400, 800, 1200, 1600, 2000]',
+                    (this._min == 0 && this._max == 2000) ? 'success' : 'failed');
 
-             this._min = 10; this._max = 78; console.log(this._min, this._max); this._reformValue();
-             console.log('result is :', this._min, this._max, this._valueList);
-             console.log('should be : 0 100 [0, 20, 40, 60, 80, 100]',
-                        (this._min == 0 && this._max == 100) ? 'success' : 'failed');
+         this._min = 10; this._max = 78; console.log(this._min, this._max); this._reformValue();
+         console.log('result is :', this._min, this._max, this._valueList);
+         console.log('should be : 0 100 [0, 20, 40, 60, 80, 100]',
+                    (this._min == 0 && this._max == 100) ? 'success' : 'failed');
 
-             this._min = -31; this._max = -3; console.log(this._min, this._max); this._reformValue();
-             console.log('result is :', this._min, this._max, this._valueList);
-             console.log('should be : -35 0 [-35, -28, -21, -14, -7, 0]',
-                        (this._min == -35 && this._max == 0) ? 'success' : 'failed');
+         this._min = -31; this._max = -3; console.log(this._min, this._max); this._reformValue();
+         console.log('result is :', this._min, this._max, this._valueList);
+         console.log('should be : -35 0 [-35, -28, -21, -14, -7, 0]',
+                    (this._min == -35 && this._max == 0) ? 'success' : 'failed');
 
-             this._min = -51; this._max = 203; console.log(this._min, this._max); this._reformValue();
-             console.log('result is :', this._min, this._max, this._valueList);
-             console.log('should be : -60 240 [-60, 0, 60, 120, 180, 240]',
-                        (this._min == -60 && this._max == 240) ? 'success' : 'failed');
+         this._min = -51; this._max = 203; console.log(this._min, this._max); this._reformValue();
+         console.log('result is :', this._min, this._max, this._valueList);
+         console.log('should be : -60 240 [-60, 0, 60, 120, 180, 240]',
+                    (this._min == -60 && this._max == 240) ? 'success' : 'failed');
 
-             this._min = -251; this._max = 23; console.log(this._min, this._max); this._reformValue();
-             console.log('result is :', this._min, this._max, this._valueList);
-             console.log('should be : -280 70 [-280, -210, -140, -70, 0, 70]',
-                        (this._min == -280 && this._max == 70) ? 'success' : 'failed');
+         this._min = -251; this._max = 23; console.log(this._min, this._max); this._reformValue();
+         console.log('result is :', this._min, this._max, this._valueList);
+         console.log('should be : -280 70 [-280, -210, -140, -70, 0, 70]',
+                    (this._min == -280 && this._max == 70) ? 'success' : 'failed');
 
-             this.option.precision = 2;
-             this._min = 0.23; this._max = 0.78; console.log(this._min, this._max); this._reformValue();
-             console.log('result is :', this._min, this._max, this._valueList);
-             console.log('should be : 0.00 1.00'
-                 + '["0.00", "0.20", "0.40", "0.60", "0.80", "1.00"]',
-                (this._min == 0.00 && this._max == 1.00) ? 'success' : 'failed');
+         this.option.precision = 2;
+         this._min = 0.23; this._max = 0.78; console.log(this._min, this._max); this._reformValue();
+         console.log('result is :', this._min, this._max, this._valueList);
+         console.log('should be : 0.00 1.00'
+             + '["0.00", "0.20", "0.40", "0.60", "0.80", "1.00"]',
+            (this._min == 0.00 && this._max == 1.00) ? 'success' : 'failed');
 
-             this._min = -12.23; this._max = -0.78; console.log(this._min, this._max);
-             this._reformValue();
-             console.log('result is :', this._min, this._max, this._valueList);
-             console.log('should be : -15.00 0.00'
-                 + '["-15.00", "-12.00", "-9.00", "-6.00", "-3.00", "0.00"]',
-                (this._min == -15.00 && this._max == 0.00) ? 'success' : 'failed');
+         this._min = -12.23; this._max = -0.78; console.log(this._min, this._max);
+         this._reformValue();
+         console.log('result is :', this._min, this._max, this._valueList);
+         console.log('should be : -15.00 0.00'
+             + '["-15.00", "-12.00", "-9.00", "-6.00", "-3.00", "0.00"]',
+            (this._min == -15.00 && this._max == 0.00) ? 'success' : 'failed');
 
-             this._min = -0.23; this._max = 0.78; console.log(this._min, this._max); this._reformValue();
-             console.log('result is :', this._min, this._max, this._valueList);
-             console.log('should be : -0.30 1.20'
-                 + '["-0.30", "0.00", "0.30", "0.60", "0.90", "1.20"]',
-                (this._min == -0.30 && this._max == 1.20) ? 'success' : 'failed');
+         this._min = -0.23; this._max = 0.78; console.log(this._min, this._max); this._reformValue()
+         console.log('result is :', this._min, this._max, this._valueList);
+         console.log('should be : -0.30 1.20'
+             + '["-0.30", "0.00", "0.30", "0.60", "0.90", "1.20"]',
+            (this._min == -0.30 && this._max == 1.20) ? 'success' : 'failed');
 
-             this._min = -1.23; this._max = 0.78; console.log(this._min, this._max); _reformValue();
-             console.log('result is :', this._min, this._max, this._valueList);
-             console.log('should be : -1.50 1.00'
-                 + '["-1.50", "-1.00", "-0.50", "0.00", "0.50", "1.00"]',
-                (this._min == -1.50 && this._max == 1.00) ? 'success' : 'failed');
+         this._min = -1.23; this._max = 0.78; console.log(this._min, this._max); _reformValue();
+         console.log('result is :', this._min, this._max, this._valueList);
+         console.log('should be : -1.50 1.00'
+             + '["-1.50", "-1.00", "-0.50", "0.00", "0.50", "1.00"]',
+            (this._min == -1.50 && this._max == 1.00) ? 'success' : 'failed');
 
-             this.option.precision = 1;
-             this._min = -2.3; this._max = 0.5; console.log(this._min, this._max); _reformValue();
-             console.log('result is :', this._min, this._max, this._valueList);
-             console.log('should be : -2.4 0.6'
-                 + '["-2.4", "-1.8", "-1.2", "-0.6", "0.0", "0.6"]',
-                (this._min == -2.4 && this._max == 0.6) ? 'success' : 'failed');
+         this.option.precision = 1;
+         this._min = -2.3; this._max = 0.5; console.log(this._min, this._max); _reformValue();
+         console.log('result is :', this._min, this._max, this._valueList);
+         console.log('should be : -2.4 0.6'
+             + '["-2.4", "-1.8", "-1.2", "-0.6", "0.0", "0.6"]',
+            (this._min == -2.4 && this._max == 0.6) ? 'success' : 'failed');
          * --------
          */
         _reformValue : function (scale) {

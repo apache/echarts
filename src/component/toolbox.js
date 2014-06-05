@@ -56,122 +56,50 @@ define(function (require) {
         // this._dataView;
         this._markShapeList = [];
         var self = this;
+        self._onMark = function (param) {
+            self.__onMark(param);
+        };
+        self._onMarkUndo = function (param) {
+            self.__onMarkUndo(param);
+        };
+        self._onMarkClear = function (param) {
+            self.__onMarkClear(param);
+        };
+        self._onDataZoom = function (param) {
+            self.__onDataZoom(param);
+        };
+        self._onDataZoomReset = function (param) {
+            self.__onDataZoomReset(param);
+        };
+        self._onDataView = function (param) {
+            self.__onDataView(param);
+        };
+        self._onRestore = function (param) {
+            self.__onRestore(param);
+        };
+        self._onSaveAsImage = function (param) {
+            self.__onSaveAsImage(param);
+        };
+        self._onMagicType = function (param) {
+            self.__onMagicType(param);
+        };
+        self._onCustomHandler = function (param) {
+            self.__onCustomHandler(param);
+        };
         self._onmousemove = function (param) {
-            if (self._marking) {
-                self._markShape.style.xEnd = zrEvent.getX(param.event);
-                self._markShape.style.yEnd = zrEvent.getY(param.event);
-                self.zr.addHoverShape(self._markShape);
-            }
-            if (self._zooming) {
-                self._zoomShape.style.width = 
-                    zrEvent.getX(param.event) - self._zoomShape.style.x;
-                self._zoomShape.style.height = 
-                    zrEvent.getY(param.event) - self._zoomShape.style.y;
-                self.zr.addHoverShape(self._zoomShape);
-                self.dom.style.cursor = 'crosshair';
-            }
-            if (self._zoomStart
-                && (self.dom.style.cursor != 'pointer' && self.dom.style.cursor != 'move')
-            ) {
-                self.dom.style.cursor = 'crosshair';
-            }
+            return self.__onmousemove(param);
         };
 
         self._onmousedown = function (param) {
-            if (param.target) {
-                return;
-            }
-            self._zooming = true;
-            var x = zrEvent.getX(param.event);
-            var y = zrEvent.getY(param.event);
-            var zoomOption = self.option.dataZoom || {};
-            self._zoomShape = new RectangleShape({
-                zlevel : self._zlevelBase,
-                style : {
-                    x : x,
-                    y : y,
-                    width : 1,
-                    height : 1,
-                    brushType: 'both'
-                },
-                highlightStyle : {
-                    lineWidth : 2,
-                    color: zoomOption.fillerColor 
-                           || ecConfig.dataZoom.fillerColor,
-                    strokeColor : zoomOption.handleColor 
-                                  || ecConfig.dataZoom.handleColor,
-                    brushType: 'both'
-                }
-            });
-            self.zr.addHoverShape(self._zoomShape);
-            return true; // 阻塞全局事件
+            return self.__onmousedown(param);
         };
         
-        self._onmouseup = function (/*param*/) {
-            if (!self._zoomShape 
-                || Math.abs(self._zoomShape.style.width) < 10 
-                || Math.abs(self._zoomShape.style.height) < 10
-            ) {
-                self._zooming = false;
-                return true;
-            }
-            if (self._zooming && self.component.dataZoom) {
-                self._zooming = false;
-                
-                var zoom = self.component.dataZoom.rectZoom(self._zoomShape.style);
-                if (zoom) {
-                    self._zoomQueue.push({
-                        start : zoom.start,
-                        end : zoom.end,
-                        start2 : zoom.start2,
-                        end2 : zoom.end2
-                    });
-                    self._iconEnable(self._iconShapeMap['dataZoomReset']);
-                    self.zr.refresh();
-                }
-            }
-            return true; // 阻塞全局事件
+        self._onmouseup = function (param) {
+            return self.__onmouseup(param);
         };
         
         self._onclick = function (param) {
-            if (param.target) {
-                return;
-            }
-            if (self._marking) {
-                self._marking = false;
-                self._markShapeList.push(self._markShape);
-                self._iconEnable(self._iconShapeMap['markUndo']);
-                self._iconEnable(self._iconShapeMap['markClear']);
-                self.zr.addShape(self._markShape);
-                self.zr.refresh();
-            } 
-            else if (self._markStart) {
-                self._marking = true;
-                var x = zrEvent.getX(param.event);
-                var y = zrEvent.getY(param.event);
-                self._markShape = new LineShape({
-                    zlevel : self._zlevelBase,
-                    style : {
-                        xStart : x,
-                        yStart : y,
-                        xEnd : x,
-                        yEnd : y,
-                        lineWidth : self.query(
-                                        self.option,
-                                        'toolbox.feature.mark.lineStyle.width'
-                                    ),
-                        strokeColor : self.query(
-                                          self.option,
-                                          'toolbox.feature.mark.lineStyle.color'
-                                      ),
-                        lineType : self.query(
-                                       self.option,
-                                       'toolbox.feature.mark.lineStyle.type'
-                                   )
-                    }
-                });
-                self.zr.addHoverShape(self._markShape);
-            }
+            return self.__onclick(param);
         };
     }
 
@@ -296,7 +224,8 @@ define(function (require) {
                         height : itemSize,
                         iconType : this._iconList[i],
                         lineWidth : 1,
-                        strokeColor : this._featureColor[this._iconList[i]] || color[i % color.length],
+                        strokeColor : this._featureColor[this._iconList[i]] 
+                                      || color[i % color.length],
                         brushType: 'stroke'
                     },
                     highlightStyle : {
@@ -306,7 +235,8 @@ define(function (require) {
                                : undefined,
                         textFont : textFont,
                         textPosition : textPosition,
-                        strokeColor : this._featureColor[this._iconList[i]] || color[i % color.length]
+                        strokeColor : this._featureColor[this._iconList[i]] 
+                                      || color[i % color.length]
                     },
                     hoverable : true,
                     clickable : true
@@ -343,53 +273,36 @@ define(function (require) {
                     }
                 }
                 
-                
                 switch(this._iconList[i]) {
                     case 'mark':
-                        itemShape.onclick = function (param) {
-                            self._onMark(param);
-                        };
+                        itemShape.onclick = self._onMark;
                         break;
                     case 'markUndo':
-                        itemShape.onclick = function (param) {
-                            self._onMarkUndo(param);
-                        };
+                        itemShape.onclick = self._onMarkUndo;
                         break;
                     case 'markClear':
-                        itemShape.onclick = function (param) {
-                            self._onMarkClear(param);
-                        };
+                        itemShape.onclick = self._onMarkClear;
                         break;
                     case 'dataZoom':
-                        itemShape.onclick = function (param) {
-                            self._onDataZoom(param);
-                        };
+                        itemShape.onclick = self._onDataZoom;
                         break;
                     case 'dataZoomReset':
-                        itemShape.onclick = function (param) {
-                            self._onDataZoomReset(param);
-                        };
+                        itemShape.onclick = self._onDataZoomReset;
                         break;
                     case 'dataView' :
                         if (!this._dataView) {
-                            var DataView = require('./dataView');;
+                            var DataView = require('./dataView');
                             this._dataView = new DataView(
                                 this.ecTheme, this.messageCenter, this.zr, this.option, this.myChart
                             );
                         }
-                        itemShape.onclick = function (param) {
-                            self._onDataView(param);
-                        };
+                        itemShape.onclick = self._onDataView;
                         break;
                     case 'restore':
-                        itemShape.onclick = function (param) {
-                            self._onRestore(param);
-                        };
+                        itemShape.onclick = self._onRestore;
                         break;
                     case 'saveAsImage':
-                        itemShape.onclick = function (param) {
-                            self._onSaveAsImage(param);
-                        };
+                        itemShape.onclick = self._onSaveAsImage;
                         break;
                     default:
                         if (this._iconList[i].match('Chart')) {
@@ -399,14 +312,10 @@ define(function (require) {
                                 itemShape.style.strokeColor = this._enableColor;
                             }
                             */
-                            itemShape.onclick = function (param) {
-                                self._onMagicType(param);
-                            };
+                            itemShape.onclick = self._onMagicType;
                         }
                         else {
-                            itemShape.onclick = function (param) {
-                                self._onCustomHandler(param);
-                            };
+                            itemShape.onclick = self._onCustomHandler;
                         }
                         break;
                 }
@@ -525,7 +434,125 @@ define(function (require) {
             };
         },
 
-        _onMark : function (param) {
+        __onmousemove : function (param) {
+            if (this._marking) {
+                this._markShape.style.xEnd = zrEvent.getX(param.event);
+                this._markShape.style.yEnd = zrEvent.getY(param.event);
+                this.zr.addHoverShape(this._markShape);
+            }
+            if (this._zooming) {
+                this._zoomShape.style.width = 
+                    zrEvent.getX(param.event) - this._zoomShape.style.x;
+                this._zoomShape.style.height = 
+                    zrEvent.getY(param.event) - this._zoomShape.style.y;
+                this.zr.addHoverShape(this._zoomShape);
+                this.dom.style.cursor = 'crosshair';
+            }
+            if (this._zoomStart
+                && (this.dom.style.cursor != 'pointer' && this.dom.style.cursor != 'move')
+            ) {
+                this.dom.style.cursor = 'crosshair';
+            }
+        },
+
+        __onmousedown : function (param) {
+            if (param.target) {
+                return;
+            }
+            this._zooming = true;
+            var x = zrEvent.getX(param.event);
+            var y = zrEvent.getY(param.event);
+            var zoomOption = this.option.dataZoom || {};
+            this._zoomShape = new RectangleShape({
+                zlevel : this._zlevelBase,
+                style : {
+                    x : x,
+                    y : y,
+                    width : 1,
+                    height : 1,
+                    brushType: 'both'
+                },
+                highlightStyle : {
+                    lineWidth : 2,
+                    color: zoomOption.fillerColor 
+                           || ecConfig.dataZoom.fillerColor,
+                    strokeColor : zoomOption.handleColor 
+                                  || ecConfig.dataZoom.handleColor,
+                    brushType: 'both'
+                }
+            });
+            this.zr.addHoverShape(this._zoomShape);
+            return true; // 阻塞全局事件
+        },
+        
+        __onmouseup : function (/*param*/) {
+            if (!this._zoomShape 
+                || Math.abs(this._zoomShape.style.width) < 10 
+                || Math.abs(this._zoomShape.style.height) < 10
+            ) {
+                this._zooming = false;
+                return true;
+            }
+            if (this._zooming && this.component.dataZoom) {
+                this._zooming = false;
+                
+                var zoom = this.component.dataZoom.rectZoom(this._zoomShape.style);
+                if (zoom) {
+                    this._zoomQueue.push({
+                        start : zoom.start,
+                        end : zoom.end,
+                        start2 : zoom.start2,
+                        end2 : zoom.end2
+                    });
+                    this._iconEnable(this._iconShapeMap['dataZoomReset']);
+                    this.zr.refresh();
+                }
+            }
+            return true; // 阻塞全局事件
+        },
+        
+        __onclick : function (param) {
+            if (param.target) {
+                return;
+            }
+            if (this._marking) {
+                this._marking = false;
+                this._markShapeList.push(this._markShape);
+                this._iconEnable(this._iconShapeMap['markUndo']);
+                this._iconEnable(this._iconShapeMap['markClear']);
+                this.zr.addShape(this._markShape);
+                this.zr.refresh();
+            } 
+            else if (this._markStart) {
+                this._marking = true;
+                var x = zrEvent.getX(param.event);
+                var y = zrEvent.getY(param.event);
+                this._markShape = new LineShape({
+                    zlevel : this._zlevelBase,
+                    style : {
+                        xStart : x,
+                        yStart : y,
+                        xEnd : x,
+                        yEnd : y,
+                        lineWidth : this.query(
+                                        this.option,
+                                        'toolbox.feature.mark.lineStyle.width'
+                                    ),
+                        strokeColor : this.query(
+                                          this.option,
+                                          'toolbox.feature.mark.lineStyle.color'
+                                      ),
+                        lineType : this.query(
+                                       this.option,
+                                       'toolbox.feature.mark.lineStyle.type'
+                                   )
+                    }
+                });
+                this.zr.addHoverShape(this._markShape);
+            }
+        },
+        
+        __onMark : function (param) {
             var target = param.target;
             if (this._marking || this._markStart) {
                 // 取消
@@ -549,7 +576,7 @@ define(function (require) {
             return true; // 阻塞全局事件
         },
         
-        _onMarkUndo : function () {
+        __onMarkUndo : function () {
             if (this._marking) {
                 this._marking = false;
             } else {
@@ -568,7 +595,7 @@ define(function (require) {
             return true;
         },
 
-        _onMarkClear : function () {
+        __onMarkClear : function () {
             if (this._marking) {
                 this._marking = false;
             }
@@ -584,7 +611,7 @@ define(function (require) {
             return true;
         },
         
-        _onDataZoom : function (param) {
+        __onDataZoom : function (param) {
             var target = param.target;
             if (this._zooming || this._zoomStart) {
                 // 取消
@@ -612,7 +639,7 @@ define(function (require) {
             return true; // 阻塞全局事件
         },
         
-        _onDataZoomReset : function () {
+        __onDataZoomReset : function () {
             if (this._zooming) {
                 this._zooming = false;
             }
@@ -721,19 +748,19 @@ define(function (require) {
             }
         },
 
-        _onDataView : function () {
+        __onDataView : function () {
             this._dataView.show(this.option);
             return true;
         },
 
-        _onRestore : function (){
+        __onRestore : function (){
             this._resetMark();
             this._resetZoom();
             this.messageCenter.dispatch(ecConfig.EVENT.RESTORE);
             return true;
         },
         
-        _onSaveAsImage : function () {
+        __onSaveAsImage : function () {
             var saveOption = this.option.toolbox.feature.saveAsImage;
             var imgType = saveOption.type || 'png';
             if (imgType != 'png' && imgType != 'jpeg') {
@@ -817,7 +844,7 @@ define(function (require) {
             return;
         },
 
-        _onMagicType : function (param) {
+        __onMagicType : function (param) {
             this._resetMark();
             var itemName = param.target._name;
             if (!this._magicType[itemName]) {
@@ -859,7 +886,7 @@ define(function (require) {
         },
         
         // 用户自定义扩展toolbox方法
-        _onCustomHandler : function (param) {
+        __onCustomHandler : function (param) {
             var target = param.target.style.iconType;
             var featureHandler = this.option.toolbox.feature[target].onclick;
             if (typeof featureHandler === 'function') {
@@ -915,7 +942,7 @@ define(function (require) {
             }
             
             this._magicType = isRestore ? {} : (this._magicType || {});
-            for (itemName in this._magicType) {
+            for (var itemName in this._magicType) {
                 if (this._magicType[itemName]) {
                     this.option = newOption;
                     this.getMagicOption();
