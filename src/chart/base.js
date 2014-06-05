@@ -468,7 +468,7 @@ define(function (require) {
                     ecData.pack(
                         itemShape,
                         serie, seriesIndex,
-                        data[i], 0,
+                        data[i], i,
                         data[i].name,
                         value
                     );
@@ -597,7 +597,7 @@ define(function (require) {
                 ecData.pack(
                     itemShape,
                     serie, seriesIndex,
-                    data[i][0], 0,
+                    data[i][0], i,
                     data[i][0].name + (data[i][1].name !== '' 
                                       ? (' > ' + data[i][1].name) 
                                       : ''),
