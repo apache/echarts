@@ -107,7 +107,7 @@ define(function (require) {
                     }
                     continue;
                 }
-                itemType = this._getSomethingByName(itemName).type;
+                itemType = data[i].icon || this._getSomethingByName(itemName).type;
                 
                 color = this.getColor(itemName);
 
@@ -487,10 +487,7 @@ define(function (require) {
         },
         
         _getItemShapeByType : function (x, y, width, height, color, itemType, defaultColor) {
-            var highlightColor = color === '#ccc' 
-                                 ? defaultColor 
-                                 : typeof color == 'string' && color != '#ccc' 
-                                   ? zrColor.lift(color, -0.3) : color;
+            var highlightColor = color === '#ccc' ? defaultColor : color;
             var itemShape = {
                 zlevel : this._zlevelBase,
                 style : {
@@ -511,6 +508,14 @@ define(function (require) {
                 hoverable : this.legendOption.selectedMode,
                 clickable : this.legendOption.selectedMode
             };
+            
+            var imageLocation;
+            if (itemType.match('image')) {
+                var imageLocation = itemType.replace(
+                    new RegExp('^image:\\/\\/'), ''
+                );
+                itemType = 'image';
+            }
             // 特殊设置
             switch (itemType) {
                 case 'line' :
@@ -531,6 +536,14 @@ define(function (require) {
                         ? (this.query(this.ecTheme, 'k.itemStyle.normal.lineStyle.color') 
                            || '#ff3200')
                         : color;
+                    break;
+                case 'image' :
+                    itemShape.style.iconType = 'image';
+                    itemShape.style.image = imageLocation;
+                    if (color === '#ccc') {
+                        itemShape.style.opacity = 0.5;
+                    }
+                    break;
             }
             return itemShape;
         },
