@@ -110,22 +110,9 @@ define(function (require) {
         
         
         isCover : function (x, y) {
-            //对鼠标的坐标也做相同的变换
-            if(this.needTransform && this._transform){
-                var inverseMatrix = [];
-                matrix.invert(inverseMatrix, this._transform);
-
-                var originPos = [x, y];
-                matrix.mulVector(originPos, inverseMatrix, [x, y, 1]);
-
-                if (x == originPos[0] && y == originPos[1]) {
-                    // 避免外部修改导致的__needTransform不准确
-                    this.updateNeedTransform();
-                }
-
-                x = originPos[0];
-                y = originPos[1];
-            }
+            var originPos = this.getTansform(x, y);
+            x = originPos[0];
+            y = originPos[1];
 
             // 快速预判并保留判断矩形
             var rect = this.style.__rect;

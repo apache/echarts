@@ -3,7 +3,7 @@
  *
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
- * shape类：标线
+ * shape类：时间轴线
  */
 define(function (require) {
     var Base = require('zrender/shape/Base');
