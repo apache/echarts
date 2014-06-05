@@ -91,7 +91,7 @@ define(function (require) {
                 case ecConfig.COMPONENT_TYPE_TITLE :
                     return 6;
 
-                // EFFECT_ZLEVEL = 7;
+                // ecConfig.EFFECT_ZLEVEL = 7;
                 
                 case ecConfig.COMPONENT_TYPE_TOOLTIP :
                     return 8;
@@ -188,7 +188,7 @@ define(function (require) {
          * 清除图形数据，实例仍可用
          */
         clear :function () {
-            this.clearAnimationShape && this.clearAnimationShape();
+            this.clearEffectShape && this.clearEffectShape();
             this.zr && this.zr.delShape(this.shapeList);
             this.shapeList = [];
         },

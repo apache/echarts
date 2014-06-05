@@ -463,6 +463,7 @@ define(function (require) {
          * 值域漫游响应 
          */
         _ondataRange : function (param) {
+            this._zr.modLayer(ecConfig.EFFECT_ZLEVEL, { motionBlur : false});
             // 用于图表间通信
             this._status.needRefresh = false;
             var len = this._chartList.length;
@@ -482,6 +483,7 @@ define(function (require) {
          * 动态类型切换响应 
          */
         _onmagicTypeChanged : function () {
+            this._zr.modLayer(ecConfig.EFFECT_ZLEVEL, { motionBlur : false});
             this._render(this._toolbox.getMagicOption());
         },
 
@@ -718,6 +720,7 @@ define(function (require) {
          * 还原 
          */
         restore : function () {
+            this._zr.modLayer(ecConfig.EFFECT_ZLEVEL, { motionBlur : false});
             this._option = zrUtil.clone(this._optionRestore);
             this._disposeChartList();
             this._island.clear();
@@ -749,6 +752,7 @@ define(function (require) {
             
             // 停止动画
             this._zr.clearAnimation();
+            this._zr.modLayer(ecConfig.EFFECT_ZLEVEL, { motionBlur : false});
             // 先来后到，安顺序刷新各种图表，图表内部refresh优化检查magicOption，无需更新则不更新~
             for (var i = 0, l = this._chartList.length; i < l; i++) {
                 this._chartList[i].refresh && this._chartList[i].refresh(magicOption);
@@ -763,6 +767,7 @@ define(function (require) {
         _disposeChartList : function () {
             // 停止动画
             this._zr.clearAnimation();
+            this._zr.modLayer(ecConfig.EFFECT_ZLEVEL, { motionBlur : false});
             var len = this._chartList.length;
             while (len--) {
                 if (this._chartList[len]) {
@@ -1571,6 +1576,7 @@ define(function (require) {
                 }
                 // 停止动画
                 self._zr.clearAnimation();
+                self._zr.modLayer(ecConfig.EFFECT_ZLEVEL, { motionBlur : false});
                 self._island.resize();
                 self._toolbox.resize();
                 self._timeline && self._timeline.resize();

@@ -20,8 +20,6 @@ define(function (require) {
     var zrUtil = require('zrender/tool/util');
     var zrArea = require('zrender/tool/area');
     
-    var EFFECT_ZLEVEL = 7;
-    
     function Base(){
         var self = this;
         this.selectedMap = {};
@@ -1344,9 +1342,9 @@ define(function (require) {
          * @param {Array=} addShapeList 指定特效对象，不知道默认使用this.shapeList
          */
         animationEffect : function (addShapeList) {
-            !addShapeList && this.clearAnimationShape();
+            !addShapeList && this.clearEffectShape();
             shapeList = addShapeList || this.shapeList;
-            var zlevel = EFFECT_ZLEVEL;
+            var zlevel = ecConfig.EFFECT_ZLEVEL;
             if (this.canvasSupported) {
                 this.zr.modLayer(
                     zlevel,
@@ -1368,10 +1366,10 @@ define(function (require) {
             }
         },
         
-        clearAnimationShape : function (clearMotionBlur) {
+        clearEffectShape : function (clearMotionBlur) {
             if (this.zr && this.effectList && this.effectList.length > 0) {
                 clearMotionBlur && this.zr.modLayer(
-                    EFFECT_ZLEVEL, 
+                    ecConfig.EFFECT_ZLEVEL, 
                     { motionBlur : false}
                 );
                 this.zr.delShape(this.effectList);

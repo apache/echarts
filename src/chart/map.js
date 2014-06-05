@@ -988,7 +988,7 @@ define(function (require) {
                 transform.top -= geoAndPos[1] - (my - top);
                 this._mapDataMap[mapType].transform = transform;
                 
-                this.clearAnimationShape(true);
+                this.clearEffectShape(true);
                 for (var i = 0, l = this.shapeList.length; i < l; i++) {
                     if(this.shapeList[i]._mapType == mapType) {
                         this.shapeList[i].position[0] = transform.left;
@@ -1104,7 +1104,7 @@ define(function (require) {
                 {type : 'move'}
             );
             
-            this.clearAnimationShape(true);
+            this.clearEffectShape(true);
             this.zr.refresh();
             
             this._justMove = true;

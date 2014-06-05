@@ -125,8 +125,6 @@ define(function (require) {
             hoverable : false
         });
         
-        ecData.clone(shape, effectShape);
-        
         effectList.push(effectShape);
         zr.addShape(effectShape);
         zr.modShape(
