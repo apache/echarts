@@ -109,26 +109,41 @@ define(function (require) {
         var r0 = newShape.style.r0;
         var r = newShape.style.r;
         
-        newShape.style.r0 = 0;
-        newShape.style.r = 0;
-        newShape.rotation = [Math.PI*2, x, y];
-        
-        zr.addShape(newShape);
-        zr.animate(newShape.id, 'style')
-            .when(
-                duration,
-                {
-                    r0 : r0,
-                    r : r
-                }
-            )
-            .start(easing);
-        zr.animate(newShape.id, '')
-            .when(
-                Math.round(duration / 3 * 2),
-                { rotation : [0, x, y] }
-            )
-            .start(easing);
+        if (newShape._animationAdd != 'r') {
+            newShape.style.r0 = 0;
+            newShape.style.r = 0;
+            newShape.rotation = [Math.PI*2, x, y];
+            
+            zr.addShape(newShape);
+            zr.animate(newShape.id, 'style')
+                .when(
+                    duration,
+                    {
+                        r0 : r0,
+                        r : r
+                    }
+                )
+                .start(easing);
+            zr.animate(newShape.id, '')
+                .when(
+                    Math.round(duration / 3 * 2),
+                    { rotation : [0, x, y] }
+                )
+                .start(easing);
+        }
+        else {
+            newShape.style.r0 = oldShape.style.r0;
+            
+            zr.addShape(newShape);
+            zr.animate(newShape.id, 'style')
+                .when(
+                    duration,
+                    {
+                        r0 : r0
+                    }
+                )
+                .start(easing);
+        }
     }
     
     /**
@@ -249,6 +264,29 @@ define(function (require) {
             )
             .start(easing);
     }
+    
+    /**
+     * gaugePointer动画
+     * 
+     * @param {ZRender} zr
+     * @param {shape} oldShape
+     * @param {shape} newShape
+     * @param {number} duration
+     * @param {tring} easing
+     */
+    function gaugePointer(zr, oldShape, newShape, duration, easing) {
+        var angle = newShape.style.angle;
+        newShape.style.angle = oldShape.style.angle;
+        zr.addShape(newShape);
+        zr.animate(newShape.id, 'style')
+            .when(
+                duration,
+                {
+                    angle : angle
+                }
+            )
+            .start(easing);
+    }
 
     return {
         pointList : pointList,
@@ -258,6 +296,7 @@ define(function (require) {
         sector : sector,
         text : text,
         polygon : polygon,
-        chord : chord
+        chord : chord,
+        gaugePointer : gaugePointer
     };
 });

@@ -1079,6 +1079,7 @@ define(function (require) {
                 case 'sector' :
                 case 'circle' :
                     if (duration > 500) {
+                        // 进入动画，加旋转
                         ecAnimation.ring(
                             this.zr,
                             oldShape,
@@ -1108,6 +1109,9 @@ define(function (require) {
                 case 'chord' :
                     ecAnimation.chord(this.zr, oldShape, newShape, duration, easing);
                     break;
+                case 'gauge-pointer' :
+                    ecAnimation.gaugePointer(this.zr, oldShape, newShape, duration, easing);
+                    break;
                 default :
                     this.zr.addShape(newShape);
                     break;
@@ -1118,6 +1122,7 @@ define(function (require) {
          * 动画进入 
          */
         _animateAdd : function (newShape, duration, easing) {
+            var oldShape = {};
             switch (newShape.type) {
                 case 'broken-line' :
                 case 'half-smooth-polygon' :
@@ -1139,75 +1144,49 @@ define(function (require) {
                         newPointList[len - 1] = zrUtil.clone(newShape.style.pointList[len - 1]);
                         newPointList[len - 2] = zrUtil.clone(newShape.style.pointList[len - 2]);
                     }
-                    this._animateMod(
-                        {
-                            style : { pointList : newPointList }
-                        },
-                        newShape,
-                        duration,
-                        easing
-                    );
+                    oldShape = {style : {pointList : newPointList}};
                     break;
                 case 'rectangle' :
                 case 'icon' :
-                    this._animateMod(
-                        {
-                            style : {
-                                x : newShape.style.x,
-                                y : newShape._orient == 'vertical'
-                                    ? newShape.style.y + newShape.style.height
-                                    : newShape.style.y,
-                                width: newShape._orient == 'vertical' 
-                                       ? newShape.style.width : 0,
-                                height: newShape._orient != 'vertical' 
-                                       ? newShape.style.height : 0
-                            }
-                        },
-                        newShape,
-                        duration,
-                        easing
-                    );
+                    oldShape = {
+                        style : {
+                            x : newShape.style.x,
+                            y : newShape._orient == 'vertical'
+                                ? newShape.style.y + newShape.style.height
+                                : newShape.style.y,
+                            width: newShape._orient == 'vertical' 
+                                   ? newShape.style.width : 0,
+                            height: newShape._orient != 'vertical' 
+                                   ? newShape.style.height : 0
+                        }
+                    };
                     break;
                 case 'candle' :
                     var y = newShape.style.y;
-                    this._animateMod(
-                        {
-                            style : {
-                                y : [y[0], y[0], y[0], y[0]]
-                            }
-                        },
-                        newShape,
-                        duration,
-                        easing
-                    );
+                    oldShape = {style : {y : [y[0], y[0], y[0], y[0]]}};
                     break;
                 case 'sector' :
-                    this._animateMod(
-                        {
+                    if (newShape._animationAdd != 'r') {
+                        oldShape = {
                             style : {
                                 startAngle : newShape.style.startAngle,
                                 endAngle : newShape.style.startAngle
                             }
-                        },
-                        newShape,
-                        duration,
-                        easing
-                    );
+                        };
+                    }
+                    else {
+                        oldShape = {style : {r0 : newShape.style.r}};
+                    }
                     break;
                 case 'text' :
-                    this._animateMod(
-                        {
-                            style : {
-                                x : newShape.style.textAlign == 'left' 
-                                    ? newShape.style.x + 100
-                                    : newShape.style.x - 100,
-                                y : newShape.style.y
-                            }
-                        },
-                        newShape,
-                        duration,
-                        easing
-                    );
+                    oldShape = {
+                        style : {
+                            x : newShape.style.textAlign == 'left' 
+                                ? newShape.style.x + 100
+                                : newShape.style.x - 100,
+                            y : newShape.style.y
+                        }
+                    };
                     break;
                 case 'polygon' :
                     var rect = require('zrender/shape/Polygon').prototype.getRect(newShape.style);
@@ -1217,34 +1196,30 @@ define(function (require) {
                     for (var i = 0, len = newShape.style.pointList.length; i < len; i++) {
                         newPointList.push([x + i, y + i]);
                     }
-                    this._animateMod(
-                        {
-                            style : { pointList : newPointList }
-                        },
-                        newShape,
-                        duration,
-                        easing
-                    );
+                    oldShape = {
+                        style : { pointList : newPointList }
+                    };
                     break;
                 case 'chord' :
-                    this._animateMod(
-                        {
-                            style : {
-                                source0 : 0,
-                                source1 : 360,
-                                target0 : 0,
-                                target1 : 360
-                            }
-                        },
-                        newShape,
-                        duration,
-                        easing
-                    );
+                    oldShape = {
+                        style : {
+                            source0 : 0,
+                            source1 : 360,
+                            target0 : 0,
+                            target1 : 360
+                        }
+                    };
                     break;
-                default :
-                    this._animateMod({}, newShape, duration, easing);
+                 case 'gauge-pointer' :
+                    oldShape = {
+                        style : {
+                            angle : newShape.style.startAngle
+                        }
+                    };
                     break;
             }
+            
+            this._animateMod(oldShape, newShape, duration, easing);
         },
         
         /**

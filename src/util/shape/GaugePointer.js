@@ -43,20 +43,25 @@ define(function (require) {
          * @param {Object} style 样式
          */
         buildPath : function (ctx, style) {
-            var width = style.lineWidth;
+            var r = style.r;
+            var width = style.width;
             var angle = style.angle;
-            var x = style.xStart - Math.cos(angle) * width * 2;
-            var y = style.yStart + Math.sin(angle) * width * 2;
-            var angle = style.angle - Math.PI / 2;
+            var x = style.x - Math.cos(angle) * width * 2;
+            var y = style.y + Math.sin(angle) * width * 2;
+            
+            angle = style.angle - Math.PI / 2;
             ctx.moveTo(x, y);
             ctx.lineTo(
-                style.xStart + Math.cos(angle) * width,
-                style.yStart - Math.sin(angle) * width
+                style.x + Math.cos(angle) * width,
+                style.y - Math.sin(angle) * width
             );
-            ctx.lineTo(style.xEnd, style.yEnd);
             ctx.lineTo(
-                style.xStart - Math.cos(angle) * width,
-                style.yStart + Math.sin(angle) * width
+                style.x + Math.cos(style.angle) * r,
+                style.y - Math.sin(style.angle) * r
+            );
+            ctx.lineTo(
+                style.x - Math.cos(angle) * width,
+                style.y + Math.sin(angle) * width
             );
             ctx.lineTo(x, y);
             return;
@@ -71,13 +76,18 @@ define(function (require) {
                 return style.__rect;
             }
             
-            style.__rect = {
-                x : Math.min(style.xStart, style.xEnd),
-                y : Math.min(style.yStart, style.yEnd),
-                width : Math.abs(style.xStart - style.xEnd),
-                height : Math.abs(style.yStart - style.yEnd)
-            };
+            var width = style.width * 2;
+            var xStart = style.x;
+            var yStart = style.y;
+            var xEnd = xStart + Math.cos(style.angle) * style.r;
+            var yEnd = yStart - Math.sin(style.angle) * style.r;
             
+            style.__rect = {
+                x : Math.min(xStart, xEnd) - width,
+                y : Math.min(yStart, yEnd) - width,
+                width : Math.abs(xStart - xEnd) + width,
+                height : Math.abs(yStart - yEnd) + width
+            };
             return style.__rect;
         },
         

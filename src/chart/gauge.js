@@ -110,14 +110,23 @@ define(function (require) {
             var r           = params.radius[1];
             var r0          = r - lineWidth;
             
+            var sectorShape;
             var len = colorArray.length;
-            while (len--) {
-                this.shapeList.push(this._getSector(
+            var lastAngle = startAngle;
+            var newAngle;
+            for (var i = 0, l = colorArray.length; i < l; i++) {
+                newAngle = startAngle - totalAngle * colorArray[i][0] / total;
+                sectorShape = this._getSector(
                     center, r0, r, 
-                    startAngle - totalAngle * colorArray[len][0] / total,   // startAngle
-                    startAngle,                                             // endAngle
-                    colorArray[len][1]                                      // color
-                ));
+                    newAngle,     // startAngle
+                    lastAngle,                                             // endAngle
+                    colorArray[i][1]                                        // color
+                );
+                lastAngle = newAngle;
+                sectorShape._animationAdd = 'r';
+                ecData.set(sectorShape, 'seriesIndex', seriesIndex);
+                ecData.set(sectorShape, 'dataIndex', i);
+                this.shapeList.push(sectorShape);
             }
         },
         
@@ -153,7 +162,7 @@ define(function (require) {
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel : this._zlevelBase,
+                    zlevel : this._zlevelBase + 1,
                     hoverable : false,
                     style : {
                         xStart : center[0] + cosAngle * r,
@@ -206,7 +215,7 @@ define(function (require) {
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel : this._zlevelBase,
+                    zlevel : this._zlevelBase + 1,
                     hoverable : false,
                     style : {
                         xStart : center[0] + cosAngle * r,
@@ -296,17 +305,17 @@ define(function (require) {
             var pointShape = new GaugePointerShape({
                 zlevel : this._zlevelBase,
                 style : {
-                    xStart : center[0],
-                    yStart : center[1],
-                    xEnd : center[0] + Math.cos(angle) * length,
-                    yEnd : center[1] - Math.sin(angle) * length,
+                    x : center[0],
+                    y : center[1],
+                    r : length,
+                    startAngle : params.startAngle * Math.PI / 180,
                     angle : angle,
                     color : color,
-                    lineWidth : pointer.width
+                    width : pointer.width
                 },
                 highlightStyle : {
                     brushType : 'fill',
-                    lineWidth : pointer.width > 2 ? 2 : (pointer.width / 2),
+                    width : pointer.width > 2 ? 2 : (pointer.width / 2),
                     color : '#fff'
                 }
             });
