@@ -76,6 +76,7 @@ define(function (require) {
                 case ecConfig.CHART_TYPE_MAP :
                 case ecConfig.CHART_TYPE_K :
                 case ecConfig.CHART_TYPE_CHORD:
+                case ecConfig.CHART_TYPE_GUAGE:
                     return 2;
 
                 case ecConfig.COMPONENT_TYPE_LEGEND :

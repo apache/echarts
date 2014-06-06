@@ -160,9 +160,6 @@ define(function (require) {
          * 绘制图形
          */
         _buildShape : function () {
-            this._axisLine = null;
-            // 标签文字格式化
-            // this._labelData = this._reformLabel();
             // 标签显示的挑选间隔
             this._interval = this._getInterval();
             

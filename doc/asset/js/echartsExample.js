@@ -101,7 +101,8 @@ else {
             'echarts/chart/radar': fileLocation,
             'echarts/chart/map': fileLocation,
             'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation
+            'echarts/chart/force': fileLocation,
+            'echarts/chart/gauge': fileLocation
         }
     });
 }
@@ -118,6 +119,7 @@ require(
         'echarts/chart/radar',
         'echarts/chart/force',
         'echarts/chart/chord',
+        'echarts/chart/gauge',
         needMap() ? 'echarts/chart/map' : 'echarts'
     ],
     requireCallback
