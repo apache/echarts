@@ -106,7 +106,8 @@ define(function (require) {
             var startAngle  = params.startAngle;
             var totalAngle  = params.totalAngle;
             var colorArray  = params.colorArray;
-            var lineWidth   = serie.axisLine.lineStyle.width;
+            var lineStyle   = serie.axisLine.lineStyle;
+            var lineWidth   = lineStyle.width;
             var r           = params.radius[1];
             var r0          = r - lineWidth;
             
@@ -118,9 +119,10 @@ define(function (require) {
                 newAngle = startAngle - totalAngle * colorArray[i][0] / total;
                 sectorShape = this._getSector(
                     center, r0, r, 
-                    newAngle,     // startAngle
-                    lastAngle,                                             // endAngle
-                    colorArray[i][1]                                        // color
+                    newAngle,           // startAngle
+                    lastAngle,          // endAngle
+                    colorArray[i][1],   // color
+                    lineStyle
                 );
                 lastAngle = newAngle;
                 sectorShape._animationAdd = 'r';
@@ -133,7 +135,7 @@ define(function (require) {
         // 坐标轴分割线
         _buildSplitLine : function (seriesIndex) {
             var serie = this.series[seriesIndex];
-            if (!serie.axisLine.show) {
+            if (!serie.splitLine.show) {
                 return
             }
             
@@ -142,10 +144,8 @@ define(function (require) {
             var total       = serie.max - min;
             var splitLine   = serie.splitLine;
             var length      = splitLine.length;
-            var lineType    = splitLine.lineStyle.type;
-            var lineWidth   = splitLine.lineStyle.width;
-            var color       = splitLine.lineStyle.color;
-            
+            var lineStyle   = splitLine.lineStyle;
+            var color       = lineStyle.color;
             var params = this.paramsMap[seriesIndex];
             var center = params.center;
             var startAngle = params.startAngle * Math.PI / 180;
@@ -172,8 +172,12 @@ define(function (require) {
                         strokeColor : color == 'auto' 
                                       ? this._getColor(seriesIndex, min + total / splitNumber * i)
                                       : color,
-                        lineType : lineType,
-                        lineWidth : lineWidth
+                        lineType : lineStyle.type,
+                        lineWidth : lineStyle.width,
+                        shadowColor : lineStyle.shadowColor,
+                        shadowBlur: lineStyle.shadowBlur,
+                        shadowOffsetX: lineStyle.shadowOffsetX,
+                        shadowOffsetY: lineStyle.shadowOffsetY
                     }
                 }));
             }
@@ -192,9 +196,8 @@ define(function (require) {
             var axisTick    = serie.axisTick;
             var tickSplit   = axisTick.splitNumber;
             var length      = axisTick.length;
-            var lineType    = axisTick.lineStyle.type;
-            var lineWidth   = axisTick.lineStyle.width;
-            var color       = axisTick.lineStyle.color;
+            var lineStyle   = axisTick.lineStyle;
+            var color       = lineStyle.color;
             
             var params = this.paramsMap[seriesIndex];
             var center = params.center;
@@ -225,8 +228,12 @@ define(function (require) {
                         strokeColor : color == 'auto' 
                                       ? this._getColor(seriesIndex, min + total / l * i)
                                       : color,
-                        lineType : lineType,
-                        lineWidth : lineWidth
+                        lineType : lineStyle.type,
+                        lineWidth : lineStyle.width,
+                        shadowColor : lineStyle.shadowColor,
+                        shadowBlur: lineStyle.shadowBlur,
+                        shadowOffsetX: lineStyle.shadowOffsetX,
+                        shadowOffsetY: lineStyle.shadowOffsetY
                     }
                 }));
             }
@@ -263,16 +270,16 @@ define(function (require) {
                 cosAngle = Math.cos(angle * Math.PI / 180);
                 angle = (angle + 360) % 360;
                 this.shapeList.push(new TextShape({
-                    zlevel : this._zlevelBase,
+                    zlevel : this._zlevelBase + 1,
                     hoverable : false,
                     style : {
                         x : center[0] + cosAngle * r0,
                         y : center[1] - sinAngle * r0,
                         color : color == 'auto' ? this._getColor(seriesIndex, value) : color,
                         text : this._getLabelText(serie.axisLabel.formatter, value),
-                        textAlign : (angle >= 100 && angle <= 260)
+                        textAlign : (angle >= 110 && angle <= 250)
                                     ? 'left' 
-                                    : (angle <= 80 || angle >= 280)
+                                    : (angle <= 70 || angle >= 290)
                                         ? 'right'
                                         : 'center',
                         textBaseline : (angle >= 10 && angle <= 170)
@@ -280,7 +287,11 @@ define(function (require) {
                                        : (angle >= 190 && angle <= 350)
                                             ? 'bottom'
                                             : 'middle',
-                        textFont : textFont
+                        textFont : textFont,
+                        shadowColor : textStyle.shadowColor,
+                        shadowBlur: textStyle.shadowBlur,
+                        shadowOffsetX: textStyle.shadowOffsetX,
+                        shadowOffsetY: textStyle.shadowOffsetY
                     }
                 }));
             }
@@ -290,7 +301,6 @@ define(function (require) {
             var serie       = this.series[seriesIndex];
             var total       = serie.max - serie.min;
             var pointer     = serie.pointer;
-            var lineWidth   = pointer.width;
             
             var params = this.paramsMap[seriesIndex];
             var length = number.parsePercent(pointer.length, params.radius[1]);
@@ -303,7 +313,7 @@ define(function (require) {
                         ? this._getColor(seriesIndex, value) : pointer.color;
             
             var pointShape = new GaugePointerShape({
-                zlevel : this._zlevelBase,
+                zlevel : this._zlevelBase + 1,
                 style : {
                     x : center[0],
                     y : center[1],
@@ -311,7 +321,11 @@ define(function (require) {
                     startAngle : params.startAngle * Math.PI / 180,
                     angle : angle,
                     color : color,
-                    width : pointer.width
+                    width : pointer.width,
+                    shadowColor : pointer.shadowColor,
+                    shadowBlur: pointer.shadowBlur,
+                    shadowOffsetX: pointer.shadowOffsetX,
+                    shadowOffsetY: pointer.shadowOffsetY
                 },
                 highlightStyle : {
                     brushType : 'fill',
@@ -329,7 +343,7 @@ define(function (require) {
             this.shapeList.push(pointShape);
             
             this.shapeList.push(new CircleShape({
-                zlevel : this._zlevelBase + 1,
+                zlevel : this._zlevelBase + 2,
                 hoverable : false,
                 style : {
                     x : center[0],
@@ -351,10 +365,11 @@ define(function (require) {
             if (name !== '') {
                 var title           = serie.title;
                 var offsetCenter    = title.offsetCenter;
-                var textColor       = title.textStyle.color;
+                var textStyle       = title.textStyle;
+                var textColor       = textStyle.color;
                 var params          = this.paramsMap[seriesIndex];
                 this.shapeList.push(new TextShape({
-                    zlevel : this._zlevelBase,
+                    zlevel : this._zlevelBase + 1,
                     hoverable : false,
                     style : {
                         x : params.center[0] 
@@ -364,7 +379,11 @@ define(function (require) {
                         color: textColor == 'auto' ? this._getColor(seriesIndex) : textColor,
                         text: name,
                         textAlign: 'center',
-                        textFont : this.getFont(title.textStyle)
+                        textFont : this.getFont(title.textStyle),
+                        shadowColor : textStyle.shadowColor,
+                        shadowBlur: textStyle.shadowBlur,
+                        shadowOffsetX: textStyle.shadowOffsetX,
+                        shadowOffsetY: textStyle.shadowOffsetY
                     }
                 }));
             }
@@ -379,18 +398,23 @@ define(function (require) {
             var detail          = serie.detail;
             var offsetCenter    = detail.offsetCenter;
             var color           = detail.backgroundColor;
-            var textColor       = detail.textStyle.color;
+            var textStyle       = detail.textStyle;
+            var textColor       = textStyle.color;
                 
             var params = this.paramsMap[seriesIndex];
             var value = this._getValue(seriesIndex);
+            var x = params.center[0] - detail.width / 2 
+                    + number.parsePercent(offsetCenter[0], params.radius[1]);
+            var y = params.center[1] 
+                    + number.parsePercent(offsetCenter[1], params.radius[1]);
             this.shapeList.push(new RectangleShape({
-                zlevel : this._zlevelBase,
+                zlevel : this._zlevelBase 
+                         + (Math.abs(x+detail.width/2 - params.center[0]) + Math.abs(y+detail.height/2 - params.center[1])) 
+                           < textStyle.fontSize ? 2 : 1,
                 hoverable : false,
                 style : {
-                    x : params.center[0] - detail.width / 2 
-                        + number.parsePercent(offsetCenter[0], params.radius[1]),
-                    y : params.center[1] 
-                        + number.parsePercent(offsetCenter[1], params.radius[1]),
+                    x : x,
+                    y : y,
                     width : detail.width,
                     height : detail.height,
                     brushType: 'both',
@@ -398,8 +422,13 @@ define(function (require) {
                     lineWidth : detail.borderWidth,
                     strokeColor : detail.borderColor,
                     
+                    shadowColor : detail.shadowColor,
+                    shadowBlur: detail.shadowBlur,
+                    shadowOffsetX: detail.shadowOffsetX,
+                    shadowOffsetY: detail.shadowOffsetY,
+                    
                     text: this._getLabelText(detail.formatter, value),
-                    textFont: this.getFont(detail.textStyle),
+                    textFont: this.getFont(textStyle),
                     textPosition: 'inside',
                     textColor : textColor == 'auto' ? this._getColor(seriesIndex, value) : textColor
                 }
@@ -449,7 +478,7 @@ define(function (require) {
         /**
          * 构建扇形
          */
-        _getSector : function (center, r0, r, startAngle, endAngle, color) {
+        _getSector : function (center, r0, r, startAngle, endAngle, color, lineStyle) {
             return new SectorShape ({
                 zlevel : this._zlevelBase,
                 hoverable : false,
@@ -461,7 +490,11 @@ define(function (require) {
                     startAngle : startAngle,
                     endAngle : endAngle,
                     brushType : 'fill',
-                    color : color
+                    color : color,
+                    shadowColor : lineStyle.shadowColor,
+                    shadowBlur: lineStyle.shadowBlur,
+                    shadowOffsetX: lineStyle.shadowOffsetX,
+                    shadowOffsetY: lineStyle.shadowOffsetY
                 }
             });
         },

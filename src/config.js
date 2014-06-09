@@ -882,7 +882,7 @@ define(function() {
 
         gauge : {
             center : ['50%', '50%'],    // 默认全局居中
-            radius : [0, '75%'],
+            radius : '75%',
             startAngle: 225,
             endAngle : -45,
             min: 0,                     // 最小值
@@ -910,7 +910,7 @@ define(function() {
                 show: true,
                 // formatter: null,
                 textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                    color: '#333'
+                    color: 'auto'
                 }
             },
             splitLine: {           // 分隔线
