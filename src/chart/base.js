@@ -940,6 +940,11 @@ define(function (require) {
             symbol = this.deepQuery(queryTarget, 'symbol') || 'circle';
             symbol = symbol.replace('empty', '').replace(/\d/g, '');
             
+            effect = this.deepMerge(
+                [data[0], mpOption],
+                'effect'
+            );
+            
             var devicePixelRatio = window.devicePixelRatio || 1;
             
             //console.log(data)
@@ -948,8 +953,9 @@ define(function (require) {
                     pointList : data,
                     color : color,
                     strokeColor: color,
-                    shadowColor : color,
-                    shadowBlur : 8 * devicePixelRatio,
+                    shadowColor : effect.shadowColor || color,
+                    shadowBlur : (typeof effect.shadowBlur != 'undefined' ? effect.shadowBlur : 8)
+                                 * devicePixelRatio,
                     size : this.deepQuery(queryTarget, 'symbolSize'),
                     iconType : symbol,
                     brushType: 'fill',
@@ -959,10 +965,6 @@ define(function (require) {
                 hoverable : false
             });
             
-            effect = this.deepMerge(
-                [data[0], mpOption],
-                'effect'
-            );
             if (effect.show) {
                 itemShape.effect = effect;
             }
