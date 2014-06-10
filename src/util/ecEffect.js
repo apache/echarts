@@ -157,7 +157,7 @@ define(function (require) {
     function line(zr, effectList, shape, zlevel) {
         var effect = shape.effect;
         var color = effect.color || shape.style.strokeColor || shape.style.color;
-        var shadowColor = effect.shadowColor || color;
+        var shadowColor = effect.shadowColor || shape.style.strokeColor || color;
         var size = shape.style.lineWidth * effect.scaleSize;
         var shadowBlur = typeof effect.shadowBlur != 'undefined'
                          ? effect.shadowBlur : size;

@@ -838,7 +838,11 @@ define(function (require) {
                     yEnd : yEnd,             // 坐标
                     brushType : 'both',
                     lineType : nlineStyle.type,
-                    shadowColor : nlineStyle.shadowColor,
+                    shadowColor : nlineStyle.shadowColor
+                                  || nlineStyle.color
+                                  || normal.borderColor
+                                  || normal.color
+                                  || color,
                     shadowBlur: nlineStyle.shadowBlur,
                     shadowOffsetX: nlineStyle.shadowOffsetX,
                     shadowOffsetY: nlineStyle.shadowOffsetY,
