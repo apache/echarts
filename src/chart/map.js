@@ -1133,6 +1133,7 @@ define(function (require) {
                 // 没有在当前实例上发生点击直接返回
                 return;
             }
+            this.isClick = false;
 
             var target = param.target;
             var name = target.style._name;

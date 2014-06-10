@@ -873,6 +873,7 @@ define(function (require) {
                 // 没有在当前实例上发生点击直接返回
                 return;
             }
+            this.isClick = false;
             var offset;             // 偏移
             var target = param.target;
             var style = target.style;
