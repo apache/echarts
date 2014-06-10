@@ -74,7 +74,7 @@ define(function (require) {
                 subLen = subLen > len ? len : subLen;
                 for (var i = sub; i < subLen; i++) {
                     if (style.random) {
-                        percent = style['randomMap' + (i % 15)] / 100;
+                        percent = style['randomMap' + (i % 20)] / 100;
                         curSize = size * percent * percent;
                         halfSize = curSize / 2;
                     }

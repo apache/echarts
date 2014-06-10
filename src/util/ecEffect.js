@@ -103,7 +103,7 @@ define(function (require) {
         var size = effect.scaleSize;
         var shadowColor = effect.shadowColor || color;
         var shadowBlur = typeof effect.shadowBlur != 'undefined'
-                         ? effect.shadowBlur : size * 2;
+                         ? effect.shadowBlur : (size * 2);
         var devicePixelRatio = window.devicePixelRatio || 1;
         var effectShape = new SymbolShape({
             zlevel : zlevel,
@@ -135,18 +135,22 @@ define(function (require) {
         var duration = Math.round(effect.period * 100);
         var clip1 = {};
         var clip2 = {};
-        for (var i = 0; i < 15; i++) {
+        for (var i = 0; i < 20; i++) {
             effectShape.style['randomMap' + i] = 0;
             clip1 = {};
             clip1['randomMap' + i] = 100;
             clip2 = {};
             clip2['randomMap' + i] = 0;
+            effectShape.style['randomMap' + i] = Math.random() * 100;
             zr.animate(effectShape.id, 'style', true)
                 .when(duration, clip1)
                 .when(duration * 2, clip2)
-                .delay(Math.random() * duration * 2)
+                .when(duration * 3, clip1)
+                .when(duration * 4, clip1)
+                .delay(Math.random() * duration * i)
+                //.delay(duration / 15 * (15 - i + 1))
                 .start();
-            effectShape.style['randomMap' + i] = Math.random() * 100;
+            
         }
     }
     
