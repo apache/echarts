@@ -730,7 +730,7 @@ define(function (require) {
             this._selectedMap[itemName] = selectStatus;
             this.messageCenter.dispatch(
                 ecConfig.EVENT.LEGEND_SELECTED,
-                param.event,
+                null,
                 {
                     selected : this._selectedMap,
                     target : itemName
