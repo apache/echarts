@@ -20,6 +20,7 @@ define(function() {
         CHART_TYPE_FORCE : 'force',
         CHART_TYPE_CHORD : 'chord',
         CHART_TYPE_GAUGE : 'gauge',
+        CHART_TYPE_FUNNEL : 'funnel',
 
         // 组件类型
         COMPONENT_TYPE_TITLE: 'title',
@@ -951,6 +952,54 @@ define(function() {
             }
         },
         
+        funnel : {
+            x: 80,
+            y: 60,
+            x2: 80,
+            y2: 60,
+            // width: {totalWidth} - x - x2,
+            // height: {totalHeight} - y - y2,
+            min: 0,
+            max: 100,
+            minSize: '0%',
+            maxSize: '100%',
+            sort : 'descending', // 'ascending', 'descending'
+            gap : 0,
+            itemStyle: {
+                normal: {
+                    // color: 各异,
+                    borderColor: '#fff',
+                    borderWidth: 1,
+                    label: {
+                        show: true,
+                        position: 'outer'
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
+                    labelLine: {
+                        show: true,
+                        length: 10,
+                        lineStyle: {
+                            // color: 各异,
+                            width: 1,
+                            type: 'solid'
+                        }
+                    }
+                },
+                emphasis: {
+                    // color: 各异,
+                    borderColor: 'rgba(0,0,0,0)',
+                    borderWidth: 1,
+                    label: {
+                        show: true
+                    },
+                    labelLine: {
+                        show: true
+                    }
+                }
+            }
+        },
+        
         island: {
             r: 15,
             calculateStep: 0.1  // 滚轮可计算步长 0.1 = 10%
@@ -1028,11 +1077,11 @@ define(function() {
                     lineStyle: {
                         // color: 随borderColor, // 主色，线色，优先级高于borderColor和color
                         // width: 随borderWidth, // 优先于borderWidth
-                        type: 'dashed',
-                        shadowColor : 'rgba(0,0,0,0)', //默认透明
-                        shadowBlur: 0,
-                        shadowOffsetX: 0,
-                        shadowOffsetY: 0
+                        type: 'dashed'
+                        // shadowColor : 'rgba(0,0,0,0)', //默认透明
+                        // shadowBlur: 0,
+                        // shadowOffsetX: 0,
+                        // shadowOffsetY: 0
                     }
                 },
                 emphasis: {

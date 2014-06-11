@@ -461,6 +461,7 @@ define(function (require) {
                     || series[i].type == ecConfig.CHART_TYPE_RADAR
                     || series[i].type == ecConfig.CHART_TYPE_CHORD
                     || series[i].type == ecConfig.CHART_TYPE_FORCE
+                    || series[i].type == ecConfig.CHART_TYPE_FUNNEL
                 ) {
                     data = series[i].type != ecConfig.CHART_TYPE_FORCE
                            ? series[i].data         // 饼图、雷达图、和弦图得查找里面的数据名字
@@ -604,7 +605,8 @@ define(function (require) {
                     else {
                         if (something.data
                             && (something.type == ecConfig.CHART_TYPE_PIE
-                                || something.type == ecConfig.CHART_TYPE_FORCE)
+                                || something.type == ecConfig.CHART_TYPE_FORCE
+                                || something.type == ecConfig.CHART_TYPE_FUNNEL)
                         ) {
                             queryTarget = [something.data, something.series];
                         }
