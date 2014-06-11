@@ -32,7 +32,8 @@ else {
             'echarts/chart/map': fileLocation,
             'echarts/chart/chord': fileLocation,
             'echarts/chart/force': fileLocation,
-            'echarts/chart/gauge': fileLocation
+            'echarts/chart/gauge': fileLocation,
+            'echarts/chart/funnel': fileLocation
         }
     });
 }
@@ -50,7 +51,8 @@ require(
         'echarts/chart/force',
         'echarts/chart/chord',
         'echarts/chart/map',
-        'echarts/chart/gauge'
+        'echarts/chart/gauge',
+        'echarts/chart/funnel'
     ],
     requireCallback
 );
