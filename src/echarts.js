@@ -917,7 +917,7 @@ define(function (require) {
                     magicOption.yAxis.data = zrUtil.clone(this._optionRestore.yAxis.data);
                 }
             }
-
+            
             // 系列数据还原
             if (this._optionRestore.series) {
                 len = this._optionRestore.series.length;
@@ -927,7 +927,6 @@ define(function (require) {
                     );
                 }
             }
-            
             
             return magicOption;
         },

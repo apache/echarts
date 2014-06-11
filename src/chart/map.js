@@ -1174,7 +1174,10 @@ define(function (require) {
             this.messageCenter.dispatch(
                 ecConfig.EVENT.MAP_SELECTED,
                 param.event,
-                {selected : this._selected}
+                {
+                    selected : this._selected,
+                    target : name
+                }
             );
             
             this.zr.refresh();

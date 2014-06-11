@@ -36,8 +36,6 @@ define(function (require) {
         ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 图表基类
         ChartBase.call(this);
-        // 复用参数索引
-        this.paramsMap = {};
         this.refresh(option);
     }
     
@@ -48,6 +46,8 @@ define(function (require) {
          */
         _buildShape : function () {
             var series = this.series;
+            // 复用参数索引
+            this._paramsMap = {};
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type == ecConfig.CHART_TYPE_GAUGE) {
                     series[i] = this.reformOption(series[i]);
@@ -67,14 +67,14 @@ define(function (require) {
         _buildSingleGauge : function (seriesIndex) {
             var serie = this.series[seriesIndex];
 
-            this.paramsMap[seriesIndex] = {
+            this._paramsMap[seriesIndex] = {
                 center : this.parseCenter(this.zr, serie.center),
                 radius : this.parseRadius(this.zr, serie.radius),
                 startAngle : serie.startAngle.toFixed(2) - 0,
                 endAngle : serie.endAngle.toFixed(2) - 0
             };
-            this.paramsMap[seriesIndex].totalAngle = this.paramsMap[seriesIndex].startAngle
-                                                   - this.paramsMap[seriesIndex].endAngle;
+            this._paramsMap[seriesIndex].totalAngle = this._paramsMap[seriesIndex].startAngle
+                                                    - this._paramsMap[seriesIndex].endAngle;
             
             this._colorMap(seriesIndex);
             
@@ -101,7 +101,7 @@ define(function (require) {
             }
             var min         = serie.min;
             var total       = serie.max - min;
-            var params      = this.paramsMap[seriesIndex];
+            var params      = this._paramsMap[seriesIndex];
             var center      = params.center;
             var startAngle  = params.startAngle;
             var totalAngle  = params.totalAngle;
@@ -146,7 +146,7 @@ define(function (require) {
             var length      = splitLine.length;
             var lineStyle   = splitLine.lineStyle;
             var color       = lineStyle.color;
-            var params = this.paramsMap[seriesIndex];
+            var params = this._paramsMap[seriesIndex];
             var center = params.center;
             var startAngle = params.startAngle * Math.PI / 180;
             var totalAngle = params.totalAngle * Math.PI / 180;
@@ -199,7 +199,7 @@ define(function (require) {
             var lineStyle   = axisTick.lineStyle;
             var color       = lineStyle.color;
             
-            var params = this.paramsMap[seriesIndex];
+            var params = this._paramsMap[seriesIndex];
             var center = params.center;
             var startAngle = params.startAngle * Math.PI / 180;
             var totalAngle = params.totalAngle * Math.PI / 180;
@@ -253,7 +253,7 @@ define(function (require) {
             var textFont    = this.getFont(textStyle);
             var color       = textStyle.color;
             
-            var params = this.paramsMap[seriesIndex];
+            var params = this._paramsMap[seriesIndex];
             var center = params.center;
             var startAngle = params.startAngle;
             var totalAngle = params.totalAngle;
@@ -302,7 +302,7 @@ define(function (require) {
             var total       = serie.max - serie.min;
             var pointer     = serie.pointer;
             
-            var params = this.paramsMap[seriesIndex];
+            var params = this._paramsMap[seriesIndex];
             var length = number.parsePercent(pointer.length, params.radius[1]);
             var center = params.center;
             var value = this._getValue(seriesIndex);
@@ -367,7 +367,7 @@ define(function (require) {
                 var offsetCenter    = title.offsetCenter;
                 var textStyle       = title.textStyle;
                 var textColor       = textStyle.color;
-                var params          = this.paramsMap[seriesIndex];
+                var params          = this._paramsMap[seriesIndex];
                 this.shapeList.push(new TextShape({
                     zlevel : this._zlevelBase + 1,
                     hoverable : false,
@@ -401,7 +401,7 @@ define(function (require) {
             var textStyle       = detail.textStyle;
             var textColor       = textStyle.color;
                 
-            var params = this.paramsMap[seriesIndex];
+            var params = this._paramsMap[seriesIndex];
             var value = this._getValue(seriesIndex);
             var x = params.center[0] - detail.width / 2 
                     + number.parsePercent(offsetCenter[0], params.radius[1]);
@@ -455,7 +455,7 @@ define(function (require) {
             for (var i = 0, l = color.length; i < l; i++) {
                 colorArray.push([color[i][0] * total + min, color[i][1]]);
             }
-            this.paramsMap[seriesIndex].colorArray = colorArray;
+            this._paramsMap[seriesIndex].colorArray = colorArray;
         },
         
         /**
@@ -466,7 +466,7 @@ define(function (require) {
                 value = this._getValue(seriesIndex);
             }
             
-            var colorArray = this.paramsMap[seriesIndex].colorArray;
+            var colorArray = this._paramsMap[seriesIndex].colorArray;
             for (var i = 0, l = colorArray.length; i < l; i++) {
                 if (colorArray[i][0] >= value) {
                     return colorArray[i][1];

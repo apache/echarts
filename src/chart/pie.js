@@ -189,7 +189,7 @@ define(function (require) {
             var r0;     // 扇形内半径
             var r1;     // 扇形外半径
 
-            for (var i = 0, l = data.length; i < l; i++){
+            for (var i = 0, l = data.length; i < l; i++) {
                 itemName = data[i].name;
                 if (!this.selectedMap[itemName] || isNaN(data[i].value)) {
                     continue;
@@ -931,7 +931,10 @@ define(function (require) {
             this.messageCenter.dispatch(
                 ecConfig.EVENT.PIE_SELECTED,
                 param.event,
-                {selected : this._selected}
+                {
+                    selected : this._selected,
+                    target :  ecData.get(target, 'name')
+                }
             );
             this.zr.refresh();
         },
