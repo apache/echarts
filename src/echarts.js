@@ -858,11 +858,12 @@ define(function (require) {
                 this._option = zrUtil.clone(option);
             }
 
+            this._optionRestore = zrUtil.clone(this._option);
+            
             if (!this._option.series || this._option.series.length === 0) {
                 return;
             }
 
-            this._optionRestore = zrUtil.clone(this._option);
             if (this.component.dataZoom                         // 存在dataZoom控件
                 && (this._option.dataZoom                       // 并且新option也存在
                     || (this._option.toolbox
@@ -918,10 +919,15 @@ define(function (require) {
             }
 
             // 系列数据还原
-            len = this._optionRestore.series.length;
-            while (len--) {
-                magicOption.series[len].data = zrUtil.clone(this._optionRestore.series[len].data);
+            if (this._optionRestore.series) {
+                len = this._optionRestore.series.length;
+                while (len--) {
+                    magicOption.series[len].data = zrUtil.clone(
+                        this._optionRestore.series[len].data
+                    );
+                }
             }
+            
             
             return magicOption;
         },
