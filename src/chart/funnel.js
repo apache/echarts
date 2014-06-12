@@ -414,17 +414,18 @@ define(function (require) {
             var textFont = this.getFont(textStyle);
             var textAlign;
             var textX;
+            var textColor = defaultColor;
             labelControl.position = labelControl.position 
                                     || itemStyle.normal.label.position;
             if (labelControl.position == 'inner' || labelControl.position == 'inside') {
                 // 内部
                 textAlign = 'center';
                 textX = x + topWidth / 2;
-                if (Math.min(topWidth, bottomWidth) > zrArea.getTextWidth(text, textFont)) {
-                    defaultColor = '#fff';
+                if (Math.max(topWidth, bottomWidth) / 2 > zrArea.getTextWidth(text, textFont)) {
+                    textColor = '#fff';
                 }
                 else {
-                    defaultColor = zrColor.reverse(defaultColor);
+                    textColor = zrColor.reverse(defaultColor);
                 }
             }
             else if (labelControl.position == 'left'){
@@ -447,7 +448,7 @@ define(function (require) {
                 style : {
                     x : textX,
                     y : y + height / 2,
-                    color : textStyle.color || defaultColor,
+                    color : textStyle.color || textColor,
                     text : text,
                     textAlign : textStyle.align || textAlign,
                     textBaseline : textStyle.baseline || 'middle',
@@ -464,15 +465,16 @@ define(function (require) {
             labelControl.position = labelControl.position || itemStyle.normal.label.position;
             text = this.getLabelText(seriesIndex, dataIndex, status);
             textFont = this.getFont(textStyle);
+            textColor = defaultColor;
             if (labelControl.position == 'inner' || labelControl.position == 'inside') {
                 // 内部
                 textAlign = 'center';
                 textX = x + topWidth / 2;
-                if (Math.min(topWidth, bottomWidth) > zrArea.getTextWidth(text, textFont)) {
-                    defaultColor = '#fff';
+                if (Math.max(topWidth, bottomWidth) / 2 > zrArea.getTextWidth(text, textFont)) {
+                    textColor = '#fff';
                 }
                 else {
-                    defaultColor = zrColor.reverse(defaultColor);
+                    textColor = zrColor.reverse(defaultColor);
                 }
             }
             else if (labelControl.position == 'left'){
@@ -491,7 +493,7 @@ define(function (require) {
             }
             textShape.highlightStyle  = {
                 x : textX,
-                color : textStyle.color || defaultColor,
+                color : textStyle.color || textColor,
                 text : text,
                 textAlign : textStyle.align || textAlign,
                 textFont : textFont,
