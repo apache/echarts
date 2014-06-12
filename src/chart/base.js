@@ -1064,13 +1064,9 @@ define(function (require) {
             ) {
                 // 通过已有的shape做动画过渡
                 for (var i = 0, l = lastShapeList.length; i < l; i++) {
-                    key = ecData.get(lastShapeList[i], 'seriesIndex') + '_'
-                          + ecData.get(lastShapeList[i], 'dataIndex')
-                          + (this.type == ecConfig.CHART_TYPE_RADAR
-                             ? ecData.get(lastShapeList[i], 'special')
-                             : '');
-                    if (key.match('undefined') || lastShapeList[i]._mark) {
-                        this.zr.delShape(lastShapeList[i].id); // 非关键元素直接删除
+                    key = this._getAnimationKey(lastShapeList[i]);
+                    if (key.match('undefined')) {
+                        this.zr.delShape(lastShapeList[i].id);  // 非关键元素直接删除
                     }
                     else {
                         key += lastShapeList[i].type;
@@ -1078,13 +1074,9 @@ define(function (require) {
                     }
                 }
                 for (var i = 0, l = shapeList.length; i < l; i++) {
-                    key = ecData.get(shapeList[i], 'seriesIndex') + '_'
-                          + ecData.get(shapeList[i], 'dataIndex')
-                          + (this.type == ecConfig.CHART_TYPE_RADAR
-                             ? ecData.get(shapeList[i], 'special')
-                             : '');
-                    if (key.match('undefined') || shapeList[i]._mark) {
-                        this.zr.addShape(shapeList[i]); // 非关键元素直接添加
+                    key = this._getAnimationKey(shapeList[i]);
+                    if (key.match('undefined')) {
+                        this.zr.addShape(shapeList[i]);         // 非关键元素直接添加
                     }
                     else {
                         key += shapeList[i].type;
@@ -1105,10 +1097,12 @@ define(function (require) {
                     }
                     else {
                         // 新有旧没有  添加并动画过渡
-                        this._animateAdd(newMap[key], duration, easing);
+                        //this._animateAdd(newMap[key], duration, easing);
+                        this._animateMod(false, newMap[key], duration, easing);
                     }
                 }
-                lastShapeList.length === 0 && this.animationMark(duration, easing);
+                //this.zr.refresh();
+                this.animationEffect();
             }
             else {
                 this.motionlessOnce = false;
@@ -1118,6 +1112,21 @@ define(function (require) {
                 for (var i = 0, l = shapeList.length; i < l; i++) {
                     this.zr.addShape(shapeList[i]);
                 }
+            }
+        },
+        
+        _getAnimationKey : function(shape) {
+            if (this.type != ecConfig.CHART_TYPE_MAP) {
+                return ecData.get(shape, 'seriesIndex') + '_'
+                       + ecData.get(shape, 'dataIndex')
+                       + (shape._mark ? shape._mark : '')
+                       + (this.type == ecConfig.CHART_TYPE_RADAR 
+                          ? ecData.get(shape, 'special') : '');
+            }
+            else {
+                return ecData.get(shape, 'seriesIndex') + '_'
+                       + ecData.get(shape, 'dataIndex')
+                       + (shape._mark ? shape._mark : 'undefined');
             }
         },
         
@@ -1131,8 +1140,10 @@ define(function (require) {
                     ecAnimation.pointList(this.zr, oldShape, newShape, duration, easing);
                     break;
                 case 'rectangle' :
-                case 'icon' :
                     ecAnimation.rectangle(this.zr, oldShape, newShape, duration, easing);
+                    break;
+                case 'icon' :
+                    ecAnimation.icon(this.zr, oldShape, newShape, duration, easing);
                     break;
                 case 'candle' :
                     if (duration > 500) {
@@ -1179,114 +1190,16 @@ define(function (require) {
                 case 'gauge-pointer' :
                     ecAnimation.gaugePointer(this.zr, oldShape, newShape, duration, easing);
                     break;
+                case 'mark-line' :
+                    ecAnimation.markline(this.zr, oldShape, newShape, duration, easing);
+                    break;
+                case 'line' :
+                    ecAnimation.line(this.zr, oldShape, newShape, duration, easing);
+                    break;
                 default :
                     this.zr.addShape(newShape);
                     break;
             }
-        },
-        
-        /**
-         * 动画进入 
-         */
-        _animateAdd : function (newShape, duration, easing) {
-            var oldShape = {};
-            switch (newShape.type) {
-                case 'broken-line' :
-                case 'half-smooth-polygon' :
-                    var newPointList = [];
-                    var len = newShape.style.pointList.length;
-                    if (newShape._orient != 'vertical') {
-                        var y = newShape.style.pointList[0][1];
-                        for (var i = 0; i < len; i++) {
-                            newPointList[i] = [newShape.style.pointList[i][0], y];
-                        }
-                    }
-                    else {
-                        var x = newShape.style.pointList[0][0];
-                        for (var i = 0; i < len; i++) {
-                            newPointList[i] = [x, newShape.style.pointList[i][1]];
-                        }
-                    }
-                    if (newShape.type == 'half-smooth-polygon') {
-                        newPointList[len - 1] = zrUtil.clone(newShape.style.pointList[len - 1]);
-                        newPointList[len - 2] = zrUtil.clone(newShape.style.pointList[len - 2]);
-                    }
-                    oldShape = {style : {pointList : newPointList}};
-                    break;
-                case 'rectangle' :
-                case 'icon' :
-                    oldShape = {
-                        style : {
-                            x : newShape.style.x,
-                            y : newShape._orient == 'vertical'
-                                ? newShape.style.y + newShape.style.height
-                                : newShape.style.y,
-                            width: newShape._orient == 'vertical' 
-                                   ? newShape.style.width : 0,
-                            height: newShape._orient != 'vertical' 
-                                   ? newShape.style.height : 0
-                        }
-                    };
-                    break;
-                case 'candle' :
-                    var y = newShape.style.y;
-                    oldShape = {style : {y : [y[0], y[0], y[0], y[0]]}};
-                    break;
-                case 'sector' :
-                    if (newShape._animationAdd != 'r') {
-                        oldShape = {
-                            style : {
-                                startAngle : newShape.style.startAngle,
-                                endAngle : newShape.style.startAngle
-                            }
-                        };
-                    }
-                    else {
-                        oldShape = {style : {r0 : newShape.style.r}};
-                    }
-                    break;
-                case 'text' :
-                    oldShape = {
-                        style : {
-                            x : newShape.style.textAlign == 'left' 
-                                ? newShape.style.x + 100
-                                : newShape.style.x - 100,
-                            y : newShape.style.y
-                        }
-                    };
-                    break;
-                case 'polygon' :
-                    var rect = require('zrender/shape/Polygon').prototype.getRect(newShape.style);
-                    var x = rect.x + rect.width / 2;
-                    var y = rect.y + rect.height / 2;
-                    var newPointList = [];
-                    for (var i = 0, len = newShape.style.pointList.length; i < len; i++) {
-                        newPointList.push([x + i, y + i]);
-                    }
-                    oldShape = {
-                        style : { pointList : newPointList }
-                    };
-                    break;
-                case 'chord' :
-                    oldShape = {
-                        style : {
-                            source0 : 0,
-                            source1 : 360,
-                            target0 : 0,
-                            target1 : 360
-                        }
-                    };
-                    break;
-                 case 'gauge-pointer' :
-                    oldShape = {
-                        style : {
-                            angle : newShape.style.startAngle
-                        }
-                    };
-                    break;
-            }
-            
-            this._animateMod(oldShape, newShape, duration, easing);
         },
         
         /**
@@ -1303,78 +1216,7 @@ define(function (require) {
                 if (!shapeList[i]._mark) {
                     continue;
                 }
-                x = shapeList[i]._x || 0;
-                y = shapeList[i]._y || 0;
-                if (shapeList[i]._mark == 'point') {
-                    this.zr.modShape(
-                        shapeList[i].id, 
-                        {
-                            scale : [0, 0, x, y]
-                        }
-                    );
-                    this.zr.animate(shapeList[i].id, '')
-                        .when(
-                            duration,
-                            {scale : [1, 1, x, y]}
-                        )
-                        .start(easing || 'QuinticOut');
-                }
-                else if (shapeList[i]._mark == 'line') {
-                    if (!shapeList[i].style.smooth) {
-                        this.zr.modShape(
-                            shapeList[i].id, 
-                            {
-                                style : {
-                                    pointList : [
-                                        [
-                                            shapeList[i].style.xStart,
-                                            shapeList[i].style.yStart
-                                        ],
-                                        [
-                                            shapeList[i].style.xStart,
-                                            shapeList[i].style.yStart
-                                        ]
-                                    ]
-                                }
-                            }
-                        );
-                        this.zr.animate(shapeList[i].id, 'style')
-                            .when(
-                                duration,
-                                {
-                                    pointList : [
-                                        [
-                                            shapeList[i].style.xStart,
-                                            shapeList[i].style.yStart
-                                        ],
-                                        [
-                                            x, y
-                                        ]
-                                    ]
-                                }
-                            )
-                            .start(easing || 'QuinticOut');
-                    }
-                    else {
-                        // 曲线动画
-                        this.zr.modShape(
-                            shapeList[i].id, 
-                            {
-                                style : {
-                                    pointListLength : 1
-                                }
-                            }
-                        );
-                        this.zr.animate(shapeList[i].id, 'style')
-                            .when(
-                                duration,
-                                {
-                                    pointListLength : shapeList[i].style.pointList.length
-                                }
-                            )
-                            .start(easing || 'QuinticOut');
-                    }
-                }
+                this._animateMod(false, shapeList[i], duration, easing);
             }
             this.animationEffect(addShapeList);
         },

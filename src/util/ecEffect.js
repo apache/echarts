@@ -69,8 +69,8 @@ define(function (require) {
         
         var devicePixelRatio = window.devicePixelRatio || 1;
         var offset = (effectShape.style.width / devicePixelRatio - shape.style.width) / 2;
-        effectShape.style.x = shape.style.x - offset;
-        effectShape.style.y = shape.style.y - offset;
+        effectShape.style.x = shape.style._x - offset;
+        effectShape.style.y = shape.style._y - offset;
         var duration = (effect.period + Math.random() * 10) * 100;
         
         zr.modShape(
@@ -226,7 +226,7 @@ define(function (require) {
         }
         else {
             // 曲线
-            var pointList = shape.style.pointList;
+            var pointList = shape.style.pointList || shape.getPointList(shape.style);
             var len = pointList.length;
             duration = Math.round(duration / len);
             var deferred = zr.animate(effectShape.id, 'style', true);

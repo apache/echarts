@@ -252,19 +252,7 @@ define(function (require) {
                 );
                 self._buildMark(mt, ms);
                 if (--self._mapDataRequireCounter <= 0) {
-                    for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                        self.zr.addShape(self.shapeList[i]);
-                    }
-                    self.zr.refresh();
-                    if (!self._markAnimation) {
-                        self._markAnimation = true;
-                        if (self.option.animation && !self.option.renderAsImage) {
-                            self.animationMark(self.option.animationDuration);
-                        }
-                    }
-                    else {
-                        self.animationEffect();
-                    }
+                    self.addShapeList();
                 }
             };
         },
@@ -1019,9 +1007,9 @@ define(function (require) {
                         }
                         else if  (this.shapeList[i].type == 'icon') {
                             geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo);
-                            this.shapeList[i].style.x = 
+                            this.shapeList[i].style.x = this.shapeList[i].style._x =
                                 geoAndPos[0] - this.shapeList[i].style.width / 2;
-                            this.shapeList[i].style.y = 
+                            this.shapeList[i].style.y = this.shapeList[i].style._y =
                                 geoAndPos[1] - this.shapeList[i].style.height / 2;
                         }
                         else {
@@ -1200,7 +1188,8 @@ define(function (require) {
                 this.series = newOption.series;
             }
             
-            this.clear();
+            //this.clear();
+            this.backupShapeList();
             this._buildShape();
             this.zr.refreshHover();
         },
