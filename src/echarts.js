@@ -861,6 +861,7 @@ define(function (require) {
             this._optionRestore = zrUtil.clone(this._option);
             
             if (!this._option.series || this._option.series.length === 0) {
+                this._zr.clear();
                 return;
             }
 
