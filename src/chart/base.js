@@ -91,39 +91,82 @@ define(function (require) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
             }
-
             var target = param.target;      // 拖拽安放目标
             var dragged = param.dragged;    // 当前被拖拽的图形对象
 
             var seriesIndex = ecData.get(target, 'seriesIndex');
             var dataIndex = ecData.get(target, 'dataIndex');
 
-            // 落到数据item上，数据被拖拽到某个数据项上，数据修改
-            var data = this.option.series[seriesIndex].data[dataIndex] || '-';
-            if (data.value) {
-                if (data.value != '-') {
-                    this.option.series[seriesIndex].data[dataIndex].value = 
-                        accMath.accAdd(
-                            this.option.series[seriesIndex].data[dataIndex].value,
-                            ecData.get(dragged, 'value')
-                        );
+            var series = this.series;
+            var data;
+            var legend = this.component.legend;
+            if (dataIndex == -1) {
+                // 落到calculableCase上，数据被拖拽进某个饼图|雷达|漏斗，增加数据
+                data = {
+                    value : ecData.get(dragged, 'value'),
+                    name : ecData.get(dragged, 'name')
+                };
+
+                // 修饼图数值不为负值
+                if (this.type == ecConfig.CHART_TYPE_PIE && data.value < 0) {
+                    data.value = 0;
                 }
-                else {
-                    this.option.series[seriesIndex].data[dataIndex].value =
-                        ecData.get(dragged, 'value');
+
+                var hasFind = false;
+                var sData = series[seriesIndex].data;
+                for (var i = 0, l = sData.length; i < l; i++) {
+                    if (sData[i].name == data.name && sData[i].value == '-') {
+                        series[seriesIndex].data[i].value = data.value;
+                        hasFind = true;
+                    }
                 }
+                !hasFind && series[seriesIndex].data.push(data);
+
+                legend && legend.add(
+                    data.name,
+                    dragged.style.color || dragged.style.strokeColor
+                );
             }
             else {
-                if (data != '-') {
-                    this.option.series[seriesIndex].data[dataIndex] = 
-                        accMath.accAdd(
-                            this.option.series[seriesIndex].data[dataIndex],
-                            ecData.get(dragged, 'value')
+                // 落到数据item上，数据被拖拽到某个数据项上，数据修改
+                data = this.option.series[seriesIndex].data[dataIndex] || '-';
+                if (typeof data.value != 'undefined') {
+                    if (data.value != '-') {
+                        this.option.series[seriesIndex].data[dataIndex].value = 
+                            accMath.accAdd(
+                                this.option.series[seriesIndex].data[dataIndex].value,
+                                ecData.get(dragged, 'value')
+                            );
+                    }
+                    else {
+                        this.option.series[seriesIndex].data[dataIndex].value =
+                            ecData.get(dragged, 'value');
+                    }
+                    
+                    if (this.type == ecConfig.CHART_TYPE_FUNNEL
+                        || this.type == ecConfig.CHART_TYPE_PIE
+                    ) {
+                        legend && legend.getRelatedAmount(data.name) == 1 
+                               && this.component.legend.del(data.name);
+                        data.name += this.option.nameConnector + ecData.get(dragged, 'name');
+                        legend && legend.add(
+                            data.name,
+                            dragged.style.color || dragged.style.strokeColor
                         );
+                    }
                 }
                 else {
-                    this.option.series[seriesIndex].data[dataIndex] =
-                        ecData.get(dragged, 'value');
+                    if (data != '-') {
+                        this.option.series[seriesIndex].data[dataIndex] = 
+                            accMath.accAdd(
+                                this.option.series[seriesIndex].data[dataIndex],
+                                ecData.get(dragged, 'value')
+                            );
+                    }
+                    else {
+                        this.option.series[seriesIndex].data[dataIndex] =
+                            ecData.get(dragged, 'value');
+                    }
                 }
             }
 
@@ -133,6 +176,11 @@ define(function (require) {
             // 处理完拖拽事件后复位
             this.isDrop = false;
 
+            var self = this;
+            setTimeout(function(){
+                self.zr.trigger('mousemove', param.event);
+            }, 300);
+            
             return;
         },
 
@@ -149,9 +197,22 @@ define(function (require) {
             var seriesIndex = ecData.get(target, 'seriesIndex');
             var dataIndex = ecData.get(target, 'dataIndex');
 
-            // 被拖拽的图形是折线图bar，删除被拖拽走的数据
-            this.option.series[seriesIndex].data[dataIndex] = '-';
-
+            var series = this.series;
+            // 删除被拖拽走的数据
+            if (typeof series[seriesIndex].data[dataIndex].value != 'undefined') {
+                series[seriesIndex].data[dataIndex].value = '-';
+                // 清理可能有且唯一的legend data
+                var name = series[seriesIndex].data[dataIndex].name;
+                if (this.component.legend 
+                    && this.component.legend.getRelatedAmount(name) == 0
+                ) {
+                    this.component.legend.del(name);
+                }
+            }
+            else {
+                series[seriesIndex].data[dataIndex] = '-';
+            }
+            
             // 别status = {}赋值啊！！
             status.dragOut = true;
             status.needRefresh = true;

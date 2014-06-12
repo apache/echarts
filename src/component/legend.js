@@ -96,7 +96,7 @@ define(function (require) {
                 );
                 dataFont = this.getFont(dataTextStyle);
                 
-                itemName = data[i].name || data[i];
+                itemName = this._getName(data[i]);
                 if (itemName === '') {
                     if (this.legendOption.orient == 'horizontal') {
                         lastX = this._itemGroupLocation.x;
@@ -210,6 +210,10 @@ define(function (require) {
             }
         },
         
+        _getName : function(data) {
+            return typeof data.name != 'undefined' ? data.name : data;
+        },
+        
         // 多行橫排居中优化
         _mLineOptimize : function () {
             var lineOffsetArray = []; // 每行宽度
@@ -305,7 +309,7 @@ define(function (require) {
                 // 水平布局，计算总宽度
                 totalHeight = itemHeight;
                 for (var i = 0; i < dataLength; i++) {
-                    if (data[i] === '') {
+                    if (this._getName(data[i]) === '') {
                         temp -= itemGap;
                         if (temp > zrWidth) {
                             totalWidth = zrWidth;
@@ -324,7 +328,7 @@ define(function (require) {
                     );
                     temp += itemWidth
                             + zrArea.getTextWidth(
-                                  data[i].name || data[i],
+                                  this._getName(data[i]),
                                   data[i].textStyle 
                                   ? this.getFont(zrUtil.merge(
                                         data[i].textStyle || {},
@@ -349,7 +353,7 @@ define(function (require) {
                     maxWidth = Math.max(
                         maxWidth,
                         zrArea.getTextWidth(
-                            data[i].name || data[i],
+                            this._getName(data[i]),
                             data[i].textStyle 
                             ? this.getFont(zrUtil.merge(
                                   data[i].textStyle || {},
@@ -362,7 +366,7 @@ define(function (require) {
                 maxWidth += itemWidth;
                 totalWidth = maxWidth;
                 for (var i = 0; i < dataLength; i++) {
-                    if (data[i] === '') {
+                    if (this._getName(data[i]) === '') {
                         temp -= itemGap;
                         if (temp > zrHeight) {
                             totalHeight = zrHeight;
@@ -594,7 +598,7 @@ define(function (require) {
                     }
                 }
                 for (var i = 0, dataLength = data.length; i < dataLength; i++) {
-                    itemName = data[i].name || data[i];
+                    itemName = this._getName(data[i]);
                     if (itemName === '') {
                         continue;
                     }
@@ -632,6 +636,36 @@ define(function (require) {
             this.clear();
             this._buildShape();
         },
+        
+        getRelatedAmount : function(name) {
+            var amount = 0;
+            var series = this.option.series;
+            var data;
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (series[i].name == name) {
+                    // 系列名称优先
+                    amount++;
+                }
+
+                if (
+                    series[i].type == ecConfig.CHART_TYPE_PIE 
+                    || series[i].type == ecConfig.CHART_TYPE_RADAR
+                    || series[i].type == ecConfig.CHART_TYPE_CHORD
+                    || series[i].type == ecConfig.CHART_TYPE_FORCE
+                    || series[i].type == ecConfig.CHART_TYPE_FUNNEL
+                ) {
+                    data = series[i].type != ecConfig.CHART_TYPE_FORCE
+                           ? series[i].data         // 饼图、雷达图、和弦图得查找里面的数据名字
+                           : series[i].categories;  // 力导布局查找categories配置
+                    for (var j = 0, k = data.length; j < k; j++) {
+                        if (data[j].name == name && data[j].value != '-') {
+                            amount++
+                        }
+                    }
+                }
+            }
+            return amount;
+        },
 
         setColor : function (legendName, color) {
             this._colorMap[legendName] = color;
@@ -649,6 +683,13 @@ define(function (require) {
         },
 
         add : function (name, color){
+            var data = this.legendOption.data;
+            for (var i = 0, dataLength = data.length; i < dataLength; i++) {
+                if (this._getName(data[i]) == name) {
+                    // 已有就不重复加了
+                    return;
+                }
+            }
             this.legendOption.data.push(name);
             this.setColor(name,color);
             this._selectedMap[name] = true;
@@ -656,18 +697,11 @@ define(function (require) {
 
         del : function (name){
             var data = this.legendOption.data;
-            var finalData = [];
-            var found = false;
             for (var i = 0, dataLength = data.length; i < dataLength; i++) {
-                if (found || data[i] != name) {
-                    finalData.push(data[i]);
-                }
-                else {
-                    found = true;
-                    continue;
+                if (this._getName(data[i]) == name) {
+                    return this.legendOption.data.splice(i, 1);
                 }
             }
-            this.legendOption.data = finalData;
         },
         
         /**

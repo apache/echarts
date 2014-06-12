@@ -86,6 +86,7 @@ define(function (require) {
                 location : location,
                 data : data
             };
+            
             var itemName;
             var total = 0;
             var selectedData = [];
@@ -105,14 +106,28 @@ define(function (require) {
             if (total === 0) {
                 return;
             }
+            // 可计算箱子
+            var funnelCase = this._buildFunnelCase(seriesIndex);
             var gap = serie.gap;
-            var height = total > 1 ? (location.height - (total - 1) * gap) / total : height;
+            var height = total > 1 
+                         ? (location.height - (total - 1) * gap) / total : location.height;
             var width;
             var lastY = location.y;
             var lastWidth = serie.sort == 'descending'
                             ? this._getItemWidth(seriesIndex, selectedData[0].value)
                             : number.parsePercent(serie.minSize, location.width);
             var next = serie.sort == 'descending' ? 1 : 0;
+            var centerX = location.centerX;
+            var pointList = [
+                [
+                    centerX - lastWidth / 2 - (lastWidth == 0 ? 0 : 10), 
+                    lastY - (lastWidth == 0 ? 10 : 5)
+                ],
+                [
+                    centerX + lastWidth / 2 + (lastWidth == 0 ? 0 : 10),
+                    lastY - (lastWidth == 0 ? 10 : 5)
+                ]
+            ];
             for (var i = 0, l = selectedData.length; i < l; i++) {
                 itemName = selectedData[i].name;
                 if (this.selectedMap[itemName] && !isNaN(selectedData[i].value)) {
@@ -125,12 +140,57 @@ define(function (require) {
                         seriesIndex, selectedData[i]._index, 
                         legend 
                         ? legend.getColor(itemName) : this.zr.getColor(selectedData[i]._index),
-                        location.centerX - lastWidth / 2, lastY, 
+                        centerX - lastWidth / 2, lastY, 
                         lastWidth, width, height
                     );
                     lastY += height + gap;
                     lastWidth = width;
+                    pointList.unshift([centerX - lastWidth / 2 - 10, lastY]);
+                    pointList.push([centerX + lastWidth / 2 + 10, lastY]);
                 }
+            }
+            if (funnelCase) {
+                if (lastWidth == 0) {
+                    pointList.pop();
+                    pointList[0][0] +=10;
+                    pointList[0][1] +=10;
+                }
+                else {
+                    pointList[pointList.length - 1][1] +=5;
+                    pointList[0][1] +=5;
+                }
+                funnelCase.style.pointList = pointList;
+            }
+        },
+        
+        _buildFunnelCase : function(seriesIndex) {
+            var serie = this.series[seriesIndex];
+            if (this.deepQuery([serie, this.option], 'calculable')) {
+                var location = this._paramsMap[seriesIndex].location;
+                var centerX = location.centerX;
+                var minWidth = number.parsePercent(serie.minSize, location.width) / 2;
+                var maxWidth = number.parsePercent(serie.maxSize, location.width) / 2;
+                var gap = 10;
+                var funnelCase = {
+                    hoverable : false,
+                    style : {
+                        pointListd : [
+                            [location.x - gap, location.y - gap],
+                            [location.x + location.width + gap, location.y - gap],
+                            [location.x + location.width + gap, location.y + location.height + gap],
+                            [location.x - gap, location.y + location.height + gap]
+                        ],
+                        brushType : 'stroke',
+                        lineWidth : 1,
+                        strokeColor : serie.calculableHolderColor
+                                      || this.ecTheme.calculableHolderColor
+                    }
+                };
+                ecData.pack(funnelCase, serie, seriesIndex, undefined, -1);
+                this.setCalculable(funnelCase);
+                funnelCase = new PolygonShape(funnelCase);
+                this.shapeList.push(funnelCase);
+                return funnelCase;
             }
         },
         
@@ -173,6 +233,12 @@ define(function (require) {
                 funnelData[i]._index = i;
             }
             function numDescending (a, b) {
+                if (a.value == '-') {
+                    return 1;
+                }
+                else if (b.value == '-') {
+                    return -1;
+                }
                 return b.value - a.value;
             }
             function numAscending (a, b) {
