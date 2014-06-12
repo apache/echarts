@@ -520,7 +520,7 @@ define(function (require) {
                     }
                     
                     if (serie.type == ecConfig.CHART_TYPE_MAP) {
-                        itemShape._geo = this.getMarkGeo(data[i].name);
+                        itemShape._geo = this.getMarkGeo(data[i]);
                     }
                     
                     // 重新pack一下数据
@@ -647,8 +647,8 @@ define(function (require) {
                 
                 if (serie.type == ecConfig.CHART_TYPE_MAP) {
                     itemShape._geo = [
-                        this.getMarkGeo(data[i][0].name),
-                        this.getMarkGeo(data[i][1].name)
+                        this.getMarkGeo(data[i][0]),
+                        this.getMarkGeo(data[i][1])
                     ];
                 }
                 

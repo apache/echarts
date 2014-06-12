@@ -134,7 +134,7 @@ define(function (require) {
                     }
                     
                     this._selectedMode[mapType] = this._selectedMode[mapType] 
-                                             || series[i].selectedMode;
+                                                  || series[i].selectedMode;
                     if (typeof this._hoverable[mapType] == 'undefined'
                         || this._hoverable[mapType]                  // false 1票否决
                     ) {
@@ -234,13 +234,19 @@ define(function (require) {
                     md = self._getSubMapData(mt, md);
                 }
                 self._mapDataMap[mt].mapData = md;
+                
+                if (md.firstChild && md.firstChild.tagName == 'svg') {
+                    self._mapDataMap[mt].rate = 1;
+                    self._mapDataMap[mt].projection = require('../util/projection/svg');
+                }
+                else {
+                    self._mapDataMap[mt].rate = 0.75;
+                    self._mapDataMap[mt].projection = require('../util/projection/normal');
+                }
+                
                 self._buildMap(
                     mt,                             // 类型
-                    self._getProjectionData(             // 地图数据
-                        mt,
-                        md,
-                        ms
-                    ),  
+                    self._getProjectionData(mt, md, ms),      // 地图数据
                     vd,                  // 用户数据
                     ms                   // 系列
                 );
@@ -300,7 +306,7 @@ define(function (require) {
          * 按需加载相关地图 
          */
         _getProjectionData : function (mapType, mapData, mapSeries) {
-            var normalProjection = require('../util/projection/normal');
+            var normalProjection = this._mapDataMap[mapType].projection;
             var province = [];
             
             // bbox永远不变
@@ -316,7 +322,8 @@ define(function (require) {
                 // 第一次或者发生了resize，需要判断
                 transform = this._getTransform(
                     bbox,
-                    mapSeries
+                    mapSeries,
+                    this._mapDataMap[mapType].rate
                 );
             }
             else {
@@ -483,32 +490,30 @@ define(function (require) {
             else if (path.cp) {
                 textPosition = [path.cp[0], path.cp[1]];
             }
-            /*
             else {
+                var bbox = this._mapDataMap[mapType].bbox;
                 textPosition = this.geo2pos(
                     mapType, 
                     [bbox.left + bbox.width / 2, bbox.top + bbox.height / 2]
                 );
             }
-            */
+            
             if (_textFixed[name]) {
                 textPosition[0] += _textFixed[name][0];
                 textPosition[1] += _textFixed[name][1];
             }
             //console.log(textPosition)
-            return {
-                name : this._nameChange(mapType, name),
-                path : path.path,
-                position : position,
-                textX : textPosition[0],
-                textY : textPosition[1]
-            };
+            path.name = this._nameChange(mapType, name);
+            path.position = position;
+            path.textX = textPosition[0];
+            path.textY = textPosition[1];
+            return path;
         },
         
         /**
          * 获取缩放 
          */
-        _getTransform : function (bbox, mapSeries) {
+        _getTransform : function (bbox, mapSeries, rate) {
             var series = this.series;
             var mapLocation;
             var x;
@@ -552,17 +557,17 @@ define(function (require) {
             var mapWidth = bbox.width;
             var mapHeight = bbox.height;
             //var minScale;
-            var xScale = (width / 0.75) / mapWidth;
+            var xScale = (width / rate) / mapWidth;
             var yScale = height / mapHeight;
             if (xScale > yScale) {
                 //minScale = yScale;
-                xScale = yScale * 0.75;
+                xScale = yScale * rate;
                 width = mapWidth * xScale;
             }
             else {
                 //minScale = xScale;
                 yScale = xScale;
-                xScale = yScale * 0.75;
+                xScale = yScale * rate;
                 height = mapHeight * yScale;
             }
             //console.log(minScale)
@@ -783,6 +788,9 @@ define(function (require) {
                     _style: zrUtil.clone(style),
                     _mapType: mapType
                 };
+                if (typeof style.scale != 'undefined') {
+                    shape.scale = zrUtil.clone(style.scale);
+                }
                 
                 textShape = new TextShape(textShape);
                 shape = new PathShape(shape);
@@ -876,8 +884,8 @@ define(function (require) {
                    : [0, 0];
         },
         
-        getMarkGeo : function(name) {
-            return _geoCoord[name];
+        getMarkGeo : function(mpData) {
+            return mpData.geoCoord || _geoCoord[mpData.name];
         },
         
         _nameChange : function (mapType, name) {
@@ -1217,7 +1225,7 @@ define(function (require) {
             if (!this._mapDataMap[mapType].transform) {
                 return null;
             }
-            return require('../util/projection/normal').pos2geo(
+            return this._mapDataMap[mapType].projection.pos2geo(
                 this._mapDataMap[mapType].transform, p
             );
         },
@@ -1252,7 +1260,7 @@ define(function (require) {
             if (!this._mapDataMap[mapType].transform) {
                 return null;
             }
-            return require('../util/projection/normal').geo2pos(
+            return this._mapDataMap[mapType].projection.geo2pos(
                 this._mapDataMap[mapType].transform, p
             );
         },
