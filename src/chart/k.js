@@ -71,11 +71,6 @@ define(function (require) {
             }
 
             this.addShapeList();
-            /*
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                this.zr.addShape(this.shapeList[i]);
-            }
-            */
         },
 
         /**
