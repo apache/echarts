@@ -9,10 +9,6 @@
 define(function(require) {
 
     var PathShape = require('zrender/shape/Path');
-    var CircleShape = require('zrender/shape/Circle');
-    var RectShape = require('zrender/shape/Rectangle');
-    var LineShape = require('zrender/shape/Line');
-    var PolygonShape = require('zrender/shape/Polygon');
     
     function getBbox(root) {
         var svgNode = root.firstChild;
@@ -91,7 +87,7 @@ define(function(require) {
         var lineWidth = xmlNode.getAttribute('stroke-width');
         var opacity = xmlNode.getAttribute('opacity');
 
-        if (color) {
+        if (color && color != 'none') {
             obj.color = color;
             if (strokeColor) {
                 obj.brushType = 'both';
@@ -99,20 +95,20 @@ define(function(require) {
             } else {
                 obj.brushType = 'fill';
             }
-        } else if (strokeColor) {
+        } else if (strokeColor && strokeColor != 'none') {
             obj.strokeColor = strokeColor;
             obj.brushType = 'stroke';
         }
-        if (lineWidth) {
-            obj.lineWidth = lineWidth;
+        if (lineWidth && lineWidth != 'none') {
+            obj.lineWidth = parseFloat(lineWidth);
         }
-        if (opacity) {
-            obj.opacity = opacity;
+        if (opacity && opacity != 'none') {
+            obj.opacity = parseFloat(opacity);
         }
     }
 
     function parsePoints(str) {
-        var list = trim(str).replace(/,/g, " ").split(/\s+/);
+        var list = trim(str).replace(/,/g, ' ').split(/\s+/);
         var points = [];
 
         for (var i = 0; i < list.length;) {
@@ -139,10 +135,10 @@ define(function(require) {
         },
 
         rect: function(xmlNode, scale) {
-            var x = parseFloat(xmlNode.getAttribute("x") || 0);
-            var y = parseFloat(xmlNode.getAttribute("y") || 0);
-            var width = parseFloat(xmlNode.getAttribute("width") || 0);
-            var height = parseFloat(xmlNode.getAttribute("height") || 0);
+            var x = parseFloat(xmlNode.getAttribute('x') || 0);
+            var y = parseFloat(xmlNode.getAttribute('y') || 0);
+            var width = parseFloat(xmlNode.getAttribute('width') || 0);
+            var height = parseFloat(xmlNode.getAttribute('height') || 0);
 
             return {
                 shapeType: 'rectangle',
@@ -158,10 +154,10 @@ define(function(require) {
         },
 
         line: function(xmlNode, scale) {
-            var x1 = parseFloat(xmlNode.getAttribute("x1") || 0);
-            var y1 = parseFloat(xmlNode.getAttribute("y1") || 0);
-            var x2 = parseFloat(xmlNode.getAttribute("x2") || 0);
-            var y2 = parseFloat(xmlNode.getAttribute("y2") || 0);
+            var x1 = parseFloat(xmlNode.getAttribute('x1') || 0);
+            var y1 = parseFloat(xmlNode.getAttribute('y1') || 0);
+            var x2 = parseFloat(xmlNode.getAttribute('x2') || 0);
+            var y2 = parseFloat(xmlNode.getAttribute('y2') || 0);
 
             return {
                 shapeType: 'line',
@@ -177,9 +173,9 @@ define(function(require) {
         },
 
         circle: function(xmlNode, scale) {
-            var cx = parseFloat(xmlNode.getAttribute("cx") || 0);
-            var cy = parseFloat(xmlNode.getAttribute("cy") || 0);
-            var r = parseFloat(xmlNode.getAttribute("r") || 0);
+            var cx = parseFloat(xmlNode.getAttribute('cx') || 0);
+            var cy = parseFloat(xmlNode.getAttribute('cy') || 0);
+            var r = parseFloat(xmlNode.getAttribute('r') || 0);
 
             return {
                 shapeType: 'circle',
@@ -194,7 +190,7 @@ define(function(require) {
         },
 
         polygon: function(xmlNode, scale) {
-            var points = xmlNode.getAttribute("points");
+            var points = xmlNode.getAttribute('points');
             var min = [Infinity, Infinity];
             var max = [-Infinity, -Infinity];
             if (points) {

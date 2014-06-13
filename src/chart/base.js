@@ -1101,7 +1101,7 @@ define(function (require) {
                         this._animateMod(false, newMap[key], duration, easing);
                     }
                 }
-                //this.zr.refresh();
+                this.zr.refresh();
                 this.animationEffect();
             }
             else {

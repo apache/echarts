@@ -13,6 +13,9 @@ define(function (require) {
     var TextShape = require('zrender/shape/Text');
     var PathShape = require('zrender/shape/Path');
     var CircleShape = require('zrender/shape/Circle');
+    var RectangleShape = require('zrender/shape/Rectangle');
+    var LineShape = require('zrender/shape/Line');
+    var PolygonShape = require('zrender/shape/Polygon');
     // 组件依赖
     require('../component/dataRange');
     
@@ -235,7 +238,7 @@ define(function (require) {
                 }
                 self._mapDataMap[mt].mapData = md;
                 
-                if (md.firstChild && md.firstChild.tagName == 'svg') {
+                if (md.firstChild) {
                     self._mapDataMap[mt].rate = 1;
                     self._mapDataMap[mt].projection = require('../util/projection/svg');
                 }
@@ -652,9 +655,11 @@ define(function (require) {
                                 zlevel : this._zlevelBase + 1,
                                 position : zrUtil.clone(style.position),
                                 _mapType : mapType,
+                                /*
                                 _geo : this.pos2geo(
                                            mapType, [style.textX + 3 + j * 7, style.textY - 10]
                                        ),
+                                       */
                                 style : {
                                     x : style.textX + 3 + j * 7,
                                     y : style.textY - 10,
@@ -687,7 +692,8 @@ define(function (require) {
                         : null;
                 
                 // 常规设置
-                style.color = color 
+                style.color = style.color 
+                              || color 
                               || this.getItemStyleColor(
                                      this.deepQuery(queryTarget, 'itemStyle.normal.color'),
                                      data.seriesIndex, -1, data
@@ -695,8 +701,10 @@ define(function (require) {
                               || this.deepQuery(
                                   queryTarget, 'itemStyle.normal.areaStyle.color'
                                  );
-                style.strokeColor = this.deepQuery(queryTarget, 'itemStyle.normal.borderColor');
-                style.lineWidth = this.deepQuery(queryTarget, 'itemStyle.normal.borderWidth');
+                style.strokeColor = style.strokeColor
+                                    || this.deepQuery(queryTarget, 'itemStyle.normal.borderColor');
+                style.lineWidth = style.lineWidth
+                                  || this.deepQuery(queryTarget, 'itemStyle.normal.borderWidth');
                 
                 // 高亮
                 highlightStyle.color = this.getItemStyleColor(
@@ -716,7 +724,7 @@ define(function (require) {
                                            )
                                            || style.lineWidth;
                 
-                style.brushType = highlightStyle.brushType = 'both';
+                style.brushType = highlightStyle.brushType = style.brushType || 'both';
                 style.lineJoin = highlightStyle.lineJoin = 'round';
                 style._name = highlightStyle._name = name;
                 
@@ -781,8 +789,24 @@ define(function (require) {
                 }
                 
                 textShape = new TextShape(textShape);
-                shape = new PathShape(shape);
-                shape.pathArray = shape._parsePathData(shape.style.path);
+                switch (shape.style.shapeType) {
+                    case 'rectangle' : 
+                        shape = new RectangleShape(shape);
+                        break;
+                    case 'line' : 
+                        shape = new LineShape(shape);
+                        break;
+                    case 'circle' : 
+                        shape = new CircleShape(shape);
+                        break;
+                    case 'polygon' : 
+                        shape = new PolygonShape(shape);
+                        break;
+                    default :
+                        shape = new PathShape(shape);
+                        shape.pathArray = shape._parsePathData(shape.style.path);
+                        break;
+                }
                 
                 if (this._selectedMode[mapType] &&
                      this._selected[name]
@@ -991,6 +1015,10 @@ define(function (require) {
                         this.shapeList[i].position[1] = transform.top;
                         if (this.shapeList[i].type == 'path' 
                             || this.shapeList[i].type == 'symbol'
+                            || this.shapeList[i].type == 'circle'
+                            || this.shapeList[i].type == 'rectangle'
+                            || this.shapeList[i].type == 'polygon'
+                            || this.shapeList[i].type == 'line'
                         ) {
                             this.shapeList[i].scale[0] *= delta;
                             this.shapeList[i].scale[1] *= delta;
