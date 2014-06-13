@@ -488,7 +488,9 @@ define(function (require) {
         _showAxisTrigger : function (xAxisIndex, yAxisIndex, dataIndex) {
             !this._event.connectTrigger && this.messageCenter.dispatch(
                 ecConfig.EVENT.TOOLTIP_IN_GRID,
-                this._event
+                this._event,
+                null,
+                this.myChart
             );
             if (typeof this.component.xAxis == 'undefined'
                 || typeof this.component.yAxis == 'undefined'
@@ -553,7 +555,8 @@ define(function (require) {
                     {
                         seriesIndex : seriesIndex,
                         dataIndex : dataIndex
-                    }
+                    },
+                    this.myChart
                 );
                 y = zrEvent.getY(this._event);
                 x = this.subPixelOptimize(
@@ -598,7 +601,8 @@ define(function (require) {
                     {
                         seriesIndex : seriesIndex,
                         dataIndex : dataIndex
-                    }
+                    },
+                    this.myChart
                 );
                 x = zrEvent.getX(this._event);
                 y = this.subPixelOptimize(
@@ -1195,7 +1199,9 @@ define(function (require) {
                 else {
                     !this._event.connectTrigger && this.messageCenter.dispatch(
                         ecConfig.EVENT.TOOLTIP_OUT_GRID,
-                        this._event
+                        this._event,
+                        null,
+                        this.myChart
                     );
                     this._hidingTicket = setTimeout(this._hide, this._hideDelay);
                 }

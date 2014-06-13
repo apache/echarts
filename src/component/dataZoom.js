@@ -587,7 +587,7 @@ define(function (require) {
             this._startFrameShape = new RectangleShape(this._startFrameShape);
             this._endFrameShape = new RectangleShape(this._endFrameShape);
             this.shapeList.push(this._startFrameShape);
-            this.shapeList.push();
+            this.shapeList.push(this._endFrameShape);
             return;
         },
         
@@ -760,7 +760,8 @@ define(function (require) {
                 this.messageCenter.dispatch(
                     ecConfig.EVENT.DATA_ZOOM,
                     null,
-                    {zoom: this._zoom}
+                    {zoom: this._zoom},
+                    this.myChart
                 );
             }
 
@@ -893,7 +894,8 @@ define(function (require) {
                 this.messageCenter.dispatch(
                     ecConfig.EVENT.DATA_ZOOM,
                     null,
-                    {zoom: this._zoom}
+                    {zoom: this._zoom},
+                    this.myChart
                 );
             }
             status.needRefresh = false; // 会有消息触发fresh，不用再刷一遍

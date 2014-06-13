@@ -52,7 +52,8 @@ define(function (require) {
                     data : typeof timelineOption.data[self.currentIndex].name != 'undefined'
                            ? timelineOption.data[self.currentIndex].name
                            : timelineOption.data[self.currentIndex]
-                }
+                },
+                self.myChart
             );
         };
         self._onFrame = function() {

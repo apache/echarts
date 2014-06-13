@@ -1042,7 +1042,8 @@ define(function (require) {
                 this.messageCenter.dispatch(
                     ecConfig.EVENT.MAP_ROAM,
                     param.event,
-                    {type : 'scale'}
+                    {type : 'scale'},
+                    this.myChart
                 );
             }
         },
@@ -1097,7 +1098,8 @@ define(function (require) {
             this.messageCenter.dispatch(
                 ecConfig.EVENT.MAP_ROAM,
                 param.event,
-                {type : 'move'}
+                {type : 'move'},
+                this.myChart
             );
             
             this.clearEffectShape(true);
@@ -1173,7 +1175,8 @@ define(function (require) {
                 {
                     selected : this._selected,
                     target : name
-                }
+                },
+                this.myChart
             );
             
             this.zr.refresh();

@@ -568,7 +568,8 @@ define(function (require) {
                 {
                     selected : this._selectedMap,
                     target : itemName
-                }
+                },
+                this.myChart
             );
         },
 
@@ -768,7 +769,8 @@ define(function (require) {
                 {
                     selected : this._selectedMap,
                     target : itemName
-                }
+                },
+                this.myChart
             );
         },
         

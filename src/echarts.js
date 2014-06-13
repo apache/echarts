@@ -310,7 +310,8 @@ define(function (require) {
                     this._messageCenter.dispatch(
                         ecConfig.EVENT.CLICK,
                         param.event,
-                        ecData
+                        ecData,
+                        this
                     );
                 }
             }
@@ -326,7 +327,8 @@ define(function (require) {
                     this._messageCenter.dispatch(
                         ecConfig.EVENT.HOVER,
                         param.event,
-                        ecData
+                        ecData,
+                        this
                     );
                 }
             }
@@ -418,9 +420,10 @@ define(function (require) {
                 this._messageCenter.dispatch(
                     ecConfig.EVENT.DATA_CHANGED,
                     param.event,
-                    this._eventPackage(param.target)
+                    this._eventPackage(param.target),
+                    this
                 );
-                this._messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+                this._messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this);
             }
         },
 
@@ -437,7 +440,7 @@ define(function (require) {
                 && this._chartList[len].onlegendSelected(param, this._status);
             }
             if (this._status.needRefresh) {
-                this._messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+                this._messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this);
             }
         },
 
@@ -455,7 +458,7 @@ define(function (require) {
             }
 
             if (this._status.needRefresh) {
-                this._messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+                this._messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this);
             }
         },
 
@@ -495,9 +498,10 @@ define(function (require) {
             this._messageCenter.dispatch(
                 ecConfig.EVENT.DATA_CHANGED,
                 null,
-                param
+                param,
+                this
             );
-            this._messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+            this._messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this);
         },
         
         /**
@@ -1118,8 +1122,9 @@ define(function (require) {
                 }
                 self._messageCenter.dispatch(
                     ecConfig.EVENT.REFRESH,
-                    '',
-                    {option: magicOption}
+                    null,
+                    {option: magicOption},
+                    self
                 );
             }, magicOption.addDataAnimation ? 500 : 0);
             return this;
@@ -1593,7 +1598,7 @@ define(function (require) {
                 }
                 self.component.grid && self.component.grid.refixAxisShape(self.component);
                 self._zr.refresh();
-                self._messageCenter.dispatch(ecConfig.EVENT.RESIZE);
+                self._messageCenter.dispatch(ecConfig.EVENT.RESIZE, null, null, self);
                 return self;
             };
         },

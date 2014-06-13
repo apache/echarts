@@ -924,7 +924,8 @@ define(function (require) {
                             start : this._range.end,
                             end : this._range.start
                         }
-                    }
+                    },
+                    this.myChart
                 );
             }
             
@@ -1116,7 +1117,8 @@ define(function (require) {
                             start : this._range.end,
                             end : this._range.start
                         }
-                    }
+                    },
+                    this.myChart
                 );
             }
         },
@@ -1125,7 +1127,7 @@ define(function (require) {
         __dataRangeSelected : function (param) {
             var idx = param.target._idx;
             this._selectedMap[idx] = !this._selectedMap[idx];
-            this.messageCenter.dispatch(ecConfig.EVENT.REFRESH);
+            this.messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this.myChart);
         },
 
         _textFormat : function(valueStart, valueEnd) {

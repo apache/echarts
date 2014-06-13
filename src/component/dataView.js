@@ -267,7 +267,8 @@ define(function (require) {
                     self.messageCenter && self.messageCenter.dispatch(
                         ecConfig.EVENT.DATA_VIEW_CHANGED,
                         null,
-                        {option : self.option}
+                        {option : self.option},
+                        self.myChart
                     );
                 },
                 // 有动画，所以高级浏览器时间更长点

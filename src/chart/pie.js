@@ -934,7 +934,8 @@ define(function (require) {
                 {
                     selected : this._selected,
                     target :  ecData.get(target, 'name')
-                }
+                },
+                this.myChart
             );
             this.zr.refresh();
         }

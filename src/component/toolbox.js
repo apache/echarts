@@ -756,7 +756,7 @@ define(function (require) {
         __onRestore : function (){
             this._resetMark();
             this._resetZoom();
-            this.messageCenter.dispatch(ecConfig.EVENT.RESTORE);
+            this.messageCenter.dispatch(ecConfig.EVENT.RESTORE, null, null, this.myChart);
             return true;
         },
         
@@ -867,7 +867,8 @@ define(function (require) {
                 this.messageCenter.dispatch(
                     ecConfig.EVENT.MAGIC_TYPE_CHANGED,
                     param.event,
-                    {magicType : this._magicType}
+                    {magicType : this._magicType},
+                    this.myChart
                 );
             }
             
@@ -881,7 +882,8 @@ define(function (require) {
             !this._isSilence && this.messageCenter.dispatch(
                 ecConfig.EVENT.MAGIC_TYPE_CHANGED,
                 null,
-                {magicType : this._magicType}
+                {magicType : this._magicType},
+                this.myChart
             );
         },
         
