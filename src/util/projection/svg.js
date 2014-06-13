@@ -6,40 +6,52 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function() {
+define(function(require) {
+
     var PathShape = require('zrender/shape/Path');
     var CircleShape = require('zrender/shape/Circle');
+    var RectShape = require('zrender/shape/Rectangle');
+    var LineShape = require('zrender/shape/Line');
+    var PolygonShape = require('zrender/shape/Polygon');
     
     function getBbox(root) {
-        var firstChild = root.firstChild;
+        var svgNode = root.firstChild;
+        // Find the svg node
+        while (!(svgNode.nodeName.toLowerCase() == 'svg' && svgNode.nodeType == 1)) {
+            svgNode = svgNode.nextSibling;
+        }
+
+        var x = parseFloat(svgNode.getAttribute('x') || 0);
+        var y = parseFloat(svgNode.getAttribute('y') || 0);
+        var width = parseFloat(svgNode.getAttribute('width') || 0);
+        var height = parseFloat(svgNode.getAttribute('height') || 0);
         return {
-            left : firstChild.getAttribute('x').replace('px', '') - 0,
-            top : firstChild.getAttribute('y').replace('px', '') - 0,
-            width : firstChild.getAttribute('width').replace('px', '') - 0,
-            height : firstChild.getAttribute('height').replace('px', '') - 0
+            left : x,
+            top : y,
+            width : width,
+            height : height
         };
     }
     
     function geoJson2Path(root, transform) {
         var scale = [transform.scale.x, transform.scale.y];
-        var pathArray = [];
+        var elList = [];
         function _getShape(root) {
-            if (root.tagName == 'path') {
-                // TODO:各种svg！！
-                var path = root.getAttribute('d');
-                var rect = PathShape.prototype.getRect({path : path});
-                pathArray.push({
-                    path : path,
-                    scale : scale,
-                    cp : [
-                        (rect.x + rect.width / 2) * scale[0], 
-                        (rect.y + rect.height / 2) * scale[1]
-                    ],
-                    id : root.id,
-                    properties : {
+            var tagName = root.tagName;
+            if (shapeBuilders[tagName]) {
+                var obj = shapeBuilders[tagName](root, scale);
+
+                if (obj) {
+                    // Common attributes
+                    obj.scale = scale;
+                    obj.properties = {
                         name : root.getAttribute('name') || ''
-                    }
-                });
+                    };
+                    obj.id = root.id;
+                    extendCommonAttributes(obj, root);
+
+                    elList.push(obj);
+                }
             }
             var shapes = root.childNodes;
             for (var i = 0, len = shapes.length; i < len; i++) {
@@ -47,7 +59,7 @@ define(function() {
             }
         }
         _getShape(root);
-        return pathArray;
+        return elList;
     }
 
     /**
@@ -66,6 +78,153 @@ define(function() {
     function geo2pos(obj, p) {
         var point = p instanceof Array ? [p[0] * 1, p[1] * 1] : [p.x * 1, p.y * 1]
         return [point[0] * obj.scale.x, point[1] * obj.scale.y];
+    }
+
+    function trim(str) {
+        return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+    }
+
+    function extendCommonAttributes(obj, xmlNode) {
+
+        var color = xmlNode.getAttribute('fill');
+        var strokeColor = xmlNode.getAttribute('stroke');
+        var lineWidth = xmlNode.getAttribute('stroke-width');
+        var opacity = xmlNode.getAttribute('opacity');
+
+        if (color) {
+            obj.color = color;
+            if (strokeColor) {
+                obj.brushType = 'both';
+                obj.strokeColor = strokeColor;
+            } else {
+                obj.brushType = 'fill';
+            }
+        } else if (strokeColor) {
+            obj.strokeColor = strokeColor;
+            obj.brushType = 'stroke';
+        }
+        if (lineWidth) {
+            obj.lineWidth = lineWidth;
+        }
+        if (opacity) {
+            obj.opacity = opacity;
+        }
+    }
+
+    function parsePoints(str) {
+        var list = trim(str).replace(/,/g, " ").split(/\s+/);
+        var points = [];
+
+        for (var i = 0; i < list.length;) {
+            var x = parseFloat(list[i++]);
+            var y = parseFloat(list[i++]);
+            points.push([x, y]);
+        }
+        return points;
+    }
+
+    // Regular svg shapes
+    var shapeBuilders = {
+        path: function(xmlNode, scale) {
+            var path = xmlNode.getAttribute('d');
+            var rect = PathShape.prototype.getRect({path : path});
+            return {
+                shapeType: 'path',
+                path : path,
+                cp : [
+                    (rect.x + rect.width / 2) * scale[0], 
+                    (rect.y + rect.height / 2) * scale[1]
+                ]
+            };
+        },
+
+        rect: function(xmlNode, scale) {
+            var x = parseFloat(xmlNode.getAttribute("x") || 0);
+            var y = parseFloat(xmlNode.getAttribute("y") || 0);
+            var width = parseFloat(xmlNode.getAttribute("width") || 0);
+            var height = parseFloat(xmlNode.getAttribute("height") || 0);
+
+            return {
+                shapeType: 'rectangle',
+                x: x,
+                y: y,
+                width: width,
+                height: height,
+                cp : [
+                    (x + width / 2) * scale[0], 
+                    (y + height / 2) * scale[1]
+                ],
+            }
+        },
+
+        line: function(xmlNode, scale) {
+            var x1 = parseFloat(xmlNode.getAttribute("x1") || 0);
+            var y1 = parseFloat(xmlNode.getAttribute("y1") || 0);
+            var x2 = parseFloat(xmlNode.getAttribute("x2") || 0);
+            var y2 = parseFloat(xmlNode.getAttribute("y2") || 0);
+
+            return {
+                shapeType: 'line',
+                xStart: x1,
+                yStart: y1,
+                xEnd: x2,
+                yEnd: y2,
+                cp : [
+                    (x1 + x2) * 0.5 * scale[0], 
+                    (y1 + y2) * 0.5 * scale[1]
+                ],
+            }
+        },
+
+        circle: function(xmlNode, scale) {
+            var cx = parseFloat(xmlNode.getAttribute("cx") || 0);
+            var cy = parseFloat(xmlNode.getAttribute("cy") || 0);
+            var r = parseFloat(xmlNode.getAttribute("r") || 0);
+
+            return {
+                shapeType: 'circle',
+                x: cx,
+                y: cy,
+                r: r,
+                cp: [
+                    cx * scale[0],
+                    cy * scale[1]
+                ]
+            }
+        },
+
+        polygon: function(xmlNode, scale) {
+            var points = xmlNode.getAttribute("points");
+            var min = [Infinity, Infinity];
+            var max = [-Infinity, -Infinity];
+            if (points) {
+                points = parsePoints(points);
+
+                for (var i = 0; i < points.length; i++) {
+                    var p = points[i];
+                    
+                    min[0] = Math.min(p[0], min[0]);
+                    min[1] = Math.min(p[1], min[1]);
+
+                    max[0] = Math.max(p[0], max[0]);
+                    max[1] = Math.max(p[1], max[1]);
+
+                }
+                return {
+                    shapeType: 'polygon',
+                    pointList: points,
+                    cp : [
+                        (min[0] + max[0]) / 2 * scale[0],
+                        (min[1] + max[1]) / 2 * scale[0]
+                    ]
+                }
+            }
+        },
+
+        polyline: function(xmlNode, scale) {
+            var obj = shapeBuilders.polygon(xmlNode, scale);
+            return obj;
+        }
     }
     
     return {
