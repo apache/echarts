@@ -214,8 +214,19 @@ option = {
                     name : '张三',
                     itemStyle: {
                         normal: {
+                            color: function(seriesIndex, dataIndex, value) {
+                                return isNaN(value) 
+                                       ? undefined
+                                       : (value >= 120 ? 'green' : 'red')
+                            },
+                            label: {
+                                show: true,
+                                formatter:function(seriesName, indicatorName, value) {
+                                    return value;
+                                }
+                            },
                             areaStyle: {
-                                color: (function(){
+                                color: (function (){
                                     var zrColor = require('zrender/tool/color');
                                     var x = document.getElementById('main').offsetWidth - 250;
                                     return zrColor.getRadialGradient(

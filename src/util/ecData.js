@@ -111,10 +111,29 @@ define(function() {
                 break;
         }
     }
+    
+    /**
+     * 私有数据克隆，把source拷贝到target上
+     * @param {shape} source 源
+     * @param {shape} target 目标
+     */
+    function clone(source, target) {
+        target._echartsData =  {
+            '_series' : source._echartsData._series,
+            '_seriesIndex' : source._echartsData._seriesIndex,
+            '_data' : source._echartsData._data,
+            '_dataIndex' : source._echartsData._dataIndex,
+            '_name' : source._echartsData._name,
+            '_value' : source._echartsData._value,
+            '_special' : source._echartsData._special,
+            '_special2' : source._echartsData._special2
+        };
+    }
 
     return {
         pack : pack,
         set : set,
-        get : get
+        get : get,
+        clone : clone
     };
 });

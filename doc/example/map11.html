@@ -84,7 +84,7 @@ option = {
     },
     tooltip : {
         trigger: 'item',
-        formatter: function(v) {
+        formatter: function (v) {
             return v[1].replace(':', ' > ');
         }
     },
@@ -117,7 +117,7 @@ option = {
         min : 0,
         max : 100,
         calculable : true,
-        color: ['red','orange','yellow','lightgreen'],
+        color: ['#ff3333', 'orange', 'yellow','lime','aqua'],
         textStyle:{
             color:'#fff'
         }
@@ -429,12 +429,18 @@ option = {
                 smooth:true,
                 effect : {
                     show: true,
-                    size: 3,
-                    shadowColor: 'yellow'
+                    scaleSize: 1,
+                    period: 30,
+                    color: '#fff',
+                    shadowBlur: 10
                 },
                 itemStyle : {
                     normal: {
-                        borderWidth:1
+                        borderWidth:1,
+                        lineStyle: {
+                            type: 'solid',
+                            shadowBlur: 10
+                        }
                     }
                 },
                 data : [
@@ -452,7 +458,7 @@ option = {
             },
             markPoint : {
                 symbol:'emptyCircle',
-                symbolSize : function(v){
+                symbolSize : function (v){
                     return 10 + v/10
                 },
                 effect : {
@@ -487,12 +493,18 @@ option = {
                 smooth:true,
                 effect : {
                     show: true,
-                    size: 3,
-                    shadowColor: 'aqua'
+                    scaleSize: 1,
+                    period: 30,
+                    color: '#fff',
+                    shadowBlur: 10
                 },
                 itemStyle : {
                     normal: {
-                        borderWidth:1
+                        borderWidth:1,
+                        lineStyle: {
+                            type: 'solid',
+                            shadowBlur: 10
+                        }
                     }
                 },
                 data : [
@@ -510,7 +522,7 @@ option = {
             },
             markPoint : {
                 symbol:'emptyCircle',
-                symbolSize : function(v){
+                symbolSize : function (v){
                     return 10 + v/10
                 },
                 effect : {
@@ -545,12 +557,18 @@ option = {
                 smooth:true,
                 effect : {
                     show: true,
-                    size: 3,
-                    shadowColor: 'lime'
+                    scaleSize: 1,
+                    period: 30,
+                    color: '#fff',
+                    shadowBlur: 10
                 },
                 itemStyle : {
                     normal: {
-                        borderWidth:1
+                        borderWidth:1,
+                        lineStyle: {
+                            type: 'solid',
+                            shadowBlur: 10
+                        }
                     }
                 },
                 data : [
@@ -568,7 +586,7 @@ option = {
             },
             markPoint : {
                 symbol:'emptyCircle',
-                symbolSize : function(v){
+                symbolSize : function (v){
                     return 10 + v/10
                 },
                 effect : {

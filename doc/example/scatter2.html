@@ -67,9 +67,35 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
+function random(){
+    var r = Math.round(Math.random() * 100);
+    return (r * (r % 2 == 0 ? 1 : -1));
+}
+
+function randomDataArray() {
+    var d = [];
+    var len = 100;
+    while (len--) {
+        d.push([
+            random(),
+            random(),
+            Math.abs(random()),
+        ]);
+    }
+    return d;
+}
+
 option = {
     tooltip : {
-        trigger: 'item'
+        trigger: 'axis',
+        showDelay : 0,
+        axisPointer:{
+            type : 'cross',
+            lineStyle: {
+                type : 'dashed',
+                width : 1
+            }
+        }
     },
     legend: {
         data:['scatter1','scatter2']
@@ -88,6 +114,7 @@ option = {
         {
             type : 'value',
             power: 1,
+            splitNumber: 4,
             scale: true
         }
     ],
@@ -95,48 +122,26 @@ option = {
         {
             type : 'value',
             power: 1,
-            scale: true,
-            splitArea : {show : true}
+            splitNumber: 4,
+            scale: true
         }
     ],
     series : [
         {
             name:'scatter1',
             type:'scatter',
-            symbolSize: function(value){
+            symbolSize: function (value){
                 return Math.round(value[2] / 5);
             },
-            data: (function() {
-                var d = [];
-                var len = 100;
-                while (len--) {
-                    d.push([
-                        (Math.random()*100).toFixed(2) - 0,
-                        (Math.random()*100).toFixed(2) - 0,
-                        (Math.random()*100).toFixed(2) - 0
-                    ]);
-                }
-                return d;
-            })()
+            data: randomDataArray()
         },
         {
             name:'scatter2',
             type:'scatter',
-            symbolSize: function(value){
+            symbolSize: function (value){
                 return Math.round(value[2] / 5);
             },
-            data: (function() {
-                var d = [];
-                var len = 100;
-                while (len--) {
-                    d.push([
-                        (Math.random()*100).toFixed(2) - 0,
-                        (Math.random()*100).toFixed(2) - 0,
-                        (Math.random()*100).toFixed(2) - 0
-                    ]);
-                }
-                return d;
-            })()
+            data: randomDataArray()
         }
     ]
 };

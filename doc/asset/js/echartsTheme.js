@@ -36,7 +36,7 @@ function refreshAll() {
     }
 }
 
-var developMode = false;
+var developMode = true;
 if (developMode) {
     // for develop
     require.config({
@@ -69,7 +69,9 @@ else {
             'echarts/chart/radar': fileLocation,
             'echarts/chart/map': fileLocation,
             'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation
+            'echarts/chart/force': fileLocation,
+            'echarts/chart/gauge': fileLocation,
+            'echarts/chart/funnel': fileLocation
         }
     });
 }
@@ -93,7 +95,9 @@ require(
         'echarts/chart/radar',
         'echarts/chart/force',
         'echarts/chart/chord',
-        'echarts/chart/map'
+        'echarts/chart/map',
+        'echarts/chart/gauge',
+        'echarts/chart/funnel'
     ],
     requireCallback
 );
@@ -140,15 +144,15 @@ function requireCallback (ec, defaultTheme) {
         */
         var domGLeft = domG.offsetLeft;
         var domGTop = domG.offsetTop;
+        var ImageShape = require('zrender/shape/Image');
         for (var i = 0, l = domMain.length; i < l; i++) {
-            _zr.addShape({
-                shape:'image',
+            _zr.addShape(new ImageShape({
                 style : {
                     x : domMain[i].offsetLeft - domGLeft,
                     y : domMain[i].offsetTop - domGTop,
                     image : myChart[i].getDataURL()
                 }
-            });
+            }));
         }
         _zr.render();
         
@@ -662,7 +666,6 @@ var option = {
         dataRange: {
             min: 0,
             max: 100000,
-            realtime: false,
             calculable : true
         },
         series : [

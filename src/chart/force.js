@@ -5,16 +5,31 @@
  *
  */
 
-define(function(require) {
+define(function (require) {
     'use strict';
+    
+    var ComponentBase = require('../component/base');
+    var ChartBase = require('./base');
+    
+    // 图形依赖
+    var CircleShape = require('zrender/shape/Circle');
+    var LineShape = require('zrender/shape/Line');
+    var IconShape = require('../util/shape/Icon');
 
+    var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
+    var zrUtil = require('zrender/tool/util');
+    var zrConfig = require('zrender/config');
+    var zrEvent = require('zrender/tool/event');
+    var vec2 = require('zrender/tool/vector');
+
+    var NDArray = require('../util/ndarray');
+        
     var requestAnimationFrame = window.requestAnimationFrame
                                 || window.msRequestAnimationFrame
                                 || window.mozRequestAnimationFrame
                                 || window.webkitRequestAnimationFrame
-                                || function(func){setTimeout(func, 16);};
-
-    require('../util/shape/icon');
+                                || function (func){setTimeout(func, 16);};
 
     // 保存节点的位置，改变数据时能够有更好的动画效果
     var nodeInitialPos = {};
@@ -26,24 +41,13 @@ define(function(require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Force(ecConfig, messageCenter, zr, option, component) {
-        // 基类装饰
-        var ComponentBase = require('../component/base');
-        ComponentBase.call(this, ecConfig, zr);
-        // 可计算特性装饰
-        var CalculableBase = require('./calculableBase');
-        CalculableBase.call(this, zr, option);
+    function Force(ecTheme, messageCenter, zr, option, myChart) {
+        // 基类
+        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
+        // 图表基类
+        ChartBase.call(this);
 
-        var ecData = require('../util/ecData');
-
-        var zrConfig = require('zrender/config');
-        var zrEvent = require('zrender/tool/event');
-        // var zrColor = require('zrender/tool/color');
-        var zrUtil = require('zrender/tool/util');
-        var vec2 = require('zrender/tool/vector');
-
-        var NDArray = require('../util/ndarray');
-
+        var component = myChart.component;
         var legend;
         var self = this;
         self.type = ecConfig.CHART_TYPE_FORCE;
@@ -103,7 +107,10 @@ define(function(require) {
         var centroid = [];
 
         var mouseX, mouseY;
-
+        
+        /**
+         * 绘制图形
+         */
         function _buildShape() {
             legend = component.legend;
             temperature = 1.0;
@@ -116,7 +123,6 @@ define(function(require) {
                 var serie = series[i];
                 if (serie.type === ecConfig.CHART_TYPE_FORCE) {
                     series[i] = self.reformOption(series[i]);
-                    
                     serieName = series[i].name || '';
                     // 系列图例开关
                     self.selectedMap[serieName] = 
@@ -124,11 +130,7 @@ define(function(require) {
                     if (!self.selectedMap[serieName]) {
                         continue;
                     }
-                    self.buildMark(
-                        series[i],
-                        i,
-                        component
-                    );
+                    self.buildMark(i);
                     
                     forceSerie = serie;
 
@@ -202,7 +204,7 @@ define(function(require) {
         function _preProcessData(nodes, links) {
             var filteredNodeMap = [];
             var cursor = 0;
-            filteredNodes = _filter(nodes, function(node, idx) {
+            filteredNodes = _filter(nodes, function (node, idx) {
                 if (!node) {
                     return;
                 }
@@ -219,7 +221,7 @@ define(function(require) {
             var source;
             var target;
             var ret;
-            filteredLinks = _filter(links, function(link, idx){
+            filteredLinks = _filter(links, function (link, idx){
                 source = link.source;
                 target = link.target;
                 ret = true;
@@ -267,10 +269,10 @@ define(function(require) {
                 var r = radius[i];
 
                 var initPos;
-                if (node.initial !== undefined) {
-                    initPos = node.initial;
-                } else if (nodeInitialPos[node.name] !== undefined) {
+                if (nodeInitialPos[node.name] !== undefined) {
                     initPos = nodeInitialPos[node.name];
+                } else if (node.initial !== undefined) {
+                    initPos = node.initial;
                 } else {
                     initPos = _randomInSquare(
                         viewportWidth/2, viewportHeight/2, initSize
@@ -287,8 +289,6 @@ define(function(require) {
                 nodeMasses[i] = r * r * density * 0.035;
 
                 var shape = {
-                    id : zr.newShapeId(self.type),
-                    shape : 'circle',
                     style : {
                         r : r,
                         x : 0,
@@ -302,8 +302,7 @@ define(function(require) {
 
                 // Label 
                 var labelStyle;
-                if (self.query(forceSerie, 'itemStyle.normal.label.show')
-                ) {
+                if (self.query(forceSerie, 'itemStyle.normal.label.show')) {
                     shape.style.text = node.name;
                     shape.style.textPosition = 'inside';
                     labelStyle = self.query(
@@ -342,15 +341,13 @@ define(function(require) {
                         var style = category.itemStyle;
                         if (style) {
                             if (style.normal) {
-                                zrUtil.merge(shape.style, style.normal, {
-                                    overwrite : true
-                                });
+                                zrUtil.merge(shape.style, style.normal, true);
                             }
                             if (style.emphasis) {
                                 zrUtil.merge(
                                     shape.highlightStyle, 
                                     style.emphasis, 
-                                    { overwrite : true }
+                                    true
                                 );
                             }
                         }
@@ -359,26 +356,21 @@ define(function(require) {
                 if (typeof(node.itemStyle) !== 'undefined') {
                     var style = node.itemStyle;
                     if(style.normal ){ 
-                        zrUtil.merge(shape.style, style.normal, {
-                            overwrite : true
-                        });
+                        zrUtil.merge(shape.style, style.normal, true);
                     }
                     if(style.normal ){ 
-                        zrUtil.merge(shape.highlightStyle, style.emphasis, {
-                            overwrite : true
-                        });
+                        zrUtil.merge(shape.highlightStyle, style.emphasis, true);
                     }
                 }
                 
                 // 拖拽特性
-                self.setCalculable(shape);
-                shape.dragEnableTime = 0;
-                shape.ondragstart = self.shapeHandler.ondragstart;
-                shape.draggable = true;
+                if (forceSerie.draggable) {
+                    self.setCalculable(shape);
+                    shape.dragEnableTime = 0;
+                    shape.ondragstart = self.shapeHandler.ondragstart;
+                    shape.draggable = forceSerie.draggable;
+                }
                 
-                nodeShapes.push(shape);
-                self.shapeList.push(shape);
-
                 var categoryName = '';
                 if (typeof(node.category) !== 'undefined') {
                     var category = categories[node.category];
@@ -402,6 +394,10 @@ define(function(require) {
                     // value
                     node.value
                 );
+                
+                shape = new CircleShape(shape);
+                nodeShapes.push(shape);
+                self.shapeList.push(shape);
                 zr.addShape(shape);
             }
 
@@ -422,8 +418,6 @@ define(function(require) {
                 }
 
                 var linkShape = {
-                    id : zr.newShapeId(self.type),
-                    shape : 'line',
                     style : {
                         xStart : 0,
                         yStart : 0,
@@ -439,21 +433,16 @@ define(function(require) {
                 zrUtil.merge(linkShape.highlightStyle, linkEmphasisStyle);
                 if (typeof(link.itemStyle) !== 'undefined') {
                     if(link.itemStyle.normal){
-                        zrUtil.merge(linkShape.style, link.itemStyle.normal, {
-                            overwrite : true
-                        });
+                        zrUtil.merge(linkShape.style, link.itemStyle.normal, true);
                     }
                     if(link.itemStyle.emphasis){
                         zrUtil.merge(
                             linkShape.highlightStyle, 
                             link.itemStyle.emphasis, 
-                            { overwrite : true }
+                            true
                         );
                     }
                 }
-
-                linkShapes.push(linkShape);
-                self.shapeList.push(linkShape);
 
                 var source = filteredNodes[link.source];
                 var target = filteredNodes[link.target];
@@ -482,20 +471,21 @@ define(function(require) {
                     true
                 );
 
+                linkShape = new LineShape(linkShape);
+                linkShapes.push(linkShape);
+                self.shapeList.push(linkShape);
                 zr.addShape(linkShape);
 
                 // Arrow shape
                 if (forceSerie.linkSymbol) {
                     var arrowShape = {
-                        id : zr.newShapeId(self.type),
-                        shape : 'icon',
                         style: {
                             x: -5,
                             y: 0,
                             width: forceSerie.linkSymbolSize[0],
                             height: forceSerie.linkSymbolSize[1],
                             iconType: forceSerie.linkSymbol,
-                            brushType: "fill",
+                            brushType: 'fill',
                             // Use same style with link shape
                             color: linkShape.style.strokeColor,
                             opacity: linkShape.style.opacity,
@@ -508,6 +498,7 @@ define(function(require) {
                         position: [0, 0],
                         rotation: 0
                     };
+                    arrowShape = new IconShape(arrowShape);
                     self.shapeList.push(arrowShape);
                     arrowShapes.push(arrowShape);
                     zr.addShape(arrowShape);
@@ -523,7 +514,7 @@ define(function(require) {
 
         function _updateLinkShapes() {
             var v = vec2.create();
-            var right = vec2.create(1, 0);
+            //var right = vec2.create(1, 0);
             for (var i = 0, len = filteredLinks.length; i < len; i++) {
                 var link = filteredLinks[i];
                 var linkShape = linkShapes[i];
@@ -545,11 +536,11 @@ define(function(require) {
                     vec2.scaleAndAdd(
                         arrowShape.position, arrowShape.position, v, targetShape.style.r + 2
                     );
-
+                    var angle;
                     if (v[1] < 0) {
-                        var angle = 2 * Math.PI - Math.acos(-v[0]);
+                        angle = 2 * Math.PI - Math.acos(-v[0]);
                     } else {
-                        var angle = Math.acos(-v[0]);
+                        angle = Math.acos(-v[0]);
                     }
                     arrowShape.rotation = angle  - Math.PI / 2;
                 }
@@ -635,15 +626,13 @@ define(function(require) {
             var velocity = [];
             // 计算位置(verlet积分)
             for (var i = 0, l = nodePositions.length; i < l; i++) {
+                var node = filteredNodes[i];
                 var name = filteredNodes[i].name;
                 if (filteredNodes[i].fixed) {
                     // 拖拽同步
                     vec2.set(nodePositions[i], mouseX, mouseY);
                     vec2.set(nodePrePositions[i], mouseX, mouseY);
                     vec2.set(nodeShapes[i].position, mouseX, mouseY);
-                    if (filteredNodes[i].initial !== undefined) {
-                        vec2.set(filteredNodes[i].initial, mouseX, mouseY);
-                    }
                     if (nodeInitialPos[name] !== undefined) {
                         vec2.set(nodeInitialPos[name], mouseX, mouseY);
                     }
@@ -666,18 +655,21 @@ define(function(require) {
                 velocity[1] = Math.max(Math.min(velocity[1], 100), -100);
 
                 vec2.add(p, p, velocity);
+
+                if (node.fixY && node.initial) {
+                    p[1] = node.initial[1];
+                }
+                if (node.fixX && node.initial) {
+                    p[0] = node.initial[0];
+                }
+
                 vec2.copy(nodeShapes[i].position, p);
 
                 if (name) {
-                    if (nodeInitialPos[name] === undefined) {
+                    if (!nodeInitialPos[name]) {
                         nodeInitialPos[name] = vec2.create();
                     }
                     vec2.copy(nodeInitialPos[name], p);
-                } else {
-                    if (filteredNodes[i].initial === undefined) {
-                        filteredNodes[i].initial = vec2.create();
-                    }
-                    vec2.copy(filteredNodes[i].initial, p);
                 }
 
                 // if(isNaN(p[0]) || isNaN(p[1])){
@@ -694,25 +686,25 @@ define(function(require) {
             _update(stepTime);
             _updateLinkShapes();
 
-            var tmp = {};
+            //var tmp = {};
             for (var i = 0; i < nodeShapes.length; i++) {
-                var shape = nodeShapes[i];
-                tmp.position = shape.position;
-                zr.modShape(shape.id, tmp, true);
+                //var shape = nodeShapes[i];
+                //tmp.position = shape.position;
+                zr.modShape(nodeShapes[i].id);
             }
-            tmp = {};
+            //tmp = {};
             for (var i = 0; i < linkShapes.length; i++) {
-                var shape = linkShapes[i];
-                tmp.style = shape.style;
-                zr.modShape(shape.id, tmp, true);
+                //var shape = linkShapes[i];
+                //tmp.style = shape.style;
+                zr.modShape(linkShapes[i].id);
             }
 
-            tmp = {};
+            //tmp = {};
             for (var i = 0; i < arrowShapes.length; i++) {
-                var shape = arrowShapes[i];
-                tmp.position = shape.position;
-                tmp.rotation = shape.rotation;
-                zr.modShape(shape.id, tmp, true);
+                //var shape = arrowShapes[i];
+                //tmp.position = shape.position;
+                //tmp.rotation = shape.rotation;
+                zr.modShape(arrowShapes[i].id);
             }
 
             zr.refresh();
@@ -758,7 +750,7 @@ define(function(require) {
         /**
          * 输出动态视觉引导线
          */
-        self.shapeHandler.ondragstart = function() {
+        self.shapeHandler.ondragstart = function () {
             self.isDragstart = true;
         };
         
@@ -770,6 +762,9 @@ define(function(require) {
         function ondragstart(param) {
             if (!self.isDragstart || !param.target) {
                 // 没有在当前实例上发生拖拽行为则直接返回
+                return;
+            }
+            if (!(forceSerie && forceSerie.draggable)) {
                 return;
             }
             var shape = param.target;
@@ -852,7 +847,10 @@ define(function(require) {
         }
         return result;
     }
-
+    
+    zrUtil.inherits(Force, ChartBase);
+    zrUtil.inherits(Force, ComponentBase);
+    
     // 图表注册
     require('../chart').define('force', Force);
 

@@ -68,7 +68,7 @@
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
 option = {
-    color : (function(){
+    color : (function (){
         var zrColor = require('zrender/tool/color');
         return zrColor.getStepColors('yellow', 'red', 28);
     })(),
@@ -85,7 +85,7 @@ option = {
     legend: {
        // orient : 'vertical',
         //x : 'center',
-        data: function(){
+        data: function (){
                 var list = [];
                 for (var i = 1; i <=28; i++) {
                     list.push(i + 2000);
@@ -118,7 +118,7 @@ option = {
         }
     ],
     calculable : false,
-    series : (function(){
+    series : (function (){
         var series = [];
         for (var i = 1; i <= 28; i++) {
             series.push({

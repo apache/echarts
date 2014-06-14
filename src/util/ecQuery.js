@@ -52,7 +52,7 @@ define(function() {
      * 获取多级控制嵌套属性的基础方法
      * 根据ctrList中优先级合并产出目标属性
      */
-    function deepMerge (ctrList, optionLocation) {
+    function deepMerge(ctrList, optionLocation) {
         var finalOption;
         var tempOption;
         var len = ctrList.length;
@@ -64,8 +64,7 @@ define(function() {
                 }
                 else {
                     zrUtil.merge(
-                        finalOption, tempOption,
-                        { 'overwrite': true, 'recursive': true }
+                        finalOption, tempOption, true
                     );
                 }
             }

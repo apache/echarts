@@ -97,7 +97,7 @@ option = {
                 normal : {
                     label : {
                         position : 'inner',
-                        formatter : function(a,b,c,d) {return (d - 0).toFixed(0) + '%'}
+                        formatter : function (a,b,c,d) {return (d - 0).toFixed(0) + '%'}
                     },
                     labelLine : {
                         show : false
@@ -132,7 +132,7 @@ option = {
                     name:'百度',
                     itemStyle : {
                         normal : {
-                            color : (function(){
+                            color : (function (){
                                 var zrColor = require('zrender/tool/color');
                                 return zrColor.getRadialGradient(
                                     300, 200, 110, 300, 200, 140,
@@ -204,7 +204,7 @@ option = {
                     }
                 },
                 emphasis : {
-                    color: (function(){
+                    color: (function (){
                         var zrColor = require('zrender/tool/color');
                         return zrColor.getRadialGradient(
                             650, 200, 80, 650, 200, 120,

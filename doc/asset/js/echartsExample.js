@@ -53,7 +53,7 @@ function refresh(isBtnRefresh){
     myChart = echarts.init(domMain);
     window.onresize = myChart.resize;
     (new Function(editor.doc.getValue()))();
-    myChart.setOption(option, true);
+    myChart.setOption(option, true)
     domMessage.innerHTML = '';
 }
 
@@ -61,12 +61,13 @@ function needMap() {
     var href = location.href;
     return href.indexOf('map') != -1
            || href.indexOf('mix3') != -1
-           || href.indexOf('mix5') != -1;
+           || href.indexOf('mix5') != -1
+           || href.indexOf('dataRange') != -1;
 
 }
 
 var echarts;
-var developMode = false;
+var developMode = true;
 
 if (developMode) {
     // for develop
@@ -100,7 +101,9 @@ else {
             'echarts/chart/radar': fileLocation,
             'echarts/chart/map': fileLocation,
             'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation
+            'echarts/chart/force': fileLocation,
+            'echarts/chart/gauge': fileLocation,
+            'echarts/chart/funnel': fileLocation
         }
     });
 }
@@ -117,6 +120,8 @@ require(
         'echarts/chart/radar',
         'echarts/chart/force',
         'echarts/chart/chord',
+        'echarts/chart/gauge',
+        'echarts/chart/funnel',
         needMap() ? 'echarts/chart/map' : 'echarts'
     ],
     requireCallback

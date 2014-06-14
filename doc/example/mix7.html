@@ -68,7 +68,7 @@
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
 // 虚拟构造同横纵坐标的两组数据
-var sData1 = (function() {
+var sData1 = (function () {
     var d = [];
     var len = 40;
     var value;
@@ -81,7 +81,7 @@ var sData1 = (function() {
     }
     return d;
 })();
-var sData2 = (function() {
+var sData2 = (function () {
     var d = [];
     var len = sData1.length;
     for (var i = 0; i < len; i++) {
@@ -103,9 +103,6 @@ option = {
     tooltip : {
         trigger: 'item',
          formatter: "{b} : {c} ({d}%)"
-    },
-    legend : {
-        data : ['系列1', '系列2']
     },
     toolbox: {
         show : true,
@@ -150,6 +147,9 @@ function buildPieSeries(){
     var yAxis = myChart.component.yAxis.getAxis(0);
     var len = sData1.length;
     option.series = option.series.slice(0,2);
+    option.legend = {
+        data : ['系列1', '系列2']
+    };
     while (len--) {
         option.series.push({
             type: 'pie',

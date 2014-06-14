@@ -6,6 +6,14 @@
  *
  */
 define(function (require) {
+    var Base = require('./base');
+    
+    // 图形依赖
+    var RectangleShape = require('zrender/shape/Rectangle');
+    
+    var ecConfig = require('../config');
+    var zrUtil = require('zrender/tool/util');
+
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -16,134 +24,133 @@ define(function (require) {
      *      @param {number=} option.grid.width 直角坐标系内绘图网格宽度，数值单位px
      *      @param {number=} option.grid.height 直角坐标系内绘图网格高度，数值单位px
      */
-    function Grid(ecConfig, messageCenter, zr, option) {
-        var Base = require('./base');
-        Base.call(this, ecConfig, zr);
+    function Grid(ecTheme, messageCenter, zr, option, myChart) {
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
 
-        var self = this;
-        self.type = ecConfig.COMPONENT_TYPE_GRID;
-
-        var _zlevelBase = self.getZlevelBase();
-
-        var _x;
-        var _y;
-        var _width;
-        var _height;
-        var _zrWidth;
-        var _zrHeight;
-
-        /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
-         * @param {Object} newOption
-         */
-        function init(newOption) {
-            option = newOption;
-
-            option.grid = self.reformOption(option.grid);
-
-            var gridOption = option.grid;
-            _zrWidth = zr.getWidth();
-            _zrHeight = zr.getHeight();
-            _x = self.parsePercent(gridOption.x, _zrWidth);
-            _y = self.parsePercent(gridOption.y, _zrHeight);
-            var x2 = self.parsePercent(gridOption.x2, _zrWidth);
-            var y2 = self.parsePercent(gridOption.y2, _zrHeight);
-            
-
-            if (typeof gridOption.width == 'undefined') {
-                _width = _zrWidth - _x - x2;
-            }
-            else {
-                _width = self.parsePercent(gridOption.width, _zrWidth);
-            }
-
-            if (typeof gridOption.height == 'undefined') {
-                _height = _zrHeight - _y - y2;
-            }
-            else {
-                _height = self.parsePercent(gridOption.height, _zrHeight);
-            }
-            
-            _x = self.subPixelOptimize(_x, gridOption.borderWidth);
-            _y = self.subPixelOptimize(_y, gridOption.borderWidth);
-
-            self.shapeList.push({
-                shape : 'rectangle',
-                id : zr.newShapeId('grid'),
-                zlevel : _zlevelBase,
-                hoverable : false,
-                style : {
-                    x : _x,
-                    y : _y,
-                    width : _width,
-                    height : _height,
-                    brushType : gridOption.borderWidth > 0 ? 'both' : 'fill',
-                    color : gridOption.backgroundColor,
-                    strokeColor: gridOption.borderColor,
-                    lineWidth : gridOption.borderWidth
-                    // type : option.splitArea.areaStyle.type,
-                }
-            });
-            zr.addShape(self.shapeList[0]);
-        }
-
-        function getX() {
-            return _x;
-        }
-
-        function getY() {
-            return _y;
-        }
-
-        function getWidth() {
-            return _width;
-        }
-
-        function getHeight() {
-            return _height;
-        }
-
-        function getXend() {
-            return _x + _width;
-        }
-
-        function getYend() {
-            return _y + _height;
-        }
-
-        function getArea() {
-            return {
-                x : _x,
-                y : _y,
-                width : _width,
-                height : _height
-            };
-        }
-        
-        function refresh(newOption) {
-            if (_zrWidth != zr.getWidth() 
-                || _zrHeight != zr.getHeight()
-                || newOption
-            ) {
-                self.clear();
-                init(newOption || option);
-            }
-        }
-
-        self.init = init;
-        self.getX = getX;
-        self.getY = getY;
-        self.getWidth = getWidth;
-        self.getHeight = getHeight;
-        self.getXend = getXend;
-        self.getYend = getYend;
-        self.getArea = getArea;
-        self.refresh = refresh;
-
-        init(option);
+        this.refresh(option);
     }
+    
+    Grid.prototype = {
+        type : ecConfig.COMPONENT_TYPE_GRID,
 
+        getX : function () {
+            return this._x;
+        },
+
+        getY : function () {
+            return this._y;
+        },
+
+        getWidth : function () {
+            return this._width;
+        },
+
+        getHeight : function () {
+            return this._height;
+        },
+
+        getXend : function () {
+            return this._x + this._width;
+        },
+
+        getYend : function () {
+            return this._y + this._height;
+        },
+
+        getArea : function () {
+            return {
+                x : this._x,
+                y : this._y,
+                width : this._width,
+                height : this._height
+            };
+        },
+        
+        /**
+         * 实在找不到合适的地方做了，各种粗暴的写法~ -_-
+         */
+        refixAxisShape : function(component) {
+            var zeroX;
+            var zeroY;
+            var axisList = component.xAxis._axisList.concat(component.yAxis._axisList);
+            var len = axisList.length;
+            var axis;
+            while (len--) {
+                axis = axisList[len];
+                if (axis.type == ecConfig.COMPONENT_TYPE_AXIS_VALUE 
+                    && axis._min < 0  
+                    && axis._max >= 0
+                ) {
+                    axis.isHorizontal()
+                    ? (zeroX = axis.getCoord(0))
+                    : (zeroY = axis.getCoord(0));
+                }
+            }
+            if (typeof zeroX != 'undefined' || typeof zeroY != 'undefined') {
+                len = axisList.length;
+                while (len--) {
+                    axisList[len].refixAxisShape(zeroX, zeroY);
+                }
+            }
+        },
+        
+        refresh : function (newOption) {
+            if (newOption
+                || this._zrWidth != this.zr.getWidth() 
+                || this._zrHeight != this.zr.getHeight()
+            ) {
+                this.clear();
+                this.option = newOption || this.option;
+                this.option.grid = this.reformOption(this.option.grid);
+    
+                var gridOption = this.option.grid;
+                this._zrWidth = this.zr.getWidth();
+                this._zrHeight = this.zr.getHeight();
+                this._x = this.parsePercent(gridOption.x, this._zrWidth);
+                this._y = this.parsePercent(gridOption.y, this._zrHeight);
+                var x2 = this.parsePercent(gridOption.x2, this._zrWidth);
+                var y2 = this.parsePercent(gridOption.y2, this._zrHeight);
+                
+    
+                if (typeof gridOption.width == 'undefined') {
+                    this._width = this._zrWidth - this._x - x2;
+                }
+                else {
+                    this._width = this.parsePercent(gridOption.width, this._zrWidth);
+                }
+    
+                if (typeof gridOption.height == 'undefined') {
+                    this._height = this._zrHeight - this._y - y2;
+                }
+                else {
+                    this._height = this.parsePercent(gridOption.height, this._zrHeight);
+                }
+                
+                this._x = this.subPixelOptimize(this._x, gridOption.borderWidth);
+                this._y = this.subPixelOptimize(this._y, gridOption.borderWidth);
+    
+                this.shapeList.push(new RectangleShape({
+                    zlevel : this._zlevelBase,
+                    hoverable : false,
+                    style : {
+                        x : this._x,
+                        y : this._y,
+                        width : this._width,
+                        height : this._height,
+                        brushType : gridOption.borderWidth > 0 ? 'both' : 'fill',
+                        color : gridOption.backgroundColor,
+                        strokeColor: gridOption.borderColor,
+                        lineWidth : gridOption.borderWidth
+                        // type : this.option.splitArea.areaStyle.type,
+                    }
+                }));
+                this.zr.addShape(this.shapeList[0]);
+            }
+        }
+    };
+    
+    zrUtil.inherits(Grid, Base);
+    
     require('../component').define('grid', Grid);
     
     return Grid;

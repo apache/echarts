@@ -79,6 +79,11 @@ option = {
         borderRadius : 8,
         borderWidth: 2,
         padding: 10,    // [5, 10, 15, 20]
+        position : function(p) {
+            // 位置回调
+            console.log && console.log(p);
+            return [p[0] + 10, p[1] - 10];
+        },
         textStyle : {
             color: 'yellow',
             decoration: 'none',
@@ -87,12 +92,12 @@ option = {
             fontStyle: 'italic',
             fontWeight: 'bold'
         },
-        formatter: function(params,ticket,callback) {
+        formatter: function (params,ticket,callback) {
             var res = 'Function formatter : <br/>' + params[0][1];
             for (var i = 0, l = params.length; i < l; i++) {
                 res += '<br/>' + params[i][0] + ' : ' + params[i][2];
             }
-            setTimeout(function(){
+            setTimeout(function (){
                 // 仅为了模拟异步回调
                 callback(ticket, res);
             }, 1000)
@@ -114,6 +119,9 @@ option = {
     xAxis : {
         data : ['周一','周二','周三','周四','周五','周六','周日']
     },
+    yAxis : {
+        type : 'value'
+    },
     series : [
         {
             name:'坐标轴触发1',
@@ -131,6 +139,7 @@ option = {
             tooltip : {             // Series config.
                 trigger: 'item',
                 backgroundColor: 'black',
+                position : [0, 0],
                 formatter: "Series formatter: <br/>{a}<br/>{b}:{c}"
             },
             stack: '数据项',

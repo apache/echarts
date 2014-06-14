@@ -2,9 +2,9 @@
 var fs = require('fs');
 var glob = require('glob');
 
-glob('geoJson/*.json', {}, function(err, files) {
+glob('geoJson/*.json', {}, function (err, files) {
 
-    files.forEach(function(file) {
+    files.forEach(function (file) {
         var output = '../' + file.replace('.json', '.js');
         var rawStr = fs.readFileSync(file, 'utf8');
         var json = JSON.parse(rawStr);
@@ -15,19 +15,19 @@ glob('geoJson/*.json', {}, function(err, files) {
         if (!features) {
             return;
         }
-        features.forEach(function(feature){
+        features.forEach(function (feature){
             var encodeOffsets = feature.geometry.encodeOffsets = [];
             var coordinates = feature.geometry.coordinates;
             if (feature.geometry.type === 'Polygon') {
-                coordinates.forEach(function(coordinate, idx){
+                coordinates.forEach(function (coordinate, idx){
                     coordinates[idx] = encodePolygon(
                         coordinate, encodeOffsets[idx] = []
                     );
                 });
             } else if(feature.geometry.type === 'MultiPolygon') {
-                coordinates.forEach(function(polygon, idx1){
+                coordinates.forEach(function (polygon, idx1){
                     encodeOffsets[idx1] = [];
-                    polygon.forEach(function(coordinate, idx2) {
+                    polygon.forEach(function (coordinate, idx2) {
                         coordinates[idx1][idx2] = encodePolygon(
                             coordinate, encodeOffsets[idx1][idx2] = []
                         );

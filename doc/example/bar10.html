@@ -78,7 +78,7 @@ option = {
         axisPointer : {            // 坐标轴指示器，坐标轴触发有效
             type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
         },
-        formatter: function(param){
+        formatter: function (param){
             return param[0][1] + '<br/>'
                    + param[0][0] + ' : ' + param[0][2] + '<br/>'
                    + param[1][0] + ' : ' + (param[1][2] + param[0][2]);
@@ -124,7 +124,7 @@ option = {
                     borderColor: 'tomato',
                     borderWidth: 6,
                     label : {
-                        show: true, position: 'inside'
+                        show: true, position: 'insideTop'
                     }
                 }
             },
@@ -142,7 +142,7 @@ option = {
                     label : {
                         show: true, 
                         position: 'top',
-                        formatter: function(a, b, c) {
+                        formatter: function (a, b, c) {
                             for (var i = 0, l = option.xAxis[0].data.length; i < l; i++) {
                                 if (option.xAxis[0].data[i] == b) {
                                     return option.series[0].data[i] + c;

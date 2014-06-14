@@ -69,7 +69,15 @@
                     <textarea id="code" name="code">
 option = {
     tooltip : {
-        trigger: 'item'
+        trigger: 'axis',
+        showDelay : 0,
+        axisPointer:{
+            type : 'cross',
+            lineStyle: {
+                type : 'dashed',
+                width : 1
+            }
+        }
     },
     legend: {
         data:['sin','cos']
@@ -106,7 +114,7 @@ option = {
             name:'sin',
             type:'scatter',
             large: true,
-            data: (function() {
+            data: (function () {
                 var d = [];
                 var len = 10000;
                 var x = 0;
@@ -126,7 +134,7 @@ option = {
             name:'cos',
             type:'scatter',
             large: true,
-            data: (function() {
+            data: (function () {
                 var d = [];
                 var len = 10000;
                 var x = 0;

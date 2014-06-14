@@ -93,7 +93,7 @@ option = {
     ]
 };
 var ecConfig = require('echarts/config');
-myChart.on(ecConfig.EVENT.MAP_SELECTED, function(param){
+myChart.on(ecConfig.EVENT.MAP_SELECTED, function (param){
     var selected = param.selected;
     var str = '当前选择： ';
     for (var p in selected) {

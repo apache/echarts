@@ -73,8 +73,16 @@ option = {
         subtext: '抽样调查来自: Heinz  2003'
     },
     tooltip : {
-        trigger: 'item',
-        formatter : function(value) {
+        trigger: 'axis',
+        showDelay : 0,
+        axisPointer:{
+            type : 'cross',
+            lineStyle: {
+                type : 'dashed',
+                width : 1
+            }
+        },
+        formatter : function (value) {
             if (value[2].length > 1) {
                 return value[0] + ' :<br/>'
                    + value[2][0] + 'cm ' 

@@ -105,7 +105,7 @@ option = {
             itemStyle: {        // 系列级个性化样式，纵向渐变填充
                 normal: {
                     borderColor:'red',
-                    color : (function(){
+                    color : (function (){
                         var zrColor = require('zrender/tool/color');
                         return zrColor.getLinearGradient(
                             0, 400, 0, 300,
@@ -116,7 +116,7 @@ option = {
                 emphasis: {
                     borderWidth: 5,
                     borderColor:'green',
-                    color: (function(){
+                    color: (function (){
                         var zrColor = require('zrender/tool/color');
                         return zrColor.getLinearGradient(
                             0, 400, 0, 300,
@@ -180,7 +180,7 @@ option = {
             itemStyle: {
                 normal: {                   // 系列级个性化，横向渐变填充
                     borderRadius: 5,
-                    color : (function(){
+                    color : (function (){
                         var zrColor = require('zrender/tool/color');
                         return zrColor.getLinearGradient(
                             0, 0, 1000, 0,
