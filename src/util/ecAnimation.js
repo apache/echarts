@@ -149,12 +149,6 @@ define(function (require) {
      * @param {tring} easing
      */
     function ring(zr, oldShape, newShape, duration, easing) {
-        if (!oldShape) {        // add
-            
-        }
-        else {                  // mod
-            
-        }
         var x = newShape.style.x;
         var y = newShape.style.y;
         var r0 = newShape.style.r0;
@@ -183,7 +177,7 @@ define(function (require) {
                 .start(easing);
         }
         else {
-            newShape.style.r0 = oldShape.style.r0;
+            newShape.style.r0 = newShape.style.r;
             
             zr.addShape(newShape);
             zr.animate(newShape.id, 'style')

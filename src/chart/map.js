@@ -256,6 +256,7 @@ define(function (require) {
                 self._buildMark(mt, ms);
                 if (--self._mapDataRequireCounter <= 0) {
                     self.addShapeList();
+                    self.zr.refresh();
                 }
             };
         },
