@@ -836,7 +836,9 @@ define(function() {
             itemStyle : {
                 normal : {
                     label : {
-                        show : true
+                        show : true,
+                        rotate: false,
+                        distance: 10
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     lineStyle : {
