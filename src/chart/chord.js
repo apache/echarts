@@ -288,6 +288,9 @@ define(function (require) {
             var rotateLabel = this.query(
                 this.chordSerieSample, 'itemStyle.normal.label.rotate'
             );
+            var labelDistance = this.query(
+                this.chordSerieSample, 'itemStyle.normal.label.distance'
+            );
 
             var self = this;
             function createMouseOver(idx) {
@@ -404,7 +407,7 @@ define(function (require) {
                     halfAngle = halfAngle * Math.PI / 180;
                     var v = [Math.cos(halfAngle), -Math.sin(halfAngle)];
 
-                    var distance = this.showScaleText ? 45 : 20;
+                    var distance = this.showScaleText ? 35 + labelDistance : labelDistance;
                     var start = vec2.scale([], v, this.outerRadius + distance);
                     vec2.add(start, start, this.center);
 
