@@ -723,6 +723,7 @@
                 normal : {
                     label : {
                         show : true,
+                        rotate: false,
                         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     lineStyle : {

@@ -285,6 +285,9 @@ define(function (require) {
             var labelColor = this.query(
                 this.chordSerieSample, 'itemStyle.normal.label.color'
             );
+            var rotateLabel = this.query(
+                this.chordSerieSample, 'itemStyle.normal.label.rotate'
+            );
 
             var self = this;
             function createMouseOver(idx) {
@@ -409,13 +412,24 @@ define(function (require) {
                         zlevel : this._zlevelBase - 1,
                         hoverable : false,
                         style : {
-                            x : start[0],
-                            y : start[1],
                             text : group.name,
                             textAlign : isRightSide ? 'left' : 'right',
                             color : labelColor
                         }
                     };
+                    if (rotateLabel) {
+                        labelShape.rotation = isRightSide ? halfAngle : Math.PI + halfAngle;
+                        if (isRightSide) {
+                            labelShape.style.x = this.outerRadius + distance;
+                        } else {
+                            labelShape.style.x = -this.outerRadius - distance;
+                        }
+                        labelShape.style.y = 0;
+                        labelShape.position = this.center;
+                    } else {
+                        labelShape.style.x = start[0];
+                        labelShape.style.y = start[1];
+                    }
                     labelShape.style.textColor = this.deepQuery(
                         [group, this.chordSerieSample],
                         'itemStyle.normal.label.textStyle.color'
@@ -538,9 +552,9 @@ define(function (require) {
                     var thelta = ((this.clockWise ? (360 - scaleAngle) : scaleAngle)
                                     + this.startAngle) / 180 * Math.PI;
                     var v = [
-                            Math.cos(thelta),
-                            -Math.sin(thelta)
-                            ];
+                        Math.cos(thelta),
+                        -Math.sin(thelta)
+                    ];
                     var start = vec2.scale([], v, this.outerRadius + 1);
                     vec2.add(start, start, this.center);
                     var end = vec2.scale([], v, this.outerRadius + this.scaleLineLength);
