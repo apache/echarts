@@ -572,7 +572,8 @@ define(function (require) {
                             yEnd : end[1],
                             lineCap : 'round',
                             brushType : 'stroke',
-                            strokeColor : '#666'
+                            strokeColor : '#666',
+                            lineWidth: 1
                         }
                     };
 
