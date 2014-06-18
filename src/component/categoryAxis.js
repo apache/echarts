@@ -633,14 +633,6 @@ define(function (require) {
                         'recursive' : true
                     }
                 );
-                option.axisLabel.textStyle = zrUtil.merge(
-                    option.axisLabel.textStyle || {},
-                    ecConfig.textStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
-                );
             }
             self.clear();
             _buildShape();
