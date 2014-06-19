@@ -356,6 +356,8 @@ define(function(require) {
             }
             
             // 中国地图加入南海诸岛
+            // 不要南海诸岛，影响布局
+            /*
             if (mapType == 'china') {
                 var leftTop = geo2pos(
                     mapType, 
@@ -383,6 +385,7 @@ define(function(require) {
                 });
                 
             }
+            */
             
             return province;
         }
