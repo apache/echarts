@@ -215,6 +215,7 @@ define(function() {
             show: true,
             showContent: true,         // tooltip主体内容
             trigger: 'item',           // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
+            // position : null         // 位置 {Array} | {Function}
             // formatter: null         // 内容格式器：{string}（Template） ¦ {Function}
             islandFormatter: '{a} <br/>{b} : {c}',  // 数据孤岛内容格式器
             showDelay: 20,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
@@ -1010,8 +1011,8 @@ define(function() {
         markPoint : {
             symbol: 'pin',         // 标注类型
             symbolSize: 10,        // 标注大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
-            large : false,
             //symbolRotate : null, // 标注旋转控制
+            large : false,
             effect : {
                 show: false,
                 period: 15,             // 运动周期，无单位，值越大越慢

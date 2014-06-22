@@ -81,6 +81,53 @@
         <span>[+]新增 [-]删除 [^]升级 [#]修复 【】重要</span>
         <div class="row-fluid">
             <div>
+                <h3>2.0.0<small>（2014-06-30）</small></h3>
+                <ul>
+                    <li>【+】 [timeline]新增组件：时间轴（timeline），支持与任意图表组合使用，try <a href="./example/map16.html" target="_blank">bar »</a>、<a href="./example/scatter4.html" target="_blank">scatter »</a>、<a href="./example/pie7.html" target="_blank">pie »</a>、<a href="./example/map14.html" target="_blank">map »</a></li>
+                    <li>【+】 [gauge]新增图表：仪表盘（gauge），查看 <a href="./example.html#gauge " target="_blank">this »</a></li>
+                    <li>【+】 [funnel]新增图表：漏斗图（funnel）查看 <a href="./example.html#funnel " target="_blank">this »</a></li>
+                    <li>【^】[map]支持svg扩展地图类型，try <a href="./example/map16.html" target="_blank">人体密码 »</a>、<a href="./example/map17.html" target="_blank">足球场 »</a></li>
+                    <li>【^】 [line][bar][scatter][k]全浏览器支持大规模数据模式</li>
+                    <li>【^】 全系统图表动画优化、升级支持状态间的渐变过渡</li>
+                    <li>【^】 全系统图表、组件生命周期管理优化、多次setOption间的状态保持</li>
+                    <li>【+】 标注（markPoint）支持大规模特效，try <a href="./example/map15.html" target="_blank">百度人气（模拟） »</a></li>
+                    <li>【+】 动态标注标线接口，addMarkPoint、addMarkLine、delMarkPoint、delMarkLine见文档 <a href="./doc.html#实例方法 " target="_blank">this »</a></li>
+                    <li>[^] [map]支持缩放极限控制scaleLimit</li>
+                    <li>[^] [bar]标线（markLine）支持类目坐标指定-1、MAXNUMBER实现坐标系内满显示</li>
+                    <li>[^] [bar]附带文本位置itemStyle.X.label.position支持'insideLeft' | 'insideRight' | 'insideTop' | 'insideBottom'</li>
+                    <li>[^] [force]力导向布局图连线支持箭头linkSymbol</li>
+                    <li>[^] [chord]文本旋转支持</li>
+                    <li>[+] [tooltip]指示器（axisPointer）样式新增支持十字准星，原阴影指示器样式areaStyle更名为shadowStyle，详细见<a href="doc.html#Tooltip" target="_blank">this »</a></li>
+                    <li>[^] [tooltip]支持位置修正和回调，position，support <a href="https://github.com/ecomfe/echarts/issues/292" target="_blank">#292 »</a></li>
+                    <li>[^] [dataRange]自适应数据精度</li>
+                    <li>[^] [dataRange]数值区间文本支持个性化formatter，try <a href="./example/dataRange.html" target="_blank">this »</a></li>
+                    <li>[^] [legend]支持自定义图形样式</li>
+                    <li>[^] [legend]定位坐标x、y支持百分比。文本和图形高亮关联。垂直居中优化等</li>
+                    <li>[^] [categoryAxis][valueAxis]坐标轴axisLine支持自动0值定位，onZero</li>
+                    <li>[^] [categoryAxis][valueAxis]坐标轴文本样式axisLabel.textStyle支持align、baseline</li>
+                    <li>[^] [categoryAxis][valueAxis]坐标轴文本axisLabel.clickable，支持点击事件响应，support <a href="https://github.com/ecomfe/echarts/issues/287" target="_blank">#287 »</a></li>
+                    <li>[^] [toolbox]动态类型切换交互优化，点击永远作为启用，弃用原开关状态设计</li>
+                    <li>[^] [title]主（副）标题超链接支持指定窗口打开，target、subtarget</li>
+                    <li>[+] 事件回调时this指向当前实例</li>
+                    <li>[^] 升级标注（markPoint）、标线（markLine）事件参数携带value，dataIndex</li>
+                    <li>[^] 支持自定义过渡动画，loadingEffect.effect外部实现</li>
+                    <li>[#] [scatter]修复散点图emptySymbol不知道lineWidth下无法显示的问题</li>
+                    <li>[#] [radar]雷达图事件携带数据index、文本formatter支持</li>
+                    <li>[#] [chord]和弦图图形元素点击事件响应</li>
+                    <li>[#] [toolbox]修复数据视图dataView在IE下无法全选的问题</li>
+                    <li>[#] [dataRange]修复无法整除导致颜色异常</li>
+                    <li>[#] 修复setOption时series为空无法清除内容，merge无效等问题 </li>
+                    <li>[#] 修复视网屏下的特效shadow偏移问题</li>
+                    <li>[#] 若干issues，fix
+                        <a href="#" target="_blank">折线与坐标轴间1px位移 »</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/294" target="_blank">#294 »</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/303" target="_blank">#303 »</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/364" target="_blank">#364 »</a> 
+                    </li>
+                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.0.0+</li>
+                </ul>
+            </div>
+            <div>
                 <h3>1.4.1<small>（2014-04-14）</small></h3>
                 <ul>
                     <li>[#] [bar][line]空值数据计算特殊值错误</li>

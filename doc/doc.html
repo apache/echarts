@@ -84,6 +84,8 @@
                                 <li><a href="#Chord">chord</a></li>
                                 <li><a href="#Force">force</a></li>
                                 <li><a href="#Map">map</a></li>
+                                <li><a href="#Gauge">gauge</a></li>
+                                <li><a href="#Funnel">funnel</a></li>
                             </ul>
                             <li><a href="#引入ECharts">引入ECharts</a></li>
                             <ul>
@@ -97,11 +99,12 @@
                             <li><a href="#选项">选项</a></li>
                             <ul>
                                 <li><a href="#Option">option</a></li>
-                                <li><a href="#Title">title</a></li>
-                                <li><a href="#Legend">legend</a></li>
-                                <li><a href="#DataRange">dataRange</a></li>
+                                <li><a href="#Timeline">timeline</a></li>
+                                <li><a href="#Title">title</a></li>                                
                                 <li><a href="#Toolbox">toolbox</a></li>
                                 <li><a href="#Tooltip">tooltip</a></li>
+                                <li><a href="#Legend">legend</a></li>
+                                <li><a href="#DataRange">dataRange</a></li>
                                 <li><a href="#DataZoom">dataZoom</a></li>
                                 <li><a href="#Grid">grid</a></li>
                                 <li><a href="#Xaxis">xAxis</a></li>
@@ -196,11 +199,12 @@
                 </p>
                 <div id="doc">
                     <h3>简介<a name="简介"> </a></h3>
-                    <p>ECharts，纯Javascript图表库，基于Canvas，底层依赖<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>，商业产品常用图表库，提供直观，生动，可交互，可个性化定制的数据可视化图表。创新的拖拽重计算、数据视图、值域漫游等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。图表类型支持折线图（区域图）、柱状图（条状图）、散点图（气泡图）、K线图、饼图（环形图）、雷达图（填充雷达图）、和弦图、力导向布局图、地图，同时支持任意维度的堆积和多图表混合展现。</P>
+                    <p>ECharts，缩写来自Enterprise Charts，商业级数据图表，一个纯Javascript的图表库，可以流畅的运行在PC和移动设备上，兼容当前绝大部分浏览器（IE6/7/8/9/10/11，chrome，firefox，Safari等），底层依赖轻量级的Canvas类库<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>，提供直观，生动，可交互，可高度个性化定制的数据可视化图表。创新的拖拽重计算、数据视图、值域漫游等特性大大增强了用户体验，赋予了用户对数据进行挖掘、整合的能力。</P>
+                    <p>支持折线图（区域图）、柱状图（条状图）、散点图（气泡图）、K线图、饼图（环形图）、雷达图（填充雷达图）、和弦图、力导向布局图、地图、仪表盘、漏斗图等11类图表，同时提供标题，详情气泡、图例、值域、数据区域、时间轴、工具箱等7个可交互组件，支持多图表、组件的联动和混搭展现。</P>
                     <img src="asset/img/architecture.png"  alt="Echarts Architecture"/>
                     <h3>名词解析<a name="名词解析"> </a></h3>
                     <p>基本名词</p>
-                    <table cellspacing="0" class="ADoc_table">
+                    <table cellspacing="0" class="ADoc_table full">
                         <tr>
                             <th> 名词 </th>
                             <th> 描述 </th>
@@ -227,70 +231,74 @@
                         </tr>
                         <tr>
                             <td> legend </td>
-                            <td> 图例 </td>
+                            <td> 图例，表述数据和图形的关联 </td>
                         </tr>
                         <tr>
                             <td> dataRange </td>
                             <td> 值域选择，常用于展现地域数据时选择值域范围 </td>
                         </tr>
                         <tr>
-                            <td> toolbox </td>
-                            <td> 辅助工具箱</td>
-                        </tr>
-                        <tr>
-                            <td> tooltip </td>
-                            <td> 气泡提示框，用于展现更详细的数据 </td>
-                        </tr>
-                        <tr>
                             <td> dataZoom </td>
                             <td> 数据区域缩放，常用于展现大数据时选择可视范围 </td>
                         </tr>
                         <tr>
+                            <td> toolbox </td>
+                            <td> 辅助工具箱，辅助功能，如添加标线，框选缩放等</td>
+                        </tr>
+                        <tr>
+                            <td> tooltip </td>
+                            <td> 气泡提示框，常用于展现更详细的数据 </td>
+                        </tr>
+                        <tr>
+                            <td> timeline </td>
+                            <td> 时间轴，常用于展现同一组数据在时间维度上的多份数据 </td>
+                        </tr>
+                        <tr>
                             <td> series </td>
-                            <td> 数据系列 </td>
+                            <td> 数据系列，一个图表可能包含多个系列，每一个系列可能包含多个数据 </td>
                         </tr>
                     </table>
                     <P> 图表名词</P>
-                    <table cellspacing="0" class="ADoc_table">
+                    <table cellspacing="0" class="ADoc_table full">
                         <tr>
                             <th> 名词 </th>
                             <th> 描述 </th>
                         </tr>
                         <tr>
                             <td> line </td>
-                            <td> 折线图，堆积折线图，区域图，堆积区域图 </td>
+                            <td> 折线图，堆积折线图，区域图，堆积区域图。 </td>
                         </tr>
                         <tr>
                             <td> bar </td>
-                            <td> 柱形图（纵向），堆积柱形图，条形图（横向），堆积条形图 </td>
+                            <td> 柱形图（纵向），堆积柱形图，条形图（横向），堆积条形图。 </td>
                         </tr>
                         <tr>
                             <td> scatter </td>
-                            <td> 散点图，气泡图，大规模散点图</td>
+                            <td> 散点图，气泡图。散点图至少需要横纵两个数据，更高维度数据加入时可以映射为颜色或大小，当映射到大小时则为气泡图 </td>
                         </tr>
                         <tr>
                             <td> k </td>
-                            <td> K线图，蜡烛图，</td>
+                            <td> K线图，蜡烛图。常用于展现股票交易数据。 </td>
                         </tr>
                         <tr>
                             <td> pie </td>
-                            <td> 饼图，圆环图 </td>
+                            <td> 饼图，圆环图。饼图支持两种（半径、面积）南丁格尔玫瑰图模式。 </td>
                         </tr>
                         <tr>
                             <td> radar </td>
-                            <td> 雷达图，填充雷达图</td>
+                            <td> 雷达图，填充雷达图。高维度数据展现的常用图表。</td>
                         </tr>
                         <tr>
                             <td> chord </td>
-                            <td> 和弦图 </td>
+                            <td> 和弦图。常用于展现关系数据，外层为圆环图，可体现数据占比关系，内层为各个扇形间相互连接的弦，可体现关系数据 </td>
                         </tr>
                         <tr>
                             <td> force </td>
-                            <td> 力导布局图 </td>
+                            <td> 力导布局图。常用于展现复杂关系网络聚类布局。 </td>
                         </tr>
                         <tr>
                             <td> map </td>
-                            <td> 地图（支持中国及全国34个省市自治区地图） </td>
+                            <td> 地图。内置世界地图、中国及中国34个省市自治区地图数据、可通过标准GeoJson扩展地图类型。支持svg扩展类地图应用，如室内地图、运动场、物件构造等。 </td>
                         </tr>
                     </table>
                     <h3>图表类型<a name="图表类型"> </a></h3>
@@ -332,11 +340,12 @@
                     <h4>单图表类型：scatter<a name="Scatter"> </a></h4>
                     <table cellspacing="0" class="ADoc_table">
                         <tr>
-                            <th> 散点图 </th>
+                            <th colspan=2> 散点图 </th>
                             <th> 气泡图 </th>
                         </tr>
                         <tr>
                             <td><img src="./asset/img/example/scatter1.png" title="" alt="散点图"/></td>
+                            <td><img src="./asset/img/example/dataRange1.png" title="" alt="散点图"/></td>
                             <td><img src="./asset/img/example/scatter2.png" title="" alt="气泡图"/></td>
                         </tr>
                     </table>
@@ -405,13 +414,44 @@
                             <th> 中国地图 </th>
                             <th> 全国34个省市自治区 </th>
                             <th> 世界地图</th>
-                            <th> 子区域模式</th>
                         </tr>
                         <tr>
                             <td><img src="./asset/img/example/map1.png" title="" alt="中国地图"/></td>
                             <td><img src="./asset/img/example/map3.png" title="" alt="全国34个省市自治区"/></td>
                             <td><img src="./asset/img/example/map4.png" title="" alt="世界地图"/></td>
+                        </tr>
+                        <tr>
+                            <th> 子区域模式 </th>
+                            <th> 标准GeoJson扩展 </th>
+                            <th> SVG扩展</th>
+                        </tr>
+                        <tr>
                             <td><img src="./asset/img/example/map8.png" title="" alt="子区域模式"/></td>
+                            <td><img src="./asset/img/example/map6.png" title="" alt="标准GeoJson扩展"/></td>
+                            <td><img src="./asset/img/example/map16.png" title="" alt="SVG扩展"/></td>
+                        </tr>
+                    </table>
+
+                    <h4>单图表类型：gauge<a name="Gauge"> </a></h4>
+                    <table cellspacing="0" class="ADoc_table">
+                        <tr>
+                            <th colspan=2> 仪表盘 </th>
+                        </tr>
+                        <tr>
+                            <td><img src="./asset/img/example/gauge4.png" title="" alt="仪表盘"/></td>
+                            <td><img src="./asset/img/example/gauge3.png" title="" alt="仪表盘"/></td>
+                        </tr>
+                    </table>
+
+                    <h4>单图表类型：funnel<a name="Funnel"> </a></h4>
+                    <table cellspacing="0" class="ADoc_table">
+                        <tr>
+                            <th colspan=3> 漏斗图 </th>
+                        </tr>
+                        <tr>
+                            <td><img src="./asset/img/example/funnel1.png" title="" alt="漏斗图"/></td>
+                            <td><img src="./asset/img/example/funnel2.png" title="" alt="漏斗图"/></td>
+                            <td><img src="./asset/img/example/funnel3.png" title="" alt="漏斗图"/></td>
                         </tr>
                     </table>
                     
@@ -419,8 +459,8 @@
                     <p>echarts提供多种引入方式，请根据你的项目类型选择合适的方式：</p>
                     
                     <h3>模块化包引入<a name="引入ECharts1"> </a></h3>
-                    <P>如果你的项目本身就是模块化的，那引入echarts将很简单，只需要配置好packet路径指向src即可，而且你还可以实现图表的按需加载，由于echarts依赖底层zrender，建议你同时下载<a href="https://github.com/ecomfe/zrender" target="_blank">zrender</a>到本地，可参考<a href="example/demo.html" target="_blank">demo</a>，你需要配置如下。</p>
-                    <p>需要注意的时，包引入提供了开发阶段最大的灵活性，但并不适合直接上线，减少请求的文件数量是前端性能优化中很基本也是很重要的规则，务必在上线时做文件的连接压缩。</P>
+                    <P>如果你熟悉模块化开发，你的项目本身就是模块化且遵循AMD规范的，那引入echarts将很简单，只需要配置好packet路径指向src即可，你将享受到图表的按需加载等最大的灵活性，由于echarts依赖底层zrender，你需要同时下载<a href="https://github.com/ecomfe/zrender" target="_blank">zrender</a>到本地，可参考<a href="example/demo.html" target="_blank">demo</a>，你需要配置如下。</p>
+                    <p>需要注意的是，包引入提供了开发阶段最大的灵活性，但并不适合直接上线，减少请求的文件数量是前端性能优化中最基本但很重要的规则，务必在上线时做文件的连接压缩。</P>
                     <div class="code">
                         <pre>//from echarts example
 require.config({
@@ -441,14 +481,13 @@ require.config({
                     </div>
                     
                     <h3>模块化单文件引入（<b>推荐</b>）<a name="引入ECharts2"> </a></h3>
-                    <P>我们建议你使用单一文件引入，如你所发现的，build文件夹下已经生成了多个单文件见下，根据你的需求使用：</P>
+                    <P>如果你使用模块化开发但并没有自己的打包合并环境，或者说你不希望在你的项目里引入第三方库的源文件，我们建议你使用单文件引入，同模块化包引入一样，你需要熟悉模块化开发，这种方式只是我们预先帮你把常用图表组合连接合并在一起，你只需一个符合AMD规范的加载器，同时引入一个echarts相关js即可。如你所发现的，build文件夹下已经生成了不同组合的多个单文件见下，根据你的需求场景只需要使用其中一个即可：</P>
                     <ul>
                         <li>echarts.js : 经过压缩，包含除地图外的全部图表</li>
                         <li>echarts-original.js : 未压缩，可用于调试，包含除地图外的全部图表</li>
                         <li>echarts-map.js : 经过压缩，全图表，包含world，china以及34个省市级地图数据</li>
                         <li>echarts-original-map.js : 未压缩，可用于调试，全图表，包含world，china以及34个省市级地图数据</li>
                     </ul>
-                    <p>如果需要更加定制的打包文件，建议在node环境下安装<a href="http://requirejs.org/docs/optimization.html" target="_blank">require.js</a>，build文件夹内为你准备好配置项，可根据你的项目需求，修改config-tpl.js以构建你的最佳配置。</p>
                     <p>采用单一文件使用例子见<a href="example/www/index.html" target="_blank">ECharts单一文件引入</a>，存放在example/www下，你需要配置如下：</p>
                     <div class="code">
                         <pre>//from echarts example
@@ -480,7 +519,7 @@ require(
 );
 </pre>
                     </div>
-                    <p>总结来说，模块化如何引入ECharts，你都需要如下4步：</p>
+                    <p>总结来说，模块化引入ECharts，你都需要如下4步：</p>
                     <ol>
                         <li>引入一个模块加载器，如<a href="https://github.com/ecomfe/esl" target="_blank">esl.js</a>或者<a href="http://requirejs.org" target="_blank">require.js</a></li>
                         <li>为ECharts准备一个具备大小（宽高）的Dom（当然可以是动态生成的）</li>
@@ -489,17 +528,18 @@ require(
                     </ol>
 
                     <h3>标签式单文件引入<a name="引入ECharts3"> </a></h3>
-                    <P>自1.3.5开始，ECharts提供标签式引入。如果你的项目本身并不是基于模块化开发的，或者是基于CMD规范（如使用的是seajs），那么引入基于AMD模块化的echarts可能并不方便，我们建议你采用srcipt标签式引入，忘掉require，srcipt标签引入echarts后将可以直接使用两个全局的命名空间：echarts，zrender，可参考<a href="example/www2/index.html" target="_blank">ECharts标签式引入</a></p>
+                    <P>自1.3.5开始，ECharts提供标签式引入。如果你的项目本身并不是基于模块化开发的，或者是基于CMD规范（如使用的是seajs），那么引入基于AMD模块化的echarts可能并不方便，我们建议你采用srcipt标签式引入，忘掉require，srcipt标签引入echarts后将可以直接使用两个全局的命名空间：echarts，zrender，可参考<a href="example/www2/index.html" target="_blank">ECharts标签式引入</a>，需要注意的是excanvas依赖body标签插入Canvas节点去判断Canvas的支持，如果你把引用echarts的script标签放置head内在IE8-的浏览器中会出现报错，解决的办法就是把标签移动到body内（后）。</p>
+                    <p>标签式引入环境中，常用模块的引用可通过命名空间直取，同模块化下的路径结构，如：<br/>echarts.config = require('echarts/config')， zrender.tool.color = require('zrender/tool/color')</p>
                     <div class="code">
                         <pre>//from echarts example
-&lt; script src="example/www2/js/echarts-plain.js" &gt; &lt; /script&gt;
-&lt; script &gt;
+&lt;script src="example/www2/js/echarts-plain.js"&gt;&lt;/script&gt;
+&lt;script&gt;
     var myChart = echarts.init(domMain);
     var option = {
         ...
     }
     myChart.setOption(option);
-&lt; /script&gt;
+&lt;/script&gt;
 </pre>
                     </div>
                     <p>可以直接引入的单文件如下：</p>
@@ -512,10 +552,10 @@ require(
                         
                     <h3>自定义构建echarts单文件<a name="自定义构建echarts单文件"></a></h3>
                     <p>
-                        默认echarts通过build目录下的build.sh(build.bat)脚本可以输出是否包含地图，是否压缩和是否打包esl（可以标签引入）排列组合总共6个版本的echarts单文件，大部分场景下已经够用，但是如果你还是觉得很多图表用不到还放在里面非常浪费，可以通过build目录下的build.js来构建一个更加贴身的echarts单文件。
+                        默认echarts通过build目录下的build.sh（build.bat）脚本可以输出是否包含地图，是否压缩和是否打包esl（可以标签引入）排列组合总共6个版本的echarts单文件，大部分场景下已经够用，但是如果你还是觉得很多图表用不到还放在里面非常浪费，可以通过build目录下的build.js来构建一个更加贴身的echarts单文件。
                     </p>
                     <p>
-                        运行build.js只需要一个<a href="http://nodejs.org/">node</a>环境，然后就可以直接在终端里运行 node build.js 运行构建脚本了，具体示例：
+                        运行build.js只需要一个<a href="http://nodejs.org/">node</a>环境， build文件夹内已经为你准备好配置项， 可根据你的项目需求修改config-tpl.js以构建你的最佳配置， 你甚至可以在终端里通过命令行参数的方式运行 node build.js 构建脚本，具体示例：
                     </p>
                     <div class="code">
                         <pre>node build.js optimize=true exclude=map,force,line output=echarts.js plain=true</pre>
@@ -548,7 +588,7 @@ require(
                     <p>更详细的配置在build/config-tpl.js目录下，具体的配置项使用可以参考requirejs optimizer的<a href="https://github.com/jrburke/r.js/blob/master/build/example.build.js">example build file</a>，要注意的的是optimize, include, wrap三个配置项会在build过程中根据输入的参数被改掉，所以不建议直接修改这三个配置项，修改config-tpl.js最常见的场景是zrender和echarts不在同一个目录下从而需要修改zrender的package路径。</p>
 
                     <h3>初始化<a name="初始化"> </a></h3>
-                    <p>通过require获得echarts接口后可实例化图表，echarts接口仅有一个方法init，执行init时传入一个具备大小的dom节点（width、height可被计算得到即可，不一定可见）后即可实例化出图表对象，图表库实现为多实例的，同一页面可在多个dom上init出多个图表，同一个dom上多次init将自动释放已有实例（1.4.0+）。init方法说明如下：</p>
+                    <p>通过require获得echarts接口后（或者命名空间上）可实例化图表，echarts接口仅有一个方法init，执行init时传入一个具备大小的dom节点（width、height可被计算得到即可，不一定可见）后即可实例化出图表对象，图表库实现为多实例的，同一页面可在多个dom上init出多个图表，同一个dom上多次init将自动释放已有实例（1.4.0+）。init方法说明如下：</p>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
                             <th> 名称 </th>
@@ -590,9 +630,9 @@ myChart.setOption({...}); </pre>
                     <div class="code">
                         <pre>
 // 不习惯模块化的你当然可以
-var ECharts;
+var echarts;
 require(['echarts'], function (ec){
-    ECharts = ec;
+    echarts = ec;
 });
 // 是的，把echarts加载后保存起来作为命名空间使用</pre>
                     </div>
@@ -608,22 +648,36 @@ require(['echarts'], function (ec){
                         <tr>
                             <td><b>{self}</b> setOption</td>
                             <td><b>{Object}</b> option, <br/><b>{boolean=}</b> notMerge</td>
-                            <td>万能接口，配置图表实例任何可配置选项（详见<a href="#Option" title="">option</a>），多次调用时option选项是默认是合并（merge）的，<br/>如果不需求，可以通过notMerger参数为true阻止与上次option的合并。 </td>
+                            <td>万能接口，配置图表实例任何可配置选项（详见<a href="#Option" title="">option</a>），多次调用时option选项默认是合并（merge）的，merge的设计可以让setOption很方便的成为更新任何属性的万能方法，比如你仅需要改title文字，则仅需要：<br/>&nbsp;&nbsp;&nbsp;&nbsp;setOption({title : {text : '新标题'}}); <br/>如果不需要，可以通过notMerger参数为true阻止与上次option的合并，如多次setOption间数据改变、长度不一致等的场景。
+                            <br/><br/>2.0.0起支持timeline组件，option中包含timeline（详见<a href="#Timeline" title="">timeline</a>）时每一个独立的option应该放置到命名为options的数组内，如
+                            <pre>myCharts.setOption({
+    timeline : {...},
+    options : [
+        {                // option1
+            title : {...},
+            series : [...]
+        },  
+        {...},           // option2
+        ...
+    ]
+});</pre>
+
+                            </td>
                         </tr>
                         <tr>
                             <td><b>{Object}</b> getOption</td>
                             <td><b>{void}</b></td>
-                            <td>返回内部持有的当前显示option克隆  </td>
+                            <td>返回内部持有的当前显示option克隆（拷贝）。  </td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> setSeries</td>
                             <td><b>{Array}</b> series, <br/><b>{boolean=}</b> notMerge</td>
-                            <td>数据接口，驱动图表生成的数据内容（详见<a href="#Series" title="">series</a>），效果等同调用setOption({series:{...}}) </td>
+                            <td>数据接口，驱动图表生成的数据内容（详见<a href="#Series" title="">series</a>），效果等同调用setOption({series : {...}}) </td>
                         </tr>
                         <tr>
                             <td><b>{Object}</b> getSeries</td>
                             <td><b>{void}</b></td>
-                            <td>返回内部持有的当前显示series克隆，效果同return getOption().series</td>
+                            <td>返回内部持有的当前显示series克隆（拷贝），效果同return getOption().series</td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> addData</td>
@@ -647,21 +701,66 @@ require(['echarts'], function (ec){
                             </td>
                         </tr>
                         <tr>
+                            <td><b>{self}</b> addMarkPoint</td>
+                            <td><b>{number}</b> seriesIdx
+                                <br/><b>{Object}</b> markData
+                            </td>
+                            <td>新增标注接口，其中
+                                <br/>seriesIdx 系列索引
+                                <br/>markData [标注]对象，同<a href="#SeriesMarkPoint" title="">series.markPoint</a>，支持多个
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>{self}</b> addMarkLine</td>
+                            <td><b>{number}</b> seriesIdx
+                                <br/><b>{Object}</b> markData
+                            </td>
+                            <td>新增标线接口，其中
+                                <br/>seriesIdx 系列索引
+                                <br/>markData [标线]对象，同<a href="#SeriesMarkLine" title="">series.markLine</a>，支持多个
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>{self}</b> delMarkPoint</td>
+                            <td><b>{number}</b> seriesIdx
+                                <br/><b>{string}</b> markName
+                            </td>
+                            <td>删除单个标注接口，其中
+                                <br/>seriesIdx 系列索引
+                                <br/>markName [标注]名称
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>{self}</b> delMarkLine</td>
+                            <td><b>{number}</b> seriesIdx
+                                <br/><b>{string}</b> markName
+                            </td>
+                            <td>删除单个标线接口，其中
+                                <br/>seriesIdx 系列索引
+                                <br/>markName [标线]名称
+                            </td>
+                        </tr>
+                        <tr>
                             <td><b>{self}</b> on</td>
                             <td><b>{string}</b> eventName, <br/><b>{Function}</b> eventListener</td>
-                            <td>事件绑定，支持事件有：
-                                <br/>REFRESH，RESTORE，RESIZE，CLICK，HOVER，
-                                <br/>DATA_CHANGED，MAGIC_TYPE_CHANGED，DATA_VIEW_CHANGED，
-                                <br/>DATA_ZOOM，DATA_RANGE，MAP_ROAM，
-                                <br/>LEGEND_SELECTED，MAP_SELECTED，PIE_SELECTED，
-                                <br/>事件命名统一挂载到require('echarts/config').EVENT（非模块化为echarts.config.EVENT）命名空间下，建议使用此命名空间作为事件名引用。
-                                     <a href="./example/event.html" target="_blank">事件调试 »</a>
+                            <td>事件绑定，事件命名统一挂载到require('echarts/config').EVENT（非模块化为echarts.config.EVENT）命名空间下，建议使用此命名空间作为事件名引用，当前版本支持事件有：
+                                <br/>REFRESH（刷新），RESTORE（还原），RESIZE（显示空间变化），CLICK（点击），HOVER（悬浮），
+                                <br/>DATA_CHANGED（数据修改），DATA_VIEW_CHANGED（数据视图修改），
+                                <br/>MAGIC_TYPE_CHANGED（动态类型切换），TIMELINE_CHANGED（时间轴变化），
+                                <br/>DATA_ZOOM（数据区域缩放），DATA_RANGE（值域漫游），MAP_ROAM（地图漫游），
+                                <br/>LEGEND_SELECTED（图例选择），MAP_SELECTED（地图选择），PIE_SELECTED（饼图选择）
+                                <br/><a href="./example/event.html" target="_blank">事件调试 » </a>
                             </td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> un</td>
                             <td><b>{string}</b> eventName, <br/><b>{Function}</b> eventListener</td>
                             <td>事件解绑定 </td>
+                        </tr>
+                        <tr>
+                            <td><b>{self}</b> setTheme</td>
+                            <td><b>{string | Object}</b> theme</td>
+                            <td> 设置主题，内置主题（暂无）直接传入名称，自定义扩展主题可传入主题对象 </td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> connect</td>
@@ -680,7 +779,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td><b>{self}</b> showLoading</td>
                             <td><b>{Object}</b> loadingOption</td>
-                            <td> 过渡控制（详见<a href="#Loadingoption" title="">loadingOption</a>），显示loading（读取中） </td>
+                            <td> 过渡控制（详见<a href="#Loadingoption" title="">loadingOption</a>），显示loading（读取中） <a href="example/loading.html" target="_blank">try this »</a></td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> hideLoading</td>
@@ -705,7 +804,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td><b>{self}</b> resize</td>
                             <td><b>{void}</b></td>
-                            <td>ECharts没有绑定resize事件，显示区域大小发生改变内部并不知道，<br/>使用方可以根据自己的需求绑定关心的事件，主动调用resize达到区域更新的效果。</td>
+                            <td>ECharts没有绑定resize事件，显示区域大小发生改变内部并不知道，使用方可以根据自己的需求绑定关心的事件，主动调用resize达到区域更新的效果。</td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> refresh</td>
@@ -769,17 +868,13 @@ require(['echarts'], function (ec){
                             </td>
                         </tr>
                         
-                         <tr class='bgRed'>
+                        <tr class='bgRed'>
+                            <td> <b>{Object}</b> timeline </td>
+                            <td> 时间轴（详见<a href="#Timeline" title="">timeline</a>），每个图表最多仅有一个时间轴控件 </td>
+                        </tr>
+                        <tr class='bgRed'>
                             <td> <b>{Object}</b> title </td>
                             <td> 标题（详见<a href="#Title" title="">title</a>），每个图表最多仅有一个标题控件 </td>
-                        </tr>
-                        <tr class='bgRed'>
-                            <td> <b>{Object}</b> legend </td>
-                            <td> 图例（详见<a href="#Legend" title="">legend</a>），每个图表最多仅有一个图例，混搭图表共享 </td>
-                        </tr>
-                        <tr class='bgRed'>
-                            <td> <b>{Object}</b> dataRange </td>
-                            <td> 值域选择（详见<a href="#DataRange" title="">dataRange</a>）,值域范围 </td>
                         </tr>
                         <tr class='bgRed'>
                             <td> <b>{Object}</b> toolbox </td>
@@ -789,6 +884,14 @@ require(['echarts'], function (ec){
                             <td> <b>{Object}</b> tooltip </td>
                             <td> 提示框（详见<a href="#Tooltip" title="">tooltip</a>），鼠标悬浮交互时的信息提示 </td>
                         </tr>
+                        <tr class='bgRed'>
+                            <td> <b>{Object}</b> legend </td>
+                            <td> 图例（详见<a href="#Legend" title="">legend</a>），每个图表最多仅有一个图例，混搭图表共享 </td>
+                        </tr>
+                        <tr class='bgRed'>
+                            <td> <b>{Object}</b> dataRange </td>
+                            <td> 值域选择（详见<a href="#DataRange" title="">dataRange</a>）,值域范围 </td>
+                        </tr>                        
                         <tr class='bgRed'>
                             <td> <b>{Object}</b> dataZoom </td>
                             <td> 数据区域缩放（详见<a href="#DataZoom" title="">dataZoom</a>）,数据展现范围选择 </td>
@@ -830,6 +933,11 @@ require(['echarts'], function (ec){
                             <td> 主标题文本超链接 </td>
                         </tr>
                         <tr>
+                            <td> <b>{string}</b> target </td>
+                            <td> null </td>
+                            <td> 指定窗口打开主标题超链接，支持'self' | 'blank'，不指定等同为'blank'（新窗口） </td>
+                        </tr>
+                        <tr>
                             <td> <b>{string}</b> subtext </td>
                             <td> '' </td>
                             <td> 副标题文本，'\n'指定换行 </td>
@@ -838,6 +946,11 @@ require(['echarts'], function (ec){
                             <td> <b>{string}</b> sublink </td>
                             <td> '' </td>
                             <td> 副标题文本超链接 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> subtarget </td>
+                            <td> null </td>
+                            <td> 指定窗口打开副标题超链接，支持'self' | 'blank'，不指定等同为'blank'（新窗口） </td>
                         </tr>
                         <tr>
                             <td> <b>{string | number}</b> x </td>
@@ -877,7 +990,7 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{number}</b> itemGap </td>
-                            <td> 10 </td>
+                            <td> 5 </td>
                             <td> 主副标题纵向间隔，单位px，默认为10</td>
                         </tr>
                         
@@ -895,200 +1008,6 @@ require(['echarts'], function (ec){
                     </table>
                     <p><img src="./asset/img/doc/title.png" title="" alt="标题"/></P>
 
-
-                    <h4>legend<a name="Legend"> </a></h4>
-                    <P> 图例，每个图表最多仅有一个图例。<a href="example/legend.html" target="_blank">try this »</a></P>
-                    <table cellspacing="0" class="ADoc_table full">
-                        <tr>
-                            <th> 名称 </th>
-                            <th> 默认值 </th>
-                            <th> 描述 </th>
-                        </tr>
-                        <tr>
-                            <td> <b>{string}</b> orient </td>
-                            <td> 'horizontal' </td>
-                            <td> 布局方式，默认为水平布局，可选为：'horizontal' | 'vertical' </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{string | number}</b> x </td>
-                            <td> 'center' </td>
-                            <td> 水平安放位置，默认为全图居中，可选为：'center' | 'left' | 'right' | <b>{number}</b>（x坐标，单位px） </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{string | number}</b> y </td>
-                            <td> 'top' </td>
-                            <td> 垂直安放位置，默认为全图顶端，可选为：'top' | 'bottom' | 'center' | <b>{number}</b>（y坐标，单位px） </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{color}</b> backgroundColor </td>
-                            <td> 'rgba(0,0,0,0)' </td>
-                            <td> 图例背景颜色，默认透明 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{string}</b> borderColor </td>
-                            <td> '#ccc' </td>
-                            <td> 图例边框颜色 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{number}</b> borderWidth </td>
-                            <td> 0 </td>
-                            <td> 图例边框线宽，单位px，默认为0（无边框） </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{number | Array}</b> padding </td>
-                            <td> 5 </td>
-                            <td> 图例内边距，单位px，默认各方向内边距为5，接受数组分别设定上右下左边距，同css，见下图 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{number}</b> itemGap </td>
-                            <td> 10 </td>
-                            <td> 各个item之间的间隔，单位px，默认为10，横向布局时为水平间隔，纵向布局时为纵向间隔，见下图 </td>
-                        </tr>
-                        <!--
-                        <tr>
-                            <td> <b>{number}</b> itemWidth </td>
-                            <td> 20 </td>
-                            <td> 图例图形宽度 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{number}</b> itemHeight </td>
-                            <td> 14 </td>
-                            <td> 图例图形高度 </td>
-                        </tr>
-                        -->
-                        <tr>
-                            <td> <b>{Object}</b> textStyle </td>
-                            <td> {color: '#333'} </td>
-                            <td> 默认只设定了图例文字颜色（详见<a href="#TextStyle" title="">textStyle</a>） ，更个性化的是，要指定文字颜色跟随图例，可设color为'auto'</td>
-                        </tr>
-                        <tr>
-                            <td> <b>{boolean | string}</b> selectedMode </td>
-                            <td> true </td>
-                            <td> 选择模式，默认开启图例开关，可选single，multiple </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{Object}</b> selected </td>
-                            <td> null </td>
-                            <td> 配置默认选中状态，可配合LEGEND.SELECTED事件做动态数据载入，<a href="example/legend.html" target="_blank">try this »</a> </td>
-                        </tr>
-                        <tr>
-                            <td> {Array &lt;string&gt;} data </td>
-                            <td> [ ] </td>
-                            <td> 图例内容数组，数组项通常为<b>{string}</b>，每一项代表一个系列的name。
-                                <br/>使用根据该值索引<a href="#Series" title="">series</a>中同名系列所用的图表类型和itemStyle，如果索引不到，该item将默认为没启用状态。
-                                <br/>如需个性化图例文字样式，可把数组项改为<b>{Object}</b>，格式为{name: <b>{string}</b>, textStyle: <b>{Object}</b>}
-                            </td>
-                        </tr>
-                    </table>
-                    <p><img src="./asset/img/doc/legend.png" title="" alt="图例"/></P>
-
-                    <h4>dataRange<a name="DataRange"> </a></h4>
-                    <P> 值域选择，每个图表最多仅有一个值域控件。<a href="example/dataRange.html" target="_blank">try this »</a></P>
-                    <table cellspacing="0" class="ADoc_table full">
-                        <tr>
-                            <th> 名称 </th>
-                            <th> 默认值 </th>
-                            <th> 描述 </th>
-                        </tr>
-                        <tr>
-                            <td> <b>{string}</b> orient </td>
-                            <td> 'vertical' </td>
-                            <td> 布局方式，默认为垂直布局，可选为：'horizontal' | 'vertical' </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{string | number}</b> x </td>
-                            <td> 'left' </td>
-                            <td> 水平安放位置，默认为全图左对齐，可选为：'center' | 'left' | 'right' | <b>{number}</b>（x坐标，单位px） </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{string | number}</b> y </td>
-                            <td> 'bottom' </td>
-                            <td> 垂直安放位置，默认为全图底部，可选为：'top' | 'bottom' | 'center' | <b>{number}</b>（y坐标，单位px） </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{color}</b> backgroundColor </td>
-                            <td> 'rgba(0,0,0,0)' </td>
-                            <td> 值域控件背景颜色，默认透明 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{string}</b> borderColor </td>
-                            <td> '#ccc' </td>
-                            <td> 值域控件边框颜色 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{number}</b> borderWidth </td>
-                            <td> 0 </td>
-                            <td> 值域控件边框线宽，单位px，默认为0（无边框） </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{number | Array}</b> padding </td>
-                            <td> 5 </td>
-                            <td> 值域控件内边距，单位px，默认各方向内边距为5，接受数组分别设定上右下左边距，同css，见下图 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{number}</b> itemGap </td>
-                            <td> 10 </td>
-                            <td> 各个item之间的间隔，单位px，默认为10，横向布局时为水平间隔，纵向布局时为纵向间隔，见下图 </td>
-                        </tr>
-                        <!--
-                        <tr>
-                            <td> <b>{number}</b> itemWidth </td>
-                            <td> 20 </td>
-                            <td> 值域控件图形宽度 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{number}</b> itemHeight </td>
-                            <td> 14 </td>
-                            <td> 值域控件图形高度 </td>
-                        </tr>
-                        -->
-                        <tr>
-                            <td> <b>{number}</b> min </td>
-                            <td> null </td>
-                            <td> 指定的最小值，eg: 0，默认无，必须参数</td>
-                        </tr>
-                        <tr>
-                            <td> <b>{number}</b> max </td>
-                            <td> null </td>
-                            <td> 指定的最大值，eg: 100，默认无，必须参数</td>
-                        </tr>
-                        <tr>
-                            <td> <b>{number}</b> precision </td>
-                            <td> 0 </td>
-                            <td> 小数精度，默认为0，无小数点 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{number}</b> splitNumber </td>
-                            <td> 5 </td>
-                            <td> 分割段数，默认为5，为0时为线性渐变 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{boolean}</b> calculable </td>
-                            <td> false </td>
-                            <td> 是否启用值域漫游，启用后无视splitNumber，值域显示为线性渐变 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{boolean}</b> realtime </td>
-                            <td> true </td>
-                            <td> 值域漫游是否实时显示 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{Array}</b> color </td>
-                            <td> ['#1e90ff','#f0ffff'] </td>
-                            <td> 值域颜色标识，颜色数组长度必须>=2，颜色代表从数值高到低的变化，即颜色数组低位代表数值高的颜色标识 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{Array}</b> text </td>
-                            <td> null </td>
-                            <td> 值域文字显示，splitNumber生效时默认以计算所得数值作为值域文字显示，可指定长度为2的文本数组显示简介的值域文本，如['高', '低']，'\n'指定换行</td>
-                        </tr>
-                        <tr>
-                            <td> <b>{Object}</b> textStyle </td>
-                            <td> {color: '#333'} </td>
-                            <td> 默认只设定了值域控件文字颜色（详见<a href="#TextStyle" title="">textStyle</a>） </td>
-                        </tr>
-                    </table>
-                    <p><img src="./asset/img/doc/dataRange.png" title="" alt="值域"/></P>
 
                     <h4>toolbox<a name="Toolbox"> </a></h4>
                     <P> 工具箱，每个图表最多仅有一个工具箱。<a href="example/toolbox.html" target="_blank">try this »</a></P>
@@ -1110,7 +1029,7 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{string | number}</b> x </td>
-                            <td> 'center' </td>
+                            <td> 'right' </td>
                             <td> 水平安放位置，默认为全图居中，可选为：'center' | 'left' | 'right' | <b>{number}</b>（x坐标，单位px） </td>
                         </tr>
                         <tr>
@@ -1293,6 +1212,12 @@ feature : {
                             <td> 触发类型，默认数据触发，见下图，可选为：'item' | 'axis' </td>
                         </tr>
                         <tr>
+                            <td> <b>{Array | Function}</b> position </td>
+                            <td> null </td>
+                            <td> 位置指定，传入<b>{Array}</b>，如[x, y]， 固定位置[x, y]；传入<b>{Function}</b>，如function([x, y]) {return [newX,newY]}，默认显示坐标为输入参数，用户指定的新坐标为输出返回。
+                            </td>
+                        </tr>
+                        <tr>
                             <td> <b>{string | Function}</b> formatter </td>
                             <td> null </td>
                             <td> 内容格式器：<b>{string}</b>（Template） | <b>{Function}</b>，支持异步回调见表格下方</td>
@@ -1347,10 +1272,14 @@ feature : {
                             <td> {<br/>
                                 type : 'line',<br/>
                                 lineStyle : {<br/>&nbsp;&nbsp;color: '#48b',<br/>&nbsp;&nbsp;width: 2,<br/>&nbsp;&nbsp;type: 'solid'<br/>},<br/>
-                                areaStyle : {<br/>&nbsp;&nbsp;size: 'auto',<br/>&nbsp;&nbsp;color: 'rgba(150,150,150,0.3)'<br/>}<br/>
+                                crossStyle : {<br/>&nbsp;&nbsp;color: '#1e90ff',<br/>&nbsp;&nbsp;width: 1,<br/>&nbsp;&nbsp;type: 'dashed'<br/>},<br/>
+                                shadowStyle : {<br/>&nbsp;&nbsp;size: 'auto',<br/>&nbsp;&nbsp;color: 'rgba(150,150,150,0.3)'<br/>}<br/>
                                 } 
                             </td>
-                            <td> 坐标轴指示器，坐标轴触发有效，默认type为line，可选为：'line' | 'shadow' | 'none'(无)，<br/>lineStyle设置直线指示器（详见<a href="#LineStyle" title="">lineStyle</a>）,<br/>areaStyle设置阴影指示器（详见<a href="#AreaStyle" title="">areaStyle</a>），areaStyle.size默认为'auto'自动计算，可指定具体宽度</td>
+                            <td> 坐标轴指示器，坐标轴触发有效，默认type为line，可选为：'line' | 'cross' | 'shadow' | 'none'(无)，指定type后对应style生效，见下
+                                 <br/>lineStyle设置直线指示器（详见<a href="#LineStyle" title="">lineStyle</a>）,
+                                 <br/>crossStyle设置十字准星指示器（详见<a href="#LineStyle" title="">lineStyle</a>）,
+                                 <br/>shadowStyle设置阴影指示器（详见<a href="#AreaStyle" title="">areaStyle</a>），areaStyle.size默认为'auto'自动计算，可指定具体宽度</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> textStyle </td>
@@ -1358,7 +1287,7 @@ feature : {
                             <td> 文本样式，默认为白色字体（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
                     </table>
-                    <P> 内容格式器formatter：</P>
+                    <P> 内容格式器formatter：<a href="example/tooltip.html" target="_blank">try this »</a></P>
                     <ul>
                         <li>
                             <b>{string}</b>，模板（Template），其变量为：
@@ -1370,15 +1299,16 @@ feature : {
                                 <li> 多值下则存在多套{a1}, {b1}, {c1}, {d1}, {a2}, {b2}, {c2}, {d2}, ...</li>
                                 <li> 其中变量a、b、c在不同图表类型下代表数据含义为：
                                     <ul>
-                                        <li>折线（区域）图、柱状（条形）图: a（系列名称），b（类目值），c（数值）, d（无）</li>
+                                        <li>折线（区域）图、柱状（条形）图 : a（系列名称），b（类目值），c（数值）, d（无）</li>
                                         <li>散点图（气泡）图 : a（系列名称），b（数据名称），c（数值数组）, d（无）</li>
-                                        <li>地图: a（系列名称），b（区域名称），c（数值）, d（无）</li>
-                                        <li>饼图、雷达图 : a（系列名称），b（数据项名称），c（数值）, d（百分比）</li>
+                                        <li>地图 : a（系列名称），b（区域名称），c（合并数值）, d（无）</li>
+                                        <li>饼图、雷达图 : a（系列名称），b（数据项名称），c（数值）, d（饼图：百分比 | 雷达图：指标名称）</li>
                                         <li>弦图 : a（系列名称），b（项1名称），c（项1-项2值），d（项2名称)， e(项2-项1值)</li>
                                         <li>力导向图 : 
                                             <ul>
                                                 <li>节点 : a（类目名称），b（节点名称），c（节点值）</li>
                                                 <li>边 : a（系列名称），b（源名称-目标名称），c（边权重）， d（如果为true的话则数据来源是边）</li>
+                                            </ul>
                                         </li>
                                     </ul>
                                 </li>
@@ -1404,6 +1334,205 @@ feature : {
                             <td><img src="./asset/img/doc/tooltip2.jpg" title="" alt="axis触发"/></td>
                         </tr>
                     </table>
+
+
+                    <h4>legend<a name="Legend"> </a></h4>
+                    <P> 图例，每个图表最多仅有一个图例。<a href="example/legend.html" target="_blank">try this »</a></P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> orient </td>
+                            <td> 'horizontal' </td>
+                            <td> 布局方式，默认为水平布局，可选为：'horizontal' | 'vertical' </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | number}</b> x </td>
+                            <td> 'center' </td>
+                            <td> 水平安放位置，默认为全图居中，可选为：'center' | 'left' | 'right' | <b>{number}</b>（x坐标，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | number}</b> y </td>
+                            <td> 'top' </td>
+                            <td> 垂直安放位置，默认为全图顶端，可选为：'top' | 'bottom' | 'center' | <b>{number}</b>（y坐标，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{color}</b> backgroundColor </td>
+                            <td> 'rgba(0,0,0,0)' </td>
+                            <td> 图例背景颜色，默认透明 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> borderColor </td>
+                            <td> '#ccc' </td>
+                            <td> 图例边框颜色 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> borderWidth </td>
+                            <td> 0 </td>
+                            <td> 图例边框线宽，单位px，默认为0（无边框） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number | Array}</b> padding </td>
+                            <td> 5 </td>
+                            <td> 图例内边距，单位px，默认各方向内边距为5，接受数组分别设定上右下左边距，同css，见下图 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> itemGap </td>
+                            <td> 10 </td>
+                            <td> 各个item之间的间隔，单位px，默认为10，横向布局时为水平间隔，纵向布局时为纵向间隔，见下图 </td>
+                        </tr>
+                        <!--
+                        <tr>
+                            <td> <b>{number}</b> itemWidth </td>
+                            <td> 20 </td>
+                            <td> 图例图形宽度 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> itemHeight </td>
+                            <td> 14 </td>
+                            <td> 图例图形高度 </td>
+                        </tr>
+                        -->
+                        <tr>
+                            <td> <b>{Object}</b> textStyle </td>
+                            <td> {color: '#333'} </td>
+                            <td> 默认只设定了图例文字颜色（详见<a href="#TextStyle" title="">textStyle</a>） ，更个性化的是，要指定文字颜色跟随图例，可设color为'auto'</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean | string}</b> selectedMode </td>
+                            <td> true </td>
+                            <td> 选择模式，默认开启图例开关，可选single，multiple </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> selected </td>
+                            <td> null </td>
+                            <td> 配置默认选中状态，可配合LEGEND.SELECTED事件做动态数据载入，<a href="example/legend.html" target="_blank">try this »</a> </td>
+                        </tr>
+                        <tr>
+                            <td> {Array &lt;string&gt;} data </td>
+                            <td> [ ] </td>
+                            <td> 图例内容数组，数组项通常为<b>{string}</b>，每一项代表一个系列的name。
+                                <br/>使用根据该值索引<a href="#Series" title="">series</a>中同名系列所用的图表类型和itemStyle，如果索引不到，该item将默认为没启用状态。
+                                <br/>如需个性化图例文字样式，可把数组项改为<b>{Object}</b>，格式为{name: <b>{string}</b>, textStyle: <b>{Object}</b>}
+                            </td>
+                        </tr>
+                    </table>
+                    <p><img src="./asset/img/doc/legend.png" title="" alt="图例"/></P>
+
+                    <h4>dataRange<a name="DataRange"> </a></h4>
+                    <P> 值域选择，每个图表最多仅有一个值域控件。<a href="example/dataRange.html" target="_blank">try this »</a></P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> orient </td>
+                            <td> 'vertical' </td>
+                            <td> 布局方式，默认为垂直布局，可选为：'horizontal' | 'vertical' </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | number}</b> x </td>
+                            <td> 'left' </td>
+                            <td> 水平安放位置，默认为全图左对齐，可选为：'center' | 'left' | 'right' | <b>{number}</b>（x坐标，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | number}</b> y </td>
+                            <td> 'bottom' </td>
+                            <td> 垂直安放位置，默认为全图底部，可选为：'top' | 'bottom' | 'center' | <b>{number}</b>（y坐标，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{color}</b> backgroundColor </td>
+                            <td> 'rgba(0,0,0,0)' </td>
+                            <td> 值域控件背景颜色，默认透明 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> borderColor </td>
+                            <td> '#ccc' </td>
+                            <td> 值域控件边框颜色 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> borderWidth </td>
+                            <td> 0 </td>
+                            <td> 值域控件边框线宽，单位px，默认为0（无边框） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number | Array}</b> padding </td>
+                            <td> 5 </td>
+                            <td> 值域控件内边距，单位px，默认各方向内边距为5，接受数组分别设定上右下左边距，同css，见下图 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> itemGap </td>
+                            <td> 10 </td>
+                            <td> 各个item之间的间隔，单位px，默认为10，横向布局时为水平间隔，纵向布局时为纵向间隔，见下图 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> itemWidth </td>
+                            <td> 20 </td>
+                            <td> 值域控件图形宽度 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> itemHeight </td>
+                            <td> 14 </td>
+                            <td> 值域控件图形高度 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> min </td>
+                            <td> null </td>
+                            <td> 指定的最小值，eg: 0，默认无，必须参数</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> max </td>
+                            <td> null </td>
+                            <td> 指定的最大值，eg: 100，默认无，必须参数</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> precision </td>
+                            <td> 0 </td>
+                            <td> 小数精度，默认为0，无小数点 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> splitNumber </td>
+                            <td> 5 </td>
+                            <td> 分割段数，默认为5，为0时为线性渐变 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> calculable </td>
+                            <td> false </td>
+                            <td> 是否启用值域漫游，启用后无视splitNumber，值域显示为线性渐变 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> realtime </td>
+                            <td> true </td>
+                            <td> 值域漫游是否实时显示 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> color </td>
+                            <td> ['#1e90ff','#f0ffff'] </td>
+                            <td> 值域颜色标识，颜色数组长度必须>=2，颜色代表从数值高到低的变化，即颜色数组低位代表数值高的颜色标识 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | Function}</b> formatter </td>
+                            <td> null </td>
+                            <td> 内容格式器：<b>{string}</b>（Template） | <b>{Function}</b>，模板变量为'{value}'和'{value2}'，代表数值起始值和结束值，函数参数两个，含义同模板变量，<a href="example/dataRange.html" target="_blank">try this »</a></td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> text </td>
+                            <td> null </td>
+                            <td> 值域文字显示，splitNumber生效时默认以计算所得数值作为值域文字显示，可指定长度为2的文本数组显示简介的值域文本，如['高', '低']，'\n'指定换行</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> textStyle </td>
+                            <td> {color: '#333'} </td>
+                            <td> 默认只设定了值域控件文字颜色（详见<a href="#TextStyle" title="">textStyle</a>） </td>
+                        </tr>
+                    </table>
+                    <p><img src="./asset/img/doc/dataRange.png" title="" alt="值域"/></P>
+
 
                     <h4>dataZoom<a name="DataZoom"> </a></h4>
                     <P> 数据区域缩放。与toolbox.feature.dataZoom同步，仅对直角坐标系图表有效。<a href="example/dataZoom.html" target="_blank">try this »</a></P>
@@ -1736,6 +1865,12 @@ feature : {
                             <td> 是否显示，默认为true，设为false后下面都没意义了 </td>
                         </tr>
                         <tr>
+                            <td> <b>{boolean}</b> onZero </td>
+                            <td> true </td>
+                            <td> 通用 </td>
+                            <td> 定位到垂直方向的0值坐标上 </td>
+                        </tr>
+                        <tr>
                             <td> <b>{Object}</b> lineStyle </td>
                             <td> {color: '#48b', width: 2, type: 'solid'} </td>
                             <td> 通用 </td>
@@ -1822,6 +1957,12 @@ feature : {
                             <td> 8 </td>
                             <td> 通用 </td>
                             <td> 坐标轴文本标签与坐标轴的间距，默认为8，单位px </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> clickable </td>
+                            <td> false </td>
+                            <td> 通用 </td>
+                            <td> 坐标轴文本标签是否可点击</td>
                         </tr>
                         <tr>
                             <td> <b>{string | Function}</b> formatter </td>
@@ -2247,10 +2388,16 @@ indicator : [
                             <td> 显示图例颜色标识（系列标识的小圆点），存在legend时生效</td>
                         </tr>
                         <tr>
-                            <td> <b>{Object}</b> roam </td>
+                            <td> <b>{boolean}</b> roam </td>
                             <td> false </td>
                             <td> 地图 </td>
                             <td> 是否开启滚轮缩放和拖拽漫游</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> scaleLimit </td>
+                            <td> null </td>
+                            <td> 地图 </td>
+                            <td> 滚轮缩放的极限控制，可指定{max:number, min:number}，其中max为放大系数，有效值应大于1，min为缩小系数，有效值应小于1</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> nameMap </td>
@@ -2287,6 +2434,18 @@ indicator : [
                             <td> [] </td>
                             <td> 力导向 </td>
                             <td> 力导向图的边数据, 每一项都有 source, target, weight三个属性, source和target是顶点的索引值， 边的权重(weight)越大则两个顶点之间的联系越大(最后稳定之后的距离越小)</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> linkSymbol </td>
+                            <td> 'none' </td>
+                            <td> 力导向 </td>
+                            <td> 力导向图的边两端图形样式，可指定为'arrow'</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> linkSymbolSize </td>
+                            <td> [10, 15] </td>
+                            <td> 力导向 </td>
+                            <td> 力导向图的边两端图形大小</td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> minRadius </td>
@@ -2468,6 +2627,11 @@ indicator : [
                             <td> <b>{number}</b> symbolRotate </td>
                             <td> null </td>
                             <td> 标注图形旋转角度，同series中的<a href="#Series">symbolRotate</a> </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> large </td>
+                            <td> false </td>
+                            <td> 是否启动大规模标注模式</a> </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> effect </td>
@@ -2770,8 +2934,19 @@ geoCoord : {
                             <td> 'outer' | null</td>
                             <td> 标签显示位置，地图标签不可指定位置
                                  <br/>饼图可选为：'outer'（外部） | 'inner'（内部），
-                                 <br/>折线图，柱形图，K线图，散点图默认根据布局自适应为'top'或者'right'，可选的还有：'inside'|'left'|'bottom'
+                                 <br/>折线图，柱形图，K线图，散点图默认根据布局自适应为'top'或者'right'，可选的还有：'inside' | 'left' | 'bottom'
+                                 <br/>柱形图可选的还有，'insideLeft' | 'insideRight' | 'insideTop' | 'insideBottom'
                             </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> rotate </td>
+                            <td> false </td>
+                            <td> 和弦图有效，文本标签自动旋转</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> distance </td>
+                            <td> 10 </td>
+                            <td> 和弦图有效，文本标签旋转后于弦的间隔</td>
                         </tr>
                         <tr>
                             <td> <b>{string | Function}</b> formatter </td>
@@ -2989,9 +3164,9 @@ geoCoord : {
                             <td> 显示话术的文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
                         <tr>
-                            <td> <b>{string}</b> effect </td>
+                            <td> <b>{string | Function}</b> effect </td>
                             <td> 'spin' </td>
-                            <td> loading效果，可选为：'spin' | 'bar' | 'ring' | 'whirling' | 'dynamicLine' | 'bubble'</td>
+                            <td> loading效果，可选为：'spin' | 'bar' | 'ring' | 'whirling' | 'dynamicLine' | 'bubble'，支持外部装载</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> effectOption </td>

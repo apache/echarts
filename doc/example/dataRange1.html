@@ -86,7 +86,7 @@ option = {
         max: 100,
         y: 'center',
         text:['高','低'],           // 文本，默认为数值文本
-        color:['skyblue','lightgreen'],
+        color:['lightgreen','yellow'],
         calculable : true
     },
     xAxis : [
@@ -110,9 +110,7 @@ option = {
         {
             name:'scatter1',
             type:'scatter',
-            symbolSize: function (value){
-                return Math.round(value[2] / 10);
-            },
+            symbolSize:5,
             data: (function () {
                 var d = [];
                 var len = 500;
