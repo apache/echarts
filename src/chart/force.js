@@ -477,7 +477,7 @@ define(function (require) {
                 zr.addShape(linkShape);
 
                 // Arrow shape
-                if (forceSerie.linkSymbol) {
+                if (forceSerie.linkSymbol && forceSerie.linkSymbol !== 'none') {
                     var arrowShape = {
                         style: {
                             x: -5,
