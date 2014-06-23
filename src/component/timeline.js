@@ -722,6 +722,8 @@ define(function (require) {
                 this.currentIndex = this.timelineOption.data.length - 1;
             }
             this._onFrame();
+            
+            return this.currentIndex;
         },
         
         next : function () {
@@ -732,22 +734,33 @@ define(function (require) {
                 this.currentIndex = 0;
             }
             this._onFrame();
+            
+            return this.currentIndex;
         },
         
-        play : function () {
+        play : function (targetIndex, autoPlay) {
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'playing') {
                 this._ctrPlayShape.style.status = 'playing';
                 this.zr.modShape(this._ctrPlayShape.id);
                 this.zr.refresh();
             }
             
-            this.timelineOption.autoPlay = true;
             
-            this.currentIndex += 1;
+            this.timelineOption.autoPlay = typeof autoPlay != 'undefined'
+                                           ? autoPlay : true;
+            
+            if (!this.timelineOption.autoPlay) {
+                clearTimeout(this.playTicket);
+            }
+            
+            this.currentIndex = typeof targetIndex != 'undefined' 
+                                ? targetIndex : (this.currentIndex + 1);
             if (this.currentIndex >= this.timelineOption.data.length) {
                 this.currentIndex = 0;
             }
             this._onFrame();
+            
+            return this.currentIndex;
         },
         
         stop : function () {
@@ -760,6 +773,8 @@ define(function (require) {
             this.timelineOption.autoPlay = false;
             
             clearTimeout(this.playTicket);
+            
+            return this.currentIndex;
         },
         
         /**
