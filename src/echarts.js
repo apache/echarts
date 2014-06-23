@@ -213,17 +213,15 @@ define(function (require) {
          */
         __onevent : function (param){
             param.__echartsId = param.__echartsId || this.id;
-            var fromMyself = true;
-            if (param.__echartsId != this.id) {
-                // 来自其他联动图表的事件
-                fromMyself = false;
-            }
+
+            // 来自其他联动图表的事件
+            var fromMyself = (param.__echartsId == this.id);
             
             if (!this._curEventType) {
                 this._curEventType = param.type;
             }
             
-            switch(param.type) {
+            switch (param.type) {
                 case ecConfig.EVENT.LEGEND_SELECTED :
                     this._onlegendSelected(param);
                     break;
@@ -543,12 +541,14 @@ define(function (require) {
          */
         _render : function (magicOption) {
             this._mergeGlobalConifg(magicOption);
+
+            var bgColor = magicOption.backgroundColor;
             if (magicOption.backgroundColor) {
                 if (!_canvasSupported 
-                    && magicOption.backgroundColor.indexOf('rgba') != -1
+                    && bgColor.indexOf('rgba') != -1
                 ) {
                     // IE6~8对RGBA的处理，filter会带来其他颜色的影响
-                    var cList = magicOption.backgroundColor.split(',');
+                    var cList = bgColor.split(',');
                     this.dom.style.filter = 'alpha(opacity=' +
                         cList[3].substring(0, cList[3].lastIndexOf(')')) * 100
                         + ')';
@@ -557,7 +557,7 @@ define(function (require) {
                     this.dom.style.backgroundColor = cList.join(',') + ')';
                 }
                 else {
-                    this.dom.style.backgroundColor = magicOption.backgroundColor;
+                    this.dom.style.backgroundColor = bgColor;
                 }
             }
             
@@ -1167,34 +1167,44 @@ define(function (require) {
         },
         
         _delMark : function (seriesIdx, markName, markType) {
-            if (!(this._option.series 
-                  && this._option.series[seriesIdx] 
-                  && this._option.series[seriesIdx][markType]
-                  && this._option.series[seriesIdx][markType].data)
+            var series = this._option.series;
+            var seriesItem;
+            var mark;
+            var dataArray;
+
+            if (!(
+                    series 
+                    && (seriesItem = series[seriesIdx]) 
+                    && (mark = seriesItem[markType])
+                    && (dataArray = mark.data)
+                )
             ) {
                 return this;
             }
+
             markName = markName.split(' > ');
             var targetIndex = -1;
-            var dataArray =  this._option.series[seriesIdx][markType].data;
+            
             for (var i = 0, l = dataArray.length; i < l; i++) {
-                if (dataArray[i] instanceof Array) {
-                    targetIndex = dataArray[i][0].name == markName[0] 
-                                  && dataArray[i][1].name == markName[1] 
+                var dataItem = dataArray[i];
+                if (dataItem instanceof Array) {
+                    targetIndex = dataItem[0].name == markName[0] 
+                                  && dataItem[1].name == markName[1] 
                                   ? i : -1;
                 }
                 else {
-                    targetIndex = dataArray[i].name == markName[0] ? i : -1;
+                    targetIndex = dataItem.name == markName[0] ? i : -1;
                 }
+
                 if (targetIndex != -1) {
                     break;
                 }
             }
             
             if (targetIndex != -1) {
-                this._option.series[seriesIdx][markType].data.splice(targetIndex, 1);
+                dataArray.splice(targetIndex, 1);
                 this._optionRestore.series[seriesIdx][markType].data.splice(targetIndex, 1);
-                var chart = this.chart[this._option.series[seriesIdx].type];
+                var chart = this.chart[seriesItem.type];
                 chart && chart.delMark(seriesIdx, markName.join(' > '), markType);
             }
             
@@ -1224,6 +1234,7 @@ define(function (require) {
             if (!_canvasSupported) {
                 return '';
             }
+
             if (this._chartList.length === 0) {
                 // 渲染为图片
                 var imgId = 'IMG' + this.id;
@@ -1232,16 +1243,23 @@ define(function (require) {
                     return img.src;
                 }
             }
+
             // 清除可能存在的tooltip元素
-            this.component.tooltip && this.component.tooltip.hideTip();
+            var tooltip = this.component.tooltip;
+            tooltip && tooltip.hideTip();
                 
-            imgType = imgType || 'png';
-            if (imgType != 'png' && imgType != 'jpeg') {
-                imgType = 'png';
+            switch (imgType) {
+                case 'jpeg':
+                    break;
+                defalut:
+                    imgType = 'png';
             }
-            var bgColor = this._option.backgroundColor
-                          && this._option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
-                             ? '#fff' : this._option.backgroundColor;
+
+            var bgColor = this._option.backgroundColor;
+            if (bgColor && bgColor.replace(' ','') == 'rgba(0,0,0,0)') {
+                bgColor = '#fff';
+            }
+
             return this._zr.toDataURL('image/' + imgType, bgColor); 
         },
 
@@ -1251,10 +1269,10 @@ define(function (require) {
          * @return img dom
          */
         getImage : function (imgType) {
+            var title = this._optionRestore.title;
             var imgDom = document.createElement('img');
             imgDom.src = this.getDataURL(imgType);
-            imgDom.title = (this._optionRestore.title && this._optionRestore.title.text)
-                           || 'ECharts';
+            imgDom.title = (title && title.text) || 'ECharts';
             return imgDom;
         },
         
@@ -1268,37 +1286,32 @@ define(function (require) {
                 return this.getDataURL(imgType);
             }
             
-            var tempDom;
-            var domSize = [
-                this.dom.offsetLeft, this.dom.offsetTop, 
-                this.dom.offsetWidth, this.dom.offsetHeight
-            ];
+            var tempDom = this.dom;
             var imgList = {
                 'self' : {
                     img : this.getDataURL(imgType),
-                    left : domSize[0],
-                    top : domSize[1],
-                    right : domSize[0] + domSize[2],
-                    bottom : domSize[1] + domSize[3]
+                    left : tempDom.offsetLeft,
+                    top : tempDom.offsetTop,
+                    right : tempDom.offsetLeft + tempDom.offsetWidth,
+                    bottom : tempDom.offsetTop + tempDom.offsetHeight
                 }
             };
+
             var minLeft = imgList.self.left;
             var minTop = imgList.self.top;
             var maxRight = imgList.self.right;
             var maxBottom = imgList.self.bottom;
+
             for (var c in this._connected) {
                 tempDom = this._connected[c].getDom();
-                domSize = [
-                    tempDom.offsetLeft, tempDom.offsetTop, 
-                    tempDom.offsetWidth, tempDom.offsetHeight
-                ];
                 imgList[c] = {
                     img : this._connected[c].getDataURL(imgType),
-                    left : domSize[0],
-                    top : domSize[1],
-                    right : domSize[0] + domSize[2],
-                    bottom : domSize[1] + domSize[3]
+                    left : tempDom.offsetLeft,
+                    top : tempDom.offsetTop,
+                    right : tempDom.offsetLeft + tempDom.offsetWidth,
+                    bottom : tempDom.offsetTop + tempDom.offsetHeight
                 };
+
                 minLeft = Math.min(minLeft, imgList[c].left);
                 minTop = Math.min(minTop, imgList[c].top);
                 maxRight = Math.max(maxRight, imgList[c].right);
@@ -1326,17 +1339,18 @@ define(function (require) {
             }
             
             zrImg.render();
-            var bgColor = this._option.backgroundColor 
-                          && this._option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
-                          ? '#fff' : this._option.backgroundColor;
-                          
+            var bgColor = this._option.backgroundColor;
+            if (bgColor && bgColor.replace(' ','') == 'rgba(0,0,0,0)') {
+                bgColor = '#fff';
+            }
+            
             var image = zrImg.toDataURL('image/png', bgColor);
             
             setTimeout(function () {
                 zrImg.dispose();
                 zrDom.parentNode.removeChild(zrDom);
                 zrDom = null;
-            },100);
+            }, 100);
             
             return image;
         },
@@ -1347,10 +1361,10 @@ define(function (require) {
          * @return img dom
          */
         getConnectedImage : function (imgType) {
+            var title = this._optionRestore.title;
             var imgDom = document.createElement('img');
             imgDom.src = this.getConnectedDataURL(imgType);
-            imgDom.title = (this._optionRestore.title && this._optionRestore.title.text)
-                           || 'ECharts';
+            imgDom.title = (title && title.text) || 'ECharts';
             return imgDom;
         },
 
@@ -1449,39 +1463,40 @@ define(function (require) {
          */
         showLoading : function (loadingOption) {
             var effectList = {
-                    bar : require('zrender/loadingEffect/Bar'),
-                    bubble : require('zrender/loadingEffect/Bubble'),
-                    dynamicLine : require('zrender/loadingEffect/DynamicLine'),
-                    ring : require('zrender/loadingEffect/Ring'),
-                    spin : require('zrender/loadingEffect/Spin'),
-                    whirling : require('zrender/loadingEffect/Whirling')
-                };
+                bar : require('zrender/loadingEffect/Bar'),
+                bubble : require('zrender/loadingEffect/Bubble'),
+                dynamicLine : require('zrender/loadingEffect/DynamicLine'),
+                ring : require('zrender/loadingEffect/Ring'),
+                spin : require('zrender/loadingEffect/Spin'),
+                whirling : require('zrender/loadingEffect/Whirling')
+            };
             this._toolbox.hideDataView();
 
             loadingOption = loadingOption || {};
-            loadingOption.textStyle = loadingOption.textStyle || {};
+
+            var textStyle = loadingOption.textStyle || {};
+            loadingOption.textStyle = textStyle;
 
             var finalTextStyle = zrUtil.merge(
-                zrUtil.clone(loadingOption.textStyle),
+                zrUtil.clone(textStyle),
                 this._themeConfig.textStyle
             );
-            loadingOption.textStyle.textFont = finalTextStyle.fontStyle + ' '
-                                             + finalTextStyle.fontWeight + ' '
-                                             + finalTextStyle.fontSize + 'px '
-                                             + finalTextStyle.fontFamily;
+            textStyle.textFont = finalTextStyle.fontStyle + ' '
+                                 + finalTextStyle.fontWeight + ' '
+                                 + finalTextStyle.fontSize + 'px '
+                                 + finalTextStyle.fontFamily;
 
-            loadingOption.textStyle.text = loadingOption.text 
-                                           || this._themeConfig.loadingText;
+            textStyle.text = loadingOption.text || this._themeConfig.loadingText;
 
             if (loadingOption.x != null) {
-                loadingOption.textStyle.x = loadingOption.x;
+                textStyle.x = loadingOption.x;
             }
             if (loadingOption.y != null) {
-                loadingOption.textStyle.y = loadingOption.y;
+                textStyle.y = loadingOption.y;
             }
             
             loadingOption.effectOption = loadingOption.effectOption || {};
-            loadingOption.effectOption.textStyle = loadingOption.textStyle;
+            loadingOption.effectOption.textStyle = textStyle;
             
             var Effect = loadingOption.effect;
             if (typeof Effect == 'string' || Effect == null) {
@@ -1507,6 +1522,8 @@ define(function (require) {
                if (typeof theme === 'string') {
                     // 默认主题
                     switch (theme) {
+                        // case 'themename':
+                        //     theme = require('./theme/themename');
                         default:
                             theme = require('./theme/default');
                     }
@@ -1515,7 +1532,9 @@ define(function (require) {
                     theme = theme || {};
                 }
                 
-                // 复位默认配置，别好心帮我改成_themeConfig = {};
+                // 复位默认配置
+                // this._themeConfig会被别的对象引用持有
+                // 所以不能改成this._themeConfig = {};
                 for (var key in this._themeConfig) {
                     delete this._themeConfig[key];
                 }
