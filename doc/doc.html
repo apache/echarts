@@ -165,6 +165,7 @@
                             <ul>
                                 <li><a href="#附录组件实例接口">组件实例接口</a></li>
                                 <ul>
+                                    <li><a href="#TimelineInterface">timeline</a></li>
                                     <li><a href="#TooltipInterface">tooltip</a></li>
                                     <li><a href="#LegendInterface">legend</a></li>
                                     <li><a href="#DataRangeInterface">dataRange</a></li>
@@ -3804,8 +3805,59 @@ option.series = [
                     <p><b style="color:red">【重要】</b>请注意，ECharts接口基于数据驱动设计，这些实例并不为开放准备，虽然你可以无限制的访问，甚至动态的覆盖重写，但这可能会导致图表无法正常工作或随着版本升级无法得到兼容，所以我们仅列出如下部分方法和属性作为使用上的参考（或者说限制），我们会尽最大的努力去保证这些方法或属性的稳定和向下兼容，并且保证在出现无法兼容的更新时在changelog上通告。如果你使用了并不出现在下述文档中的方法或属性将得不到这份保证，请谅解。</p>
                     
                     <h4>组件实例接口<a name="附录组件实例接口"> </a></h3>
-                    <p>ECharts包含组件有：title、legend、dataRange、toolbox、tooltip、dataZoom、grid、xAxis、yAxis、polar</p>
+                    <p>ECharts包含组件有：timeline、title、legend、dataRange、toolbox、tooltip、dataZoom、grid、xAxis、yAxis、polar</p>
                     
+                    <h4>timeline<a name="TimelineInterface"> </a></h4>
+                    <P>时间轴，每个图表最多仅有一个时间轴。可使用的属性和方法有：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 类型 </th>
+                            <th> 名称 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b></td>
+                            <td> type </td>
+                            <td> 组件类型，等于config.COMPONENT_TYPE_TIMELINE </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Function}</b></td>
+                            <td> play</td>
+                            <td> 播放
+                                <br/>参数：<b>{number=}</b> index， <b>{boolean=}</b> autoPlay，（见下）
+                                <br/> 返回：<b>{number}</b> currendIndex，当前播放的options数组位置索引
+                                <br/>index ：指定需要播放的options数组位置索引，不指定则从当前index开始播放
+                                <br/>autoPlay ：是否自动播放，不指定则自动播放
+                            </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Function}</b></td>
+                            <td> stop</td>
+                            <td> 暂停
+                                <br/>参数：无
+                                <br/> 返回：<b>{number}</b> currendIndex，当前播放的options数组位置索引
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td> <b>{Function}</b></td>
+                            <td> next</td>
+                            <td> 下一个
+                                <br/>参数：无
+                                <br/> 返回：<b>{number}</b> currendIndex，当前播放的options数组位置索引
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td> <b>{Function}</b></td>
+                            <td> last</td>
+                            <td> 上一个
+                                <br/>参数：无
+                                <br/> 返回：<b>{number}</b> currendIndex，当前播放的options数组位置索引
+                            </td>
+                        </tr>
+                    </table>
+
                     <h4>tooltip<a name="TooltipInterface"> </a></h4>
                     <P>提示框，鼠标悬浮交互时的信息提示，每个图表最多仅有一个提示框。可使用的属性和方法有：</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -4099,14 +4151,14 @@ option.series = [
 // srcipt标签式引入
 var myChart = echarts.init(document.getElementById('main'));
 
-// ajax getting data...............
-
 // 过渡---------------------
 myChart.showLoading({
     text: &#39;正在努力的读取数据中...&#39;,    //loading话术
 });
 
-// ajax return
+// ajax getting data...............
+
+// ajax callback
 myChart.hideLoading();
 
 // 图表使用-------------------
