@@ -603,7 +603,7 @@ define(function (require) {
             }
             
             var componentList = [
-                'title', 'tooltip', 'legend', 'dataRange',
+                'title', 'legend', 'tooltip', 'dataRange',
                 'grid', 'dataZoom', 'xAxis', 'yAxis', 'polar'
             ];
             

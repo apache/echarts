@@ -1300,8 +1300,8 @@ define(function (require) {
         },
         
         _setSelectedMap : function () {
-            if (this.option.legend && this.option.legend.selected) {
-                this._selectedMap = this.option.legend.selected;
+            if (this.component.legend) {
+                this._selectedMap = zrUtil.clone(this.component.legend.getSelectedMap());
             }
             else {
                 this._selectedMap = {};
