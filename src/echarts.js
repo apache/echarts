@@ -1195,6 +1195,7 @@ define(function (require) {
             if (targetIndex > -1) {
                 dataArray.splice(targetIndex, 1);
                 this._optionRestore.series[seriesIdx][markType].data.splice(targetIndex, 1);
+
                 var chart = this.chart[seriesItem.type];
                 chart && chart.delMark(seriesIdx, markName.join(' > '), markType);
             }
@@ -1242,7 +1243,7 @@ define(function (require) {
             switch (imgType) {
                 case 'jpeg':
                     break;
-                defalut:
+                default:
                     imgType = 'png';
             }
 
@@ -1331,7 +1332,7 @@ define(function (require) {
             
             zrImg.render();
             var bgColor = this._option.backgroundColor;
-            if (bgColor && bgColor.replace(' ','') == 'rgba(0,0,0,0)') {
+            if (bgColor && bgColor.replace(/ /g, '') == 'rgba(0,0,0,0)') {
                 bgColor = '#fff';
             }
             
@@ -1581,7 +1582,7 @@ define(function (require) {
         },
         
         _clearEffect : function() {
-            this._zr.modLayer(ecConfig.EFFECT_ZLEVEL, { motionBlur : false});
+            this._zr.modLayer(ecConfig.EFFECT_ZLEVEL, {motionBlur : false});
             this._zr.painter.clearLayer(ecConfig.EFFECT_ZLEVEL);
         },
         
