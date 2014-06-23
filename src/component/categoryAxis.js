@@ -195,8 +195,10 @@ define(function (require) {
             if (this.isHorizontal()) {
                 // 横向
                 var yPosition = this.option.position == 'bottom'
-                        ? (tickOption.inside ? (this.grid.getYend() - length) : this.grid.getYend())
-                        : (tickOption.inside ? this.grid.getY() : (this.grid.getY() - length));
+                        ? (tickOption.inside 
+                           ? (this.grid.getYend() - length - 1) : (this.grid.getYend() + 1))
+                        : (tickOption.inside 
+                           ? (this.grid.getY() + 1) : (this.grid.getY() - length - 1));
                 var x;
                 for (var i = startIndex; i < dataLength; i += interval) {
                     // 亚像素优化
@@ -222,8 +224,10 @@ define(function (require) {
             else {
                 // 纵向
                 var xPosition = this.option.position == 'left'
-                    ? (tickOption.inside ? this.grid.getX() : (this.grid.getX() - length))
-                    : (tickOption.inside ? (this.grid.getXend() - length) : this.grid.getXend());
+                    ? (tickOption.inside 
+                       ? (this.grid.getX() + 1) : (this.grid.getX() - length - 1))
+                    : (tickOption.inside 
+                       ? (this.grid.getXend() - length - 1) : (this.grid.getXend() + 1));
                         
                 var y;
                 for (var i = startIndex; i < dataLength; i += interval) {
