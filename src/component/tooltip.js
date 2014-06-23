@@ -382,8 +382,12 @@ define(function (require) {
                     else {
                         // 双数值轴
                         this._showAxisTrigger(xAxisIndex, yAxisIndex, -1);
+                        return;
                     }
                 }
+            }
+            if (this.option.tooltip.axisPointer.type == 'cross') {
+                this._showAxisTrigger(-1, -1, -1);
             }
         },
         
