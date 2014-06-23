@@ -47,12 +47,14 @@ define(function (require) {
         }
             
         dom = dom instanceof Array ? dom[0] : dom;
+
         // dom与echarts实例映射索引
         var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
         if (!key) {
             key = _idBase++;
             dom.setAttribute(DOM_ATTRIBUTE_KEY, key);
         }
+
         if (_instances[key]) {
             // 同一个dom上多次init，自动释放已有实例
             _instances[key].dispose();
@@ -125,6 +127,29 @@ define(function (require) {
         'DRAGSTART', 'DRAGEND', 'DRAGENTER', 'DRAGOVER', 'DRAGLEAVE', 'DROP'
     ];
 
+    /**
+     * 对echarts的实例中的chartList属性成员，逐个进行方法调用，遍历顺序为逆序
+     * 由于在事件触发的默认行为处理中，多次用到相同逻辑，所以抽象了该方法
+     * 由于所有的调用场景里，最多只有两个参数，基于性能和体积考虑，这里就不使用call或者apply了
+     * 
+     * @inner
+     * @param {ECharts} ecInstance ECharts实例
+     * @param {string} methodName 要调用的方法名
+     * @param {*} arg0 调用参数1
+     * @param {*} arg1 调用参数2
+     * @param {*} arg2 调用参数3
+     */
+    function callChartListMethodReverse(ecInstance, methodName, arg0, arg1, arg2) {
+        var chartList = ecInstance._chartList;
+        var len = chartList.length;
+
+        while (len--) {
+            var chart = chartList[len];
+            if (typeof chart[methodName] === 'function') {
+                chart[methodName](arg0, arg1, arg2);
+            }
+        }
+    }
 
     Echarts.prototype = {
         /**
@@ -287,20 +312,16 @@ define(function (require) {
                 this._curEventType = null;
             }
         },
-        
+
         /**
          * 点击事件，响应zrender事件，包装后分发到Echarts层
          */
         _onclick : function (param) {
-            var len = this._chartList.length;
-            while (len--) {
-                this._chartList[len]
-                && this._chartList[len].onclick
-                && this._chartList[len].onclick(param);
-            }
+            callChartListMethodReverse(this, 'onclick', param);
+
             if (param.target) {
                 var ecData = this._eventPackage(param.target);
-                if (ecData && typeof ecData.seriesIndex != 'undefined') {
+                if (ecData && ecData.seriesIndex != null) {
                     this._messageCenter.dispatch(
                         ecConfig.EVENT.CLICK,
                         param.event,
@@ -317,7 +338,7 @@ define(function (require) {
         _onmouseover : function (param) {
             if (param.target) {
                 var ecData = this._eventPackage(param.target);
-                if (ecData && typeof ecData.seriesIndex != 'undefined') {
+                if (ecData && ecData.seriesIndex != null) {
                     this._messageCenter.dispatch(
                         ecConfig.EVENT.HOVER,
                         param.event,
@@ -338,60 +359,36 @@ define(function (require) {
                 dragOut : false,
                 needRefresh : false
             };
-            var len = this._chartList.length;
-            while (len--) {
-                this._chartList[len]
-                && this._chartList[len].ondragstart
-                && this._chartList[len].ondragstart(param);
-            }
+
+            callChartListMethodReverse(this, 'ondragstart', param);
         },
 
         /**
          * dragging回调，可计算特性实现
          */
         _ondragenter : function (param) {
-            var len = this._chartList.length;
-            while (len--) {
-                this._chartList[len]
-                && this._chartList[len].ondragenter
-                && this._chartList[len].ondragenter(param);
-            }
+            callChartListMethodReverse(this, 'ondragenter', param);
         },
 
         /**
          * dragstart回调，可计算特性实现
          */
         _ondragover : function (param) {
-            var len = this._chartList.length;
-            while (len--) {
-                this._chartList[len]
-                && this._chartList[len].ondragover
-                && this._chartList[len].ondragover(param);
-            }
+            callChartListMethodReverse(this, 'ondragover', param);
         },
         
         /**
          * dragstart回调，可计算特性实现
          */
         _ondragleave : function (param) {
-            var len = this._chartList.length;
-            while (len--) {
-                this._chartList[len]
-                && this._chartList[len].ondragleave
-                && this._chartList[len].ondragleave(param);
-            }
+            callChartListMethodReverse(this, 'ondragleave', param);
         },
 
         /**
          * dragstart回调，可计算特性实现
          */
         _ondrop : function (param) {
-            var len = this._chartList.length;
-            while (len--) {
-                this._chartList[len]
-                && this._chartList[len].ondrop
-                && this._chartList[len].ondrop(param, this._status);
-            }
+            callChartListMethodReverse(this, 'ondrop', param, this._status);
             this._island.ondrop(param, this._status);
         },
 
@@ -399,25 +396,23 @@ define(function (require) {
          * dragdone回调 ，可计算特性实现
          */
         _ondragend : function (param) {
-            var len = this._chartList.length;
-            while (len--) {
-                this._chartList[len]
-                && this._chartList[len].ondragend
-                && this._chartList[len].ondragend(param, this._status);
-            }
+            callChartListMethodReverse(this, 'ondragend', param, this._status);
+
             this._timeline && this._timeline.ondragend(param, this._status);
             this._island.ondragend(param, this._status);
 
             // 发生过重计算
             if (this._status.needRefresh) {
                 this._syncBackupData(this._option);
-                this._messageCenter.dispatch(
+
+                var messageCenter = this._messageCenter;
+                messageCenter.dispatch(
                     ecConfig.EVENT.DATA_CHANGED,
                     param.event,
                     this._eventPackage(param.target),
                     this
                 );
-                this._messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this);
+                messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this);
             }
         },
 
@@ -427,12 +422,8 @@ define(function (require) {
         _onlegendSelected : function (param) {
             // 用于图表间通信
             this._status.needRefresh = false;
-            var len = this._chartList.length;
-            while (len--) {
-                this._chartList[len]
-                && this._chartList[len].onlegendSelected
-                && this._chartList[len].onlegendSelected(param, this._status);
-            }
+            callChartListMethodReverse(this, 'onlegendSelected', param, this._status);
+
             if (this._status.needRefresh) {
                 this._messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this);
             }
@@ -444,12 +435,7 @@ define(function (require) {
         _ondataZoom : function (param) {
             // 用于图表间通信
             this._status.needRefresh = false;
-            var len = this._chartList.length;
-            while (len--) {
-                this._chartList[len]
-                && this._chartList[len].ondataZoom
-                && this._chartList[len].ondataZoom(param, this._status);
-            }
+            callChartListMethodReverse(this, 'ondataZoom', param, this._status);
 
             if (this._status.needRefresh) {
                 this._messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this);
@@ -463,12 +449,7 @@ define(function (require) {
             this._clearEffect();
             // 用于图表间通信
             this._status.needRefresh = false;
-            var len = this._chartList.length;
-            while (len--) {
-                this._chartList[len]
-                && this._chartList[len].ondataRange
-                && this._chartList[len].ondataRange(param, this._status);
-            }
+            callChartListMethodReverse(this, 'ondataRange', param, this._status);
             
             // 没有相互影响，直接刷新即可
             if (this._status.needRefresh) {
@@ -502,13 +483,8 @@ define(function (require) {
          * tooltip与图表间通信 
          */
         _tooltipHover : function (param) {
-            var len = this._chartList.length;
             var tipShape = [];
-            while (len--) {
-                this._chartList[len]
-                && this._chartList[len].ontooltipHover
-                && this._chartList[len].ontooltipHover(param, tipShape);
-            }
+            callChartListMethodReverse(this, 'ontooltipHover', param, tipShape);
         },
 
         /**
@@ -808,7 +784,7 @@ define(function (require) {
             ];
             var len = mergeList.length;
             while (len--) {
-                if (typeof magicOption[mergeList[len]] == 'undefined') {
+                if (magicOption[mergeList[len]] == null) {
                     magicOption[mergeList[len]] = this._themeConfig[mergeList[len]];
                 }
             }
@@ -1497,10 +1473,10 @@ define(function (require) {
             loadingOption.textStyle.text = loadingOption.text 
                                            || this._themeConfig.loadingText;
 
-            if (typeof loadingOption.x != 'undefined') {
+            if (loadingOption.x != null) {
                 loadingOption.textStyle.x = loadingOption.x;
             }
-            if (typeof loadingOption.y != 'undefined') {
+            if (loadingOption.y != null) {
                 loadingOption.textStyle.y = loadingOption.y;
             }
             
@@ -1508,7 +1484,7 @@ define(function (require) {
             loadingOption.effectOption.textStyle = loadingOption.textStyle;
             
             var Effect = loadingOption.effect;
-            if (typeof Effect == 'string' || typeof Effect == 'undefined') {
+            if (typeof Effect == 'string' || Effect == null) {
                 Effect =  effectList[loadingOption.effect || 'spin'];
             }
             this._zr.showLoading(new Effect(loadingOption.effectOption));
@@ -1531,9 +1507,6 @@ define(function (require) {
                if (typeof theme === 'string') {
                     // 默认主题
                     switch (theme) {
-                        case 'default':
-                            theme = require('./theme/default');
-                            break;
                         default:
                             theme = require('./theme/default');
                     }
@@ -1627,7 +1600,6 @@ define(function (require) {
             this.clear();
             this._zr.dispose();
             this._zr = null;
-            return;
         }
     };
 
