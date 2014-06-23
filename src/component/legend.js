@@ -12,7 +12,7 @@ define(function (require) {
     var TextShape = require('zrender/shape/Text');
     var RectangleShape = require('zrender/shape/Rectangle');
     var SectorShape = require('zrender/shape/Sector');
-    var BeziercurveShape = require('zrender/shape/Beziercurve');
+    //var BeziercurveShape = require('zrender/shape/Beziercurve');
     var IconShape = require('../util/shape/Icon');
     var CandleShape = require('../util/shape/Candle');
     
@@ -811,7 +811,7 @@ define(function (require) {
                 endAngle : 135
             });
         },
-        
+        /*
         chord : function (ctx, style) {
             var x = style.x;
             var y = style.y;
@@ -841,7 +841,7 @@ define(function (require) {
             });
             ctx.lineTo(x, y + height);
         },
-        
+        */
         k : function (ctx, style) {
             var x = style.x;
             var y = style.y;
