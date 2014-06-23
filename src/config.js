@@ -443,8 +443,8 @@ define(function() {
         },
 
         timeline : {
-            type : 'time',  // 模式是时间类型，支持 number
             show: true,
+            type : 'time',  // 模式是时间类型，支持 number
             notMerge : false,
             realtime : true,
             x: 80,
@@ -453,14 +453,14 @@ define(function() {
             y2: 0,
             // width: {totalWidth} - x - x2,
             height: 50,
-            controlPosition : 'left',           // 'right' | 'none'
-            autoPlay : false,
-            loop : true,
-            playInterval : 2000,                // 播放时间间隔，单位ms
             backgroundColor: 'rgba(0,0,0,0)',   // 时间轴背景颜色
             borderColor : '#ccc',               // 时间轴边框颜色
             borderWidth : 0,                    // 时间轴边框线宽，单位px，默认为0（无边框）
             padding : 5,                        // 时间轴内边距，单位px，默认各方向内边距为5，
+            controlPosition : 'left',           // 'right' | 'none'
+            autoPlay : false,
+            loop : true,
+            playInterval : 2000,                // 播放时间间隔，单位ms
             lineStyle : {
                 width : 1,
                 color : '#666',
@@ -892,7 +892,7 @@ define(function() {
             min: 0,                     // 最小值
             max: 100,                   // 最大值
             precision: 0,               // 小数精度，默认为0，无小数点
-            splitNumber: 10,             // 分割段数，默认为5
+            splitNumber: 10,            // 分割段数，默认为10
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
                 lineStyle: {       // 属性lineStyle控制线条样式
