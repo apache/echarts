@@ -543,7 +543,7 @@ define(function (require) {
             this._mergeGlobalConifg(magicOption);
 
             var bgColor = magicOption.backgroundColor;
-            if (magicOption.backgroundColor) {
+            if (bgColor) {
                 if (!_canvasSupported 
                     && bgColor.indexOf('rgba') != -1
                 ) {
@@ -582,16 +582,15 @@ define(function (require) {
             var component;
             for (var i = 0, l = componentList.length; i < l; i++) {
                 componentType = componentList[i];
+                component = this.component[componentType];
+
                 if (magicOption[componentType]) {
-                    if (this.component[componentType]) {
-                        this.component[componentType].refresh &&
-                        this.component[componentType].refresh(magicOption);
+                    if (component) {
+                        component.refresh && component.refresh(magicOption);
                     }
                     else {
                         ComponentClass = componentLibrary.get(
-                            (componentType == 'xAxis' || componentType == 'yAxis')
-                            ? 'axis'
-                            : componentType
+                            /^[xy]Axis$/.test(componentType) ? 'axis' : componentType
                         );
                         component = new ComponentClass(
                             this._themeConfig, this._messageCenter, this._zr,
@@ -599,10 +598,10 @@ define(function (require) {
                         );
                         this.component[componentType] = component;
                     }
-                    this._chartList.push(this.component[componentType]);
+                    this._chartList.push(component);
                 }
-                else if (this.component[componentType]) {
-                    this.component[componentType].dispose();
+                else if (component) {
+                    component.dispose();
                     this.component[componentType] = null;
                     delete this.component[componentType];
                 }
@@ -618,6 +617,7 @@ define(function (require) {
                     console.error('series[' + i + '] chart type has not been defined.');
                     continue;
                 }
+
                 if (!chartMap[chartType]) {
                     chartMap[chartType] = true;
                     ChartClass = chartLibrary.get(chartType);
@@ -712,7 +712,7 @@ define(function (require) {
             var magicOption = param.option;
             
             // 外部调用的refresh且有option带入
-            if (!this._refreshInside && param.option) {
+            if (!this._refreshInside && magicOption) {
                 // 做简单的差异合并去同步内部持有的数据克隆，不建议带入数据
                 // 开启数据区域缩放、拖拽重计算、数据视图可编辑模式情况下，当用户产生了数据变化后无法同步
                 // 如有带入option存在数据变化，请重新setOption
@@ -740,21 +740,22 @@ define(function (require) {
          */
         _disposeChartList : function () {
             this._clearEffect();
+
             // 停止动画
             this._zr.clearAnimation();
+
             var len = this._chartList.length;
             while (len--) {
-                if (this._chartList[len]) {
-                    this.chart[this._chartList[len].type] 
-                    && delete this.chart[this._chartList[len].type];
-                    
-                    this.component[this._chartList[len].type] 
-                    && delete this.component[this._chartList[len].type];
-                    
-                    this._chartList[len].dispose 
-                    && this._chartList[len].dispose();
+                var chart = this._chartList[len];
+
+                if (chart) {
+                    var chartType = chart.type;
+                    this.chart[chartType] && delete this.chart[chartType];
+                    this.component[chartType] && delete this.component[chartType];
+                    chart.dispose && chart.dispose();
                 }
             }
+
             this._chartList = [];
         },
 
@@ -782,17 +783,21 @@ define(function (require) {
                 // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
                 'DRAG_ENABLE_TIME'
             ];
+
             var len = mergeList.length;
             while (len--) {
-                if (magicOption[mergeList[len]] == null) {
-                    magicOption[mergeList[len]] = this._themeConfig[mergeList[len]];
+                var mergeItem = mergeList[len];
+                if (magicOption[mergeItem] == null) {
+                    magicOption[mergeItem] = this._themeConfig[mergeItem];
                 }
             }
             
             // 数值系列的颜色列表，不传则采用内置颜色，可配数组，借用zrender实例注入，会有冲突风险，先这样
-            var themeColor = (magicOption.color && magicOption.color.length > 0)
-                             ? magicOption.color
-                             : this._themeConfig.color;
+            var themeColor = magicOption.color;
+            if (!(themeColor && themeColor.length)) {
+                themeColor = this._themeConfig.color;
+            }
+
             this._zr.getColor = function (idx) {
                 var zrColor = require('zrender/tool/color');
                 return zrColor.getColor(idx, themeColor);
@@ -862,46 +867,33 @@ define(function (require) {
         getOption : function () {
             var magicOption = zrUtil.clone(this._option);
             
-            var len;
-            // 横轴数据还原
-            if (this._optionRestore.xAxis) {
-                if (this._optionRestore.xAxis instanceof Array) {
-                    len = this._optionRestore.xAxis.length;
-                    while (len--) {
-                        magicOption.xAxis[len].data = zrUtil.clone(
-                            this._optionRestore.xAxis[len].data
-                        );
+            var self = this;
+            function restoreOption(prop) {
+                var restoreSource = self._optionRestore[prop];
+
+                if (restoreSource) {
+                    if (restoreSource instanceof Array) {
+                        var len = restoreSource.length;
+                        while (len--) {
+                            magicOption[prop][len].data = zrUtil.clone(
+                                restoreSource[len].data
+                            );
+                        }
+                    }
+                    else {
+                        magicOption[prop].data = zrUtil.clone(restoreSource.data);
                     }
                 }
-                else {
-                    magicOption.xAxis.data = zrUtil.clone(this._optionRestore.xAxis.data);
-                }
             }
+
+            // 横轴数据还原
+            restoreOption('xAxis');
             
             // 纵轴数据还原
-            if (this._optionRestore.yAxis) {
-                if (this._optionRestore.yAxis instanceof Array) {
-                    len = this._optionRestore.yAxis.length;
-                    while (len--) {
-                        magicOption.yAxis[len].data = zrUtil.clone(
-                            this._optionRestore.yAxis[len].data
-                        );
-                    }
-                }
-                else {
-                    magicOption.yAxis.data = zrUtil.clone(this._optionRestore.yAxis.data);
-                }
-            }
+            restoreOption('yAxis');
             
             // 系列数据还原
-            if (this._optionRestore.series) {
-                len = this._optionRestore.series.length;
-                while (len--) {
-                    magicOption.series[len].data = zrUtil.clone(
-                        this._optionRestore.series[len].data
-                    );
-                }
-            }
+            restoreOption('series');
             
             return magicOption;
         },
@@ -1114,42 +1106,41 @@ define(function (require) {
         },
         
         _addMark : function (seriesIdx, markData, markType) {
-            if (!(this._option.series && this._option.series[seriesIdx])) {
-                return this;
+            var series = this._option.series;
+            var seriesItem;
+
+            if (series && (seriesItem = series[seriesIdx])) {
+                var seriesR = this._optionRestore.series;
+                var seriesRItem = seriesR[seriesIdx];
+                var markOpt = seriesItem[markType];
+                var markOptR = seriesRItem[markType];
+
+                markOpt = seriesItem[markType] = markOpt || {data: []};
+                markOptR = seriesRItem[markType] = markOptR || {data: []};
+
+                for (var key in markData) {
+                    if (key == 'data') {
+                        // 数据concat
+                        markOpt.data = markOpt.data.concat(markData.data);
+                        markOptR.data = markOptR.data.concat(markData.data);
+                    }
+                    else if (typeof markData[key] != 'object'
+                          || typeof markOpt[key] == 'undefined'
+                    ) {
+                        // 简单类型或新值直接赋值
+                        markOpt[key] = markOptR[key] = markData[key];
+                    }
+                    else {
+                        // 非数据的复杂对象merge
+                        zrUtil.merge(markOpt[key], markData[key], true);
+                        zrUtil.merge(markOptR[key], markData[key], true);
+                    }
+                }
+                
+                var chart = this.chart[seriesItem.type];
+                chart && chart.addMark(seriesIdx, markData, markType);
             }
-            this._option.series[seriesIdx][markType] 
-                =  this._option.series[seriesIdx][markType] || {data: []};
-            this._optionRestore.series[seriesIdx][markType] 
-                =  this._optionRestore.series[seriesIdx][markType] || {data: []};
-            for (var key in markData) {
-                if (key == 'data') {
-                    // 数据concat
-                    this._option.series[seriesIdx][markType].data = 
-                        this._option.series[seriesIdx][markType].data.concat(markData.data);
-                    this._optionRestore.series[seriesIdx][markType].data = 
-                        this._optionRestore.series[seriesIdx][markType].data.concat(markData.data);
-                }
-                else if (typeof markData[key] != 'object'
-                      || typeof this._option.series[seriesIdx][markType][key] == 'undefined'
-                ) {
-                    // 简单类型或新值直接赋值
-                    this._option.series[seriesIdx][markType][key] 
-                        = this._optionRestore.series[seriesIdx][markType][key]
-                        = markData[key];
-                }
-                else {
-                    // 非数据的复杂对象merge
-                    zrUtil.merge(
-                        this._option.series[seriesIdx][markType][key], markData[key], true
-                    );
-                    zrUtil.merge(
-                        this._optionRestore.series[seriesIdx][markType][key], markData[key], true
-                    );
-                }
-            }
-            
-            var chart = this.chart[this._option.series[seriesIdx].type];
-            chart && chart.addMark(seriesIdx, markData, markType);
+
             return this;
         },
         
@@ -1188,20 +1179,20 @@ define(function (require) {
             for (var i = 0, l = dataArray.length; i < l; i++) {
                 var dataItem = dataArray[i];
                 if (dataItem instanceof Array) {
-                    targetIndex = dataItem[0].name == markName[0] 
-                                  && dataItem[1].name == markName[1] 
-                                  ? i : -1;
+                    if (dataItem[0].name == markName[0]
+                        && dataItem[1].name == markName[1]
+                    ) {
+                        targetIndex = i;
+                        break;
+                    }
                 }
-                else {
-                    targetIndex = dataItem.name == markName[0] ? i : -1;
-                }
-
-                if (targetIndex != -1) {
+                else if (dataItem.name == markName[0]) {
+                    targetIndex = i;
                     break;
                 }
             }
             
-            if (targetIndex != -1) {
+            if (targetIndex > -1) {
                 dataArray.splice(targetIndex, 1);
                 this._optionRestore.series[seriesIdx][markType].data.splice(targetIndex, 1);
                 var chart = this.chart[seriesItem.type];
