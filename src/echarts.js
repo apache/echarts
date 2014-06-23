@@ -104,6 +104,28 @@ define(function (require) {
         this._init();
     }
     
+    /**
+     * ZRender EVENT
+     * 
+     * @inner
+     * @const
+     * @type {Object}
+     */
+    var ZR_EVENT = require('zrender/config').EVENT;
+
+    /**
+     * 要绑定监听的zrender事件列表
+     * 
+     * @const
+     * @inner
+     * @type {Array}
+     */
+    var ZR_EVENT_LISTENS = [
+        'CLICK', 'MOUSEOVER', 
+        'DRAGSTART', 'DRAGEND', 'DRAGENTER', 'DRAGOVER', 'DRAGLEAVE', 'DROP'
+    ];
+
+
     Echarts.prototype = {
         /**
          * 初始化::构造函数
@@ -126,20 +148,19 @@ define(function (require) {
                 }
             }
 
-            var zrConfig = require('zrender/config');
-            this._onzrevent = function(param){
-                return self.__onzrevent(param);
+
+            var eventBehaviors = {};
+            this._onzrevent = function (param) {
+                return self[eventBehaviors[ param.type ]](param);
             };
-            // 只关心这些事件
-            _zr.on(zrConfig.EVENT.CLICK, this._onzrevent);
-            _zr.on(zrConfig.EVENT.MOUSEOVER, this._onzrevent);
-            //_zr.on(zrConfig.EVENT.MOUSEWHEEL, this._onzrevent);
-            _zr.on(zrConfig.EVENT.DRAGSTART, this._onzrevent);
-            _zr.on(zrConfig.EVENT.DRAGEND, this._onzrevent);
-            _zr.on(zrConfig.EVENT.DRAGENTER, this._onzrevent);
-            _zr.on(zrConfig.EVENT.DRAGOVER, this._onzrevent);
-            _zr.on(zrConfig.EVENT.DRAGLEAVE, this._onzrevent);
-            _zr.on(zrConfig.EVENT.DROP, this._onzrevent);
+
+            // 挂载关心的事件
+            for (var i = 0, len = ZR_EVENT_LISTENS.length; i < len; i++) {
+                var eventName = ZR_EVENT_LISTENS[i]
+                var eventValue = ZR_EVENT[eventName];
+                eventBehaviors[eventValue] = '_on' + eventName.toLowerCase();
+                _zr.on(eventValue, this._onzrevent);
+            }
 
             this.chart = {};            // 图表索引
             this.component = {};        // 组件索引
@@ -160,33 +181,6 @@ define(function (require) {
             componentLibrary.define('title', require('./component/title'));
             componentLibrary.define('tooltip', require('./component/tooltip'));
             componentLibrary.define('legend', require('./component/legend'));
-        },
-        
-        /**
-         * zrender事件内部分发器
-         */
-        __onzrevent : function(param){
-            var zrConfig = require('zrender/config');
-            switch (param.type) {
-                case zrConfig.EVENT.CLICK :
-                    return this._onclick(param);
-                case zrConfig.EVENT.MOUSEOVER :
-                    return this._onhover(param);
-                case zrConfig.EVENT.DRAGSTART :
-                    return this._ondragstart(param);
-                case zrConfig.EVENT.DRAGEND :
-                    return this._ondragend(param);
-                case zrConfig.EVENT.DRAGENTER :
-                    return this._ondragenter(param);
-                case zrConfig.EVENT.DRAGOVER :
-                    return this._ondragover(param);
-                case zrConfig.EVENT.DRAGLEAVE :
-                    return this._ondragleave(param);
-                case zrConfig.EVENT.DROP :
-                    return this._ondrop(param);
-                case zrConfig.EVENT.MOUSEWHEEL :
-                    return this._onmousewheel(param);
-            }
         },
 
         /**
@@ -318,9 +312,9 @@ define(function (require) {
         },
 
          /**
-         * 悬浮事件，响应zrender事件，包装后分发到Echarts层
-         */
-        _onhover : function (param) {
+          * 鼠标移入事件，响应zrender事件，包装后分发到Echarts层
+          */
+        _onmouseover : function (param) {
             if (param.target) {
                 var ecData = this._eventPackage(param.target);
                 if (ecData && typeof ecData.seriesIndex != 'undefined') {
