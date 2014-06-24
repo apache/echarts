@@ -52,6 +52,9 @@ define(function (require) {
 
         ctx.moveTo(style.x + 13 * dx,       style.y + 10 * dy);
         ctx.lineTo(style.x + 13 * dx,       style.y + style.height);
+        
+        // 避免自动闭合路径
+        ctx.moveTo(style.x, style.y);
     }
 
     function _iconMarkUndo(ctx, style) {
@@ -69,6 +72,9 @@ define(function (require) {
 
         ctx.moveTo(style.x + 10 * dx,       style.y + 13 * dy);
         ctx.lineTo(style.x + style.width,   style.y + 13 * dy);
+        
+        // 避免自动闭合路径
+        ctx.moveTo(style.x, style.y);
     }
 
     function _iconMarkClear(ctx, style) {
@@ -93,6 +99,9 @@ define(function (require) {
         ctx.lineTo(style.x + 3 * dx,        style.y + style.height);
         ctx.lineTo(style.x + 13 * dx,        style.y + style.height);
         ctx.lineTo(style.x + style.width,        style.y + 5 * dy);
+        
+        // 避免自动闭合路径
+        ctx.moveTo(style.x, style.y);
     }
 
     function _iconDataZoom(ctx, style) {
@@ -111,8 +120,8 @@ define(function (require) {
         ctx.lineTo(style.x + style.width, style.y + 3 * dy);
         ctx.lineTo(style.x + 8 * dx,      style.y + 3 * dy);
         
-        ctx.moveTo(style.x, style.y); // 避免closePath
-        ctx.lineTo(style.x, style.y); // 避免closePath
+        // 避免自动闭合路径
+        ctx.moveTo(style.x, style.y);
     }
     
     function _iconDataZoomReset(ctx, style) {
@@ -135,8 +144,8 @@ define(function (require) {
         ctx.lineTo(style.x + 14 * dx,     style.y + 13 * dy);
         ctx.lineTo(style.x + 10 * dx,     style.y + style.height);
         
-        ctx.moveTo(style.x, style.y); // 避免closePath
-        ctx.lineTo(style.x, style.y); // 避免closePath
+        // 避免自动闭合路径
+        ctx.moveTo(style.x, style.y);
     }
     
     function _iconRestore(ctx, style) {
@@ -157,8 +166,8 @@ define(function (require) {
         ctx.lineTo(style.x + style.width,   style.y + 4 * dy);
         ctx.lineTo(style.x + 11 * dx,       style.y + 5 * dy);
         
-        ctx.moveTo(style.x, style.y); // 避免closePath
-        ctx.lineTo(style.x, style.y); // 避免closePath
+        // 避免自动闭合路径
+        ctx.moveTo(style.x, style.y);
     }
 
     function _iconLineChart(ctx, style) {
@@ -174,8 +183,8 @@ define(function (require) {
         ctx.lineTo(style.x + 11 * dx,   style.y + 11 * dy);
         ctx.lineTo(style.x + 15 * dx,   style.y + 2 * dy);
         
-        ctx.moveTo(style.x, style.y); // 避免closePath
-        ctx.lineTo(style.x, style.y); // 避免closePath
+        // 避免自动闭合路径
+        ctx.moveTo(style.x, style.y);
     }
 
     function _iconBarChart(ctx, style) {
@@ -198,6 +207,9 @@ define(function (require) {
         ctx.lineTo(style.x + 11 * dx,       style.y + 9 * dy);
         ctx.lineTo(style.x + 12 * dx,       style.y + 9 * dy);
         ctx.lineTo(style.x + 12 * dx,       style.y + 14 * dy);
+        
+        // 避免自动闭合路径
+        ctx.moveTo(style.x, style.y);
     }
 
     function _iconStackChart(ctx, style) {
@@ -210,6 +222,9 @@ define(function (require) {
         while (len--) {
             ctx.rect(x, y + dy * len + 2, width, 2);
         }
+        
+        // 避免自动闭合路径
+        ctx.moveTo(style.x, style.y);
     }
     
     function _iconTiledChart(ctx, style) {
@@ -222,6 +237,9 @@ define(function (require) {
         while (len--) {
             ctx.rect(x + dx * len, y, 2, height);
         }
+        
+        // 避免自动闭合路径
+        ctx.moveTo(style.x, style.y);
     }
     
     function _iconDataView(ctx, style) {
@@ -244,6 +262,9 @@ define(function (require) {
 
         ctx.moveTo(style.x + 3 * dx, style.y + 12 * dx);
         ctx.lineTo(style.x + 9 * dx, style.y + 12 * dx);
+        
+        // 避免自动闭合路径
+        ctx.moveTo(style.x, style.y);
     }
     
     function _iconSave(ctx, style) {
@@ -267,8 +288,8 @@ define(function (require) {
         ctx.lineTo(style.x + 10 * dx,   style.y + 11 * dy);
         ctx.lineTo(style.x + 6 * dx,    style.y + 11 * dy);
         
-        ctx.moveTo(style.x, style.y); // 避免closePath
-        ctx.lineTo(style.x, style.y); // 避免closePath
+        // 避免自动闭合路径
+        ctx.moveTo(style.x, style.y);
     }
     
     function _iconCross(ctx, style) {
