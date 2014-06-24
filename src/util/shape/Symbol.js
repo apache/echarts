@@ -36,7 +36,7 @@ define(function (require) {
     var PolygonShape = require('zrender/shape/Polygon');
     var polygonInstance = new PolygonShape({});
     var zrUtil = require('zrender/tool/util');
-    
+
     function Symbol(options) {
         Base.call(this, options);
     }
@@ -54,7 +54,7 @@ define(function (require) {
             if (len === 0) {
                 return;
             }
-            
+
             var subSize = 10000;
             var subSetLength = Math.ceil(len / subSize);
             var sub;
@@ -126,10 +126,8 @@ define(function (require) {
                     }
                 }
             }
-            
-            return;
         },
-        
+
         /* 像素模式
         buildPath : function (ctx, style) {
             var pointList = style.pointList;
@@ -145,7 +143,7 @@ define(function (require) {
                 height : Math.floor(rect.height)
             };
             var pixels = ctx.getImageData(
-                rect.x * ratio, rect.y * ratio, 
+                rect.x * ratio, rect.y * ratio,
                 rect.width * ratio, rect.height * ratio
             );
             var data = pixels.data;
@@ -164,14 +162,14 @@ define(function (require) {
                 data[idx] = r;
                 data[idx + 1] = g;
                 data[idx + 2] = b;
-                data[idx + 3] = 255; 
+                data[idx + 3] = 255;
             }
             ctx.putImageData(pixels, rect.x * ratio, rect.y * ratio);
             // console.log(new Date() - ti);
             return;
         },
         */
-       
+
         /**
          * 返回矩形区域，用于局部刷新和文字定位
          * @param {Object} style
@@ -179,7 +177,7 @@ define(function (require) {
         getRect : function (style) {
             return style.__rect || polygonInstance.getRect(style);
         },
-        
+
         isCover : function (x, y) {
             // 快速预判并保留判断矩形
             var rect = this.style.__rect;
@@ -194,12 +192,12 @@ define(function (require) {
                 // 矩形内
                 return true;
             }
-            
+
             return false;
         }
     };
 
     zrUtil.inherits(Symbol, Base);
-    
+
     return Symbol;
 });
