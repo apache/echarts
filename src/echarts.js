@@ -981,6 +981,7 @@ define(function (require) {
                     if (additionData != null) {
                         var legend;
                         var legendData;
+                        
                         if (seriesItem.type == ecConfig.CHART_TYPE_PIE
                             && (legend = optionRestore.legend) 
                             && (legendData = legend.data)
@@ -988,7 +989,6 @@ define(function (require) {
                             var mLegendData = magicOption.legend.data;
                             legendData[inMethod](additionData);
                             mLegendData[inMethod](additionData);
-          
 
                             if (!dataGrow) {
                                 var legendDataIdx = zrUtil.indexOf(legendData, data.name);
@@ -1023,7 +1023,7 @@ define(function (require) {
                             if (optionRestore.yAxis[axisIdx].type == 'category') {
                                 axisData = optionRestore.yAxis[axisIdx].data;
                                 mAxisData = magicOption.yAxis[axisIdx].data;
-                                
+
                                 axisData[inMethod](additionData);
                                 mAxisData[inMethod](additionData);
                                 if (!dataGrow) {
