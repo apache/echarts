@@ -9,7 +9,7 @@ define(function (require) {
     var Base = require('zrender/shape/Base');
     var PolygonShape = require('zrender/shape/Polygon');
     var zrUtil = require('zrender/tool/util');
-    
+
     function HandlePolygon(options) {
         Base.call(this, options);
     }
@@ -25,7 +25,6 @@ define(function (require) {
             PolygonShape.prototype.buildPath(
                 ctx, style
             );
-            return;
         },
         isCover : function (x, y) {
             var originPos = this.getTansform(x, y);
@@ -48,6 +47,6 @@ define(function (require) {
     };
 
     zrUtil.inherits(HandlePolygon, Base);
-    
+
     return HandlePolygon;
 });
