@@ -150,6 +150,8 @@ define(function() {
                                        // 'top' ¦ 'bottom' ¦ 'center'
                                        // ¦ {number}（y坐标，单位px）
             color : ['#1e90ff','#22bb22','#4b0082','#d2691e'],
+            disableColor : '#ddd',
+            effectiveColor : 'red',
             backgroundColor: 'rgba(0,0,0,0)', // 工具箱背景颜色
             borderColor: '#ccc',       // 工具箱边框颜色
             borderWidth: 0,            // 工具箱边框线宽，单位px，默认为0（无边框）
