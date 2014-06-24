@@ -18,8 +18,8 @@ define(function (require) {
     var dashedLineTo = require('zrender/shape/util/dashedLineTo');
     var smoothSpline = require('zrender/shape/util/smoothSpline');
     var zrUtil = require('zrender/tool/util');
-    
-    
+
+
     function MarkLine(options) {
         Base.call(this, options);
     }
@@ -54,7 +54,7 @@ define(function (require) {
             ctx.beginPath();
             this.buildLinePath(ctx, style);
             ctx.stroke();
-            
+
             this.brushSymbol(ctx, style, 0);
             this.brushSymbol(ctx, style, 1);
 
@@ -63,10 +63,8 @@ define(function (require) {
             }
 
             ctx.restore();
-
-            return;
         },
-    
+
         /**
          * 创建线条路径
          * @param {Context2D} ctx Canvas 2D上下文
@@ -75,12 +73,12 @@ define(function (require) {
         buildLinePath : function (ctx, style) {
             var pointList = style.pointList || this.getPointList(style);
             style.pointList = pointList;
-            
+
             var len = Math.min(
-                    style.pointList.length, 
+                    style.pointList.length,
                     Math.round(style.pointListLength || style.pointList.length)
                 );
-            
+
             if (!style.lineType || style.lineType == 'solid') {
                 //默认为实线
                 ctx.moveTo(pointList[0][0],pointList[0][1]);
@@ -93,7 +91,7 @@ define(function (require) {
             ) {
                 if (style.smooth !== 'spline') {
                     // 直线
-                    var dashLength = (style.lineWidth || 1) 
+                    var dashLength = (style.lineWidth || 1)
                                  * (style.lineType == 'dashed' ? 5 : 1);
                     ctx.moveTo(pointList[0][0],pointList[0][1]);
                     for (var i = 1; i < len; i++) {
@@ -116,7 +114,7 @@ define(function (require) {
         },
 
         /**
-         * 标线始末标注 
+         * 标线始末标注
          */
         brushSymbol : function (ctx, style, idx) {
             if (style.symbol[idx] == 'none') {
@@ -124,7 +122,7 @@ define(function (require) {
             }
             ctx.save();
             ctx.beginPath();
-            
+
             ctx.lineWidth = style.symbolBorder;
             ctx.strokeStyle = style.symbolBorderColor;
             // symbol
@@ -133,10 +131,10 @@ define(function (require) {
             if (style.symbol[idx].match('empty')) {
                 ctx.fillStyle = '#fff'; //'rgba(0, 0, 0, 0)';
             }
-            
+
             // symbolRotate
             var len = Math.min(
-                    style.pointList.length, 
+                    style.pointList.length,
                     Math.round(style.pointListLength || style.pointList.length)
                 );
             var x = idx === 0 ? style.pointList[0][0] : style.pointList[len - 1][0];
@@ -151,7 +149,7 @@ define(function (require) {
                     matrix.translate(transform, transform, [-x, -y]);
                 }
                 matrix.rotate(
-                    transform, transform, 
+                    transform, transform,
                     rotate * Math.PI / 180
                 );
                 if (x || y ) {
@@ -173,16 +171,16 @@ define(function (require) {
                 style.height = symbolSize * 2;
                 IconShape.prototype.buildPath(ctx, style);
             }
-            
+
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
             ctx.restore();
         },
-        
+
         buildArrawPath : function (ctx, style, idx) {
             var len = Math.min(
-                    style.pointList.length, 
+                    style.pointList.length,
                     Math.round(style.pointListLength || style.pointList.length)
                 );
             var symbolSize = style.symbolSize[idx] * 2;
@@ -234,7 +232,7 @@ define(function (require) {
                     }
                 }
             }
-            
+
             var halfRotate = Math.PI / 8; // 夹角
             var x = idx === 0 ? xStart : xEnd;
             var y = idx === 0 ? yStart : yEnd;
@@ -258,7 +256,7 @@ define(function (require) {
             }
             ctx.lineTo(x, y);
         },
-        
+
         getPointList : function (style) {
             var pointList = [
                 [style.xStart, style.yStart],
@@ -276,7 +274,7 @@ define(function (require) {
             }
             return pointList;
         },
-        
+
         /**
          * {Array} start point
          * {Array} end point
@@ -320,7 +318,7 @@ define(function (require) {
             }
             return mp;
         },
-        
+
         /**
          * 返回矩形区域，用于局部刷新和文字定位
          * @param {Object} style
@@ -329,7 +327,7 @@ define(function (require) {
             if (style.__rect) {
                 return style.__rect;
             }
-            
+
             var lineWidth = style.lineWidth || 1;
             style.__rect = {
                 x : Math.min(style.xStart, style.xEnd) - lineWidth,
@@ -339,10 +337,10 @@ define(function (require) {
                 height : Math.abs(style.yStart - style.yEnd)
                          + lineWidth
             };
-            
+
             return style.__rect;
         },
-        
+
         isCover : function (x, y) {
             var originPos = this.getTansform(x, y);
             x = originPos[0];
@@ -359,16 +357,16 @@ define(function (require) {
                 && y <= (rect.y + rect.height)
             ) {
                 // 矩形内
-                return this.style.smooth !== 'spline' 
+                return this.style.smooth !== 'spline'
                        ? area.isInside(lineInstance, this.style, x, y)
                        : area.isInside(brokenLineInstance, this.style, x, y);
             }
-            
+
             return false;
         }
     };
 
     zrUtil.inherits(MarkLine, Base);
-    
+
     return MarkLine;
 });
