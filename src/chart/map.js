@@ -473,14 +473,19 @@ define(function (require) {
         _getSingleProvince : function (mapType, path, position) {
             var textPosition;
             var name = path.properties.name;
+            var textFixed = _textFixed[name] || [0, 0];
             if (_geoCoord[name]) {
+                // 经纬度直接定位不加textFixed
                 textPosition = this.geo2pos(
                     mapType, 
                     _geoCoord[name]
                 );
             }
             else if (path.cp) {
-                textPosition = [path.cp[0], path.cp[1]];
+                textPosition = [
+                    path.cp[0] + textFixed[0], 
+                    path.cp[1] + textFixed[1]
+                ];
             }
             else {
                 var bbox = this._mapDataMap[mapType].bbox;
@@ -488,12 +493,10 @@ define(function (require) {
                     mapType, 
                     [bbox.left + bbox.width / 2, bbox.top + bbox.height / 2]
                 );
+                textPosition[0] += textFixed[0];
+                textPosition[1] += textFixed[1];
             }
             
-            if (_textFixed[name]) {
-                textPosition[0] += _textFixed[name][0];
-                textPosition[1] += _textFixed[name][1];
-            }
             //console.log(textPosition)
             path.name = this._nameChange(mapType, name);
             path.position = position;
