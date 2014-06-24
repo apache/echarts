@@ -948,125 +948,105 @@ define(function (require) {
          * @param {string=} additionData 是否增加类目轴(饼图为图例)数据，附加操作同isHead和dataGrow
          */
         addData : function (seriesIdx, data, isHead, dataGrow, additionData) {
-            var magicOption = this.getOption();
             var params = seriesIdx instanceof Array
-                         ? seriesIdx
-                         : [[seriesIdx, data, isHead, dataGrow, additionData]];
-            var axisIdx;
-            var legendDataIdx;
+                ? seriesIdx
+                : [[seriesIdx, data, isHead, dataGrow, additionData]];
+
             //this._optionRestore 和 magicOption 都要同步
+            var magicOption = this.getOption();
+            var optionRestore = this._optionRestore;
             for (var i = 0, l = params.length; i < l; i++) {
                 seriesIdx = params[i][0];
                 data = params[i][1];
                 isHead = params[i][2];
                 dataGrow = params[i][3];
                 additionData = params[i][4];
-                if (this._optionRestore.series[seriesIdx]) {
-                    if (isHead) {
-                        this._optionRestore.series[seriesIdx].data.unshift(data);
-                        magicOption.series[seriesIdx].data.unshift(data);
-                        if (!dataGrow) {
-                            this._optionRestore.series[seriesIdx].data.pop();
-                            data = magicOption.series[seriesIdx].data.pop();
-                        }
-                    }
-                    else {
-                        this._optionRestore.series[seriesIdx].data.push(data);
-                        magicOption.series[seriesIdx].data.push(data);
-                        if (!dataGrow) {
-                            this._optionRestore.series[seriesIdx].data.shift();
-                            data = magicOption.series[seriesIdx].data.shift();
-                        }
+
+                
+                var seriesItem = optionRestore.series[seriesIdx];
+                var inMethod = isHead ? 'unshift' : 'push';
+                var outMethod = isHead ? 'pop' : 'shift';
+                if (seriesItem) {
+                    var seriesItemData = seriesItem.data;
+                    var mSeriesItemData = magicOption.series[seriesIdx].Data;
+
+                    seriesItemData[inMethod](data);
+                    mSeriesItemData[inMethod](data);
+                    if (!dataGrow) {
+                        seriesItemData[outMethod]();
+                        data = mSeriesItemData[outMethod]();
                     }
                     
-                    if (typeof additionData != 'undefined'
-                        && this._optionRestore.series[seriesIdx].type == ecConfig.CHART_TYPE_PIE
-                        && this._optionRestore.legend 
-                        && this._optionRestore.legend.data
-                    ) {
-                        if (isHead) {
-                            this._optionRestore.legend.data.unshift(additionData);
-                            magicOption.legend.data.unshift(additionData);
-                        }
-                        else {
-                            this._optionRestore.legend.data.push(additionData);
-                            magicOption.legend.data.push(additionData);
-                        }
-                        if (!dataGrow) {
-                            legendDataIdx = zrUtil.indexOf(
-                                this._optionRestore.legend.data, data.name
-                            );
-                            legendDataIdx != -1 
-                            && this._optionRestore.legend.data.splice(legendDataIdx, 1);
-                            
-                            legendDataIdx = zrUtil.indexOf(
-                                magicOption.legend.data, data.name
-                            );
-                            legendDataIdx != -1 
-                            && magicOption.legend.data.splice(legendDataIdx, 1);
-                        }
-                    } 
-                    else if (typeof additionData != 'undefined'
-                             && typeof this._optionRestore.xAxis != 'undefined'
-                             && typeof this._optionRestore.yAxis != 'undefined'
-                    ) {
-                        // x轴类目
-                        axisIdx = this._optionRestore.series[seriesIdx].xAxisIndex || 0;
-                        if (typeof this._optionRestore.xAxis[axisIdx].type == 'undefined'
-                            || this._optionRestore.xAxis[axisIdx].type == 'category'
+                    
+                    if (additionData != null) {
+                        var legend;
+                        var legendData;
+                        if (seriesItem.type == ecConfig.CHART_TYPE_PIE
+                            && (legend = optionRestore.legend) 
+                            && (legendData = legend.data)
                         ) {
-                            if (isHead) {
-                                this._optionRestore.xAxis[axisIdx].data.unshift(additionData);
-                                magicOption.xAxis[axisIdx].data.unshift(additionData);
-                                if (!dataGrow) {
-                                    this._optionRestore.xAxis[axisIdx].data.pop();
-                                    magicOption.xAxis[axisIdx].data.pop();
-                                }
-                            }
-                            else {
-                                this._optionRestore.xAxis[axisIdx].data.push(additionData);
-                                magicOption.xAxis[axisIdx].data.push(additionData);
-                                if (!dataGrow) {
-                                    this._optionRestore.xAxis[axisIdx].data.shift();
-                                    magicOption.xAxis[axisIdx].data.shift();
-                                }
+                            var mLegendData = magicOption.legend.data;
+                            legendData[inMethod](additionData);
+                            mLegendData[inMethod](additionData);
+          
+
+                            if (!dataGrow) {
+                                var legendDataIdx = zrUtil.indexOf(legendData, data.name);
+                                legendDataIdx != -1 && legendData.splice(legendDataIdx, 1);
+                                
+                                legendDataIdx = zrUtil.indexOf(mLegendData, data.name);
+                                legendDataIdx != -1 && mLegendData.splice(legendDataIdx, 1);
                             }
                         }
-                        
-                        // y轴类目
-                        axisIdx = this._optionRestore.series[seriesIdx].yAxisIndex || 0;
-                        if (this._optionRestore.yAxis[axisIdx].type == 'category') {
-                            if (isHead) {
-                                this._optionRestore.yAxis[axisIdx].data.unshift(additionData);
-                                magicOption.yAxis[axisIdx].data.unshift(additionData);
+                        else if (optionRestore.xAxis != null && optionRestore.yAxis != null) {
+                            // x轴类目
+                            var axisData;
+                            var mAxisData;
+                            var axisIdx = seriesItem.xAxisIndex || 0;
+
+                            if (typeof optionRestore.xAxis[axisIdx].type == 'undefined'
+                                || optionRestore.xAxis[axisIdx].type == 'category'
+                            ) {
+                                axisData = optionRestore.xAxis[axisIdx].data;
+                                mAxisData = magicOption.xAxis[axisIdx].data;
+
+                                axisData[inMethod](additionData);
+                                mAxisData[inMethod](additionData);
                                 if (!dataGrow) {
-                                    this._optionRestore.yAxis[axisIdx].data.pop();
-                                    magicOption.yAxis[axisIdx].data.pop();
+                                    axisData[outMethod]();
+                                    mAxisData[outMethod]();
                                 }
                             }
-                            else {
-                                this._optionRestore.yAxis[axisIdx].data.push(additionData);
-                                magicOption.yAxis[axisIdx].data.push(additionData);
+                            
+                            // y轴类目
+                            axisIdx = seriesItem.yAxisIndex || 0;
+                            if (optionRestore.yAxis[axisIdx].type == 'category') {
+                                axisData = optionRestore.yAxis[axisIdx].data;
+                                mAxisData = magicOption.yAxis[axisIdx].data;
+                                
+                                axisData[inMethod](additionData);
+                                mAxisData[inMethod](additionData);
                                 if (!dataGrow) {
-                                    this._optionRestore.yAxis[axisIdx].data.shift();
-                                    magicOption.yAxis[axisIdx].data.shift();
+                                    axisData[outMethod]();
+                                    mAxisData[outMethod]();
                                 }
                             }
                         }
                     }
+
                     // 同步图表内状态，动画需要
                     this._option.series[seriesIdx].data = magicOption.series[seriesIdx].data;
                 }
             }
             
             this._zr.clearAnimation();
-            for (var i = 0, l = this._chartList.length; i < l; i++) {
-                if (magicOption.addDataAnimation 
-                    && this._chartList[i].addDataAnimation
-                ) {
-                    this._chartList[i].addDataAnimation(params);
+            var chartList = this._chartList;
+            for (var i = 0, l = chartList.length; i < l; i++) {
+                if (magicOption.addDataAnimation && chartList[i].addDataAnimation) {
+                    chartList[i].addDataAnimation(params);
                 }
             }
+
             // dataZoom同步数据
             this.component.dataZoom && this.component.dataZoom.syncOption(magicOption);
             
@@ -1077,10 +1057,10 @@ define(function (require) {
                     return; // 已经被释放
                 }
                 self._zr.clearAnimation();
-                for (var i = 0, l = self._chartList.length; i < l; i++) {
+                for (var i = 0, l = chartList.length; i < l; i++) {
                     // 有addData动画就去掉过渡动画
-                    self._chartList[i].motionlessOnce = magicOption.addDataAnimation 
-                                                        && self._chartList[i].addDataAnimation;
+                    chartList[i].motionlessOnce = 
+                        magicOption.addDataAnimation && chartList[i].addDataAnimation;
                 }
                 self._messageCenter.dispatch(
                     ecConfig.EVENT.REFRESH,
