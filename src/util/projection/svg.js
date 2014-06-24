@@ -9,18 +9,21 @@
 define(function(require) {
 
     var PathShape = require('zrender/shape/Path');
-    
+    function toFloat(str) {
+        return parseFloat(str || 0);
+    }
+
     function getBbox(root) {
         var svgNode = root.firstChild;
         // Find the svg node
-        while (!(svgNode.nodeName.toLowerCase() == 'svg' && svgNode.nodeType == 1)) {
+        while (!(svgNode.nodeName == 'SVG' && svgNode.nodeType == 1)) {
             svgNode = svgNode.nextSibling;
         }
 
-        var x = parseFloat(svgNode.getAttribute('x') || 0);
-        var y = parseFloat(svgNode.getAttribute('y') || 0);
-        var width = parseFloat(svgNode.getAttribute('width') || 0);
-        var height = parseFloat(svgNode.getAttribute('height') || 0);
+        var x = toFloat(svgNode.getAttribute('x'));
+        var y = toFloat(svgNode.getAttribute('y'));
+        var width = toFloat(svgNode.getAttribute('width'));
+        var height = toFloat(svgNode.getAttribute('height'));
         return {
             left : x,
             top : y,
@@ -135,10 +138,10 @@ define(function(require) {
         },
 
         rect: function(xmlNode, scale) {
-            var x = parseFloat(xmlNode.getAttribute('x') || 0);
-            var y = parseFloat(xmlNode.getAttribute('y') || 0);
-            var width = parseFloat(xmlNode.getAttribute('width') || 0);
-            var height = parseFloat(xmlNode.getAttribute('height') || 0);
+            var x = toFloat(xmlNode.getAttribute('x'));
+            var y = toFloat(xmlNode.getAttribute('y'));
+            var width = toFloat(xmlNode.getAttribute('width'));
+            var height = toFloat(xmlNode.getAttribute('height'));
 
             return {
                 shapeType: 'rectangle',
@@ -154,10 +157,10 @@ define(function(require) {
         },
 
         line: function(xmlNode, scale) {
-            var x1 = parseFloat(xmlNode.getAttribute('x1') || 0);
-            var y1 = parseFloat(xmlNode.getAttribute('y1') || 0);
-            var x2 = parseFloat(xmlNode.getAttribute('x2') || 0);
-            var y2 = parseFloat(xmlNode.getAttribute('y2') || 0);
+            var x1 = toFloat(xmlNode.getAttribute('x1'));
+            var y1 = toFloat(xmlNode.getAttribute('y1'));
+            var x2 = toFloat(xmlNode.getAttribute('x2'));
+            var y2 = toFloat(xmlNode.getAttribute('y2'));
 
             return {
                 shapeType: 'line',
@@ -173,9 +176,9 @@ define(function(require) {
         },
 
         circle: function(xmlNode, scale) {
-            var cx = parseFloat(xmlNode.getAttribute('cx') || 0);
-            var cy = parseFloat(xmlNode.getAttribute('cy') || 0);
-            var r = parseFloat(xmlNode.getAttribute('r') || 0);
+            var cx = toFloat(xmlNode.getAttribute('cx'));
+            var cy = toFloat(xmlNode.getAttribute('cy'));
+            var r = toFloat(xmlNode.getAttribute('r'));
 
             return {
                 shapeType: 'circle',
