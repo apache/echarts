@@ -60,6 +60,7 @@ define(function (require) {
         _numberOrder : function (a, b) {
             return b - a;
         },
+
         /**
          * 创建矩形路径
          * @param {Context2D} ctx Canvas 2D上下文
@@ -79,7 +80,6 @@ define(function (require) {
             );
             ctx.moveTo(style.x, yList[1]);
             ctx.lineTo(style.x, yList[0]);
-            return;
         },
 
         /**
@@ -87,23 +87,21 @@ define(function (require) {
          * @param {Object} style
          */
         getRect : function (style) {
-            if (style.__rect) {
-                return style.__rect;
+            if (!style.__rect) {
+                var lineWidth = 0;
+                if (style.brushType == 'stroke' || style.brushType == 'fill') {
+                    lineWidth = style.lineWidth || 1;
+                }
+
+                var yList = zrUtil.clone(style.y).sort(this._numberOrder);
+                style.__rect = {
+                    x : Math.round(style.x - style.width / 2 - lineWidth / 2),
+                    y : Math.round(yList[3] - lineWidth / 2),
+                    width : style.width + lineWidth,
+                    height : yList[0] - yList[3] + lineWidth
+                };
             }
-            var lineWidth;
-            if (style.brushType == 'stroke' || style.brushType == 'fill') {
-                lineWidth = style.lineWidth || 1;
-            }
-            else {
-                lineWidth = 0;
-            }
-            var yList = zrUtil.clone(style.y).sort(this._numberOrder);
-            style.__rect = {
-                x : Math.round(style.x - style.width / 2 - lineWidth / 2),
-                y : Math.round(yList[3] - lineWidth / 2),
-                width : style.width + lineWidth,
-                height : yList[0] - yList[3] + lineWidth
-            };
+            
             return style.__rect;
         },
         
@@ -118,16 +116,11 @@ define(function (require) {
             if (!rect) {
                 rect = this.style.__rect = this.getRect(this.style);
             }
-            if (x >= rect.x
+
+            return x >= rect.x
                 && x <= (rect.x + rect.width)
                 && y >= rect.y
-                && y <= (rect.y + rect.height)
-            ) {
-                // 矩形内
-                return true;
-            }
-            
-            return false;
+                && y <= (rect.y + rect.height);
         }
     };
 
