@@ -18,45 +18,46 @@ define(function (require) {
      * @param {tring} easing
      */
     function pointList(zr, oldShape, newShape, duration, easing) {
-        var newPointList;
+        var newPointList = newShape.style.pointList;
+        var newPointListLen = newPointList.length;
+        var oldPointList;
+
         if (!oldShape) {        // add
-            newPointList = [];
-            var len = newShape.style.pointList.length;
+            oldPointList = [];
             if (newShape._orient != 'vertical') {
-                var y = newShape.style.pointList[0][1];
-                for (var i = 0; i < len; i++) {
-                    newPointList[i] = [newShape.style.pointList[i][0], y];
+                var y = newPointList[0][1];
+                for (var i = 0; i < newPointListLen; i++) {
+                    oldPointList[i] = [newPointList[i][0], y];
                 }
             }
             else {
-                var x = newShape.style.pointList[0][0];
-                for (var i = 0; i < len; i++) {
-                    newPointList[i] = [x, newShape.style.pointList[i][1]];
+                var x = newPointList[0][0];
+                for (var i = 0; i < newPointListLen; i++) {
+                    oldPointList[i] = [x, newPointList[i][1]];
                 }
             }
+
             if (newShape.type == 'half-smooth-polygon') {
-                newPointList[len - 1] = zrUtil.clone(newShape.style.pointList[len - 1]);
-                newPointList[len - 2] = zrUtil.clone(newShape.style.pointList[len - 2]);
+                oldPointList[newPointListLen - 1] = zrUtil.clone(newPointList[newPointListLen - 1]);
+                oldPointList[newPointListLen - 2] = zrUtil.clone(newPointList[newPointListLen - 2]);
             }
-            oldShape = {style : {pointList : newPointList}};
+            oldShape = {style : {pointList : oldPointList}};
         }
         
-        newPointList = newShape.style.pointList;
-        if (oldShape.style.pointList.length == newPointList.length) {
-            newShape.style.pointList = oldShape.style.pointList;
+        oldPointList = oldShape.style.pointList;
+        var oldPointListLen = oldPointList.length;
+        if (oldPointListLen == newPointListLen) {
+            newShape.style.pointList = oldPointList;
         }
-        else if (oldShape.style.pointList.length < newPointList.length) {
+        else if (oldPointListLen < newPointListLen) {
             // 原来短，新的长，补全
-            newShape.style.pointList = oldShape.style.pointList.concat(
-                newPointList.slice(oldShape.style.pointList.length)
-            );
+            newShape.style.pointList = oldPointList.concat(newPointList.slice(oldPointListLen));
         }
         else {
             // 原来长，新的短，截断
-            newShape.style.pointList = oldShape.style.pointList.slice(
-                0, newPointList.length
-            );
+            newShape.style.pointList = oldPointList.slice(0, newPointListLen);
         }
+
         zr.addShape(newShape);
         zr.animate(newShape.id, 'style')
             .when(
@@ -67,6 +68,22 @@ define(function (require) {
     }
     
     /**
+     * 复制样式
+     * 
+     * @inner
+     * @param {Object} target 目标对象
+     * @param {Object} source 源对象
+     * @param {...string} props 复制的属性列表
+     */
+    function cloneStyle(target, source) {
+        var len = arguments.length;
+        for (var i = 2; i < len; i++) {
+            var prop = arguments[i];
+            target.style[prop] = source.style[prop];
+        }
+    }
+
+    /**
      * 方型动画
      * 
      * @param {ZRender} zr
@@ -76,29 +93,31 @@ define(function (require) {
      * @param {tring} easing
      */
     function rectangle(zr, oldShape, newShape, duration, easing) {
+        var newShapeStyle = newShape.style;
         if (!oldShape) {        // add
             oldShape = {
                 style : {
-                    x : newShape.style.x,
+                    x : newShapeStyle.x,
                     y : newShape._orient == 'vertical'
-                        ? newShape.style.y + newShape.style.height
-                        : newShape.style.y,
+                        ? newShapeStyle.y + newShapeStyle.height
+                        : newShapeStyle.y,
                     width: newShape._orient == 'vertical' 
-                           ? newShape.style.width : 0,
+                           ? newShapeStyle.width : 0,
                     height: newShape._orient != 'vertical' 
-                           ? newShape.style.height : 0
+                           ? newShapeStyle.height : 0
                 }
             };
         }
         
-        var newX = newShape.style.x;
-        var newY = newShape.style.y;
-        var newWidth = newShape.style.width;
-        var newHeight = newShape.style.height;
-        newShape.style.x = oldShape.style.x;
-        newShape.style.y = oldShape.style.y;
-        newShape.style.width = oldShape.style.width;
-        newShape.style.height = oldShape.style.height;
+        var newX = newShapeStyle.x;
+        var newY = newShapeStyle.y;
+        var newWidth = newShapeStyle.width;
+        var newHeight = newShapeStyle.height;
+        cloneStyle(
+            newShape, oldShape,
+            'x', 'y', 'width', 'height'
+        );
+
         zr.addShape(newShape);
         zr.animate(newShape.id, 'style')
             .when(
@@ -218,8 +237,10 @@ define(function (require) {
         var startAngle = newShape.style.startAngle;
         var endAngle = newShape.style.endAngle;
         
-        newShape.style.startAngle = oldShape.style.startAngle;
-        newShape.style.endAngle = oldShape.style.endAngle;
+        cloneStyle(
+            newShape, oldShape,
+            'startAngle', 'endAngle'
+        );
         
         zr.addShape(newShape);
         zr.animate(newShape.id, 'style')
@@ -257,8 +278,10 @@ define(function (require) {
         var x = newShape.style.x;
         var y = newShape.style.y;
         
-        newShape.style.x = oldShape.style.x;
-        newShape.style.y = oldShape.style.y;
+        cloneStyle(
+            newShape, oldShape,
+            'x', 'y'
+        );
         
         zr.addShape(newShape);
         zr.animate(newShape.id, 'style')
@@ -325,10 +348,10 @@ define(function (require) {
         var target1 = newShape.style.target1;
         
         if (oldShape.style) {
-            newShape.style.source0 = oldShape.style.source0;
-            newShape.style.source1 = oldShape.style.source1;
-            newShape.style.target0 = oldShape.style.target0;
-            newShape.style.target1 = oldShape.style.target1;
+            cloneStyle(
+                newShape, oldShape,
+                'source0', 'source1', 'target0', 'target1'
+            );
         }
         
         zr.addShape(newShape);
@@ -391,6 +414,7 @@ define(function (require) {
         newShape.style._y = newShape.style.y;
         newShape.style._width = newShape.style.width;
         newShape.style._height = newShape.style.height;
+
         if (!oldShape) {    // add
             var x = newShape._x || 0;
             var y = newShape._y || 0;
@@ -431,10 +455,12 @@ define(function (require) {
         var xEnd = newShape.style.xEnd;
         var yStart = newShape.style.yStart;
         var yEnd = newShape.style.yEnd;
-        newShape.style.xStart = oldShape.style.xStart;
-        newShape.style.xEnd = oldShape.style.xEnd;
-        newShape.style.yStart = oldShape.style.yStart;
-        newShape.style.yEnd = oldShape.style.yEnd;
+
+        cloneStyle(
+            newShape, oldShape,
+            'xStart', 'xEnd', 'yStart', 'yEnd'
+        );
+
         zr.addShape(newShape);
         zr.animate(newShape.id, 'style')
             .when(

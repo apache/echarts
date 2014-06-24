@@ -22,15 +22,12 @@ define(function() {
     ) {
         var value;
         if (typeof data != 'undefined') {
-            if (typeof data.value != 'undefined') {
-                value = data.value;
-            }
-            else {
-                value = data;
-            }
+            value = data.value == null
+                ? data
+                : data.value;
         }
 
-        shape._echartsData =  {
+        shape._echartsData = {
             '_series' : series,
             '_seriesIndex' : seriesIndex,
             '_data' : data,
@@ -56,21 +53,14 @@ define(function() {
 
         switch (key) {
             case 'series' :
-                return data && data._series;
             case 'seriesIndex' :
-                return data && data._seriesIndex;
             case 'data' :
-                return data && data._data;
             case 'dataIndex' :
-                return data && data._dataIndex;
             case 'name' :
-                return data && data._name;
             case 'value' :
-                return data && data._value;
             case 'special' :
-                return data && data._special;
             case 'special2' :
-                return data && data._special2;
+                return data && data['_' + key];
         }
 
         return null;
@@ -86,28 +76,14 @@ define(function() {
         shape._echartsData = shape._echartsData || {};
         switch (key) {
             case 'series' :             // 当前系列值
-                shape._echartsData._series = value;
-                break;
             case 'seriesIndex' :        // 系列数组位置索引
-                shape._echartsData._seriesIndex = value;
-                break;
             case 'data' :               // 当前数据值
-                shape._echartsData._data = value;
-                break;
             case 'dataIndex' :          // 数据数组位置索引
-                shape._echartsData._dataIndex = value;
-                break;
             case 'name' :
-                shape._echartsData._name = value;
-                break;
             case 'value' :
-                shape._echartsData._value = value;
-                break;
             case 'special' :
-                shape._echartsData._special = value;
-                break;
             case 'special2' :
-                shape._echartsData._special2 = value;
+                shape._echartsData['_' + key] = value;
                 break;
         }
     }

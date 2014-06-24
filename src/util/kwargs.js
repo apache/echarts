@@ -23,7 +23,8 @@ define(function (){
             // Check the existance of the kwargs
             if (kwargs && kwargs.constructor === Object) {
                 args.pop();
-            }else{
+            }
+            else{
                 kwargs = {};
             }
 
@@ -32,7 +33,8 @@ define(function (){
                 var name = names[i];
                 if (name in kwargs) {
                     args[i] = kwargs[name];
-                }else if(name in defaults && args[i] === undefined){
+                }
+                else if(name in defaults && args[i] == null){
                     args[i] = defaults[name];
                 }
             }
