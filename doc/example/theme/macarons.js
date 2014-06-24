@@ -55,9 +55,9 @@ var theme = {
 
     // 区域缩放控制器
     dataZoom: {
-        dataBackgroundColor: '#d0e4fe',            // 数据背景颜色
-        fillerColor: 'rgba(184,227,247,0.3)',   // 填充颜色
-        handleColor: 'rgba(70,130,180,0.8)',    // 手柄颜色
+        dataBackgroundColor: '#efefff',            // 数据背景颜色
+        fillerColor: 'rgba(182,162,222,0.2)',   // 填充颜色
+        handleColor: '#008acd',    // 手柄颜色
 
     },
 
@@ -120,8 +120,12 @@ var theme = {
     },
 
     timeline : {
+        lineStyle : {
+            color : '#008acd'
+        },
         controlStyle : {
-            normal : { color : '#666'}
+            normal : { color : '#008acd'},
+            emphasis : { color : '#008acd'}
         },
         symbol : 'emptyCircle',
         symbolSize : 3

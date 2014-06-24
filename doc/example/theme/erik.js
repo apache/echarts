@@ -38,11 +38,15 @@ var theme = {
 
     // 区域缩放控制器
     dataZoom: {
-        dataBackgroundColor: '#dcdcdc',            // 数据背景颜色
-        fillerColor: 'rgba(144,197,237,0.2)',   // 填充颜色
-        handleColor: 'rgba(0,94,170,0.8)'     // 手柄颜色
+        dataBackgroundColor: '#dedede',            // 数据背景颜色
+        fillerColor: 'rgba(154,217,247,0.2)',   // 填充颜色
+        handleColor: '#005eaa'     // 手柄颜色
     },
-
+    
+    grid: {
+        borderWidth: 0
+    },
+    
     // 类目轴
     categoryAxis: {
         axisLine: {            // 坐标轴线
@@ -66,6 +70,16 @@ var theme = {
             areaStyle: {       // 属性areaStyle（详见areaStyle）控制区域样式
                 color: ['rgba(250,250,250,0.2)','rgba(200,200,200,0.2)']
             }
+        }
+    },
+    
+    timeline : {
+        lineStyle : {
+            color : '#005eaa'
+        },
+        controlStyle : {
+            normal : { color : '#005eaa'},
+            emphasis : { color : '#005eaa'}
         }
     },
 

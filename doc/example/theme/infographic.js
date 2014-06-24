@@ -53,22 +53,22 @@ var theme = {
                 color: '#27727B'
             },
             shadowStyle : {                     // 阴影指示器样式设置
-                color: 'rgba(200,200,200,0.5)'
+                color: 'rgba(200,200,200,0.3)'
             }
         }
     },
 
     // 区域缩放控制器
     dataZoom: {
-        dataBackgroundColor: '#ddd',            // 数据背景颜色
-        fillerColor: 'rgba(188,195,52,0.1)',   // 填充颜色
+        dataBackgroundColor: 'rgba(181,195,52,0.3)',            // 数据背景颜色
+        fillerColor: 'rgba(181,195,52,0.2)',   // 填充颜色
         handleColor: '#27727B',    // 手柄颜色
 
     },
 
     // 网格
     grid: {
-        borderColor: '#eee'
+        borderWidth:0
     },
 
     // 类目轴
@@ -79,28 +79,22 @@ var theme = {
             }
         },
         splitLine: {           // 分隔线
-            lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
-                color: ['#eee']
-            }
+            show: false
         }
     },
 
     // 数值型坐标轴默认参数
     valueAxis: {
         axisLine: {            // 坐标轴线
-            lineStyle: {       // 属性lineStyle控制线条样式
-                color: '#27727B'
-            }
+            show: false
         },
         splitArea : {
-            show : true,
-            areaStyle : {
-                color: ['rgba(250,250,250,0.1)','rgba(200,200,200,0.1)']
-            }
+            show: false
         },
         splitLine: {           // 分隔线
             lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
-                color: ['#eee']
+                color: ['#ccc'],
+                type: 'dashed'
             }
         }
     },
@@ -126,12 +120,11 @@ var theme = {
 
     timeline : {
         lineStyle : {
-            width : 1,
-            color : '#27727B',
-            type : 'dashed'
+            color : '#27727B'
         },
         controlStyle : {
-            normal : { color : '#27727B'}
+            normal : { color : '#27727B'},
+            emphasis : { color : '#27727B'}
         },
         symbol : 'emptyCircle',
         symbolSize : 3
