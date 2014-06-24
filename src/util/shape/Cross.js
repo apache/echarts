@@ -33,7 +33,7 @@ define(function (require) {
     var Base = require('zrender/shape/Base');
     var LineShape = require('zrender/shape/Line');
     var zrUtil = require('zrender/tool/util');
-    
+
     function Cross(options) {
         Base.call(this, options);
     }
@@ -57,7 +57,7 @@ define(function (require) {
             style.yEnd = rect.y + rect.height;
             LineShape.prototype.buildPath(ctx, style);
         },
-        
+
         /**
          * 返回矩形区域，用于局部刷新和文字定位
          * @param {Object} style
@@ -65,10 +65,10 @@ define(function (require) {
         getRect : function (style) {
             return style.rect;
         },
-        
+
         isCover : function (x, y) {
             // 快速预判并保留判断矩形
-            var rect = this.style.__rect = this.style.__rect 
+            var rect = this.style.__rect = this.style.__rect
                                            || this.getRect(this.style);
             return x >= rect.x
                 && x <= (rect.x + rect.width)
@@ -78,6 +78,6 @@ define(function (require) {
     };
 
     zrUtil.inherits(Cross, Base);
-    
+
     return Cross;
 });
