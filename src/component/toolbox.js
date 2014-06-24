@@ -107,7 +107,10 @@ define(function (require) {
         type : ecConfig.COMPONENT_TYPE_TOOLBOX,
         _buildShape : function () {
             this._iconList = [];
-            var feature = this.option.toolbox.feature;
+            var toolboxOption = this.option.toolbox;
+            this._enableColor = toolboxOption.effectiveColor
+            this._disableColor = toolboxOption.disableColor;
+            var feature = toolboxOption.feature;
             var iconName = [];
             for (var key in feature){
                 if (feature[key].show) {
