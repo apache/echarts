@@ -26,6 +26,7 @@ var theme = {
         color:['#1790cf','#a2d4e6']
     },
 
+    // 工具箱
     toolbox: {
         color : ['#06467c','#00613c','#872d2f','#c47630'],
         itemGap: 8
