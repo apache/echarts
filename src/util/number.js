@@ -7,22 +7,22 @@
  */
 define(function() {
     function _trim(str) {
-        return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+        return str.replace(/^\s+/, '').replace(/\s+$/, '');
     }
     
     /**
      * 百分比计算
      */
     function parsePercent(value, maxValue) {
-        if (typeof(value) === 'string') {
+        if (typeof value === 'string') {
             if (_trim(value).match(/%$/)) {
                 return parseFloat(value) / 100 * maxValue;
-            } else {
-                return parseFloat(value);
             }
-        } else {
-            return value;
+
+            return parseFloat(value);
         }
+
+        return value;
     }
     
     /**
