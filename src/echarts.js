@@ -968,7 +968,7 @@ define(function (require) {
                 var outMethod = isHead ? 'pop' : 'shift';
                 if (seriesItem) {
                     var seriesItemData = seriesItem.data;
-                    var mSeriesItemData = magicOption.series[seriesIdx].Data;
+                    var mSeriesItemData = magicOption.series[seriesIdx].data;
 
                     seriesItemData[inMethod](data);
                     mSeriesItemData[inMethod](data);
@@ -981,7 +981,7 @@ define(function (require) {
                     if (additionData != null) {
                         var legend;
                         var legendData;
-                        
+
                         if (seriesItem.type == ecConfig.CHART_TYPE_PIE
                             && (legend = optionRestore.legend) 
                             && (legendData = legend.data)
