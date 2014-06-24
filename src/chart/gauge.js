@@ -19,7 +19,6 @@ define(function (require) {
 
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
-    var number = require('../util/number');
     var zrUtil = require('zrender/tool/util');
     var zrMath = require('zrender/tool/math');
     var zrColor = require('zrender/tool/color');
@@ -107,7 +106,7 @@ define(function (require) {
             var totalAngle  = params.totalAngle;
             var colorArray  = params.colorArray;
             var lineStyle   = serie.axisLine.lineStyle;
-            var lineWidth   = lineStyle.width;
+            var lineWidth   = this.parsePercent(lineStyle.width, params.radius[1]);
             var r           = params.radius[1];
             var r0          = r - lineWidth;
             
@@ -139,14 +138,16 @@ define(function (require) {
                 return
             }
             
+            var params = this._paramsMap[seriesIndex];
             var splitNumber = serie.splitNumber;
             var min         = serie.min;
             var total       = serie.max - min;
             var splitLine   = serie.splitLine;
-            var length      = splitLine.length;
+            var length      = this.parsePercent(
+                                  splitLine.length, params.radius[1]
+                              );
             var lineStyle   = splitLine.lineStyle;
             var color       = lineStyle.color;
-            var params = this._paramsMap[seriesIndex];
             var center = params.center;
             var startAngle = params.startAngle * Math.PI / 180;
             var totalAngle = params.totalAngle * Math.PI / 180;
@@ -190,16 +191,18 @@ define(function (require) {
                 return
             }
             
+            var params = this._paramsMap[seriesIndex];
             var splitNumber = serie.splitNumber;
             var min         = serie.min;
             var total       = serie.max - min;
             var axisTick    = serie.axisTick;
             var tickSplit   = axisTick.splitNumber;
-            var length      = axisTick.length;
+            var length      = this.parsePercent(
+                                  axisTick.length, params.radius[1]
+                              );
             var lineStyle   = axisTick.lineStyle;
             var color       = lineStyle.color;
             
-            var params = this._paramsMap[seriesIndex];
             var center = params.center;
             var startAngle = params.startAngle * Math.PI / 180;
             var totalAngle = params.totalAngle * Math.PI / 180;
@@ -257,7 +260,10 @@ define(function (require) {
             var center = params.center;
             var startAngle = params.startAngle;
             var totalAngle = params.totalAngle;
-            var r0 = params.radius[1] - serie.splitLine.length - 10;
+            var r0 = params.radius[1] 
+                     - this.parsePercent(
+                         serie.splitLine.length, params.radius[1]
+                     ) - 10;
             var axShape;
             var angle;
             var sinAngle;
@@ -299,11 +305,15 @@ define(function (require) {
         
         _buildPointer : function (seriesIndex) {
             var serie       = this.series[seriesIndex];
+            if (!serie.pointer.show) {
+                return
+            }
             var total       = serie.max - serie.min;
             var pointer     = serie.pointer;
             
             var params = this._paramsMap[seriesIndex];
-            var length = number.parsePercent(pointer.length, params.radius[1]);
+            var length = this.parsePercent(pointer.length, params.radius[1]);
+            var width = this.parsePercent(pointer.width, params.radius[1]);
             var center = params.center;
             var value = this._getValue(seriesIndex);
             value = value < serie.max ? value : serie.max;
@@ -321,7 +331,7 @@ define(function (require) {
                     startAngle : params.startAngle * Math.PI / 180,
                     angle : angle,
                     color : color,
-                    width : pointer.width,
+                    width : width,
                     shadowColor : pointer.shadowColor,
                     shadowBlur: pointer.shadowBlur,
                     shadowOffsetX: pointer.shadowOffsetX,
@@ -329,7 +339,7 @@ define(function (require) {
                 },
                 highlightStyle : {
                     brushType : 'fill',
-                    width : pointer.width > 2 ? 2 : (pointer.width / 2),
+                    width : width > 2 ? 2 : (width / 2),
                     color : '#fff'
                 }
             });
@@ -368,18 +378,20 @@ define(function (require) {
                 var textStyle       = title.textStyle;
                 var textColor       = textStyle.color;
                 var params          = this._paramsMap[seriesIndex];
+                var x = params.center[0] + this.parsePercent(offsetCenter[0], params.radius[1]);
+                var y = params.center[1] + this.parsePercent(offsetCenter[1], params.radius[1]);
                 this.shapeList.push(new TextShape({
-                    zlevel : this._zlevelBase + 1,
+                    zlevel : this._zlevelBase
+                             + (Math.abs(x - params.center[0]) + Math.abs(y - params.center[1])) 
+                               < textStyle.fontSize * 2 ? 2 : 1,
                     hoverable : false,
                     style : {
-                        x : params.center[0] 
-                            + number.parsePercent(offsetCenter[0], params.radius[1]),
-                        y : params.center[1] 
-                            + number.parsePercent(offsetCenter[1], params.radius[1]),
+                        x : x,
+                        y : y,
                         color: textColor == 'auto' ? this._getColor(seriesIndex) : textColor,
                         text: name,
                         textAlign: 'center',
-                        textFont : this.getFont(title.textStyle),
+                        textFont : this.getFont(textStyle),
                         shadowColor : textStyle.shadowColor,
                         shadowBlur: textStyle.shadowBlur,
                         shadowOffsetX: textStyle.shadowOffsetX,
@@ -404,9 +416,9 @@ define(function (require) {
             var params = this._paramsMap[seriesIndex];
             var value = this._getValue(seriesIndex);
             var x = params.center[0] - detail.width / 2 
-                    + number.parsePercent(offsetCenter[0], params.radius[1]);
+                    + this.parsePercent(offsetCenter[0], params.radius[1]);
             var y = params.center[1] 
-                    + number.parsePercent(offsetCenter[1], params.radius[1]);
+                    + this.parsePercent(offsetCenter[1], params.radius[1]);
             this.shapeList.push(new RectangleShape({
                 zlevel : this._zlevelBase 
                          + (Math.abs(x+detail.width/2 - params.center[0]) + Math.abs(y+detail.height/2 - params.center[1])) 

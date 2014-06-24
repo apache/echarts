@@ -46,8 +46,8 @@ define(function (require) {
             var r = style.r;
             var width = style.width;
             var angle = style.angle;
-            var x = style.x - Math.cos(angle) * width * 2;
-            var y = style.y + Math.sin(angle) * width * 2;
+            var x = style.x - Math.cos(angle) * width * (width >= r / 3 ? 1 : 2);
+            var y = style.y + Math.sin(angle) * width * (width >= r / 3 ? 1 : 2);
             
             angle = style.angle - Math.PI / 2;
             ctx.moveTo(x, y);

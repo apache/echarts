@@ -929,6 +929,7 @@ define(function() {
                 }
             },
             pointer : {
+                show : true,
                 length : '80%',
                 width : 8,
                 color : 'auto'
