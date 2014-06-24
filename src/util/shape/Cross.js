@@ -40,6 +40,7 @@ define(function (require) {
 
     Cross.prototype =  {
         type : 'cross',
+
         /**
          * 创建矩形路径
          * @param {Context2D} ctx Canvas 2D上下文
@@ -55,7 +56,6 @@ define(function (require) {
             style.yStart = rect.y;
             style.yEnd = rect.y + rect.height;
             LineShape.prototype.buildPath(ctx, style);
-            return;
         },
         
         /**
@@ -70,16 +70,10 @@ define(function (require) {
             // 快速预判并保留判断矩形
             var rect = this.style.__rect = this.style.__rect 
                                            || this.getRect(this.style);
-            if (x >= rect.x
+            return x >= rect.x
                 && x <= (rect.x + rect.width)
                 && y >= rect.y
-                && y <= (rect.y + rect.height)
-            ) {
-                // 矩形内
-                return true;
-            }
-            
-            return false;
+                && y <= (rect.y + rect.height);
         }
     };
 

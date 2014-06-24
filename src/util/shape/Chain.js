@@ -19,6 +19,7 @@ define(function (require) {
 
     Chain.prototype =  {
         type : 'chain',
+        
         /**
          * 画刷
          * @param ctx       画布句柄

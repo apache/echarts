@@ -43,6 +43,7 @@ define(function (require) {
 
     ChordShape.prototype = {
         type : 'chord',
+        
         // center, source0, source1, target0, target1, r
         buildPath : function (ctx, style) {
             var PI2 = Math.PI * 2;
