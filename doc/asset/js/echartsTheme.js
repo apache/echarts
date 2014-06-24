@@ -1,7 +1,7 @@
 var myChart = [];
 var domMain = $("[md='main']");
 
-var theme = 'erik';
+var theme = 'infographic';
 $('[name=theme-select]').on('change', function(){
     selectChange($(this).val());
 });
@@ -77,10 +77,10 @@ else {
     });
 }
 
-var hash = window.location.hash.replace('#','') || 'erik';
+var hash = window.location.hash.replace('#','') || 'infographic';
 if ($('[name=theme-select]').val(hash).val() != hash) {
-    $('[name=theme-select]').val('erik');
-    hash = 'erik';
+    $('[name=theme-select]').val('infographic');
+    hash = 'infographic';
 }
 
 // 按需加载
@@ -181,7 +181,9 @@ function requireCallback (ec, defaultTheme) {
         
             var downloadLink = document.createElement('a');
             downloadLink.href = image
-            downloadLink.setAttribute('download', 'EChartsTheme.png');
+            downloadLink.setAttribute(
+                'download', 'EChartsTheme-' + $('[name=theme-select]').val() + '.png'
+            );
             downloadLink.innerHTML = '<img style="height:80%" src="' + image 
                 + '" title="'
                 + (!!(window.attachEvent && navigator.userAgent.indexOf('Opera') === -1)

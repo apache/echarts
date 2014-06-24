@@ -317,9 +317,6 @@ var theme = {
             }
         },
         detail : {
-            backgroundColor: 'rgba(30,144,255,0.8)',
-            borderWidth: 1,
-            borderColor: '#fff',
             shadowColor : '#fff', //默认透明
             shadowBlur: 5,
             offsetCenter: [0, '50%'],       // x, y，单位px
