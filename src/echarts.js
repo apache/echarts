@@ -1528,6 +1528,7 @@ define(function (require) {
                 this._themeConfig.textStyle.fontFamily = this._themeConfig.textStyle.fontFamily2;
             }
             
+            this._timeline && this._timeline.setTheme(true);
             this._optionRestore && this.restore();
         },
 

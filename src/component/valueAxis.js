@@ -249,7 +249,7 @@ define(function (require) {
                 var ey = this.grid.getYend();
                 var x;
 
-                for (var i = 1; i < dataLength - 1; i++) {
+                for (var i = 0; i < dataLength; i++) {
                     // 亚像素优化
                     x = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
@@ -275,7 +275,7 @@ define(function (require) {
                 var ex = this.grid.getXend();
                 var y;
 
-                for (var i = 1; i < dataLength - 1; i++) {
+                for (var i = 0; i < dataLength; i++) {
                     // 亚像素优化
                     y = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {

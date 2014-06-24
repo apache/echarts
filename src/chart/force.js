@@ -745,6 +745,9 @@ define(function (require) {
 
         function dispose(){
             _updating = false;
+            self.clear();
+            self.shapeList = null;
+            self.effectList = null;
         }
 
         /**

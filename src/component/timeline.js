@@ -78,21 +78,7 @@ define(function (require) {
             }
         };
 
-        this.timelineOption = this.option.timeline = this.reformOption(this.option.timeline);
-        // 补全padding属性
-        this.timelineOption.padding = this.reformCssArray(
-            this.timelineOption.padding
-        );
-        // 通用字体设置
-        this.timelineOption.label.textStyle = zrUtil.merge(
-            this.timelineOption.label.textStyle || {},
-            this.ecTheme.textStyle
-        );
-        this.timelineOption.checkpointStyle.label.textStyle = zrUtil.merge(
-            this.timelineOption.checkpointStyle.label.textStyle || {},
-            this.ecTheme.textStyle
-        );
-            
+        this.setTheme(false);
         this.options = this.option.options;
         this.currentIndex = this.timelineOption.currentIndex % this.timelineOption.data.length;
         
@@ -583,7 +569,10 @@ define(function (require) {
             }
             
             this._handleShape.style.color = cpStyle.color == 'auto'
-                                            ? (curPoint.color ? curPoint.color : '#1e90ff')
+                                            ? (curPoint.color 
+                                               ? curPoint.color 
+                                               : timelineOption.controlStyle.emphasis.color
+                                              )
                                             : cpStyle.color;
             this._handleShape.style.textColor = cpStyle.label.textStyle.color == 'auto'
                                                 ? this._handleShape.style.color
@@ -782,6 +771,29 @@ define(function (require) {
          */
         resize : function () {
             if (this.timelineOption.show) {
+                this.clear();
+                this._buildShape();
+                this._syncHandleShape();
+            }
+        },
+        
+        setTheme : function(needRefresh) {
+            this.timelineOption = this.reformOption(zrUtil.clone(this.option.timeline));
+            // 补全padding属性
+            this.timelineOption.padding = this.reformCssArray(
+                this.timelineOption.padding
+            );
+            // 通用字体设置
+            this.timelineOption.label.textStyle = zrUtil.merge(
+                this.timelineOption.label.textStyle || {},
+                this.ecTheme.textStyle
+            );
+            this.timelineOption.checkpointStyle.label.textStyle = zrUtil.merge(
+                this.timelineOption.checkpointStyle.label.textStyle || {},
+                this.ecTheme.textStyle
+            );
+            
+            if (this.timelineOption.show && needRefresh) {
                 this.clear();
                 this._buildShape();
                 this._syncHandleShape();
