@@ -36,7 +36,7 @@ define(function() {
                 case 'Feature':
                     convertorParse[shape.geometry.type](shape.geometry.coordinates);
                     break;
-                case 'GeometryCollection'
+                case 'GeometryCollection' :
                     geometries = shape.geometries;
                     for (var j = 0, len2 = geometries.length; j < len2; j++) {
                         convertorParse[geometries[j].type](
