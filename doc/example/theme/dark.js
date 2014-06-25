@@ -6,7 +6,7 @@ var theme = {
     
     // 默认色板
     color: [
-        '#FE8463','#9BCA63','#FAD860','#60C0DD','#F3A43B',
+        '#FE8463','#9BCA63','#FAD860','#60C0DD','#0084C6',
         '#D7504B','#C6E579','#26C0C0','#F0805A','#F4E001',
         '#B5C334'
     ],
@@ -31,7 +31,7 @@ var theme = {
     // 值域
     dataRange: {
         itemWidth: 15,
-        color: ['#60C0DD','#9BCA63'],
+        color: ['#FFF808','#21BCF9'],
         textStyle: {
             color: '#ccc'          // 值域文字颜色
         }
