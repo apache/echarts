@@ -192,6 +192,25 @@ define(function(require) {
             }
         },
 
+        ellipse: function(xmlNode, scale) {
+            var cx = parseFloat(xmlNode.getAttribute("cx") || 0);
+            var cy = parseFloat(xmlNode.getAttribute("cy") || 0);
+            var rx = parseFloat(xmlNode.getAttribute("rx") || 0);
+            var ry = parseFloat(xmlNode.getAttribute("ry") || 0);
+
+            return {
+                shapeType: 'ellipse',
+                x: cx,
+                y: cy,
+                a: rx,
+                b: ry,
+                cp: [
+                    cx * scale[0],
+                    cy * scale[1]
+                ]
+            }
+        },
+
         polygon: function(xmlNode, scale) {
             var points = xmlNode.getAttribute('points');
             var min = [Infinity, Infinity];
