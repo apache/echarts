@@ -12,14 +12,14 @@ define(function (require) {
     var dashedLineTo = require('zrender/shape/util/dashedLineTo');
     var zrUtil = require('zrender/tool/util');
     var matrix = require('zrender/tool/matrix');
-    
+
     function Chain(options) {
         Base.call(this, options);
     }
 
     Chain.prototype =  {
         type : 'chain',
-        
+
         /**
          * 画刷
          * @param ctx       画布句柄
@@ -48,13 +48,13 @@ define(function (require) {
             ctx.beginPath();
             this.buildLinePath(ctx, style);
             ctx.stroke();
-            
+
             this.brushSymbol(ctx, style);
 
             ctx.restore();
             return;
         },
-    
+
         /**
          * 创建线条路径
          * @param {Context2D} ctx Canvas 2D上下文
@@ -65,30 +65,30 @@ define(function (require) {
             var y = style.y + 5;
             var width = style.width;
             var height = style.height / 2 - 10;
-            
+
             ctx.moveTo(x, y);
             ctx.lineTo(x, y + height);
             ctx.moveTo(x + width, y);
             ctx.lineTo(x + width, y + height);
-            
+
             ctx.moveTo(x, y + height / 2);
             if (!style.lineType || style.lineType == 'solid') {
                 ctx.lineTo(x + width, y + height / 2);
             }
             else if (style.lineType == 'dashed' || style.lineType == 'dotted') {
-                var dashLength = (style.lineWidth || 1) 
+                var dashLength = (style.lineWidth || 1)
                              * (style.lineType == 'dashed' ? 5 : 1);
                 dashedLineTo(ctx, x, y + height / 2, x + width, y + height / 2, dashLength);
             }
         },
 
         /**
-         * 标线始末标注 
+         * 标线始末标注
          */
         brushSymbol : function (ctx, style) {
             var y = style.y + style.height / 4;
             ctx.save();
-            
+
             var chainPoint = style.chainPoint;
             var curPoint;
             for (var idx = 0, l = chainPoint.length; idx < l; idx++) {
@@ -97,7 +97,7 @@ define(function (require) {
                     ctx.beginPath();
                     var symbolSize = curPoint.symbolSize;
                     IconShape.prototype.buildPath(
-                        ctx, 
+                        ctx,
                         {
                             iconType : curPoint.symbol,
                             x : curPoint.x - symbolSize,
@@ -112,7 +112,7 @@ define(function (require) {
                     ctx.fill();
                     ctx.stroke();
                 }
-                
+
                 if (curPoint.showLabel) {
                     ctx.font = curPoint.textFont;
                     ctx.fillStyle = curPoint.textColor;
@@ -129,10 +129,10 @@ define(function (require) {
                     }
                 }
             }
-            
+
             ctx.restore();
         },
-        
+
         _updateTextTransform : function (ctx, rotation) {
             var _transform = matrix.create();
             matrix.identity(_transform);
@@ -156,24 +156,11 @@ define(function (require) {
             // 保存这个变换矩阵
             ctx.transform.apply(ctx, _transform);
         },
-        
-        isCover : function (x, y) {
-            var rect = this.style;
-            if (x >= rect.x
-                && x <= (rect.x + rect.width)
-                && y >= rect.y
-                && y <= (rect.y + rect.height)
-            ) {
-                // 矩形内
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
+
+        isCover : require('./normalIsCover')
     };
 
     zrUtil.inherits(Chain, Base);
-    
+
     return Chain;
 });

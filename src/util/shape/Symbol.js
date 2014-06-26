@@ -178,23 +178,7 @@ define(function (require) {
             return style.__rect || polygonInstance.getRect(style);
         },
 
-        isCover : function (x, y) {
-            // 快速预判并保留判断矩形
-            var rect = this.style.__rect;
-            if (!rect) {
-                rect = this.style.__rect = this.getRect(this.style);
-            }
-            if (x >= rect.x
-                && x <= (rect.x + rect.width)
-                && y >= rect.y
-                && y <= (rect.y + rect.height)
-            ) {
-                // 矩形内
-                return true;
-            }
-
-            return false;
-        }
+        isCover : require('./normalIsCover')
     };
 
     zrUtil.inherits(Symbol, Base);

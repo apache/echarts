@@ -34,7 +34,7 @@ define(function (require) {
     function GaugePointer(options) {
         Base.call(this, options);
     }
-    
+
     GaugePointer.prototype =  {
         type: 'gauge-pointer',
         /**
@@ -48,7 +48,7 @@ define(function (require) {
             var angle = style.angle;
             var x = style.x - Math.cos(angle) * width * (width >= r / 3 ? 1 : 2);
             var y = style.y + Math.sin(angle) * width * (width >= r / 3 ? 1 : 2);
-            
+
             angle = style.angle - Math.PI / 2;
             ctx.moveTo(x, y);
             ctx.lineTo(
@@ -66,7 +66,7 @@ define(function (require) {
             ctx.lineTo(x, y);
             return;
         },
-        
+
         /**
          * 返回矩形区域，用于局部刷新和文字定位
          * @param {Object} style
@@ -75,13 +75,13 @@ define(function (require) {
             if (style.__rect) {
                 return style.__rect;
             }
-            
+
             var width = style.width * 2;
             var xStart = style.x;
             var yStart = style.y;
             var xEnd = xStart + Math.cos(style.angle) * style.r;
             var yEnd = yStart - Math.sin(style.angle) * style.r;
-            
+
             style.__rect = {
                 x : Math.min(xStart, xEnd) - width,
                 y : Math.min(yStart, yEnd) - width,
@@ -90,31 +90,11 @@ define(function (require) {
             };
             return style.__rect;
         },
-        
-        isCover : function (x, y) {
-            var originPos = this.getTansform(x, y);
-            x = originPos[0];
-            y = originPos[1];
 
-            // 快速预判并保留判断矩形
-            var rect = this.style.__rect;
-            if (!rect) {
-                rect = this.style.__rect = this.getRect(this.style);
-            }
-            if (x >= rect.x
-                && x <= (rect.x + rect.width)
-                && y >= rect.y
-                && y <= (rect.y + rect.height)
-            ) {
-                // 矩形内
-                return true;
-            }
-            
-            return false;
-        }
+        isCover : require('./normalIsCover')
     };
 
     zrUtil.inherits(GaugePointer, Base);
-    
+
     return GaugePointer;
 });

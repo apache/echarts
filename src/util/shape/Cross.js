@@ -66,15 +66,7 @@ define(function (require) {
             return style.rect;
         },
 
-        isCover : function (x, y) {
-            // 快速预判并保留判断矩形
-            var rect = this.style.__rect = this.style.__rect
-                                           || this.getRect(this.style);
-            return x >= rect.x
-                && x <= (rect.x + rect.width)
-                && y >= rect.y
-                && y <= (rect.y + rect.height);
-        }
+        isCover : require('./normalIsCover')
     };
 
     zrUtil.inherits(Cross, Base);

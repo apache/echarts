@@ -54,7 +54,7 @@ define(function (require) {
     function Candle(options) {
         Base.call(this, options);
     }
-    
+
     Candle.prototype =  {
         type: 'candle',
         _numberOrder : function (a, b) {
@@ -68,7 +68,7 @@ define(function (require) {
          */
         buildPath : function (ctx, style) {
             var yList = zrUtil.clone(style.y).sort(this._numberOrder);
-            
+
             ctx.moveTo(style.x, yList[3]);
             ctx.lineTo(style.x, yList[2]);
             ctx.moveTo(style.x - style.width / 2, yList[2]);
@@ -101,30 +101,15 @@ define(function (require) {
                     height : yList[0] - yList[3] + lineWidth
                 };
             }
-            
+
             return style.__rect;
         },
-        
-        
-        isCover : function (x, y) {
-            var originPos = this.getTansform(x, y);
-            x = originPos[0];
-            y = originPos[1];
 
-            // 快速预判并保留判断矩形
-            var rect = this.style.__rect;
-            if (!rect) {
-                rect = this.style.__rect = this.getRect(this.style);
-            }
 
-            return x >= rect.x
-                && x <= (rect.x + rect.width)
-                && y >= rect.y
-                && y <= (rect.y + rect.height);
-        }
+        isCover : require('./normalIsCover')
     };
 
     zrUtil.inherits(Candle, Base);
-    
+
     return Candle;
 });
