@@ -1027,6 +1027,7 @@ define(function (require) {
                             || this.shapeList[i].type == 'rectangle'
                             || this.shapeList[i].type == 'polygon'
                             || this.shapeList[i].type == 'line'
+                            || this.shapeList[i].type == 'ellipse'
                         ) {
                             this.shapeList[i].scale[0] *= delta;
                             this.shapeList[i].scale[1] *= delta;
