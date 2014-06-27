@@ -1,74 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="zh-cn">
+  <head>
     <meta charset="utf-8">
-    <title>ECharts</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="ECharts">
     <meta name="author" content="linzhifeng@baidu.com">
+    <title>ECharts · Doc</title>
 
-    <!-- Le styles -->
-    <link href="asset/css/bootstrap.css" rel="stylesheet">
-    <link href="asset/css/bootstrap-responsive.css" rel="stylesheet">
-    <link href="asset/css/echartsHome.css" rel="stylesheet">
+    <link rel="shortcut icon" href="./asset/ico/favicon.png">
 
-    <!-- Fav and touch icons -->
-    <link rel="shortcut icon" href="asset/ico/favicon.png">
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="./asset/css/bootstrap.css" rel="stylesheet">
+    <link href="./asset/css/carousel.css" rel="stylesheet">
+    <link href="./asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
 </head>
 
 <body>
-    <!-- NAVBAR
-    ================================================== -->
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="brand" href="../index.html">ECharts</a>
-          <div class="nav-collapse collapse">
-              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
-              <ul class="nav">
-                <li><a href="../index.html"><i class="icon-home icon-white"></i> Home</a></li>
-                <li><a href="example.html" class="active">Example</a></li>
-                <li class="active"><a href="doc.html">API &amp; Doc</a></li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a id="last-release-link" href=""> </a></li>
-                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
-                  </ul>
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
-                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
-                    <li class="divider"></li>
-                    <!--li class="nav-header">Library</li-->
-                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
-                  </ul>
-                </li>
-              </ul>
-           </div><!--/.nav-collapse -->
-        </div><!-- /.container -->
-      </div><!-- /.navbar-inner -->
-    </div><!-- /.navbar-wrapper -->
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
 
     <div class="container-fluid">
         <div class="row-fluid">
-            <div class="span3">
-                <div class="affix accordion span3" id="accordion">
-                  <div class="accordion-group">
-                    <div class="accordion-heading">
+            <div class="col-md-3">
+                <div class="affix panel col-md-3" id="accordion">
+                  <div class="panel panel-default">
+                    <div class="panel-heading">
                       <div class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse-description">
                         <strong>描述</strong>
                       </div>
                     </div>
-                    <div id="collapse-description" class="accordion-body collapse in">
-                      <div class="accordion-inner">
+                    <div id="collapse-description" class="panel-collapse collapse in">
+                      <div class="panel-body">
                         <div id="toc">
                         <ul>
                             <li><a href="#简介">简介</a></li>
@@ -187,22 +155,22 @@
                       </div>
                     </div>
                   </div>
-                  <div class="accordion-group">
-                    <div class="accordion-heading">
+                  <div class="panel panel-default">
+                    <div class="panel-heading">
                       <div class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse-config">
                         <strong>默认选项</strong>
                       </div>
                     </div>
-                    <div id="collapse-config" class="accordion-body collapse">
-                      <div class="accordion-inner">
+                    <div id="collapse-config" class="panel-collapse collapse">
+                      <div class="panel-body">
                         <div id="config"></div>
                       </div>
                     </div>
                   </div>
               </div><!--/.well -->
             </div>
-            <div class="span9">
-                <p style="margin:10px 0 -30px 0">
+            <div class="col-md-9">
+                <p style="margin:20px 0 -30px 0">
                     <a href="./start.html" target="_blank">入门教程 ( Getting started ) »</a><br/>
                     <a href="mailto:echarts@baidu.com">Any feedback or question ? »</a>
                 </p>
@@ -4146,8 +4114,8 @@ option.series = [
                     
                     <h3>附录：一个直观的事例<a name="附录一个直观的事例"> </a></h3>
                     <p>查看更多实例 <a href="example.html" target="_blank">example</a>，或者使用这个<a href="example/demo.html" target="_blank">demo</a> 或 <a href="example/www/index.html" target="_blank">ECharts单一文件引入</a>作为你的模板</p>
-                    <div class="code">
-                        <pre>// 图表实例化------------------
+                    <div class="code" style="margin-bottom: 25px;">
+                        <pre style="margin-bottom: 0;">// 图表实例化------------------
 // srcipt标签式引入
 var myChart = echarts.init(document.getElementById('main'));
 
@@ -4221,27 +4189,14 @@ myChart.dispose();
 </div>                        </div>
                     </div>
         </div>
-        <hr>
-        <!-- FOOTER -->
-        <footer>
-          <p class="pull-right"><a href="#">Back to top</a></p>
-          <p>&copy; 2014 <a href="http://efe.baidu.com" target="_blank">EFE</a> &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">License</a> &middot; <a href="changelog.html" target="_blank">Changelog</a></p>
-        </footer>
     </div><!--/.fluid-container-->
 
-    <script src="asset/js/jquery.js"></script>
-    <script src="asset/js/bootstrap-transition.js"></script>
-    <script src="asset/js/bootstrap-alert.js"></script>
-    <script src="asset/js/bootstrap-modal.js"></script>
-    <script src="asset/js/bootstrap-dropdown.js"></script>
-    <script src="asset/js/bootstrap-scrollspy.js"></script>
-    <script src="asset/js/bootstrap-tab.js"></script>
-    <script src="asset/js/bootstrap-tooltip.js"></script>
-    <script src="asset/js/bootstrap-popover.js"></script>
-    <script src="asset/js/bootstrap-button.js"></script>
-    <script src="asset/js/bootstrap-collapse.js"></script>
-    <script src="asset/js/bootstrap-carousel.js"></script>
-    <script src="asset/js/bootstrap-typeahead.js"></script>
+    <!-- FOOTER -->
+    <footer id="footer"></footer>
+    
+    <script src="./asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="./asset/js/echartsHome.js"></script>
+    <script src="./asset/js/bootstrap.min.js"></script>
     <script src="asset/js/echartsConfig.js"></script>
     <script src="asset/js/echartsDoc.js"></script>
 </body>

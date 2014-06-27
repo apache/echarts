@@ -14,16 +14,16 @@ var theme = {
             fontWeight: 'normal'
         }
     },
-
+    
     // 图例
     legend: {
         itemGap: 8
     },
-
+    
     // 值域
     dataRange: {
-        itemWidth: 10,             // 值域图形宽度，线性渐变水平布局宽度为该值 * 10
-        color:['#c12e34','#FFD93A']
+        itemWidth: 15,             // 值域图形宽度，线性渐变水平布局宽度为该值 * 10
+        color:['#1790cf','#a2d4e6']
     },
 
     // 工具箱
@@ -43,11 +43,11 @@ var theme = {
         fillerColor: 'rgba(154,217,247,0.2)',   // 填充颜色
         handleColor: '#005eaa'     // 手柄颜色
     },
-
+    
     grid: {
         borderWidth: 0
     },
-
+    
     // 类目轴
     categoryAxis: {
         axisLine: {            // 坐标轴线
@@ -73,7 +73,7 @@ var theme = {
             }
         }
     },
-
+    
     timeline : {
         lineStyle : {
             color : '#005eaa'
@@ -98,7 +98,7 @@ var theme = {
             }
         }
     },
-
+    
     map: {
         itemStyle: {
             normal: {
@@ -123,7 +123,7 @@ var theme = {
             }
         }
     },
-
+    
     force : {
         itemStyle: {
             normal: {
@@ -133,7 +133,7 @@ var theme = {
             }
         }
     },
-
+    
     chord : {
         padding : 4,
         itemStyle : {
@@ -163,14 +163,14 @@ var theme = {
             }
         }
     },
-
+    
     gauge : {
         startAngle: 225,
         endAngle : -45,
         axisLine: {            // 坐标轴线
             show: true,        // 默认显示，属性show控制显示与否
             lineStyle: {       // 属性lineStyle控制线条样式
-                color: [[0.2, '#2b821d'],[0.8, '#005eaa'],[1, '#c12e34']],
+                color: [[0.2, '#2b821d'],[0.8, '#005eaa'],[1, '#c12e34']], 
                 width: 5
             }
         },
@@ -208,7 +208,7 @@ var theme = {
             }
         }
     },
-
+    
     textStyle: {
         fontFamily: '微软雅黑, Arial, Verdana, sans-serif'
     }

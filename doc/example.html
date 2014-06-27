@@ -1,35 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="zh-cn">
+  <head>
     <meta charset="utf-8">
-    <title>ECharts</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="ECharts">
     <meta name="author" content="linzhifeng@baidu.com">
+    <title>ECharts · Example</title>
 
-    <!-- Le styles -->
-    <link href="asset/css/bootstrap.css" rel="stylesheet">
-    <link href="asset/css/bootstrap-responsive.css" rel="stylesheet">
-    <link href="asset/css/echartsHome.css" rel="stylesheet">
+    <link rel="shortcut icon" href="./asset/ico/favicon.png">
 
-    <!-- Fav and touch icons -->
-    <link rel="shortcut icon" href="asset/ico/favicon.png">
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="./asset/css/bootstrap.css" rel="stylesheet">
+    <link href="./asset/css/carousel.css" rel="stylesheet">
+    <link href="./asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
     <style type="text/css">
         .affix {
-            width:170px;
-        }
-        .affix i {
-            margin-top:4px;
-            opacity:.5;
-            filter:alpha(opacity=50);
-        }
-        ul {
-            margin:5px;
+            width:160px;
         }
         .affix li {
             list-style-type : none;
-            height : 30px;
-            line-height:30px;
+            height : 35px;
+            line-height:35px;
             vertical-align:middle;
         }
         ul.slides li{
@@ -63,85 +60,56 @@
             display:inline-block;
             *zoom:1;
         }
-        .span10 h3 {
+        .col-md-10 h3 {
             clear:both;
             margin:10px 0;
             padding-bottom:10px;
-            border-bottom:1px solid #ddd;
+            border-bottom:1px solid #ccc;
         }
-        .span10 h3 a {
+        .col-md-10 h3 a {
             display:inline-block;
             *zoom:1;
-            padding-top:80px;
+            padding-top:90px;
+        }
+        #chartsTypeNav ul li {
+            transition: background-color 0.3s;
+            -moz-transition: background-color 0.3s; 
+            -webkit-transition: background-color 0.3s; 
+            -o-transition: background-color 0.3s;
+            padding-left:10px;
         }
     </style>
 </head>
 
 <body>
-    <!-- NAVBAR
-    ================================================== -->
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="brand" href="../index.html">ECharts</a>
-          <div class="nav-collapse collapse">
-              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
-              <ul class="nav">
-                <li><a href="../index.html"><i class="icon-home icon-white"></i> Home</a></li>
-                <li class="active"><a href="example.html" class="active">Example</a></li>
-                <li><a href="doc.html" >API &amp; Doc</a></li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a id="last-release-link" href=""> </a></li>
-                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
-                  </ul>
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
-                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
-                    <li class="divider"></li>
-                    <!--li class="nav-header">Library</li-->
-                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
-                    
-                  </ul>
-                </li>
-              </ul>
-           </div><!--/.nav-collapse -->
-        </div><!-- /.container -->
-      </div><!-- /.navbar-inner -->
-    </div><!-- /.navbar-wrapper -->
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
 
-    <div class="container">
+    <div class="container" style="padding-top:10px;">
         <div class="row-fluid">
-            <div class="span2">
-                <div class = 'affix'>
-                    <ul>
-                        <li><i class="icon-star"></i> <a href="#line">折线（面积）图</a></li>
-                        <li><i class="icon-star"></i> <a href="#bar">柱状（条形）图</a></li>
-                        <li><i class="icon-star"></i> <a href="#scatter">散点（气泡）图</a></li>
-                        <li><i class="icon-star"></i> <a href="#k">K线图</a></li>
-                        <li><i class="icon-star"></i> <a href="#pie">饼（圆环）图</a></li>
-                        <li><i class="icon-star"></i> <a href="#radar">雷达（面积）图</a></li>
-                        <li><i class="icon-star"></i> <a href="#chord">和弦图</a></li>
-                        <li><i class="icon-star"></i> <a href="#force">力导向布局图</a></li>
-                        <li><i class="icon-star"></i> <a href="#map">地图</a></li>
-                        <li><i class="icon-fire"></i> <a href="#mix">混搭</a></li>
-                        <li><i class="icon-wrench"></i> <a href="#component">组件</a></li>
-                        <li><i class="icon-flag"></i> <a href="#other">其他</a></li>
-                        <li><i class="icon-leaf"></i> <a href="#theme">主题</a></li>
-                        <li><i class="icon-globe"></i> <a href="#topic">专题</a></li>
+            <div class="col-md-2">
+                <div class = 'affix' style="margin-left:-20px;" id="chartsTypeNav">
+                    <ul style="padding:5px 0;">
+                        <li><i class="ec-icon ec-icon-line"></i> <a href="#line">折线（面积）图</a></li>
+                        <li><i class="ec-icon ec-icon-bar"></i> <a href="#bar">柱状（条形）图</a></li>
+                        <li><i class="ec-icon ec-icon-scatter"></i> <a href="#scatter">散点（气泡）图</a></li>
+                        <li><i class="ec-icon ec-icon-k"></i> <a href="#k">K线图</a></li>
+                        <li><i class="ec-icon ec-icon-pie"></i> <a href="#pie">饼（圆环）图</a></li>
+                        <li><i class="ec-icon ec-icon-radar"></i> <a href="#radar">雷达（面积）图</a></li>
+                        <li><i class="ec-icon ec-icon-chord"></i> <a href="#chord">和弦图</a></li>
+                        <li><i class="ec-icon ec-icon-force"></i> <a href="#force">力导向布局图</a></li>
+                        <li><i class="ec-icon ec-icon-map"></i> <a href="#map">地图</a></li>
+                        <li><i class="ec-icon ec-icon-gauge"></i> <a href="#map">仪表盘</a></li>
+                        <li><i class="ec-icon ec-icon-funnel"></i> <a href="#map">漏斗图</a></li>
+                        <li><i class="ec-icon ec-icon-mix"></i> <a href="#mix">混搭</a></li>
+                        <li><i class="ec-icon ec-icon-component"></i> <a href="#component">组件</a></li>
+                        <li><i class="ec-icon ec-icon-other"></i> <a href="#other">其他</a></li>
+                        <li><i class="ec-icon ec-icon-theme"></i> <a href="#theme">主题</a></li>
+                        <li><i class="ec-icon ec-icon-topic"></i> <a href="#topic">专题</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="span10">
+            <div class="col-md-10">
                 <p style="margin:10px 0 -30px 0">
                     <a href="./start.html" target="_blank">入门教程 ( Getting started ) »</a><br/>
                     <a href="mailto:echarts@baidu.com">Any feedback or question ? »</a>
@@ -448,6 +416,12 @@
                     </div>
                 </div>
                 <div>
+                    <h3>仪表盘<a name="gauge"> </a></h3>
+                </div>
+                <div>
+                    <h3>漏斗图<a name="funnel"> </a></h3>
+                </div>
+                <div>
                     <h3>混搭<a name="mix"> </a></h3>
                     <div class="section">
                         <div class="thumb4">
@@ -574,7 +548,7 @@
                     <h3>主题<a name="theme"> </a></h3>
                     <p>主题定制调试工具，<a href='example/themeDesigner.html' target="_blank">ECharts Theme Designer</a></p>
                     <p><small>ps:别太依赖代码编辑区，没做本地缓存，页面刷新就没了，建议使用一个本地编辑器编辑主题，只用代码区作为主题定制调试工具。主题写好试试顶部的SaveAsImage（IE8-不支持），会把所有图表合并到一张图中，这是默认样式，期待与我们联系，show出你的主题，让你的设计成为ECharts内置甚至默认主题随时有可能，我们将为您献上一份小礼品同时你的名字将被永留在贡献者名单中。</small></p>
-                    <a href="example/themeDesigner.html" target="_blank"><img src="asset/img/example/EChartsTheme.jpg"></a>
+                    <a href="example/themeDesigner.html" target="_blank"><img src="asset/img/example/EChartsTheme.jpg" style="max-width:100%"></a>
                 <div>
                 </div>
                     <h3>专题<a name="topic"></a></h3>
@@ -587,34 +561,16 @@
                 </div>
             </div>
         </div>
-        
-        
-        <hr>
-        <footer>
-          <p class="pull-right"><a href="#">Back to top</a></p>
-          <p>&copy; 2014 <a href="http://efe.baidu.com" target="_blank">EFE</a> &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">License</a> &middot; <a href="changelog.html" target="_blank">Changelog</a></p>
-        </footer>
     </div> <!-- /container -->
 
+    <footer id="footer"></footer>
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="asset/js/jquery.js"></script>
-    <script src="asset/js/bootstrap-transition.js"></script>
-    <script src="asset/js/bootstrap-alert.js"></script>
-    <script src="asset/js/bootstrap-modal.js"></script>
-    <script src="asset/js/bootstrap-dropdown.js"></script>
-    <script src="asset/js/bootstrap-scrollspy.js"></script>
-    <script src="asset/js/bootstrap-tab.js"></script>
-    <script src="asset/js/bootstrap-tooltip.js"></script>
-    <script src="asset/js/bootstrap-popover.js"></script>
-    <script src="asset/js/bootstrap-button.js"></script>
-    <script src="asset/js/bootstrap-collapse.js"></script>
-    <script src="asset/js/bootstrap-carousel.js"></script>
-    <script src="asset/js/bootstrap-typeahead.js"></script>
+    <script src="./asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="./asset/js/echartsHome.js"></script>
+    <script src="./asset/js/bootstrap.min.js"></script>
     <script type="text/javascript">
-    
-    
     $(window).load(function (){
       var section = $('[class=section]');
       function loadImage(i) {
@@ -639,6 +595,63 @@
       for (var i = 0, l = section.length; i < l; i++) {
           loadImage(i);
       }
+      
+    var chartsTypeNav = document.getElementById('chartsTypeNav');
+    function _scroll() {
+        var navHeight = chartsTypeNav.offsetHeight;
+        var viewHeight = document.documentElement.clientHeight;
+        var scrollHeight = document.documentElement.scrollTop
+                           || document.body.scrollTop;
+        var offsetHeight = document.body.offsetHeight;
+        var footHole = offsetHeight - scrollHeight - viewHeight;
+        var maxHeight = viewHeight - (230 - footHole) - 80;
+        if (footHole < 320 && maxHeight < navHeight) {
+            // 见footer
+            //chartsTypeNav.style.marginTop = footHole - 150 + 'px';
+            chartsTypeNav.style.marginTop = maxHeight - navHeight + 'px';
+        }
+        else {
+            // 未见footer
+            chartsTypeNav.style.marginTop = 'auto';
+        }
+        
+        var len = offsetList.length;
+        if (scrollHeight > offsetList[len - 3].offsetTop) {
+                navDom[len - 2].style.backgroundColor = '#3E98C5';
+                $(navDom[len - 2]).children('a')[0].style.color = '#fff';
+        }
+        else {
+            for (var i = 0; i < len - 1; i++) {
+                if (Math.abs(scrollHeight - offsetList[i].offsetTop) < 300 && navDom[i]) {
+                    navDom[i].style.backgroundColor = '#3E98C5';
+                    $(navDom[i]).children('a')[0].style.color = '#fff';
+                }
+                else {
+                    navDom[i].style.backgroundColor = 'transparent';
+                    $(navDom[i]).children('a')[0].style.color = '#3E98C5';
+                }
+            }
+        }
+    }
+    var offsetList = [];
+    var navDom = $('#chartsTypeNav>ul>li');
+    function _resize() {
+        offsetList = [];
+        $('h3').each(function(idx, dom){
+            offsetList[idx] = {
+                name : dom.childNodes[1].name, 
+                offsetTop : dom.childNodes[1].offsetTop
+            };
+        });
+        offsetList.push({
+            name : 'topic',
+            offsetTop : 100000
+        })
+        setTimeout(_scroll, 500);
+    }
+    $(window).on('scroll', _scroll);
+    $(window).on('resize', _resize);
+    _resize();
     });
     </script>
   </body>

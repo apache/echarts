@@ -124,13 +124,13 @@ function _resize() {
     var offsetHeight = document.body.offsetHeight;
     var maxHeight;
     var footHole = offsetHeight - scrollHeight - viewHeight;
-    if (footHole > 60) {
+    if (footHole > 230) {
         // 未见footer，60 top、bottom， 40 per one
         maxHeight = viewHeight - 100 - 40 * 2;
     }
     else {
         // 见footer
-        maxHeight = viewHeight - 200 - 40 * 2;
+        maxHeight = viewHeight - 350 - 40 * 2;
     }
     if (domConfig.scrollHeight > maxHeight) {
         domConfig.style.height = maxHeight + 'px';
