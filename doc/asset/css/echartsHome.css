@@ -1,153 +1,122 @@
+html {
+    background-color: rgb(6, 19, 37);
+}
 body {
-    padding-top: 60px;
-    padding-bottom: 40px;
-    color: #5a5a5a;
-    font-family: "微软雅黑";
+  padding-top: 50px;
+  padding-bottom: 0;
+  background-color: rgb(247, 247, 247);
 }
-
-.face {
-    background-color:#181818;
+body p {
+    line-height: 2;
 }
-
-#forkme_banner {
-    display: block;
-    position: absolute;
-    top: 0;
-    right: 0;
-    z-index: 10;
-    padding: 10px 50px 10px 10px;
-    color: #fff;
-    background: url('../img/blacktocat.png') #0090ff no-repeat 95% 50%;
-    font-weight: 700;
-    box-shadow: 0 0 10px rgba(0,0,0,.5);
-    border-bottom-left-radius: 2px;
-    border-bottom-right-radius: 2px;
-}
-
-/* Carousel base class */
-.carousel {
-  margin: -20px 0 30px 0;
-}
-
-.carousel .container {
-  position: relative;
-  z-index: 9;
-}
-
-.carousel-control {
-  height: 80px;
-  margin-top: 0;
-  font-size: 120px;
-  text-shadow: 0 1px 1px rgba(0,0,0,.4);
-  background-color: transparent;
-  border: 0;
-  z-index: 10;
-}
-
-.carousel .item {
-  height: 300px;
-}
-.carousel img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  min-width: 100%;
-  height: 300px;
-}
-
-.carousel-caption {
-  background-color: transparent;
-  position: static;
-  max-width: 540px;
-  padding: 0;
-  margin-top: 40px;
-}
-.carousel-caption h1,
-.carousel-caption .lead {
-  margin: 0;
-  line-height: 1.25;
-  color: #fff;
-  text-shadow: 0 1px 1px rgba(0,0,0,.4);
-}
-.carousel-caption .btn {
-  margin-top: 10px;
-}
-
-.carousel-caption a.link {
-  color: #666;
-  text-decoration: underline;
-}
-
-.carousel-caption a.link:hover,
-.carousel-caption a.link:focus {
-  color: #0088cc;
-  text-decoration: underline;
-}
-/* Featurettes
-------------------------- */
-.featurette-divider {
-  margin: 30px 0; /* Space out the Bootstrap <hr> more */
-}
-.featurette {
-  overflow: hidden; /* Vertically center images part 2: clear their floats. */
-}
-
-.navbar a.brand {
-    background:url('../ico/favicon.png') no-repeat 0 10px;
-    margin-left:0
-}
-.sidebar-nav {
-    padding: 9px 0;
+.navbar {
     margin-bottom: 0;
 }
+.navbar > .container .navbar-brand {
+    margin-left:0;
+}
+.navbar a.navbar-brand {
+    background:url('../img/echarts-logo.png') no-repeat 0 10px;
+    padding-left: 48px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 25px;
+}
+.navbar-default {
+    background-color: rgb(247, 247, 247);
+    border-color:rgb(218, 218, 218);
+}
+.navbar-default .navbar-nav > li.active > a {
+    background-color: transparent;
+    color: #3E98C5;
+    font-weight: bolder;
+    border-bottom: 3px solid rgb(62,152, 197);
+}
+.navbar-default .navbar-nav > li > a:hover {
+    background-color: #eee;
+}
 
-/* Give some space on the sides of the floated elements so text doesn't run right into it. */
-.featurette .pull-left {
-  margin:10px 40px 0 0;
-}
-.featurette .pull-right {
-  margin:10px 0 0 40px;
-}
 
-/* Thin out the marketing headings */
-.featurette-heading {
-  font-size: 50px;
-  font-weight: 300;
-  line-height: 1;
-  margin-bottom:30px;
+blockquote {
+    border-width:0;
 }
-
-.CodeMirror pre{color: #f8f8f2;}
-
-.span4.ani {
-    transition: width 1s;
-    -moz-transition: width 1s; /* Firefox 4 */
-    -webkit-transition: width 1s; /* Safari and Chrome */
-    -o-transition: width 1s; /* Opera */
-}
-.span8.ani {
-    transition: width 1s;
-    -moz-transition: width 1s; /* Firefox 4 */
-    -webkit-transition: width 1s; /* Safari and Chrome */
-    -o-transition: width 1s; /* Opera */
-}
-.main {
-    height: 400px;
-    /*
-    height : 400px !important;
-    width : 800px !important;
-    */
-    overflow: hidden;
-    padding : 10px;
+.marketing .feature .col-lg-4 img {
     margin-bottom: 10px;
-    border: 1px solid #e3e3e3;
-    -webkit-border-radius: 4px;
-       -moz-border-radius: 4px;
-            border-radius: 4px;
-    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-       -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
 }
+.user img {
+    height:50px;
+    padding: 5px;
+    margin: 10px 3px;
+    border: 1px solid #ddd;
+    opacity: .75;
+}
+.user a:hover img {
+  opacity: 1;
+  border: 1px solid #ccc;
+}
+
+
+.featurette {
+    padding:50px 0;
+    border-top: 1px solid #ddd;
+}
+.featurette-heading {
+    margin-top: 0px
+}
+img {
+    max-width: 100%;
+}
+
+hr {
+    border-color: #ddd;
+}
+
+.row {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.team .row {
+    margin-bottom: 40px;
+}
+
+#footer {
+    clear:both;
+    background-color: rgb(6, 19, 37);
+    padding: 30px 0;
+}
+#footer p {
+    color: #fff;
+    font-size: 14px;
+}
+#footer a {
+    color: rgb(190, 205, 223);
+    font-size: 12px;
+}
+#footer ul {
+    list-style-type: none;
+    padding: 0;
+}
+#footer i {
+    color: rgb(190, 205, 223);
+}
+.dropdown i {
+    color:#555;
+}
+.nav ul.dropdown-menu{
+    min-width : 0;
+}
+.dropdown-menu > li > a {
+    padding: 3px 10px;
+}
+
+/*
+
+*/
+
+/* Featurettes
+------------------------- */
+/*
+
 
 a.accordion-toggle:hover {
     text-decoration:none;
@@ -187,8 +156,81 @@ tr.head {
     background-color:#f5f5f5
 }
 
+/*example*/
+.CodeMirror pre{color: #f8f8f2;}
+.CodeMirror-scrollbar-filler {
+    background-color:rgb(247,247,247);
+}
+.container-fluid .example {
+    padding: 25px 0;
+}
+.sidebar-nav {
+    padding: 9px 0;
+    margin-bottom: 0;
+}
+.nav-header {
+    display: block;
+    padding: 3px 15px;
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 20px;
+    color: #999999;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+}
+.col-md-4.ani {
+    transition: width 1s;
+    -moz-transition: width 1s; 
+    -webkit-transition: width 1s; 
+    -o-transition: width 1s;
+}
+.col-md-8.ani {
+    transition: width 1s;
+    -moz-transition: width 1s; 
+    -webkit-transition: width 1s;
+    -o-transition: width 1s; 
+}
+.main {
+    height: 400px;
+
+    overflow: hidden;
+    padding : 10px;
+    margin-bottom: 10px;
+    border: 1px solid #e3e3e3;
+    -webkit-border-radius: 4px;
+       -moz-border-radius: 4px;
+            border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+       -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+#graphic .btn {
+    width: 80px;
+}
+#graphic .text-primary {
+    margin:0 5px 0 20px
+}
+#icon-resize {
+    color:#000;
+    float:right;
+    opacity:.4;
+    filter:alpha(opacity=30);
+}
+a#icon-resize:hover {
+    opacity:.8;
+    filter:alpha(opacity=60);
+    text-decoration: blink;
+}
+
 /*doc*/
-.accordion-inner {
+.panel {
+    background-color:transparent;
+    margin-left: -15px;
+    margin-top: 10px;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+.panel-body {
     padding: 0 0 0 10px;
 }
 #toc,
@@ -276,6 +318,7 @@ table.full {width:100%;}
     border-bottom:2px solid rgb(23,53,81);
     background:rgb(37,78,117);
     color:#fff;
+    text-align:center;
 }
 .bgRed {
     background:rgb(255,230,230);
@@ -285,15 +328,6 @@ table.full {width:100%;}
 }
 .bgBlue {
     background:rgb(210,230,255);
-}
-#icon-resize {
-    float:right;
-    opacity:.3;
-    filter:alpha(opacity=30);
-}
-a#icon-resize:hover {
-    opacity:.6;
-    filter:alpha(opacity=60);
 }
 
 .prettyprint {
@@ -305,4 +339,63 @@ a#icon-resize:hover {
 }
 .prettyprint .pln {
   line-height: 0px;
+}
+
+.ec-icon {
+    display: inline-block;
+    width: 35px;
+    height: 26px;
+    *margin-right: .3em;
+    line-height: 25px;
+    vertical-align: middle;
+    background-image: url("../img/icon-bar.png");
+    background-repeat: no-repeat;
+}
+.ec-icon-line {
+    background-position: 0 -1px;
+}
+.ec-icon-bar {
+    background-position: 0 -26px;
+}
+.ec-icon-scatter {
+    background-position: 0 -51px;
+}
+.ec-icon-k {
+    background-position: 0 -76px;
+}
+.ec-icon-pie {
+    background-position: 0 -101px;
+}
+.ec-icon-radar {
+    background-position: 0 -126px;
+}
+.ec-icon-chord {
+    background-position: 0 -151px;
+}
+.ec-icon-force {
+    background-position: 0 -176px;
+}
+.ec-icon-map {
+    background-position: 0 -201px;
+}
+.ec-icon-gauge {
+    background-position: 0 -226px;
+}
+.ec-icon-funnel {
+    background-position: 0 -251px;
+}
+.ec-icon-mix {
+    background-position: 0 -276px;
+}
+.ec-icon-component {
+    background-position: 0 -301px;
+}
+.ec-icon-other {
+    background-position: 0 -326px;
+}
+.ec-icon-theme {
+    background-position: 0 -351px;
+}
+.ec-icon-topic {
+    background-position: 0 -376px;
 }

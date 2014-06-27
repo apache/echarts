@@ -7,24 +7,24 @@ var iconResize = document.getElementById('icon-resize');
 var needRefresh = false;
 
 function autoResize() {
-    if (iconResize.className == 'icon-resize-full') {
+    if ($(iconResize).hasClass('glyphicon-resize-full')) {
         focusCode();
-        iconResize.className = 'icon-resize-small';
+        iconResize.className = 'glyphicon glyphicon-resize-small';
     }
     else {
         focusGraphic();
-        iconResize.className = 'icon-resize-full';
+        iconResize.className = 'glyphicon glyphicon-resize-full';
     }
 }
 
 function focusCode() {
-    domCode.className = 'span8 ani';
-    domGraphic.className = 'span4 ani';
+    domCode.className = 'col-md-8 ani';
+    domGraphic.className = 'col-md-4 ani';
 }
 
 function focusGraphic() {
-    domCode.className = 'span4 ani';
-    domGraphic.className = 'span8 ani';
+    domCode.className = 'col-md-4 ani';
+    domGraphic.className = 'col-md-8 ani';
     if (needRefresh) {
         myChart.showLoading();
         setTimeout(refresh, 1000);
@@ -50,7 +50,7 @@ function refresh(isBtnRefresh){
     if (myChart && myChart.dispose) {
         myChart.dispose();
     }
-    myChart = echarts.init(domMain);
+    myChart = echarts.init(domMain, curTheme);
     window.onresize = myChart.resize;
     (new Function(editor.doc.getValue()))();
     myChart.setOption(option, true)
@@ -112,6 +112,7 @@ else {
 require(
     [
         'echarts',
+        'theme/infographic',
         'echarts/chart/line',
         'echarts/chart/bar',
         'echarts/chart/scatter',
@@ -127,12 +128,54 @@ require(
     requireCallback
 );
 
-function requireCallback (ec) {
+var curTheme;
+function requireCallback (ec, defaultTheme) {
+    curTheme = defaultTheme;
     echarts = ec;
-    if (myChart && myChart.dispose) {
-        myChart.dispose();
-    }
-    myChart = echarts.init(domMain);
     refresh();
     window.onresize = myChart.resize;
+}
+
+var theme = 'infographic';
+var themeSelector = $('#theme-select')[0];
+if (themeSelector) {
+    themeSelector.innerHTML = 
+        '<option selected="true" name="infographic">infographic</option>'
+        + '<option name="macarons">macarons</option>'
+        + '<option name="shine">shine</option>'
+        + '<option name="dark">dark</option>'
+        + '<option name="blue">blue</option>'
+        + '<option name="green">green</option>'
+        + '<option name="red">red</option>'
+        + '<option name="gray">gray</option>'
+        + '<option name="default">default</option>';
+    $(themeSelector).on('change', function(){
+        selectChange($(this).val());
+    });
+    function selectChange(value){
+        theme = value;
+        myChart.showLoading();
+        $(themeSelector).val(theme);
+        if (theme != 'default') {
+            window.location.hash = value;
+            require(['theme/' + theme], function(curTheme){
+                theme = curTheme;
+                setTimeout(refreshTheme, 500);
+            })
+        }
+        else {
+            window.location.hash = '';
+            theme = {};
+            setTimeout(refreshTheme, 500);
+        }
+    }
+    function refreshTheme(){
+        myChart.hideLoading();
+        myChart.setTheme(theme);
+    }
+    var hash = window.location.hash.replace('#','') || 'infographic';
+    if ($(themeSelector).val(hash).val() != hash) {
+        $(themeSelector).val('infographic');
+        hash = 'infographic';
+    }
 }
