@@ -143,14 +143,14 @@ function requireCallback (ec, defaultTheme) {
             }
         });
         */
-        var domGLeft = domG.offsetLeft;
-        var domGTop = domG.offsetTop;
+        var domGLeft =0; domG.offsetLeft;
+        var domGTop =0; domG.offsetTop;
         var ImageShape = require('zrender/shape/Image');
         for (var i = 0, l = domMain.length; i < l; i++) {
             _zr.addShape(new ImageShape({
                 style : {
-                    x : domMain[i].offsetLeft - domGLeft,
-                    y : domMain[i].offsetTop - domGTop,
+                    x : domMain[i].offsetParent.offsetLeft - domGLeft,
+                    y : domMain[i].offsetParent.offsetTop - domGTop,
                     image : myChart[i].getDataURL()
                 }
             }));

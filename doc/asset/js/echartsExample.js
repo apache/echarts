@@ -6,6 +6,58 @@ var domMessage = document.getElementById('wrong-message');
 var iconResize = document.getElementById('icon-resize');
 var needRefresh = false;
 
+var hash = window.location.hash.replace('#','') || 'infographic';
+var curTheme;
+function requireCallback (ec, defaultTheme) {
+    curTheme = themeSelector ? defaultTheme : {};
+    echarts = ec;
+    refresh();
+    window.onresize = myChart.resize;
+}
+
+var themeSelector = $('#theme-select')[0];
+if (themeSelector) {
+    themeSelector.innerHTML = 
+        '<option selected="true" name="infographic">infographic</option>'
+        + '<option name="macarons">macarons</option>'
+        + '<option name="shine">shine</option>'
+        + '<option name="dark">dark</option>'
+        + '<option name="blue">blue</option>'
+        + '<option name="green">green</option>'
+        + '<option name="red">red</option>'
+        + '<option name="gray">gray</option>'
+        + '<option name="default">default</option>';
+    $(themeSelector).on('change', function(){
+        selectChange($(this).val());
+    });
+    function selectChange(value){
+        var theme = value;
+        myChart.showLoading();
+        $(themeSelector).val(theme);
+        if (theme != 'default') {
+            window.location.hash = value;
+            require(['theme/' + theme], function(tarTheme){
+                curTheme = tarTheme;
+                setTimeout(refreshTheme, 500);
+            })
+        }
+        else {
+            window.location.hash = '';
+            theme = {};
+            setTimeout(refreshTheme, 500);
+        }
+    }
+    function refreshTheme(){
+        myChart.hideLoading();
+        myChart.setTheme(curTheme);
+    }
+    if ($(themeSelector).val(hash).val() != hash) {
+        $(themeSelector).val('infographic');
+        hash = 'infographic';
+        window.location.hash = hash;
+    }
+}
+
 function autoResize() {
     if ($(iconResize).hasClass('glyphicon-resize-full')) {
         focusCode();
@@ -112,7 +164,7 @@ else {
 require(
     [
         'echarts',
-        'theme/infographic',
+        'theme/' + hash,
         'echarts/chart/line',
         'echarts/chart/bar',
         'echarts/chart/scatter',
@@ -128,54 +180,3 @@ require(
     requireCallback
 );
 
-var curTheme;
-function requireCallback (ec, defaultTheme) {
-    curTheme = defaultTheme;
-    echarts = ec;
-    refresh();
-    window.onresize = myChart.resize;
-}
-
-var theme = 'infographic';
-var themeSelector = $('#theme-select')[0];
-if (themeSelector) {
-    themeSelector.innerHTML = 
-        '<option selected="true" name="infographic">infographic</option>'
-        + '<option name="macarons">macarons</option>'
-        + '<option name="shine">shine</option>'
-        + '<option name="dark">dark</option>'
-        + '<option name="blue">blue</option>'
-        + '<option name="green">green</option>'
-        + '<option name="red">red</option>'
-        + '<option name="gray">gray</option>'
-        + '<option name="default">default</option>';
-    $(themeSelector).on('change', function(){
-        selectChange($(this).val());
-    });
-    function selectChange(value){
-        theme = value;
-        myChart.showLoading();
-        $(themeSelector).val(theme);
-        if (theme != 'default') {
-            window.location.hash = value;
-            require(['theme/' + theme], function(curTheme){
-                theme = curTheme;
-                setTimeout(refreshTheme, 500);
-            })
-        }
-        else {
-            window.location.hash = '';
-            theme = {};
-            setTimeout(refreshTheme, 500);
-        }
-    }
-    function refreshTheme(){
-        myChart.hideLoading();
-        myChart.setTheme(theme);
-    }
-    var hash = window.location.hash.replace('#','') || 'infographic';
-    if ($(themeSelector).val(hash).val() != hash) {
-        $(themeSelector).val('infographic');
-        hash = 'infographic';
-    }
-}
