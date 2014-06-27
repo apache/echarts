@@ -494,7 +494,9 @@ define(function (require) {
                             shadowOffsetX: linkShape.style.shadowOffsetX,
                             shadowOffsetY: linkShape.style.shadowOffsetY,
                         },
-                        highlightStyle: linkShape.highlightStyle,
+                        highlightStyle: {
+                            brushType: 'fill'
+                        },
                         position: [0, 0],
                         rotation: 0
                     };
