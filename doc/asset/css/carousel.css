@@ -37,7 +37,7 @@ body {
 
 /* Carousel base class */
 .carousel {
-  height: 500px;
+  height: 400px;
   margin-bottom: 60px;
 }
 /* Since positioning the image, we need to help out the caption */
@@ -47,17 +47,33 @@ body {
 
 /* Declare heights because of positioning of img element */
 .carousel .item {
-  height: 500px;
-  background-color: #777;
+  height: 400px;
+  background-color: #3A90BA ;
 }
 .carousel-inner > .item > img {
   position: absolute;
   top: 0;
-  left: 0;
-  min-width: 100%;
-  height: 500px;
+  left: 50%;
+  margin-left:-640px;
+  min-width: 1280px;
+  height: 400px;
 }
-
+.carousel-control.left {
+background-image: -webkit-linear-gradient(left, color-stop(rgba(0, 0, 0, .3) 0%), color-stop(rgba(0, 0, 0, .0001) 100%));
+background-image: linear-gradient(to right, rgba(0, 0, 0, .3) 0%, rgba(0, 0, 0, .0001) 100%);
+filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#80000000', endColorstr='#00000000', GradientType=1);
+}
+.carousel-control.right {
+background-image: -webkit-linear-gradient(left, color-stop(rgba(0, 0, 0, .0001) 0%), color-stop(rgba(0, 0, 0, .3) 100%));
+background-image: linear-gradient(to right, rgba(0, 0, 0, .0001) 0%, rgba(0, 0, 0, .3) 100%);
+filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#80000000', GradientType=1);
+}
+.carousel-control:hover, .carousel-control:focus {
+    opacity: .8;
+}
+.carousel-caption .btn-warning{
+    background-color: #F4BE27
+}
 
 
 /* MARKETING CONTENT
