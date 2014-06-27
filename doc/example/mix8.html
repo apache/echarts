@@ -26,6 +26,11 @@
 
     <link href="../asset/css/codemirror.css" rel="stylesheet">
     <link href="../asset/css/monokai.css" rel="stylesheet">
+    <style type="text/css">
+        .CodeMirror {
+            height: 500px;
+        }
+    </style>
 </head>
 
 <body>
@@ -454,8 +459,7 @@ setTimeout(function (){
                 <div id="main3" class="main" style='height:105px;padding-top:1px;border-top-width:0'></div>
                 <div>
                     <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
-                    <span class="text-primary">切换主题</span>
-                    <select id="theme-select"></select>
+                    
 
                     <span id='wrong-message' style="color:red"></span>
                 </div>
@@ -472,5 +476,27 @@ setTimeout(function (){
     <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
     <script src="../asset/js/bootstrap.min.js"></script>
     <script src="../asset/js/echartsExample.js"></script>
+    <script type="text/javascript">
+        function refresh(isBtnRefresh){
+            if (isBtnRefresh) {
+                needRefresh = true;
+                focusGraphic();
+                myChart2.showLoading();
+                myChart3.showLoading();
+                return;
+            }
+            needRefresh = false;
+            
+            myChart = echarts.init(domMain);
+            (new Function(editor.doc.getValue()))();
+            myChart.setOption(option, true);
+            domMessage.innerHTML = '';
+            window.onresize = function () {
+                myChart.resize();
+                myChart2.resize();
+                myChart3.resize();
+            }
+        }
+    </script>
 </body>
 </html>

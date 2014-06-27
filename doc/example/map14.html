@@ -26,6 +26,12 @@
 
     <link href="../asset/css/codemirror.css" rel="stylesheet">
     <link href="../asset/css/monokai.css" rel="stylesheet">
+
+    <style type="text/css">
+        .CodeMirror {
+            height: 550px;
+        }
+    </style>
 </head>
 
 <body>
@@ -145,7 +151,7 @@ option = {
               </div><!--/.well -->
             </div><!--/span-->
             <div id="graphic" class="col-md-8">
-                <div id="main" class="main"></div>
+                <div id="main" class="main" style="height: 530px;"></div>
                 <div>
                     <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
                     <span class="text-primary">切换主题</span>
@@ -165,6 +171,7 @@ option = {
     <script src="../asset/js/jquery.min.js"></script>
     <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
     <script src="../asset/js/bootstrap.min.js"></script>
+    <script src="timelineOption.js"></script>
     <script src="../asset/js/echartsExample.js"></script>
 </body>
 </html>

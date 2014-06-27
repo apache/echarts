@@ -26,17 +26,22 @@
 
     <link href="../asset/css/codemirror.css" rel="stylesheet">
     <link href="../asset/css/monokai.css" rel="stylesheet">
+    <style type="text/css">
+        .chart {
+            height: 300px;
+            margin-bottom:10px;
+        }
+    </style>
 </head>
 
 <body>
     <!-- Fixed navbar -->
     <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
 
-
     <div class="container">
-        <div class="row-fluid example">
-            <div class='span8'> 
-                <select style="width:100%" name="theme-select">
+        <div class="row" style="margin:20px 0;">
+            <div class='col-md-8'> 
+                <select style="width:100%;height:34px;" name="theme-select">
                     <option selected="true" name='infographic'>infographic</option>
                     <option name='macarons'>macarons</option>
                     <option name='shine'>shine</option>
@@ -48,81 +53,75 @@
                     <option name='default'>default</option>
                 </select>
             </div>
-            <button class="btn btn-info span4" type="button" onclick="saveAsImage()">Save As Image</button>
-        </div>
-        <div class="row-fluid">
-            <div id="graphic" class="span12">
-                <div class="row-fluid">
-                    <div class="span6">
-                        <div md="main" class="chart"></div>
-                    </div><!--/span-->
-                    <div class="span6">
-                        <div md="main" class="chart"></div>
-                    </div><!--/span-->
-                </div>
-                <div class="row-fluid">
-                    <div class="span6">
-                        <div md="main" class="chart"></div>
-                    </div><!--/span-->
-                    <div class="span6">
-                        <div md="main" class="chart"></div>
-                    </div><!--/span-->
-                </div>
-                <div class="row-fluid">
-                    <div class="span12">
-                        <div md="main" class="chart" style="height:500px"></div>
-                    </div><!--/span-->
-                </div>
-                <div class="row-fluid">
-                    <div class="span12">
-                        <div class="row-fluid">
-                            <div class="span4">
-                                <div md="main" class="chart" style="height:270px"></div>
-                            </div><!--/span-->
-                            <div class="span4">
-                                <div md="main" class="chart" style="height:270px"></div>
-                            </div><!--/span-->
-                            <div class="span4">
-                                <div md="main" class="chart" style="height:270px"></div>
-                            </div><!--/span-->
-                        </div>
-                    </div><!--/span-->
-                </div>
-                <div class="row-fluid">
-                    <div class="span12">
-                        <div class="row-fluid">
-                            <div class="span4">
-                                <div md="main" class="chart" style="height:270px"></div>
-                            </div><!--/span-->
-                            <div class="span4">
-                                <div md="main" class="chart" style="height:270px"></div>
-                            </div><!--/span-->
-                            <div class="span4">
-                                <div md="main" class="chart" style="height:270px"></div>
-                            </div><!--/span-->
-                        </div>
-                    </div><!--/span-->
-                </div>
-            </div><!--/span-->
-        </div><!--/row-->
-        <div class="row-fluid">
-            <div class='span8'> 
-                <select style="width:100%" name="theme-select">
-                    <option selected="true" name='infographic'>infographic</option>
-                    <option name='macarons'>macarons</option>
-                    <option name='shine'>shine</option>
-                    <option name='dark'>dark</option>
-                    <option name='blue'>blue</option>
-                    <option name='green'>green</option>
-                    <option name='red'>red</option>
-                    <option name='gray'>gray</option>
-                    <option name='default'>default</option>
-                </select>
-            </div>
-            <button class="btn btn-info span4" type="button" onclick="saveAsImage()">Save As Image</button>
+            <button class="btn btn-info col-md-4" type="button" onclick="saveAsImage()">Save As Image</button>
         </div>
         
-        </div><!--/.fluid-container-->
+        <div class="row-fluid">
+            <div id="graphic" class="col-md-12">
+                <div class="row-fluid">
+                    <div class="col-md-6">
+                        <div md="main" class="chart"></div>
+                    </div><!--/col-md--->
+                    <div class="col-md-6">
+                        <div md="main" class="chart"></div>
+                    </div><!--/col-md--->
+                </div>
+                <div class="row-fluid">
+                    <div class="col-md-6">
+                        <div md="main" class="chart"></div>
+                    </div><!--/col-md--->
+                    <div class="col-md-6">
+                        <div md="main" class="chart"></div>
+                    </div><!--/col-md--->
+                </div>
+                <div class="row-fluid">
+                    <div class="col-md-12">
+                        <div md="main" class="chart" style="height:500px"></div>
+                    </div><!--/col-md--->
+                </div>
+                <div class="row-fluid">
+                    <div class="col-md-4">
+                        <div md="main" class="chart" style="height:270px"></div>
+                    </div><!--/col-md--->
+                    <div class="col-md-4">
+                        <div md="main" class="chart" style="height:270px"></div>
+                    </div><!--/col-md--->
+                    <div class="col-md-4">
+                        <div md="main" class="chart" style="height:270px"></div>
+                    </div><!--/col-md--->
+                </div>
+                <div class="row-fluid">
+                    <div class="col-md-4">
+                        <div md="main" class="chart" style="height:270px"></div>
+                    </div><!--/col-md--->
+                    <div class="col-md-4">
+                        <div md="main" class="chart" style="height:270px"></div>
+                    </div><!--/col-md--->
+                    <div class="col-md-4">
+                        <div md="main" class="chart" style="height:270px"></div>
+                    </div><!--/col-md--->
+                </div>
+            </div><!--/col-md--->
+        </div><!--/row-->
+        
+        <div class="row">
+            <button class="btn btn-info col-md-3" type="button" onclick="saveAsImage()">Save As Image</button>
+            <div class='col-md-6'> 
+                <select style="width:100%;height:34px;" name="theme-select">
+                    <option selected="true" name='infographic'>infographic</option>
+                    <option name='macarons'>macarons</option>
+                    <option name='shine'>shine</option>
+                    <option name='dark'>dark</option>
+                    <option name='blue'>blue</option>
+                    <option name='green'>green</option>
+                    <option name='red'>red</option>
+                    <option name='gray'>gray</option>
+                    <option name='default'>default</option>
+                </select>
+            </div>
+        </div>
+        
+    </div><!--/.fluid-container-->
 
     <footer id="footer"></footer>
     <!-- Le javascript
@@ -131,6 +130,6 @@
     <script src="../asset/js/jquery.min.js"></script>
     <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
     <script src="../asset/js/bootstrap.min.js"></script>
-    <script src="../asset/js/echartsExample.js"></script>
+    <script src="../asset/js/echartsTheme.js"></script>
 </body>
 </html>

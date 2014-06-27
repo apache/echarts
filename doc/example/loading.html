@@ -100,7 +100,10 @@ loadingTicket = setTimeout(function (){
             <div id="graphic" class="col-md-8">
                 <div id="main" class="main"></div>
                 <div>
-                    <button onclick="refresh(true)">Loading ~</button>
+                    <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">Loading</button>
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
+
                     <span id='wrong-message' style="color:red"></span>
                 </div>
             </div><!--/span-->
@@ -116,5 +119,19 @@ loadingTicket = setTimeout(function (){
     <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
     <script src="../asset/js/bootstrap.min.js"></script>
     <script src="../asset/js/echartsExample.js"></script>
+    <script type="text/javascript">
+        var loadingTicket;
+        var effectIndex = -1;
+        var effect = ['spin' , 'bar' , 'ring' , 'whirling' , 'dynamicLine' , 'bubble'];
+        function refresh(isBtnRefresh){
+            //(new function (editor.doc.getValue()))();
+            if (myChart && myChart.dispose) {
+                myChart.dispose();
+            }
+            myChart = echarts.init(domMain, curTheme);
+            (new Function (editor.doc.getValue()))();
+            domMessage.innerHTML = '';
+        }
+    </script>
 </body>
 </html>

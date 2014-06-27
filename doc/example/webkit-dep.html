@@ -26,6 +26,11 @@
 
     <link href="../asset/css/codemirror.css" rel="stylesheet">
     <link href="../asset/css/monokai.css" rel="stylesheet">
+    <style type="text/css">
+        .CodeMirror {
+            height: 620px;
+        }
+    </style>
 </head>
 
 <body>
@@ -100,6 +105,28 @@ option = {
     <script src="../asset/js/jquery.min.js"></script>
     <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
     <script src="../asset/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        var webkitDepData;
+        require(['webkit-dep'], function (wd) {
+            webkitDepData = wd;
+            //webkitDepData has been required and defined in webkit-dep.js
+            webkitDepData.minRadius = 5;
+            webkitDepData.maxRadius = 8;
+            webkitDepData.density = 1.1;
+            webkitDepData.attractiveness = 1.1;
+            webkitDepData.itemStyle = {
+                normal : {
+                    linkStyle : {
+                        opacity : 0.5
+                    }
+                }
+            }
+            // Echarts have been loaded
+            if (typeof(echarts) !== 'undefined') {
+                refresh();
+            }
+        })
+    </script>
     <script src="../asset/js/echartsExample.js"></script>
 </body>
 </html>

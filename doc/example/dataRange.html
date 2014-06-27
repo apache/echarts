@@ -26,6 +26,11 @@
 
     <link href="../asset/css/codemirror.css" rel="stylesheet">
     <link href="../asset/css/monokai.css" rel="stylesheet">
+    <style type="text/css">
+        .CodeMirror {
+            height: 550px;
+        }
+    </style>
 </head>
 
 <body>
@@ -155,7 +160,10 @@ option = {
             <div id="graphic" class="col-md-8">
                 <div id="main" class="main" style="height: 530px;"></div>
                 <div>
-                    <button onclick="refresh(true)">下一个 (Next) ~</button>
+                    <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
+
                     <span id='wrong-message' style="color:red"></span>
                 </div>
             </div><!--/span-->
@@ -170,6 +178,16 @@ option = {
     <script src="../asset/js/jquery.min.js"></script>
     <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
     <script src="../asset/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        var curIndex = 0;
+    </script>
     <script src="../asset/js/echartsExample.js"></script>
+    <script>
+        function focusGraphic() {
+            domCode.className = 'col-md-4 ani';
+            domGraphic.className = 'col-md-8 ani';
+            refresh();
+        }
+    </script>
 </body>
 </html>
