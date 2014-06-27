@@ -38,7 +38,7 @@
             <img src="./asset/img/architecture.png" alt="ECharts Architecture" style="max-width: 100%;"/>
         </div>
         <p class="lead">ECharts (Enterprise Charts 商业产品图表库)</p>
-        <p>提供商业产品常用图表，底层基于<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>（一个全新的轻量级canvas类库），创建了坐标系，图例，提示，工具箱等基础组件，并在此上构建出折线图、柱状图、散点图、K线图、饼图、雷达图、地图、和弦图以及力导向布局图，同时支持任意维度的堆积和多图表混合展现。</p>
+        <p>提供商业产品常用图表，底层基于<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a>（一个全新的轻量级canvas类库），创建了坐标系，图例，提示，工具箱等基础组件，并在此上构建出折线图、柱状图、散点图、K线图、饼图、雷达图、地图、和弦图、力导向布局图、仪表盘以及漏斗图，同时支持任意维度的堆积和多图表混合展现。</p>
         <div style="float:left;margin:20px 10px 30px 10px;"><img src="./asset/img/device.png" alt="Echarts device"/></div>
         <div>
             <img src="./asset/img/explorer.png"  alt="Echarts explorer"/>
@@ -62,8 +62,8 @@
         </div>
         <div  class="col-md-7">
         <h2 class="featurette-heading">混搭</h2>
-            <p>混搭的图表会更具表现力也更有有趣味，ECharts提供的图表（共9类14种）支持任意混搭：</p>
-            <p>折线图（面积图）、柱状图（条形图）、散点图（气泡图）、K线图、<br/>饼图（环形图）、雷达图、地图、和弦图、力导布局图。</p>
+            <p>混搭的图表会更具表现力也更有有趣味，ECharts提供的图表（共11类17种）支持任意混搭：</p>
+            <p>折线图（面积图）、柱状图（条形图）、散点图（气泡图）、K线图、<br/>饼图（环形图）、雷达图、地图、和弦图、力导布局图、仪表盘、漏斗图。</p>
             <p>混搭情况下一个标准图表：包含唯一图例、工具箱、数据区域缩放、值域漫游模块，一个直角坐标系（可包含一条或多条类目轴线，一条或多条值轴线，最多上下左右四条）</p>
         </div>
       </div>
@@ -158,9 +158,9 @@
 
       <div class="row featurette">
         <div class="col-md-7">
-            <h2 class="featurette-heading">大规模散点图</h2>
-            <p>如何展现成千上百万的离散数据从而找出他们的分布和聚类？貌似除了用专业的统计工具（如MATLAB）外别无选择？</p>
-            <p>不，ECharts发明了基于像素的大规模散点图（专利），一个900 x 400的散点区域就能够毫不重复的呈现36万组数据，这对于常规的应用，用现代浏览器就足以轻松展现百万级的散点数据！</p>
+            <h2 class="featurette-heading">大规模数据模式</h2>
+            <p>如何展现成千上百万的数据？貌似除了用专业的统计工具（如MATLAB）外别无选择？</p>
+            <p>不，在拥有如此多交互特性下ECharts依然可以做到直角系图表（折、柱、散点、K线）20万数据秒级内渲染完成，这对于常规的应用，用现代浏览器就足以轻松展现百万规模的数据！</p>
         </div>
         <div class="col-md-5">
             <img src="./asset/img/scatter.gif"  alt="Echarts 大规模散点图"/>
@@ -256,6 +256,17 @@
          </div>
          <div class="col-md-6">
             <img src="./asset/img/example/mix3.png" alt="Echarts 事件交互"/>
+         </div>
+      </div>
+      
+      <div class="row featurette">
+         <div class="col-md-6">
+            <img src="./asset/img/example/mix3.png" alt="Echarts 事件交互"/>
+         </div>
+         <div class="col-md-6">
+            <h2 class="featurette-heading">百搭时间轴</h2>
+            <p>时空数据分析是信息可视化里一个相当重要的方向！ECharts提供可与任意图表搭配使用的时间轴控件以展现时空数据变化。</p>
+            <p>try <a href="./example/bar11.html" target="_blank">bar »</a>、<a href="./example/scatter4.html" target="_blank">scatter »</a>、<a href="./example/pie7.html" target="_blank">pie »</a>、<a href="./example/map14.html" target="_blank">map »</a></p>
          </div>
       </div>
       <!-- /END THE FEATURETTES -->
