@@ -26,9 +26,26 @@ define(function (require) {
                 ctx, style
             );
         },
-        isCover : require('./normalIsCover')
-    };
+        isCover : function (x, y) {
+            var originPos = this.getTansform(x, y);
+            x = originPos[0];
+            y = originPos[1];
 
+            // 不能缓存rect！
+            var rect = this.style.rect;
+            if (x >= rect.x
+                && x <= (rect.x + rect.width)
+                && y >= rect.y
+                && y <= (rect.y + rect.height)
+            ) {
+                // 矩形内
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    };
     zrUtil.inherits(HandlePolygon, Base);
 
     return HandlePolygon;
