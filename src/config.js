@@ -692,7 +692,7 @@ define(function() {
             itemStyle: {
                 normal: {
                     // color: 各异,
-                    borderColor: '#fff',
+                    borderColor: 'rgba(0,0,0,0)',
                     borderWidth: 1,
                     label: {
                         show: true,
@@ -752,7 +752,7 @@ define(function() {
             itemStyle: {
                 normal: {
                     // color: 各异,
-                    borderColor: '#fff',
+                    borderColor: 'rgba(0,0,0,0)',
                     borderWidth: 1,
                     areaStyle: {
                         color: '#ccc'
@@ -833,7 +833,7 @@ define(function() {
             sort : 'none', // can be 'none', 'ascending', 'descending'
             sortSub : 'none', // can be 'none', 'ascending', 'descending'
             startAngle : 90,
-            clockWise : false,
+            clockWise : true,
             showScale : false,
             showScaleText : false,
             itemStyle : {
