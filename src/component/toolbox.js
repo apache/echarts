@@ -232,7 +232,7 @@ define(function (require) {
                         brushType: 'stroke'
                     },
                     highlightStyle : {
-                        lineWidth : 2,
+                        lineWidth : 1,
                         text : toolboxOption.showTitle 
                                ? this._featureTitle[this._iconList[i]]
                                : undefined,
