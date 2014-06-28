@@ -32,7 +32,7 @@ function option0 (name) {
                 type: 'map',
                 mapType: 'china',
                 mapLocation: {
-                    x:'left'
+                    //x:'left'
                 },
                 hoverable: false,
                 roam:true,

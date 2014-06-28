@@ -154,7 +154,7 @@ functionMap.chart0 = function (type) {
     myChart0.hideLoading();
     myChart0.setOption(option0(type));
     dataWorst = data[type];
-    setTimeout(extMark, 200);
+    //setTimeout(extMark, 2000);
     $('#overview-head')[0].innerHTML = overviewContent[type][0];
     $('#overview-content')[0].innerHTML = overviewContent[type][1];
     $('#overview-link')[0].href = overviewContent[type][2];
@@ -163,7 +163,7 @@ functionMap.chart0 = function (type) {
 function extMark() {
     var map = myChart0.chart.map;
     if (!map.geo2pos('china','北京')) {
-        setTimeout(extMark, 200);
+        setTimeout(extMark, 1000);
         return;
     }
     var zr = myChart0.getZrender();

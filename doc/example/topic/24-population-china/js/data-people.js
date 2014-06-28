@@ -63,6 +63,7 @@ var option = {
         trigger: 'item'
     },
     legend: {
+        data:[],
         //orient: 'vertical',
         x:'right',
         y: 55,
@@ -85,8 +86,6 @@ var option = {
         y: 'center',
         feature : {
             mark : {show: true},
-            dataView : {show: true, readOnly: false},
-            restore : {show: true},
             saveAsImage : {show: true}
         }
     },
@@ -142,7 +141,7 @@ var option = {
         // 图例示意占位
         
     ],
-    animation: false
+    animation: true
 };
 
 
