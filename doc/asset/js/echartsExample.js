@@ -6,10 +6,12 @@ var domMessage = document.getElementById('wrong-message');
 var iconResize = document.getElementById('icon-resize');
 var needRefresh = false;
 
-var hash = window.location.hash.replace('#','') || 'infographic';
+var hash = location.hash.replace('#','') || (needMap() ? 'default' : 'macarons');
 var curTheme;
 function requireCallback (ec, defaultTheme) {
-    curTheme = themeSelector ? defaultTheme : {};
+    curTheme = themeSelector 
+               ? defaultTheme
+               : {};
     echarts = ec;
     refresh();
     window.onresize = myChart.resize;
@@ -17,9 +19,9 @@ function requireCallback (ec, defaultTheme) {
 
 var themeSelector = $('#theme-select')[0];
 if (themeSelector) {
-    themeSelector.innerHTML = 
-        '<option selected="true" name="infographic">infographic</option>'
-        + '<option name="macarons">macarons</option>'
+    themeSelector.innerHTML =
+        '<option selected="true" name="macarons">macarons</option>' 
+        + '<option name="infographic">infographic</option>'
         + '<option name="shine">shine</option>'
         + '<option name="dark">dark</option>'
         + '<option name="blue">blue</option>'
@@ -43,7 +45,7 @@ if (themeSelector) {
         }
         else {
             window.location.hash = '';
-            theme = {};
+            curTheme = {};
             setTimeout(refreshTheme, 500);
         }
     }
@@ -52,8 +54,8 @@ if (themeSelector) {
         myChart.setTheme(curTheme);
     }
     if ($(themeSelector).val(hash).val() != hash) {
-        $(themeSelector).val('infographic');
-        hash = 'infographic';
+        $(themeSelector).val('macarons');
+        hash = 'macarons';
         window.location.hash = hash;
     }
 }
@@ -119,7 +121,7 @@ function needMap() {
 }
 
 var echarts;
-var developMode = true;
+var developMode = false;
 
 if (developMode) {
     // for develop

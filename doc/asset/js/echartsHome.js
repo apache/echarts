@@ -106,7 +106,7 @@ $('#footer')[0].innerHTML =
                 + '<ul>'
                     + '<li><a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">License</a></li>'
                     + '<li><a href="http://echarts.baidu.com/doc/changelog.html" target="_blank">Changelog</a></li>'
-                    + '<li><a href="dhttp://www.oschina.net/p/echarts" target="_blank">开源中国</a></li>'
+                    + '<li><a href="http://www.oschina.net/p/echarts" target="_blank">开源中国</a></li>'
                 + '</ul>'
             + '</div>'
             + '<div class="col-lg-3">'
@@ -122,7 +122,7 @@ $('#footer')[0].innerHTML =
             + '</div>'
         + '</div>'
         + '<p class="pull-right"><a href="javascript:void(0)" onclick="back2Top()" >Back to top</a></p>'
-        + '<p>&copy; 2014 Baidu</p>'
+        + '<p>&copy; 2014 <a href="http://www.baidu.com/" target="_blank">Baidu</a></p>'
     + '</div>';
 
 

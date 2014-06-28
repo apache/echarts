@@ -57,6 +57,9 @@ blockquote {
 .thx div {
     padding:0;
 }
+div.user {
+    margin-top: 20px;
+}
 .user img {
     height:50px;
     padding: 5px;
@@ -89,7 +92,26 @@ hr {
     margin-right: 0;
     margin-left: 0;
 }
-
+.jumbotron {
+    margin: 0;
+    text-align: center;
+    background-color:transparent;
+  }
+  .jumbotron h1 {
+    font-size: 100px;
+    line-height: 1;
+  }
+  .jumbotron .lead {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+  .jumbotron .btn {
+    font-size: 21px;
+    padding: 14px 24px;
+  }
+.team {
+    padding-bottom:0;
+}
 .team .row {
     margin-bottom: 40px;
 }
@@ -105,7 +127,7 @@ hr {
     color: #fff;
     font-size: 14px;
 }
-#footer a {
+#footer li a {
     color: rgb(190, 205, 223);
     font-size: 12px;
 }
@@ -175,7 +197,6 @@ hr {
 }
 .main {
     height: 400px;
-
     overflow: hidden;
     padding : 10px;
     margin-bottom: 10px;
