@@ -50,6 +50,7 @@
           <h2>发展</h2>
           <p>&#12288;&#12288;ECharts缘起公司自身的业务需求，但开源使得它得以发展，虽然业界已经有多如牛毛的JS图表库，但ECharts带着颠覆性的功能设计和技术特征，发布后得到了业界高度关注和好评，迅速成为国内数据可视化领域的“<a href="http://www.itongji.cn/article/0P525392013.html" target="_blank">后起之秀</a>”，先后在CSDN、ITEye、InfoQ、中国统计网、统计之都等主流技术媒体上有专题报道，被开源中国收录后即被列为精选做了长达一周的首页首位推荐，收藏数超过了1000，github上发布12个月后star数超过了1900，已经成为了国内同类别项目中关注度最高的开源项目。被百度外100多家企业应用在新闻传媒、证券金融、电子商务、旅游酒店、天气地理、视频游戏、电力等众多领域。</p>
           <p>&#12288;&#12288;令我们意外的是，ECharts仅发布半年入选成为了“<a href="http://www.oschina.net/news/47438/2013-top-10-hot-projects-in-china" target="_blank">2013年国产开源软件10大年度热门项目</a>”，同时在“<a href="http://www.oschina.net/news/47468/2013-top-20-newest-opensource-projects" target="_blank">2013年度最新的20大热门开源软件</a>”中排名第一。除此之外，ECharts还得到了跨领域以及国外技术团体关注，如在R领域就同时出现国内外多个版本的扩展，听说还有两家亚太地区金融咨询企业正在研发基于ECharts的BI类产品，甚至还有人拿着ECharts跑到纽约市长数据分析部门做应用推广。这都是我们的意外收获，感谢大家的支持。</p>
+          <div id="main" style="height:300px;"></div>
       </div>
       
       <div class="row featurette team">
@@ -186,5 +187,73 @@
     <script src="./asset/js/jquery.min.js"></script>
     <script type="text/javascript" src="./asset/js/echartsHome.js"></script>
     <script src="./asset/js/bootstrap.min.js"></script>
+    <script src="asset/js/esl/esl.js"></script>
+    <script type="text/javascript">
+        require.config({
+            paths:{ 
+                echarts:'example/www/js/echarts',
+                'echarts/chart/bar' : 'example/www/js/echarts',
+                'echarts/chart/line': 'example/www/js/echarts'
+            }
+        });
+        require(
+            [
+                'echarts',
+                'example/theme/infographic',
+                'echarts/chart/bar',
+                'echarts/chart/line'
+            ],
+            function(ec, theme) {
+                myChart = ec.init(document.getElementById('main'), theme);
+                myChart.setOption({
+                    title : {
+                        text: 'Github关注度'
+                    },
+                    tooltip : {
+                        trigger: 'axis',
+                        showDelay: 0
+                    },
+                    grid:{y2:30},
+                    xAxis : [
+                        {
+                            type : 'category',
+                            boundaryGap : false,
+                            axisLabel: {interval:0,formatter:function(v){return v.replace('年',' - ').replace('月','')}},
+                            data : [
+                                '2013年6月','2013年7月','2013年8月','2013年9月','2013年10月',
+                                '2013年11月','2013年12月','2014年1月','2014年2月','2014年3月',
+                                '2014年4月','2014年5月'
+                            ]
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            type : 'value'
+                        }
+                    ],
+                    series : [{
+                        name:'echarts',
+                        type:'line',
+                        itemStyle:{normal:{color:'#E87C25'}},
+                        data:[
+                          {value:0,itemStyle:{normal:{label:{show:true,formatter:'1.0.0'}}}},
+                          {value:90,itemStyle:{normal:{label:{show:true,formatter:'1.1.0'}}}},
+                          {value:316,itemStyle:{normal:{label:{show:true,formatter:'1.1.1'}}}},
+                          {value:480,itemStyle:{normal:{label:{show:true,formatter:'1.2.0'}}}},
+                          {value:620,itemStyle:{normal:{label:{show:true,formatter:'1.2.1'}}}},
+                          {value:743,itemStyle:{normal:{label:{show:true,formatter:'1.3.0'}}}},
+                          {value:904,itemStyle:{normal:{label:{show:true,formatter:'1.3.5'}}}},
+                          {value:1090,itemStyle:{normal:{label:{show:true,formatter:'1.3.6'}}}},
+                          {value:1262,itemStyle:{normal:{label:{show:true,formatter:'1.3.7'}}}},
+                          {value:1368,itemStyle:{normal:{label:{show:true,formatter:'1.3.8'}}}},
+                          {value:1610,itemStyle:{normal:{label:{show:true,formatter:'1.4.0'}}}},
+                          {value:1767,itemStyle:{normal:{label:{show:true,formatter:'1.4.1'}}}}
+                        ]
+                    }]
+                });
+            }
+        );
+
+    </script>
   </body>
 </html>

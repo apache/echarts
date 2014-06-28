@@ -88,15 +88,13 @@ option = {
     xAxis : [
         {
             type : 'value',
-            splitNumber: 2,
-            splitArea: {show:true}
+            splitNumber: 2
         }
     ],
     yAxis : [
         {
             type : 'value',
-            splitNumber: 2,
-            splitArea : {show : true}
+            splitNumber: 2
         }
     ],
     animation: false,
@@ -147,7 +145,7 @@ function buildPieSeries(){
         })
     }
     option.animation = true;
-    myChart.setOption(option);
+    myChart.setOption(option, true);
     window.onresize = buildPieSeries;
 }
 // 构造出一系列的饼图代替原来的散点，需要在散点画出来后才能获取到散点的坐标，setTimeout！

@@ -89,22 +89,19 @@ function option(chartType, n) {
         ];
         opt.yAxis = [
             {
-                type : 'value',
-                splitArea : {show : true}
+                type : 'value'
             }
         ];
     }
     else if (chartType == 'scatter') {
         opt.xAxis = [
             {
-                type : 'value',
-                splitArea : {show : true}
+                type : 'value'
             }
         ];
         opt.yAxis = [
             {
-                type : 'value',
-                splitArea : {show : true}
+                type : 'value'
             }
         ];
     }
