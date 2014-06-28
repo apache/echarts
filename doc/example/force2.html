@@ -110,6 +110,13 @@ option = {
         trigger: 'item',
         formatter: '{a} : {b}'
     },
+    toolbox: {
+        show : true,
+        feature : {
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
     legend: {
         x: 'left',
         data:['叶子节点','非叶子节点', '根节点']
@@ -120,28 +127,13 @@ option = {
             name : "Force tree",
             categories : [
                 {
-                    name: '叶子节点',
-                    itemStyle: {
-                        normal: {
-                            color : '#ff7f50'
-                        }
-                    }
+                    name: '叶子节点'
                 },
                 {
-                    name: '非叶子节点',
-                    itemStyle: {
-                        normal: {
-                            color : '#6f57bc'
-                        }
-                    }
+                    name: '非叶子节点'
                 },
                 {
-                    name: '根节点',
-                    itemStyle: {
-                        normal: {
-                            color : '#af0000'
-                        }
-                    }
+                    name: '根节点'
                 }
             ],
             itemStyle: {

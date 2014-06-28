@@ -117,7 +117,7 @@ option = {
 clearInterval(timeTicket);
 timeTicket = setInterval(function (){
     option.series[0].data[0].value = (Math.random()*100).toFixed(2) - 0;
-    myChart.setOption(option);
+    myChart.setOption(option,true);
 },2000)
                     </textarea>
               </div><!--/.well -->
@@ -143,6 +143,7 @@ timeTicket = setInterval(function (){
     <script src="../asset/js/jquery.min.js"></script>
     <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
     <script src="../asset/js/bootstrap.min.js"></script>
+    <script type="text/javascript">var timeTicket;</script>
     <script src="../asset/js/echartsExample.js"></script>
 </body>
 </html>

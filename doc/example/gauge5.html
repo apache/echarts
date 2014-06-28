@@ -323,7 +323,7 @@ timeTicket = setInterval(function (){
     option.series[1].data[0].value = (Math.random()*7).toFixed(2) - 0;
     option.series[2].data[0].value = (Math.random()*2).toFixed(2) - 0;
     option.series[3].data[0].value = (Math.random()*2).toFixed(2) - 0;
-    myChart.setOption(option);
+    myChart.setOption(option,true);
 },2000)
                     </textarea>
               </div><!--/.well -->
@@ -332,9 +332,6 @@ timeTicket = setInterval(function (){
                 <div id="main" class="main"></div>
                 <div>
                     <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
-                    <span class="text-primary">切换主题</span>
-                    <select id="theme-select"></select>
-
                     <span id='wrong-message' style="color:red"></span>
                 </div>
             </div><!--/span-->
@@ -349,6 +346,7 @@ timeTicket = setInterval(function (){
     <script src="../asset/js/jquery.min.js"></script>
     <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
     <script src="../asset/js/bootstrap.min.js"></script>
+    <script type="text/javascript">var timeTicket;</script>
     <script src="../asset/js/echartsExample.js"></script>
 </body>
 </html>

@@ -73,24 +73,13 @@ option = {
             type : 'value',
             axisLabel : {
                 formatter: '{value} °C'
-            },
-            splitArea : {show : true}
+            }
         }
     ],
     series : [
         {
             name:'最高气温',
             type:'line',
-            itemStyle: {
-                normal: {
-                    lineStyle: {
-                        shadowColor : 'rgba(0,0,0,0.4)',
-                        shadowBlur: 5,
-                        shadowOffsetX: 3,
-                        shadowOffsetY: 3
-                    }
-                }
-            },
             data:[11, 11, 15, 13, 12, 13, 10],
             markPoint : {
                 data : [
@@ -107,16 +96,6 @@ option = {
         {
             name:'最低气温',
             type:'line',
-            itemStyle: {
-                normal: {
-                    lineStyle: {
-                        shadowColor : 'rgba(0,0,0,0.4)',
-                        shadowBlur: 5,
-                        shadowOffsetX: 3,
-                        shadowOffsetY: 3
-                    }
-                }
-            },
             data:[1, -2, 2, 5, 3, 2, 0],
             markPoint : {
                 data : [
