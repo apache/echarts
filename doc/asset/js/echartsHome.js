@@ -84,7 +84,10 @@ $('#head')[0].innerHTML =
         + '</div><!--/.nav-collapse -->'
       + '</div>';
       
-
+function back2Top() {
+    $("body,html").animate({scrollTop:0},1000);
+    return false;
+}
 $('#footer')[0].style.marginTop = '50px';
 $('#footer')[0].innerHTML = 
      '<div class="container">'
@@ -114,11 +117,11 @@ $('#footer')[0].innerHTML =
                     + '<li><i class="fa fa-weibo"></i> <a href="http://weibo.com/echarts" target="_blank">Weibo</a></li>'
                 + '</ul>'
             + '</div>'
-            + '<div class="col-lg-3" style="position:relative">'
-                + '<img src="'+ (loc.img || '.')+ '/asset/img/echarts-logo2.png" alt="ECharts" style="position:absolute;top:-120px;"/>'
+            + '<div class="col-lg-3 flogo">'
+                + '<a href="javascript:void(0)" onclick="back2Top()" title="回到顶部"><img src="'+ (loc.img || '.')+ '/asset/img/echarts-logo2.png" alt="ECharts"/></a>'
             + '</div>'
         + '</div>'
-        + '<p class="pull-right"><a href="#">Back to top</a></p>'
+        + '<p class="pull-right"><a href="javascript:void(0)" onclick="back2Top()" >Back to top</a></p>'
         + '<p>&copy; 2014 Baidu</p>'
     + '</div>';
 

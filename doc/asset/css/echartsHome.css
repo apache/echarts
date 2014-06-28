@@ -38,9 +38,24 @@ body p {
 
 blockquote {
     border-width:0;
+    margin-bottom:10px;
 }
 .marketing .feature .col-lg-4 img {
     margin-bottom: 10px;
+}
+.marketing .thx .col-lg-4 {
+    margin-bottom: 0;
+    text-align:left;
+}
+.thx blockquote p {
+    text-align:left;
+    margin-bottom:0;
+}
+.thx blockquote small {
+    text-align:right;
+}
+.thx div {
+    padding:0;
 }
 .user img {
     height:50px;
@@ -78,7 +93,9 @@ hr {
 .team .row {
     margin-bottom: 40px;
 }
-
+.team i {
+    font-size:12px;
+}
 #footer {
     clear:both;
     background-color: rgb(6, 19, 37);
@@ -99,6 +116,18 @@ hr {
 #footer i {
     color: rgb(190, 205, 223);
 }
+#footer div.flogo {
+    position:relative;
+}
+#footer div.flogo img {
+    width:80%;
+    position:absolute;
+    left:30px;
+    top:-120px;
+}
+#footer div.flogo a:hover img {
+    top:-130px;
+}
 .dropdown i {
     color:#555;
 }
@@ -109,52 +138,6 @@ hr {
     padding: 3px 10px;
 }
 
-/*
-
-*/
-
-/* Featurettes
-------------------------- */
-/*
-
-
-a.accordion-toggle:hover {
-    text-decoration:none;
-    font-weight:bolder;
-}
-ul.nav-list {
-    overflow-y: auto;
-}
-.nav-list i.icon-plus, .nav-list i.icon-minus {
-    margin: 6px 0 0 -15px;
-    float: left;
-    cursor : pointer;
-    opacity: .3;
-    filter:alpha(opacity=30);
-}
-i.icon-chevron-right{
-    float: right;
-    margin-top: 2px;
-    margin-right: -6px;
-    opacity: .25;
-    filter:alpha(opacity=25);
-}
-.page-header {
-    padding-top:35px;
-    margin:0;
-    border-width:0;
-}
-.page-header h1 {
-    background-color:#eee;
-    padding:15px;
-    text-align:right;
-}
-div.section {
-    padding-top:30px;
-}
-tr.head {
-    background-color:#f5f5f5
-}
 
 /*example*/
 .CodeMirror pre{color: #f8f8f2;}
@@ -344,7 +327,7 @@ table.full {width:100%;}
 .ec-icon {
     display: inline-block;
     width: 35px;
-    height: 26px;
+    height: 25px;
     *margin-right: .3em;
     line-height: 25px;
     vertical-align: middle;

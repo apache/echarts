@@ -622,7 +622,7 @@
         }
         else {
             for (var i = 0; i < len - 1; i++) {
-                if (Math.abs(scrollHeight - offsetList[i].offsetTop) < 300 && navDom[i]) {
+                if (Math.abs(scrollHeight - offsetList[i].offsetTop) < 280 && navDom[i]) {
                     navDom[i].style.backgroundColor = '#3E98C5';
                     $(navDom[i]).children('a')[0].style.color = '#fff';
                 }
@@ -649,6 +649,19 @@
         })
         setTimeout(_scroll, 500);
     }
+    
+    function scroll2Pos (idx) {
+        return function() {
+            $("body,html").animate(
+                {scrollTop: offsetList[idx].offsetTop},
+                500
+            );
+            return false;
+        }
+    }
+    $('#chartsTypeNav>ul>li>a').each(function(idx, dom){
+        $(dom).on('click', scroll2Pos(idx));
+    })
     $(window).on('scroll', _scroll);
     $(window).on('resize', _resize);
     _resize();
