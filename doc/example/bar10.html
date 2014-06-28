@@ -73,15 +73,13 @@ option = {
     xAxis : [
         {
             type : 'category',
-            splitLine : {show: false},
             data : ['Cosco','CMA','APL','OOCL','Wanhai','Zim']
         }
     ],
     yAxis : [
         {
             type : 'value',
-            boundaryGap: [0, 0.1],
-            splitArea : {show : true}
+            boundaryGap: [0, 0.1]
         }
     ],
     series : [
@@ -95,6 +93,7 @@ option = {
                     color: 'tomato',
                     borderColor: 'tomato',
                     borderWidth: 6,
+                    borderRadius:0,
                     label : {
                         show: true, position: 'insideTop'
                     }
@@ -111,6 +110,7 @@ option = {
                     color: '#fff',
                     borderColor: 'tomato',
                     borderWidth: 6,
+                    borderRadius:0,
                     label : {
                         show: true, 
                         position: 'top',

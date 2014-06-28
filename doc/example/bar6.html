@@ -88,8 +88,7 @@ option = {
     ],
     yAxis : [
         {
-            type : 'value',
-            splitArea: {show : true}
+            type : 'value'
         }
     ],
     series : [
@@ -113,14 +112,14 @@ option = {
             name:'收入',
             type:'bar',
             stack: '总量',
-            itemStyle : { normal: {label : {show: true, position: 'inside'}}},
+            itemStyle : { normal: {label : {show: true, position: 'top'}}},
             data:[900, 345, 393, '-', '-', 135, 178, 286, '-', '-', '-']
         },
         {
             name:'支出',
             type:'bar',
             stack: '总量',
-            itemStyle : { normal: {label : {show: true, position: 'inside'}}},
+            itemStyle : { normal: {label : {show: true, position: 'bottom'}}},
             data:['-', '-', '-', 108, 154, '-', '-', '-', 119, 361, 203]
         }
     ]

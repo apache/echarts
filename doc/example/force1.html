@@ -50,6 +50,13 @@ option = {
         trigger: 'item',
         formatter: '{a} : {b}'
     },
+    toolbox: {
+        show : true,
+        feature : {
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
     legend: {
         x: 'left',
         data:['家人','朋友']
@@ -60,28 +67,13 @@ option = {
             name : "人物关系",
             categories : [
                 {
-                    name: '人物',
-                    itemStyle: {
-                        normal: {
-                            color : '#ff7f50'
-                        }
-                    }
+                    name: '人物'
                 },
                 {
-                    name: '家人',
-                    itemStyle: {
-                        normal: {
-                            color : '#87cdfa'
-                        }
-                    }
+                    name: '家人'
                 },
                 {
-                    name:'朋友',
-                    itemStyle: {
-                        normal: {
-                            color : '#9acd32'
-                        }
-                    }
+                    name:'朋友'
                 }
             ],
             itemStyle: {

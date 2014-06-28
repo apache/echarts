@@ -94,8 +94,7 @@ option = {
             type : 'value',
             power: 1,
             max:100,
-            scale: true,
-            splitLine : {show : false}
+            scale: true
         }
     ],
     yAxis : [
@@ -104,15 +103,13 @@ option = {
             scale:true,
             precision: 2,
             splitNumber: 9,
-            boundaryGap: [0.05, 0.05],
-            splitArea : {show : true}
+            boundaryGap: [0.05, 0.05]
         },
         {
             type : 'value',
             power: 1,
             max:100,
-            scale: true,
-            splitLine : {show : false}
+            scale: true
         }
     ],
     series : [
@@ -283,6 +280,7 @@ timeTicket = setInterval(function (){
     <script src="../asset/js/jquery.min.js"></script>
     <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
     <script src="../asset/js/bootstrap.min.js"></script>
+    <script type="text/javascript">var timeTicket;</script>
     <script src="../asset/js/echartsExample.js"></script>
 </body>
 </html>
