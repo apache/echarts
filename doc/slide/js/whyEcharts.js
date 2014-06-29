@@ -43,6 +43,30 @@ else {
     });
 }
 
+var theme = {
+    backgroundColor:'#fff',
+     color: [
+        '#5d9cec', '#62c87f', '#f15755', '#fc863f', '#7053b6',
+        '#6ed5e6','#ffce55',  '#f57bc1', '#dcb186', '#647c9d'
+    ],
+    symbolList : [
+        'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond',
+        'circle', 'rectangle', 'triangle', 'diamond' 
+    ],
+    k: {
+        itemStyle: {
+            normal: {
+                color: '#ff3200',          // 阳线填充颜色
+                color0: '#00aa11',      // 阴线填充颜色
+                lineStyle: {
+                    width: 1,
+                    color: '#ff3200',   // 阳线边框颜色
+                    color0: '#00aa11'   // 阴线边框颜色
+                }
+            }
+        }
+    }
+}
 /*
 require.config({
     paths:{ 
@@ -154,7 +178,7 @@ function showChart() {
         myChart = null;
     }
     if (optionKey) {
-    	myChart = echarts.init(dom);
+        myChart = echarts.init(dom, theme);
 	    var option = optionMap[optionKey];
 	    dom.className = 'main noLoading';
 		myChart.setOption(option);
@@ -779,7 +803,7 @@ var optionMap = {
                 ]
             };
             document.getElementById('mcMain2').className = 'main noLoading';
-            myChart2 = echarts.init(document.getElementById('mcMain2'));
+            myChart2 = echarts.init(document.getElementById('mcMain2'),theme);
             myChart2.setOption(option2);
 
             var option3 = {
@@ -869,7 +893,7 @@ var optionMap = {
                 ]
             };
             document.getElementById('mcMain3').className = 'main noLoading';
-            myChart3 = echarts.init(document.getElementById('mcMain3'));
+            myChart3 = echarts.init(document.getElementById('mcMain3'),theme);
             myChart3.setOption(option3);
 
             myChart.connect([myChart2, myChart3]);
@@ -1140,6 +1164,10 @@ var optionMap = {
             }
             functionMap.force2 = function () {
                 myChart.setOption({
+                    color : ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
+                '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
+                '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
+                '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'],
                     tooltip : {
                         trigger: 'item'
                     },
@@ -1201,7 +1229,7 @@ var optionMap = {
                     saveAsImage : {show: true}
                 }
             },
-            dataZoom : {
+            AAdataZoom : {
                 show : false,
                 realtime: true,
                 start : 0,
@@ -1261,7 +1289,7 @@ var optionMap = {
                     yAxisIndex: 1,
                     itemStyle: {
                         normal: {
-                            color : 'rgba(135,206,205,0.4)'
+                            color : 'rgba(85,206,85,0.4)'
                         }
                     },
                     data:(function (){
@@ -1566,6 +1594,148 @@ var optionMap = {
             }
         ]
     },
+    gf : {
+        color : [
+            'rgba(255, 69, 0, 0.5)',
+            'rgba(255, 150, 0, 0.5)',
+            'rgba(255, 200, 0, 0.5)',
+            'rgba(155, 200, 50, 0.5)',
+            'rgba(55, 200, 100, 0.5)'
+        ],
+        title : {
+            text: '商业BI图表',
+            subtext: '纯属虚构'
+        },
+        tooltip : {
+            trigger: 'item',
+            formatter: "{a} <br/>{b} : {c}%"
+        },
+        toolbox: {
+            show : true,
+            feature : {
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                restore : {show: true},
+                saveAsImage : {show: true}
+            }
+        },
+        legend: {
+            data : ['展现','点击','访问','咨询','订单']
+        },
+        series : [
+            {
+                name:'业务指标',
+                type:'gauge',
+                center: ['25%','50%'],
+                splitNumber: 10,       // 分割段数，默认为5
+                axisLine: {            // 坐标轴线
+                    lineStyle: {       // 属性lineStyle控制线条样式
+                        color: [[0.2, '#228b22'],[0.8, '#48b'],[1, 'rgb(255, 80, 20)']], 
+                        width: 8
+                    }
+                },
+                axisTick: {            // 坐标轴小标记
+                    splitNumber: 10,   // 每份split细分多少段
+                    length :12,        // 属性length控制线长
+                    lineStyle: {       // 属性lineStyle控制线条样式
+                        color: 'auto'
+                    }
+                },
+                axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
+                    textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                        color: 'auto'
+                    }
+                },
+                splitLine: {           // 分隔线
+                    show: true,        // 默认显示，属性show控制显示与否
+                    length :30,         // 属性length控制线长
+                    lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
+                        color: 'auto'
+                    }
+                },
+                pointer : {
+                    width : 5
+                },
+                title : {
+                    show : true,
+                    offsetCenter: [0, '-40%'],       // x, y，单位px
+                    textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                        fontWeight: 'bolder'
+                    }
+                },
+                detail : {
+                    formatter:'{value}%',
+                    textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                        color: 'auto',
+                        fontWeight: 'bolder'
+                    }
+                },
+                data:[{value: 85, name: '完成率'}]
+            },
+            {
+                name:'预期',
+                type:'funnel',
+                x: '45%',
+                width: '45%',
+                itemStyle: {
+                    normal: {
+                        label: {
+                            formatter: '{b}预期'
+                        },
+                        labelLine: {
+                            show : false
+                        }
+                    },
+                    emphasis: {
+                        label: {
+                            position:'inside',
+                            formatter: '{b}预期 : {c}%'
+                        }
+                    }
+                },
+                data:[
+                    {value:60, name:'访问'},
+                    {value:40, name:'咨询'},
+                    {value:20, name:'订单'},
+                    {value:80, name:'点击'},
+                    {value:100, name:'展现'}
+                ]
+            },
+            {
+                name:'实际',
+                type:'funnel',
+                x: '45%',
+                width: '45%',
+                maxSize: '80%',
+                itemStyle: {
+                    normal: {
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                        label: {
+                            position: 'inside',
+                            formatter: '{c}%',
+                            textStyle: {
+                                color: '#fff'
+                            }
+                        }
+                    },
+                    emphasis: {
+                        label: {
+                            position:'inside',
+                            formatter: '{b}实际 : {c}%'
+                        }
+                    }
+                },
+                data:[
+                    {value:30, name:'访问'},
+                    {value:10, name:'咨询'},
+                    {value:5, name:'订单'},
+                    {value:50, name:'点击'},
+                    {value:80, name:'展现'}
+                ]
+            }
+        ]
+    },
     mix1 : {
     	color: ['#ff7f50','#87cefa','#da70d6','#ff69b4','#ba55d3','#32cd32','#6495ed'],
         tooltip : {
@@ -1769,6 +1939,10 @@ var optionMap = {
 		
     })(),
     mix3 : {
+        title : {
+            text: '2011全国GDP（亿元）',
+            subtext: '数据来自国家统计局'
+        },
         tooltip : {
             trigger: 'item'
         },
@@ -1796,7 +1970,7 @@ var optionMap = {
         },
         series : [
             {
-                name: 'iphone销量',
+                name: '2011全国GDP分布',
                 type: 'map',
                 mapType: 'china',
                 mapLocation: {
@@ -1842,7 +2016,7 @@ var optionMap = {
                 ]
             },
             {
-                name:'各省销量',
+                name:'2011全国GDP对比',
                 type:'pie',
                 roseType : 'area',
                 tooltip: {
@@ -1970,9 +2144,11 @@ var optionMap = {
                 })()
             }, true);
         }
-        functionMap.wormhole = function () {
+        functionMap.wormhole = function() {
+            myChart.clear();
+            myChart.getZrender().clear();
             myChart.setOption({
-                color : (function (){
+                color : (function(){
                     var zrColor = require('zrender/tool/color');
                     return zrColor.getStepColors('yellow', 'red', 28);
                 })(),
@@ -1989,7 +2165,7 @@ var optionMap = {
                 legend: {
                    // orient : 'vertical',
                     //x : 'center',
-                    data: function (){
+                    data: function(){
                             var list = [];
                             for (var i = 1; i <=28; i++) {
                                 list.push(i + 2000);
@@ -2022,7 +2198,7 @@ var optionMap = {
                     }
                 ],
                 calculable : false,
-                series : (function (){
+                series : (function(){
                     var series = [];
                     for (var i = 1; i <= 28; i++) {
                         series.push({
@@ -2060,14 +2236,14 @@ var optionMap = {
         }
         return {};
     })(),
-    effect : (function () {
+    effect1 : (function() {
     	var effect = {
 		    show: true,
-		    scaleSize: 1,
-		    period: 10,             // 运动周期，无单位，值越大越慢
+            scaleSize: 1,//require('zrender/tool/env').canvasSupported ? 1 : 2,
+            period: 30,             // 运动周期，无单位，值越大越慢
 		    color: '#fff',
-		    shadowColor: 'rgba(220,220,220,0.8)',
-		    shadowBlur : 15 
+            shadowColor: 'rgba(220,220,220,0.4)',
+            shadowBlur : 5 
 		};
 		function itemStyle(idx) {
 		    return {
@@ -2076,18 +2252,18 @@ var optionMap = {
 		            borderWidth:1,
 		            borderColor:['rgba(30,144,255,1)','lime'][idx],
 		            lineStyle: {
-		                type: 'solid',
-		                shadowColor : ['rgba(30,144,255,1)','lime'][idx], //默认透明
-		                shadowBlur: 10,
-		                shadowOffsetX: 0,
-		                shadowOffsetY: 0
+                        //shadowColor : ['rgba(30,144,255,1)','lime'][idx], //默认透明
+                        //shadowBlur: 10,
+                        //shadowOffsetX: 0,
+                        //shadowOffsetY: 0,
+                        type: 'solid'
 		            }
 		        }
 		    }
 		};
-         functionMap.effect = function () {
+        functionMap.effect1 = function() {
             myChart.setOption({
-		    //ackgroundColor: '#1b1b1b',
+		    backgroundColor: 'rgba(0,0,0,0)',
 		    color: ['rgba(30,144,255,1)','lime'],
 		    title : {
 		        text: '中国铁路运输主干线',
@@ -2100,7 +2276,7 @@ var optionMap = {
 		    },
 		    tooltip : {
 		        trigger: 'item',
-		        formatter: function (v) {
+                    formatter: function(v) {
 		            return v[1].replace(':', ' > ');
 		        }
 		    },
@@ -2147,7 +2323,7 @@ var optionMap = {
 		                symbolSize : 1,
 		                effect : effect,
 		                itemStyle : itemStyle(0),
-		                smooth:false,
+                            smooth:true,
 		                data : [
 		                    [{name:'北京'}, {name:'哈尔滨'}],
 		                    [{name:'哈尔滨'}, {name:'满洲里'}],
@@ -2205,7 +2381,7 @@ var optionMap = {
 		                symbolSize : 1,
 		                effect : effect,
 		                itemStyle : itemStyle(1),
-		                smooth:false,
+                            smooth:true,
 		                data : [
 		                    [{name:'北京'}, {name:'兰州'}],
 		                    [{name:'兰州'}, {name:'拉萨'}],
@@ -2339,7 +2515,7 @@ var optionMap = {
         }
         functionMap.effect2 = function () {
             myChart.setOption({
-			    dbackgroundColor: '#1b1b1b',
+                backgroundColor: 'rgba(0,0,0,0)',
 			    color: ['gold','aqua','lime'],
 			    title : {
 			        text: '模拟迁徙',
@@ -2351,7 +2527,7 @@ var optionMap = {
 			    },
 			    tooltip : {
 			        trigger: 'item',
-			        formatter: function (v) {
+            formatter: function(v) {
 			            return v[1].replace(':', ' > ');
 			        }
 			    },
@@ -2384,7 +2560,7 @@ var optionMap = {
 			        min : 0,
 			        max : 100,
 			        calculable : true,
-			        color: ['red','orange','yellow','lightgreen'],
+            color: ['#ff3333', 'orange', 'yellow','lime','aqua'],
 			        textStyle:{
 			            color:'#fff'
 			        }
@@ -2696,12 +2872,18 @@ var optionMap = {
 			                smooth:true,
 			                effect : {
 			                    show: true,
-			                    size: 3,
-			                    shadowColor: 'yellow'
+                        scaleSize: 1,
+                        period: 30,
+                        color: '#fff',
+                        shadowBlur: 10
 			                },
 			                itemStyle : {
 			                    normal: {
-			                        borderWidth:1
+                            borderWidth:1,
+                            lineStyle: {
+                                type: 'solid',
+                                shadowBlur: 10
+                            }
 			                    }
 			                },
 			                data : [
@@ -2719,7 +2901,7 @@ var optionMap = {
 			            },
 			            markPoint : {
 			                symbol:'emptyCircle',
-			                symbolSize : function (v){
+                    symbolSize : function(v){
 			                    return 10 + v/10
 			                },
 			                effect : {
@@ -2754,12 +2936,18 @@ var optionMap = {
 			                smooth:true,
 			                effect : {
 			                    show: true,
-			                    size: 3,
-			                    shadowColor: 'aqua'
+                        scaleSize: 1,
+                        period: 30,
+                        color: '#fff',
+                        shadowBlur: 10
 			                },
 			                itemStyle : {
 			                    normal: {
-			                        borderWidth:1
+                            borderWidth:1,
+                            lineStyle: {
+                                type: 'solid',
+                                shadowBlur: 10
+                            }
 			                    }
 			                },
 			                data : [
@@ -2777,7 +2965,7 @@ var optionMap = {
 			            },
 			            markPoint : {
 			                symbol:'emptyCircle',
-			                symbolSize : function (v){
+                    symbolSize : function(v){
 			                    return 10 + v/10
 			                },
 			                effect : {
@@ -2812,12 +3000,18 @@ var optionMap = {
 			                smooth:true,
 			                effect : {
 			                    show: true,
-			                    size: 3,
-			                    shadowColor: 'lime'
+                        scaleSize: 1,
+                        period: 30,
+                        color: '#fff',
+                        shadowBlur: 10
 			                },
 			                itemStyle : {
 			                    normal: {
-			                        borderWidth:1
+                            borderWidth:1,
+                            lineStyle: {
+                                type: 'solid',
+                                shadowBlur: 10
+                            }
 			                    }
 			                },
 			                data : [
@@ -2835,7 +3029,7 @@ var optionMap = {
 			            },
 			            markPoint : {
 			                symbol:'emptyCircle',
-			                symbolSize : function (v){
+                    symbolSize : function(v){
 			                    return 10 + v/10
 			                },
 			                effect : {
