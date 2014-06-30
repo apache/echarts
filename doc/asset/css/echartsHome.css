@@ -58,12 +58,12 @@ blockquote {
     padding:0;
 }
 div.user {
-    margin-top: 20px;
+    margin-top: 30px;
 }
 .user img {
     height:50px;
     padding: 5px;
-    margin: 10px 3px;
+    margin: 15px 3px;
     border: 1px solid #ddd;
     opacity: .75;
 }
