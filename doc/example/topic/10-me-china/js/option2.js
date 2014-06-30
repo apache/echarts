@@ -29,7 +29,7 @@ function option2 (name) {
     option.title.textStyle.color = color;
     option.dataRange.color = [
         color, 
-        require('zrender/tool/color').lift(color, -0.8)
+        require('zrender/tool/color').lift(color, -0.9)
     ];
     option.dataRange.max = dataMap['data' + name][curYear + 'max'];
     

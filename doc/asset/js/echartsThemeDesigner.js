@@ -6,24 +6,24 @@ var iconResize = document.getElementById('icon-resize');
 var needRefresh = false;
 
 function autoResize() {
-    if (iconResize.className == 'icon-resize-full') {
+    if ($(iconResize).hasClass('glyphicon-resize-full')) {
         focusCode();
-        iconResize.className = 'icon-resize-small';
+        iconResize.className = 'glyphicon glyphicon-resize-small';
     }
     else {
         focusGraphic();
-        iconResize.className = 'icon-resize-full';
+        iconResize.className = 'glyphicon glyphicon-resize-full';
     }
 }
 
 function focusCode() {
-    domCode.className = 'span8 ani';
-    domGraphic.className = 'span4 ani';
+    domCode.className = 'col-md-8 ani';
+    domGraphic.className = 'col-md-4 ani';
 }
 
 function focusGraphic() {
-    domCode.className = 'span4 ani';
-    domGraphic.className = 'span8 ani';
+    domCode.className = 'col-md-4 ani';
+    domGraphic.className = 'col-md-8 ani';
     if (needRefresh) {
         myChart[0].showLoading();
         myChart[1].showLoading();
@@ -93,7 +93,9 @@ else {
             'echarts/chart/radar': fileLocation,
             'echarts/chart/map': fileLocation,
             'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation
+            'echarts/chart/force': fileLocation,
+            'echarts/chart/gauge': fileLocation,
+            'echarts/chart/funnel': fileLocation
         }
     });
 }
@@ -110,7 +112,9 @@ require(
         'echarts/chart/radar',
         'echarts/chart/force',
         'echarts/chart/chord',
-        'echarts/chart/map'
+        'echarts/chart/map',
+        'echarts/chart/gauge',
+        'echarts/chart/funnel'
     ],
     requireCallback
 );
@@ -156,17 +160,17 @@ function requireCallback (ec) {
             }
         });
         */
-        var domGLeft = domG.offsetLeft;
-        var domGTop = domG.offsetTop;
+        var domGLeft = 0;// domG.offsetLeft;
+        var domGTop = 0;//domG.offsetTop;
+        var ImageShape = require('zrender/shape/Image');
         for (var i = 0, l = domMain.length; i < l; i++) {
-            _zr.addShape({
-                shape:'image',
+            _zr.addShape(new ImageShape({
                 style : {
-                    x : domMain[i].offsetLeft - domGLeft + (i < 6 ? 0: domGWidth),
-                    y : domMain[i].offsetTop - domGTop - (i < 6 ? 0: 1200),
+                    x : domMain[i].offsetParent.offsetLeft - domGLeft + (i < 6 ? 0: domGWidth),
+                    y : domMain[i].offsetParent.offsetTop - domGTop - (i < 6 ? 0: 1200),
                     image : myChart[i].getDataURL()
                 }
-            });
+            }));
         }
         _zr.render();
         
@@ -645,7 +649,7 @@ var option = {
                 ]
             }
         ],
-        animation: false
+        animation: true
     },
     4 : {
         title : {
@@ -815,7 +819,7 @@ var option = {
                 ]
             }
         ],
-        animation: false
+        animation: true
     },
     5 : {
         title : {
@@ -898,7 +902,7 @@ var option = {
                 })()
             }
         ],
-        animation: false
+        animation: true
     },
     6 : {
         title : {
@@ -970,7 +974,7 @@ var option = {
                 ]
             }
         ],
-        animation: false
+        animation: true
     },
     7 : {
         title : {
@@ -999,7 +1003,7 @@ var option = {
                 ]
             }
         ],
-        animation: false
+        animation: true
     },
     8 : {
         title : {
@@ -1041,7 +1045,7 @@ var option = {
                 ]
             }
         ],
-        animation: false
+        animation: true
     },
     9 : {
         title : {
@@ -1161,7 +1165,7 @@ var option = {
                     links : links
                 }
             ],
-            animation: false
+            animation: true
         } 
     })()
 };

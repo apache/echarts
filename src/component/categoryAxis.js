@@ -6,108 +6,115 @@
  *
  */
 define(function (require) {
+    var Base = require('./base');
+    
+    // 图形依赖
+    var TextShape = require('zrender/shape/Text');
+    var LineShape = require('zrender/shape/Line');
+    var RectangleShape = require('zrender/shape/Rectangle');
+    
+    var ecConfig = require('../config');
+    var zrUtil = require('zrender/tool/util');
+    var zrArea = require('zrender/tool/area');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
      * @param {ZRender} zr zrender实例
      * @param {Object} option 类目轴参数
-     * @param {Grid} grid 网格对象
+     * @param {Grid} component 组件
      */
-    function CategoryAxis(ecConfig, messageCenter, zr, option, component) {
-        var Base = require('./base');
-        Base.call(this, ecConfig, zr);
-
-        var zrUtil = require('zrender/tool/util');
-        var zrArea = require('zrender/tool/area');
-
-        var self = this;
-        self.type = ecConfig.COMPONENT_TYPE_AXIS_CATEGORY;
-
-        var grid = component.grid;
-
-        var _zlevelBase = self.getZlevelBase();
-        var _interval;                              // 标签显示的挑选间隔
-        var _labelData;
-
-        function _reformLabel() {
-            var data = zrUtil.clone(option.data);
-            var axisFormatter = option.axisLabel.formatter;
-            var formatter;
-            for (var i = 0, l = data.length; i < l; i++) {
-                formatter = data[i].formatter || axisFormatter;
-                if (formatter) {
-                    if (typeof formatter == 'function') {
-                        if (typeof data[i].value != 'undefined') {
-                            data[i].value = formatter(data[i].value);
-                        }
-                        else {
-                            data[i] = formatter(data[i]);
-                        }
-                    }
-                    else if (typeof formatter == 'string') {
-                        if (typeof data[i].value != 'undefined') {
-                            data[i].value = formatter.replace(
-                                '{value}',data[i].value
-                            );
-                        }
-                        else {
-                            data[i] = formatter.replace('{value}',data[i]);
-                        }
-                    }
+    function CategoryAxis(ecTheme, messageCenter, zr, option, myChart, axisBase) {
+        if (option.data.length < 1) {
+            console.error('option.data.length < 1.');
+            return;
+        }
+        
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
+        
+        this.grid = this.component.grid;
+        
+        for (var method in axisBase) {
+            this[method] = axisBase[method];
+        }
+        
+        this.refresh(option);
+    }
+    
+    CategoryAxis.prototype = {
+        type : ecConfig.COMPONENT_TYPE_AXIS_CATEGORY,
+        _getReformedLabel : function (idx) {
+            var data = typeof this.option.data[idx].value != 'undefined'
+                       ? this.option.data[idx].value
+                       : this.option.data[idx];
+            var formatter = this.option.data[idx].formatter 
+                            || this.option.axisLabel.formatter;
+            if (formatter) {
+                if (typeof formatter == 'function') {
+                    data = formatter(data);
+                }
+                else if (typeof formatter == 'string') {
+                    data = formatter.replace('{value}', data);
                 }
             }
             return data;
-        }
-
+        },
+        
         /**
          * 计算标签显示挑选间隔
          */
-        function _getInterval() {
-            var interval   = option.axisLabel.interval;
+        _getInterval : function () {
+            var interval   = this.option.axisLabel.interval;
             if (interval == 'auto') {
                 // 麻烦的自适应计算
-                var fontSize = option.axisLabel.textStyle.fontSize;
-                var font = self.getFont(option.axisLabel.textStyle);
-                var data = option.data;
-                var dataLength = option.data.length;
+                var fontSize = this.option.axisLabel.textStyle.fontSize;
+                var data = this.option.data;
+                var dataLength = this.option.data.length;
 
-                if (option.position == 'bottom' || option.position == 'top') {
+                if (this.isHorizontal()) {
                     // 横向
                     if (dataLength > 3) {
-                        var gap = getGap();
+                        var gap = this.getGap();
                         var isEnough = false;
                         var labelSpace;
                         var labelSize;
-                        interval = 0;
+                        var step = Math.floor(0.5 / gap);
+                        step = step < 1 ? 1 : step;
+                        interval = Math.floor(15 / gap);
                         while (!isEnough && interval < dataLength) {
-                            interval++;
+                            interval += step;
                             isEnough = true;
-                            labelSpace = gap * interval - 10; // 标签左右至少间隔为5px
-                            for (var i = 0; i < dataLength; i += interval) {
-                                if (option.axisLabel.rotate !== 0) {
+                            labelSpace = Math.floor(gap * interval); // 标签左右至少间隔为3px
+                            for (var i = Math.floor((dataLength - 1)/ interval) * interval; 
+                                 i >= 0; i -= interval
+                             ) {
+                                if (this.option.axisLabel.rotate !== 0) {
                                     // 有旋转
                                     labelSize = fontSize;
                                 }
                                 else if (data[i].textStyle) {
                                     labelSize = zrArea.getTextWidth(
-                                        _labelData[i].value || _labelData[i],
-                                        self.getFont(
+                                        this._getReformedLabel(i),
+                                        this.getFont(
                                             zrUtil.merge(
                                                 data[i].textStyle,
-                                                option.axisLabel.textStyle,
-                                                {
-                                                    'overwrite': false,
-                                                    'recursive': true
-                                                }
+                                                this.option.axisLabel.textStyle
                                            )
                                         )
                                     );
                                 }
                                 else {
+                                    /*
                                     labelSize = zrArea.getTextWidth(
-                                        _labelData[i].value || _labelData[i],
+                                        this._getReformedLabel(i),
                                         font
                                     );
+                                    */
+                                    // 不定义data级特殊文本样式，用fontSize优化getTextWidth
+                                    var label = this._getReformedLabel(i) + '';
+                                    var wLen = (label.match(/\w/g) || '').length;
+                                    var oLen = label.length - wLen;
+                                    labelSize = wLen * fontSize * 2 / 3 + oLen * fontSize;
                                 }
 
                                 if (labelSpace < labelSize) {
@@ -126,8 +133,8 @@ define(function (require) {
                 else {
                     // 纵向
                     if (dataLength > 3) {
-                        var gap = getGap();
-                        interval = 1;
+                        var gap = this.getGap();
+                        interval = Math.floor(11 / gap);
                         // 标签上下至少间隔为3px
                         while ((gap * interval - 6) < fontSize
                                 && interval < dataLength
@@ -143,138 +150,64 @@ define(function (require) {
             }
             else {
                 // 用户自定义间隔
-                interval += 1;
+                interval = interval - 0 + 1;
             }
 
             return interval;
-        }
-
-        function _buildShape() {
-            _labelData = _reformLabel();
-            _interval = _getInterval();
-            option.splitArea.show && _buildSplitArea();
-            option.splitLine.show && _buildSplitLine();
-            option.axisLine.show && _buildAxisLine();
-            option.axisTick.show && _buildAxisTick();
-            option.axisLabel.show && _buildAxisLabel();
-
-            for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
-                zr.addShape(self.shapeList[i]);
-            }
-        }
-
-        // 轴线
-        function _buildAxisLine() {
-            var lineWidth = option.axisLine.lineStyle.width;
-            var halfLineWidth = lineWidth / 2;
-            var axShape = {
-                shape : 'line',
-                zlevel : _zlevelBase + 1,
-                hoverable : false
-            };
-            switch (option.position) {
-                case 'left' :
-                    axShape.style = {
-                        xStart : grid.getX() - halfLineWidth,
-                        yStart : grid.getYend() + halfLineWidth,
-                        xEnd : grid.getX() - halfLineWidth,
-                        yEnd : grid.getY() - halfLineWidth
-                    };
-                    break;
-                case 'right' :
-                    axShape.style = {
-                        xStart : grid.getXend() + halfLineWidth,
-                        yStart : grid.getYend() + halfLineWidth,
-                        xEnd : grid.getXend() + halfLineWidth,
-                        yEnd : grid.getY() - halfLineWidth
-                    };
-                    break;
-                case 'bottom' :
-                    axShape.style = {
-                        xStart : grid.getX() - halfLineWidth,
-                        yStart : grid.getYend() + halfLineWidth,
-                        xEnd : grid.getXend() + halfLineWidth,
-                        yEnd : grid.getYend() + halfLineWidth
-                    };
-                    break;
-                case 'top' :
-                    axShape.style = {
-                        xStart : grid.getX() - halfLineWidth,
-                        yStart : grid.getY() - halfLineWidth,
-                        xEnd : grid.getXend() + halfLineWidth,
-                        yEnd : grid.getY() - halfLineWidth
-                    };
-                    break;
-            }
-            if (option.name !== '') {
-                axShape.style.text = option.name;
-                axShape.style.textPosition = option.nameLocation;
-                axShape.style.textFont = self.getFont(option.nameTextStyle);
-                if (option.nameTextStyle.align) {
-                    axShape.style.textAlign = option.nameTextStyle.align;
-                }
-                if (option.nameTextStyle.baseline) {
-                    axShape.style.textBaseline = option.nameTextStyle.baseline;
-                }
-                if (option.nameTextStyle.color) {
-                    axShape.style.textColor = option.nameTextStyle.color;
-                }
-            }
-            axShape.style.strokeColor = option.axisLine.lineStyle.color;
+        },
+        
+        /**
+         * 绘制图形
+         */
+        _buildShape : function () {
+            // 标签显示的挑选间隔
+            this._interval = this._getInterval();
             
-            axShape.style.lineWidth = lineWidth;
-            // 亚像素优化
-            if (option.position == 'left' || option.position == 'right') {
-                // 纵向布局，优化x
-                axShape.style.xStart 
-                    = axShape.style.xEnd 
-                    = self.subPixelOptimize(axShape.style.xEnd, lineWidth);
-            }
-            else {
-                // 横向布局，优化y
-                axShape.style.yStart 
-                    = axShape.style.yEnd 
-                    = self.subPixelOptimize(axShape.style.yEnd, lineWidth);
-            }
-            
-            axShape.style.lineType = option.axisLine.lineStyle.type;
+            this.option.splitArea.show && this._buildSplitArea();
+            this.option.splitLine.show && this._buildSplitLine();
+            this.option.axisLine.show && this._buildAxisLine();
+            this.option.axisTick.show && this._buildAxisTick();
+            this.option.axisLabel.show && this._buildAxisLabel();
 
-            self.shapeList.push(axShape);
-        }
+            for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                this.zr.addShape(this.shapeList[i]);
+            }
+        },
 
         // 小标记
-        function _buildAxisTick() {
+        _buildAxisTick : function () {
             var axShape;
-            //var data       = option.data;
-            var dataLength = option.data.length;
-            var tickOption = option.axisTick;
+            //var data       = this.option.data;
+            var dataLength = this.option.data.length;
+            var tickOption = this.option.axisTick;
             var length     = tickOption.length;
             var color      = tickOption.lineStyle.color;
             var lineWidth  = tickOption.lineStyle.width;
             var interval   = tickOption.interval == 'auto' 
-                             ? _interval : (tickOption.interval - 0 + 1);
+                             ? this._interval : (tickOption.interval - 0 + 1);
             var onGap      = tickOption.onGap;
             var optGap     = onGap 
-                             ? (getGap() / 2) 
+                             ? (this.getGap() / 2) 
                              : typeof onGap == 'undefined'
-                                   ? (option.boundaryGap ? (getGap() / 2) : 0)
+                                   ? (this.option.boundaryGap ? (this.getGap() / 2) : 0)
                                    : 0;
             var startIndex = optGap > 0 ? -interval : 0;                       
-            if (option.position == 'bottom' || option.position == 'top') {
+            if (this.isHorizontal()) {
                 // 横向
-                var yPosition = option.position == 'bottom'
-                        ? (tickOption.inside ? (grid.getYend() - length) : grid.getYend())
-                        : (tickOption.inside ? grid.getY() : (grid.getY() - length));
+                var yPosition = this.option.position == 'bottom'
+                        ? (tickOption.inside 
+                           ? (this.grid.getYend() - length - 1) : (this.grid.getYend() + 1))
+                        : (tickOption.inside 
+                           ? (this.grid.getY() + 1) : (this.grid.getY() - length - 1));
                 var x;
                 for (var i = startIndex; i < dataLength; i += interval) {
                     // 亚像素优化
-                    x = self.subPixelOptimize(
-                        getCoordByIndex(i) + (i >= 0 ? optGap : 0), lineWidth
+                    x = this.subPixelOptimize(
+                        this.getCoordByIndex(i) + (i >= 0 ? optGap : 0), lineWidth
                     );
                     axShape = {
-                        shape : 'line',
-                        zlevel : _zlevelBase,
+                        _axisShape : 'axisTick',
+                        zlevel : this._zlevelBase,
                         hoverable : false,
                         style : {
                             xStart : x,
@@ -285,24 +218,26 @@ define(function (require) {
                             lineWidth : lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    this.shapeList.push(new LineShape(axShape));
                 }
             }
             else {
-                // 纵向                        
-                var xPosition = option.position == 'left'
-                        ? (tickOption.inside ? grid.getX() : (grid.getX() - length))
-                        : (tickOption.inside ? (grid.getXend() - length) : grid.getXend());
+                // 纵向
+                var xPosition = this.option.position == 'left'
+                    ? (tickOption.inside 
+                       ? (this.grid.getX() + 1) : (this.grid.getX() - length - 1))
+                    : (tickOption.inside 
+                       ? (this.grid.getXend() - length - 1) : (this.grid.getXend() + 1));
                         
                 var y;
                 for (var i = startIndex; i < dataLength; i += interval) {
                     // 亚像素优化
-                    y = self.subPixelOptimize(
-                        getCoordByIndex(i) - (i >= 0 ? optGap : 0), lineWidth
+                    y = this.subPixelOptimize(
+                        this.getCoordByIndex(i) - (i >= 0 ? optGap : 0), lineWidth
                     );
                     axShape = {
-                        shape : 'line',
-                        zlevel : _zlevelBase,
+                        _axisShape : 'axisTick',
+                        zlevel : this._zlevelBase,
                         hoverable : false,
                         style : {
                             xStart : xPosition,
@@ -313,63 +248,63 @@ define(function (require) {
                             lineWidth : lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    this.shapeList.push(new LineShape(axShape));
                 }
             }
-        }
+        },
 
         // 坐标轴文本
-        function _buildAxisLabel() {
+        _buildAxisLabel : function () {
             var axShape;
-            var data       = option.data;
-            var dataLength = option.data.length;
-            var rotate     = option.axisLabel.rotate;
-            var margin     = option.axisLabel.margin;
-            var textStyle  = option.axisLabel.textStyle;
+            var data       = this.option.data;
+            var dataLength = this.option.data.length;
+            var rotate     = this.option.axisLabel.rotate;
+            var margin     = this.option.axisLabel.margin;
+            var clickable  = this.option.axisLabel.clickable;
+            var textStyle  = this.option.axisLabel.textStyle;
             var dataTextStyle;
 
-            if (option.position == 'bottom' || option.position == 'top') {
+            if (this.isHorizontal()) {
                 // 横向
                 var yPosition;
                 var baseLine;
-                if (option.position == 'bottom') {
-                    yPosition = grid.getYend() + margin;
+                if (this.option.position == 'bottom') {
+                    yPosition = this.grid.getYend() + margin;
                     baseLine = 'top';
                 }
                 else {
-                    yPosition = grid.getY() - margin;
+                    yPosition = this.grid.getY() - margin;
                     baseLine = 'bottom';
                 }
 
-                for (var i = 0; i < dataLength; i += _interval) {
-                    if ((_labelData[i].value || _labelData[i]) === '') {
+                for (var i = 0; i < dataLength; i += this._interval) {
+                    if (this._getReformedLabel(i) === '') {
                         // 空文本优化
                         continue;
                     }
                     dataTextStyle = zrUtil.merge(
                         data[i].textStyle || {},
-                        textStyle,
-                        {'overwrite': false}
+                        textStyle
                     );
                     axShape = {
-                        shape : 'text',
-                        zlevel : _zlevelBase,
+                        // shape : 'text',
+                        zlevel : this._zlevelBase,
                         hoverable : false,
                         style : {
-                            x : getCoordByIndex(i),
+                            x : this.getCoordByIndex(i),
                             y : yPosition,
                             color : dataTextStyle.color,
-                            text : _labelData[i].value || _labelData[i],
-                            textFont : self.getFont(dataTextStyle),
-                            textAlign : 'center',
-                            textBaseline : baseLine
+                            text : this._getReformedLabel(i),
+                            textFont : this.getFont(dataTextStyle),
+                            textAlign : dataTextStyle.align || 'center',
+                            textBaseline : dataTextStyle.baseline || baseLine
                         }
                     };
                     if (rotate) {
                         axShape.style.textAlign = rotate > 0
-                                                  ? (option.position == 'bottom'
+                                                  ? (this.option.position == 'bottom'
                                                     ? 'right' : 'left')
-                                                  : (option.position == 'bottom'
+                                                  : (this.option.position == 'bottom'
                                                     ? 'left' : 'right');
                         axShape.rotation = [
                             rotate * Math.PI / 180,
@@ -377,49 +312,51 @@ define(function (require) {
                             axShape.style.y
                         ];
                     }
-                    self.shapeList.push(axShape);
+                    this.shapeList.push(new TextShape(
+                        this._axisLabelClickable(clickable, axShape)
+                    ));
                 }
             }
             else {
                 // 纵向
                 var xPosition;
                 var align;
-                if (option.position == 'left') {
-                    xPosition = grid.getX() - margin;
+                if (this.option.position == 'left') {
+                    xPosition = this.grid.getX() - margin;
                     align = 'right';
                 }
                 else {
-                    xPosition = grid.getXend() + margin;
+                    xPosition = this.grid.getXend() + margin;
                     align = 'left';
                 }
 
-                for (var i = 0; i < dataLength; i += _interval) {
-                    if ((_labelData[i].value || _labelData[i]) === '') {
+                for (var i = 0; i < dataLength; i += this._interval) {
+                    if (this._getReformedLabel(i) === '') {
                         // 空文本优化
                         continue;
                     }
                     dataTextStyle = zrUtil.merge(
                         data[i].textStyle || {},
-                        textStyle,
-                        {'overwrite': false}
+                        textStyle
                     );
                     axShape = {
-                        shape : 'text',
-                        zlevel : _zlevelBase,
+                        // shape : 'text',
+                        zlevel : this._zlevelBase,
                         hoverable : false,
                         style : {
                             x : xPosition,
-                            y : getCoordByIndex(i),
+                            y : this.getCoordByIndex(i),
                             color : dataTextStyle.color,
-                            text : _labelData[i].value || _labelData[i],
-                            textFont : self.getFont(dataTextStyle),
-                            textAlign : align,
-                            textBaseline : (i === 0 && option.name !== '')
-                                           ? 'bottom'
-                                           : (i == (dataLength - 1) 
-                                              && option.name !== '')
-                                             ? 'top'
-                                             : 'middle'
+                            text : this._getReformedLabel(i),
+                            textFont : this.getFont(dataTextStyle),
+                            textAlign : dataTextStyle.align || align,
+                            textBaseline : dataTextStyle.baseline 
+                                           || (i === 0 && this.option.name !== '')
+                                               ? 'bottom'
+                                               : (i == (dataLength - 1) 
+                                                  && this.option.name !== '')
+                                                 ? 'top'
+                                                 : 'middle'
                         }
                     };
                     
@@ -430,16 +367,18 @@ define(function (require) {
                             axShape.style.y
                         ];
                     }
-                    self.shapeList.push(axShape);
+                    this.shapeList.push(new TextShape(
+                        this._axisLabelClickable(clickable, axShape)
+                    ));
                 }
             }
-        }
-
-        function _buildSplitLine() {
+        },
+        
+        _buildSplitLine : function () {
             var axShape;
-            //var data       = option.data;
-            var dataLength  = option.data.length;
-            var sLineOption = option.splitLine;
+            //var data       = this.option.data;
+            var dataLength  = this.option.data.length;
+            var sLineOption = this.option.splitLine;
             var lineType    = sLineOption.lineStyle.type;
             var lineWidth   = sLineOption.lineStyle.width;
             var color       = sLineOption.lineStyle.color;
@@ -448,242 +387,213 @@ define(function (require) {
             
             var onGap      = sLineOption.onGap;
             var optGap     = onGap 
-                             ? (getGap() / 2) 
+                             ? (this.getGap() / 2) 
                              : typeof onGap == 'undefined'
-                                   ? (option.boundaryGap ? (getGap() / 2) : 0)
+                                   ? (this.option.boundaryGap ? (this.getGap() / 2) : 0)
                                    : 0;
-            dataLength -= (onGap || (typeof onGap == 'undefined' && option.boundaryGap)) ? 1 : 0;
-            if (option.position == 'bottom' || option.position == 'top') {
+            dataLength -= (onGap || (typeof onGap == 'undefined' && this.option.boundaryGap)) 
+                          ? 1 : 0;
+            if (this.isHorizontal()) {
                 // 横向
-                var sy = grid.getY();
-                var ey = grid.getYend();
+                var sy = this.grid.getY();
+                var ey = this.grid.getYend();
                 var x;
 
-                for (var i = 0; i < dataLength; i += _interval) {
+                for (var i = 0; i < dataLength; i += this._interval) {
                     // 亚像素优化
-                    x = self.subPixelOptimize(
-                        getCoordByIndex(i) + optGap, lineWidth
+                    x = this.subPixelOptimize(
+                        this.getCoordByIndex(i) + optGap, lineWidth
                     );
                     axShape = {
-                        shape : 'line',
-                        zlevel : _zlevelBase,
+                        // shape : 'line',
+                        zlevel : this._zlevelBase,
                         hoverable : false,
                         style : {
                             xStart : x,
                             yStart : sy,
                             xEnd : x,
                             yEnd : ey,
-                            strokeColor : color[(i / _interval) % colorLength],
+                            strokeColor : color[(i / this._interval) % colorLength],
                             lineType : lineType,
                             lineWidth : lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    this.shapeList.push(new LineShape(axShape));
                 }
 
             }
             else {
                 // 纵向
-                var sx = grid.getX();
-                var ex = grid.getXend();
+                var sx = this.grid.getX();
+                var ex = this.grid.getXend();
                 var y;
 
-                for (var i = 0; i < dataLength; i += _interval) {
+                for (var i = 0; i < dataLength; i += this._interval) {
                     // 亚像素优化
-                    y = self.subPixelOptimize(
-                        getCoordByIndex(i) - optGap, lineWidth
+                    y = this.subPixelOptimize(
+                        this.getCoordByIndex(i) - optGap, lineWidth
                     );
                     axShape = {
-                        shape : 'line',
-                        zlevel : _zlevelBase,
+                        // shape : 'line',
+                        zlevel : this._zlevelBase,
                         hoverable : false,
                         style : {
                             xStart : sx,
                             yStart : y,
                             xEnd : ex,
                             yEnd : y,
-                            strokeColor : color[(i / _interval) % colorLength],
+                            strokeColor : color[(i / this._interval) % colorLength],
                             linetype : lineType,
                             lineWidth : lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    this.shapeList.push(new LineShape(axShape));
                 }
             }
-        }
+        },
 
-        function _buildSplitArea() {
+        _buildSplitArea : function () {
             var axShape;
-            var sAreaOption = option.splitArea;
+            var sAreaOption = this.option.splitArea;
             var color = sAreaOption.areaStyle.color;
             if (!(color instanceof Array)) {
                 // 非数组一律认为是单一颜色的字符串，单一颜色则用一个背景，颜色错误不负责啊！！！
                 axShape = {
-                    shape : 'rectangle',
-                    zlevel : _zlevelBase,
+                    // shape : 'rectangle',
+                    zlevel : this._zlevelBase,
                     hoverable : false,
                     style : {
-                        x : grid.getX(),
-                        y : grid.getY(),
-                        width : grid.getWidth(),
-                        height : grid.getHeight(),
+                        x : this.grid.getX(),
+                        y : this.grid.getY(),
+                        width : this.grid.getWidth(),
+                        height : this.grid.getHeight(),
                         color : color
-                        // type : option.splitArea.areaStyle.type,
+                        // type : this.option.splitArea.areaStyle.type,
                     }
                 };
-                self.shapeList.push(axShape);
+                this.shapeList.push(new RectangleShape(axShape));
             }
             else {
                 // 多颜色
                 var colorLength = color.length;
-                var dataLength  = option.data.length;
+                var dataLength  = this.option.data.length;
         
                 var onGap      = sAreaOption.onGap;
                 var optGap     = onGap 
-                                 ? (getGap() / 2) 
+                                 ? (this.getGap() / 2) 
                                  : typeof onGap == 'undefined'
-                                       ? (option.boundaryGap ? (getGap() / 2) : 0)
+                                       ? (this.option.boundaryGap ? (this.getGap() / 2) : 0)
                                        : 0;
-                if (option.position == 'bottom' || option.position == 'top') {
+                if (this.isHorizontal()) {
                     // 横向
-                    var y = grid.getY();
-                    var height = grid.getHeight();
-                    var lastX = grid.getX();
+                    var y = this.grid.getY();
+                    var height = this.grid.getHeight();
+                    var lastX = this.grid.getX();
                     var curX;
     
-                    for (var i = 0; i <= dataLength; i += _interval) {
+                    for (var i = 0; i <= dataLength; i += this._interval) {
                         curX = i < dataLength
-                               ? (getCoordByIndex(i) + optGap)
-                               : grid.getXend();
+                               ? (this.getCoordByIndex(i) + optGap)
+                               : this.grid.getXend();
                         axShape = {
-                            shape : 'rectangle',
-                            zlevel : _zlevelBase,
+                            // shape : 'rectangle',
+                            zlevel : this._zlevelBase,
                             hoverable : false,
                             style : {
                                 x : lastX,
                                 y : y,
                                 width : curX - lastX,
                                 height : height,
-                                color : color[(i / _interval) % colorLength]
-                                // type : option.splitArea.areaStyle.type,
+                                color : color[(i / this._interval) % colorLength]
+                                // type : this.option.splitArea.areaStyle.type,
                             }
                         };
-                        self.shapeList.push(axShape);
+                        this.shapeList.push(new RectangleShape(axShape));
                         lastX = curX;
                     }
                 }
                 else {
                     // 纵向
-                    var x = grid.getX();
-                    var width = grid.getWidth();
-                    var lastYend = grid.getYend();
+                    var x = this.grid.getX();
+                    var width = this.grid.getWidth();
+                    var lastYend = this.grid.getYend();
                     var curY;
     
-                    for (var i = 0; i <= dataLength; i += _interval) {
+                    for (var i = 0; i <= dataLength; i += this._interval) {
                         curY = i < dataLength
-                               ? (getCoordByIndex(i) - optGap)
-                               : grid.getY();
+                               ? (this.getCoordByIndex(i) - optGap)
+                               : this.grid.getY();
                         axShape = {
-                            shape : 'rectangle',
-                            zlevel : _zlevelBase,
+                            // shape : 'rectangle',
+                            zlevel : this._zlevelBase,
                             hoverable : false,
                             style : {
                                 x : x,
                                 y : curY,
                                 width : width,
                                 height : lastYend - curY,
-                                color : color[(i / _interval) % colorLength]
-                                // type : option.splitArea.areaStyle.type
+                                color : color[(i / this._interval) % colorLength]
+                                // type : this.option.splitArea.areaStyle.type
                             }
                         };
-                        self.shapeList.push(axShape);
+                        this.shapeList.push(new RectangleShape(axShape));
                         lastYend = curY;
                     }
                 }
             }
-        }
-
-        /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
-         * @param {Object} newOption
-         * @param {Object} newGrid
-         */
-        function init(newOption, newGrid) {
-            if (newOption.data.length < 1) {
-                return;
-            }
-            grid = newGrid;
-
-            refresh(newOption);
-        }
+        },
 
         /**
          * 刷新
          */
-        function refresh(newOption) {
+        refresh : function (newOption) {
             if (newOption) {
-                option = self.reformOption(newOption);
+                this.option = this.reformOption(newOption);
                 // 通用字体设置
-                option.axisLabel.textStyle = zrUtil.merge(
-                    option.axisLabel.textStyle || {},
-                    ecConfig.textStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
-                );
-                option.axisLabel.textStyle = zrUtil.merge(
-                    option.axisLabel.textStyle || {},
-                    ecConfig.textStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
+                this.option.axisLabel.textStyle = zrUtil.merge(
+                    this.option.axisLabel.textStyle || {},
+                    this.ecTheme.textStyle
                 );
             }
-            self.clear();
-            _buildShape();
-        }
+            this.clear();
+            this._buildShape();
+        },
 
         /**
          * 返回间隔
          */
-        function getGap() {
-            var dataLength = option.data.length;
-            var total = (option.position == 'bottom'
-                        || option.position == 'top')
-                        ? grid.getWidth()
-                        : grid.getHeight();
-            if (option.boundaryGap) {               // 留空
+        getGap : function () {
+            var dataLength = this.option.data.length;
+            var total = this.isHorizontal()
+                        ? this.grid.getWidth()
+                        : this.grid.getHeight();
+            if (this.option.boundaryGap) {              // 留空
                 return total / dataLength;
             }
-            else {                                  // 顶头
+            else {                                      // 顶头
                 return total / (dataLength > 1 ? (dataLength - 1) : 1);
             }
-        }
+        },
 
         // 根据值换算位置
-        function getCoord(value) {
-            var data = option.data;
+        getCoord : function (value) {
+            var data = this.option.data;
             var dataLength = data.length;
-            var gap = getGap();
-            var position = option.boundaryGap ? (gap / 2) : 0;
+            var gap = this.getGap();
+            var position = this.option.boundaryGap ? (gap / 2) : 0;
 
             for (var i = 0; i < dataLength; i++) {
                 if (data[i] == value
                     || (typeof data[i].value != 'undefined' 
                         && data[i].value == value)
                 ) {
-                    if (option.position == 'bottom'
-                        || option.position == 'top'
-                    ) {
+                    if (this.isHorizontal()) {
                         // 横向
-                        position = grid.getX() + position;
+                        position = this.grid.getX() + position;
                     }
                     else {
                         // 纵向
-                        position = grid.getYend() - position;
+                        position = this.grid.getYend() - position;
                     }
                     
                     return position;
@@ -696,54 +606,52 @@ define(function (require) {
                 }
                 position += gap;
             }
-        }
+        },
 
         // 根据类目轴数据索引换算位置
-        function getCoordByIndex(dataIndex) {
+        getCoordByIndex : function (dataIndex) {
             if (dataIndex < 0) {
-                if (option.position == 'bottom' || option.position == 'top') {
-                    return grid.getX();
+                if (this.isHorizontal()) {
+                    return this.grid.getX();
                 }
                 else {
-                    return grid.getYend();
+                    return this.grid.getYend();
                 }
             }
-            else if (dataIndex > option.data.length - 1) {
-                if (option.position == 'bottom' || option.position == 'top') {
-                    return grid.getXend();
+            else if (dataIndex > this.option.data.length - 1) {
+                if (this.isHorizontal()) {
+                    return this.grid.getXend();
                 }
                 else {
-                    return grid.getY();
+                    return this.grid.getY();
                 }
             }
             else {
-                var gap = getGap();
-                var position = option.boundaryGap ? (gap / 2) : 0;
+                var gap = this.getGap();
+                var position = this.option.boundaryGap ? (gap / 2) : 0;
                 position += dataIndex * gap;
                 
-                if (option.position == 'bottom'
-                    || option.position == 'top'
-                ) {
+                if (this.isHorizontal()) {
                     // 横向
-                    position = grid.getX() + position;
+                    position = this.grid.getX() + position;
                 }
                 else {
                     // 纵向
-                    position = grid.getYend() - position;
+                    position = this.grid.getYend() - position;
                 }
                 
                 return position;
                 /* 准确更重要
-                return (dataIndex === 0 || dataIndex == option.data.length - 1)
+                return (dataIndex === 0 || dataIndex == this.option.data.length - 1)
                        ? position
                        : Math.floor(position);
                 */
             }
-        }
+        },
 
         // 根据类目轴数据索引换算类目轴名称
-        function getNameByIndex(dataIndex) {
-            var data = option.data[dataIndex];
+        getNameByIndex : function (dataIndex) {
+            var data = this.option.data[dataIndex];
             if (typeof data != 'undefined' && typeof data.value != 'undefined')
             {
                 return data.value;
@@ -751,11 +659,11 @@ define(function (require) {
             else {
                 return data;
             }
-        }
+        },
         
         // 根据类目轴名称换算类目轴数据索引
-        function getIndexByName(name) {
-            var data = option.data;
+        getIndexByName : function (name) {
+            var data = this.option.data;
             var dataLength = data.length;
 
             for (var i = 0; i < dataLength; i++) {
@@ -766,34 +674,27 @@ define(function (require) {
                     return i;
                 }
             }
-        }
+            
+            return -1;
+        },
+        
+        // 根据位置换算值
+        getValueFromCoord : function() {
+            return '';
+        },
 
         /**
          * 根据类目轴数据索引返回是否为主轴线
          * @param {number} dataIndex 类目轴数据索引
          * @return {boolean} 是否为主轴
          */
-        function isMainAxis(dataIndex) {
-            return dataIndex % _interval === 0;
+        isMainAxis : function (dataIndex) {
+            return dataIndex % this._interval === 0;
         }
-
-        function getPosition() {
-            return option.position;
-        }
-
-        self.init = init;
-        self.refresh = refresh;
-        self.getGap = getGap;
-        self.getCoord = getCoord;
-        self.getCoordByIndex = getCoordByIndex;
-        self.getNameByIndex = getNameByIndex;
-        self.getIndexByName = getIndexByName;
-        self.isMainAxis = isMainAxis;
-        self.getPosition = getPosition;
-
-        init(option, grid);
-    }
-
+    };
+    
+    zrUtil.inherits(CategoryAxis, Base);
+    
     require('../component').define('categoryAxis', CategoryAxis);
     
     return CategoryAxis;

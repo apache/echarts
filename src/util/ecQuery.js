@@ -14,22 +14,24 @@ define(function() {
      */
     function query(optionTarget, optionLocation) {
         if (typeof optionTarget == 'undefined') {
-            return undefined;
+            return;
         }
+
         if (!optionLocation) {
             return optionTarget;
         }
-        optionLocation = optionLocation.split('.');
 
+        optionLocation = optionLocation.split('.');
         var length = optionLocation.length;
         var curIdx = 0;
         while (curIdx < length) {
             optionTarget = optionTarget[optionLocation[curIdx]];
             if (typeof optionTarget == 'undefined') {
-                return undefined;
+                return;
             }
             curIdx++;
         }
+
         return optionTarget;
     }
         
@@ -45,31 +47,29 @@ define(function() {
                 return finalOption;
             }
         }
-        return undefined;
     }
     
     /**
      * 获取多级控制嵌套属性的基础方法
      * 根据ctrList中优先级合并产出目标属性
      */
-    function deepMerge (ctrList, optionLocation) {
+    function deepMerge(ctrList, optionLocation) {
         var finalOption;
-        var tempOption;
         var len = ctrList.length;
         while (len--) {
-            tempOption = query(ctrList[len], optionLocation);
+            var tempOption = query(ctrList[len], optionLocation);
             if (typeof tempOption != 'undefined') {
                 if (typeof finalOption == 'undefined') {
                     finalOption = zrUtil.clone(tempOption);
                 }
                 else {
                     zrUtil.merge(
-                        finalOption, tempOption,
-                        { 'overwrite': true, 'recursive': true }
+                        finalOption, tempOption, true
                     );
                 }
             }
         }
+        
         return finalOption;
     }
     

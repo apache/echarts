@@ -6,66 +6,72 @@
  *
  */
 define(function (require) {
+    var Base = require('./base');
+    
+    // 图形依赖
+    var TextShape = require('zrender/shape/Text');
+    var RectangleShape = require('zrender/shape/Rectangle');
+    
+    var ecConfig = require('../config');
+    var zrUtil = require('zrender/tool/util');
+    var zrArea = require('zrender/tool/area');
+    var zrColor = require('zrender/tool/color');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
      * @param {ZRender} zr zrender实例
      * @param {Object} option 图表参数
      */
-    function Title(ecConfig, messageCenter, zr, option) {
-        var Base = require('./base');
-        Base.call(this, ecConfig, zr);
+    function Title(ecTheme, messageCenter, zr, option, myChart) {
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
+        
+        this.refresh(option);
+    }
+    
+    Title.prototype = {
+        type : ecConfig.COMPONENT_TYPE_TITLE,
+        _buildShape : function () {
+            // 标题元素组的位置参数，通过计算所得x, y, width, height
+            this._itemGroupLocation = this._getItemGroupLocation();
 
-        var zrArea = require('zrender/tool/area');
-        var zrUtil = require('zrender/tool/util');
+            this._buildBackground();
+            this._buildItem();
 
-        var self = this;
-        self.type = ecConfig.COMPONENT_TYPE_TITLE;
-
-        var titleOption;                       // 标题选项，共享数据源
-        var _zlevelBase = self.getZlevelBase();
-
-        var _itemGroupLocation = {};    // 标题元素组的位置参数，通过计算所得x, y, width, height
-
-        function _buildShape() {
-            _itemGroupLocation = _getItemGroupLocation();
-
-            _buildBackground();
-            _buildItem();
-
-            for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
-                zr.addShape(self.shapeList[i]);
+            for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                this.zr.addShape(this.shapeList[i]);
             }
-        }
+        },
 
         /**
          * 构建所有标题元素
          */
-        function _buildItem() {
-            var text = titleOption.text;
-            var link = titleOption.link;
-            var subtext = titleOption.subtext;
-            var sublink = titleOption.sublink;
-            var font = self.getFont(titleOption.textStyle);
-            var subfont = self.getFont(titleOption.subtextStyle);
+        _buildItem : function () {
+            var text = this.titleOption.text;
+            var link = this.titleOption.link;
+            var target = this.titleOption.target;
+            var subtext = this.titleOption.subtext;
+            var sublink = this.titleOption.sublink;
+            var subtarget = this.titleOption.subtarget;
+            var font = this.getFont(this.titleOption.textStyle);
+            var subfont = this.getFont(this.titleOption.subtextStyle);
             
-            var x = _itemGroupLocation.x;
-            var y = _itemGroupLocation.y;
-            var width = _itemGroupLocation.width;
-            var height = _itemGroupLocation.height;
+            var x = this._itemGroupLocation.x;
+            var y = this._itemGroupLocation.y;
+            var width = this._itemGroupLocation.width;
+            var height = this._itemGroupLocation.height;
             
             var textShape = {
-                shape : 'text',
-                zlevel : _zlevelBase,
+                zlevel : this._zlevelBase,
                 style : {
                     y : y,
-                    color : titleOption.textStyle.color,
+                    color : this.titleOption.textStyle.color,
                     text: text,
                     textFont: font,
                     textBaseline: 'top'
                 },
                 highlightStyle: {
+                    color : zrColor.lift(this.titleOption.textStyle.color, 1),
                     brushType: 'fill'
                 },
                 hoverable: false
@@ -73,22 +79,27 @@ define(function (require) {
             if (link) {
                 textShape.hoverable = true;
                 textShape.clickable = true;
-                textShape.onclick = function(){
-                    window.open(link);
+                textShape.onclick = function (){
+                    if (!target || target != 'self') {
+                        window.open(link);
+                    }
+                    else {
+                        window.location = link;
+                    }
                 };
             }
             
             var subtextShape = {
-                shape : 'text',
-                zlevel : _zlevelBase,
+                zlevel : this._zlevelBase,
                 style : {
                     y : y + height,
-                    color : titleOption.subtextStyle.color,
+                    color : this.titleOption.subtextStyle.color,
                     text: subtext,
                     textFont: subfont,
                     textBaseline: 'bottom'
                 },
                 highlightStyle: {
+                    color : zrColor.lift(this.titleOption.subtextStyle.color, 1),
                     brushType: 'fill'
                 },
                 hoverable: false
@@ -96,14 +107,17 @@ define(function (require) {
             if (sublink) {
                 subtextShape.hoverable = true;
                 subtextShape.clickable = true;
-                subtextShape.onclick = function(){
-                    window.open(sublink);
+                subtextShape.onclick = function (){
+                    if (!subtarget || subtarget != 'self') {
+                        window.open(sublink);
+                    }
+                    else {
+                        window.location = sublink;
+                    }
                 };
             }
 
-            
-
-            switch (titleOption.x) {
+            switch (this.titleOption.x) {
                 case 'center' :
                     textShape.style.x = subtextShape.style.x = x + width / 2;
                     textShape.style.textAlign = subtextShape.style.textAlign 
@@ -120,53 +134,52 @@ define(function (require) {
                                               = 'right';
                     break;
                 default :
-                    x = titleOption.x - 0;
+                    x = this.titleOption.x - 0;
                     x = isNaN(x) ? 0 : x;
                     textShape.style.x = subtextShape.style.x = x;
                     break;
             }
             
-            if (titleOption.textAlign) {
+            if (this.titleOption.textAlign) {
                 textShape.style.textAlign = subtextShape.style.textAlign 
-                                          = titleOption.textAlign;
+                                          = this.titleOption.textAlign;
             }
 
-            self.shapeList.push(textShape);
-            subtext !== '' && self.shapeList.push(subtextShape);
-        }
+            this.shapeList.push(new TextShape(textShape));
+            subtext !== '' && this.shapeList.push(new TextShape(subtextShape));
+        },
 
-        function _buildBackground() {
-            var pTop = titleOption.padding[0];
-            var pRight = titleOption.padding[1];
-            var pBottom = titleOption.padding[2];
-            var pLeft = titleOption.padding[3];
+        _buildBackground : function () {
+            var pTop = this.titleOption.padding[0];
+            var pRight = this.titleOption.padding[1];
+            var pBottom = this.titleOption.padding[2];
+            var pLeft = this.titleOption.padding[3];
 
-            self.shapeList.push({
-                shape : 'rectangle',
-                zlevel : _zlevelBase,
+            this.shapeList.push(new RectangleShape({
+                zlevel : this._zlevelBase,
                 hoverable :false,
                 style : {
-                    x : _itemGroupLocation.x - pLeft,
-                    y : _itemGroupLocation.y - pTop,
-                    width : _itemGroupLocation.width + pLeft + pRight,
-                    height : _itemGroupLocation.height + pTop + pBottom,
-                    brushType : titleOption.borderWidth === 0
+                    x : this._itemGroupLocation.x - pLeft,
+                    y : this._itemGroupLocation.y - pTop,
+                    width : this._itemGroupLocation.width + pLeft + pRight,
+                    height : this._itemGroupLocation.height + pTop + pBottom,
+                    brushType : this.titleOption.borderWidth === 0
                                 ? 'fill' : 'both',
-                    color : titleOption.backgroundColor,
-                    strokeColor : titleOption.borderColor,
-                    lineWidth : titleOption.borderWidth
+                    color : this.titleOption.backgroundColor,
+                    strokeColor : this.titleOption.borderColor,
+                    lineWidth : this.titleOption.borderWidth
                 }
-            });
-        }
+            }));
+        },
 
         /**
          * 根据选项计算标题实体的位置坐标
          */
-        function _getItemGroupLocation() {
-            var text = titleOption.text;
-            var subtext = titleOption.subtext;
-            var font = self.getFont(titleOption.textStyle);
-            var subfont = self.getFont(titleOption.subtextStyle);
+        _getItemGroupLocation : function () {
+            var text = this.titleOption.text;
+            var subtext = this.titleOption.subtext;
+            var font = this.getFont(this.titleOption.textStyle);
+            var subfont = this.getFont(this.titleOption.subtextStyle);
             
             var totalWidth = Math.max(
                     zrArea.getTextWidth(text, font),
@@ -175,48 +188,48 @@ define(function (require) {
             var totalHeight = zrArea.getTextHeight(text, font)
                               + (subtext === ''
                                  ? 0
-                                 : (titleOption.itemGap
+                                 : (this.titleOption.itemGap
                                     + zrArea.getTextHeight(subtext, subfont))
                                 );
 
             var x;
-            var zrWidth = zr.getWidth();
-            switch (titleOption.x) {
+            var zrWidth = this.zr.getWidth();
+            switch (this.titleOption.x) {
                 case 'center' :
                     x = Math.floor((zrWidth - totalWidth) / 2);
                     break;
                 case 'left' :
-                    x = titleOption.padding[3] + titleOption.borderWidth;
+                    x = this.titleOption.padding[3] + this.titleOption.borderWidth;
                     break;
                 case 'right' :
                     x = zrWidth
                         - totalWidth
-                        - titleOption.padding[1]
-                        - titleOption.borderWidth;
+                        - this.titleOption.padding[1]
+                        - this.titleOption.borderWidth;
                     break;
                 default :
-                    x = titleOption.x - 0;
+                    x = this.titleOption.x - 0;
                     x = isNaN(x) ? 0 : x;
                     break;
             }
 
             var y;
-            var zrHeight = zr.getHeight();
-            switch (titleOption.y) {
+            var zrHeight = this.zr.getHeight();
+            switch (this.titleOption.y) {
                 case 'top' :
-                    y = titleOption.padding[0] + titleOption.borderWidth;
+                    y = this.titleOption.padding[0] + this.titleOption.borderWidth;
                     break;
                 case 'bottom' :
                     y = zrHeight
                         - totalHeight
-                        - titleOption.padding[2]
-                        - titleOption.borderWidth;
+                        - this.titleOption.padding[2]
+                        - this.titleOption.borderWidth;
                     break;
                 case 'center' :
                     y = Math.floor((zrHeight - totalHeight) / 2);
                     break;
                 default :
-                    y = titleOption.y - 0;
+                    y = this.titleOption.y - 0;
                     y = isNaN(y) ? 0 : y;
                     break;
             }
@@ -227,59 +240,38 @@ define(function (require) {
                 width : totalWidth,
                 height : totalHeight
             };
-        }
-
-        function init(newOption) {
-            refresh(newOption);
-        }
+        },
         
         /**
          * 刷新
          */
-        function refresh(newOption) {
+        refresh : function (newOption) {
             if (newOption) {
-                option = newOption;
+                this.option = newOption;
 
-                option.title = self.reformOption(option.title);
+                this.option.title = this.reformOption(this.option.title);
                 // 补全padding属性
-                option.title.padding = self.reformCssArray(
-                    option.title.padding
+                this.option.title.padding = this.reformCssArray(
+                    this.option.title.padding
                 );
     
-                titleOption = option.title;
-                titleOption.textStyle = zrUtil.merge(
-                    titleOption.textStyle,
-                    ecConfig.textStyle,
-                    {
-                        'overwrite': false,
-                        'recursive': false
-                    }
+                this.titleOption = this.option.title;
+                this.titleOption.textStyle = zrUtil.merge(
+                    this.titleOption.textStyle,
+                    this.ecTheme.textStyle
                 );
-                titleOption.subtextStyle = zrUtil.merge(
-                    titleOption.subtextStyle,
-                    ecConfig.textStyle,
-                    {
-                        'overwrite': false,
-                        'recursive': false
-                    }
+                this.titleOption.subtextStyle = zrUtil.merge(
+                    this.titleOption.subtextStyle,
+                    this.ecTheme.textStyle
                 );
-    
-                self.clear();
-                _buildShape();
             }
+            
+            this.clear();
+            this._buildShape();
         }
-        
-        function resize() {
-             self.clear();
-            _buildShape();
-        }
-
-        self.init = init;
-        self.refresh = refresh;
-        self.resize = resize;
-
-        init(option);
-    }
+    };
+    
+    zrUtil.inherits(Title, Base);
     
     require('../component').define('title', Title);
     

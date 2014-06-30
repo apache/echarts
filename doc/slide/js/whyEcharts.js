@@ -36,11 +36,37 @@ else {
             'echarts/chart/map': fileLocation,
             'echarts/chart/chord': fileLocation,
             'echarts/chart/force': fileLocation,
+            'echarts/chart/gauge': fileLocation,
+            'echarts/chart/funnel': fileLocation,
        		 webkitDep : '../../doc/example/webkit-dep'
         }
     });
 }
 
+var theme = {
+    backgroundColor:'#fff',
+     color: [
+        '#5d9cec', '#62c87f', '#f15755', '#fc863f', '#7053b6',
+        '#6ed5e6','#ffce55',  '#f57bc1', '#dcb186', '#647c9d'
+    ],
+    symbolList : [
+        'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond',
+        'circle', 'rectangle', 'triangle', 'diamond' 
+    ],
+    k: {
+        itemStyle: {
+            normal: {
+                color: '#ff3200',          // 阳线填充颜色
+                color0: '#00aa11',      // 阴线填充颜色
+                lineStyle: {
+                    width: 1,
+                    color: '#ff3200',   // 阳线边框颜色
+                    color0: '#00aa11'   // 阴线边框颜色
+                }
+            }
+        }
+    }
+}
 /*
 require.config({
     paths:{ 
@@ -71,9 +97,11 @@ require(
         'echarts/chart/radar',
         'echarts/chart/force',
         'echarts/chart/chord',
-        'echarts/chart/map'
+        'echarts/chart/map',
+        'echarts/chart/gauge',
+        'echarts/chart/funnel'
     ],
-    function(ec, wd) {
+    function (ec, wd) {
         echarts = ec;
         webkitDepData = wd;
         webkitDepData.minRadius = 5;
@@ -98,14 +126,14 @@ require(
 
 var curEvent;
 var showChartTimer;
-Reveal.addEventListener( 'ready', function(event){
+Reveal.addEventListener( 'ready', function (event){
     clearTimeout(showChartTimer);
     curEvent = event;
     getCurParams();
     showChartTimer = setTimeout(showChart, 800);
 });
 
-Reveal.addEventListener( 'slidechanged', function(event){
+Reveal.addEventListener( 'slidechanged', function (event){
     clearTimeout(showChartTimer);
     curEvent = event;
     getCurParams();
@@ -150,7 +178,7 @@ function showChart() {
         myChart = null;
     }
     if (optionKey) {
-    	myChart = echarts.init(dom);
+        myChart = echarts.init(dom, theme);
 	    var option = optionMap[optionKey];
 	    dom.className = 'main noLoading';
 		myChart.setOption(option);
@@ -334,7 +362,7 @@ var optionMap = {
                 axisLabel : {
                     rotate: 45
                 },
-                data : function(){
+                data : function (){
                     var list = [];
                     for (var i = 1; i <= 30; i++) {
                         list.push('11 - ' + i);
@@ -552,7 +580,7 @@ var optionMap = {
     dataZoom1 : {
         tooltip : {
             trigger: 'axis',
-            formatter: function(params) {
+            formatter: function (params) {
                 var res = params[1][1];
                 res += '<br/>' + params[1][0];
                 res += '<br/>  开盘 : ' + params[1][2][0] + '  最高 : ' + params[1][2][3];
@@ -578,8 +606,8 @@ var optionMap = {
         dataZoom : {
             show : true,
             realtime: true,
-            start : 50,
-            end : 100
+            start : 0,
+            end : 50
         },
         xAxis : [
             {
@@ -604,7 +632,7 @@ var optionMap = {
                 splitNumber: 9,
                 boundaryGap: [0.05, 0.05],
                 axisLabel: {
-	                formatter: function(v) {
+	                formatter: function (v) {
 	                    return Math.round(v/10000) + ' 万'
 	                }
 	            },
@@ -650,7 +678,7 @@ var optionMap = {
                 			label : {
                 				show:true,
                 				position:'top',
-				                formatter: function(a,b,v) {
+				                formatter: function (a,b,v) {
 				                    return Math.round(v/10000) + ' 万'
 				                }
                 			}
@@ -668,7 +696,7 @@ var optionMap = {
                 			color:'#1e90ff',
                 			label : {
                 				show:true,
-				                formatter: function(a,b,v) {
+				                formatter: function (a,b,v) {
 				                    return Math.round(v/10000) + ' 万'
 				                }
                 			}
@@ -686,8 +714,8 @@ var optionMap = {
             }
         ]
     },
-    multiCharts : (function(){
-        functionMap.multiCharts = function(){
+    multiCharts : (function (){
+        functionMap.multiCharts = function (){
             var option2 = {
                 tooltip : {
                     trigger: 'axis',
@@ -712,8 +740,8 @@ var optionMap = {
                 dataZoom : {
                     show : true,
                     realtime: true,
-                    start : 50,
-                    end : 100
+                    start : 0,
+                    end : 50
                 },
                 grid: {
                     x: 80,
@@ -739,7 +767,7 @@ var optionMap = {
                         splitNumber: 3,
                         boundaryGap: [0.05, 0.05],
                         axisLabel: {
-			                formatter: function(v) {
+			                formatter: function (v) {
 			                    return Math.round(v/10000) + ' 万'
 			                }
 			            },
@@ -775,7 +803,7 @@ var optionMap = {
                 ]
             };
             document.getElementById('mcMain2').className = 'main noLoading';
-            myChart2 = echarts.init(document.getElementById('mcMain2'));
+            myChart2 = echarts.init(document.getElementById('mcMain2'),theme);
             myChart2.setOption(option2);
 
             var option3 = {
@@ -803,8 +831,8 @@ var optionMap = {
                     y:200,
                     show : true,
                     realtime: true,
-                    start : 50,
-                    end : 100
+                    start : 0,
+                    end : 50
                 },
                 grid: {
                     x: 80,
@@ -829,7 +857,7 @@ var optionMap = {
                         splitNumber:3,
                         boundaryGap: [0.05, 0.05],
                         axisLabel: {
-			                formatter: function(v) {
+			                formatter: function (v) {
 			                    return Math.round(v/10000) + ' 万'
 			                }
 			            },
@@ -865,7 +893,7 @@ var optionMap = {
                 ]
             };
             document.getElementById('mcMain3').className = 'main noLoading';
-            myChart3 = echarts.init(document.getElementById('mcMain3'));
+            myChart3 = echarts.init(document.getElementById('mcMain3'),theme);
             myChart3.setOption(option3);
 
             myChart.connect([myChart2, myChart3]);
@@ -879,7 +907,7 @@ var optionMap = {
             tooltip : {
                 trigger: 'axis',
                 showDelay: 0,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
-                formatter: function(params) {
+                formatter: function (params) {
                     var res = params[0][1];
                     res += '<br/>' + params[0][0];
                     res += '<br/>  开盘 : ' + params[0][2][0] + '  最高 : ' + params[0][2][3];
@@ -904,8 +932,8 @@ var optionMap = {
                 y: 250,
                 show : true,
                 realtime: true,
-                start : 50,
-                end : 100
+                start : 0,
+                end : 50
             },
             grid: {
                 x: 80,
@@ -991,7 +1019,7 @@ var optionMap = {
                 type:'scatter',
                 large: true,
                 symbol:'circle',
-                data: (function() {
+                data: (function () {
                     var d = [];
                     var len = 25000;
                     var x = 0;
@@ -1011,7 +1039,7 @@ var optionMap = {
                 type:'scatter',
                 large: true,
                 symbol:'circle',
-                data: (function() {
+                data: (function () {
                     var d = [];
                     var len = 25000;
                     var x = 0;
@@ -1028,8 +1056,8 @@ var optionMap = {
             }
         ]
     },
-    force : (function() {
-            functionMap.force = function() {
+    force : (function () {
+            functionMap.force = function () {
                 myChart.setOption({
                     tooltip : {
                         trigger: 'item',
@@ -1134,8 +1162,12 @@ var optionMap = {
                     ]
                 }, true);
             }
-            functionMap.force2 = function() {
+            functionMap.force2 = function () {
                 myChart.setOption({
+                    color : ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
+                '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
+                '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
+                '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'],
                     tooltip : {
                         trigger: 'item'
                     },
@@ -1149,11 +1181,11 @@ var optionMap = {
             }
             return {};
     })(),
-    dynamic : (function(){
-        functionMap.dynamic = function() {
+    dynamic : (function (){
+        functionMap.dynamic = function () {
             var lastData = 11;
             var axisData;            
-            timeTicket = setInterval(function(){
+            timeTicket = setInterval(function (){
                 lastData += Math.random() * ((Math.round(Math.random() * 10) % 2) == 0 ? 1 : -1);
                 lastData = lastData.toFixed(1) - 0;
                 axisData = (new Date()).toLocaleTimeString().replace(/^\D*/,'');
@@ -1197,17 +1229,17 @@ var optionMap = {
                     saveAsImage : {show: true}
                 }
             },
-            dataZoom : {
+            AAdataZoom : {
                 show : false,
                 realtime: true,
-                start : 50,
-                end : 100
+                start : 0,
+                end : 50
             },
             xAxis : [
                 {
                     type : 'category',
                     boundaryGap : true,
-                    data : (function(){
+                    data : (function (){
                         var now = new Date();
                         var res = [];
                         var len = 10;
@@ -1222,7 +1254,7 @@ var optionMap = {
                     type : 'category',
                     boundaryGap : true,
                     splitline : {show : false},
-                    data : (function(){
+                    data : (function (){
                         var res = [];
                         var len = 10;
                         while (len--) {
@@ -1257,10 +1289,10 @@ var optionMap = {
                     yAxisIndex: 1,
                     itemStyle: {
                         normal: {
-                            color : 'rgba(135,206,205,0.4)'
+                            color : 'rgba(85,206,85,0.4)'
                         }
                     },
-                    data:(function(){
+                    data:(function (){
                         var res = [];
                         var len = 10;
                         while (len--) {
@@ -1280,7 +1312,7 @@ var optionMap = {
                             }
                         }
                     },
-                    data:(function(){
+                    data:(function (){
                         var res = [];
                         var len = 10;
                         while (len--) {
@@ -1308,7 +1340,7 @@ var optionMap = {
         },
         tooltip : {
             trigger: 'item',
-            formatter : function(params) {
+            formatter : function (params) {
                 var g1 = params[1];
                 var serie = params[0];
                 var g2 = params[3];
@@ -1562,6 +1594,148 @@ var optionMap = {
             }
         ]
     },
+    gf : {
+        color : [
+            'rgba(255, 69, 0, 0.5)',
+            'rgba(255, 150, 0, 0.5)',
+            'rgba(255, 200, 0, 0.5)',
+            'rgba(155, 200, 50, 0.5)',
+            'rgba(55, 200, 100, 0.5)'
+        ],
+        title : {
+            text: '商业BI图表',
+            subtext: '纯属虚构'
+        },
+        tooltip : {
+            trigger: 'item',
+            formatter: "{a} <br/>{b} : {c}%"
+        },
+        toolbox: {
+            show : true,
+            feature : {
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                restore : {show: true},
+                saveAsImage : {show: true}
+            }
+        },
+        legend: {
+            data : ['展现','点击','访问','咨询','订单']
+        },
+        series : [
+            {
+                name:'业务指标',
+                type:'gauge',
+                center: ['25%','50%'],
+                splitNumber: 10,       // 分割段数，默认为5
+                axisLine: {            // 坐标轴线
+                    lineStyle: {       // 属性lineStyle控制线条样式
+                        color: [[0.2, '#228b22'],[0.8, '#48b'],[1, 'rgb(255, 80, 20)']], 
+                        width: 8
+                    }
+                },
+                axisTick: {            // 坐标轴小标记
+                    splitNumber: 10,   // 每份split细分多少段
+                    length :12,        // 属性length控制线长
+                    lineStyle: {       // 属性lineStyle控制线条样式
+                        color: 'auto'
+                    }
+                },
+                axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
+                    textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                        color: 'auto'
+                    }
+                },
+                splitLine: {           // 分隔线
+                    show: true,        // 默认显示，属性show控制显示与否
+                    length :30,         // 属性length控制线长
+                    lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
+                        color: 'auto'
+                    }
+                },
+                pointer : {
+                    width : 5
+                },
+                title : {
+                    show : true,
+                    offsetCenter: [0, '-40%'],       // x, y，单位px
+                    textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                        fontWeight: 'bolder'
+                    }
+                },
+                detail : {
+                    formatter:'{value}%',
+                    textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                        color: 'auto',
+                        fontWeight: 'bolder'
+                    }
+                },
+                data:[{value: 85, name: '完成率'}]
+            },
+            {
+                name:'预期',
+                type:'funnel',
+                x: '45%',
+                width: '45%',
+                itemStyle: {
+                    normal: {
+                        label: {
+                            formatter: '{b}预期'
+                        },
+                        labelLine: {
+                            show : false
+                        }
+                    },
+                    emphasis: {
+                        label: {
+                            position:'inside',
+                            formatter: '{b}预期 : {c}%'
+                        }
+                    }
+                },
+                data:[
+                    {value:60, name:'访问'},
+                    {value:40, name:'咨询'},
+                    {value:20, name:'订单'},
+                    {value:80, name:'点击'},
+                    {value:100, name:'展现'}
+                ]
+            },
+            {
+                name:'实际',
+                type:'funnel',
+                x: '45%',
+                width: '45%',
+                maxSize: '80%',
+                itemStyle: {
+                    normal: {
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                        label: {
+                            position: 'inside',
+                            formatter: '{c}%',
+                            textStyle: {
+                                color: '#fff'
+                            }
+                        }
+                    },
+                    emphasis: {
+                        label: {
+                            position:'inside',
+                            formatter: '{b}实际 : {c}%'
+                        }
+                    }
+                },
+                data:[
+                    {value:30, name:'访问'},
+                    {value:10, name:'咨询'},
+                    {value:5, name:'订单'},
+                    {value:50, name:'点击'},
+                    {value:80, name:'展现'}
+                ]
+            }
+        ]
+    },
     mix1 : {
     	color: ['#ff7f50','#87cefa','#da70d6','#ff69b4','#ba55d3','#32cd32','#6495ed'],
         tooltip : {
@@ -1646,8 +1820,8 @@ var optionMap = {
             }
         ]
     },
-    mix2 : (function(){
-    	var sData1 = (function() {
+    mix2 : (function (){
+    	var sData1 = (function () {
 		    var d = [];
 		    var len = 40;
 		    var value;
@@ -1660,7 +1834,7 @@ var optionMap = {
 		    }
 		    return d;
 		})();
-		var sData2 = (function() {
+		var sData2 = (function () {
 		    var d = [];
 		    var len = sData1.length;
 		    for (var i = 0; i < len; i++) {
@@ -1679,6 +1853,9 @@ var optionMap = {
 		    var len = sData1.length;
 		    var option = myChart.getOption();
 		    option.series = option.series.slice(0,2);
+		    option.legend = {
+                data : ['系列1', '系列2']
+            };
 		    while (len--) {
 		        option.series.push({
 		            type: 'pie',
@@ -1717,9 +1894,6 @@ var optionMap = {
 		    tooltip : {
 		        trigger: 'item',
 		         formatter: "{b} : {c} ({d}%)"
-		    },
-		    legend : {
-		        data : ['系列1', '系列2']
 		    },
 		    toolbox: {
 		        show : true,
@@ -1765,6 +1939,10 @@ var optionMap = {
 		
     })(),
     mix3 : {
+        title : {
+            text: '2011全国GDP（亿元）',
+            subtext: '数据来自国家统计局'
+        },
         tooltip : {
             trigger: 'item'
         },
@@ -1792,7 +1970,7 @@ var optionMap = {
         },
         series : [
             {
-                name: 'iphone销量',
+                name: '2011全国GDP分布',
                 type: 'map',
                 mapType: 'china',
                 mapLocation: {
@@ -1838,7 +2016,7 @@ var optionMap = {
                 ]
             },
             {
-                name:'各省销量',
+                name:'2011全国GDP对比',
                 type:'pie',
                 roseType : 'area',
                 tooltip: {
@@ -1854,10 +2032,10 @@ var optionMap = {
                 ]
             }
         ],
-        animation: (function() {
-            functionMap.mix3 = function() {
+        animation: (function () {
+            functionMap.mix3 = function () {
                 var ecConfig = require('echarts/config');
-                myChart.on(ecConfig.EVENT.MAP_SELECTED, function(param){
+                myChart.on(ecConfig.EVENT.MAP_SELECTED, function (param){
                     var selected = param.selected;
                     var option = optionMap.mix3;
                     var mapSeries = option.series[0];
@@ -1883,8 +2061,8 @@ var optionMap = {
             return false;
         })()
     },
-    lasagna : (function() {
-         functionMap.lasagna = function() {
+    lasagna : (function () {
+         functionMap.lasagna = function () {
             myChart.setOption({
                 tooltip : {
                     trigger: 'item',
@@ -1904,7 +2082,7 @@ var optionMap = {
                         saveAsImage : {show: true}
                     }
                 },
-                series : (function(){
+                series : (function (){
                     var series = [];
                     for (var i = 0; i < 30; i++) {
                         series.push({
@@ -1932,15 +2110,15 @@ var optionMap = {
                     };
                     return series;
                 })(),
-                calculable : (function(){
-                    setTimeout(function(){
+                calculable : (function (){
+                    setTimeout(function (){
                         if (!myChart) {
                             return;
                         }
                         var _ZR = myChart.getZrender();
+                        var TextShape = require('zrender/shape/Text');
                         // 补充千层饼
-                        _ZR.addShape({
-                            shape : 'text',
+                        _ZR.addShape(new TextShape({
                             style : {
                                 x : _ZR.getWidth() / 2,
                                 y : _ZR.getHeight() / 2,
@@ -1948,9 +2126,8 @@ var optionMap = {
                                 text : '恶梦的过去',
                                 textAlign : 'center'
                             }
-                        });
-                        _ZR.addShape({
-                            shape : 'text',
+                        }));
+                        _ZR.addShape(new TextShape({
                             style : {
                                 x : _ZR.getWidth() / 2 + 200,
                                 y : _ZR.getHeight() / 2,
@@ -1960,7 +2137,7 @@ var optionMap = {
                                 textAlign : 'left',
                                 textFont:'normal 20px 微软雅黑'
                             }
-                        });
+                        }));
                         _ZR.refresh();
                     }, 2000);
                     return false;
@@ -1968,6 +2145,8 @@ var optionMap = {
             }, true);
         }
         functionMap.wormhole = function() {
+            myChart.clear();
+            myChart.getZrender().clear();
             myChart.setOption({
                 color : (function(){
                     var zrColor = require('zrender/tool/color');
@@ -2057,14 +2236,14 @@ var optionMap = {
         }
         return {};
     })(),
-    effect : (function() {
+    effect1 : (function() {
     	var effect = {
 		    show: true,
-		    scaleSize: 1,
-		    period: 10,             // 运动周期，无单位，值越大越慢
+            scaleSize: 1,//require('zrender/tool/env').canvasSupported ? 1 : 2,
+            period: 30,             // 运动周期，无单位，值越大越慢
 		    color: '#fff',
-		    shadowColor: 'rgba(220,220,220,0.8)',
-		    shadowBlur : 15 
+            shadowColor: 'rgba(220,220,220,0.4)',
+            shadowBlur : 5 
 		};
 		function itemStyle(idx) {
 		    return {
@@ -2073,18 +2252,18 @@ var optionMap = {
 		            borderWidth:1,
 		            borderColor:['rgba(30,144,255,1)','lime'][idx],
 		            lineStyle: {
-		                type: 'solid',
-		                shadowColor : ['rgba(30,144,255,1)','lime'][idx], //默认透明
-		                shadowBlur: 10,
-		                shadowOffsetX: 0,
-		                shadowOffsetY: 0
+                        //shadowColor : ['rgba(30,144,255,1)','lime'][idx], //默认透明
+                        //shadowBlur: 10,
+                        //shadowOffsetX: 0,
+                        //shadowOffsetY: 0,
+                        type: 'solid'
 		            }
 		        }
 		    }
 		};
-         functionMap.effect = function() {
+        functionMap.effect1 = function() {
             myChart.setOption({
-		    //ackgroundColor: '#1b1b1b',
+		    backgroundColor: 'rgba(0,0,0,0)',
 		    color: ['rgba(30,144,255,1)','lime'],
 		    title : {
 		        text: '中国铁路运输主干线',
@@ -2097,7 +2276,7 @@ var optionMap = {
 		    },
 		    tooltip : {
 		        trigger: 'item',
-		        formatter: function(v) {
+                    formatter: function(v) {
 		            return v[1].replace(':', ' > ');
 		        }
 		    },
@@ -2144,7 +2323,7 @@ var optionMap = {
 		                symbolSize : 1,
 		                effect : effect,
 		                itemStyle : itemStyle(0),
-		                smooth:false,
+                            smooth:true,
 		                data : [
 		                    [{name:'北京'}, {name:'哈尔滨'}],
 		                    [{name:'哈尔滨'}, {name:'满洲里'}],
@@ -2202,7 +2381,7 @@ var optionMap = {
 		                symbolSize : 1,
 		                effect : effect,
 		                itemStyle : itemStyle(1),
-		                smooth:false,
+                            smooth:true,
 		                data : [
 		                    [{name:'北京'}, {name:'兰州'}],
 		                    [{name:'兰州'}, {name:'拉萨'}],
@@ -2334,9 +2513,9 @@ var optionMap = {
 		    ]
 		}, true);
         }
-        functionMap.effect2 = function() {
+        functionMap.effect2 = function () {
             myChart.setOption({
-			    dbackgroundColor: '#1b1b1b',
+                backgroundColor: 'rgba(0,0,0,0)',
 			    color: ['gold','aqua','lime'],
 			    title : {
 			        text: '模拟迁徙',
@@ -2348,7 +2527,7 @@ var optionMap = {
 			    },
 			    tooltip : {
 			        trigger: 'item',
-			        formatter: function(v) {
+            formatter: function(v) {
 			            return v[1].replace(':', ' > ');
 			        }
 			    },
@@ -2381,7 +2560,7 @@ var optionMap = {
 			        min : 0,
 			        max : 100,
 			        calculable : true,
-			        color: ['red','orange','yellow','lightgreen'],
+            color: ['#ff3333', 'orange', 'yellow','lime','aqua'],
 			        textStyle:{
 			            color:'#fff'
 			        }
@@ -2693,12 +2872,18 @@ var optionMap = {
 			                smooth:true,
 			                effect : {
 			                    show: true,
-			                    size: 3,
-			                    shadowColor: 'yellow'
+                        scaleSize: 1,
+                        period: 30,
+                        color: '#fff',
+                        shadowBlur: 10
 			                },
 			                itemStyle : {
 			                    normal: {
-			                        borderWidth:1
+                            borderWidth:1,
+                            lineStyle: {
+                                type: 'solid',
+                                shadowBlur: 10
+                            }
 			                    }
 			                },
 			                data : [
@@ -2716,7 +2901,7 @@ var optionMap = {
 			            },
 			            markPoint : {
 			                symbol:'emptyCircle',
-			                symbolSize : function(v){
+                    symbolSize : function(v){
 			                    return 10 + v/10
 			                },
 			                effect : {
@@ -2751,12 +2936,18 @@ var optionMap = {
 			                smooth:true,
 			                effect : {
 			                    show: true,
-			                    size: 3,
-			                    shadowColor: 'aqua'
+                        scaleSize: 1,
+                        period: 30,
+                        color: '#fff',
+                        shadowBlur: 10
 			                },
 			                itemStyle : {
 			                    normal: {
-			                        borderWidth:1
+                            borderWidth:1,
+                            lineStyle: {
+                                type: 'solid',
+                                shadowBlur: 10
+                            }
 			                    }
 			                },
 			                data : [
@@ -2774,7 +2965,7 @@ var optionMap = {
 			            },
 			            markPoint : {
 			                symbol:'emptyCircle',
-			                symbolSize : function(v){
+                    symbolSize : function(v){
 			                    return 10 + v/10
 			                },
 			                effect : {
@@ -2809,12 +3000,18 @@ var optionMap = {
 			                smooth:true,
 			                effect : {
 			                    show: true,
-			                    size: 3,
-			                    shadowColor: 'lime'
+                        scaleSize: 1,
+                        period: 30,
+                        color: '#fff',
+                        shadowBlur: 10
 			                },
 			                itemStyle : {
 			                    normal: {
-			                        borderWidth:1
+                            borderWidth:1,
+                            lineStyle: {
+                                type: 'solid',
+                                shadowBlur: 10
+                            }
 			                    }
 			                },
 			                data : [
@@ -2832,7 +3029,7 @@ var optionMap = {
 			            },
 			            markPoint : {
 			                symbol:'emptyCircle',
-			                symbolSize : function(v){
+                    symbolSize : function(v){
 			                    return 10 + v/10
 			                },
 			                effect : {

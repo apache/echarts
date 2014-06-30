@@ -15,6 +15,8 @@
         }
     ],
     include:[
+        'echarts/chart/gauge',
+        'echarts/chart/funnel',
         'echarts/chart/scatter',
         'echarts/chart/k',
         'echarts/chart/radar',

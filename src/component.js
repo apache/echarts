@@ -5,17 +5,17 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function(/*require*/) {    //component
+define(function (/*require*/) {     // component
     var self = {};
 
-    var _componentLibrary = {};     //echart组件库
+    var _componentLibrary = {};     // echart组件库
 
     /**
      * 定义图形实现
      * @param {Object} name
      * @param {Object} clazz 图形实现
      */
-    self.define = function(name, clazz) {
+    self.define = function (name, clazz) {
         _componentLibrary[name] = clazz;
         return self;
     };
@@ -24,9 +24,9 @@ define(function(/*require*/) {    //component
      * 获取图形实现
      * @param {Object} name
      */
-    self.get = function(name) {
+    self.get = function (name) {
         return _componentLibrary[name];
     };
-
+    
     return self;
 });

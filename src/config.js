@@ -19,6 +19,8 @@ define(function() {
         CHART_TYPE_ISLAND: 'island',
         CHART_TYPE_FORCE : 'force',
         CHART_TYPE_CHORD : 'chord',
+        CHART_TYPE_GAUGE : 'gauge',
+        CHART_TYPE_FUNNEL : 'funnel',
 
         // 组件类型
         COMPONENT_TYPE_TITLE: 'title',
@@ -35,9 +37,10 @@ define(function() {
         COMPONENT_TYPE_Y_AXIS: 'yAxis',
         COMPONENT_TYPE_AXIS_CATEGORY: 'categoryAxis',
         COMPONENT_TYPE_AXIS_VALUE: 'valueAxis',
+        COMPONENT_TYPE_TIMELINE: 'timeline',
 
         // 全图默认背景
-        // backgroundColor: 'rgba(0,0,0,0)',
+        backgroundColor: 'rgba(0,0,0,0)',
         
         // 默认色板
         color: ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
@@ -49,8 +52,10 @@ define(function() {
         title: {
             text: '',
             //link: null,              // 超链接跳转
+            //target: null,            // 仅支持self | blank
             subtext: '',
             //sublink: null,           // 超链接跳转
+            //subtarget: null,         // 仅支持self | blank
             x: 'left',                 // 水平安放位置，默认为左对齐，可选为：
                                        // 'center' ¦ 'left' ¦ 'right'
                                        // ¦ {number}（x坐标，单位px）
@@ -63,7 +68,7 @@ define(function() {
             borderWidth: 0,            // 标题边框线宽，单位px，默认为0（无边框）
             padding: 5,                // 标题内边距，单位px，默认各方向内边距为5，
                                        // 接受数组分别设定上右下左边距，同css
-            itemGap: 10,               // 主副标题纵向间隔，单位px，默认为10，
+            itemGap: 5,               // 主副标题纵向间隔，单位px，默认为10，
             textStyle: {
                 fontSize: 18,
                 fontWeight: 'bolder',
@@ -127,6 +132,7 @@ define(function() {
             calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
             realtime: true,
             color:['#006edd','#e0ffff'],//颜色 
+            //formatter: null,
             //text:['高','低'],           // 文本，默认为数值文本
             textStyle: {
                 color: '#333'          // 值域文字颜色
@@ -144,6 +150,8 @@ define(function() {
                                        // 'top' ¦ 'bottom' ¦ 'center'
                                        // ¦ {number}（y坐标，单位px）
             color : ['#1e90ff','#22bb22','#4b0082','#d2691e'],
+            disableColor : '#ddd',
+            effectiveColor : 'red',
             backgroundColor: 'rgba(0,0,0,0)', // 工具箱背景颜色
             borderColor: '#ccc',       // 工具箱边框颜色
             borderWidth: 0,            // 工具箱边框线宽，单位px，默认为0（无边框）
@@ -186,7 +194,7 @@ define(function() {
                     title : {
                         line : '折线图切换',
                         bar : '柱形图切换',
-                        stack : '堆叠',
+                        stack : '堆积',
                         tiled : '平铺'
                     },
                     type : [] // 'line', 'bar', 'stack', 'tiled'
@@ -209,6 +217,7 @@ define(function() {
             show: true,
             showContent: true,         // tooltip主体内容
             trigger: 'item',           // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
+            // position : null         // 位置 {Array} | {Function}
             // formatter: null         // 内容格式器：{string}（Template） ¦ {Function}
             islandFormatter: '{a} <br/>{b} : {c}',  // 数据孤岛内容格式器
             showDelay: 20,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
@@ -221,15 +230,21 @@ define(function() {
             padding: 5,                // 提示内边距，单位px，默认各方向内边距为5，
                                        // 接受数组分别设定上右下左边距，同css
             axisPointer : {            // 坐标轴指示器，坐标轴触发有效
-                type : 'line',         // 默认为直线，可选为：'line' | 'shadow'
+                type : 'line',         // 默认为直线，可选为：'line' | 'shadow' | 'cross'
                 lineStyle : {          // 直线指示器样式设置
                     color: '#48b',
                     width: 2,
                     type: 'solid'
                 },
-                areaStyle : {                       // 阴影指示器样式设置
-                    size: 'auto',                   // 阴影大小
-                    color: 'rgba(150,150,150,0.3)'  // 阴影颜色
+                crossStyle: {
+                    color: '#1e90ff',
+                    width: 1,
+                    type: 'dashed'
+                },
+                shadowStyle : {                     // 阴影指示器样式设置
+                    color: 'rgba(150,150,150,0.3)', // 阴影颜色
+                    width: 'auto',                  // 阴影大小
+                    type: 'default'
                 }
             },
             textStyle: {
@@ -282,6 +297,7 @@ define(function() {
             boundaryGap: true,     // 类目起始和结束两端空白策略
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
+                onZero: true,
                 lineStyle: {       // 属性lineStyle控制线条样式
                     color: '#48b',
                     width: 2,
@@ -304,6 +320,7 @@ define(function() {
                 interval: 'auto',
                 rotate: 0,
                 margin: 8,
+                // clickable: false,
                 // formatter: null,
                 textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
                     color: '#333'
@@ -342,6 +359,7 @@ define(function() {
             splitNumber: 5,        // 分割段数，默认为5
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
+                onZero: true,
                 lineStyle: {       // 属性lineStyle控制线条样式
                     color: '#48b',
                     width: 2,
@@ -361,6 +379,7 @@ define(function() {
                 show: true,
                 rotate: 0,
                 margin: 8,
+                // clickable: false,
                 // formatter: null,
                 textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
                     color: '#333'
@@ -425,6 +444,62 @@ define(function() {
             //indicator : []
         },
 
+        timeline : {
+            show: true,
+            type : 'time',  // 模式是时间类型，支持 number
+            notMerge : false,
+            realtime : true,
+            x: 80,
+            // y: {number},
+            x2: 80,
+            y2: 0,
+            // width: {totalWidth} - x - x2,
+            height: 50,
+            backgroundColor: 'rgba(0,0,0,0)',   // 时间轴背景颜色
+            borderColor : '#ccc',               // 时间轴边框颜色
+            borderWidth : 0,                    // 时间轴边框线宽，单位px，默认为0（无边框）
+            padding : 5,                        // 时间轴内边距，单位px，默认各方向内边距为5，
+            controlPosition : 'left',           // 'right' | 'none'
+            autoPlay : false,
+            loop : true,
+            playInterval : 2000,                // 播放时间间隔，单位ms
+            lineStyle : {
+                width : 1,
+                color : '#666',
+                type : 'dashed'
+            },
+            label: {                            // 文本标签
+                show: true,
+                interval: 'auto',
+                rotate: 0,
+                // formatter: null,
+                textStyle: {                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: '#333'
+                }
+            },
+            checkpointStyle : {
+                symbol : 'auto',
+                symbolSize : 'auto',
+                color : 'auto',
+                borderColor : 'auto',
+                borderWidth : 'auto',
+                label: {                            // 文本标签
+                    show: false,
+                    textStyle: {                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                        color: 'auto'
+                    }
+                }
+            },
+            controlStyle : {
+                normal : { color : '#333'},
+                emphasis : { color : '#1e90ff'}
+            },
+            symbol : 'emptyDiamond',
+            symbolSize : 4,
+            currentIndex : 0
+            // data : []
+        },
+        
         // 柱形图默认参数
         bar: {
             // stack: null
@@ -544,7 +619,7 @@ define(function() {
                     label: {
                         show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        formatter : function(a, b, c) {
+                        formatter : function (a, b, c) {
                             if (typeof c[2] != 'undefined') {
                                 return c[2];
                             }
@@ -562,7 +637,7 @@ define(function() {
                     label: {
                         show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        formatter : function(a, b, c) {
+                        formatter : function (a, b, c) {
                             if (typeof c[2] != 'undefined') {
                                 return c[2];
                             }
@@ -617,7 +692,7 @@ define(function() {
             itemStyle: {
                 normal: {
                     // color: 各异,
-                    borderColor: '#fff',
+                    borderColor: 'rgba(0,0,0,0)',
                     borderWidth: 1,
                     label: {
                         show: true,
@@ -660,12 +735,12 @@ define(function() {
         
         map: {
             mapType: 'china',   // 各省的mapType暂时都用中文
-            mapLocation: {
-                x : 'center',
-                y : 'center'
+            //mapLocation: {
+                // x : 'center' | 'left' | 'right' | 'x%' | {number},
+                // y : 'center' | 'top' | 'bottom' | 'x%' | {number}
                 // width    // 自适应
                 // height   // 自适应
-            },
+            //},
             // mapValueCalculation: 'sum', // 数值合并方式，默认加和，可选为：
                                            // 'sum' | 'average' | 'max' | 'min' 
             mapValuePrecision : 0,         // 地图数值计算结果小数精度
@@ -673,10 +748,11 @@ define(function() {
             // selectedMode: false,        // 选择模式，默认关闭，可选single，multiple
             hoverable: true,
             // roam : false,               // 是否开启缩放及漫游模式
+            // scaleLimit : null,
             itemStyle: {
                 normal: {
                     // color: 各异,
-                    borderColor: '#fff',
+                    borderColor: 'rgba(0,0,0,0)',
                     borderWidth: 1,
                     areaStyle: {
                         color: '#ccc'
@@ -719,6 +795,7 @@ define(function() {
             coolDown : 0.99,
             linkSymbol: null,
             linkSymbolSize: [10, 15],
+            draggable: true,
             // 分类里如果有样式会覆盖节点默认样式
             categories : [],
             itemStyle: {
@@ -756,13 +833,15 @@ define(function() {
             sort : 'none', // can be 'none', 'ascending', 'descending'
             sortSub : 'none', // can be 'none', 'ascending', 'descending'
             startAngle : 90,
-            clockWise : false,
+            clockWise : true,
             showScale : false,
             showScaleText : false,
             itemStyle : {
                 normal : {
                     label : {
-                        show : true
+                        show : true,
+                        rotate: false,
+                        distance: 10
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     lineStyle : {
@@ -772,7 +851,7 @@ define(function() {
                     chordStyle : {
                         lineStyle : {
                             width : 1,
-                            color : '#666'
+                            color : '#999'
                         }
                     }
                 },
@@ -783,8 +862,8 @@ define(function() {
                     },
                     chordStyle : {
                         lineStyle : {
-                            width : 2,
-                            color : '#333'
+                            width : 1,
+                            color : '#666'
                         }
                     }
                 }
@@ -807,6 +886,126 @@ define(function() {
             matrix : []
         },
 
+        gauge : {
+            center : ['50%', '50%'],    // 默认全局居中
+            radius : '75%',
+            startAngle: 225,
+            endAngle : -45,
+            min: 0,                     // 最小值
+            max: 100,                   // 最大值
+            precision: 0,               // 小数精度，默认为0，无小数点
+            splitNumber: 10,            // 分割段数，默认为10
+            axisLine: {            // 坐标轴线
+                show: true,        // 默认显示，属性show控制显示与否
+                lineStyle: {       // 属性lineStyle控制线条样式
+                    color: [[0.2, '#228b22'],[0.8, '#48b'],[1, '#ff4500']], 
+                    width: 30
+                }
+            },
+            axisTick: {            // 坐标轴小标记
+                show: true,        // 属性show控制显示与否，默认不显示
+                splitNumber: 5,    // 每份split细分多少段
+                length :8,         // 属性length控制线长
+                lineStyle: {       // 属性lineStyle控制线条样式
+                    color: '#eee',
+                    width: 1,
+                    type: 'solid'
+                }
+            },
+            axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
+                show: true,
+                // formatter: null,
+                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: 'auto'
+                }
+            },
+            splitLine: {           // 分隔线
+                show: true,        // 默认显示，属性show控制显示与否
+                length :30,         // 属性length控制线长
+                lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
+                    color: '#eee',
+                    width: 2,
+                    type: 'solid'
+                }
+            },
+            pointer : {
+                show : true,
+                length : '80%',
+                width : 8,
+                color : 'auto'
+            },
+            title : {
+                show : true,
+                offsetCenter: [0, '-40%'],       // x, y，单位px
+                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: '#333',
+                    fontSize : 15
+                }
+            },
+            detail : {
+                show : true,
+                backgroundColor: 'rgba(0,0,0,0)',
+                borderWidth: 0,
+                borderColor: '#ccc',
+                width: 100,
+                height: 40,
+                offsetCenter: [0, '40%'],       // x, y，单位px
+                // formatter: null,
+                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: 'auto',
+                    fontSize : 30
+                }
+            }
+        },
+        
+        funnel : {
+            x: 80,
+            y: 60,
+            x2: 80,
+            y2: 60,
+            // width: {totalWidth} - x - x2,
+            // height: {totalHeight} - y - y2,
+            min: 0,
+            max: 100,
+            minSize: '0%',
+            maxSize: '100%',
+            sort : 'descending', // 'ascending', 'descending'
+            gap : 0,
+            itemStyle: {
+                normal: {
+                    // color: 各异,
+                    borderColor: '#fff',
+                    borderWidth: 1,
+                    label: {
+                        show: true,
+                        position: 'outer'
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    },
+                    labelLine: {
+                        show: true,
+                        length: 10,
+                        lineStyle: {
+                            // color: 各异,
+                            width: 1,
+                            type: 'solid'
+                        }
+                    }
+                },
+                emphasis: {
+                    // color: 各异,
+                    borderColor: 'rgba(0,0,0,0)',
+                    borderWidth: 1,
+                    label: {
+                        show: true
+                    },
+                    labelLine: {
+                        show: true
+                    }
+                }
+            }
+        },
+        
         island: {
             r: 15,
             calculateStep: 0.1  // 滚轮可计算步长 0.1 = 10%
@@ -816,6 +1015,7 @@ define(function() {
             symbol: 'pin',         // 标注类型
             symbolSize: 10,        // 标注大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             //symbolRotate : null, // 标注旋转控制
+            large : false,
             effect : {
                 show: false,
                 period: 15,             // 运动周期，无单位，值越大越慢
@@ -858,6 +1058,7 @@ define(function() {
             // 标线起始和结束的symbol旋转控制
             //symbolRotate : null,
             //smooth : false,
+            large : false,
             effect : {
                 show: false,
                 period: 15,             // 运动周期，无单位，值越大越慢
@@ -882,11 +1083,11 @@ define(function() {
                     lineStyle: {
                         // color: 随borderColor, // 主色，线色，优先级高于borderColor和color
                         // width: 随borderWidth, // 优先于borderWidth
-                        type: 'dashed',
-                        shadowColor : 'rgba(0,0,0,0)', //默认透明
-                        shadowBlur: 0,
-                        shadowOffsetX: 0,
-                        shadowOffsetY: 0
+                        type: 'dashed'
+                        // shadowColor : 'rgba(0,0,0,0)', //默认透明
+                        // shadowBlur: 0,
+                        // shadowOffsetX: 0,
+                        // shadowOffsetY: 0
                     }
                 },
                 emphasis: {
@@ -930,13 +1131,15 @@ define(function() {
             PIE_SELECTED: 'pieSelected',
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',
             DATA_VIEW_CHANGED: 'dataViewChanged',
+            TIMELINE_CHANGED: 'timelineChanged',
             MAP_ROAM : 'mapRoam',
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover',
             TOOLTIP_IN_GRID: 'tooltipInGrid',
             TOOLTIP_OUT_GRID: 'tooltipOutGrid'
         },
-        DRAG_ENABLE_TIME : 150,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
+        DRAG_ENABLE_TIME : 120,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
+        EFFECT_ZLEVEL : 7,
         // 主题，默认标志图形类型列表
         symbolList : [
           'circle', 'rectangle', 'triangle', 'diamond',
@@ -951,7 +1154,7 @@ define(function() {
         valueConnector: ' : ',
         animation: true,
         addDataAnimation: true,         // 动态数据接口是否开启动画效果
-        animationThreshold: 2500,       // 动画元素阀值，产生的图形原素超过2500不出动画
+        animationThreshold: 2000,       // 动画元素阀值，产生的图形原素超过2000不出动画
         animationDuration: 2000,
         animationEasing: 'ExponentialOut'    //BounceOut
     };
