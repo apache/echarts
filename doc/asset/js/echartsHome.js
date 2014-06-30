@@ -1,5 +1,5 @@
 var version = '2.0.0';
-var curPage = location.href.match(/(\w*).html/)[1];
+var curPage = location.href.match(/(\w*).html/) ? location.href.match(/(\w*).html/)[1] : 'index';
 
 var activeClass = {};
 var loc = {};
@@ -74,8 +74,8 @@ $('#head')[0].innerHTML =
             + '<li class="dropdown">'
               + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">下载 <b class="caret"></b></a>'
               + '<ul class="dropdown-menu">'
-                + '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.rar"><i class="fa fa-download"></i> echarts-' + version + '</a></li>'
-                + '<li><a href="http://echarts.baidu.com/build/echarts-1.4.1.rar"><i class="fa fa-download"></i> echarts-1.4.1</a></li>'
+                + '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.zip"><i class="fa fa-download"></i> echarts-' + version + '</a></li>'
+                + '<li><a href="http://echarts.baidu.com/build/echarts-1.4.1.zip"><i class="fa fa-download"></i> echarts-1.4.1</a></li>'
               + '</ul>'
             + '</li>'
             //+ '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.rar">下载</a></li>'

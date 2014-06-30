@@ -57,7 +57,7 @@ var theme = {
     dataZoom: {
         dataBackgroundColor: '#efefff',            // 数据背景颜色
         fillerColor: 'rgba(182,162,222,0.2)',   // 填充颜色
-        handleColor: '#008acd',    // 手柄颜色
+        handleColor: '#008acd'    // 手柄颜色
     },
 
     // 网格
