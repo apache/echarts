@@ -52,7 +52,7 @@ for (var i = 0, l = domTextarea.length; i < l; i++) {
         { lineNumbers: true }
     );
     editor[i].setOption("theme", 'monokai');
-    editor[i].on('change', function(){needRefresh = true;});
+    editor[i].on('change', function (){needRefresh = true;});
 }
 
 function refresh(isBtnRefresh, idd){
@@ -67,7 +67,7 @@ function refresh(isBtnRefresh, idd){
         myChart[idx].dispose();
     }
     myChart[idx] = echarts.init(domMain[idx]);
-    (new Function(editor[idx].doc.getValue().replace(
+    (new Function (editor[idx].doc.getValue().replace(
         'option', 'option[' + idx + ']'))
     )()
     myChart[idx].setOption(option[idx], true);
@@ -76,7 +76,7 @@ function refresh(isBtnRefresh, idd){
 
 function refreshAll() {
     for (var i = 0, l = myChart.length; i < l; i++) {
-        (new Function(editor[i].doc.getValue().replace(
+        (new Function (editor[i].doc.getValue().replace(
             'option', 'option[' + i + ']'))
         )();
         myChart[i].setOption(option[i], true);
@@ -117,7 +117,9 @@ else {
             'echarts/chart/radar': fileLocation,
             'echarts/chart/map': fileLocation,
             'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation
+            'echarts/chart/force': fileLocation,
+            'echarts/chart/gauge': fileLocation,
+            'echarts/chart/funnel': fileLocation
         }
     });
 }
@@ -134,7 +136,9 @@ require(
         'echarts/chart/radar',
         'echarts/chart/force',
         'echarts/chart/chord',
-        'echarts/chart/map'
+        'echarts/chart/map',
+        'echarts/chart/gauge',
+        'echarts/chart/funnel'
     ],
     requireCallback
 );
@@ -154,7 +158,7 @@ function requireCallback (ec) {
     }
     refreshAll();
     
-    window.onresize = function(){
+    window.onresize = function (){
         for (var i = 0, l = myChart.length; i < l; i++) {
             myChart[i].resize && myChart[i].resize();
         }

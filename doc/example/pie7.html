@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+    <title>ECharts · Example</title>
+
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/carousel.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="../asset/js/esl/esl.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
+
+
+    <div class="container-fluid">
+        <div class="row-fluid example">
+            <div id="sidebar-code" class="col-md-4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+var idx = 1;
+option = {
+    timeline : {
+        data : [
+            '2013-01-01', '2013-02-01', '2013-03-01', '2013-04-01', '2013-05-01',
+            { name:'2013-06-01', symbol:'emptyStar6', symbolSize:8 },
+            '2013-07-01', '2013-08-01', '2013-09-01', '2013-10-01', '2013-11-01',
+            { name:'2013-12-01', symbol:'star6', symbolSize:8 }
+        ],
+        label : {
+            formatter : function(s) {
+                return s.slice(0, 7);
+            }
+        }
+    },
+    options : [
+        {
+            title : {
+                text: '浏览器占比变化',
+                subtext: '纯属虚构'
+            },
+            tooltip : {
+                trigger: 'item',
+                formatter: "{a} <br/>{b} : {c} ({d}%)"
+            },
+            legend: {
+                data:['Chrome','Firefox','Safari','IE9+','IE8-']
+            },
+            toolbox: {
+                show : true,
+                feature : {
+                    mark : {show: true},
+                    dataView : {show: true, readOnly: false},
+                    restore : {show: true},
+                    saveAsImage : {show: true}
+                }
+            },
+            series : [
+                {
+                    name:'浏览器（数据纯属虚构）',
+                    type:'pie',
+                    center: ['50%', '45%'],
+                    radius: '50%',
+                    data:[
+                        {value: idx * 128 + 80,  name:'Chrome'},
+                        {value: idx * 64  + 160,  name:'Firefox'},
+                        {value: idx * 32  + 320,  name:'Safari'},
+                        {value: idx * 16  + 640,  name:'IE9+'},
+                        {value: idx++ * 8  + 1280, name:'IE8-'}
+                    ]
+                }
+            ]
+        },
+        {
+            series : [
+                {
+                    name:'浏览器（数据纯属虚构）',
+                    type:'pie',
+                    data:[
+                        {value: idx * 128 + 80,  name:'Chrome'},
+                        {value: idx * 64  + 160,  name:'Firefox'},
+                        {value: idx * 32  + 320,  name:'Safari'},
+                        {value: idx * 16  + 640,  name:'IE9+'},
+                        {value: idx++ * 8  + 1280, name:'IE8-'}
+                    ]
+                }
+            ]
+        },
+        {
+            series : [
+                {
+                    name:'浏览器（数据纯属虚构）',
+                    type:'pie',
+                    data:[
+                        {value: idx * 128 + 80,  name:'Chrome'},
+                        {value: idx * 64  + 160,  name:'Firefox'},
+                        {value: idx * 32  + 320,  name:'Safari'},
+                        {value: idx * 16  + 640,  name:'IE9+'},
+                        {value: idx++ * 8  + 1280, name:'IE8-'}
+                    ]
+                }
+            ]
+        },
+        {
+            series : [
+                {
+                    name:'浏览器（数据纯属虚构）',
+                    type:'pie',
+                    data:[
+                        {value: idx * 128 + 80,  name:'Chrome'},
+                        {value: idx * 64  + 160,  name:'Firefox'},
+                        {value: idx * 32  + 320,  name:'Safari'},
+                        {value: idx * 16  + 640,  name:'IE9+'},
+                        {value: idx++ * 8  + 1280, name:'IE8-'}
+                    ]
+                }
+            ]
+        },
+        {
+            series : [
+                {
+                    name:'浏览器（数据纯属虚构）',
+                    type:'pie',
+                    data:[
+                        {value: idx * 128 + 80,  name:'Chrome'},
+                        {value: idx * 64  + 160,  name:'Firefox'},
+                        {value: idx * 32  + 320,  name:'Safari'},
+                        {value: idx * 16  + 640,  name:'IE9+'},
+                        {value: idx++ * 8  + 1280, name:'IE8-'}
+                    ]
+                }
+            ]
+        },
+        {
+            series : [
+                {
+                    name:'浏览器（数据纯属虚构）',
+                    type:'pie',
+                    data:[
+                        {value: idx * 128 + 80,  name:'Chrome'},
+                        {value: idx * 64  + 160,  name:'Firefox'},
+                        {value: idx * 32  + 320,  name:'Safari'},
+                        {value: idx * 16  + 640,  name:'IE9+'},
+                        {value: idx++ * 8  + 1280, name:'IE8-'}
+                    ]
+                }
+            ]
+        },
+        {
+            series : [
+                {
+                    name:'浏览器（数据纯属虚构）',
+                    type:'pie',
+                    data:[
+                        {value: idx * 128 + 80,  name:'Chrome'},
+                        {value: idx * 64  + 160,  name:'Firefox'},
+                        {value: idx * 32  + 320,  name:'Safari'},
+                        {value: idx * 16  + 640,  name:'IE9+'},
+                        {value: idx++ * 8  + 1280, name:'IE8-'}
+                    ]
+                }
+            ]
+        },
+        {
+            series : [
+                {
+                    name:'浏览器（数据纯属虚构）',
+                    type:'pie',
+                    data:[
+                        {value: idx * 128 + 80,  name:'Chrome'},
+                        {value: idx * 64  + 160,  name:'Firefox'},
+                        {value: idx * 32  + 320,  name:'Safari'},
+                        {value: idx * 16  + 640,  name:'IE9+'},
+                        {value: idx++ * 8  + 1280, name:'IE8-'}
+                    ]
+                }
+            ]
+        },
+        {
+            series : [
+                {
+                    name:'浏览器（数据纯属虚构）',
+                    type:'pie',
+                    data:[
+                        {value: idx * 128 + 80,  name:'Chrome'},
+                        {value: idx * 64  + 160,  name:'Firefox'},
+                        {value: idx * 32  + 320,  name:'Safari'},
+                        {value: idx * 16  + 640,  name:'IE9+'},
+                        {value: idx++ * 8  + 1280, name:'IE8-'}
+                    ]
+                }
+            ]
+        },
+        {
+            series : [
+                {
+                    name:'浏览器（数据纯属虚构）',
+                    type:'pie',
+                    data:[
+                        {value: idx * 128 + 80,  name:'Chrome'},
+                        {value: idx * 64  + 160,  name:'Firefox'},
+                        {value: idx * 32  + 320,  name:'Safari'},
+                        {value: idx * 16  + 640,  name:'IE9+'},
+                        {value: idx++ * 8  + 1280, name:'IE8-'}
+                    ]
+                }
+            ]
+        },
+        {
+            series : [
+                {
+                    name:'浏览器（数据纯属虚构）',
+                    type:'pie',
+                    data:[
+                        {value: idx * 128 + 80,  name:'Chrome'},
+                        {value: idx * 64  + 160,  name:'Firefox'},
+                        {value: idx * 32  + 320,  name:'Safari'},
+                        {value: idx * 16  + 640,  name:'IE9+'},
+                        {value: idx++ * 8  + 1280, name:'IE8-'}
+                    ]
+                }
+            ]
+        },
+        {
+            series : [
+                {
+                    name:'浏览器（数据纯属虚构）',
+                    type:'pie',
+                    data:[
+                        {value: idx * 128 + 80,  name:'Chrome'},
+                        {value: idx * 64  + 160,  name:'Firefox'},
+                        {value: idx * 32  + 320,  name:'Safari'},
+                        {value: idx * 16  + 640,  name:'IE9+'},
+                        {value: idx++ * 8  + 1280, name:'IE8-'}
+                    ]
+                }
+            ]
+        }
+    ]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="col-md-8">
+                <div id="main" class="main"></div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
+
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        
+        </div><!--/.fluid-container-->
+
+    <footer id="footer"></footer>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
+    <script src="../asset/js/bootstrap.min.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>

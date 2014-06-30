@@ -6,25 +6,79 @@ var domMessage = document.getElementById('wrong-message');
 var iconResize = document.getElementById('icon-resize');
 var needRefresh = false;
 
+var hash = location.hash.replace('#','') || (needMap() ? 'default' : 'macarons');
+var curTheme;
+function requireCallback (ec, defaultTheme) {
+    curTheme = themeSelector 
+               ? defaultTheme
+               : {};
+    echarts = ec;
+    refresh();
+    window.onresize = myChart.resize;
+}
+
+var themeSelector = $('#theme-select')[0];
+if (themeSelector) {
+    themeSelector.innerHTML =
+        '<option selected="true" name="macarons">macarons</option>' 
+        + '<option name="infographic">infographic</option>'
+        + '<option name="shine">shine</option>'
+        + '<option name="dark">dark</option>'
+        + '<option name="blue">blue</option>'
+        + '<option name="green">green</option>'
+        + '<option name="red">red</option>'
+        + '<option name="gray">gray</option>'
+        + '<option name="default">default</option>';
+    $(themeSelector).on('change', function(){
+        selectChange($(this).val());
+    });
+    function selectChange(value){
+        var theme = value;
+        myChart.showLoading();
+        $(themeSelector).val(theme);
+        if (theme != 'default') {
+            window.location.hash = value;
+            require(['theme/' + theme], function(tarTheme){
+                curTheme = tarTheme;
+                setTimeout(refreshTheme, 500);
+            })
+        }
+        else {
+            window.location.hash = '';
+            curTheme = {};
+            setTimeout(refreshTheme, 500);
+        }
+    }
+    function refreshTheme(){
+        myChart.hideLoading();
+        myChart.setTheme(curTheme);
+    }
+    if ($(themeSelector).val(hash).val() != hash) {
+        $(themeSelector).val('macarons');
+        hash = 'macarons';
+        window.location.hash = hash;
+    }
+}
+
 function autoResize() {
-    if (iconResize.className == 'icon-resize-full') {
+    if ($(iconResize).hasClass('glyphicon-resize-full')) {
         focusCode();
-        iconResize.className = 'icon-resize-small';
+        iconResize.className = 'glyphicon glyphicon-resize-small';
     }
     else {
         focusGraphic();
-        iconResize.className = 'icon-resize-full';
+        iconResize.className = 'glyphicon glyphicon-resize-full';
     }
 }
 
 function focusCode() {
-    domCode.className = 'span8 ani';
-    domGraphic.className = 'span4 ani';
+    domCode.className = 'col-md-8 ani';
+    domGraphic.className = 'col-md-4 ani';
 }
 
 function focusGraphic() {
-    domCode.className = 'span4 ani';
-    domGraphic.className = 'span8 ani';
+    domCode.className = 'col-md-4 ani';
+    domGraphic.className = 'col-md-8 ani';
     if (needRefresh) {
         myChart.showLoading();
         setTimeout(refresh, 1000);
@@ -50,10 +104,10 @@ function refresh(isBtnRefresh){
     if (myChart && myChart.dispose) {
         myChart.dispose();
     }
-    myChart = echarts.init(domMain);
+    myChart = echarts.init(domMain, curTheme);
     window.onresize = myChart.resize;
     (new Function(editor.doc.getValue()))();
-    myChart.setOption(option, true);
+    myChart.setOption(option, true)
     domMessage.innerHTML = '';
 }
 
@@ -61,7 +115,8 @@ function needMap() {
     var href = location.href;
     return href.indexOf('map') != -1
            || href.indexOf('mix3') != -1
-           || href.indexOf('mix5') != -1;
+           || href.indexOf('mix5') != -1
+           || href.indexOf('dataRange') != -1;
 
 }
 
@@ -100,7 +155,9 @@ else {
             'echarts/chart/radar': fileLocation,
             'echarts/chart/map': fileLocation,
             'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation
+            'echarts/chart/force': fileLocation,
+            'echarts/chart/gauge': fileLocation,
+            'echarts/chart/funnel': fileLocation
         }
     });
 }
@@ -109,6 +166,7 @@ else {
 require(
     [
         'echarts',
+        'theme/' + hash,
         'echarts/chart/line',
         'echarts/chart/bar',
         'echarts/chart/scatter',
@@ -117,17 +175,10 @@ require(
         'echarts/chart/radar',
         'echarts/chart/force',
         'echarts/chart/chord',
+        'echarts/chart/gauge',
+        'echarts/chart/funnel',
         needMap() ? 'echarts/chart/map' : 'echarts'
     ],
     requireCallback
 );
 
-function requireCallback (ec) {
-    echarts = ec;
-    if (myChart && myChart.dispose) {
-        myChart.dispose();
-    }
-    myChart = echarts.init(domMain);
-    refresh();
-    window.onresize = myChart.resize;
-}

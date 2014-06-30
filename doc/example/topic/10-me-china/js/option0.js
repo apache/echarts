@@ -109,7 +109,7 @@ function option0 () {
                 type: 'bar',
                 itemStyle : {
                     normal : {
-                        color : (function(){
+                        color : (function (){
                             var zrColor = require('zrender/tool/color');
                             return zrColor.getLinearGradient(
                                 0, 80, 0, 500,

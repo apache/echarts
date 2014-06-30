@@ -24,7 +24,7 @@ define(function() {
         }
 
 
-        mercator.invert = function(coordinates) {
+        mercator.invert = function (coordinates) {
             var x = (coordinates[0] - translate[0]) / scale;
             var y = (coordinates[1] - translate[1]) / scale;
             return [
@@ -33,7 +33,7 @@ define(function() {
             ];
         };
 
-        mercator.scale = function(x) {
+        mercator.scale = function (x) {
             if (!arguments.length) {
                 return scale;
             }
@@ -41,7 +41,7 @@ define(function() {
             return mercator;
         };
 
-        mercator.translate = function(x) {
+        mercator.translate = function (x) {
             if (!arguments.length) {
                 return translate;
             }

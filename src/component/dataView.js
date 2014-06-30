@@ -6,6 +6,11 @@
  *
  */
 define(function (require) {
+    var Base = require('./base');
+
+    var ecConfig = require('../config');
+    var zrUtil = require('zrender/tool/util');
+    
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -13,114 +18,140 @@ define(function (require) {
      * @param {Object} option 提示框参数
      * @param {HtmlElement} dom 目标对象
      */
-    function DataView(ecConfig, messageCenter, zr, option, dom) {
-        var Base = require('./base');
-        Base.call(this, ecConfig, zr);
+    function DataView(ecTheme, messageCenter, zr, option, myChart) {
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
 
-        var self = this;
-        self.type = ecConfig.COMPONENT_TYPE_DATAVIEW;
-
-        var _lang = ['Data View', 'close', 'refresh'];
-
-        var _canvasSupported = require('zrender/tool/env').canvasSupported;
+        this.dom = myChart.dom;
         
         // dataview dom & css
-        var _tDom = document.createElement('div');
-        var _textArea = document.createElement('textArea');
-        var _buttonRefresh = document.createElement('button');
-        var _buttonClose = document.createElement('button');
-        var _hasShow = false;
-
-        // 通用样式
-        var _gCssText = 'position:absolute;'
-                        + 'display:block;'
-                        + 'overflow:hidden;'
-                        + 'transition:height 0.8s,background-color 1s;'
-                        + '-moz-transition:height 0.8s,background-color 1s;'
-                        + '-webkit-transition:height 0.8s,background-color 1s;'
-                        + '-o-transition:height 0.8s,background-color 1s;'
-                        + 'z-index:1;'
-                        + 'left:0;'
-                        + 'top:0;';
-        var _sizeCssText;
-        var _cssName = 'echarts-dataview';
+        this._tDom = document.createElement('div');
+        this._textArea = document.createElement('textArea');
+        this._buttonRefresh = document.createElement('button');
+        this._buttonClose = document.createElement('button');
+        this._hasShow = false;
 
         // 缓存一些高宽数据
-        var _zrHeight = zr.getHeight();
-        var _zrWidth = zr.getWidth();
+        this._zrHeight = zr.getHeight();
+        this._zrWidth = zr.getWidth();
+    
+        this._tDom.className = 'echarts-dataview',
+        this.hide();
+        this.dom.firstChild.appendChild(this._tDom);
 
-        function hide() {
-            _sizeCssText = 'width:' + _zrWidth + 'px;'
+        if (window.addEventListener) {
+            this._tDom.addEventListener('click', this._stop);
+            this._tDom.addEventListener('mousewheel', this._stop);
+            this._tDom.addEventListener('mousemove', this._stop);
+            this._tDom.addEventListener('mousedown', this._stop);
+            this._tDom.addEventListener('mouseup', this._stop);
+
+            // mobile支持
+            this._tDom.addEventListener('touchstart', this._stop);
+            this._tDom.addEventListener('touchmove', this._stop);
+            this._tDom.addEventListener('touchend', this._stop);
+        }
+        else {
+            this._tDom.attachEvent('onclick', this._stop);
+            this._tDom.attachEvent('onmousewheel', this._stop);
+            this._tDom.attachEvent('onmousemove', this._stop);
+            this._tDom.attachEvent('onmousedown', this._stop);
+            this._tDom.attachEvent('onmouseup', this._stop);
+        }
+    }
+    
+    DataView.prototype = {
+        type : ecConfig.COMPONENT_TYPE_DATAVIEW,
+        _lang : ['Data View', 'close', 'refresh'],
+        // 通用样式
+        _gCssText : 'position:absolute;'
+                    + 'display:block;'
+                    + 'overflow:hidden;'
+                    + 'transition:height 0.8s,background-color 1s;'
+                    + '-moz-transition:height 0.8s,background-color 1s;'
+                    + '-webkit-transition:height 0.8s,background-color 1s;'
+                    + '-o-transition:height 0.8s,background-color 1s;'
+                    + 'z-index:1;'
+                    + 'left:0;'
+                    + 'top:0;',
+        hide : function () {
+            this._sizeCssText = 'width:' + this._zrWidth + 'px;'
                            + 'height:' + 0 + 'px;'
                            + 'background-color:#f0ffff;';
-            _tDom.style.cssText = _gCssText + _sizeCssText;
+            this._tDom.style.cssText = this._gCssText + this._sizeCssText;
             // 这是个很恶心的事情
-            dom.onselectstart = function() {
+            /*
+            this.dom.onselectstart = function () {
                 return false;
             };
-        }
+            */
+        },
 
-        function show(newOption) {
-            _hasShow = true;
-            var lang = self.query(option, 'toolbox.feature.dataView.lang')
-                       || _lang;
+        show : function (newOption) {
+            this._hasShow = true;
+            var lang = this.query(this.option, 'toolbox.feature.dataView.lang')
+                       || this._lang;
 
-            option = newOption;
+            this.option = newOption;
 
-
-            _tDom.innerHTML = '<p style="padding:8px 0;margin:0 0 10px 0;'
+            this._tDom.innerHTML = '<p style="padding:8px 0;margin:0 0 10px 0;'
                               + 'border-bottom:1px solid #eee">'
-                              + (lang[0] || _lang[0])
+                              + (lang[0] || this._lang[0])
                               + '</p>';
 
-            _textArea.style.cssText =
+            this._textArea.style.cssText =
                 'display:block;margin:0 0 8px 0;padding:4px 6px;overflow:auto;'
-                + 'width:' + (_zrWidth - 15) + 'px;'
-                + 'height:' + (_zrHeight - 100) + 'px;';
-            var customContent = self.query(
-                option, 'toolbox.feature.dataView.optionToContent'
+                + 'width:' + (this._zrWidth - 15) + 'px;'
+                + 'height:' + (this._zrHeight - 100) + 'px;';
+            var customContent = this.query(
+                this.option, 'toolbox.feature.dataView.optionToContent'
             );
             if (typeof customContent != 'function') {
-                _textArea.value = _optionToContent();
+                this._textArea.value = this._optionToContent();
             }
             else {
-                _textArea.value = customContent(option);
+                this._textArea.value = customContent(this.option);
             }
-            _tDom.appendChild(_textArea);
+            this._tDom.appendChild(this._textArea);
 
-            _buttonClose.style.cssText = 'float:right;padding:1px 6px;';
-            _buttonClose.innerHTML = lang[1] || _lang[1];
-            _buttonClose.onclick = hide;
-            _tDom.appendChild(_buttonClose);
+            this._buttonClose.style.cssText = 'float:right;padding:1px 6px;';
+            this._buttonClose.innerHTML = lang[1] || this._lang[1];
+            var self = this;
+            this._buttonClose.onclick = function (){
+                self.hide();
+            };
+            this._tDom.appendChild(this._buttonClose);
 
-            if (self.query(option, 'toolbox.feature.dataView.readOnly')
+            if (this.query(this.option, 'toolbox.feature.dataView.readOnly')
                 === false
             ) {
-                _buttonRefresh.style.cssText =
+                this._buttonRefresh.style.cssText =
                     'float:right;margin-right:10px;padding:1px 6px;';
-                _buttonRefresh.innerHTML = lang[2] || _lang[2];
-                _buttonRefresh.onclick = _save;
-                _tDom.appendChild(_buttonRefresh);
-                _textArea.readOnly = false;
-                _textArea.style.cursor = 'default';
+                this._buttonRefresh.innerHTML = lang[2] || this._lang[2];
+                this._buttonRefresh.onclick = function (){
+                    self._save();
+                };
+                this._tDom.appendChild(this._buttonRefresh);
+                this._textArea.readOnly = false;
+                this._textArea.style.cursor = 'default';
             }
             else {
-                _textArea.readOnly = true;
-                _textArea.style.cursor = 'text';
+                this._textArea.readOnly = true;
+                this._textArea.style.cursor = 'text';
             }
 
-            _sizeCssText = 'width:' + _zrWidth + 'px;'
-                           + 'height:' + _zrHeight + 'px;'
+            this._sizeCssText = 'width:' + this._zrWidth + 'px;'
+                           + 'height:' + this._zrHeight + 'px;'
                            + 'background-color:#fff;';
-            _tDom.style.cssText = _gCssText + _sizeCssText;
-
+            this._tDom.style.cssText = this._gCssText + this._sizeCssText;
             // 这是个很恶心的事情
-            dom.onselectstart = function() {
+            /*
+            this.dom.onselectstart = function () {
                 return true;
             };
-        }
+            */
+        },
 
-        function _optionToContent() {
+        _optionToContent : function () {
             var i;
             var j;
             var k;
@@ -129,11 +160,11 @@ define(function (require) {
             var valueList;
             var axisList = [];
             var content = '';
-            if (option.xAxis) {
-                if (option.xAxis instanceof Array) {
-                    axisList = option.xAxis;
+            if (this.option.xAxis) {
+                if (this.option.xAxis instanceof Array) {
+                    axisList = this.option.xAxis;
                 } else {
-                    axisList = [option.xAxis];
+                    axisList = [this.option.xAxis];
                 }
                 for (i = 0, len = axisList.length; i < len; i++) {
                     // 横纵默认为类目
@@ -151,11 +182,11 @@ define(function (require) {
                 }
             }
 
-            if (option.yAxis) {
-                if (option.yAxis instanceof Array) {
-                    axisList = option.yAxis;
+            if (this.option.yAxis) {
+                if (this.option.yAxis instanceof Array) {
+                    axisList = this.option.yAxis;
                 } else {
-                    axisList = [option.yAxis];
+                    axisList = [this.option.yAxis];
                 }
                 for (i = 0, len = axisList.length; i < len; i++) {
                     if (axisList[i].type  == 'category') {
@@ -172,7 +203,7 @@ define(function (require) {
                 }
             }
 
-            var series = option.series;
+            var series = this.option.series;
             var itemName;
             for (i = 0, len = series.length; i < len; i++) {
                 valueList = [];
@@ -206,44 +237,46 @@ define(function (require) {
             }
 
             return content;
-        }
+        },
 
-        function _save() {
-            var text = _textArea.value;
-            var customContent = self.query(
-                option, 'toolbox.feature.dataView.contentToOption'
+        _save : function () {
+            var text = this._textArea.value;
+            var customContent = this.query(
+                this.option, 'toolbox.feature.dataView.contentToOption'
             );
             if (typeof customContent != 'function') {
                 text = text.split('\n');
                 var content = [];
                 for (var i = 0, l = text.length; i < l; i++) {
-                    text[i] = _trim(text[i]);
+                    text[i] = this._trim(text[i]);
                     if (text[i] !== '') {
                         content.push(text[i]);
                     }
                 }
-                _contentToOption(content);
+                this._contentToOption(content);
             }
             else {
-                customContent(text, option);
+                customContent(text, this.option);
             }
 
-            hide();
-
+            this.hide();
+            
+            var self = this;
             setTimeout(
-                function(){
-                    messageCenter && messageCenter.dispatch(
+                function (){
+                    self.messageCenter && self.messageCenter.dispatch(
                         ecConfig.EVENT.DATA_VIEW_CHANGED,
                         null,
-                        {option : option}
+                        {option : self.option},
+                        self.myChart
                     );
                 },
                 // 有动画，所以高级浏览器时间更长点
-                _canvasSupported ? 800 : 100
+                self.canvasSupported ? 800 : 100
             );
-        }
+        },
 
-        function _contentToOption(content) {
+        _contentToOption : function (content) {
             var i;
             var j;
             var k;
@@ -255,11 +288,11 @@ define(function (require) {
             var contentValueList;
             var value;
 
-            if (option.xAxis) {
-                if (option.xAxis instanceof Array) {
-                    axisList = option.xAxis;
+            if (this.option.xAxis) {
+                if (this.option.xAxis instanceof Array) {
+                    axisList = this.option.xAxis;
                 } else {
-                    axisList = [option.xAxis];
+                    axisList = [this.option.xAxis];
                 }
                 for (i = 0, len = axisList.length; i < len; i++) {
                     // 横纵默认为类目
@@ -267,7 +300,7 @@ define(function (require) {
                     ) {
                         contentValueList = content[contentIdx].split(',');
                         for (j = 0, k = axisList[i].data.length; j < k; j++) {
-                            value = _trim(contentValueList[j] || '');
+                            value = this._trim(contentValueList[j] || '');
                             data = axisList[i].data[j];
                             if (typeof axisList[i].data[j].value != 'undefined'
                             ) {
@@ -282,17 +315,17 @@ define(function (require) {
                 }
             }
 
-            if (option.yAxis) {
-                if (option.yAxis instanceof Array) {
-                    axisList = option.yAxis;
+            if (this.option.yAxis) {
+                if (this.option.yAxis instanceof Array) {
+                    axisList = this.option.yAxis;
                 } else {
-                    axisList = [option.yAxis];
+                    axisList = [this.option.yAxis];
                 }
                 for (i = 0, len = axisList.length; i < len; i++) {
                     if (axisList[i].type  == 'category') {
                         contentValueList = content[contentIdx].split(',');
                         for (j = 0, k = axisList[i].data.length; j < k; j++) {
-                            value = _trim(contentValueList[j] || '');
+                            value = this._trim(contentValueList[j] || '');
                             data = axisList[i].data[j];
                             if (typeof axisList[i].data[j].value != 'undefined'
                             ) {
@@ -307,7 +340,7 @@ define(function (require) {
                 }
             }
 
-            var series = option.series;
+            var series = this.option.series;
             for (i = 0, len = series.length; i < len; i++) {
                 contentIdx++;
                 if (series[i].type == ecConfig.CHART_TYPE_SCATTER) {
@@ -328,7 +361,7 @@ define(function (require) {
                     contentValueList = content[contentIdx].split(',');
                     for (var j = 0, k = series[i].data.length; j < k; j++) {
                         value = (contentValueList[j] || '').replace(/.*:/,'');
-                        value = _trim(value);
+                        value = this._trim(value);
                         value = (value != '-' && value !== '')
                                 ? (value - 0)
                                 : '-';
@@ -343,17 +376,17 @@ define(function (require) {
                     contentIdx++;
                 }
             }
-        }
+        },
 
-        function _trim(str){
+        _trim : function (str){
             var trimer = new RegExp(
                 '(^[\\s\\t\\xa0\\u3000]+)|([\\u3000\\xa0\\s\\t]+\x24)', 'g'
             );
             return str.replace(trimer, '');
-        }
+        },
 
         // 阻塞zrender事件
-        function _stop(e){
+        _stop : function (e){
             e = e || window.event;
             if (e.stopPropagation) {
                 e.stopPropagation();
@@ -361,105 +394,70 @@ define(function (require) {
             else {
                 e.cancelBubble = true;
             }
-        }
-
-        function _init() {
-            _tDom.className = _cssName;
-            hide();
-            dom.firstChild.appendChild(_tDom);
-
-            if (window.addEventListener) {
-                _tDom.addEventListener('click', _stop);
-                _tDom.addEventListener('mousewheel', _stop);
-                _tDom.addEventListener('mousemove', _stop);
-                _tDom.addEventListener('mousedown', _stop);
-                _tDom.addEventListener('mouseup', _stop);
-
-                // mobile支持
-                _tDom.addEventListener('touchstart', _stop);
-                _tDom.addEventListener('touchmove', _stop);
-                _tDom.addEventListener('touchend', _stop);
-            }
-            else {
-                _tDom.attachEvent('onclick', _stop);
-                _tDom.attachEvent('onmousewheel', _stop);
-                _tDom.attachEvent('onmousemove', _stop);
-                _tDom.attachEvent('onmousedown', _stop);
-                _tDom.attachEvent('onmouseup', _stop);
-            }
-        }
+        },
 
         /**
          * zrender事件响应：窗口大小改变
          */
-        function resize() {
-            _zrHeight = zr.getHeight();
-            _zrWidth = zr.getWidth();
-            if (_tDom.offsetHeight > 10) {
-                _sizeCssText = 'width:' + _zrWidth + 'px;'
-                               + 'height:' + _zrHeight + 'px;'
+        resize : function () {
+            this._zrHeight = this.zr.getHeight();
+            this._zrWidth = this.zr.getWidth();
+            if (this._tDom.offsetHeight > 10) {
+                this._sizeCssText = 'width:' + this._zrWidth + 'px;'
+                               + 'height:' + this._zrHeight + 'px;'
                                + 'background-color:#fff;';
-                _tDom.style.cssText = _gCssText + _sizeCssText;
-                _textArea.style.cssText = 'display:block;margin:0 0 8px 0;'
+                this._tDom.style.cssText = this._gCssText + this._sizeCssText;
+                this._textArea.style.cssText = 'display:block;margin:0 0 8px 0;'
                                         + 'padding:4px 6px;overflow:auto;'
-                                        + 'width:' + (_zrWidth - 15) + 'px;'
-                                        + 'height:' + (_zrHeight - 100) + 'px;';
+                                        + 'width:' + (this._zrWidth - 15) + 'px;'
+                                        + 'height:' + (this._zrHeight - 100) + 'px;';
             }
-        }
+        },
 
         /**
          * 释放后实例不可用，重载基类方法
          */
-        function dispose() {
+        dispose : function () {
             if (window.removeEventListener) {
-                _tDom.removeEventListener('click', _stop);
-                _tDom.removeEventListener('mousewheel', _stop);
-                _tDom.removeEventListener('mousemove', _stop);
-                _tDom.removeEventListener('mousedown', _stop);
-                _tDom.removeEventListener('mouseup', _stop);
+                this._tDom.removeEventListener('click', this._stop);
+                this._tDom.removeEventListener('mousewheel', this._stop);
+                this._tDom.removeEventListener('mousemove', this._stop);
+                this._tDom.removeEventListener('mousedown', this._stop);
+                this._tDom.removeEventListener('mouseup', this._stop);
 
                 // mobile支持
-                _tDom.removeEventListener('touchstart', _stop);
-                _tDom.removeEventListener('touchmove', _stop);
-                _tDom.removeEventListener('touchend', _stop);
+                this._tDom.removeEventListener('touchstart', this._stop);
+                this._tDom.removeEventListener('touchmove', this._stop);
+                this._tDom.removeEventListener('touchend', this._stop);
             }
             else {
-                _tDom.detachEvent('onclick', _stop);
-                _tDom.detachEvent('onmousewheel', _stop);
-                _tDom.detachEvent('onmousemove', _stop);
-                _tDom.detachEvent('onmousedown', _stop);
-                _tDom.detachEvent('onmouseup', _stop);
+                this._tDom.detachEvent('onclick', this._stop);
+                this._tDom.detachEvent('onmousewheel', this._stop);
+                this._tDom.detachEvent('onmousemove', this._stop);
+                this._tDom.detachEvent('onmousedown', this._stop);
+                this._tDom.detachEvent('onmouseup', this._stop);
             }
 
-            _buttonRefresh.onclick = null;
-            _buttonClose.onclick = null;
+            this._buttonRefresh.onclick = null;
+            this._buttonClose.onclick = null;
 
-            if (_hasShow) {
-                _tDom.removeChild(_textArea);
-                _tDom.removeChild(_buttonRefresh);
-                _tDom.removeChild(_buttonClose);
+            if (this._hasShow) {
+                this._tDom.removeChild(this._textArea);
+                this._tDom.removeChild(this._buttonRefresh);
+                this._tDom.removeChild(this._buttonClose);
             }
 
-            _textArea = null;
-            _buttonRefresh = null;
-            _buttonClose = null;
+            this._textArea = null;
+            this._buttonRefresh = null;
+            this._buttonClose = null;
 
-            dom.firstChild.removeChild(_tDom);
-            _tDom = null;
-            self = null;
+            this.dom.firstChild.removeChild(this._tDom);
+            this._tDom = null;
         }
-
-
-        // 重载基类方法
-        self.dispose = dispose;
-
-        self.resize = resize;
-        self.show = show;
-        self.hide = hide;
-
-        _init();
-    }
-
+    };
+    
+    zrUtil.inherits(DataView, Base);
+    
     require('../component').define('dataView', DataView);
     
     return DataView;

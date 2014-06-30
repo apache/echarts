@@ -131,7 +131,7 @@ body {
             'echarts/chart/line',
             'echarts/chart/map'
         ],
-        function(ec) {
+        function (ec) {
             colorList = require('zrender/tool/color').getGradientColors(
                 ['red','yellow','lightskyblue'], 10
             );
@@ -187,7 +187,7 @@ body {
     }
     
     var yearSelector = document.getElementById('year');
-    yearSelector.onchange = function(e){
+    yearSelector.onchange = function (e){
         var curYear = yearSelector.selectedOptions[0].innerHTML;
         option.title.text = '中国人口流动图示 (' + curYear + ')';
         var max = dataPeople[curYear + 'max'];

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+    <title>ECharts · Example</title>
+
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/carousel.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="../asset/js/esl/esl.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+
+    <style type="text/css">
+        .CodeMirror {
+            height: 550px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
+
+
+    <div class="container-fluid">
+        <div class="row-fluid example">
+            <div id="sidebar-code" class="col-md-4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+option = {
+    timeline:{
+        data:[
+            '2002-01-01','2003-01-01','2004-01-01','2005-01-01','2006-01-01',
+            '2007-01-01','2008-01-01','2009-01-01','2010-01-01','2011-01-01'
+        ],
+        label : {
+            formatter : function(s) {
+                return s.slice(0, 4);
+            }
+        },
+        autoPlay : true,
+        playInterval : 1000
+    },
+    options:[
+        {
+            title : {
+                'text':'2002全国宏观经济指标',
+                'subtext':'数据来自国家统计局'
+            },
+            tooltip : {'trigger':'item'},
+            toolbox : {
+                'show':true, 
+                'feature':{
+                    'mark':{'show':true},
+                    'dataView':{'show':true,'readOnly':false},
+                    'restore':{'show':true},
+                    'saveAsImage':{'show':true}
+                }
+            },
+            dataRange: {
+                min: 0,
+                max : 53000,
+                text:['高','低'],           // 文本，默认为数值文本
+                calculable : true,
+                x: 'left',
+                color: ['orangered','yellow','lightskyblue']
+            },
+            series : [
+                {
+                    'name':'GDP',
+                    'type':'map',
+                    'data': dataMap.dataGDP['2002']
+                }
+            ]
+        },
+        {
+            title : {'text':'2003全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2003']}
+            ]
+        },
+        {
+            title : {'text':'2004全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2004']}
+            ]
+        },
+        {
+            title : {'text':'2005全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2005']}
+            ]
+        },
+        {
+            title : {'text':'2006全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2006']}
+            ]
+        },
+        {
+            title : {'text':'2007全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2007']}
+            ]
+        },
+        {
+            title : {'text':'2008全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2008']}
+            ]
+        },
+        {
+            title : {'text':'2009全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2009']}
+            ]
+        },
+        {
+            title : {'text':'2010全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2010']}
+            ]
+        },
+        {
+            title : {'text':'2011全国宏观经济指标'},
+            series : [
+                {'data': dataMap.dataGDP['2011']}
+            ]
+        }
+    ]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="col-md-8">
+                <div id="main" class="main" style="height: 530px;"></div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
+
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        
+        </div><!--/.fluid-container-->
+
+    <footer id="footer"></footer>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
+    <script src="../asset/js/bootstrap.min.js"></script>
+    <script src="timelineOption.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>

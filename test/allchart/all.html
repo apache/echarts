@@ -106,7 +106,7 @@ option = {
                 normal: {
                     areaStyle: {
                         // 区域图，纵向渐变填充
-                        color : (function(){
+                        color : (function (){
                             var zrColor = require('zrender/tool/color');
                             return zrColor.getLinearGradient(
                                 0, 200, 0, 400,
@@ -210,7 +210,7 @@ option = {
                 normal: {
                     lineStyle: {            // 系列级个性化折线样式，横向渐变描边
                         width: 2,
-                        color: (function(){
+                        color: (function (){
                             var zrColor = require('zrender/tool/color');
                             return zrColor.getLinearGradient(
                                 0, 0, 1000, 0,
@@ -297,7 +297,7 @@ option = {
             itemStyle: {        // 系列级个性化样式，纵向渐变填充
                 normal: {
                     borderColor:'red',
-                    color : (function(){
+                    color : (function (){
                         var zrColor = require('zrender/tool/color');
                         return zrColor.getLinearGradient(
                             0, 400, 0, 300,
@@ -308,7 +308,7 @@ option = {
                 emphasis: {
                     borderWidth: 5,
                     borderColor:'green',
-                    color: (function(){
+                    color: (function (){
                         var zrColor = require('zrender/tool/color');
                         return zrColor.getLinearGradient(
                             0, 400, 0, 300,
@@ -372,7 +372,7 @@ option = {
             itemStyle: {
                 normal: {                   // 系列级个性化，横向渐变填充
                     borderRadius: 5,
-                    color : (function(){
+                    color : (function (){
                         var zrColor = require('zrender/tool/color');
                         return zrColor.getLinearGradient(
                             0, 0, 1000, 0,
@@ -471,7 +471,7 @@ option = {
             name:'scatter1',
             type:'scatter',
             symbol: 'emptyCircle', //'circle', 'rectangle', 'triangle', 'diamond', 'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
-            symbolSize: function(value){
+            symbolSize: function (value){
                 if (value[0] < 2) {
                     return 2;
                 }
@@ -492,7 +492,7 @@ option = {
                     color: 'lightgreen'
                 }
             },
-            data: (function() {
+            data: (function () {
                 var d = [];
                 var len = 20;
                 while (len--) {
@@ -509,7 +509,7 @@ option = {
             name:'scatter2',
             type:'scatter',
             symbol: 'image://../../doc/asset/ico/favicon.png',     // 系列级个性化拐点图形
-            symbolSize: function(value){
+            symbolSize: function (value){
                 return Math.round(value[2] * 3);
             },
             itemStyle: {
@@ -517,7 +517,7 @@ option = {
                     label : {show: true}
                 }
             },
-            data: (function() {
+            data: (function () {
                 var d = [];
                 var len = 20;
                 while (len--) {
@@ -579,7 +579,7 @@ option = {
 option = {
     tooltip : {
         trigger: 'axis',
-        formatter: function(params) {
+        formatter: function (params) {
             var res = params[0][1];
             res += '<br/>' + params[0][0];
             res += '<br/>  开盘 : ' + params[0][2][0] + '  最高 : ' + params[0][2][3];
@@ -830,7 +830,7 @@ option = {
                 normal : {
                     label : {
                         position : 'inner',
-                        formatter : function(a,b,c,d) {return (d - 0).toFixed(0) + '%'}
+                        formatter : function (a,b,c,d) {return (d - 0).toFixed(0) + '%'}
                     },
                     labelLine : {
                         show : false
@@ -865,7 +865,7 @@ option = {
                     name:'百度',
                     itemStyle : {
                         normal : {
-                            color : (function(){
+                            color : (function (){
                                 var zrColor = require('zrender/tool/color');
                                 return zrColor.getRadialGradient(
                                     300, 200, 110, 300, 200, 140,
@@ -936,7 +936,7 @@ option = {
                     }
                 },
                 emphasis : {
-                    color: (function(){
+                    color: (function (){
                         var zrColor = require('zrender/tool/color');
                         return zrColor.getRadialGradient(
                             650, 200, 80, 650, 200, 120,
@@ -1139,7 +1139,7 @@ option = {
                     itemStyle: {
                         normal: {
                             areaStyle: {
-                                color: (function(){
+                                color: (function (){
                                     var zrColor = require('zrender/tool/color');
                                     var x = 600
                                     return zrColor.getRadialGradient(

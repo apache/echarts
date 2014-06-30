@@ -54,7 +54,7 @@ require(
         'echarts/chart/radar',
         'echarts/chart/map'
     ],
-    function(ec) {
+    function (ec) {
         EC_READY = true;
         myChart0 = ec.init(document.getElementById('g0')).showLoading({effect:'bubble'});
         myChart1 = ec.init(document.getElementById('g1')).showLoading({effect:'bubble'});
@@ -154,7 +154,7 @@ functionMap.chart0 = function (type) {
     myChart0.hideLoading();
     myChart0.setOption(option0(type));
     dataWorst = data[type];
-    setTimeout(extMark, 200);
+    //setTimeout(extMark, 2000);
     $('#overview-head')[0].innerHTML = overviewContent[type][0];
     $('#overview-content')[0].innerHTML = overviewContent[type][1];
     $('#overview-link')[0].href = overviewContent[type][2];
@@ -163,7 +163,7 @@ functionMap.chart0 = function (type) {
 function extMark() {
     var map = myChart0.chart.map;
     if (!map.geo2pos('china','北京')) {
-        setTimeout(extMark, 200);
+        setTimeout(extMark, 1000);
         return;
     }
     var zr = myChart0.getZrender();
@@ -174,14 +174,14 @@ function extMark() {
     var pos;
     var city;
     var len = dataWorst.length;
+    var lineShape = require('zrender/shape/Line');
     for (var i = len - 1, l = len - 2; i > l; i--) {
         // 最差10位
         city = dataWorst[i].name;
         pos = map.getPosByGeo('china', cityGeo[city]);
         //pos = map.geo2pos('china', cityGeo[city]);
-        shapeList.push({
+        shapeList.push(new lineShape({
             shape : 'line',
-            id : zr.newShapeId(),
             zlevel : 5,
             style : {
                 xStart : pos[0],
@@ -196,7 +196,7 @@ function extMark() {
                 text : city + ' : ' + dataWorst[i].value,
                 textPosition: 'end'//'specific'
             }
-        });
+        }));
         y += 30;
     }
     for (var i = 0, l = shapeList.length; i < l; i++) {
@@ -249,10 +249,10 @@ functionMap.chart3 = function (type) {
 }
 
 var resizeTicket;
-window.onload = function() {
-    window.onresize = function() {
+window.onload = function () {
+    window.onresize = function () {
         clearTimeout(resizeTicket);
-        resizeTicket = setTimeout(function(){
+        resizeTicket = setTimeout(function (){
             myChart0.resize();
             myChart1.resize();
             myChart20.resize();

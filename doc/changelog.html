@@ -1,19 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-cn">
   <head>
     <meta charset="utf-8">
-    <title>ECharts</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="ECharts">
     <meta name="author" content="linzhifeng@baidu.com">
+    <title>ECharts · Changelog</title>
 
-    <!-- Le styles -->
-    <link href="asset/css/bootstrap.css" rel="stylesheet">
-    <link href="asset/css/bootstrap-responsive.css" rel="stylesheet">
-    <link href="asset/css/echartsHome.css" rel="stylesheet">
+    <link rel="shortcut icon" href="./asset/ico/favicon.png">
 
-    <!-- Fav and touch icons -->
-    <link rel="shortcut icon" href="asset/ico/favicon.png">
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="./asset/css/bootstrap.css" rel="stylesheet">
+    <link href="./asset/css/carousel.css" rel="stylesheet">
+    <link href="./asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
     <style type="text/css">
         .ddhide {
             height:0;
@@ -31,46 +36,8 @@
   </head>
 
   <body>
-    <!-- NAVBAR
-    ================================================== -->
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="brand" href="../index.html">ECharts</a>
-          <div class="nav-collapse collapse">
-              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
-              <ul class="nav">
-                <li><a href="../index.html"><i class="icon-home icon-white"></i> Home</a></li>
-                <li class="active"><a href="example.html" class="active">Example</a></li>
-                <li><a href="doc.html" >API &amp; Doc</a></li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a id="last-release-link" href=""> </a></li>
-                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
-                  </ul>
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
-                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
-                    <li class="divider"></li>
-                    <!--li class="nav-header">Library</li-->
-                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
-                    
-                  </ul>
-                </li>
-              </ul>
-           </div><!--/.nav-collapse -->
-        </div><!-- /.container -->
-      </div><!-- /.navbar-inner -->
-    </div><!-- /.navbar-wrapper -->
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
 
     <div class="container">
         <div id="main-wrap" class="ddhide">
@@ -80,6 +47,53 @@
         <h2>修改记录</h2>
         <span>[+]新增 [-]删除 [^]升级 [#]修复 【】重要</span>
         <div class="row-fluid">
+            <div>
+                <h3>2.0.0<small>（2014-06-30）</small></h3>
+                <ul>
+                    <li>【+】 [timeline]新增组件：时间轴（timeline），支持与任意图表组合使用，try <a href="./example/bar11.html" target="_blank">bar »</a>、<a href="./example/scatter4.html" target="_blank">scatter »</a>、<a href="./example/pie7.html" target="_blank">pie »</a>、<a href="./example/map14.html" target="_blank">map »</a></li>
+                    <li>【+】 [gauge]新增图表：仪表盘（gauge），查看 <a href="./example.html#gauge " target="_blank">this »</a></li>
+                    <li>【+】 [funnel]新增图表：漏斗图（funnel）查看 <a href="./example.html#funnel " target="_blank">this »</a></li>
+                    <li>【^】[map]支持svg扩展地图类型，try <a href="./example/map16.html" target="_blank">人体密码 »</a>、<a href="./example/map17.html" target="_blank">足球场 »</a>、<a href="./example/map18.html" target="_blank">百度大厦F3 »</a></li>
+                    <li>【^】 [line][bar][scatter][k]全浏览器支持大规模数据模式</li>
+                    <li>【^】 全系统图表动画优化、升级支持状态间的渐变过渡</li>
+                    <li>【^】 全系统图表、组件生命周期管理优化、多次setOption间的状态保持</li>
+                    <li>【+】 标注（markPoint）支持大规模特效，try <a href="./example/map15.html" target="_blank">百度人气（模拟） »</a></li>
+                    <li>【+】 动态标注标线接口，addMarkPoint、addMarkLine、delMarkPoint、delMarkLine见文档 <a href="./doc.html#实例方法 " target="_blank">this »</a></li>
+                    <li>[^] [map]支持缩放极限控制scaleLimit</li>
+                    <li>[^] [bar]标线（markLine）支持类目坐标指定-1、MAXNUMBER实现坐标系内满显示</li>
+                    <li>[^] [bar]附带文本位置itemStyle.X.label.position支持'insideLeft' | 'insideRight' | 'insideTop' | 'insideBottom'</li>
+                    <li>[^] [force]力导向布局图连线支持箭头linkSymbol</li>
+                    <li>[^] [chord]文本旋转支持</li>
+                    <li>[+] [tooltip]指示器（axisPointer）样式新增支持十字准星，原阴影指示器样式areaStyle更名为shadowStyle，详细见<a href="doc.html#Tooltip" target="_blank">this »</a></li>
+                    <li>[^] [tooltip]支持位置修正和回调，position，support <a href="https://github.com/ecomfe/echarts/issues/292" target="_blank">#292 »</a></li>
+                    <li>[^] [dataRange]自适应数据精度</li>
+                    <li>[^] [dataRange]数值区间文本支持个性化formatter，try <a href="./example/dataRange.html" target="_blank">this »</a></li>
+                    <li>[^] [legend]支持自定义图形样式</li>
+                    <li>[^] [legend]定位坐标x、y支持百分比。文本和图形高亮关联。垂直居中优化等</li>
+                    <li>[^] [categoryAxis][valueAxis]坐标轴axisLine支持自动0值定位，onZero</li>
+                    <li>[^] [categoryAxis][valueAxis]坐标轴文本样式axisLabel.textStyle支持align、baseline</li>
+                    <li>[^] [categoryAxis][valueAxis]坐标轴文本axisLabel.clickable，支持点击事件响应，support <a href="https://github.com/ecomfe/echarts/issues/287" target="_blank">#287 »</a></li>
+                    <li>[^] [toolbox]动态类型切换交互优化，点击永远作为启用，弃用原开关状态设计</li>
+                    <li>[^] [title]主（副）标题超链接支持指定窗口打开，target、subtarget</li>
+                    <li>[+] 事件回调时this指向当前实例</li>
+                    <li>[^] 升级标注（markPoint）、标线（markLine）事件参数携带value，dataIndex</li>
+                    <li>[^] 支持自定义过渡动画，loadingEffect.effect外部实现</li>
+                    <li>[#] [scatter]修复散点图emptySymbol不知道lineWidth下无法显示的问题</li>
+                    <li>[#] [radar]雷达图事件携带数据index、文本formatter支持</li>
+                    <li>[#] [chord]和弦图图形元素点击事件响应</li>
+                    <li>[#] [toolbox]修复数据视图dataView在IE下无法全选的问题</li>
+                    <li>[#] [dataRange]修复无法整除导致颜色异常</li>
+                    <li>[#] 修复setOption时series为空无法清除内容，merge无效等问题 </li>
+                    <li>[#] 修复视网屏下的特效shadow偏移问题</li>
+                    <li>[#] 若干issues，fix
+                        <a href="#" target="_blank">折线与坐标轴间1px位移 »</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/294" target="_blank">#294 »</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/303" target="_blank">#303 »</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/364" target="_blank">#364 »</a> 
+                    </li>
+                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.0.0+</li>
+                </ul>
+            </div>
             <div>
                 <h3>1.4.1<small>（2014-04-14）</small></h3>
                 <ul>
@@ -97,7 +111,7 @@
                     <li>【+】 多图联动，try <a href="./example/mix8.html" target="_blank">this »</a>，support <a href="https://github.com/ecomfe/echarts/issues/248" target="_blank">#248 »</a> <a href="http://www.oschina.net/question/1457761_145010" target="_blank">this »</a></li>
                     <li>【+】 标注（markPoint）、标线（markLine）炫光特效，try <a href="./example/map11.html" target="_blank">百度迁徙（模拟） »</a> <a href="./example/map12.html" target="_blank">中国铁路运输主干线 »</a></li>
                     <li>【+】 [line][bar][scatter]标注（markPoint）、标线（markLine）支持特殊值自动标记（max、min、average） support <a href="https://github.com/ecomfe/echarts/issues/218" target="_blank">#218 »</a> <a href="https://github.com/ecomfe/echarts/issues/249" target="_blank">#249 »</a></li>
-                    <li>【+】 [toolbox]magicType新增支持堆叠平铺切换（stack、tiled）</li>
+                    <li>【+】 [toolbox]magicType新增支持堆积平铺切换（stack、tiled）</li>
                     <li>【^】 [toolbox]【重要】option格式欠规范，重新设计，详见  <a href="https://github.com/ecomfe/echarts/issues/252" target="_blank">#252 »</a></li>
                     <li>【^】 [line][bar][scatter][pie][radar][map]样式itemStyle.[normal|emphasis].color支持function回调   <a href="https://github.com/ecomfe/echarts/issues/246" target="_blank">#246 »</a></li>
                     <li>[^] [valueAxis]坐标轴文本axisLabel.textStyle.color支持funtion回调</li>
@@ -113,9 +127,9 @@
                     <li>[^] 同一个dom上多次init图表自动释放已有实例</li>
                     <li>[^] 标注（markPoint）、标线（markLine）支持数据级tooltip</li>
                     <li>[#] [pie]饼图边框样式（borderColor、borderWidth）fix <a href="https://github.com/ecomfe/echarts/issues/223" target="_blank">#223 »</a></li>
-                    <li>【#】 [bar][line][valueAxis]堆叠下scale计算错误</li>
-                    <li>[#] [bar]0值堆叠显示错位</li>
-                    <li>[#] [bar]堆叠自定义barWidth顺序问题</li>
+                    <li>【#】 [bar][line][valueAxis]堆积下scale计算错误</li>
+                    <li>[#] [bar]0值堆积显示错位</li>
+                    <li>[#] [bar]堆积自定义barWidth顺序问题</li>
                     <li>[#] 标线（markLine）symbol为none显示错误</li>
                     <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.1.1+</li>
                 </ul>
@@ -361,35 +375,21 @@
                         <li>多维度堆积</li>
                     </ul>
                     <li>多级控制，个性化定制</li>
-                    <li>事件交互：REFRESH，CLICK，HOVER，DATA_CHANGED，MAGIC_TYPE_CHANGED，DATA_VIEW_CHANGED，DATA_ZOOM，LEGEND_SELECTED</li>
+                    <li>事件交互：
+                        <br/>REFRESH，CLICK，HOVER，DATA_CHANGED，MAGIC_TYPE_CHANGED，
+                        <br/>DATA_VIEW_CHANGED，DATA_ZOOM，LEGEND_SELECTED</li>
                 </ul>
             </div>
         </div>
-      <hr>
-      <footer>
-        <p class="pull-right"><a href="#">Back to top</a></p>
-        <p>&copy; 2014 <a href="http://efe.baidu.com" target="_blank">EFE</a> &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">License</a> &middot; <a href="changelog.html">Changelog</a></p>
-      </footer>
-
     </div> <!-- /container -->
-
+    <footer id="footer"></footer>
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="asset/js/esl/esl.js"></script>
     <script src="asset/js/dataDancing.js"></script>
-    <script src="asset/js/jquery.js"></script>
-    <script src="asset/js/bootstrap-transition.js"></script>
-    <script src="asset/js/bootstrap-alert.js"></script>
-    <script src="asset/js/bootstrap-modal.js"></script>
-    <script src="asset/js/bootstrap-dropdown.js"></script>
-    <script src="asset/js/bootstrap-scrollspy.js"></script>
-    <script src="asset/js/bootstrap-tab.js"></script>
-    <script src="asset/js/bootstrap-tooltip.js"></script>
-    <script src="asset/js/bootstrap-popover.js"></script>
-    <script src="asset/js/bootstrap-button.js"></script>
-    <script src="asset/js/bootstrap-collapse.js"></script>
-    <script src="asset/js/bootstrap-carousel.js"></script>
-    <script src="asset/js/bootstrap-typeahead.js"></script>
+    <script src="./asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="./asset/js/echartsHome.js"></script>
+    <script src="./asset/js/bootstrap.min.js"></script>
   </body>
 </html>

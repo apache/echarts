@@ -1,4 +1,4 @@
-define(function(){
+define(function (){
     function kwargs(func, defaults) {
         /*jshint maxlen : 200*/
         var removeComments = new RegExp('(\\/\\*[\\w\\\'\\,\\(\\)\\s\\r\\n\\*]*\\*\\/)|(\\/\\/[\\w\\s\\\'][^\\n\\r]*$)|(<![\\-\\-\\s\\w\\>\\/]*>)', 'gim');
@@ -16,14 +16,15 @@ define(function(){
             defaults = {};
         }
 
-        return function() {
+        return function () {
             var args = Array.prototype.slice.call(arguments);
             var kwargs = args[args.length - 1];
 
             // Check the existance of the kwargs
             if (kwargs && kwargs.constructor === Object) {
                 args.pop();
-            }else{
+            }
+            else{
                 kwargs = {};
             }
 
@@ -32,7 +33,8 @@ define(function(){
                 var name = names[i];
                 if (name in kwargs) {
                     args[i] = kwargs[name];
-                }else if(name in defaults && args[i] === undefined){
+                }
+                else if(name in defaults && args[i] == null){
                     args[i] = defaults[name];
                 }
             }
