@@ -23,6 +23,7 @@ define(function (require) {
     function Base(){
         var self = this;
         this.selectedMap = {};
+        this.lastShapeList = [];
         this.shapeHandler = {
             onclick : function () {
                 self.isClick = true;
@@ -1083,6 +1084,7 @@ define(function (require) {
                         newMap[key] = shapeList[i];
                     }
                 }
+                
                 for (key in oldMap) {
                     if (!newMap[key]) {
                         // 新的没有 删除
@@ -1093,11 +1095,13 @@ define(function (require) {
                     if (oldMap[key]) {
                         // 新旧都有 动画过渡
                         this.zr.delShape(oldMap[key].id);
+                        console.log(oldMap[key].id,oldMap[key].style.name)
                         this._animateMod(oldMap[key], newMap[key], duration, easing);
                     }
                     else {
                         // 新有旧没有  添加并动画过渡
                         //this._animateAdd(newMap[key], duration, easing);
+                        console.log(newMap[key].id,newMap[key].style.name,1111)
                         this._animateMod(false, newMap[key], duration, easing);
                     }
                 }

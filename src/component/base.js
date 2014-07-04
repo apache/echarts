@@ -32,8 +32,10 @@ define(function (require) {
                 var shape;
                 if (!(target instanceof Array)) {
                     shape = self.getShapeById(target);
-                    self.zr.addHoverShape(shape);
-                    zlevel = Math.min(zlevel, shape.zlevel);
+                    if (shape) {
+                        self.zr.addHoverShape(shape);
+                        zlevel = Math.min(zlevel, shape.zlevel);
+                    }
                 }
                 else {
                     for (var i = 0, l = target.length; i < l; i++) {

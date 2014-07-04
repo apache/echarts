@@ -94,7 +94,8 @@ define(function (require) {
          */
         _buildShape : function () {
             var series = this.series;
-            this.selectedMap = {};
+            this.selectedMap = {}; // 系列
+            this._activeMapType = {}; // 当前活跃的地图类型
             
             var legend = this.component.legend;
             var seriesName;
@@ -124,7 +125,7 @@ define(function (require) {
                     this._nameMap[mapType] = this._nameMap[mapType] || {};
                     series[i].nameMap 
                     && zrUtil.merge(this._nameMap[mapType], series[i].nameMap, true);
-                    
+                    this._activeMapType[mapType] = true;
 
                     if (series[i].textFixed) {
                         zrUtil.merge(
@@ -189,6 +190,8 @@ define(function (require) {
             for (var mt in valueData) {
                 this._mapDataRequireCounter++;
             }
+            //清空
+            this._clearSelected();
             for (var mt in valueData) {
                 if (valueCalculation[mt] && valueCalculation[mt] == 'average') {
                     for (var k in valueData[mt]) {
@@ -202,6 +205,7 @@ define(function (require) {
                 }
                 
                 this._mapDataMap[mt] = this._mapDataMap[mt] || {};
+                
                 if (this._mapDataMap[mt].mapData) {
                     // 已经缓存了则直接用
                     this._mapDataCallback(mt, valueData[mt], mapSeries[mt])(
@@ -260,6 +264,15 @@ define(function (require) {
                     self.zr.refresh();
                 }
             };
+        },
+        
+        _clearSelected : function() {
+            for (var k in this._selected) {
+                if (!this._activeMapType[this._mapTypeMap[k]]) {
+                    delete this._selected[k];
+                    delete this._mapTypeMap[k];
+                }
+            }
         },
         
         _getSubMapData : function (mapType, mapData) {
@@ -1181,7 +1194,9 @@ define(function (require) {
                     if (this._selected[p] && this._mapTypeMap[p] == mapType) {
                         // 复位那些生效shape（包括文字）
                         for (var i = 0; i < len; i++) {
-                            if (this.shapeList[i].style._name == p) {
+                            if (this.shapeList[i].style._name == p 
+                                && this.shapeList[i]._mapType == mapType
+                            ) {
                                 this.shapeList[i].style = this.shapeList[i]._style;
                                 this.zr.modShape(this.shapeList[i].id);
                             }
@@ -1195,7 +1210,9 @@ define(function (require) {
             
             // 更新当前点击shape（包括文字）
             for (var i = 0; i < len; i++) {
-                if (this.shapeList[i].style._name == name) {
+                if (this.shapeList[i].style._name == name
+                    && this.shapeList[i]._mapType == mapType
+                ) {
                    if (this._selected[name]) {
                         this.shapeList[i].style = this.shapeList[i].highlightStyle;
                     }
@@ -1228,10 +1245,21 @@ define(function (require) {
                 this.series = newOption.series;
             }
             
-            //this.clear();
-            this.backupShapeList();
+            if (this._mapDataRequireCounter > 0) {
+                this.clear();
+            }
+            else {
+                this.backupShapeList();
+            }
             this._buildShape();
-            this.zr.refreshHover();
+            //this.zr.refreshHover();
+            this.zr.trigger(
+                zrConfig.EVENT.MOUSEMOVE,
+                {
+                    zrenderX : 0,
+                    zrenderY : 0
+                }
+            );
         },
         
         /**
