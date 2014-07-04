@@ -98,6 +98,7 @@ define(function (require) {
         this._curEventType = false;         // 破循环信号灯
         this._chartList = [];               // 图表实例
         this._messageCenter = {};           // Echarts层的消息中心，做zrender原始事件转换
+        this._messageCenterOutSide = {};    // Echarts层的外部消息中心，做Echarts层的消息转发
         
         // resize方法经常被绑定到window.resize上，闭包一个this
         this.resize = this.resize();
@@ -163,6 +164,21 @@ define(function (require) {
             // 添加消息中心的事件分发器特性
             var zrEvent = require('zrender/tool/event');
             zrEvent.Dispatcher.call(this._messageCenter);
+            zrEvent.Dispatcher.call(this._messageCenterOutSide);
+            
+            // wrap: n,e,d,t for name event data this
+            this._messageCenter._dispatch = this._messageCenter.dispatch;
+            this._messageCenter.dispatch = function(n,e,d,t) {
+                self._messageCenter._dispatch(n, e, d, t);
+                if (n != 'HOVER') {
+                    setTimeout(function(){
+                        self._messageCenterOutSide.dispatch(n,e,d,t)
+                    },50);
+                }
+                else {
+                    self._messageCenterOutSide.dispatch(n, e, d, t);
+                }
+            }
             
             this._onevent = function(param){
                 return self.__onevent(param);
@@ -1341,22 +1357,22 @@ define(function (require) {
         },
 
         /**
-         * 绑定事件
+         * 外部接口绑定事件
          * @param {Object} eventName 事件名称
          * @param {Object} eventListener 事件响应函数
          */
         on : function (eventName, eventListener) {
-            this._messageCenter.bind(eventName, eventListener);
+            this._messageCenterOutSide.bind(eventName, eventListener);
             return this;
         },
 
         /**
-         * 解除事件绑定
+         * 外部接口解除事件绑定
          * @param {Object} eventName 事件名称
          * @param {Object} eventListener 事件响应函数
          */
         un : function (eventName, eventListener) {
-            this._messageCenter.unbind(eventName, eventListener);
+            this._messageCenterOutSide.unbind(eventName, eventListener);
             return this;
         },
         
