@@ -3891,6 +3891,10 @@ define(
          * @param {Object} e 图形元素
          */
         function findHover(shape) {
+            // 临时修改
+            if (shape.invisible) {
+                return false;
+            }
             if (
                 ( this._draggingTarget && this._draggingTarget.id == shape.id ) //迭代到当前拖拽的图形上
                 || shape.isSilent() // 打酱油的路过，啥都不响应的shape~
@@ -9522,9 +9526,9 @@ define(
         var log = require('./tool/log');
         var guid = require('./tool/guid');
 
-        var Handler = require( './Handler' );
-        var Painter = require( './Painter' );
-        var Storage = require( './Storage' );
+        var Handler = require('./Handler');
+        var Painter = require('./Painter');
+        var Storage = require('./Storage');
         var Animation = require('./animation/animation');
 
         var _instances = {};    //ZRender实例map索引
@@ -41192,7 +41196,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                 
                 // 当前小角度需要检查前一个是否也是小角度，如果是得调整长度，不能完全避免，但能大大降低覆盖概率
                 if (i > 0 
-                    && percent < 4       // 约15度
+                    && Math.abs(startAngle - endAngle) < 15       // 约15度
                     && lastPercent < 4
                     && this._needLabel(serie, data[i], false)
                     && this.deepQuery(
