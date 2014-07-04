@@ -241,7 +241,7 @@ define(function (require) {
                 
                 // 当前小角度需要检查前一个是否也是小角度，如果是得调整长度，不能完全避免，但能大大降低覆盖概率
                 if (i > 0 
-                    && percent < 4       // 约15度
+                    && Math.abs(startAngle - endAngle) < 15       // 约15度
                     && lastPercent < 4
                     && this._needLabel(serie, data[i], false)
                     && this.deepQuery(
