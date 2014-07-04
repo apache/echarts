@@ -3,7 +3,7 @@ var curPage = location.href.match(/(\w*).html/) ? location.href.match(/(\w*).htm
 
 var activeClass = {};
 var loc = {};
-var forkWidth;
+var forkWidth = 149;
 switch (curPage) {
     case 'index' :
         activeClass[curPage] = 'active';
@@ -51,10 +51,10 @@ $('#head')[0].innerHTML =
           + '<a class="navbar-brand" href="http://echarts.baidu.com">ECharts</a>'
         + '</div>'
         + '<a href="https://github.com/ecomfe/echarts" target="_blank">'
-            + '<img style="position:absolute;top:0;right:0;border:0;z-index:1000;width:' + (forkWidth || 149) + 'px" src="'+ (loc.img || '.') + '/asset/img/fork.png" alt="Fork me on GitHub">'
+            + '<img id="fork-image" style="position:absolute;top:0;right:0;border:0;z-index:1000;width:' + forkWidth + 'px" src="'+ (loc.img || '.') + '/asset/img/fork.png" alt="Fork me on GitHub">'
         + '</a>'
         + '<div class="navbar-collapse collapse" id="nav-wrap">'
-          + '<ul class="nav navbar-nav navbar-right" id="nav">'
+          + '<ul class="nav navbar-nav navbar-right" id="nav" style="max-width:100%;">'
             + '<li class="' + (activeClass.index || '') + '"><a href="' + (loc.index || '.') + '/index.html">首页</a></li>'
             + '<li class="' + (activeClass.feature || '') + '"><a href="' + (loc.feature || '.') + '/feature.html">特性</a></li>'
             + '<li class="' + (activeClass.example || '') + '"><a href="' + (loc.example || '.') + '/example.html">实例</a></li>'
@@ -139,6 +139,7 @@ function fixFork () {
         navMarginRight = 150 - (bodyWidth - contnetWidth) / 2;
     }
     $('#nav')[0].style.marginRight = navMarginRight + 'px';
+    $('#fork-image')[0].style.width = (document.body.offsetWidth < 768 ? 1 : forkWidth) + 'px';
 };
 fixFork();
 $(window).on('resize', fixFork);
