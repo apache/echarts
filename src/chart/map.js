@@ -1222,7 +1222,6 @@ define(function (require) {
                     this.zr.modShape(this.shapeList[i].id);
                 }
             }
-            
             this.messageCenter.dispatch(
                 ecConfig.EVENT.MAP_SELECTED,
                 param.event,
@@ -1232,8 +1231,15 @@ define(function (require) {
                 },
                 this.myChart
             );
-            
             this.zr.refresh();
+            
+            var self = this;
+            setTimeout(function(){
+                self.zr.trigger(
+                    zrConfig.EVENT.MOUSEMOVE,
+                    param.event
+                );
+            },100)
         },
 
         /**
@@ -1252,14 +1258,7 @@ define(function (require) {
                 this.backupShapeList();
             }
             this._buildShape();
-            //this.zr.refreshHover();
-            this.zr.trigger(
-                zrConfig.EVENT.MOUSEMOVE,
-                {
-                    zrenderX : 0,
-                    zrenderY : 0
-                }
-            );
+            this.zr.refreshHover();
         },
         
         /**
