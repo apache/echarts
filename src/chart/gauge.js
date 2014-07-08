@@ -115,7 +115,7 @@ define(function (require) {
             var lastAngle = startAngle;
             var newAngle;
             for (var i = 0, l = colorArray.length; i < l; i++) {
-                newAngle = startAngle - totalAngle * colorArray[i][0] / total;
+                newAngle = startAngle - totalAngle * (colorArray[i][0] - min) / total;
                 sectorShape = this._getSector(
                     center, r0, r, 
                     newAngle,           // startAngle
@@ -318,7 +318,7 @@ define(function (require) {
             var value = this._getValue(seriesIndex);
             value = value < serie.max ? value : serie.max;
             
-            var angle  = (params.startAngle - params.totalAngle / total * value) * Math.PI / 180;
+            var angle  = (params.startAngle - params.totalAngle / total * (value - serie.min)) * Math.PI / 180;
             var color = pointer.color == 'auto' 
                         ? this._getColor(seriesIndex, value) : pointer.color;
             
