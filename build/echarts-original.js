@@ -3891,10 +3891,6 @@ define(
          * @param {Object} e 图形元素
          */
         function findHover(shape) {
-            // 临时修改
-            if (shape.invisible) {
-                return false;
-            }
             if (
                 ( this._draggingTarget && this._draggingTarget.id == shape.id ) //迭代到当前拖拽的图形上
                 || shape.isSilent() // 打酱油的路过，啥都不响应的shape~
@@ -10123,8 +10119,10 @@ define('echarts/component/base',['require','../config','../util/ecQuery','../uti
                 var shape;
                 if (!(target instanceof Array)) {
                     shape = self.getShapeById(target);
-                    self.zr.addHoverShape(shape);
-                    zlevel = Math.min(zlevel, shape.zlevel);
+                    if (shape) {
+                        self.zr.addHoverShape(shape);
+                        zlevel = Math.min(zlevel, shape.zlevel);
+                    }
                 }
                 else {
                     for (var i = 0, l = target.length; i < l; i++) {
@@ -13962,6 +13960,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
     function Base(){
         var self = this;
         this.selectedMap = {};
+        this.lastShapeList = [];
         this.shapeHandler = {
             onclick : function () {
                 self.isClick = true;
@@ -15022,6 +15021,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                         newMap[key] = shapeList[i];
                     }
                 }
+                
                 for (key in oldMap) {
                     if (!newMap[key]) {
                         // 新的没有 删除
@@ -22416,6 +22416,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         this._curEventType = false;         // 破循环信号灯
         this._chartList = [];               // 图表实例
         this._messageCenter = {};           // Echarts层的消息中心，做zrender原始事件转换
+        this._messageCenterOutSide = {};    // Echarts层的外部消息中心，做Echarts层的消息转发
         
         // resize方法经常被绑定到window.resize上，闭包一个this
         this.resize = this.resize();
@@ -22481,6 +22482,21 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
             // 添加消息中心的事件分发器特性
             var zrEvent = require('zrender/tool/event');
             zrEvent.Dispatcher.call(this._messageCenter);
+            zrEvent.Dispatcher.call(this._messageCenterOutSide);
+            
+            // wrap: n,e,d,t for name event data this
+            this._messageCenter._dispatch = this._messageCenter.dispatch;
+            this._messageCenter.dispatch = function(n,e,d,t) {
+                self._messageCenter._dispatch(n, e, d, t);
+                if (n != 'HOVER') {
+                    setTimeout(function(){
+                        self._messageCenterOutSide.dispatch(n,e,d,t)
+                    },50);
+                }
+                else {
+                    self._messageCenterOutSide.dispatch(n, e, d, t);
+                }
+            }
             
             this._onevent = function(param){
                 return self.__onevent(param);
@@ -23659,22 +23675,22 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         },
 
         /**
-         * 绑定事件
+         * 外部接口绑定事件
          * @param {Object} eventName 事件名称
          * @param {Object} eventListener 事件响应函数
          */
         on : function (eventName, eventListener) {
-            this._messageCenter.bind(eventName, eventListener);
+            this._messageCenterOutSide.bind(eventName, eventListener);
             return this;
         },
 
         /**
-         * 解除事件绑定
+         * 外部接口解除事件绑定
          * @param {Object} eventName 事件名称
          * @param {Object} eventListener 事件响应函数
          */
         un : function (eventName, eventListener) {
-            this._messageCenter.unbind(eventName, eventListener);
+            this._messageCenterOutSide.unbind(eventName, eventListener);
             return this;
         },
         
@@ -24135,7 +24151,7 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
             var lastAngle = startAngle;
             var newAngle;
             for (var i = 0, l = colorArray.length; i < l; i++) {
-                newAngle = startAngle - totalAngle * colorArray[i][0] / total;
+                newAngle = startAngle - totalAngle * (colorArray[i][0] - min) / total;
                 sectorShape = this._getSector(
                     center, r0, r, 
                     newAngle,           // startAngle
@@ -24338,7 +24354,7 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
             var value = this._getValue(seriesIndex);
             value = value < serie.max ? value : serie.max;
             
-            var angle  = (params.startAngle - params.totalAngle / total * value) * Math.PI / 180;
+            var angle  = (params.startAngle - params.totalAngle / total * (value - serie.min)) * Math.PI / 180;
             var color = pointer.color == 'auto' 
                         ? this._getColor(seriesIndex, value) : pointer.color;
             
@@ -29383,7 +29399,7 @@ define('echarts/component/dataRange',['require','./base','zrender/shape/Text','z
             status.dragOut = true;
             status.dragIn = true;
             
-            if (!this.dataRangeOption.realtime) {
+            if (!this.dataRangeOption.realtime && false) {
                 this.messageCenter.dispatch(
                     ecConfig.EVENT.DATA_RANGE,
                     null,
@@ -29698,8 +29714,8 @@ define('echarts/component/dataRange',['require','./base','zrender/shape/Text','z
             }
             
             if (this.dataRangeOption.calculable) {
-                if (value > this._gap * this._range.start + this.dataRangeOption.min
-                    || value < this._gap * this._range.end + this.dataRangeOption.min) {
+                if (value - (this._gap * this._range.start + this.dataRangeOption.min) > 0.00005
+                    || value - (this._gap * this._range.end + this.dataRangeOption.min) < -0.00005) {
                      return null;
                 }
             }

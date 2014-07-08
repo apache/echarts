@@ -915,7 +915,7 @@ define(function (require) {
             status.dragOut = true;
             status.dragIn = true;
             
-            if (!this.dataRangeOption.realtime) {
+            if (!this.dataRangeOption.realtime && false) {
                 this.messageCenter.dispatch(
                     ecConfig.EVENT.DATA_RANGE,
                     null,
@@ -1230,8 +1230,8 @@ define(function (require) {
             }
             
             if (this.dataRangeOption.calculable) {
-                if (value > this._gap * this._range.start + this.dataRangeOption.min
-                    || value < this._gap * this._range.end + this.dataRangeOption.min) {
+                if (value - (this._gap * this._range.start + this.dataRangeOption.min) > 0.00005
+                    || value - (this._gap * this._range.end + this.dataRangeOption.min) < -0.00005) {
                      return null;
                 }
             }
