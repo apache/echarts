@@ -8,7 +8,7 @@
     { "name": "Yangji", "email": "yangji01@baidu.com" }
   ],
   "description": "Enterprise Charts 【Baidu Hi : 1379172 | Email : echarts@baidu.com】",
-  "main": ["build/echarts-plain-original.js, build/echarts-plain-original-map.js"],
+  "main": ["build/echarts-plain-original.js", "build/echarts-plain-original-map.js"],
   "keywords": [
     "baidu",
     "echarts",
