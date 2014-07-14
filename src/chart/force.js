@@ -248,7 +248,7 @@ define(function (require) {
             var l = nodes.length;
             for (var i = 0; i < l; i++) {
                 var node = nodes[i];
-                if (node.value !== undefined) {
+                if (typeof(node.value) !== 'undefined') {
                     radius.push(node.value);
                 } else {
                     radius.push(1);
@@ -269,9 +269,9 @@ define(function (require) {
                 var r = radius[i];
 
                 var initPos;
-                if (nodeInitialPos[node.name] !== undefined) {
+                if (typeof(nodeInitialPos[node.name]) !== 'undefined') {
                     initPos = nodeInitialPos[node.name];
-                } else if (node.initial !== undefined) {
+                } else if (typeof(node.initial) !== 'undefined') {
                     initPos = node.initial;
                 } else {
                     initPos = _randomInSquare(
@@ -411,7 +411,7 @@ define(function (require) {
                 var link = links[i];
                 // var source = nodes[link.source];
                 // var target = nodes[link.target];
-                if (link.weight !== undefined) {
+                if (typeof(link.weight) !== 'undefined') {
                     linkWeights.push(link.weight);
                 } else {
                     linkWeights.push(1);
@@ -635,7 +635,7 @@ define(function (require) {
                     vec2.set(nodePositions[i], mouseX, mouseY);
                     vec2.set(nodePrePositions[i], mouseX, mouseY);
                     vec2.set(nodeShapes[i].position, mouseX, mouseY);
-                    if (nodeInitialPos[name] !== undefined) {
+                    if (typeof(nodeInitialPos[name]) !== 'undefined') {
                         vec2.set(nodeInitialPos[name], mouseX, mouseY);
                     }
                     continue;
@@ -673,10 +673,6 @@ define(function (require) {
                     }
                     vec2.copy(nodeInitialPos[name], p);
                 }
-
-                // if(isNaN(p[0]) || isNaN(p[1])){
-                //     throw new Error('NaN');
-                // }
             }
         }
 
@@ -823,17 +819,6 @@ define(function (require) {
 
         init(option, component);
     }
-    
-    /*
-    function _randomInCircle(x, y, radius) {
-        var theta = Math.random() * Math.PI * 2;
-        var r = radius * Math.random();
-        return [
-            Math.cos(theta) * r + x,
-            Math.sin(theta) * r + y
-        ];
-    }
-    */
    
     function _randomInSquare(x, y, size) {
         return [

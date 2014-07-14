@@ -49,7 +49,7 @@ define(function (require) {
             this.setContext(ctx, style);
 
             // 设置transform
-            this.updateTransform(ctx);
+            this.setTransform(ctx);
 
             ctx.beginPath();
             this.buildLinePath(ctx, style);
