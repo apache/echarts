@@ -152,7 +152,7 @@ define(function(require) {
                 cp : [
                     (x + width / 2) * scale[0], 
                     (y + height / 2) * scale[1]
-                ],
+                ]
             }
         },
 
@@ -171,7 +171,7 @@ define(function(require) {
                 cp : [
                     (x1 + x2) * 0.5 * scale[0], 
                     (y1 + y2) * 0.5 * scale[1]
-                ],
+                ]
             }
         },
 

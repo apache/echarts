@@ -1185,7 +1185,7 @@ define(function (require) {
                 // 判断是否落到直角系里，axis触发的tooltip
                 this._curTarget = false;
                 this._event = param.event;
-                this._event._target = this._event.target || this._event.toElement;
+                // this._event._target = this._event.target || this._event.toElement;
                 this._event.zrenderX = mx;
                 this._event.zrenderY = my;
                 if (this._needAxisTrigger 
@@ -1213,7 +1213,7 @@ define(function (require) {
             else {
                 this._curTarget = target;
                 this._event = param.event;
-                this._event._target = this._event.target || this._event.toElement;
+                // this._event._target = this._event.target || this._event.toElement;
                 this._event.zrenderX = mx;
                 this._event.zrenderY = my;
                 var polarIndex;
