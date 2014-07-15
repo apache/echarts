@@ -12,6 +12,8 @@ define(function (require) {
     var TextShape = require('zrender/shape/Text');
     var LineShape = require('zrender/shape/Line');
     var PolygonShape = require('zrender/shape/Polygon');
+    var Circle = require('zrender/shape/Circle');
+    var Ring = require('zrender/shape/Ring');
 
     var ecConfig = require('../config');
     var zrUtil = require('zrender/tool/util');
@@ -31,6 +33,7 @@ define(function (require) {
          */
         _buildShape : function () {
             for (var i = 0; i < this.polar.length; i ++) {
+                this._index = i;
                 this.reformOption(this.polar[i]);
 
                 this._queryTarget = [this.polar[i], this.option];
@@ -58,10 +61,7 @@ define(function (require) {
             var length = indicator.length;
             var startAngle = item.startAngle ;
             var dStep = 2 * Math.PI / length;
-            var radius = this.parsePercent(
-                item.radius,
-                Math.min(this.zr.getWidth(), this.zr.getHeight()) / 2
-            );
+            var radius = this._getRadius();
             var __ecIndicator = item.__ecIndicator = [];
             var vector;
 
@@ -74,6 +74,19 @@ define(function (require) {
                     vector : [vector[1], -vector[0]]
                 });
             }
+        },
+
+        /**
+         * 获取外圈的半径
+         *
+         * @return {number}
+         */
+        _getRadius : function () {
+            var item = this.polar[this._index];
+            return this.parsePercent(
+                item.radius,
+                Math.min(this.zr.getWidth(), this.zr.getHeight()) / 2
+            )
         },
 
         /**
@@ -288,15 +301,22 @@ define(function (require) {
             var pointList = [];
             var vector;
             var shape;
-
-            for (var i = 0; i < len; i ++) {
-                vector = __ecIndicator[i].vector;
-                pointList.push(this._mapVector(vector, center, 1.2));
+            var type = item.type;
+            
+            if (type == 'polygon') {
+                for (var i = 0; i < len; i ++) {
+                    vector = __ecIndicator[i].vector;
+                    pointList.push(this._mapVector(vector, center, 1.2));
+                }
+                shape = this._getShape(
+                    pointList, 'fill', 'rgba(0,0,0,0)', '', 1
+                );
+            } else if (type == 'circle') {
+                shape = this._getCircle(
+                    '', 1, 1.2, center, 'fill', 'rgba(0,0,0,0)'
+                );
             }
             
-            shape = this._getShape(
-                pointList, 'fill', 'rgba(0,0,0,0)', '', 1
-            );
             return shape;
         },
 
@@ -318,15 +338,24 @@ define(function (require) {
             var scale;
             var scale1;
             var pointList;
+            var type = this.deepQuery(this._queryTarget, 'type');
 
             for (var i = 0; i < splitNumber ; i ++ ) {
                 scale = (splitNumber - i) / splitNumber;
-                pointList = this._getPointList(__ecIndicator, scale, center);
                 
                 if (show) {
-                    shape = this._getShape(
-                        pointList, 'stroke', '', strokeColor, lineWidth
-                    );
+                    if (type == 'polygon') {
+                        pointList = this._getPointList(
+                            __ecIndicator, scale, center);
+                        shape = this._getShape(
+                            pointList, 'stroke', '', strokeColor, lineWidth
+                        );
+                    } else if (type == 'circle') {
+                        shape = this._getCircle(
+                            strokeColor, lineWidth, scale, center, 'stroke'
+                        );
+                    }
+                    
                     this.shapeList.push(shape);
                 }
 
@@ -337,6 +366,63 @@ define(function (require) {
                     ); 
                 }  
             }
+        },
+
+        /**
+         * 绘制圆
+         *
+         * @param {string} strokeColor
+         * @param {number} lineWidth
+         * @param {number} scale
+         * @param {Array.<number>} center
+         * @param {string} brushType
+         * @param {string} color
+         * @return {Circle}
+         */
+        _getCircle : function (
+            strokeColor, lineWidth, scale, center, brushType, color
+        ) {
+            var radius = this._getRadius();
+            return new Circle({
+                zlevel : this._zlevelBase,
+                style: {
+                    x: center[0],
+                    y: center[1],
+                    r: radius * scale,
+                    brushType: brushType,
+                    strokeColor: strokeColor,
+                    lineWidth: lineWidth,
+                    color: color
+                },
+                hoverable : false,
+                draggable : false
+            });
+        },
+
+        /**
+         * 绘制圆环
+         *
+         * @param {string} color  间隔颜色
+         * @param {number} scale0  小圆的scale
+         * @param {number} scale1  大圆的scale
+         * @param {Array.<number>} center  圆点
+         * @return {Ring}
+         */
+        _getRing : function (color, scale0, scale1, center) {
+            var radius = this._getRadius();
+            return new Ring({
+                zlevel : this._zlevelBase,
+                style : {
+                    x : center[0],
+                    y : center[1],
+                    r : scale0 * radius,
+                    r0 : scale1 * radius,
+                    color : color,
+                    brushType : 'fill'
+                },
+                hoverable : false,
+                draggable : false 
+            })
         },
 
         /**
@@ -367,13 +453,10 @@ define(function (require) {
          * @param {string} 颜色
          * @param {string} 描边颜色
          * @param {number} 线条宽度
-         * @param {boolean=} hoverable
-         * @param {boolean=} draggable
          * @return {Object} 绘制的图形对象
          */ 
         _getShape : function (
-            pointList, brushType, color, strokeColor, lineWidth, 
-            hoverable, draggable
+            pointList, brushType, color, strokeColor, lineWidth
         ) {
             return new PolygonShape({
                 zlevel : this._zlevelBase,
@@ -384,8 +467,8 @@ define(function (require) {
                     strokeColor : strokeColor,
                     lineWidth   : lineWidth
                 },
-                hoverable : hoverable || false,
-                draggable : draggable || false
+                hoverable : false,
+                draggable : false
             });
         },
 
@@ -405,6 +488,8 @@ define(function (require) {
             var pointList = [];
             var indLen = __ecIndicator.length;
             var shape;
+
+            var type = this.deepQuery(this._queryTarget, 'type');
             
             if (typeof colorArr == 'string') {
                 colorArr = [colorArr];
@@ -412,22 +497,26 @@ define(function (require) {
             colorLen = colorArr.length;
             color = colorArr[ colorInd % colorLen];
 
-            for (var i = 0; i < indLen ; i ++) {
-                pointList = [];
-                vector = __ecIndicator[i].vector;
-                vector1 = __ecIndicator[(i + 1) % indLen].vector;
+            if (type == 'polygon') {
+                for (var i = 0; i < indLen ; i ++) {
+                    pointList = [];
+                    vector = __ecIndicator[i].vector;
+                    vector1 = __ecIndicator[(i + 1) % indLen].vector;
 
-                pointList.push(this._mapVector(vector, center, scale));
-                pointList.push(this._mapVector(vector, center, scale1));
-                pointList.push(this._mapVector(vector1, center, scale1));
-                pointList.push(this._mapVector(vector1, center, scale));
+                    pointList.push(this._mapVector(vector, center, scale));
+                    pointList.push(this._mapVector(vector, center, scale1));
+                    pointList.push(this._mapVector(vector1, center, scale1));
+                    pointList.push(this._mapVector(vector1, center, scale));
 
-                shape = this._getShape(
-                    pointList, 'fill', color, '', 1
-                );
+                    shape = this._getShape(
+                        pointList, 'fill', color, '', 1
+                    );
+                    this.shapeList.push(shape);
+                }
+            } else if (type == 'circle') {
+                shape = this._getRing(color, scale, scale1, center);
                 this.shapeList.push(shape);
             }
-            
         },
 
         /**
@@ -847,7 +936,6 @@ define(function (require) {
             var len;
             var angle;
             var finalAngle;
-            var zrSize = Math.min(this.zr.getWidth(), this.zr.getHeight()) / 2;
             for (var i = 0 ; i < this.polar.length; i ++) {
                 item = this.polar[i];
                 center = this.getCenter(i);
@@ -857,7 +945,7 @@ define(function (require) {
                         valueIndex : 0
                     };
                 }
-                radius = this.parsePercent(item.radius, zrSize);
+                radius = this._getRadius();
                 startAngle = item.startAngle;
                 indicator = item.indicator;
                 len = indicator.length;
