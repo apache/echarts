@@ -76,6 +76,8 @@ define(function (require) {
         this._rawNodes = null;
         this._rawLinks = null;
 
+        this._steps = 1;
+
         if (workerUrl) {
             this._layoutWorker = new Worker(workerUrl);
         } else {
@@ -101,8 +103,6 @@ define(function (require) {
         }
 
         this._init();
-
-        this._steps = 1;
     }
 
     /**
