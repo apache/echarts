@@ -64,7 +64,7 @@ define(function (require) {
 
         // 保存节点的位置，改变数据时能够有更好的动画效果
         // TODO
-        myChart.__forceNodePositionMap = myChart.__forceNodePositionMap || {};
+        this.__forceNodePositionMap = this.__forceNodePositionMap || {};
 
         this._nodeShapes = [];
         this._linkShapes = [];
@@ -77,12 +77,6 @@ define(function (require) {
         this._rawLinks = null;
 
         this._steps = 1;
-
-        if (workerUrl) {
-            this._layoutWorker = new Worker(workerUrl);
-        } else {
-            this._layout = new ForceLayout();
-        }
 
         // 关闭可拖拽属性
         this.ondragstart = function() {
@@ -140,7 +134,7 @@ define(function (require) {
                 });
             }
             else {
-                cb = function() {
+                var cb = function() {
                     if (self._updating) {
                         self._step();
                         requestAnimationFrame(cb);
@@ -165,6 +159,21 @@ define(function (require) {
                     series[i] = this.reformOption(series[i]);
                     serieName = series[i].name || '';
                     
+                    if (workerUrl && serie.useWorker) {
+                        if (!this._layoutWorker) {
+                            this._layoutWorker = new Worker(workerUrl);
+                        }
+                        this._layout = null;
+                    } else {
+                        if (!this._layout) {
+                            this._layout = new ForceLayout();
+                        }
+                        if (this._layoutWorker) {
+                            this._layoutWorker.terminate();
+                            this._layoutWorker = null   
+                        }
+                    }
+
                     // 系列图例开关
                     this.selectedMap[serieName] = 
                         legend ? legend.isSelected(serieName) : true;
@@ -285,9 +294,9 @@ define(function (require) {
             for (var i = 0; i < len; i++) {
                 var initPos;
                 var node = nodes[i];
-                if (typeof(this.myChart.__forceNodePositionMap[node.name]) !== 'undefined') {
+                if (typeof(this.__forceNodePositionMap[node.name]) !== 'undefined') {
                     initPos = vec2.create();
-                    vec2.copy(initPos, this.myChart.__forceNodePositionMap[node.name]);
+                    vec2.copy(initPos, this.__forceNodePositionMap[node.name]);
                 } else if (typeof(node.initial) !== 'undefined') {
                     initPos = Array.prototype.slice.call(node.initial);
                 } else {
@@ -656,9 +665,9 @@ define(function (require) {
 
                 var nodeName = node.name;
                 if (nodeName) {
-                    var gPos = this.myChart.__forceNodePositionMap[nodeName];
+                    var gPos = this.__forceNodePositionMap[nodeName];
                     if (!gPos) {
-                        gPos = this.myChart.__forceNodePositionMap[nodeName] = vec2.create();
+                        gPos = this.__forceNodePositionMap[nodeName] = vec2.create();
                     }
                     vec2.copy(gPos, position);
                 }
@@ -702,9 +711,9 @@ define(function (require) {
 
                     var nodeName = node.name;
                     if (nodeName) {
-                        var gPos = this.myChart.__forceNodePositionMap[nodeName];
+                        var gPos = this.__forceNodePositionMap[nodeName];
                         if (!gPos) {
-                            gPos = this.myChart.__forceNodePositionMap[nodeName] = vec2.create();
+                            gPos = this.__forceNodePositionMap[nodeName] = vec2.create();
                         }
                         vec2.copy(gPos, shape.position);
                     }
@@ -765,12 +774,11 @@ define(function (require) {
             this.effectList = null;
 
             if (this._layoutWorker) {
-                this._layoutWorker.onmessage = null;
                 this._layoutWorker.terminate();
             }
             this._layoutWorker = null;
 
-            this.myChart.__forceNodePositionMap = {};
+            this.__forceNodePositionMap = {};
         }
     }
 

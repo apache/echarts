@@ -70,8 +70,7 @@ option = {
                     name: '人物'
                 },
                 {
-                    name: '家人',
-                    symbol: 'diamond'
+                    name: '家人'
                 },
                 {
                     name:'朋友'
@@ -82,7 +81,7 @@ option = {
                     label: {
                         show: true,
                         textStyle: {
-                            color: '#800080'
+                            color: '#333'
                         }
                     },
                     nodeStyle : {
@@ -102,17 +101,14 @@ option = {
                     linkStyle : {}
                 }
             },
+            useWorker: false,
             minRadius : 15,
             maxRadius : 25,
             gravity: 1.1,
             scaling: 1.2,
             linkSymbol: 'arrow',
             nodes:[
-                {
-                    category:0, name: '乔布斯', value : 10,
-                    symbol: 'star',
-                    symbolSize: 40
-                },
+                {category:0, name: '乔布斯', value : 10},
                 {category:1, name: '丽萨-乔布斯',value : 2},
                 {category:1, name: '保罗-乔布斯',value : 3},
                 {category:1, name: '克拉拉-乔布斯',value : 3},
@@ -125,11 +121,7 @@ option = {
                 {category:2, name: '龙-韦恩',value : 1},
             ],
             links : [
-                {source : 1, target : 0, weight : 1, itemStyle: {
-                    normal: {
-                        lineWidth: 10
-                    }
-                }},
+                {source : 1, target : 0, weight : 1},
                 {source : 2, target : 0, weight : 2},
                 {source : 3, target : 0, weight : 1},
                 {source : 4, target : 0, weight : 2},
