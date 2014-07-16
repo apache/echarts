@@ -1,10 +1,7 @@
 (function __echartsForceLayoutWorker(self) {
 
 // In web worker
-if (
-    typeof(WorkerGlobalScope) !== 'undefined'
-    && (self instanceof WorkerGlobalScope)
-) {
+if (typeof(window) === 'undefined' || !(window === self)) {
     // Simple TMD implementation
     self.tmd = {};
     tmd.modules = {};
