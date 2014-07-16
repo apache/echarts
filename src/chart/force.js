@@ -34,6 +34,20 @@ define(function (require) {
                                 || window.webkitRequestAnimationFrame
                                 || function (func){setTimeout(func, 16);};
 
+    // Use inline web worker
+    var workerUrl;
+    if (
+        typeof(Worker) !== 'undefined' &&
+        typeof(Blob) !== 'undefined'
+    ) {
+        var blob = new Blob([ForceLayout.getWorkerCode()]);
+        workerUrl = window.URL.createObjectURL(blob);
+    }
+
+    function getToken() {
+        return Math.round(new Date().getTime() / 100) % 10000000;
+    }
+
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -62,7 +76,11 @@ define(function (require) {
         this._rawNodes = null;
         this._rawLinks = null;
 
-        this._layout = new ForceLayout();
+        if (workerUrl) {
+            this._layoutWorker = new Worker(workerUrl);
+        } else {
+            this._layout = new ForceLayout();
+        }
 
         // 关闭可拖拽属性
         this.ondragstart = function() {
@@ -82,8 +100,9 @@ define(function (require) {
             onmousemove.apply(self, arguments);
         }
 
-
         this._init();
+
+        this._steps = 1;
     }
 
     /**
@@ -100,22 +119,43 @@ define(function (require) {
 
             this.clear();
 
+            this._updating = true;
+        
             this._buildShape();
 
-            this._updating = true;
-            function cb() {
-                if (self._updating) {
-                    self._step();
-                    requestAnimationFrame(cb);
+            if (this._layoutWorker) {
+                this._layoutWorker.onmessage = function(e) {
+                    if (self._temperature < 0.01) {
+                        requestAnimationFrame(function() {
+                            self._step.call(self, e);
+                        });   
+                    } else {
+                        self._step.call(self, e);
+                    }
                 }
+                this._layoutWorker.postMessage({
+                    cmd: 'update',
+                    steps: this._steps,
+                    temperature: this._temperature
+                });
             }
-            requestAnimationFrame(cb);
+            else {
+                cb = function() {
+                    if (self._updating) {
+                        self._step();
+                        requestAnimationFrame(cb);
+                    }
+                }
+                requestAnimationFrame(cb);
+            }
         },
 
         _buildShape: function() {
             var legend = this.component.legend;
             var series = this.series;
             var serieName;
+
+            this._temperature = 1;
 
             this.shapeList.length = 0;
 
@@ -220,6 +260,7 @@ define(function (require) {
 
             var minRadius = this.query(serie, 'minRadius');
             var maxRadius = this.query(serie, 'maxRadius');
+            this._steps = serie.steps || 1;
 
             var center = this.parseCenter(this.zr, serie.center);
             var size = this.parseRadius(this.zr, serie.size);
@@ -290,10 +331,31 @@ define(function (require) {
                 gravity: serie.gravity || 1.0
             };
 
-            zrUtil.merge(this._layout, config, true);
+            if (this._layoutWorker) {
 
-            this._layout.initNodes(positionArr, massArr, radius);
-            this._layout.initEdges(edgeArr, edgeWeightArr);
+                this._token = getToken();
+
+                this._layoutWorker.postMessage({
+                    cmd: 'init',
+                    nodesPosition: positionArr,
+                    nodesMass: massArr,
+                    nodesSize: radius,
+                    edges: edgeArr,
+                    edgesWeight: edgeWeightArr,
+                    token: this._token
+                });
+
+                this._layoutWorker.postMessage({
+                    cmd: 'updateConfig',
+                    config: config
+                });
+
+            } else {
+
+                zrUtil.merge(this._layout, config, true);
+                this._layout.initNodes(positionArr, massArr, radius);
+                this._layout.initEdges(edgeArr, edgeWeightArr);   
+            }
         },
 
         _buildNodeShapes: function(serie) {
@@ -319,7 +381,7 @@ define(function (require) {
                 var queryTarget = [];
                 var shapeNormalStyle = [];
                 var shapeEmphasisStyle = [];
-                
+
                 queryTarget.push(node);
                 if (node.itemStyle) {
                     shapeNormalStyle.push(node.itemStyle.normal);
@@ -571,7 +633,9 @@ define(function (require) {
             }
         },
 
-        _update: function() {
+        _update: function(e) {
+
+            this._layout.temperature = this._temperature;
             this._layout.update();
 
             for (var i = 0; i < this._layout.nodes.length; i++) {
@@ -599,10 +663,82 @@ define(function (require) {
                     vec2.copy(gPos, position);
                 }
             }
+
+            this._temperature *= 0.99;
         },
 
-        _step: function(){
-            this._update();
+        _updateWorker: function(e) {
+            if (!this._updating) {
+                return;
+            }
+
+            var positionArr = new Float32Array(e.data);
+            var token = positionArr[0];
+            var ret = token === this._token;
+            // If token is from current layout instance
+            if (ret) {
+                var nNodes = (positionArr.length - 1) / 2;
+
+                for (var i = 0; i < nNodes; i++) {
+                    var shape = this._nodeShapes[i];
+                    var node = this._filteredNodes[i];
+                    
+                    var x = positionArr[i * 2 + 1];
+                    var y = positionArr[i * 2 + 2];
+
+                    if (shape.fixed || (node.fixX && node.fixY)) {
+                        positionArr[i * 2 + 1] = shape.position[0];
+                        positionArr[i * 2 + 2] = shape.position[1];
+                    } else if (node.fixX) {
+                        positionArr[i * 2 + 1] = shape.position[0];
+                        shape.position[1] = y;
+                    } else if (node.fixY) {
+                        positionArr[i * 2 + 2] = shape.position[1];
+                        shape.position[0] = x;
+                    } else  {
+                        shape.position[0] = x;
+                        shape.position[1] = y;
+                    }
+
+                    var nodeName = node.name;
+                    if (nodeName) {
+                        var gPos = this.myChart.__forceNodePositionMap[nodeName];
+                        if (!gPos) {
+                            gPos = this.myChart.__forceNodePositionMap[nodeName] = vec2.create();
+                        }
+                        vec2.copy(gPos, shape.position);
+                    }
+                }
+
+                this._layoutWorker.postMessage(positionArr.buffer, [positionArr.buffer]);
+            }
+
+            var self = this;
+            self._layoutWorker.postMessage({
+                cmd: 'update',
+                steps: this._steps,
+                temperature: this._temperature
+            });  
+
+            for (var i = 0; i < this._steps; i++) {
+                this._temperature *= 0.99;
+            }
+
+            return ret;
+        },
+
+        _step: function(e){
+            if (this._layoutWorker) {
+                var res = this._updateWorker(e);
+                if (!res) {
+                    return;
+                }
+            } else {
+                if (this._temperature < 0.01) {
+                    return;
+                }
+                this._update();
+            }
 
             this._updateLinkShapes();
 
@@ -627,6 +763,12 @@ define(function (require) {
             this.clear();
             this.shapeList = null;
             this.effectList = null;
+
+            if (this._layoutWorker) {
+                this._layoutWorker.onmessage = null;
+                this._layoutWorker.terminate();
+            }
+            this._layoutWorker = null;
 
             this.myChart.__forceNodePositionMap = {};
         }
@@ -654,7 +796,7 @@ define(function (require) {
     }
 
     function onmousemove() {
-        this._layout.temperature = 0.8;
+        this._temperature = 0.8;
     }
     
     /**

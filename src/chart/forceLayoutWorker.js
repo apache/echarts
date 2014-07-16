@@ -1,3 +1,5 @@
+(function __echartsForceLayoutWorker(self) {
+
 // In web worker
 if (
     typeof(WorkerGlobalScope) !== 'undefined'
@@ -17,9 +19,8 @@ if (
         } else if (arguments.length == 1) {
             constructor = id;
             id = 'ForceLayout';
-        } else {
-            tmd.modules[id] = constructor(tmd.require);
         }
+        tmd.modules[id] = constructor(tmd.require);
     }
 
     // Vector2 math functions
@@ -104,11 +105,11 @@ if (
                 return;
             }
             var positionArr = new Float32Array(e.data);
-            var nNodes = positionArr.length / 2;
+            var nNodes = (positionArr.length - 1) / 2;
             for (var i = 0; i < nNodes; i++) {
                 var node = forceLayout.nodes[i];
-                node.position[0] = positionArr[i * 2];
-                node.position[1] = positionArr[i * 2 + 1];
+                node.position[0] = positionArr[i * 2 + 1];
+                node.position[1] = positionArr[i * 2 + 2];
             }
             return;
         }
@@ -117,9 +118,12 @@ if (
 
         switch(e.data.cmd) {
             case "init":
-                forceLayout = new ForceLayout();
+                if (!forceLayout) {
+                    forceLayout = new ForceLayout();
+                }
                 forceLayout.initNodes(e.data.nodesPosition, e.data.nodesMass, e.data.nodesSize);
                 forceLayout.initEdges(e.data.edges, e.data.edgesWeight);
+                forceLayout._token = e.data.token;
                 break;
             case "updateConfig":
                 if (forceLayout) {
@@ -130,19 +134,28 @@ if (
                 break;
             case "update":
                 var steps = e.data.steps;
+
                 if (forceLayout) {
-                    for (var i = 0; i < steps; i++) {
-                        forceLayout.update();
+                    var nNodes = forceLayout.nodes.length;
+                    var positionArr = new Float32Array(nNodes * 2 + 1);
+
+                    forceLayout.temperature = e.data.temperature;
+
+                    if (e.data.temperature > 0.01) {
+                        for (var i = 0; i < steps; i++) {
+                            forceLayout.update();
+                            forceLayout.temperature *= 0.99;
+                        }
+                        // Callback
+                        for (var i = 0; i < nNodes; i++) {
+                            var node = forceLayout.nodes[i];
+                            positionArr[i * 2 + 1] = node.position[0];
+                            positionArr[i * 2 + 2] = node.position[1];
+                        }
+
+                        positionArr[0] = forceLayout._token;
                     }
 
-                    var nNodes = forceLayout.nodes.length;
-                    var positionArr = new Float32Array(nNodes * 2)
-                    // Callback
-                    for (var i = 0; i < nNodes; i++) {
-                        var node = forceLayout.nodes[i];
-                        positionArr[i * 2] = node.position[0];
-                        positionArr[i * 2 + 1] = node.position[1];
-                    }
                     self.postMessage(positionArr.buffer, [positionArr.buffer]);
                 } else {
                     // Not initialzied yet
@@ -366,8 +379,6 @@ define(function(require) {
         this._massArr = null;
 
         this._k = 0;
-
-        this._maxSpeedIncrease
     }
 
     ForceLayout.prototype.initNodes = function(positionArr, massArr, sizeArr) {
@@ -511,6 +522,7 @@ define(function(require) {
 
             // Prevent swinging
             // Limited the increase of speed up to 100% each step
+            // TODO adjust by nodes number
             vec2.sub(v, speed, node.speedPrev);
             var swing = vec2.len(v);
             if (swing > 0) {
@@ -529,8 +541,6 @@ define(function(require) {
 
             vec2.add(node.position, node.position, speed);
         }
-
-        this.temperature *= 0.99;
     }
 
     ForceLayout.prototype.applyRegionToNodeRepulsion = (function() {
@@ -667,5 +677,12 @@ define(function(require) {
         this.bbox[3] = maxY;
     }
 
+    ForceLayout.getWorkerCode = function() {
+        var str = __echartsForceLayoutWorker.toString();
+        return str.slice(str.indexOf('{') + 1, str.lastIndexOf('}'));
+    }
+
     return ForceLayout;
 });
+
+})(window);

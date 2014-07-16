@@ -789,6 +789,9 @@ define(function() {
             center: ['50%', '50%'],
             size: '100%',
 
+            // 每一帧 force 迭代的次数，仅在启用webworker的情况下有用
+            steps: 1,
+
             scaling : 1.0,
             // 向心力因子，越大向心力越大
             gravity : 1,
