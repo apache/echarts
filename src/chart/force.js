@@ -10,6 +10,8 @@ define(function (require) {
     
     var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
+
+    var ForceLayout = require('./ForceLayoutWorker');
     
     // 图形依赖
     var CircleShape = require('zrender/shape/Circle');
@@ -24,15 +26,13 @@ define(function (require) {
     var vec2 = require('zrender/tool/vector');
 
     var NDArray = require('../util/ndarray');
-        
+    var ArrayCtor = typeof(Float32Array) == 'undefined' ? Array : Float32Array;
+
     var requestAnimationFrame = window.requestAnimationFrame
                                 || window.msRequestAnimationFrame
                                 || window.mozRequestAnimationFrame
                                 || window.webkitRequestAnimationFrame
                                 || function (func){setTimeout(func, 16);};
-
-    // 保存节点的位置，改变数据时能够有更好的动画效果
-    var nodeInitialPos = {};
 
     /**
      * 构造函数
@@ -42,176 +42,146 @@ define(function (require) {
      * @param {Object} component 组件
      */
     function Force(ecTheme, messageCenter, zr, option, myChart) {
+        var self = this;
         // 基类
         ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 图表基类
         ChartBase.call(this);
 
-        var component = myChart.component;
-        var legend;
-        var self = this;
-        self.type = ecConfig.CHART_TYPE_FORCE;
+        // 保存节点的位置，改变数据时能够有更好的动画效果
+        // TODO
+        myChart.__forceNodePositionMap = myChart.__forceNodePositionMap || {};
 
-        var series;
+        this._nodeShapes = [];
+        this._linkShapes = [];
 
-        var forceSerie;
+        this._updating = true;
 
-        var nodeShapes = [];
-        var linkShapes = [];
-        var arrowShapes = [];
+        this._filteredNodes = null;
+        this._filteredLinks = null;
+        this._rawNodes = null;
+        this._rawLinks = null;
 
-        // 节点分类
-        var categories = [];
-        // 默认节点样式
-        var nodeStyle;
-        var nodeEmphasisStyle;
-        // 默认边样式
-        var linkStyle;
-        var linkEmphasisStyle;
+        this._layout = new ForceLayout();
 
-        var rawNodes;
-        var rawLinks;
+        // 关闭可拖拽属性
+        this.ondragstart = function() {
+            ondragstart.apply(self, arguments);
+        }
+        this.ondragend = function() {
+            ondragend.apply(self, arguments);
+        }
 
-        // nodes和links过滤后的原始数据
-        var filteredNodes = [];
-        var filteredLinks = [];
+        this.ondrop = function() {};
 
-        // nodes和links的权重, 用来计算引力和斥力
-        var nodeWeights = [];
-        var linkWeights = [];
+        this.shapeHandler.ondragstart = function() {
+            self.isDragstart = true;
+        }
 
-        // 节点的受力
-        var nodeForces = [];
-        // 节点的位置
-        var nodePositions = [];
-        var nodePrePositions = [];
-        // 节点的质量
-        var nodeMasses = [];
+        this.onmousemove = function() {
+            onmousemove.apply(self, arguments);
+        }
 
-        var temperature;
-        var k;
-        
-        //- ----------外部参数
-        var density;
-        var initSize;
-        var coolDown;
-        var centripetal;
-        // var initializeSize; // defined but never used
-        var attractiveness;
-        //- ----------
 
-        var stepTime = 1/60;
-        
-        var viewportWidth;
-        var viewportHeight;
-        var centroid = [];
+        this._init();
+    }
 
-        var mouseX, mouseY;
-        
-        /**
-         * 绘制图形
-         */
-        function _buildShape() {
-            legend = component.legend;
-            temperature = 1.0;
-            viewportWidth = zr.getWidth();
-            viewportHeight = zr.getHeight();
-            centroid = [viewportWidth/2, viewportHeight/2];
-            
+    /**
+     * 绘制图形
+     */
+    Force.prototype = {
+
+        constructor: Force,
+
+        type : ecConfig.CHART_TYPE_FORCE,
+
+        _init: function() {
+            var self = this;
+
+            this.clear();
+
+            this._buildShape();
+
+            this._updating = true;
+            function cb() {
+                if (self._updating) {
+                    self._step();
+                    requestAnimationFrame(cb);
+                }
+            }
+            requestAnimationFrame(cb);
+        },
+
+        _buildShape: function() {
+            var legend = this.component.legend;
+            var series = this.series;
             var serieName;
+
+            this.shapeList.length = 0;
+
             for (var i = 0, l = series.length; i < l; i++) {
                 var serie = series[i];
                 if (serie.type === ecConfig.CHART_TYPE_FORCE) {
-                    series[i] = self.reformOption(series[i]);
+                    series[i] = this.reformOption(series[i]);
                     serieName = series[i].name || '';
+                    
                     // 系列图例开关
-                    self.selectedMap[serieName] = 
+                    this.selectedMap[serieName] = 
                         legend ? legend.isSelected(serieName) : true;
-                    if (!self.selectedMap[serieName]) {
+                    if (!this.selectedMap[serieName]) {
                         continue;
                     }
-                    self.buildMark(i);
-                    
-                    forceSerie = serie;
 
-                    var minRadius = self.query(serie, 'minRadius');
-                    var maxRadius = self.query(serie, 'maxRadius');
-
-                    // ----------获取外部参数
-                    attractiveness = self.query(
-                        serie, 'attractiveness'
-                    );
-                    density = self.query(serie, 'density');
-                    initSize = self.query(serie, 'initSize');
-                    centripetal = self.query(serie, 'centripetal');
-                    coolDown = self.query(serie, 'coolDown');
-                    // ----------
-
-                    categories = self.query(serie, 'categories');
+                    this.buildMark(i);
                     
                     // 同步selected状态
+                    var categories = serie.categories;
                     for (var j = 0, len = categories.length; j < len; j++) {
                         if (categories[j].name) {
                             if (legend){
-                                self.selectedMap[j] = 
+                                this.selectedMap[j] = 
                                     legend.isSelected(categories[j].name);
                             } else {
-                                self.selectedMap[j] = true;
+                                this.selectedMap[j] = true;
                             }
                         }
                     }
 
-                    linkStyle = self.query(
-                        serie, 'itemStyle.normal.linkStyle'
-                    );
-                    linkEmphasisStyle = self.query(
-                        serie, 'itemStyle.emphasis.linkStyle'
-                    );
-                    nodeStyle = self.query(
-                        serie, 'itemStyle.normal.nodeStyle'
-                    );
-                    nodeEmphasisStyle = self.query(
-                        serie, 'itemStyle.emphasis.nodeStyle'
-                    );
-                    
-                    rawNodes = self.query(serie, 'nodes');
-                    rawLinks = zrUtil.clone(self.query(serie, 'links'));
-                    _preProcessData(rawNodes, rawLinks);
-                    // Reset data
-                    nodePositions.length = 0;
-                    nodePrePositions.length = 0;
-                    nodeMasses.length = 0;
-                    nodeWeights.length = 0;
-                    linkWeights.length = 0;
-                    nodeMasses.length = 0;
-                    nodeShapes.length = 0;
-                    linkShapes.length = 0;
-                    arrowShapes.length = 0;
+                    this._preProcessData(serie);
 
-                    var area = viewportWidth * viewportHeight;
+                    this._nodeShapes.length = 0;
+                    this._linkShapes.length = 0;
 
-                    // Formula in 'Graph Drawing by Force-directed Placement'
-                    k = 0.5 / attractiveness 
-                        * Math.sqrt(area / filteredNodes.length);
-                    
-                    // 这两方法里需要加上读取self.selectedMap判断当前系列是否显示的逻辑
-                    _buildLinkShapes(filteredNodes, filteredLinks);
-                    _buildNodeShapes(filteredNodes, minRadius, maxRadius);
+                    this._buildLinkShapes(serie);
+                    this._buildNodeShapes(serie);
+
+                    this._initLayout(serie);
+
+                    // TODO 多个 force 
+                    this._forceSerie = serie;
+                    break;
                 }
             }
-        }
+        },
 
-        function _preProcessData(nodes, links) {
+        _preProcessData: function(serie) {
+            this._rawNodes = this.query(serie, 'nodes');
+            this._rawLinks = zrUtil.clone(this.query(serie, 'links'));
+
             var filteredNodeMap = [];
             var cursor = 0;
-            filteredNodes = _filter(nodes, function (node, idx) {
+            var self = this;
+            this._filteredNodes = _filter(this._rawNodes, function (node, idx) {
                 if (!node) {
                     return;
                 }
                 if (node.ignore) {
                     return;
                 }
-                if (self.selectedMap[node.category]) {
+                if (
+                    typeof(node.category) == 'undefined'
+                    || self.selectedMap[node.category]
+                ) {
                     filteredNodeMap[idx] = cursor++;
                     return true;
                 } else {
@@ -220,11 +190,10 @@ define(function (require) {
             });
             var source;
             var target;
-            var ret;
-            filteredLinks = _filter(links, function (link, idx){
+            this._filteredLinks = _filter(this._rawLinks, function (link, idx){
                 source = link.source;
                 target = link.target;
-                ret = true;
+                var ret = true;
                 if (filteredNodeMap[source] >= 0) {
                     link.source = filteredNodeMap[source];
                 } else {
@@ -240,135 +209,190 @@ define(function (require) {
 
                 return ret;
             });
-        }
+        },
 
-        function _buildNodeShapes(nodes, minRadius, maxRadius) {
+        _initLayout: function(serie) {
+
+            var nodes = this._filteredNodes;
+            var links = this._filteredLinks;
+            var shapes = this._nodeShapes;
+            var len = nodes.length;
+
+            var minRadius = this.query(serie, 'minRadius');
+            var maxRadius = this.query(serie, 'maxRadius');
+
+            var center = this.parseCenter(this.zr, serie.center);
+            var size = this.parseRadius(this.zr, serie.size);
+            size = size[1] * 2;
+
             // 将值映射到minRadius-maxRadius的范围上
             var radius = [];
-            var l = nodes.length;
-            for (var i = 0; i < l; i++) {
+            for (var i = 0; i < len; i++) {
                 var node = nodes[i];
-                if (typeof(node.value) !== 'undefined') {
-                    radius.push(node.value);
-                } else {
-                    radius.push(1);
-                }
+                radius.push(node.value || 1);
             }
 
-            var narr = new NDArray(radius);
-            radius = narr.map(minRadius, maxRadius)
-                        .toArray();
-            var max = narr.max();
-            if (max !== 0) {
-                nodeWeights = narr.mul(1/max, narr).toArray();
+            var arr = new NDArray(radius);
+            radius = arr.map(minRadius, maxRadius).toArray();
+            var max = arr.max();
+            if (max == 0) {
+                return;
             }
+            var massArr = arr.mul(1/max, arr).toArray();
+            var positionArr = new ArrayCtor(len * 2);
 
-            for (var i = 0; i < l; i++) {
-                var node = nodes[i];
-                var x, y;
-                var r = radius[i];
-
+            for (var i = 0; i < len; i++) {
                 var initPos;
-                if (typeof(nodeInitialPos[node.name]) !== 'undefined') {
-                    initPos = nodeInitialPos[node.name];
+                var node = nodes[i];
+                if (typeof(this.myChart.__forceNodePositionMap[node.name]) !== 'undefined') {
+                    initPos = vec2.create();
+                    vec2.copy(initPos, this.myChart.__forceNodePositionMap[node.name]);
                 } else if (typeof(node.initial) !== 'undefined') {
-                    initPos = node.initial;
+                    initPos = Array.prototype.slice.call(node.initial);
                 } else {
                     initPos = _randomInSquare(
-                        viewportWidth/2, viewportHeight/2, initSize
+                        center[0], center[1], size * 0.8
                     );
                 }
-                var x = initPos[0];
-                var y = initPos[1];
-                // 初始化位置
-                nodePositions[i] = vec2.create(x, y);
-                nodePrePositions[i] = vec2.create(x, y);
-                // 初始化受力
-                nodeForces[i] = vec2.create(0, 0);
-                // 初始化质量
-                nodeMasses[i] = r * r * density * 0.035;
+                var style = shapes[i].style;
+                style.width = style.width || (radius[i] * 2);
+                style.height = style.height || (radius[i] * 2);
+                style.x = -style.width / 2;
+                style.y = -style.height / 2;
+                shapes[i].position = initPos;
 
-                var shape = {
+                positionArr[i * 2] = initPos[0];
+                positionArr[i * 2 + 1] = initPos[1];
+            }
+
+            len = links.length;
+            var edgeArr = new ArrayCtor(len * 2);
+            var edgeWeightArr = new ArrayCtor(len);
+            for (var i = 0; i < len; i++) {
+                var link = links[i];
+                edgeArr[i * 2] = link.source;
+                edgeArr[i * 2 + 1] = link.target;
+                edgeWeightArr[i] = link.weight || 1;
+            }
+
+            arr = new NDArray(edgeWeightArr);
+            var max = arr.max();
+            if (max == 0) {
+                return;
+            }
+            var edgeWeightArr = arr.mul(1 / max, arr)._array;
+
+            var config = {
+                center: center,
+                width: size,
+                height: size,
+                scaling: serie.scaling || 1.0,
+                gravity: serie.gravity || 1.0
+            };
+
+            zrUtil.merge(this._layout, config, true);
+
+            this._layout.initNodes(positionArr, massArr, radius);
+            this._layout.initEdges(edgeArr, edgeWeightArr);
+        },
+
+        _buildNodeShapes: function(serie) {
+            var categories = this.query(serie, 'categories');
+            var nodes = this._filteredNodes;
+            var len = nodes.length;
+            var legend = this.component.legend;
+            var self = this;
+
+            for (var i = 0; i < len; i++) {
+                var node = nodes[i];
+                var x, y;
+
+                var shape = new IconShape({
                     style : {
-                        r : r,
                         x : 0,
                         y : 0
                     },
                     clickable : true,
-                    highlightStyle : {},
-                    position : [x, y],
-                    __forceIndex : i
-                };
+                    highlightStyle : {}
+                });
 
-                // Label 
-                var labelStyle;
-                if (self.query(forceSerie, 'itemStyle.normal.label.show')) {
+                var queryTarget = [];
+                var shapeNormalStyle = [];
+                var shapeEmphasisStyle = [];
+                
+                queryTarget.push(node);
+                if (node.itemStyle) {
+                    shapeNormalStyle.push(node.itemStyle.normal);
+                    shapeEmphasisStyle.push(node.itemStyle.emphasis);
+                }
+                if (typeof(node.category) !== 'undefined') {
+                    var category = categories[node.category];
+                    if (category) {
+                        // 使用 Legend.getColor 配置默认 category 的默认颜色
+                        category.itemStyle = category.itemStyle || {};
+                        category.itemStyle.normal = category.itemStyle.normal || {};
+                        category.itemStyle.normal.color = category.itemStyle.normal.color
+                            || legend.getColor(category.name);
+
+                        queryTarget.push(category);
+                        shapeNormalStyle.unshift(category.itemStyle.normal);
+                        shapeEmphasisStyle.unshift(category.itemStyle.emphasis);
+                    }
+                }
+                queryTarget.push(serie);
+                shapeNormalStyle.unshift(serie.itemStyle.normal.nodeStyle);
+                shapeEmphasisStyle.unshift(serie.itemStyle.emphasis.nodeStyle);
+
+                shape.style.iconType = this.deepQuery(queryTarget, 'symbol');
+                // 强制设定节点大小，否则默认映射到 minRadius 到 maxRadius 后的值
+                shape.style.width = shape.style.height
+                    = (this.deepQuery(queryTarget, 'symbolSize') || 0) * 2;
+
+                // 节点样式
+                for (var k = 0; k < shapeNormalStyle.length; k++) {
+                    if (shapeNormalStyle[k]) {
+                        zrUtil.merge(shape.style, shapeNormalStyle[k], true);
+                    }
+                } 
+                // 节点高亮样式
+                for (var k = 0; k < shapeEmphasisStyle.length; k++) {
+                    if (shapeEmphasisStyle[k]) {
+                        zrUtil.merge(shape.highlightStyle, shapeEmphasisStyle[k], true);
+                    }
+                } 
+                
+                // 节点标签样式
+                if (this.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {
                     shape.style.text = node.name;
                     shape.style.textPosition = 'inside';
-                    labelStyle = self.query(
-                        forceSerie, 'itemStyle.normal.label.textStyle'
+                    var labelStyle = this.deepQuery(
+                        queryTarget, 'itemStyle.normal.label.textStyle'
                     ) || {};
                     shape.style.textColor = labelStyle.color || '#fff';
                     shape.style.textAlign = labelStyle.align || 'center';
                     shape.style.textBaseline = labelStyle.baseline || 'middle';
-                    shape.style.textFont = self.getFont(labelStyle);
+                    shape.style.textFont = this.getFont(labelStyle);
                 }
 
-                if (self.query(forceSerie, 'itemStyle.emphasis.label.show')) {
+                if (this.deepQuery(queryTarget, 'itemStyle.emphasis.label.show')) {
                     shape.highlightStyle.text = node.name;
                     shape.highlightStyle.textPosition = 'inside';
-                    labelStyle = self.query(
-                        forceSerie, 'itemStyle.emphasis.label.textStyle'
+                    var labelStyle = this.deepQuery(
+                        queryTarget, 'itemStyle.emphasis.label.textStyle'
                     ) || {};
                     shape.highlightStyle.textColor = labelStyle.color || '#fff';
-                    shape.highlightStyle.textAlign = labelStyle.align 
-                                                     || 'center';
-                    shape.highlightStyle.textBaseline = labelStyle.baseline 
-                                                        || 'middle';
-                    shape.highlightStyle.textFont = self.getFont(labelStyle);
+                    shape.highlightStyle.textAlign = labelStyle.align  || 'center';
+                    shape.highlightStyle.textBaseline = labelStyle.baseline || 'middle';
+                    shape.highlightStyle.textFont = this.getFont(labelStyle);
                 }
 
-                // 优先级 node.style > category.style > defaultStyle
-                zrUtil.merge(shape.style, nodeStyle);
-                zrUtil.merge(shape.highlightStyle, nodeEmphasisStyle);
-
-                if (typeof(node.category) !== 'undefined') {
-                    var category = categories[node.category];
-                    if (category) {
-                        if (legend) {
-                            shape.style.color = legend.getColor(category.name);
-                        }
-                        var style = category.itemStyle;
-                        if (style) {
-                            if (style.normal) {
-                                zrUtil.merge(shape.style, style.normal, true);
-                            }
-                            if (style.emphasis) {
-                                zrUtil.merge(
-                                    shape.highlightStyle, 
-                                    style.emphasis, 
-                                    true
-                                );
-                            }
-                        }
-                    }
-                }
-                if (typeof(node.itemStyle) !== 'undefined') {
-                    var style = node.itemStyle;
-                    if(style.normal ){ 
-                        zrUtil.merge(shape.style, style.normal, true);
-                    }
-                    if(style.normal ){ 
-                        zrUtil.merge(shape.highlightStyle, style.emphasis, true);
-                    }
-                }
-                
                 // 拖拽特性
-                if (forceSerie.draggable) {
-                    self.setCalculable(shape);
+                if (serie.draggable) {
+                    this.setCalculable(shape);
                     shape.dragEnableTime = 0;
-                    shape.ondragstart = self.shapeHandler.ondragstart;
-                    shape.draggable = forceSerie.draggable;
+                    shape.draggable = serie.draggable;
+                    shape.ondragstart = this.shapeHandler.ondragstart;
+                    shape.ondragover = function() {};
                 }
                 
                 var categoryName = '';
@@ -388,36 +412,31 @@ define(function (require) {
                     // data
                     node,
                     // data index
-                    zrUtil.indexOf(rawNodes, node),
+                    zrUtil.indexOf(this._rawNodes, node),
                     // name
                     node.name || '',
                     // value
                     node.value
                 );
                 
-                shape = new CircleShape(shape);
-                nodeShapes.push(shape);
-                self.shapeList.push(shape);
-                zr.addShape(shape);
+                this._nodeShapes.push(shape);
+                this.shapeList.push(shape);
+                this.zr.addShape(shape);
             }
+        },
 
-            // _normalize(nodeMasses, nodeMasses);
-        }
+        _buildLinkShapes: function(serie) {
 
-        function _buildLinkShapes(nodes, links) {
-            var l = links.length;
+            var nodes = this._filteredNodes;
+            var links = this._filteredLinks;
+            var len = links.length;
 
-            for (var i = 0; i < l; i++) {
+            for (var i = 0; i < len; i++) {
                 var link = links[i];
-                // var source = nodes[link.source];
-                // var target = nodes[link.target];
-                if (typeof(link.weight) !== 'undefined') {
-                    linkWeights.push(link.weight);
-                } else {
-                    linkWeights.push(1);
-                }
+                var source = nodes[link.source];
+                var target = nodes[link.target];
 
-                var linkShape = {
+                var linkShape = new LineShape({
                     style : {
                         xStart : 0,
                         yStart : 0,
@@ -427,31 +446,36 @@ define(function (require) {
                     },
                     clickable : true,
                     highlightStyle : {}
-                };
+                });
 
-                zrUtil.merge(linkShape.style, linkStyle);
-                zrUtil.merge(linkShape.highlightStyle, linkEmphasisStyle);
+                zrUtil.merge(
+                    linkShape.style,
+                    this.query(serie, 'itemStyle.normal.linkStyle'),
+                    true
+                );
+                zrUtil.merge(
+                    linkShape.highlightStyle,
+                    this.query(serie, 'itemStyle.emphasis.linkStyle'),
+                    true
+                );
                 if (typeof(link.itemStyle) !== 'undefined') {
                     if(link.itemStyle.normal){
                         zrUtil.merge(linkShape.style, link.itemStyle.normal, true);
                     }
                     if(link.itemStyle.emphasis){
                         zrUtil.merge(
-                            linkShape.highlightStyle, 
-                            link.itemStyle.emphasis, 
+                            linkShape.highlightStyle,
+                            link.itemStyle.emphasis,
                             true
                         );
                     }
                 }
 
-                var source = filteredNodes[link.source];
-                var target = filteredNodes[link.target];
-
-                var link = rawLinks[link.rawIndex];
+                var link = this._rawLinks[link.rawIndex];
                 ecData.pack(
                     linkShape,
                     // serie
-                    forceSerie,
+                    serie,
                     // serie index
                     0,
                     // link data
@@ -471,20 +495,19 @@ define(function (require) {
                     true
                 );
 
-                linkShape = new LineShape(linkShape);
-                linkShapes.push(linkShape);
-                self.shapeList.push(linkShape);
-                zr.addShape(linkShape);
+                this._linkShapes.push(linkShape);
+                this.shapeList.push(linkShape);
+                this.zr.addShape(linkShape);
 
                 // Arrow shape
-                if (forceSerie.linkSymbol && forceSerie.linkSymbol !== 'none') {
-                    var arrowShape = {
+                if (serie.linkSymbol && serie.linkSymbol !== 'none') {
+                    var symbolShape = new IconShape({
                         style: {
                             x: -5,
                             y: 0,
-                            width: forceSerie.linkSymbolSize[0],
-                            height: forceSerie.linkSymbolSize[1],
-                            iconType: forceSerie.linkSymbol,
+                            width: serie.linkSymbolSize[0],
+                            height: serie.linkSymbolSize[1],
+                            iconType: serie.linkSymbol,
                             brushType: 'fill',
                             // Use same style with link shape
                             color: linkShape.style.strokeColor,
@@ -499,325 +522,161 @@ define(function (require) {
                         },
                         position: [0, 0],
                         rotation: 0
-                    };
-                    arrowShape = new IconShape(arrowShape);
-                    self.shapeList.push(arrowShape);
-                    arrowShapes.push(arrowShape);
-                    zr.addShape(arrowShape);
+                    });
+                    linkShape._symbolShape = symbolShape;
+                    this.shapeList.push(symbolShape);
+                    this.zr.addShape(symbolShape);
                 }
             }
+        },
 
-            var narr = new NDArray(linkWeights);
-            var max = narr.max();
-            if (max !== 0) {
-                linkWeights = narr.mul(1/max, narr).toArray();
-            }
-        }
-
-        function _updateLinkShapes() {
+        _updateLinkShapes: function() {
             var v = vec2.create();
-            //var right = vec2.create(1, 0);
-            for (var i = 0, len = filteredLinks.length; i < len; i++) {
-                var link = filteredLinks[i];
-                var linkShape = linkShapes[i];
-                var sourceShape = nodeShapes[link.source];
-                var targetShape = nodeShapes[link.target];
+            var links = this._filteredLinks;
+            for (var i = 0, len = links.length; i < len; i++) {
+                var link = links[i];
+                var linkShape = this._linkShapes[i];
+                var sourceShape = this._nodeShapes[link.source];
+                var targetShape = this._nodeShapes[link.target];
 
                 linkShape.style.xStart = sourceShape.position[0];
                 linkShape.style.yStart = sourceShape.position[1];
                 linkShape.style.xEnd = targetShape.position[0];
                 linkShape.style.yEnd = targetShape.position[1];
 
-                if (forceSerie.linkSymbol) {
-                    var arrowShape = arrowShapes[i];
-                    vec2.copy(arrowShape.position, targetShape.position);
+                this.zr.modShape(linkShape.id);
+
+                if (linkShape._symbolShape) {
+                    var symbolShape = linkShape._symbolShape;
+                    vec2.copy(symbolShape.position, targetShape.position);
 
                     vec2.sub(v, sourceShape.position, targetShape.position);
                     vec2.normalize(v, v);
 
                     vec2.scaleAndAdd(
-                        arrowShape.position, arrowShape.position, v, targetShape.style.r + 2
+                        symbolShape.position, symbolShape.position,
+                        v, targetShape.style.width / 2 + 2
                     );
+
                     var angle;
                     if (v[1] < 0) {
                         angle = 2 * Math.PI - Math.acos(-v[0]);
                     } else {
                         angle = Math.acos(-v[0]);
                     }
-                    arrowShape.rotation = angle  - Math.PI / 2;
+                    symbolShape.rotation = angle  - Math.PI / 2;
+
+                    this.zr.modShape(symbolShape.id);
                 }
             }
-        }
+        },
 
-        function _update(stepTime) {
-            var len = nodePositions.length;
-            var v12 = [];
-            // 计算节点之间斥力
-            var k2 = k*k;
-            // Reset force
-            for (var i = 0; i < len; i++) {
-                nodeForces[i][0] = 0;
-                nodeForces[i][1] = 0;
-            }
-            for (var i = 0; i < len; i++) {
-                for (var j = i+1; j < len; j++){
-                    var w1 = nodeWeights[i];
-                    var w2 = nodeWeights[j];
-                    var p1 = nodePositions[i];
-                    var p2 = nodePositions[j];
+        _update: function() {
+            this._layout.update();
 
-                    // 节点1到2的向量
-                    vec2.sub(v12, p2, p1);
-                    var d = vec2.length(v12);
-                    // 距离大于500忽略斥力
-                    if(d > 500){
-                        continue;
+            for (var i = 0; i < this._layout.nodes.length; i++) {
+                var position = this._layout.nodes[i].position;
+                var shape = this._nodeShapes[i];
+                var node = this._filteredNodes[i];
+                if (shape.fixed || (node.fixX && node.fixY)) {
+                    vec2.copy(position, shape.position);
+                } else if (node.fixX) {
+                    position[0] = shape.position[0];
+                    shape.position[1] = position[1];
+                } else if (node.fixY) {
+                    position[1] = shape.position[1];
+                    shape.position[0] = position[0];
+                } else  {
+                    vec2.copy(shape.position, position);
+                }
+
+                var nodeName = node.name;
+                if (nodeName) {
+                    var gPos = this.myChart.__forceNodePositionMap[nodeName];
+                    if (!gPos) {
+                        gPos = this.myChart.__forceNodePositionMap[nodeName] = vec2.create();
                     }
-                    if(d < 5){
-                        d = 5;
-                    }
-
-                    vec2.scale(v12, v12, 1 / d);
-                    var forceFactor = 1 * (w1 + w2) * k2 / d;
-
-                    //节点1受到的力
-                    vec2.scaleAndAdd(
-                        nodeForces[i], nodeForces[i], v12, -forceFactor
-                    );
-                    //节点2受到的力
-                    vec2.scaleAndAdd(
-                        nodeForces[j], nodeForces[j], v12, forceFactor
-                    );
+                    vec2.copy(gPos, position);
                 }
             }
-            // 计算节点之间引力
-            for (var i = 0, l = filteredLinks.length; i < l; i++) {
-                var link = filteredLinks[i];
-                var w = linkWeights[i];
-                var s = link.source;
-                var t = link.target;
-                var p1 = nodePositions[s];
-                var p2 = nodePositions[t];
+        },
 
-                vec2.sub(v12, p2, p1);
-                var d2 = vec2.lengthSquare(v12);
-                if (d2 === 0) {
-                    continue;
-                }
+        _step: function(){
+            this._update();
 
-                var forceFactor = w * d2 / k / Math.sqrt(d2);
-                // 节点1受到的力
-                vec2.scaleAndAdd(
-                    nodeForces[s], nodeForces[s], v12, forceFactor
-                );
-                // 节点2受到的力
-                vec2.scaleAndAdd(
-                    nodeForces[t], nodeForces[t], v12, -forceFactor
-                );
-            }
-            // 到质心的向心力
-            for (var i = 0, l = filteredNodes.length; i < l; i++){
-                var p = nodePositions[i];
-                vec2.sub(v12, centroid, p);
-                var d2 = vec2.lengthSquare(v12);
-                var forceFactor = d2 * centripetal / (100 * Math.sqrt(d2));
-                vec2.scaleAndAdd(
-                    nodeForces[i], nodeForces[i], v12, forceFactor
-                );
-            }
-            var velocity = [];
-            // 计算位置(verlet积分)
-            for (var i = 0, l = nodePositions.length; i < l; i++) {
-                var node = filteredNodes[i];
-                var name = filteredNodes[i].name;
-                if (filteredNodes[i].fixed) {
-                    // 拖拽同步
-                    vec2.set(nodePositions[i], mouseX, mouseY);
-                    vec2.set(nodePrePositions[i], mouseX, mouseY);
-                    vec2.set(nodeShapes[i].position, mouseX, mouseY);
-                    if (typeof(nodeInitialPos[name]) !== 'undefined') {
-                        vec2.set(nodeInitialPos[name], mouseX, mouseY);
-                    }
-                    continue;
-                }
-                var p = nodePositions[i];
-                var __P = nodePrePositions[i];
-                vec2.sub(velocity, p, __P);
-                __P[0] = p[0];
-                __P[1] = p[1];
-                vec2.scaleAndAdd(
-                    velocity, velocity,
-                    nodeForces[i],
-                    stepTime / nodeMasses[i]
-                );
-                // Damping
-                vec2.scale(velocity, velocity, temperature);
-                // 防止速度太大
-                velocity[0] = Math.max(Math.min(velocity[0], 100), -100);
-                velocity[1] = Math.max(Math.min(velocity[1], 100), -100);
+            this._updateLinkShapes();
 
-                vec2.add(p, p, velocity);
-
-                if (node.fixY && node.initial) {
-                    p[1] = node.initial[1];
-                }
-                if (node.fixX && node.initial) {
-                    p[0] = node.initial[0];
-                }
-
-                vec2.copy(nodeShapes[i].position, p);
-
-                if (name) {
-                    if (!nodeInitialPos[name]) {
-                        nodeInitialPos[name] = vec2.create();
-                    }
-                    vec2.copy(nodeInitialPos[name], p);
-                }
-            }
-        }
-
-        function _step(){
-            if (temperature < 0.01) {
-                return;
+            for (var i = 0; i < this._nodeShapes.length; i++) {
+                this.zr.modShape(this._nodeShapes[i].id);
             }
 
-            _update(stepTime);
-            _updateLinkShapes();
+            this.zr.refresh();
+        },
 
-            //var tmp = {};
-            for (var i = 0; i < nodeShapes.length; i++) {
-                //var shape = nodeShapes[i];
-                //tmp.position = shape.position;
-                zr.modShape(nodeShapes[i].id);
-            }
-            //tmp = {};
-            for (var i = 0; i < linkShapes.length; i++) {
-                //var shape = linkShapes[i];
-                //tmp.style = shape.style;
-                zr.modShape(linkShapes[i].id);
-            }
-
-            //tmp = {};
-            for (var i = 0; i < arrowShapes.length; i++) {
-                //var shape = arrowShapes[i];
-                //tmp.position = shape.position;
-                //tmp.rotation = shape.rotation;
-                zr.modShape(arrowShapes[i].id);
-            }
-
-            zr.refresh();
-
-            // Cool Down
-            temperature *= coolDown;
-        }
-
-        var _updating;
-        function init(newOption, newComponent) {
-            option = newOption;
-            component = newComponent;
-
-            series = option.series;
-
-            self.clear();
-            _buildShape();
-
-            _updating = true;
-            function cb() {
-                if (_updating) {
-                    _step();
-                    requestAnimationFrame(cb);
-                }
-            }
-            requestAnimationFrame(cb);
-        }
-
-        function refresh(newOption) {
+        refresh: function(newOption) {
             if (newOption) {
-                option = newOption;
-                series = option.series;
+                this.option = newOption;
+                this.series = option.series;
             }
-            self.clear();
-            _buildShape();
-            temperature = 1.0;
+            this.clear();
+            this._buildShape();
+        },
+
+        dispose: function(){
+            this._updating = false;
+            this.clear();
+            this.shapeList = null;
+            this.effectList = null;
+
+            this.myChart.__forceNodePositionMap = {};
+        }
+    }
+
+    /**
+     * 拖拽开始
+     */
+    function ondragstart(param) {
+        if (!this.isDragstart || !param.target) {
+            // 没有在当前实例上发生拖拽行为则直接返回
+            return;
+        }
+        if (!(this._forceSerie && this._forceSerie.draggable)) {
+            return;
         }
 
-        function dispose(){
-            _updating = false;
-            self.clear();
-            self.shapeList = null;
-            self.effectList = null;
+        var shape = param.target;
+        shape.fixed = true;
+
+        // 处理完拖拽事件后复位
+        this.isDragstart = false;
+
+        this.zr.on(zrConfig.EVENT.MOUSEMOVE, this.onmousemove);
+    }
+
+    function onmousemove() {
+        this._layout.temperature = 0.8;
+    }
+    
+    /**
+     * 数据项被拖拽出去，重载基类方法
+     */
+    function ondragend(param, status) {
+        if (!this.isDragend || !param.target) {
+            // 没有在当前实例上发生拖拽行为则直接返回
+            return;
         }
+        var shape = param.target;
+        shape.fixed = false;
 
-        /**
-         * 输出动态视觉引导线
-         */
-        self.shapeHandler.ondragstart = function () {
-            self.isDragstart = true;
-        };
-        
-        function onclick() { }
+        // 别status = {}赋值啊！！
+        status.dragIn = true;
+        //你自己refresh的话把他设为false，设true就会重新调refresh接口
+        status.needRefresh = false;
 
-        /**
-         * 拖拽开始
-         */
-        function ondragstart(param) {
-            if (!self.isDragstart || !param.target) {
-                // 没有在当前实例上发生拖拽行为则直接返回
-                return;
-            }
-            if (!(forceSerie && forceSerie.draggable)) {
-                return;
-            }
-            var shape = param.target;
-            var idx = shape.__forceIndex;
-            var node = filteredNodes[idx];
-            node.fixed = true;
+        // 处理完拖拽事件后复位
+        this.isDragend = false;
 
-            // 处理完拖拽事件后复位
-            self.isDragstart = false;
-            
-            zr.on(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
-        }
-        
-        /**
-         * 数据项被拖拽出去，重载基类方法
-         */
-        function ondragend(param, status) {
-            if (!self.isDragend || !param.target) {
-                // 没有在当前实例上发生拖拽行为则直接返回
-                return;
-            }
-            var shape = param.target;
-            var idx = shape.__forceIndex;
-            var node = filteredNodes[idx];
-            node.fixed = false;
-
-            // 别status = {}赋值啊！！
-            status.dragIn = true;
-            //你自己refresh的话把他设为false，设true就会重新调refresh接口
-            status.needRefresh = false;
-
-            // 处理完拖拽事件后复位
-            self.isDragend = false;
-            
-            zr.un(zrConfig.EVENT.MOUSEMOVE, _onmousemove);
-        }
-
-        // 拖拽中位移信息
-        function _onmousemove(param) {
-            temperature = 0.8;
-            mouseX = zrEvent.getX(param.event);
-            mouseY = zrEvent.getY(param.event);
-        }
-        
-        self.init = init;
-        self.refresh = refresh;
-        self.ondragstart = ondragstart;
-        self.ondragend = ondragend;
-        self.dispose = dispose;
-        self.onclick = onclick;
-
-        init(option, component);
+        this.zr.un(zrConfig.EVENT.MOUSEMOVE, this.onmousemove);
     }
    
     function _randomInSquare(x, y, size) {

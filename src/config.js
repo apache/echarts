@@ -785,17 +785,23 @@ define(function() {
             // 数据map到圆的半径的最小值和最大值
             minRadius : 10,
             maxRadius : 20,
-            density : 1.0,
-            attractiveness : 1.0,
-            // 初始化的随机大小位置
-            initSize : 300,
+            center: ['50%', '50%'],
+            size: '100%',
+
+            scaling : 1.0,
             // 向心力因子，越大向心力越大
-            centripetal : 1,
+            gravity : 1,
             // 冷却因子
             coolDown : 0.99,
+
+            symbol: 'circle',
+            // symbolSize 为 0 的话使用映射到minRadius-maxRadius后的值
+            symbolSize: 0,
+
             linkSymbol: null,
             linkSymbolSize: [10, 15],
             draggable: true,
+
             // 分类里如果有样式会覆盖节点默认样式
             categories : [],
             itemStyle: {
@@ -808,7 +814,8 @@ define(function() {
                     nodeStyle : {
                         brushType : 'both',
                         color : '#f08c2e',
-                        strokeColor : '#5182ab'
+                        strokeColor : '#5182ab',
+                        lineWidth: 1
                     },
                     linkStyle : {
                         strokeColor : '#5182ab'
@@ -821,9 +828,31 @@ define(function() {
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     nodeStyle : {},
-                    linkStyle : {}
+                    linkStyle : {
+                        opacity: 0
+                    }
                 }
             }
+            // nodes: [{
+            //     name: 'xxx',
+            //     value: 1,
+            //     itemStyle: {},
+            //     initial: [0, 0],
+            //     fixX: false,
+            //     fixY: false,
+            //     ignore: false,
+            //     symbol: 'circle',
+            //     symbolSize: 0
+            // }]
+            // links: [{
+            //      source: 1,
+            //      target: 2,
+            //      weight: 1,
+            //      itemStyle: {}
+            // }, {
+            //      source: 'xxx',
+            //      target: 'ooo'
+            // }]
         },
 
         chord : {

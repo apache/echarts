@@ -172,10 +172,6 @@ define(function (require) {
             var _zr = require('zrender').init(this.dom);
             this._zr = _zr;
 
-            // 添加消息中心的事件分发器特性
-            zrEvent.Dispatcher.call(this._messageCenter);
-            zrEvent.Dispatcher.call(this._messageCenterOutSide);
-            
             // wrap: n,e,d,t for name event data this
             this._messageCenter.dispatch = function(type, event, eventPackage, that) {
                 eventPackage = eventPackage || {};

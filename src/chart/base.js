@@ -199,6 +199,7 @@ define(function (require) {
             var dataIndex = ecData.get(target, 'dataIndex');
 
             var series = this.series;
+
             // 删除被拖拽走的数据
             if (typeof series[seriesIndex].data[dataIndex].value != 'undefined') {
                 series[seriesIndex].data[dataIndex].value = '-';

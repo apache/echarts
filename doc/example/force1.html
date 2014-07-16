@@ -70,7 +70,8 @@ option = {
                     name: '人物'
                 },
                 {
-                    name: '家人'
+                    name: '家人',
+                    symbol: 'diamond'
                 },
                 {
                     name:'朋友'
@@ -103,12 +104,15 @@ option = {
             },
             minRadius : 15,
             maxRadius : 25,
-            density : 0.05,
-            attractiveness: 1.2,
+            gravity: 1.1,
+            scaling: 1.2,
             linkSymbol: 'arrow',
-            draggable: false,
             nodes:[
-                {category:0, name: '乔布斯', value : 10},
+                {
+                    category:0, name: '乔布斯', value : 10,
+                    symbol: 'star',
+                    symbolSize: 40
+                },
                 {category:1, name: '丽萨-乔布斯',value : 2},
                 {category:1, name: '保罗-乔布斯',value : 3},
                 {category:1, name: '克拉拉-乔布斯',value : 3},
