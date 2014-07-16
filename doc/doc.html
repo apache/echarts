@@ -2305,6 +2305,11 @@ require(['echarts'], function (ec){
                             <td> {show : true} </td>
                             <td> 分隔区域，默认不显示，属性show控制显示与否，属性areaStyle（详见<a href="#AreaStyle" title="">areaStyle</a>）控制区域样式 </td>
                         </tr>
+                         <tr>
+                            <td> <b>{String}</b> type </td>
+                            <td> 'polygon' </td>
+                            <td> 极坐标的形状，'polygon'|'circle' 多边形|圆形</td>
+                        </tr>
                         <tr>
                             <td> <b>{Array}</b> indicator </td>
                             <td> [] </td>
@@ -2314,11 +2319,11 @@ require(['echarts'], function (ec){
                     <div class="code">
                         <pre>
 indicator : [
-    {name : '外观'},
-    {name : '拍照', min : 0},
-    {name : '系统', min : 0, max : 100},
-    {name : '性能', axisLabel: {...}},
-    {name : '屏幕'}
+    {text : '外观'},
+    {text : '拍照', min : 0},
+    {text : '系统', min : 0, max : 100},
+    {text : '性能', axisLabel: {...}},
+    {text : '屏幕'}
 ]
 </pre>
 </div>

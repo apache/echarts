@@ -440,7 +440,8 @@ define(function() {
                     width : 1,
                     color : '#ccc'
                 }
-            }
+            },
+            type: 'polygon'
             //indicator : []
         },
 
