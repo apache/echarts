@@ -160,10 +160,17 @@ define(function (require) {
                     serieName = series[i].name || '';
                     
                     if (workerUrl && serie.useWorker) {
-                        if (!this._layoutWorker) {
-                            this._layoutWorker = new Worker(workerUrl);
+                        try {
+                            if (!this._layoutWorker) {
+                                this._layoutWorker = new Worker(workerUrl);
+                            }
+                            this._layout = null;   
+                        } catch(e) {    // IE10-11 will throw security error when using blog url
+                            this._layoutWorker = null;
+                            if (!this._layout) {
+                                this._layout = new ForceLayout();
+                            }
                         }
-                        this._layout = null;
                     } else {
                         if (!this._layout) {
                             this._layout = new ForceLayout();
