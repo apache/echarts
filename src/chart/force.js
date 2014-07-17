@@ -206,6 +206,8 @@ define(function (require) {
 
                     this._initLayout(serie);
 
+                    this._updateLinkShapes();
+
                     // TODO 多个 force 
                     this._forceSerie = serie;
                     break;

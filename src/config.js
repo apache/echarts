@@ -793,7 +793,7 @@ define(function() {
             minRadius : 10,
             maxRadius : 20,
 
-            // 在 1k+ 顶点的图上建议设置 large 为 true, 会使用 Barnes-Hut simulation
+            // 在 500+ 顶点的图上建议设置 large 为 true, 会使用 Barnes-Hut simulation
             // 同时开启 useWorker 并且把 steps 值调大
             // 关于Barnes-Hut simulation: http://en.wikipedia.org/wiki/Barnes–Hut_simulation
             large: false,
