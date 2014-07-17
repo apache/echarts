@@ -997,7 +997,7 @@ define(function (require) {
                 var width = transform.width;
                 var height = transform.height;
                 // 位置转经纬度
-                geoAndPos = this.pos2geo(mapType, [mx - left, my - top]);
+                var geoAndPos = this.pos2geo(mapType, [mx - left, my - top]);
                 if (delta > 0) {
                     delta = 1.2;        // 放大
                     if (typeof this._scaleLimitMap[mapType].max != 'undeined'
@@ -1239,7 +1239,7 @@ define(function (require) {
                     zrConfig.EVENT.MOUSEMOVE,
                     param.event
                 );
-            },100)
+            },100);
         },
 
         /**

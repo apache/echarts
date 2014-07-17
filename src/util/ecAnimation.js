@@ -448,7 +448,7 @@ define(function (require) {
                     xEnd : newShape.style.xStart,
                     yEnd : newShape.style.yStart
                 }
-            }
+            };
         }
         
         var xStart = newShape.style.xStart;
@@ -527,7 +527,7 @@ define(function (require) {
         }
         else {
             // mod
-            line(zr, oldShape, newShape, duration, easing)
+            line(zr, oldShape, newShape, duration, easing);
         }
     }
 

@@ -625,6 +625,7 @@ define(function (require) {
          */
         _mapSize : function (categoryAxis, locationMap, ignoreUserDefined) {
             var series = this.series;
+            var seriesIndex;
             var barWidthMap = {};
             var barMinHeightMap = {};
             var sBarWidth;

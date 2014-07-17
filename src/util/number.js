@@ -31,7 +31,7 @@ define(function() {
     function parseCenter(zr, center) {
         return [
             parsePercent(center[0], zr.getWidth()),
-            parsePercent(center[1], zr.getHeight()),
+            parsePercent(center[1], zr.getHeight())
         ];
     }
 
@@ -46,7 +46,7 @@ define(function() {
         var zrSize = Math.min(zr.getWidth(), zr.getHeight()) / 2;
         return [
             parsePercent(radius[0], zrSize),
-            parsePercent(radius[1], zrSize),
+            parsePercent(radius[1], zrSize)
         ];
     }
     

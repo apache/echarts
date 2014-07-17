@@ -206,7 +206,7 @@ define(function (require) {
                 // 清理可能有且唯一的legend data
                 var name = series[seriesIndex].data[dataIndex].name;
                 if (this.component.legend 
-                    && this.component.legend.getRelatedAmount(name) == 0
+                    && this.component.legend.getRelatedAmount(name) === 0
                 ) {
                     this.component.legend.del(name);
                 }
@@ -1004,7 +1004,7 @@ define(function (require) {
             color = this.deepMerge(queryTarget, 'itemStyle.normal').color 
                     || color;
             
-            symbol = this.deepQuery(queryTarget, 'symbol') || 'circle';
+            var symbol = this.deepQuery(queryTarget, 'symbol') || 'circle';
             symbol = symbol.replace('empty', '').replace(/\d/g, '');
             
             effect = this.deepMerge(
@@ -1213,8 +1213,6 @@ define(function (require) {
          */
         animationMark : function (duration , easing, addShapeList) {
             var shapeList = addShapeList || this.shapeList;
-            var x;
-            var y;
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 if (!shapeList[i]._mark) {
                     continue;

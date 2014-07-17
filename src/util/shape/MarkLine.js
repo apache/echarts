@@ -239,15 +239,15 @@ define(function (require) {
             var point= [
                 [
                     x + symbolSize * Math.cos(rotate - halfRotate),
-                    y - symbolSize * Math.sin(rotate - halfRotate),
+                    y - symbolSize * Math.sin(rotate - halfRotate)
                 ],
                 [
                     x + symbolSize * 0.6 * Math.cos(rotate),
-                    y - symbolSize * 0.6 * Math.sin(rotate),
+                    y - symbolSize * 0.6 * Math.sin(rotate)
                 ],
                 [
                     x + symbolSize * Math.cos(rotate + halfRotate),
-                    y - symbolSize * Math.sin(rotate + halfRotate),
+                    y - symbolSize * Math.sin(rotate + halfRotate)
                 ]
             ];
             ctx.moveTo(x, y);

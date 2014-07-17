@@ -66,7 +66,7 @@ define(function(require) {
      * @param {Array} p
      */
     function pos2geo(obj, p) {
-        var point = p instanceof Array ? [p[0] * 1, p[1] * 1] : [p.x * 1, p.y * 1]
+        var point = p instanceof Array ? [p[0] * 1, p[1] * 1] : [p.x * 1, p.y * 1];
         return [point[0] / obj.scale.x, point[1] / obj.scale.y];
     }
     
@@ -75,7 +75,7 @@ define(function(require) {
      * @param {Array | Object} p
      */
     function geo2pos(obj, p) {
-        var point = p instanceof Array ? [p[0] * 1, p[1] * 1] : [p.x * 1, p.y * 1]
+        var point = p instanceof Array ? [p[0] * 1, p[1] * 1] : [p.x * 1, p.y * 1];
         return [point[0] * obj.scale.x, point[1] * obj.scale.y];
     }
 
@@ -153,7 +153,7 @@ define(function(require) {
                     (x + width / 2) * scale[0], 
                     (y + height / 2) * scale[1]
                 ]
-            }
+            };
         },
 
         line: function(xmlNode, scale) {
@@ -172,7 +172,7 @@ define(function(require) {
                     (x1 + x2) * 0.5 * scale[0], 
                     (y1 + y2) * 0.5 * scale[1]
                 ]
-            }
+            };
         },
 
         circle: function(xmlNode, scale) {
@@ -189,14 +189,14 @@ define(function(require) {
                     cx * scale[0],
                     cy * scale[1]
                 ]
-            }
+            };
         },
 
         ellipse: function(xmlNode, scale) {
-            var cx = parseFloat(xmlNode.getAttribute("cx") || 0);
-            var cy = parseFloat(xmlNode.getAttribute("cy") || 0);
-            var rx = parseFloat(xmlNode.getAttribute("rx") || 0);
-            var ry = parseFloat(xmlNode.getAttribute("ry") || 0);
+            var cx = parseFloat(xmlNode.getAttribute('cx') || 0);
+            var cy = parseFloat(xmlNode.getAttribute('cy') || 0);
+            var rx = parseFloat(xmlNode.getAttribute('rx') || 0);
+            var ry = parseFloat(xmlNode.getAttribute('ry') || 0);
 
             return {
                 shapeType: 'ellipse',
@@ -208,7 +208,7 @@ define(function(require) {
                     cx * scale[0],
                     cy * scale[1]
                 ]
-            }
+            };
         },
 
         polygon: function(xmlNode, scale) {
@@ -235,7 +235,7 @@ define(function(require) {
                         (min[0] + max[0]) / 2 * scale[0],
                         (min[1] + max[1]) / 2 * scale[0]
                     ]
-                }
+                };
             }
         },
 
@@ -243,7 +243,7 @@ define(function(require) {
             var obj = shapeBuilders.polygon(xmlNode, scale);
             return obj;
         }
-    }
+    };
     
     return {
         getBbox : getBbox,

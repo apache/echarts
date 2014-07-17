@@ -108,7 +108,7 @@ define(function (require) {
         _buildShape : function () {
             this._iconList = [];
             var toolboxOption = this.option.toolbox;
-            this._enableColor = toolboxOption.effectiveColor
+            this._enableColor = toolboxOption.effectiveColor;
             this._disableColor = toolboxOption.disableColor;
             var feature = toolboxOption.feature;
             var iconName = [];

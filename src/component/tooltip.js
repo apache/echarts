@@ -1351,7 +1351,7 @@ define(function (require) {
             if (typeof serie == 'undefined') {
                 return;
             }
-            var chart = myChart.chart[serie.type];
+            var chart = this.myChart.chart[serie.type];
             var isAxisTrigger = this.deepQuery(
                                     [serie, this.option], 'tooltip.trigger'
                                 ) == 'axis';
@@ -1625,8 +1625,8 @@ define(function (require) {
             
             clearTimeout(this._hidingTicket);
             clearTimeout(this._showingTicket);
-            this.zr.un(zrConfig.EVENT.MOUSEMOVE, self._onmousemove);
-            this.zr.un(zrConfig.EVENT.GLOBALOUT, self._onglobalout);
+            this.zr.un(zrConfig.EVENT.MOUSEMOVE, this._onmousemove);
+            this.zr.un(zrConfig.EVENT.GLOBALOUT, this._onglobalout);
             
             if (this.hasAppend) {
                 this.dom.firstChild.removeChild(this._tDom);

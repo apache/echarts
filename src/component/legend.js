@@ -322,10 +322,6 @@ define(function (require) {
                         temp = 0;
                         continue;
                     }
-                    dataTextStyle = zrUtil.merge(
-                        data[i].textStyle || {},
-                        textStyle
-                    );
                     temp += itemWidth
                             + zrArea.getTextWidth(
                                   this._getName(data[i]),
@@ -660,7 +656,7 @@ define(function (require) {
                            : series[i].categories;  // 力导布局查找categories配置
                     for (var j = 0, k = data.length; j < k; j++) {
                         if (data[j].name == name && data[j].value != '-') {
-                            amount++
+                            amount++;
                         }
                     }
                 }

@@ -19,4 +19,4 @@ define(function () {
             && y >= rect.y
             && y <= (rect.y + rect.height);
     };
-})
+});

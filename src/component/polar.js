@@ -86,7 +86,7 @@ define(function (require) {
             return this.parsePercent(
                 item.radius,
                 Math.min(this.zr.getWidth(), this.zr.getHeight()) / 2
-            )
+            );
         },
 
         /**
@@ -422,7 +422,7 @@ define(function (require) {
                 },
                 hoverable : false,
                 draggable : false 
-            })
+            });
         },
 
         /**
@@ -657,6 +657,7 @@ define(function (require) {
             var serie;
             var serieData;
             var legend = this.component.legend;
+            var polarIndex;
 
             for (var i = 0; i < this.series.length; i ++) {
                 serie = this.series[i];

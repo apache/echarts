@@ -191,7 +191,7 @@ define(function (require) {
                         type, eventPackage, that
                     );
                 }
-            }
+            };
             
             this._onevent = function(param){
                 return self.__onevent(param);
@@ -210,7 +210,7 @@ define(function (require) {
 
             // 挂载关心的事件
             for (var i = 0, len = ZR_EVENT_LISTENS.length; i < len; i++) {
-                var eventName = ZR_EVENT_LISTENS[i]
+                var eventName = ZR_EVENT_LISTENS[i];
                 var eventValue = ZR_EVENT[eventName];
                 eventBehaviors[eventValue] = '_on' + eventName.toLowerCase();
                 _zr.on(eventValue, this._onzrevent);

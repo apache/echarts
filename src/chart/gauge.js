@@ -20,8 +20,6 @@ define(function (require) {
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
-    var zrMath = require('zrender/tool/math');
-    var zrColor = require('zrender/tool/color');
     
     /**
      * 构造函数
@@ -96,7 +94,7 @@ define(function (require) {
         _buildAxisLine : function (seriesIndex) {
             var serie = this.series[seriesIndex];
             if (!serie.axisLine.show) {
-                return
+                return;
             }
             var min         = serie.min;
             var total       = serie.max - min;
@@ -111,7 +109,6 @@ define(function (require) {
             var r0          = r - lineWidth;
             
             var sectorShape;
-            var len = colorArray.length;
             var lastAngle = startAngle;
             var newAngle;
             for (var i = 0, l = colorArray.length; i < l; i++) {
@@ -135,7 +132,7 @@ define(function (require) {
         _buildSplitLine : function (seriesIndex) {
             var serie = this.series[seriesIndex];
             if (!serie.splitLine.show) {
-                return
+                return;
             }
             
             var params = this._paramsMap[seriesIndex];
@@ -154,7 +151,6 @@ define(function (require) {
             var r = params.radius[1];
             var r0 = r - length;
             
-            var axShape;
             var angle;
             var sinAngle;
             var cosAngle;
@@ -188,7 +184,7 @@ define(function (require) {
         _buildAxisTick : function (seriesIndex) {
             var serie = this.series[seriesIndex];
             if (!serie.axisTick.show) {
-                return
+                return;
             }
             
             var params = this._paramsMap[seriesIndex];
@@ -209,12 +205,11 @@ define(function (require) {
             var r = params.radius[1];
             var r0 = r - length;
             
-            var axShape;
             var angle;
             var sinAngle;
             var cosAngle;
             for (var i = 0, l = splitNumber * tickSplit; i <= l; i++) {
-                if (i % tickSplit == 0) {   // 同splitLine
+                if (i % tickSplit === 0) {   // 同splitLine
                     continue;
                 }
                 angle = startAngle - totalAngle / l * i;
@@ -246,7 +241,7 @@ define(function (require) {
         _buildAxisLabel : function (seriesIndex) {
             var serie = this.series[seriesIndex];
             if (!serie.axisLabel.show) {
-                return
+                return;
             }
             
             var splitNumber = serie.splitNumber;
@@ -264,7 +259,7 @@ define(function (require) {
                      - this.parsePercent(
                          serie.splitLine.length, params.radius[1]
                      ) - 10;
-            var axShape;
+            
             var angle;
             var sinAngle;
             var cosAngle;
@@ -306,7 +301,7 @@ define(function (require) {
         _buildPointer : function (seriesIndex) {
             var serie       = this.series[seriesIndex];
             if (!serie.pointer.show) {
-                return
+                return;
             }
             var total       = serie.max - serie.min;
             var pointer     = serie.pointer;
@@ -367,7 +362,7 @@ define(function (require) {
         _buildTitle : function(seriesIndex) {
             var serie = this.series[seriesIndex];
             if (!serie.title.show) {
-                return
+                return;
             }
             
             var data = serie.data[0];
@@ -404,7 +399,7 @@ define(function (require) {
         _buildDetail : function(seriesIndex) {
             var serie = this.series[seriesIndex];
             if (!serie.detail.show) {
-                return
+                return;
             }
             
             var detail          = serie.detail;
@@ -421,7 +416,8 @@ define(function (require) {
                     + this.parsePercent(offsetCenter[1], params.radius[1]);
             this.shapeList.push(new RectangleShape({
                 zlevel : this._zlevelBase 
-                         + (Math.abs(x+detail.width/2 - params.center[0]) + Math.abs(y+detail.height/2 - params.center[1])) 
+                         + (Math.abs(x+detail.width/2 - params.center[0]) 
+                            + Math.abs(y+detail.height/2 - params.center[1]))
                            < textStyle.fontSize ? 2 : 1,
                 hoverable : false,
                 style : {

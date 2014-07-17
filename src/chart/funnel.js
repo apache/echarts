@@ -12,16 +12,12 @@ define(function (require) {
     // 图形依赖
     var TextShape = require('zrender/shape/Text');
     var LineShape = require('zrender/shape/Line');
-    var RectangleShape = require('zrender/shape/Rectangle');
     var PolygonShape = require('zrender/shape/Polygon');
-    var CircleShape = require('zrender/shape/Circle');
-    var SectorShape = require('zrender/shape/Sector');
 
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
     var number = require('../util/number');
     var zrUtil = require('zrender/tool/util');
-    var zrMath = require('zrender/tool/math');
     var zrColor = require('zrender/tool/color');
     var zrArea = require('zrender/tool/area');
     
@@ -99,7 +95,7 @@ define(function (require) {
                     this.selectedMap[itemName] = true;
                 }
                 if (this.selectedMap[itemName] && !isNaN(data[i].value)) {
-                    selectedData.push(data[i])
+                    selectedData.push(data[i]);
                     total++;
                 }
             }
@@ -120,12 +116,12 @@ define(function (require) {
             var centerX = location.centerX;
             var pointList = [
                 [
-                    centerX - lastWidth / 2 - (lastWidth == 0 ? 0 : 10), 
-                    lastY - (lastWidth == 0 ? 10 : 5)
+                    centerX - lastWidth / 2 - (lastWidth === 0 ? 0 : 10), 
+                    lastY - (lastWidth === 0 ? 10 : 5)
                 ],
                 [
-                    centerX + lastWidth / 2 + (lastWidth == 0 ? 0 : 10),
-                    lastY - (lastWidth == 0 ? 10 : 5)
+                    centerX + lastWidth / 2 + (lastWidth === 0 ? 0 : 10),
+                    lastY - (lastWidth === 0 ? 10 : 5)
                 ]
             ];
             for (var i = 0, l = selectedData.length; i < l; i++) {
@@ -150,7 +146,7 @@ define(function (require) {
                 }
             }
             if (funnelCase) {
-                if (lastWidth == 0) {
+                if (lastWidth === 0) {
                     pointList.pop();
                     pointList[0][0] +=10;
                     pointList[0][1] +=10;
@@ -167,9 +163,6 @@ define(function (require) {
             var serie = this.series[seriesIndex];
             if (this.deepQuery([serie, this.option], 'calculable')) {
                 var location = this._paramsMap[seriesIndex].location;
-                var centerX = location.centerX;
-                var minWidth = number.parsePercent(serie.minSize, location.width) / 2;
-                var maxWidth = number.parsePercent(serie.maxSize, location.width) / 2;
                 var gap = 10;
                 var funnelCase = {
                     hoverable : false,
@@ -223,7 +216,7 @@ define(function (require) {
                 width : width,
                 height : height,
                 centerX : x + width / 2
-            }
+            };
         },
         
         _mapData : function(seriesIndex) {
@@ -245,7 +238,7 @@ define(function (require) {
                 return -numDescending(a, b);
             }
             if (serie.sort != 'none') {
-                funnelData.sort(serie.sort == 'descending' ? numDescending : numAscending)
+                funnelData.sort(serie.sort == 'descending' ? numDescending : numAscending);
             }
             
             return funnelData;
@@ -491,14 +484,14 @@ define(function (require) {
                         ? (location.x + location.width + 10) 
                         : (location.centerX + Math.max(topWidth, bottomWidth) / 2 + lineLength);
             }
-            textShape.highlightStyle  = {
+            textShape.highlightStyle = {
                 x : textX,
                 color : textStyle.color || textColor,
                 text : text,
                 textAlign : textStyle.align || textAlign,
                 textFont : textFont,
                 brushType : 'fill'
-            }
+            };
             
             return new TextShape(textShape);
         },
@@ -626,7 +619,7 @@ define(function (require) {
                 lineWidth : lineStyle.width
             };
             
-            return new LineShape(lineShape)
+            return new LineShape(lineShape);
         },
 
         /**
