@@ -14,7 +14,6 @@ define(function (require) {
     var ForceLayout = require('./ForceLayoutWorker');
     
     // 图形依赖
-    var CircleShape = require('zrender/shape/Circle');
     var LineShape = require('zrender/shape/Line');
     var IconShape = require('../util/shape/Icon');
 
@@ -22,7 +21,6 @@ define(function (require) {
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrConfig = require('zrender/config');
-    var zrEvent = require('zrender/tool/event');
     var vec2 = require('zrender/tool/vector');
 
     var NDArray = require('../util/ndarray');
@@ -82,21 +80,17 @@ define(function (require) {
         // 关闭可拖拽属性
         this.ondragstart = function() {
             ondragstart.apply(self, arguments);
-        }
+        };
         this.ondragend = function() {
             ondragend.apply(self, arguments);
-        }
-
+        };
         this.ondrop = function() {};
-
         this.shapeHandler.ondragstart = function() {
             self.isDragstart = true;
-        }
-
+        };
         this.onmousemove = function() {
             onmousemove.apply(self, arguments);
-        }
-
+        };
         this._init();
     }
 
@@ -127,7 +121,8 @@ define(function (require) {
                     } else {
                         self._step.call(self, e);
                     }
-                }
+                };
+
                 this._layoutWorker.postMessage({
                     cmd: 'update',
                     steps: this._steps,
@@ -141,7 +136,8 @@ define(function (require) {
                         self._step();
                         requestAnimationFrame(cb);
                     }
-                }
+                };
+
                 requestAnimationFrame(cb);
             }
         },
@@ -179,7 +175,7 @@ define(function (require) {
                         }
                         if (this._layoutWorker) {
                             this._layoutWorker.terminate();
-                            this._layoutWorker = null   
+                            this._layoutWorker = null;
                         }
                     }
 
@@ -259,12 +255,12 @@ define(function (require) {
                 source = link.source;
                 target = link.target;
                 var ret = true;
-                if (typeof(source) == 'string') {   // source 用 node id 表示
-                    var idx = filteredNodeMap[source];
-                } else {    // source 用 node index 表示
-                    var idx = filteredNodeList[source];
+                var idx = typeof(source) === 'string'
+                    ? filteredNodeMap[source]    // source 用 node id 表示
+                    : filteredNodeList[source];  // source 用 node index 表示
+                if (typeof(idx) == 'undefined') {
+                    idx = -1;
                 }
-                if (typeof(idx) == 'undefined') { idx = -1; }
 
                 if (idx >= 0) {
                     link.source = idx;
@@ -272,12 +268,12 @@ define(function (require) {
                     ret = false;
                 }
 
-                if (typeof(target) == 'string') {   // target 用 node id 表示
-                    var idx = filteredNodeMap[target];
-                } else {    // target 用 node index 表示
-                    var idx = filteredNodeList[target];
+                var idx = typeof(target) === 'string'
+                    ? filteredNodeMap[target]    // target 用 node id 表示
+                    : filteredNodeList[target];  // target 用 node index 表示
+                if (typeof(idx) == 'undefined') {
+                    idx = -1;
                 }
-                if (typeof(idx) == 'undefined') { idx = -1; }
 
                 if (idx >= 0) {
                     link.target = idx;
@@ -317,7 +313,7 @@ define(function (require) {
             var arr = new NDArray(radius);
             radius = arr.map(minRadius, maxRadius).toArray();
             var max = arr.max();
-            if (max == 0) {
+            if (max === 0) {
                 return;
             }
             var massArr = arr.mul(1/max, arr).toArray();
@@ -359,7 +355,7 @@ define(function (require) {
 
             arr = new NDArray(edgeWeightArr);
             var max = arr.max();
-            if (max == 0) {
+            if (max === 0) {
                 return;
             }
             var edgeWeightArr = arr.mul(1 / max, arr)._array;
@@ -405,11 +401,9 @@ define(function (require) {
             var nodes = this._filteredNodes;
             var len = nodes.length;
             var legend = this.component.legend;
-            var self = this;
 
             for (var i = 0; i < len; i++) {
                 var node = nodes[i];
-                var x, y;
 
                 var shape = new IconShape({
                     style : {
@@ -496,7 +490,7 @@ define(function (require) {
                     shape.dragEnableTime = 0;
                     shape.draggable = true;
                     shape.ondragstart = this.shapeHandler.ondragstart;
-                    shape.ondragover = function() {};
+                    shape.ondragover = null;
                 }
                 
                 var categoryName = '';
@@ -619,7 +613,7 @@ define(function (require) {
                             shadowBlur: linkShape.style.shadowBlur,
                             shadowColor: linkShape.style.shadowColor,
                             shadowOffsetX: linkShape.style.shadowOffsetX,
-                            shadowOffsetY: linkShape.style.shadowOffsetY,
+                            shadowOffsetY: linkShape.style.shadowOffsetY
                         },
                         highlightStyle: {
                             brushType: 'fill'
@@ -795,7 +789,7 @@ define(function (require) {
         refresh: function(newOption) {
             if (newOption) {
                 this.option = newOption;
-                this.series = option.series;
+                this.series = this.option.series;
             }
             this.clear();
             this._buildShape();
@@ -814,7 +808,7 @@ define(function (require) {
 
             this.__nodePositionMap = {};
         }
-    }
+    };
 
     /**
      * 拖拽开始

@@ -1,24 +1,24 @@
 (function __echartsForceLayoutWorker(self) {
 
 // In web worker
-if (typeof(window) === 'undefined' || !(window === self)) {
+if (typeof(window) === 'undefined' || window !== self) {
     // Simple TMD implementation
     self.tmd = {};
-    tmd.modules = {};
+    self.tmd.modules = {};
 
-    tmd.require = function(id) {
-        return tmd.modules[id];
-    }
+    self.tmd.require = function(id) {
+        return self.tmd.modules[id];
+    };
 
     self.define = function(id, constructor) {
-        if (arguments.length == 0) {
+        if (arguments.length === 0) {
             return;
         } else if (arguments.length == 1) {
             constructor = id;
             id = 'ForceLayout';
         }
-        tmd.modules[id] = constructor(tmd.require);
-    }
+        self.tmd.modules[id] = constructor(self.tmd.require);
+    };
 
     // Vector2 math functions
     define('zrender/tool/vector', function(require) {
@@ -86,7 +86,7 @@ if (typeof(window) === 'undefined' || !(window === self)) {
                 out[1] = y;
                 return out;
             }
-        }
+        };
     });
 
     /****************************
@@ -114,7 +114,7 @@ if (typeof(window) === 'undefined' || !(window === self)) {
         var ForceLayout = self.tmd.modules.ForceLayout;
 
         switch(e.data.cmd) {
-            case "init":
+            case 'init':
                 if (!forceLayout) {
                     forceLayout = new ForceLayout();
                 }
@@ -122,14 +122,14 @@ if (typeof(window) === 'undefined' || !(window === self)) {
                 forceLayout.initEdges(e.data.edges, e.data.edgesWeight);
                 forceLayout._token = e.data.token;
                 break;
-            case "updateConfig":
+            case 'updateConfig':
                 if (forceLayout) {
                     for (var name in e.data.config) {
                         forceLayout[name] = e.data.config[name];
                     }
                 }
                 break;
-            case "update":
+            case 'update':
                 var steps = e.data.steps;
 
                 if (forceLayout) {
@@ -162,16 +162,13 @@ if (typeof(window) === 'undefined' || !(window === self)) {
                 }
                 break;
         }
-    }
+    };
 }
 // 1. Graph Drawing by Force-directed Placement
 // 2. http://webatlas.fr/tempshare/ForceAtlas2_Paper.pdf
 define(function(require) {
 
     'use strict';
-
-    var inWorker = typeof(WorkerGlobalScope) !== 'undefined'
-        && (self instanceof WorkerGlobalScope);
 
     var vec2 = require('zrender/tool/vector');
     var ArrayCtor = typeof(Float32Array) == 'undefined' ? Array : Float32Array;
@@ -209,17 +206,17 @@ define(function(require) {
         }
         this.nSubRegions = 0;
         this.node = null;
-    }
+    };
     // Clear after update
     Region.prototype.afterUpdate = function() {
         this.subRegions.length = this.nSubRegions;
         for (var i = 0; i < this.nSubRegions; i++) {
             this.subRegions[i].afterUpdate();
         }
-    }
+    };
 
     Region.prototype.addNode = function(node) {
-        if (this.nSubRegions == 0) {
+        if (this.nSubRegions === 0) {
             if (this.node == null) {
                 this.node = node;
                 return;
@@ -231,7 +228,7 @@ define(function(require) {
         this._addNodeToSubRegion(node);
 
         this._updateCenterOfMass(node);
-    }
+    };
 
     Region.prototype.findSubRegion = function(x, y) {
         for (var i = 0; i < this.nSubRegions; i++) {
@@ -240,14 +237,14 @@ define(function(require) {
                 return region;
             }
         }
-    }
+    };
 
     Region.prototype.contain = function(x, y) {
         return this.bbox[0] <= x
             && this.bbox[2] >= x
             && this.bbox[1] <= y
             && this.bbox[3] >= y;
-    }
+    };
 
     Region.prototype.setBBox = function(minX, minY, maxX, maxY) {
         // Min
@@ -258,7 +255,7 @@ define(function(require) {
         this.bbox[3] = maxY;
 
         this.size = (maxX - minX + maxY - minY) / 2;
-    }
+    };
 
     Region.prototype._newSubRegion = function() {
         var subRegion = this.subRegions[this.nSubRegions];
@@ -268,7 +265,7 @@ define(function(require) {
         }
         this.nSubRegions++;
         return subRegion;
-    }
+    };
 
     Region.prototype._addNodeToSubRegion = function(node) {
         var subRegion = this.findSubRegion(node.position[0], node.position[1]);
@@ -295,7 +292,7 @@ define(function(require) {
         }
 
         subRegion.addNode(node);
-    }
+    };
 
     Region.prototype._updateCenterOfMass = function(node) {
         // Incrementally update
@@ -309,13 +306,13 @@ define(function(require) {
         this.mass += node.mass;
         this.centerOfMass[0] = x / this.mass;
         this.centerOfMass[1] = y / this.mass;
-    }
+    };
 
     /****************************
      * Class: Graph Node
      ***************************/
     function GraphNode() {
-        this.position = vec2.create()
+        this.position = vec2.create();
 
         this.force = vec2.create();
         this.forcePrev = vec2.create();
@@ -401,7 +398,7 @@ define(function(require) {
         if (haveSize) {
             this._sizeArr = sizeArr;
         }
-    }
+    };
 
     ForceLayout.prototype.initEdges = function(edgeArr, edgeWeightArr) {
         var nEdges = edgeArr.length / 2;
@@ -427,7 +424,7 @@ define(function(require) {
 
             this.edges.push(edge);
         }
-    }
+    };
 
     ForceLayout.prototype.update = function() {
 
@@ -538,7 +535,7 @@ define(function(require) {
 
             vec2.add(node.position, node.position, speed);
         }
-    }
+    };
 
     ForceLayout.prototype.applyRegionToNodeRepulsion = (function() {
         var v = vec2.create();
@@ -557,7 +554,7 @@ define(function(require) {
                     }
                 }
             }
-        }
+        };
     })();
 
     ForceLayout.prototype.applyNodeToNodeRepulsion = (function() {
@@ -570,7 +567,7 @@ define(function(require) {
             var d2 = v[0] * v[0] + v[1] * v[1];
 
             // PENDING
-            if (d2 == 0) {
+            if (d2 === 0) {
                 return;
             }
 
@@ -596,7 +593,7 @@ define(function(require) {
                 vec2.scaleAndAdd(na.force, na.force, v, factor * 2);
             }
             vec2.scaleAndAdd(nb.force, nb.force, v, -factor * 2);
-        }
+        };
     })();
 
     ForceLayout.prototype.applyEdgeAttraction = (function() {
@@ -609,7 +606,7 @@ define(function(require) {
             var d = vec2.len(v);
 
             var w;
-            if (this.edgeWeightInfluence == 0) {
+            if (this.edgeWeightInfluence === 0) {
                 w = 1;
             } else if (this.edgeWeightInfluence == 1) {
                 w = edge.weight;
@@ -631,7 +628,7 @@ define(function(require) {
 
             vec2.scaleAndAdd(na.force, na.force, v, factor);
             vec2.scaleAndAdd(nb.force, nb.force, v, -factor);
-        }
+        };
     })();
 
     ForceLayout.prototype.applyNodeGravity = (function() {
@@ -643,7 +640,7 @@ define(function(require) {
             vec2.sub(v, this.center, node.position);
             var d = vec2.len(v);
             vec2.scaleAndAdd(node.force, node.force, v, this.gravity * node.mass / (d + 1));
-        }
+        };
     })();
 
     ForceLayout.prototype.applyNodeStrongGravity = (function() {
@@ -653,7 +650,7 @@ define(function(require) {
             vec2.sub(v, this.center, node.position);
             var d = vec2.len(v) / 100;
             vec2.scaleAndAdd(node.force, node.force, v, d * this.gravity * node.mass);
-        }
+        };
     })();
 
     ForceLayout.prototype.updateBBox = function() {
@@ -672,12 +669,12 @@ define(function(require) {
         this.bbox[1] = minY;
         this.bbox[2] = maxX;
         this.bbox[3] = maxY;
-    }
+    };
 
     ForceLayout.getWorkerCode = function() {
         var str = __echartsForceLayoutWorker.toString();
         return str.slice(str.indexOf('{') + 1, str.lastIndexOf('}'));
-    }
+    };
 
     return ForceLayout;
 });

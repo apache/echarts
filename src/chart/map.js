@@ -1000,7 +1000,7 @@ define(function (require) {
                 var geoAndPos = this.pos2geo(mapType, [mx - left, my - top]);
                 if (delta > 0) {
                     delta = 1.2;        // 放大
-                    if (typeof this._scaleLimitMap[mapType].max != 'undeined'
+                    if (typeof this._scaleLimitMap[mapType].max != 'undefined'
                         && transform.baseScale >= this._scaleLimitMap[mapType].max
                     ) {
                         return;     // 缩放限制
@@ -1008,7 +1008,7 @@ define(function (require) {
                 }
                 else {
                     delta = 1 / 1.2;    // 缩小
-                    if (typeof this._scaleLimitMap[mapType].min != 'undeined'
+                    if (typeof this._scaleLimitMap[mapType].min != 'undefined'
                         && transform.baseScale <= this._scaleLimitMap[mapType].min
                     ) {
                         return;     // 缩放限制
