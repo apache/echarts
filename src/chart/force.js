@@ -77,6 +77,7 @@ define(function (require) {
         this._rawLinks = null;
 
         this._steps = 1;
+        this._coolDown = 0.99;
 
         // 关闭可拖拽属性
         this.ondragstart = function() {
@@ -130,7 +131,8 @@ define(function (require) {
                 this._layoutWorker.postMessage({
                     cmd: 'update',
                     steps: this._steps,
-                    temperature: this._temperature
+                    temperature: this._temperature,
+                    coolDown: this._coolDown
                 });
             }
             else {
@@ -299,6 +301,7 @@ define(function (require) {
             var minRadius = this.query(serie, 'minRadius');
             var maxRadius = this.query(serie, 'maxRadius');
             this._steps = serie.steps || 1;
+            this._coolDown = serie.coolDown || 0.99;
 
             var center = this.parseCenter(this.zr, serie.center);
             var size = this.parseRadius(this.zr, serie.size);
@@ -703,7 +706,7 @@ define(function (require) {
                 }
             }
 
-            this._temperature *= 0.99;
+            this._temperature *= this._coolDown;
         },
 
         _updateWorker: function(e) {
@@ -756,11 +759,12 @@ define(function (require) {
             self._layoutWorker.postMessage({
                 cmd: 'update',
                 steps: this._steps,
-                temperature: this._temperature
+                temperature: this._temperature,
+                coolDown: this._coolDown
             });  
 
             for (var i = 0; i < this._steps; i++) {
-                this._temperature *= 0.99;
+                this._temperature *= this._coolDown;
             }
 
             return ret;

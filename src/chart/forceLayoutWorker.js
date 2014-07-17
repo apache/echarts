@@ -141,7 +141,7 @@ if (typeof(window) === 'undefined' || !(window === self)) {
                     if (e.data.temperature > 0.01) {
                         for (var i = 0; i < steps; i++) {
                             forceLayout.update();
-                            forceLayout.temperature *= 0.99;
+                            forceLayout.temperature *= e.data.coolDown;
                         }
                         // Callback
                         for (var i = 0; i < nNodes; i++) {
