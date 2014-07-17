@@ -2,6 +2,7 @@
     "bitwise": false,
     "camelcase": true,
     "curly": true,
+    "es3": true,
     "eqeqeq": false,
     "forin": false,
     "immed": true,
@@ -13,13 +14,13 @@
     "plusplus": false,
     "quotmark": "single",
     "regexp": false,
-    "undef": false,
-    "unused": true,
+    "undef": true,
+    "unused": "vars",
     "strict": false,
     "trailing": false,
     "maxparams": 20,
     "maxdepth": 6,
-    "maxlen": 100,
+    "maxlen": 120,
 
     "asi": false,
     "boss": false,
@@ -61,5 +62,10 @@
     "nomen": false,
     "onevar": false,
     "passfail": false,
-    "white": false
+    "white": false,
+
+    "predef": [
+        "define", 
+        "require"
+    ]
 }
