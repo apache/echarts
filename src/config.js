@@ -783,21 +783,31 @@ define(function() {
         },
         
         force : {
-            // 数据map到圆的半径的最小值和最大值
-            minRadius : 10,
-            maxRadius : 20,
+            // 布局中心
             center: ['50%', '50%'],
+
+            // 布局大小
             size: '100%',
             
+            // 数据映射到圆的半径的最小值和最大值
+            minRadius : 10,
+            maxRadius : 20,
+
+            // 在 1k+ 顶点的图上建议设置 large 为 true, 会使用 Barnes-Hut simulation
+            // 同时开启 useWorker 并且把 steps 值调大
+            // 关于Barnes-Hut simulation: http://en.wikipedia.org/wiki/Barnes–Hut_simulation
+            large: false,
+
+            // 为 false 的时候强制关闭 web worker
             useWorker: true,
             // 每一帧 force 迭代的次数，仅在启用webworker的情况下有用
             steps: 1,
 
+            // 布局缩放因子，并不完全精确, 效果跟布局大小类似
             scaling : 1.0,
-            // 向心力因子，越大向心力越大
+
+            // 向心力因子，越大向心力越大（ 所有顶点会往 center 的位置收拢 )
             gravity : 1,
-            // 冷却因子
-            coolDown : 0.99,
 
             symbol: 'circle',
             // symbolSize 为 0 的话使用映射到minRadius-maxRadius后的值

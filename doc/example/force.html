@@ -107,7 +107,7 @@ option = {
             maxRadius : 25,
             gravity: 1.1,
             scaling: 1.2,
-            draggable: true,
+            draggable: false,
             linkSymbol: 'arrow',
             steps: 10,
             nodes:[
@@ -115,6 +115,7 @@ option = {
                     category:0, name: '乔布斯', value : 10,
                     symbol: 'star',
                     symbolSize: 40,
+                    draggable: true,
                     itemStyle: {
                         normal: {
                             label: {
@@ -142,23 +143,24 @@ option = {
                         lineWidth: 10
                     }
                 }},
-                {source : 2, target : 0, weight : 2},
-                {source : 3, target : 0, weight : 1},
-                {source : 4, target : 0, weight : 2},
-                {source : 5, target : 0, weight : 3},
-                {source : 6, target : 0, weight : 6},
-                {source : 7, target : 0, weight : 6},
-                {source : 8, target : 0, weight : 1},
-                {source : 9, target : 0, weight : 1},
-                {source : 10, target : 0, weight : 1},
-                {source : 3, target : 2, weight : 1},
-                {source : 6, target : 2, weight : 1},
-                {source : 6, target : 3, weight : 1},
-                {source : 6, target : 4, weight : 1},
-                {source : 6, target : 5, weight : 1},
-                {source : 7, target : 6, weight : 6},
-                {source : 7, target : 3, weight : 1},
-                {source : 9, target : 6, weight : 1}
+                {source : '丽萨-乔布斯', target : '乔布斯', weight : 1},
+                {source : '保罗-乔布斯', target : '乔布斯', weight : 2},
+                {source : '克拉拉-乔布斯', target : '乔布斯', weight : 1},
+                {source : '劳伦-鲍威尔', target : '乔布斯', weight : 2},
+                {source : '史蒂夫-沃兹尼艾克', target : '乔布斯', weight : 3},
+                {source : '奥巴马', target : '乔布斯', weight : 6},
+                {source : '比尔-盖茨', target : '乔布斯', weight : 6},
+                {source : '乔纳森-艾夫', target : '乔布斯', weight : 1},
+                {source : '蒂姆-库克', target : '乔布斯', weight : 1},
+                {source : '龙-韦恩', target : '乔布斯', weight : 1},
+                {source : '克拉拉-乔布斯', target : '保罗-乔布斯', weight : 1},
+                {source : '奥巴马', target : '保罗-乔布斯', weight : 1},
+                {source : '奥巴马', target : '克拉拉-乔布斯', weight : 1},
+                {source : '奥巴马', target : '劳伦-鲍威尔', weight : 1},
+                {source : '奥巴马', target : '史蒂夫-沃兹尼艾克', weight : 1},
+                {source : '比尔-盖茨', target : '奥巴马', weight : 6},
+                {source : '比尔-盖茨', target : '克拉拉-乔布斯', weight : 1},
+                {source : '蒂姆-库克', target : '奥巴马', weight : 1}
             ]
         }
     ]

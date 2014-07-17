@@ -64,7 +64,7 @@ define(function (require) {
 
         // 保存节点的位置，改变数据时能够有更好的动画效果
         // TODO
-        this.__forceNodePositionMap = this.__forceNodePositionMap || {};
+        this.__nodePositionMap = {};
 
         this._nodeShapes = [];
         this._linkShapes = [];
@@ -217,44 +217,64 @@ define(function (require) {
             this._rawNodes = this.query(serie, 'nodes');
             this._rawLinks = zrUtil.clone(this.query(serie, 'links'));
 
-            var filteredNodeMap = [];
+            var filteredNodeList = [];
+            var filteredNodeMap = {};
             var cursor = 0;
             var self = this;
-            this._filteredNodes = _filter(this._rawNodes, function (node, idx) {
+            this._filteredNodes = _filter(this._rawNodes, function (node, i) {
                 if (!node) {
                     return;
                 }
                 if (node.ignore) {
                     return;
                 }
+                var idx = -1;
                 if (
                     typeof(node.category) == 'undefined'
                     || self.selectedMap[node.category]
                 ) {
-                    filteredNodeMap[idx] = cursor++;
-                    return true;
-                } else {
-                    filteredNodeMap[idx] = -1;
+                    idx = cursor++;
                 }
+                if (node.name) {
+                    filteredNodeMap[node.name] = idx;
+                }
+                filteredNodeList[i] = idx;
+
+                return idx >= 0;
             });
             var source;
             var target;
-            this._filteredLinks = _filter(this._rawLinks, function (link, idx){
+            this._filteredLinks = _filter(this._rawLinks, function (link, i){
                 source = link.source;
                 target = link.target;
                 var ret = true;
-                if (filteredNodeMap[source] >= 0) {
-                    link.source = filteredNodeMap[source];
+                if (typeof(source) == 'string') {   // source 用 node id 表示
+                    var idx = filteredNodeMap[source];
+                } else {    // source 用 node index 表示
+                    var idx = filteredNodeList[source];
+                }
+                if (typeof(idx) == 'undefined') { idx = -1; }
+
+                if (idx >= 0) {
+                    link.source = idx;
                 } else {
                     ret = false;
                 }
-                if (filteredNodeMap[target] >= 0) {
-                    link.target = filteredNodeMap[target];
+
+                if (typeof(target) == 'string') {   // target 用 node id 表示
+                    var idx = filteredNodeMap[target];
+                } else {    // target 用 node index 表示
+                    var idx = filteredNodeList[target];
+                }
+                if (typeof(idx) == 'undefined') { idx = -1; }
+
+                if (idx >= 0) {
+                    link.target = idx;
                 } else {
                     ret = false;
                 }
                 // 保存原始链接中的index
-                link.rawIndex = idx;
+                link.rawIndex = i;
 
                 return ret;
             });
@@ -294,9 +314,9 @@ define(function (require) {
             for (var i = 0; i < len; i++) {
                 var initPos;
                 var node = nodes[i];
-                if (typeof(this.__forceNodePositionMap[node.name]) !== 'undefined') {
+                if (typeof(this.__nodePositionMap[node.name]) !== 'undefined') {
                     initPos = vec2.create();
-                    vec2.copy(initPos, this.__forceNodePositionMap[node.name]);
+                    vec2.copy(initPos, this.__nodePositionMap[node.name]);
                 } else if (typeof(node.initial) !== 'undefined') {
                     initPos = Array.prototype.slice.call(node.initial);
                 } else {
@@ -337,7 +357,8 @@ define(function (require) {
                 width: size,
                 height: size,
                 scaling: serie.scaling || 1.0,
-                gravity: serie.gravity || 1.0
+                gravity: serie.gravity || 1.0,
+                barnesHutOptimize: serie.large
             };
 
             if (this._layoutWorker) {
@@ -458,10 +479,10 @@ define(function (require) {
                 }
 
                 // 拖拽特性
-                if (serie.draggable) {
+                if (this.deepQuery(queryTarget, 'draggable')) {
                     this.setCalculable(shape);
                     shape.dragEnableTime = 0;
-                    shape.draggable = serie.draggable;
+                    shape.draggable = true;
                     shape.ondragstart = this.shapeHandler.ondragstart;
                     shape.ondragover = function() {};
                 }
@@ -665,9 +686,9 @@ define(function (require) {
 
                 var nodeName = node.name;
                 if (nodeName) {
-                    var gPos = this.__forceNodePositionMap[nodeName];
+                    var gPos = this.__nodePositionMap[nodeName];
                     if (!gPos) {
-                        gPos = this.__forceNodePositionMap[nodeName] = vec2.create();
+                        gPos = this.__nodePositionMap[nodeName] = vec2.create();
                     }
                     vec2.copy(gPos, position);
                 }
@@ -711,9 +732,9 @@ define(function (require) {
 
                     var nodeName = node.name;
                     if (nodeName) {
-                        var gPos = this.__forceNodePositionMap[nodeName];
+                        var gPos = this.__nodePositionMap[nodeName];
                         if (!gPos) {
-                            gPos = this.__forceNodePositionMap[nodeName] = vec2.create();
+                            gPos = this.__nodePositionMap[nodeName] = vec2.create();
                         }
                         vec2.copy(gPos, shape.position);
                     }
@@ -778,7 +799,7 @@ define(function (require) {
             }
             this._layoutWorker = null;
 
-            this.__forceNodePositionMap = {};
+            this.__nodePositionMap = {};
         }
     }
 
@@ -788,9 +809,6 @@ define(function (require) {
     function ondragstart(param) {
         if (!this.isDragstart || !param.target) {
             // 没有在当前实例上发生拖拽行为则直接返回
-            return;
-        }
-        if (!(this._forceSerie && this._forceSerie.draggable)) {
             return;
         }
 
