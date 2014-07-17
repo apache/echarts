@@ -1387,7 +1387,7 @@ NDArray.prototype = {
     /**
      * equal
      */
-    equal : function (rightOperand) {
+    equal : function (rightOperand, out) {
         return this.binaryOperation(
             this, rightOperand, E_EQL, out
         );
