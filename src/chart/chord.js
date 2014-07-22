@@ -70,6 +70,7 @@ define(function (require) {
                 return;
             }
             if (!this.chordSeries.length) {
+                this.addShapeList();
                 return;
             }
 
