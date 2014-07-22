@@ -185,7 +185,11 @@ define(function (require) {
         
         resize : function () {
             this.refresh && this.refresh();
-            this.animationEffect && this.animationEffect();
+            this.clearEffectShape && this.clearEffectShape(true);
+            var self = this;
+            setTimeout(function(){
+                self.animationEffect && self.animationEffect();
+            },200);
         },
 
         /**
