@@ -485,49 +485,45 @@ define(function (require) {
      * @param {tring} easing
      */
     function markline(zr, oldShape, newShape, duration, easing) {
-        if (!oldShape) {    // add
-            if (!newShape.style.smooth) {
-                newShape.style.pointList = [
+        if (!newShape.style.smooth) {
+            newShape.style.pointList = !oldShape 
+                ? [
                     [newShape.style.xStart, newShape.style.yStart],
                     [newShape.style.xStart, newShape.style.yStart]
-                ];
-                zr.addShape(newShape);
-                zr.animate(newShape.id, 'style')
-                    .when(
-                        duration,
-                        {
-                            pointList : [
-                                [
-                                    newShape.style.xStart,
-                                    newShape.style.yStart
-                                ],
-                                [
-                                    newShape._x || 0, newShape._y || 0
-                                ]
+                ]
+                : oldShape.style.pointList;
+            zr.addShape(newShape);
+            zr.animate(newShape.id, 'style')
+                .when(
+                    duration,
+                    {
+                        pointList : [
+                            [
+                                newShape.style.xStart,
+                                newShape.style.yStart
+                            ],
+                            [
+                                newShape._x || 0, newShape._y || 0
                             ]
-                        }
-                    )
-                    .start(easing || 'QuinticOut');
-            }
-            else {
-                // 曲线动画
-                newShape.style.pointListLength = 1;
-                zr.addShape(newShape);
-                newShape.style.pointList = newShape.style.pointList 
-                                           || newShape.getPointList(newShape.style);
-                zr.animate(newShape.id, 'style')
-                    .when(
-                        duration,
-                        {
-                            pointListLength : newShape.style.pointList.length
-                        }
-                    )
-                    .start(easing || 'QuinticOut');
-            }
+                        ]
+                    }
+                )
+                .start(easing || 'QuinticOut');
         }
         else {
-            // mod
-            line(zr, oldShape, newShape, duration, easing);
+            // 曲线动画
+            newShape.style.pointListLength = 1;
+            zr.addShape(newShape);
+            newShape.style.pointList = newShape.style.pointList 
+                                       || newShape.getPointList(newShape.style);
+            zr.animate(newShape.id, 'style')
+                .when(
+                    duration,
+                    {
+                        pointListLength : newShape.style.pointList.length
+                    }
+                )
+                .start(easing || 'QuinticOut');
         }
     }
 
