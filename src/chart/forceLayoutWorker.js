@@ -10,11 +10,19 @@ if (typeof(window) === 'undefined' || window !== self) {
         return self.tmd.modules[id];
     };
 
-    self.define = function(id, constructor) {
+    self.define = function(id, deps, constructor) {
         if (arguments.length === 0) {
             return;
         } else if (arguments.length == 1) {
             constructor = id;
+            // TODO
+            id = 'ForceLayout';
+        } else if (arguments.length == 2) {
+            constructor = deps;
+        }
+        // In release environment
+        // Ugliy polyfill
+        if (id.indexOf('ForceLayout') >= 0) {
             id = 'ForceLayout';
         }
         self.tmd.modules[id] = constructor(self.tmd.require);
