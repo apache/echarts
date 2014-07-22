@@ -124,6 +124,7 @@ define(function (require) {
                 throw new Error('Data not valid');
             }
             if (shape[0] === 0 || shape[2] === 0) {
+                this.addShapeList();
                 return;
             }
 
