@@ -2658,27 +2658,158 @@ indicator : [
                         <tr>
                             <td> <b>{Array}</b> categories </td>
                             <td> [] </td>
-                            <td> 力导向图中节点的分类, 每一项有name和itemStyle两个属性，itemStyle配置详见<a href="#ItemStyle">itemStyle</a></td>
+                            <td>
+                                力导向图中节点的分类, 对于每一项:
+                                <table cellspacing="0" class="ADoc_table full">
+                                    <tr>
+                                        <th> 名称 </th>
+                                        <th> 默认值 </th>
+                                        <th> 描述 </th>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{string}</b> name </td>
+                                        <td></td>
+                                        <td> 类目名称 </td>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{string}</b> symbol </td>
+                                        <td> circle </td>
+                                        <td> 所有该类目的节点的形状, 详见 <a href="#SymbolList">symbolList</a> </td>
+                                    </tr>
+                                    <tr>
+                                        <td> {number} symbolSize </td>
+                                        <td></td>
+                                        <td> 所有该类目的节点的大小 </td>
+                                    </tr>
+                                    <tr>
+                                        <td> {boolean} draggable </td>
+                                        <td></td>
+                                        <td> 所有该类目的节点是否能被拖拽 </td>
+                                    </tr>
+                                    <tr>
+                                        <td> itemStyle </td>
+                                        <td></td>
+                                        <td> 详见 <a href="#ItemStyle">itemStyle</a> </td>
+                                    </tr>
+                                </table>
+                            </td>
                         </tr>
                         <tr>
                             <td> <b>{Array}</b> nodes </td>
                             <td> [] </td>
-                            <td> 力导向图的顶点数据, 每一项都有 name, value, category三个属性，分别表示节点的名称， 节点的值和节点的分类</td>
+                            <td> 力导向图的顶点数据, 每一项：
+                                <table cellspacing="0" class="ADoc_table full">
+                                    <tr>
+                                        <th> 名称 </th>
+                                        <th> 默认值 </th>
+                                        <th> 描述 </th>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{string}</b> name </td>
+                                        <td></td>
+                                        <td> 节点名称 </td>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{number}</b> value </td>
+                                        <td> 1 </td>
+                                        <td> 节点值，在不指定 symbolSize 的时候会被映射成 minRadius - maxRadius 作为节点大小 </td>
+                                    </tr>
+                                    <tr>
+                                        <td> {Array} initial </td>
+                                        <td></td>
+                                        <td> 强制指定节点的初始值，在不指定的时候会在某个范围内随机生成 </td>
+                                    </tr>
+                                    <tr>
+                                        <td> {boolean} fixX </td>
+                                        <td>false</td>
+                                        <td>是否固定节点在 X 轴上的值，配合 initial 使用</td>
+                                    </tr>
+                                    <tr>
+                                        <td> {boolean} fixY </td>
+                                        <td>false</td>
+                                        <td>是否固定节点在 Y 轴上的值，配合 initial 使用</td>
+                                    </tr>
+                                    <tr>
+                                        <td> {boolean} ignore </td>
+                                        <td>false</td>
+                                        <td>是否忽略该节点</td>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{string}</b> symbol </td>
+                                        <td> circle </td>
+                                        <td> 节点的形状, 详见 <a href="#SymbolList">symbolList</a> </td>
+                                    </tr>
+                                    <tr>
+                                        <td> {number} symbolSize </td>
+                                        <td></td>
+                                        <td> 强制指定节点的大小 </td>
+                                    </tr>
+                                    <tr>
+                                        <td> {boolean} draggable </td>
+                                        <td></td>
+                                        <td> 节点是否能被拖拽 </td>
+                                    </tr>
+                                    <tr>
+                                        <td> itemStyle </td>
+                                        <td></td>
+                                        <td> 详见 <a href="#ItemStyle">itemStyle</a> </td>
+                                    </tr>
+                                </table>
+                            </td>
                         </tr>
                         <tr>
                             <td> <b>{Array}</b> links </td>
                             <td> [] </td>
-                            <td> 力导向图的边数据, 每一项都有 source, target, weight三个属性,<br/> source和target是顶点的索引值，边的权重(weight)越大则两个顶点之间的联系越大(最后稳定之后的距离越小)</td>
+                            <td> 力导向图的边数据, 每一项:
+                                <table cellspacing="0" class="ADoc_table full">
+                                    <tr>
+                                        <th> 名称 </th>
+                                        <th> 默认值 </th>
+                                        <th> 描述 </th>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{string|number}</b> source </td>
+                                        <td></td>
+                                        <td> 源节点的index或者源节点的name </td>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{string|number}</b> target </td>
+                                        <td></td>
+                                        <td> 目标节点的index或者目标节点的name </td>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{number}</b> weight </td>
+                                        <td> 1 </td>
+                                        <td> 边的权重，权重越大邻接节点越靠拢 </td>
+                                    </tr>
+                                    <tr>
+                                        <td> itemStyle </td>
+                                        <td></td>
+                                        <td> 详见 <a href="#ItemStyle">itemStyle</a>, 只能设置 lineWidth, strokeColor, lineType 等描边的属性 </td>
+                                    </tr>
+                                </table>
                         </tr>
                         <tr>
-                            <td> <b>{string}</b> linkSymbol </td>
-                            <td> 'none' </td>
-                            <td> 力导向图的边两端图形样式，可指定为'arrow'</td>
+                            <td>
+                                <b> {Array} center</b>
+                            </td>
+                            <td>
+                                ['50%', '50%']
+                            </td>
+                            <td>
+                                布局中心，可以是绝对值或者相对百分比
+                            </td>
                         </tr>
                         <tr>
-                            <td> <b>{Array}</b> linkSymbolSize </td>
-                            <td> [10, 15] </td>
-                            <td> 力导向图的边两端图形大小</td>
+                            <td>
+                                <b> {number} size</b>
+                            </td>
+                            <td>
+                                100%
+                            </td>
+                            <td>
+                                布局大小，可以是绝对值或者相对百分比
+                            </td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> minRadius </td>
@@ -2691,14 +2822,54 @@ indicator : [
                             <td> 顶点数据映射成圆半径后的最大半径 </td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> density </td>
-                            <td> 1 </td>
-                            <td> 顶点的密度，影响布局时顶点运动的速度，值越大速度越慢 </td>
+                            <td> <b>{string}</b> symbol </td>
+                            <td> 'circle' </td>
+                            <td> 节点的形状, 详见 <a href="#SymbolList">symbolList</a> </td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> attractiveness </td>
+                            <td> {number} symbolSize </td>
+                            <td></td>
+                            <td> 节点的大小 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> linkSymbol </td>
+                            <td> 'none' </td>
+                            <td> 力导向图的边两端图形样式，可指定为'arrow', 详见<a href="#SymbolList">symbolList</a></td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> linkSymbolSize </td>
+                            <td> [10, 15] </td>
+                            <td> 力导向图的边两端图形大小</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> scaling </td>
                             <td> 1 </td>
-                            <td> 顶点之间的引力系数，影响到布局稳定之后的大小，值越大则稳定之后顶点之间的距离越小 </td>
+                            <td> 布局缩放系数，并不完全精确, 效果跟布局大小类似 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> gravity </td>
+                            <td> 1 </td>
+                            <td> 向心力系数，系数越大则节点越往中心靠拢 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> draggable </td>
+                            <td> true </td>
+                            <td> 节点是否能被拖拽 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> large </td>
+                            <td> false </td>
+                            <td> 在 500+ 顶点的图上建议设置 large 为 true, 会使用 <a href="http://en.wikipedia.org/wiki/Barnes–Hut_simulation">Barnes-Hut simulation</a>, 同时开启 useWorker 并且把 steps 值调大 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> useWorker </td>
+                            <td> true </td>
+                            <td> 是否在浏览器支持 web worker 的时候把布局计算放入 web worker 中 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> steps </td>
+                            <td> 1 </td>
+                            <td> 每一帧布局计算的迭代次数，因为每一帧绘制的时间经常会比布局时间长很多，所以在使用 web worker 的时候可以把 steps 调大来平衡两者的时间从而达到效率最优化 </td>
                         </tr>
                     </table>
 
@@ -3347,6 +3518,18 @@ geoCoord : {
                             <td> 弦样式，详见<a href="#ChordStyle" title="">chordStyle</a></td>
                         </tr>
                         <tr>
+                            <td> <b>{Object}</b> nodeStyle </td>
+                            <td> 图表各异 </td>
+                            <td> 力导向图</td>
+                            <td> 弦样式，详见<a href="#NodeStyle" title="">nodeStyle</a></td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> linkStyle </td>
+                            <td> 图表各异 </td>
+                            <td> 力导向图</td>
+                            <td> 弦样式，详见<a href="#LinkStyle" title="">linkStyle</a></td>
+                        </tr>
+                        <tr>
                             <td> <b>{string}</b> borderColor </td>
                             <td> '#fff' </td>
                             <td> 柱形图，折线图（symbol），散点图（symbole），饼图，markPoint</td>
@@ -3546,6 +3729,71 @@ geoCoord : {
                             <td> <b>{string}</b> type </td>
                             <td> 'default' </td>
                             <td> 填充样式，目前仅支持'default'(实填充) </td>
+                        </tr>
+                    </table>
+
+                    <h4>chordStyle<a name="ChordStyle"> </a></h4>
+                    <P> 和弦图中的弦样式 </P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> lineStyle</td>
+                            <td> {width: 1, color: '#999'} </td>
+                            <td> </td>
+                        </tr>
+                    </table>
+
+                    <h4>nodeStyle<a name="NodeStyle"> </a></h4>
+                    <P> 力导向图中的节点样式</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> brushType</td>
+                            <td> 'both' </td>
+                            <td> 可选 'both', 'stroke', 'fill' </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{color}</b> color</td>
+                            <td> '#f08c2e' </td>
+                            <td> 填充颜色 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{color}</b> strokeColor</td>
+                            <td> '#5182ab' </td>
+                            <td> 描边颜色 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> lineWidth </td>
+                            <td> 1 </td>
+                            <td> 描边线宽 </td>
+                        </tr>
+                    </table>
+
+                    <h4>linkStyle<a name="LinkStyle"> </a></h4>
+                    <P> 力导向图中的边样式 </P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{color}</b> strokeColor</td>
+                            <td> '#5182ab' </td>
+                            <td> 线条颜色 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> lineWidth </td>
+                            <td> 1 </td>
+                            <td> 线宽 </td>
                         </tr>
                     </table>
 

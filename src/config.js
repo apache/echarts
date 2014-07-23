@@ -821,7 +821,12 @@ define(function() {
             draggable: true,
 
             // 分类里如果有样式会覆盖节点默认样式
-            categories : [],
+            categories : [{
+                // itemStyle
+                // symbol
+                // symbolSize
+                // name
+            }],
             itemStyle: {
                 normal: {
                     // color: 各异,
