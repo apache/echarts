@@ -1569,7 +1569,7 @@ define(function (require) {
             return function(){
                 self._clearEffect();
                 self._zr.resize();
-                if (self._option.renderAsImage && _canvasSupported) {
+                if (self._option && self._option.renderAsImage && _canvasSupported) {
                     // 渲染为图片重走render模式
                     self._render(self._option);
                     return self;
