@@ -916,7 +916,7 @@ define(function (require) {
                 seriesIndex = this.shapeList[i]._seriesIndex;
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
                     // 有数据删除才有移动的动画
-                    if (this.shapeList[i]._main) {
+                    if (this.shapeList[i]._main && this.shapeList[i].style.pointList.length > 1) {
                         pointList = this.shapeList[i].style.pointList;
                         // 主线动画
                         dx = Math.abs(pointList[0][0] - pointList[1][0]);
