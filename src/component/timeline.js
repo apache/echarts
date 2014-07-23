@@ -82,15 +82,18 @@ define(function (require) {
         this.options = this.option.options;
         this.currentIndex = this.timelineOption.currentIndex % this.timelineOption.data.length;
         
-        /*
-        if (!this.timelineOption.notMerge) {
+        if (!this.timelineOption.notMerge && this.currentIndex !== 0) {
+            /*
             for (var i = 1, l = this.timelineOption.data.length; i < l; i++) {
                 this.options[i] = zrUtil.merge(
                     this.options[i], this.options[i - 1]
                 );
             }
+            */
+           this.options[this.currentIndex] = zrUtil.merge(
+               this.options[this.currentIndex], this.options[0]
+           );
         }
-        */
         
         if (this.timelineOption.show) {
             this._buildShape();
