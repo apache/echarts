@@ -302,7 +302,8 @@ define(function (require) {
             
             if (formatter) {
                 if (typeof formatter == 'function') {
-                    return formatter(
+                    return formatter.call(
+                        this.myChart,
                         serie.name,
                         name,
                         value

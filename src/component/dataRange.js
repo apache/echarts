@@ -1140,7 +1140,9 @@ define(function (require) {
                                                          .replace('{value2}', valueEnd);
                 }
                 else if (typeof this.dataRangeOption.formatter == 'function') {
-                    return this.dataRangeOption.formatter(valueStart, valueEnd);
+                    return this.dataRangeOption.formatter.call(
+                        this.myChart, valueStart, valueEnd
+                    );
                 }
             }
             

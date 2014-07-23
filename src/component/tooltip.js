@@ -659,8 +659,8 @@ define(function (require) {
                         ]);
                     }
                     this._curTicket = 'axis:' + dataIndex;
-                    this._tDom.innerHTML = formatter(
-                        params, this._curTicket, this._setContent
+                    this._tDom.innerHTML = formatter.call(
+                        this.myChart, params, this._curTicket, this._setContent
                     );
                 }
                 else if (typeof formatter == 'string') {
@@ -803,8 +803,8 @@ define(function (require) {
                 }
                 if (typeof formatter == 'function') {
                     this._curTicket = 'axis:' + dataIndex;
-                    this._tDom.innerHTML = formatter(
-                        params, this._curTicket, this._setContent
+                    this._tDom.innerHTML = formatter.call(
+                        this.myChart, params, this._curTicket, this._setContent
                     );
                 }
                 else if (typeof formatter == 'string') {
@@ -918,7 +918,8 @@ define(function (require) {
                 this._curTicket = (serie.name || '')
                                   + ':'
                                   + ecData.get(this._curTarget, 'dataIndex');
-                this._tDom.innerHTML = formatter(
+                this._tDom.innerHTML = formatter.call(
+                    this.myChart,
                     [
                         serie.name || '',
                         name,

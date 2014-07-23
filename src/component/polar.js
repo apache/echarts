@@ -219,7 +219,7 @@ define(function (require) {
                 style.color = textStyle.color;
                 
                 if (typeof name.formatter == 'function') {
-                    style.text = name.formatter(indicator[i].text, i);
+                    style.text = name.formatter.call(this.myChart, indicator[i].text, i);
                 }
                 else if (typeof name.formatter == 'string'){
                     style.text = name.formatter.replace(

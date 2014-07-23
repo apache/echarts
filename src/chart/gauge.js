@@ -513,7 +513,7 @@ define(function (require) {
         _getLabelText : function (formatter, value) {
             if (formatter) {
                 if (typeof formatter == 'function') {
-                    return formatter(value);
+                    return formatter.call(this.myChart, value);
                 }
                 else if (typeof formatter == 'string') {
                     return formatter.replace('{value}', value);

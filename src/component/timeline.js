@@ -189,7 +189,7 @@ define(function (require) {
                             || timelineOption.label.formatter;
             if (formatter) {
                 if (typeof formatter == 'function') {
-                    data = formatter(data);
+                    data = formatter.call(this.myChart, data);
                 }
                 else if (typeof formatter == 'string') {
                     data = formatter.replace('{value}', data);

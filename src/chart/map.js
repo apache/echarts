@@ -196,8 +196,7 @@ define(function (require) {
                 if (valueCalculation[mt] && valueCalculation[mt] == 'average') {
                     for (var k in valueData[mt]) {
                         valueData[mt][k].value = 
-                            (valueData[mt][k].value 
-                             / valueData[mt][k].seriesIndex.length)
+                            (valueData[mt][k].value / valueData[mt][k].seriesIndex.length)
                             .toFixed(
                                 mapValuePrecision[mt]
                             ) - 0;
@@ -935,7 +934,8 @@ define(function (require) {
             );
             if (formatter) {
                 if (typeof formatter == 'function') {
-                    return formatter(
+                    return formatter.call(
+                        this.myChart,
                         name,
                         value
                     );

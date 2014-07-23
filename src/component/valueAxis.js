@@ -741,7 +741,7 @@ define(function (require) {
             if (formatter) {
                 for (var i = 0, l = this._valueList.length; i < l; i++) {
                     if (typeof formatter == 'function') {
-                        this._valueLabel.push(formatter(this._valueList[i]));
+                        this._valueLabel.push(formatter.call(this.myChart, this._valueList[i]));
                     }
                     else if (typeof formatter == 'string') {
                         this._valueLabel.push(
