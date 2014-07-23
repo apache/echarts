@@ -416,14 +416,14 @@ define(function (require) {
                 if (this.zoomOption.orient == 'horizontal') {
                     pointList.push([
                         this._location.x + x * i,
-                        this._location.y + height - 5 - Math.round(
+                        this._location.y + height - 1 - Math.round(
                             (value - minValue) / valueRange * (height - 10)
                         )
                     ]);
                 }
                 else {
                     pointList.push([
-                        this._location.x + 5 + Math.round(
+                        this._location.x + 1 + Math.round(
                             (value - minValue) / valueRange * (width - 10)
                         ),
                         this._location.y + y * i
