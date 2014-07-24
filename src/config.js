@@ -1070,6 +1070,7 @@ define(function() {
             large : false,
             effect : {
                 show: false,
+                loop: true,
                 period: 15,             // 运动周期，无单位，值越大越慢
                 scaleSize : 2         // 放大倍数，以markPoint点size为基准
                 // color : 'gold',
@@ -1113,6 +1114,7 @@ define(function() {
             large : false,
             effect : {
                 show: false,
+                loop: true,
                 period: 15,             // 运动周期，无单位，值越大越慢
                 scaleSize : 2           // 放大倍数，以markLine线lineWidth为基准
                 // color : 'gold',

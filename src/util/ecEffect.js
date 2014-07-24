@@ -87,13 +87,17 @@ define(function (require) {
             }
         );
         
-        zr.animate(effectShape.id, '', true)
+        zr.animate(effectShape.id, '', effect.loop)
             .when(
                 duration,
                 {
                     scale : [1, 1, centerX, centerY]
                 }
             )
+            .done(function() {
+                shape.effect.show = false;
+                zr.delShape(effectShape.id);
+            })
             .start();
     }
     
@@ -214,7 +218,7 @@ define(function (require) {
                        )));
         if (!shape.style.smooth) {
             // 直线
-            zr.animate(effectShape.id, 'style', true)
+            zr.animate(effectShape.id, 'style', effect.loop)
                 .when(
                     duration,
                     {
@@ -222,6 +226,10 @@ define(function (require) {
                         y : shape._y - offset
                     }
                 )
+                .done(function() {
+                    shape.effect.show = false;
+                    zr.delShape(effectShape.id);
+                })
                 .start();
         }
         else {
@@ -229,7 +237,7 @@ define(function (require) {
             var pointList = shape.style.pointList || shape.getPointList(shape.style);
             var len = pointList.length;
             duration = Math.round(duration / len);
-            var deferred = zr.animate(effectShape.id, 'style', true);
+            var deferred = zr.animate(effectShape.id, 'style', effect.loop);
             var step = Math.ceil(len / 8);
             for (var j = 0; j < len - step; j+= step) {
                 deferred.when(
@@ -247,6 +255,10 @@ define(function (require) {
                     y : pointList[len - 1][1] - offset
                 }
             );
+            deferred.done(function() {
+                shape.effect.show = false;
+                zr.delShape(effectShape.id);
+            })
             deferred.start('spline');
         }
     }
