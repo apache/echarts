@@ -43851,8 +43851,8 @@ zrender.tool = {
 }
 
 zrender.animation = {
-    Animation : require('zrender/animation/animation'),
-    Cip : require('zrender/animation/clip'),
+    Animation : require('zrender/animation/Animation'),
+    Cip : require('zrender/animation/Clip'),
     easing : require('zrender/animation/easing')
 }
 var echarts = require('echarts');
