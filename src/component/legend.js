@@ -73,6 +73,7 @@ define(function (require) {
             var textStyle  = this.legendOption.textStyle;
             var dataTextStyle;
             var dataFont;
+	    var formattedName;
 
             var zrWidth = this.zr.getWidth();
             var zrHeight = this.zr.getHeight();
@@ -97,6 +98,7 @@ define(function (require) {
                 dataFont = this.getFont(dataTextStyle);
                 
                 itemName = this._getName(data[i]);
+		formattedName = this._getFormatterName(itemName);
                 if (itemName === '') {
                     if (this.legendOption.orient == 'horizontal') {
                         lastX = this._itemGroupLocation.x;
@@ -116,7 +118,7 @@ define(function (require) {
 
                 if (this.legendOption.orient == 'horizontal') {
                     if (zrWidth - lastX < 200   // 最后200px做分行预判
-                        && (itemWidth + 5 + zrArea.getTextWidth(itemName, dataFont)
+                        && (itemWidth + 5 + zrArea.getTextWidth(formattedName, dataFont)
                             // 分行的最后一个不用算itemGap
                             + (i == dataLength - 1 || data[i+1] === '' ? 0 : itemGap)
                            ) >= zrWidth - lastX
@@ -160,7 +162,7 @@ define(function (require) {
                         color : this._selectedMap[itemName]
                                 ? (dataTextStyle.color === 'auto' ? color : dataTextStyle.color)
                                 : '#ccc',
-                        text: itemName,
+                        text: formattedName,
                         textFont: dataFont,
                         textBaseline: 'middle'
                     },
@@ -193,7 +195,7 @@ define(function (require) {
 
                 if (this.legendOption.orient == 'horizontal') {
                     lastX += itemWidth + 5
-                             + zrArea.getTextWidth(itemName, dataFont)
+                             + zrArea.getTextWidth(formattedName, dataFont)
                              + itemGap;
                 }
                 else {
@@ -212,6 +214,26 @@ define(function (require) {
         
         _getName : function(data) {
             return typeof data.name != 'undefined' ? data.name : data;
+        },
+
+        _getFormatterName: function(itemName) {
+            var formatter = this.legendOption.formatter;
+            var formattedName;
+            if (typeof formatter == 'function') {
+                formattedName = formatter.call(this.myChart, itemName);
+            }
+            else if (typeof formatter == 'string') {
+                formattedName = formatter.replace('{name}', itemName);
+            }
+            else {
+                formattedName = itemName;
+            }
+            return formattedName;
+        },
+
+        _getFormatterNameFromData: function(data) {
+            var itemName = this._getName(data);
+            return this._getFormatterName(itemName);
         },
         
         // 多行橫排居中优化
@@ -324,7 +346,7 @@ define(function (require) {
                     }
                     temp += itemWidth
                             + zrArea.getTextWidth(
-                                  this._getName(data[i]),
+                                  this._getFormatterNameFromData(data[i]),
                                   data[i].textStyle 
                                   ? this.getFont(zrUtil.merge(
                                         data[i].textStyle || {},
@@ -349,7 +371,7 @@ define(function (require) {
                     maxWidth = Math.max(
                         maxWidth,
                         zrArea.getTextWidth(
-                            this._getName(data[i]),
+                            this._getFormatterNameFromData(data[i]),
                             data[i].textStyle 
                             ? this.getFont(zrUtil.merge(
                                   data[i].textStyle || {},
