@@ -925,7 +925,8 @@ define(function (require) {
                         name,
                         value,
                         special,
-                        special2
+                        special2,
+                        data
                     ],
                     this._curTicket,
                     this._setContent
