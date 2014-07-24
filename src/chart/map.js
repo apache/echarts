@@ -192,6 +192,11 @@ define(function (require) {
             }
             //清空
             this._clearSelected();
+            if (this._mapDataRequireCounter === 0) {
+                this.clear();
+                this.zr && this.zr.delShape(this.lastShapeList);
+                this.lastShapeList = [];
+            }
             for (var mt in valueData) {
                 if (valueCalculation[mt] && valueCalculation[mt] == 'average') {
                     for (var k in valueData[mt]) {
@@ -983,6 +988,9 @@ define(function (require) {
          * 滚轮缩放 
          */
         __onmousewheel : function (param) {
+            if (this.shapeList.length <= 0) {
+                return;
+            }
             var event = param.event;
             var mx = zrEvent.getX(event);
             var my = zrEvent.getY(event);
@@ -1099,6 +1107,9 @@ define(function (require) {
         },
         
         __onmousedown : function (param) {
+            if (this.shapeList.length <= 0) {
+                return;
+            }
             var target = param.target;
             if (target && target.draggable) {
                 return;
