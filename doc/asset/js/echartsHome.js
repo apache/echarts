@@ -1,4 +1,4 @@
-var version = '2.0.0';
+var version = '2.0.1';
 var curPage = location.href.match(/(\w*).html/) ? location.href.match(/(\w*).html/)[1] : 'index';
 
 var activeClass = {};
@@ -89,7 +89,7 @@ function back2Top() {
     return false;
 }
 $('#footer')[0].style.marginTop = '50px';
-$('#footer')[0].innerHTML = 
+$('#footer')[0].innerHTML =
      '<div class="container">'
         + '<div class="row" style="padding-bottom:20px;">'
             + '<div class="col-lg-3">'
@@ -112,9 +112,9 @@ $('#footer')[0].innerHTML =
             + '<div class="col-lg-3">'
                 + '<p>联系我们</p>'
                 + '<ul>'
-                    + '<li><a href="mailto:echarts@baidu.com">echarts@baidu.com</a></li>'
-                    + '<li><i class="fa fa-github"></i> <a href="https://github.com/ecomfe/echarts" target="_blank"> Github</a></li>'
-                    + '<li><i class="fa fa-weibo"></i> <a href="http://weibo.com/echarts" target="_blank">Weibo</a></li>'
+                    + '<li><a href="mailto:echarts(a)baidu.com">echarts(a)baidu.com</a></li>'
+                    + '<li><a href="https://github.com/ecomfe/echarts" target="_blank"> Github</a></li>'
+                    + '<li><a href="http://weibo.com/echarts" target="_blank">Weibo</a></li>'
                 + '</ul>'
             + '</div>'
             + '<div class="col-lg-3 flogo">'

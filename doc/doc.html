@@ -172,7 +172,7 @@
             <div class="col-md-9">
                 <p style="margin:20px 0 -30px 0">
                     <a href="./start.html" target="_blank" style="margin-right: 50px;">入门教程 ( Getting started ) »</a>
-                    <a href="mailto:echarts@baidu.com">Any feedback or question ? »</a>
+                    <a href="https://github.com/ecomfe/echarts/issues?page=1&state=open" target="_blank">Any feedback or question ? »</a>
                 </p>
                 <div id="doc">
                     <h3>简介<a name="简介"> </a></h3>
@@ -1446,6 +1446,7 @@ require(['echarts'], function (ec){
                                 <li>{b} | {b0}</li>
                                 <li>{c} | {c0}</li>
                                 <li>{d} | {d0} （部分图表类型无此项）</li>
+                                <li>{e} | {e0} （部分图表类型无此项）</li>
                                 <li> 多值下则存在多套{a1}, {b1}, {c1}, {d1}, {a2}, {b2}, {c2}, {d2}, ...</li>
                                 <li> 其中变量a、b、c、d在不同图表类型下代表数据含义为：
                                     <ul>
@@ -1467,9 +1468,10 @@ require(['echarts'], function (ec){
                         <li>
                             <b>{Function}</b>，传递参数列表如下：
                             <ul>
-                                <li>&lt;Array&gt; params : 数组内容同模板变量，[[a, b, c, d], [a1, b1, c1, d1], ...]</li>
+                                <li>&lt;Array&gt; params : 数组内容同模板变量，[[a, b, c, d, e, data], [a1, b1, c1, d1, e1, data1], ...]，不同的是当trigger为item时最后一项返回option中的完整data</li>
                                 <li>&lt;String&gt; ticket : 异步回调标识</li>
                                 <li>&lt;Function&gt; callback : 异步回调，回调时需要两个参数，第一个为前面提到的ticket，第二个为填充内容html</li>
+                                <li><i>*函数回调时this指针指向当前图表实例（myChart）</i></li>
                             </ul>
                         </li>
                     </ul>
@@ -1550,6 +1552,11 @@ require(['echarts'], function (ec){
                             <td> <b>{Object}</b> textStyle </td>
                             <td> {color: '#333'} </td>
                             <td> 默认只设定了图例文字颜色（详见<a href="#TextStyle" title="">textStyle</a>） ，更个性化的是，要指定文字颜色跟随图例，可设color为'auto'</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | Function}</b> formatter </td>
+                            <td> null </td>
+                            <td> 文本格式器：<b>{string}</b>（Template） | <b>{Function}</b>，模板变量为'{name}'，函数回调参数为name</td>
                         </tr>
                         <tr>
                             <td> <b>{boolean | string}</b> selectedMode </td>
@@ -3270,6 +3277,7 @@ indicator : [
                             <td> <b>{Object}</b> effect </td>
                             <td> {
                                 <br/>show: false,
+                                <br/>loop: true,
                                 <br/>period: 15,
                                 <br/>scaleSize : 2,
                                 <br/>color : null,
@@ -3279,6 +3287,7 @@ indicator : [
                             </td>
                             <td> 标注图形炫光特效:
                                 <br/>show 是否开启，默认关闭
+                                <br/>loop 循环动画，默认开启,
                                 <br/>period 运动周期，无单位，值越大越慢，默认为15
                                 <br/>scaleSize 放大倍数，以markPoint symbolSize为基准
                                 <br/>color 炫光颜色，默认跟随markPoint itemStyle定义颜色,
@@ -3371,6 +3380,7 @@ geoCoord : {
                             <td> <b>{Object}</b> effect </td>
                             <td> {
                                 <br/>show: false,
+                                <br/>loop: true,
                                 <br/>period: 15,
                                 <br/>scaleSize : 2,
                                 <br/>color : null,
@@ -3380,6 +3390,7 @@ geoCoord : {
                             </td>
                             <td> 标线图形炫光特效:
                                 <br/>show 是否开启，默认关闭
+                                <br/>loop 循环动画，默认开启,
                                 <br/>period 运动周期，无单位，值越大越慢，默认为15
                                 <br/>scaleSize 放大倍数，以markLine lineWidth为基准
                                 <br/>color 炫光颜色，默认跟随markLine itemStyle定义颜色,

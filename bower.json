@@ -1,7 +1,8 @@
 {
   "name": "echarts",
-  "version": "2.0.0",
-  "homepage": "https://github.com/ecomfe/echarts",
+  "version": "2.0.1",
+  "homepage": "http://echarts.baidu.com",
+  "repository": "git://github.com/ecomfe/echarts",
   "authors": [
     { "name": "Kener", "email": "linzhifeng@baidu.com" },
     { "name": "Pissang", "email": "shenyi01@baidu.com" },
@@ -12,7 +13,8 @@
   "keywords": [
     "baidu",
     "echarts",
-    "canvas"
+    "canvas",
+    "data visualization"
   ],
   "license": "BSD",
   "private": true,
