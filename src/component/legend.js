@@ -73,7 +73,7 @@ define(function (require) {
             var textStyle  = this.legendOption.textStyle;
             var dataTextStyle;
             var dataFont;
-	    var formattedName;
+            var formattedName;
 
             var zrWidth = this.zr.getWidth();
             var zrHeight = this.zr.getHeight();
@@ -98,7 +98,7 @@ define(function (require) {
                 dataFont = this.getFont(dataTextStyle);
                 
                 itemName = this._getName(data[i]);
-		formattedName = this._getFormatterName(itemName);
+                formattedName = this._getFormatterName(itemName);
                 if (itemName === '') {
                     if (this.legendOption.orient == 'horizontal') {
                         lastX = this._itemGroupLocation.x;

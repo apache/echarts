@@ -118,6 +118,8 @@ define(function (require) {
                     switch (style.brushType) {
                         case 'both':
                             ctx.fill();
+                            style.lineWidth > 0 && ctx.stroke();  // js hint -_-"
+                            break;
                         case 'stroke':
                             style.lineWidth > 0 && ctx.stroke();
                             break;

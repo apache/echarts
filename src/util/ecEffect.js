@@ -258,7 +258,7 @@ define(function (require) {
             deferred.done(function() {
                 shape.effect.show = false;
                 zr.delShape(effectShape.id);
-            })
+            });
             deferred.start('spline');
         }
     }
