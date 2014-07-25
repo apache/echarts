@@ -797,13 +797,16 @@ define('echarts/config',[],function() {
             minRadius : 10,
             maxRadius : 20,
 
+            // 是否根据屏幕比例拉伸
+            ratioScaling: false,
+
             // 在 500+ 顶点的图上建议设置 large 为 true, 会使用 Barnes-Hut simulation
             // 同时开启 useWorker 并且把 steps 值调大
             // 关于Barnes-Hut simulation: http://en.wikipedia.org/wiki/Barnes–Hut_simulation
             large: false,
 
-            // 为 false 的时候强制关闭 web worker
-            useWorker: true,
+            // 是否在浏览器支持 worker 的时候使用 web worker
+            useWorker: false,
             // 每一帧 force 迭代的次数，仅在启用webworker的情况下有用
             steps: 1,
 
@@ -36030,10 +36033,10 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
 
     return Chord;
 });
-(function __echartsForceLayoutWorker(self) {
+(function __echartsForceLayoutWorker(glob) {
 
 // In web worker
-if (typeof(window) === 'undefined' || window !== self) {
+if (typeof(window) === 'undefined' || window !== glob) {
     // Simple TMD implementation
     self.tmd = {};
     self.tmd.modules = {};
@@ -36520,11 +36523,7 @@ define('echarts/chart/ForceLayoutWorker',['require','zrender/tool/vector'],funct
 
             // Gravity
             if (this.gravity > 0) {
-                if (this.strongGravity) {
-                    this.applyNodeStrongGravity(na);
-                } else {
-                    this.applyNodeGravity(na);
-                }
+                this.applyNodeGravity(na);
             }
         }
 
@@ -36678,18 +36677,20 @@ define('echarts/chart/ForceLayoutWorker',['require','zrender/tool/vector'],funct
             // vec2.sub(v, this._rootRegion.centerOfMass, node.position);
             // vec2.negate(v, node.position);
             vec2.sub(v, this.center, node.position);
-            var d = vec2.len(v);
-            vec2.scaleAndAdd(node.force, node.force, v, this.gravity * node.mass / (d + 1));
-        };
-    })();
-
-    ForceLayout.prototype.applyNodeStrongGravity = (function() {
-        var v = vec2.create();
-        return function(node) {
-            // vec2.negate(v, node.position);
-            vec2.sub(v, this.center, node.position);
+            if (this.width > this.height) {
+                // Stronger gravity on y axis
+                v[1] *= this.width / this.height;
+            } else {
+                // Stronger gravity on x axis
+                v[0] *= this.height / this.width;
+            }
             var d = vec2.len(v) / 100;
-            vec2.scaleAndAdd(node.force, node.force, v, d * this.gravity * node.mass);
+            
+            if (this.strongGravity) {
+                vec2.scaleAndAdd(node.force, node.force, v, d * this.gravity * node.mass);
+            } else {
+                vec2.scaleAndAdd(node.force, node.force, v, this.gravity * node.mass / (d + 1));
+            }
         };
     })();
 
@@ -37022,8 +37023,9 @@ define('echarts/chart/force',['require','../component/base','./base','./ForceLay
             this._coolDown = serie.coolDown || 0.99;
 
             var center = this.parseCenter(this.zr, serie.center);
-            var size = this.parseRadius(this.zr, serie.size);
-            size = size[1] * 2;
+            var width = this.parsePercent(serie.size, this.zr.getWidth());
+            var height = this.parsePercent(serie.size, this.zr.getHeight());
+            var size = Math.min(width, height);
 
             // 将值映射到minRadius-maxRadius的范围上
             var radius = [];
@@ -37084,8 +37086,8 @@ define('echarts/chart/force',['require','../component/base','./base','./ForceLay
 
             var config = {
                 center: center,
-                width: size,
-                height: size,
+                width: serie.ratioScaling ? width : size,
+                height: serie.ratioScaling ? height : size,
                 scaling: serie.scaling || 1.0,
                 gravity: serie.gravity || 1.0,
                 barnesHutOptimize: serie.large
