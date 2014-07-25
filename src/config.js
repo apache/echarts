@@ -796,13 +796,16 @@ define(function() {
             minRadius : 10,
             maxRadius : 20,
 
+            // 是否根据屏幕比例拉伸
+            ratioScaling: false,
+
             // 在 500+ 顶点的图上建议设置 large 为 true, 会使用 Barnes-Hut simulation
             // 同时开启 useWorker 并且把 steps 值调大
             // 关于Barnes-Hut simulation: http://en.wikipedia.org/wiki/Barnes–Hut_simulation
             large: false,
 
-            // 为 false 的时候强制关闭 web worker
-            useWorker: true,
+            // 是否在浏览器支持 worker 的时候使用 web worker
+            useWorker: false,
             // 每一帧 force 迭代的次数，仅在启用webworker的情况下有用
             steps: 1,
 

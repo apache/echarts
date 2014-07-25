@@ -363,8 +363,8 @@ define(function (require) {
 
             var config = {
                 center: center,
-                width: width,
-                height: height,
+                width: serie.ratioScaling ? width : size,
+                height: serie.ratioScaling ? height : size,
                 scaling: serie.scaling || 1.0,
                 gravity: serie.gravity || 1.0,
                 barnesHutOptimize: serie.large

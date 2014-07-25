@@ -642,13 +642,13 @@ define(function(require) {
             // vec2.sub(v, this._rootRegion.centerOfMass, node.position);
             // vec2.negate(v, node.position);
             vec2.sub(v, this.center, node.position);
-            // if (this.width > this.height) {
-            //     // Stronger gravity on y axis
-            //     v[1] *= this.width / this.height;
-            // } else {
-            //     // Stronger gravity on x axis
-            //     v[0] *= this.height / this.width;
-            // }
+            if (this.width > this.height) {
+                // Stronger gravity on y axis
+                v[1] *= this.width / this.height;
+            } else {
+                // Stronger gravity on x axis
+                v[0] *= this.height / this.width;
+            }
             var d = vec2.len(v) / 100;
             
             if (this.strongGravity) {
