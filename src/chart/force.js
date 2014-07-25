@@ -300,8 +300,9 @@ define(function (require) {
             this._coolDown = serie.coolDown || 0.99;
 
             var center = this.parseCenter(this.zr, serie.center);
-            var size = this.parseRadius(this.zr, serie.size);
-            size = size[1] * 2;
+            var width = this.parsePercent(serie.size, this.zr.getWidth());
+            var height = this.parsePercent(serie.size, this.zr.getHeight());
+            var size = Math.min(width, height);
 
             // 将值映射到minRadius-maxRadius的范围上
             var radius = [];
@@ -362,8 +363,8 @@ define(function (require) {
 
             var config = {
                 center: center,
-                width: size,
-                height: size,
+                width: width,
+                height: height,
                 scaling: serie.scaling || 1.0,
                 gravity: serie.gravity || 1.0,
                 barnesHutOptimize: serie.large
