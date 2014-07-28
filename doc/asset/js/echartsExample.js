@@ -17,9 +17,9 @@ function requireCallback (ec, defaultTheme) {
     window.onresize = myChart.resize;
 }
 
-var themeSelector = $('#theme-select')[0];
+var themeSelector = $('#theme-select');
 if (themeSelector) {
-    themeSelector.innerHTML =
+    themeSelector.html(
         '<option selected="true" name="macarons">macarons</option>' 
         + '<option name="infographic">infographic</option>'
         + '<option name="shine">shine</option>'
@@ -28,7 +28,8 @@ if (themeSelector) {
         + '<option name="green">green</option>'
         + '<option name="red">red</option>'
         + '<option name="gray">gray</option>'
-        + '<option name="default">default</option>';
+        + '<option name="default">default</option>'
+    );
     $(themeSelector).on('change', function(){
         selectChange($(this).val());
     });

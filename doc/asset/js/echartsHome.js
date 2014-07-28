@@ -26,7 +26,7 @@ switch (curPage) {
         loc.index = '..';
         break;
     default :
-        forkWidth = 90;
+        forkWidth = 60;
         activeClass['example'] = 'active';
         loc.index = '../..';
         loc.feature = '../../doc';
@@ -74,8 +74,8 @@ $('#head')[0].innerHTML =
             + '<li class="dropdown">'
               + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">下载 <b class="caret"></b></a>'
               + '<ul class="dropdown-menu">'
-                + '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.zip"><i class="fa fa-download"></i> echarts-' + version + '</a></li>'
-                + '<li><a href="http://echarts.baidu.com/build/echarts-1.4.1.zip"><i class="fa fa-download"></i> echarts-1.4.1</a></li>'
+                + '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.zip"> echarts-' + version + '</a></li>'
+                + '<li><a href="http://echarts.baidu.com/build/echarts-1.4.1.zip"> echarts-1.4.1</a></li>'
               + '</ul>'
             + '</li>'
             //+ '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.rar">下载</a></li>'
@@ -92,7 +92,7 @@ $('#footer')[0].style.marginTop = '50px';
 $('#footer')[0].innerHTML =
      '<div class="container">'
         + '<div class="row" style="padding-bottom:20px;">'
-            + '<div class="col-lg-3">'
+            + '<div class="col-md-3">'
                 + '<p>友情链接</p>'
                 + '<ul>'
                     + '<li><a href="http://efe.baidu.com" target="_blank">Baidu EFE</a></li>'
@@ -101,7 +101,7 @@ $('#footer')[0].innerHTML =
                     + '<li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>'
                 + '</ul>'
             + '</div>'
-            + '<div class="col-lg-3">'
+            + '<div class="col-md-3">'
                 + '<p>更多</p>'
                 + '<ul>'
                     + '<li><a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">License</a></li>'
@@ -109,7 +109,7 @@ $('#footer')[0].innerHTML =
                     + '<li><a href="http://www.oschina.net/p/echarts" target="_blank">开源中国</a></li>'
                 + '</ul>'
             + '</div>'
-            + '<div class="col-lg-3">'
+            + '<div class="col-md-3">'
                 + '<p>联系我们</p>'
                 + '<ul>'
                     + '<li><a href="mailto:echarts(a)baidu.com">echarts(a)baidu.com</a></li>'
@@ -117,7 +117,7 @@ $('#footer')[0].innerHTML =
                     + '<li><a href="http://weibo.com/echarts" target="_blank">Weibo</a></li>'
                 + '</ul>'
             + '</div>'
-            + '<div class="col-lg-3 flogo">'
+            + '<div class="col-md-3 flogo">'
                 + '<a href="javascript:void(0)" onclick="back2Top()" title="回到顶部"><img src="'+ (loc.img || '.')+ '/asset/img/echarts-logo2.png" alt="ECharts"/></a>'
             + '</div>'
         + '</div>'
