@@ -370,6 +370,8 @@ define(function(require) {
         this.width = 500;
         this.height = 500;
 
+        this.maxSpeedIncrease = 1.0;
+
         this.nodes = [];
         this.edges = [];
 
@@ -527,7 +529,7 @@ define(function(require) {
                 vec2.scale(v, v, 1 / swing);
                 var base = vec2.len(node.speedPrev);
                 if (base > 0) {
-                    swing = Math.min(swing / base, 1) * base;
+                    swing = Math.min(swing / base, this.maxSpeedIncrease) * base;
                     vec2.scaleAndAdd(speed, node.speedPrev, v, swing);
                 }
             }
