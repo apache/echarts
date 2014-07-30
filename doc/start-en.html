@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+    <title>ECharts · Start</title>
+    
+    <link rel="shortcut icon" href="./asset/ico/favicon.png">
+    
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="./asset/css/bootstrap.css" rel="stylesheet">
+    <link href="./asset/css/carousel.css" rel="stylesheet">
+    <link href="./asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script src="./asset/js/google-code-prettify.js"></script>
+    <link href="./asset/css/google-code-prettify.css" rel="stylesheet" />
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="./asset/css/monokai.css" rel="stylesheet">
+    <style type="text/css">
+        .nav-tabs.nav-justified > .active > a, .nav-tabs.nav-justified > .active > a:hover {
+            background-color:rgb(247, 247, 247);
+            font-weight: bolder;
+        }
+        .tab-content {
+            padding:20px;
+            border-left: 1px solid #dddddd;
+            border-right: 1px solid #dddddd;
+            border-top: 0px;
+        }
+    </style>
+  </head>
+
+  <body>
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
+    
+    <div class="container">
+        <h2 class="text-center">5分钟上手写ECharts的第一个图表</h2>
+        <ul class="nav nav-tabs nav-justified">
+            <li class="active">
+                <a id = "o-aqi" href="#main0" data-toggle="tab">模块化单文件引入（推荐）</a></li>
+            <li><a id = "o-pm25" href="#main1" data-toggle="tab">标签式单文件引入</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="main0">
+        <b class="title">1、新建一个echarts.html文件。为ECharts准备一个具备大小（宽高）的Dom。</b>
+        <pre class="prettyprint"><xmp><!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+</head>
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="height:400px"></div>
+</body></xmp></pre>
+
+
+        <b class="title">2、新建&lt;script&gt;标签引入符合AMD规范的加载器，如esl.js</b>
+        <pre class="prettyprint"><xmp><!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <!-- 来自百度CDN -->
+    <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-6-10/esl.js"></script>
+</head>
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="height:400px"></div>
+</body></xmp></pre>
+
+
+        <b class="title">3、新建&lt;script&gt;标签中为模块加载器配置echarts和所需图表的路径（相对路径为从当前页面链接到echarts.js），引入图表文件见<a href="doc.html#引入ECharts2" target="_blank">引入ECharts2</a></b>
+        <pre class="prettyprint"><xmp><!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <!-- 来自百度CDN -->
+    <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-6-10/esl.js"></script>
+</head>
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="height:400px"></div>
+    <script type="text/javascript">
+        // 路径配置
+        require.config({
+            paths:{ 
+                'echarts' : 'http://echarts.baidu.com/build/echarts',
+                'echarts/chart/bar' : 'http://echarts.baidu.com/build/echarts'
+            }
+        });
+    </script>
+</body></xmp></pre>
+
+
+        <b class="title">4、&lt;script&gt;标签内动态加载echarts和所需图表，回调函数中可以初始化图表并驱动图表的生成，option见<a href="doc.html#Option" target="_blank">API & Doc</a></b>
+        <pre class="prettyprint"><xmp><!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <!-- 来自百度CDN -->
+    <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-6-10/esl.js"></script>
+</head>
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="height:400px"></div>
+    <script type="text/javascript">
+        // 路径配置
+        require.config({
+            paths:{ 
+                'echarts' : 'http://echarts.baidu.com/build/echarts',
+                'echarts/chart/bar' : 'http://echarts.baidu.com/build/echarts'
+            }
+        });
+        
+        // 使用
+        require(
+            [
+                'echarts',
+                'echarts/chart/bar' // 使用柱状图就加载bar模块，按需加载
+            ],
+            function (ec) {
+                // 基于准备好的dom，初始化echarts图表
+                var myChart = ec.init(document.getElementById('main')); 
+                
+                var option = {
+                    tooltip: {
+                        show: true
+                    },
+                    legend: {
+                        data:['销量']
+                    },
+                    xAxis : [
+                        {
+                            type : 'category',
+                            data : ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            type : 'value'
+                        }
+                    ],
+                    series : [
+                        {
+                            "name":"销量",
+                            "type":"bar",
+                            "data":[5, 20, 40, 10, 10, 20]
+                        }
+                    ]
+                };
+        
+                // 为echarts对象加载数据 
+                myChart.setOption(option); 
+            }
+        );
+    </script>
+</body></xmp></pre>
+
+
+        <b>5、浏览器中打开echarts.html，就可看到以下效果</b>
+            </div>
+
+<!------------------------------>
+
+            <div class="tab-pane" id="main1">
+        <b class="title">1、新建一个echarts.html文件。为ECharts准备一个具备大小（宽高）的Dom。</b>
+        <pre class="prettyprint"><xmp><!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+</head>
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="height:400px"></div>
+</body></xmp></pre>
+
+
+        <b class="title">2、新建&lt;script&gt;标签引入echarts-plain.js，引入图表文件见<a href="doc.html#引入ECharts3" target="_blank">引入ECharts3</a></b>
+        <pre class="prettyprint"><xmp><!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+</head>
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="height:400px"></div>
+    <!-- ECharts单文件引入 -->
+    <script src="http://echarts.baidu.com/build/echarts-plain.js"></script>
+</body></xmp></pre>
+
+
+        <b class="title">3、新建&lt;script&gt;标签，使用全局变量echarts初始化图表并驱动图表的生成，option见<a href="doc.html#Option" target="_blank">API & Doc</a></b>
+        <pre class="prettyprint"><xmp><!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+</head>
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="height:400px"></div>
+    <!-- ECharts单文件引入 -->
+    <script src="http://echarts.baidu.com/build/echarts-plain.js"></script>
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts图表
+        var myChart = echarts.init(document.getElementById('main')); 
+        
+        var option = {
+            tooltip: {
+                show: true
+            },
+            legend: {
+                data:['销量']
+            },
+            xAxis : [
+                {
+                    type : 'category',
+                    data : ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
+                }
+            ],
+            yAxis : [
+                {
+                    type : 'value'
+                }
+            ],
+            series : [
+                {
+                    "name":"销量",
+                    "type":"bar",
+                    "data":[5, 20, 40, 10, 10, 20]
+                }
+            ]
+        };
+
+        // 为echarts对象加载数据 
+        myChart.setOption(option); 
+    </script>
+</body></xmp></pre>
+
+
+        <b>4、浏览器中打开echarts.html，就可看到以下效果</b>
+            </div>
+        
+        
+        </div>
+        <div id="main" style="height:400px;border: 1px solid #dddddd;border-top-width:0"></div>
+        
+        <div class="row" style="margin-top: 30px;">
+            <h2>最好的参考资源：实例</h2>
+            <p>ECharts可以说是数据驱动的图表，大部分时候你关心的是那个option该如何实现，官网的<a href="./doc.html">文档</a>提供详细的说明，另外我们还有近100个<a href="./example.html">实例</a>，这些例子都为你展现了最核心的option代码，可以通过在线修改查看效果，ECharts是玩出来的，希望你玩得开心。</p>
+        </div>
+    </div>
+    <script src="./asset/js/esl/esl.js"></script>
+     
+    <script type="text/javascript">
+        require.config({
+            paths:{ 
+                'echarts' : 'http://echarts.baidu.com/build/echarts',
+                'echarts/chart/bar' : 'http://echarts.baidu.com/build/echarts'
+            }
+        });
+        require(
+            [
+                'echarts',
+                'echarts/chart/bar'
+            ],
+            function (ec) {
+                var myChart = ec.init(document.getElementById('main'));
+                myChart.setOption(option);
+            }
+        );
+        var option = {
+            tooltip: {
+                show: true
+            },
+            legend: {
+                data:['销量']
+            },
+            xAxis : [
+                {
+                    type : 'category',
+                    data : ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
+                }
+            ],
+            yAxis : [
+                {
+                    type : 'value'
+                }
+            ],
+            series : [
+                {
+                    "name":"销量",
+                    "type":"bar",
+                    "data":[5,20,40,10,10,20]
+                }
+            ]
+        };
+    </script>
+    
+    <footer id="footer"></footer>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="./asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="./asset/js/echartsHome.js"></script>
+    <script src="./asset/js/bootstrap.min.js"></script>
+  </body>
+</html>
