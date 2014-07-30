@@ -38,8 +38,12 @@ define(function (require) {
         typeof(Worker) !== 'undefined' &&
         typeof(Blob) !== 'undefined'
     ) {
-        var blob = new Blob([ForceLayout.getWorkerCode()]);
-        workerUrl = window.URL.createObjectURL(blob);
+        try {
+            var blob = new Blob([ForceLayout.getWorkerCode()]);
+            workerUrl = window.URL.createObjectURL(blob);   
+        } catch(e) {
+            workerUrl = '';
+        }
     }
 
     function getToken() {
