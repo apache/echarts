@@ -1060,8 +1060,8 @@ define(function (require) {
                             this.shapeList[i].style.xStart = geoAndPos[0];
                             this.shapeList[i].style.yStart = geoAndPos[1];
                             geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo[1]);
-                            this.shapeList[i].style.xEnd = geoAndPos[0];
-                            this.shapeList[i].style.yEnd = geoAndPos[1];
+                            this.shapeList[i]._x = this.shapeList[i].style.xEnd = geoAndPos[0];
+                            this.shapeList[i]._y = this.shapeList[i].style.yEnd = geoAndPos[1];
                         }
                         else if  (this.shapeList[i].type == 'icon') {
                             geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo);
