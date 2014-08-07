@@ -11,7 +11,7 @@ define(function (require) {
     var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
 
-    var ForceLayout = require('./ForceLayoutWorker');
+    var ForceLayout = require('./forceLayoutWorker');
     
     // 图形依赖
     var LineShape = require('zrender/shape/Line');
