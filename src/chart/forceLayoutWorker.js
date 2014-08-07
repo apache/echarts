@@ -1,36 +1,14 @@
-(function __echartsForceLayoutWorker(glob) {
+// 1. Graph Drawing by Force-directed Placement
+// 2. http://webatlas.fr/tempshare/ForceAtlas2_Paper.pdf
+define(function __echartsForceLayoutWorker(require) {
 
-// In web worker
-if (typeof(window) === 'undefined' || window !== glob) {
-    // Simple TMD implementation
-    self.tmd = {};
-    self.tmd.modules = {};
+    'use strict';
 
-    self.tmd.require = function(id) {
-        return self.tmd.modules[id];
-    };
-
-    self.define = function(id, deps, constructor) {
-        if (arguments.length === 0) {
-            return;
-        } else if (arguments.length == 1) {
-            constructor = id;
-            // TODO
-            id = 'ForceLayout';
-        } else if (arguments.length == 2) {
-            constructor = deps;
-        }
-        // In release environment
-        // Ugliy polyfill
-        if (id.indexOf('ForceLayout') >= 0) {
-            id = 'ForceLayout';
-        }
-        self.tmd.modules[id] = constructor(self.tmd.require);
-    };
-
-    // Vector2 math functions
-    define('zrender/tool/vector', function(require) {
-        return {
+    var vec2;
+    // In web worker
+    var inWorker = typeof(window) === 'undefined' && typeof(require) === 'undefined';
+    if (inWorker) {
+        vec2 = {
             create: function(x, y) {
                 var out = new Float32Array(2);
                 out[0] = x || 0;
@@ -95,90 +73,9 @@ if (typeof(window) === 'undefined' || window !== glob) {
                 return out;
             }
         };
-    });
-
-    /****************************
-     * Main process
-     ***************************/
-
-    var forceLayout = null;
-
-    self.onmessage = function(e) {
-        // Position read back
-        if (e.data instanceof ArrayBuffer) {
-            if (!forceLayout) {
-                return;
-            }
-            var positionArr = new Float32Array(e.data);
-            var nNodes = (positionArr.length - 1) / 2;
-            for (var i = 0; i < nNodes; i++) {
-                var node = forceLayout.nodes[i];
-                node.position[0] = positionArr[i * 2 + 1];
-                node.position[1] = positionArr[i * 2 + 2];
-            }
-            return;
-        }
-
-        var ForceLayout = self.tmd.modules.ForceLayout;
-
-        switch(e.data.cmd) {
-            case 'init':
-                if (!forceLayout) {
-                    forceLayout = new ForceLayout();
-                }
-                forceLayout.initNodes(e.data.nodesPosition, e.data.nodesMass, e.data.nodesSize);
-                forceLayout.initEdges(e.data.edges, e.data.edgesWeight);
-                forceLayout._token = e.data.token;
-                break;
-            case 'updateConfig':
-                if (forceLayout) {
-                    for (var name in e.data.config) {
-                        forceLayout[name] = e.data.config[name];
-                    }
-                }
-                break;
-            case 'update':
-                var steps = e.data.steps;
-
-                if (forceLayout) {
-                    var nNodes = forceLayout.nodes.length;
-                    var positionArr = new Float32Array(nNodes * 2 + 1);
-
-                    forceLayout.temperature = e.data.temperature;
-
-                    if (e.data.temperature > 0.01) {
-                        for (var i = 0; i < steps; i++) {
-                            forceLayout.update();
-                            forceLayout.temperature *= e.data.coolDown;
-                        }
-                        // Callback
-                        for (var i = 0; i < nNodes; i++) {
-                            var node = forceLayout.nodes[i];
-                            positionArr[i * 2 + 1] = node.position[0];
-                            positionArr[i * 2 + 2] = node.position[1];
-                        }
-
-                        positionArr[0] = forceLayout._token;
-                    }
-
-                    self.postMessage(positionArr.buffer, [positionArr.buffer]);
-                } else {
-                    // Not initialzied yet
-                    var emptyArr = new Float32Array();
-                    // Post transfer object
-                    self.postMessage(emptyArr.buffer, [emptyArr.buffer]);
-                }
-                break;
-        }
-    };
-}
-// 1. Graph Drawing by Force-directed Placement
-// 2. http://webatlas.fr/tempshare/ForceAtlas2_Paper.pdf
-define(function(require) {
-
-    'use strict';
-
-    var vec2 = require('zrender/tool/vector');
+    } else {
+        vec2 = require('zrender/tool/vector');
+    }
     var ArrayCtor = typeof(Float32Array) == 'undefined' ? Array : Float32Array;
 
     /****************************
@@ -681,10 +578,83 @@ define(function(require) {
 
     ForceLayout.getWorkerCode = function() {
         var str = __echartsForceLayoutWorker.toString();
-        return str.slice(str.indexOf('{') + 1, str.lastIndexOf('}'));
+        return str.slice(str.indexOf('{') + 1, str.lastIndexOf('return'));
     };
+
+    /****************************
+     * Main process
+     ***************************/
+
+    if (inWorker) {
+        var forceLayout = null;
+
+        self.onmessage = function(e) {
+            // Position read back
+            if (e.data instanceof ArrayBuffer) {
+                if (!forceLayout) {
+                    return;
+                }
+                var positionArr = new Float32Array(e.data);
+                var nNodes = (positionArr.length - 1) / 2;
+                for (var i = 0; i < nNodes; i++) {
+                    var node = forceLayout.nodes[i];
+                    node.position[0] = positionArr[i * 2 + 1];
+                    node.position[1] = positionArr[i * 2 + 2];
+                }
+                return;
+            }
+
+            switch(e.data.cmd) {
+                case 'init':
+                    if (!forceLayout) {
+                        forceLayout = new ForceLayout();
+                    }
+                    forceLayout.initNodes(e.data.nodesPosition, e.data.nodesMass, e.data.nodesSize);
+                    forceLayout.initEdges(e.data.edges, e.data.edgesWeight);
+                    forceLayout._token = e.data.token;
+                    break;
+                case 'updateConfig':
+                    if (forceLayout) {
+                        for (var name in e.data.config) {
+                            forceLayout[name] = e.data.config[name];
+                        }
+                    }
+                    break;
+                case 'update':
+                    var steps = e.data.steps;
+
+                    if (forceLayout) {
+                        var nNodes = forceLayout.nodes.length;
+                        var positionArr = new Float32Array(nNodes * 2 + 1);
+
+                        forceLayout.temperature = e.data.temperature;
+
+                        if (e.data.temperature > 0.01) {
+                            for (var i = 0; i < steps; i++) {
+                                forceLayout.update();
+                                forceLayout.temperature *= e.data.coolDown;
+                            }
+                            // Callback
+                            for (var i = 0; i < nNodes; i++) {
+                                var node = forceLayout.nodes[i];
+                                positionArr[i * 2 + 1] = node.position[0];
+                                positionArr[i * 2 + 2] = node.position[1];
+                            }
+
+                            positionArr[0] = forceLayout._token;
+                        }
+
+                        self.postMessage(positionArr.buffer, [positionArr.buffer]);
+                    } else {
+                        // Not initialzied yet
+                        var emptyArr = new Float32Array();
+                        // Post transfer object
+                        self.postMessage(emptyArr.buffer, [emptyArr.buffer]);
+                    }
+                    break;
+            }
+        };
+    }
 
     return ForceLayout;
 });
-
-})(window);
