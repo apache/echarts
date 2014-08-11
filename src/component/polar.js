@@ -138,6 +138,7 @@ define(function (require) {
             // var startAngle = this.deepQuery(this._queryTarget, 'startAngle');
             var offset;
             var precision = this.deepQuery(this._queryTarget, 'precision');
+            var interval;
 
             for (var i = 0; i < indicator.length; i ++) {
                 axisLabel = this.deepQuery(
@@ -155,8 +156,9 @@ define(function (require) {
                     value = __ecIndicator[i].value;
                     theta = i / indicator.length * 2 * Math.PI;
                     offset = axisLabel.offset || 10;
+                    interval = axisLabel.interval || 0;
 
-                    for (var j = 1 ; j <= splitNumber; j ++) {
+                    for (var j = 1 ; j <= splitNumber; j += interval + 1) {
                         newStyle = zrUtil.merge({}, style);
                         text = 
                             j * (value.max - value.min) / splitNumber
