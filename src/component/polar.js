@@ -113,7 +113,7 @@ define(function (require) {
                 splitArea, strokeColor, lineWidth, show
             );
             
-            this._addLine(
+            axisLine.show && this._addLine(
                 __ecIndicator, center, axisLine
             );
         },
