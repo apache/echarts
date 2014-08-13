@@ -52,7 +52,6 @@ require('echarts/util/mapData/params').params.baiduBuilding = {
             url: "svg/baidu-building.svg",
             dataType: 'xml',
             success: function(xml) {
-                kener = xml;
                 callback(xml)
             }
         });

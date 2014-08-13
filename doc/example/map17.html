@@ -52,7 +52,6 @@ require('echarts/util/mapData/params').params.football = {
             url: "svg/football.svg",
             dataType: 'xml',
             success: function(xml) {
-                kener = xml;
                 callback(xml)
             }
         });
