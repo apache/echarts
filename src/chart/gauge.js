@@ -19,6 +19,7 @@ define(function (require) {
 
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
+    var accMath = require('../util/accMath');
     var zrUtil = require('zrender/tool/util');
     
     /**
@@ -265,7 +266,7 @@ define(function (require) {
             var cosAngle;
             var value;
             for (var i = 0; i <= splitNumber; i++) {
-                value = min + total / splitNumber * i;
+                value = min + accMath.accMul(accMath.accDiv(total , splitNumber) , i);
                 angle = startAngle - totalAngle / splitNumber * i;
                 sinAngle = Math.sin(angle * Math.PI / 180);
                 cosAngle = Math.cos(angle * Math.PI / 180);
