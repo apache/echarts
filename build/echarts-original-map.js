@@ -2953,7 +2953,7 @@ define(
          * @type {Function}
          * @param {Event} e : event对象
          */
-        var stop = window.Event && window.Event.prototype.preventDefault
+        var stop = typeof window.addEventListener === 'function'
             ? function (e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -3164,6 +3164,7 @@ define(
         };
     }
 );
+
 /**
  * echarts设备环境识别
  *
@@ -5631,10 +5632,6 @@ define(
             options = options || {};
             
             this.id = options.id || guid();
-            this.zlevel = 0;
-            this.draggable = false;
-            this.clickable = false;
-            this.hoverable = true;
 
             for ( var key in options ) {
                 this[ key ] = options[ key ];
@@ -5649,6 +5646,20 @@ define(
             Transformable.call(this);
             Dispatcher.call(this);
         }
+
+        Base.prototype.invisible = false;
+
+        Base.prototype.ignore = false;
+
+        Base.prototype.zlevel = 0;
+
+        Base.prototype.draggable = false;
+
+        Base.prototype.clickable = false;
+
+        Base.prototype.hoverable = true;
+
+        Base.prototype.z = 0;
 
         /**
          * 画刷
@@ -7778,7 +7789,7 @@ define(
                         image = new Image();//document.createElement('image');
                         image.onload = function(){
                             image.onload = null;
-                            clearTimeout( _refreshTimeout );
+                            clearTimeout(_refreshTimeout);
                             _needsRefresh.push( me );
                             // 防止因为缓存短时间内触发多次onload事件
                             _refreshTimeout = setTimeout(function(){
@@ -7787,7 +7798,7 @@ define(
                                 _needsRefresh = [];
                             }, 10);
                         };
-                        _cache[ src ] = image;
+                        _cache[src] = image;
 
                         image.src = src;
                     }
@@ -7808,16 +7819,22 @@ define(
                     }
                     // Else is canvas
 
+                    var width = style.width || image.width;
+                    var height = style.height || image.height;
+                    var x = style.x;
+                    var y = style.y;
+                    
+                    // 图片加载失败
+                    if (!image.width || !image.height) {
+                        return;
+                    }
+
                     ctx.save();
                     this.setContext(ctx, style);
 
                     // 设置transform
                     this.setTransform(ctx);
 
-                    var width = style.width || image.width;
-                    var height = style.height || image.height;
-                    var x = style.x;
-                    var y = style.y;
                     if (style.sWidth && style.sHeight) {
                         var sx = style.sx || 0;
                         var sy = style.sy || 0;
@@ -7904,6 +7921,7 @@ define(
 
         // retina 屏幕优化
         var devicePixelRatio = window.devicePixelRatio || 1;
+        devicePixelRatio = Math.max(devicePixelRatio, 1);
         var vmlCanvasManager = window.G_vmlCanvasManager;
 
         /**
@@ -7962,6 +7980,7 @@ define(
             var hoverLayer = new Layer('_zrender_hover_', this);
             this._layers['hover'] = hoverLayer;
             domRoot.appendChild(hoverLayer.dom);
+            hoverLayer.initContext();
 
             hoverLayer.onselectstart = returnFalse;
 
@@ -7980,9 +7999,8 @@ define(
             if (this.isLoading()) {
                 this.hideLoading();
             }
-
             // TODO
-            this.refresh(callback);
+            this.refresh(callback, true);
 
             return this;
         };
@@ -7991,12 +8009,11 @@ define(
          * 刷新
          * 
          * @param {Function=} callback 刷新结束后的回调函数
+         * @param {Boolean} paintAll 强制绘制所有shape
          */
-        Painter.prototype.refresh = function (callback) {
-
+        Painter.prototype.refresh = function (callback, paintAll) {
             var list = this.storage.getShapeList(true);
-
-            this._paintList(list);
+            this._paintList(list, paintAll);
 
             if (typeof callback == 'function') {
                 callback();
@@ -8005,13 +8022,16 @@ define(
             return this;
         };
 
-        Painter.prototype._paintList = function(list) {
+        Painter.prototype._paintList = function(list, paintAll) {
 
-            var layerStatus = this._getLayerStatus(list);
+            if (typeof(paintAll) == 'undefined') {
+                paintAll = false;
+            }
+
+            this._updateLayerStatus(list);
 
             var currentLayer;
             var currentZLevel;
-            var currentLayerDirty = true;
             var ctx;
 
             for (var id in this._layers) {
@@ -8026,15 +8046,14 @@ define(
                 var shape = list[i];
 
                 if (currentZLevel !== shape.zlevel) {
-                    currentLayer = this._getLayer(shape.zlevel, currentLayer);
+                    currentLayer = this.getLayer(shape.zlevel, currentLayer);
                     ctx = currentLayer.ctx;
                     currentZLevel = shape.zlevel;
-                    currentLayerDirty = layerStatus[currentZLevel];
 
                     // Reset the count
                     currentLayer.unusedCount = 0;
 
-                    if (currentLayerDirty) {
+                    if (currentLayer.dirty || paintAll) {
                         currentLayer.clear();
                     }
                 }
@@ -8069,7 +8088,7 @@ define(
                     }
                 }
 
-                if (currentLayerDirty && !shape.invisible) {
+                if ((currentLayer.dirty || paintAll) && !shape.invisible) {
                     if (
                         !shape.onbrush
                         || (shape.onbrush && !shape.onbrush(ctx, false))
@@ -8102,7 +8121,9 @@ define(
             for (var id in this._layers) {
                 if (id !== 'hover') {
                     var layer = this._layers[id];
-                    if (layer.unusedCount >= 2) {
+                    layer.dirty = false;
+                    // 删除过期的层
+                    if (layer.unusedCount >= 500) {
                         delete this._layers[id];
                         layer.dom.parentNode.removeChild(layer.dom);
                     }
@@ -8113,7 +8134,7 @@ define(
             }
         };
 
-        Painter.prototype._getLayer = function(zlevel, prevLayer) {
+        Painter.prototype.getLayer = function(zlevel, prevLayer) {
             // Change draw layer
             var currentLayer = this._layers[zlevel];
             if (!currentLayer) {
@@ -8130,7 +8151,8 @@ define(
                         currentLayer.dom
                     );
                 }
-
+                currentLayer.initContext();
+                
                 this._layers[zlevel] = currentLayer;
 
                 currentLayer.config = this._layerConfig[zlevel];
@@ -8139,21 +8161,40 @@ define(
             return currentLayer;
         };
 
-        Painter.prototype._getLayerStatus = function(list) {
+        Painter.prototype._updateLayerStatus = function(list) {
+            
+            var layers = this._layers;
 
-            var obj = {};
+            var elCounts = {};
+            for (var z in layers) {
+                if (z !== 'hover') {
+                    elCounts[z] = layers[z].elCount;
+                    layers[z].elCount = 0;
+                }
+            }
 
             for (var i = 0, l = list.length; i < l; i++) {
                 var shape = list[i];
                 var zlevel = shape.zlevel;
-                // Already mark as dirty
-                if (obj[zlevel]) {
-                    continue;
+                var layer = layers[zlevel];
+                if (layer) {
+                    layer.elCount++;
+                    // 已经被标记为需要刷新
+                    if (layer.dirty) {
+                        continue;
+                    }
+                    layer.dirty = shape.__dirty;
                 }
-                obj[zlevel] = shape.__dirty;
             }
 
-            return obj;
+            // 层中的元素数量有发生变化
+            for (var z in layers) {
+                if (z !== 'hover') {
+                    if (elCounts[z] !== layers[z].elCount) {
+                        layers[z].dirty = true;
+                    }
+                }
+            }
         };
 
         /**
@@ -8297,7 +8338,7 @@ define(
                     this._layers[id].resize(width, height);
                 }
 
-                this.refresh();
+                this.refresh(null, true);
             }
 
             return this;
@@ -8343,7 +8384,7 @@ define(
             this._bgDom.appendChild(imageDom);
             var ctx = imageDom.getContext('2d');
             devicePixelRatio != 1 
-            && ctx.scale(devicePixelRatio, devicePixelRatio);
+                && ctx.scale(devicePixelRatio, devicePixelRatio);
             
             ctx.fillStyle = backgroundColor || '#fff';
             ctx.rect(
@@ -8548,12 +8589,6 @@ define(
             this.dom = createDom(id, 'canvas', painter);
             vmlCanvasManager && vmlCanvasManager.initElement(this.dom);
 
-            this.ctx = this.dom.getContext('2d');
-
-            if (devicePixelRatio != 1) { 
-                this.ctx.scale(devicePixelRatio, devicePixelRatio);
-            }
-
             this.domBack = null;
             this.ctxBack = null;
 
@@ -8562,6 +8597,17 @@ define(
             this.unusedCount = 0;
 
             this.config = null;
+
+            this.dirty = true;
+
+            this.elCount = 0;
+        }
+
+        Layer.prototype.initContext = function() {
+            this.ctx = this.dom.getContext('2d');
+            if (devicePixelRatio != 1) { 
+                this.ctx.scale(devicePixelRatio, devicePixelRatio);
+            }
         }
 
         Layer.prototype.createBackBuffer = function() {
@@ -8577,9 +8623,6 @@ define(
         };
 
         Layer.prototype.resize = function(width, height) {
-            
-            this.dom.setAttribute('width', width);
-            this.dom.setAttribute('height', height);
             this.dom.style.width = width + 'px';
             this.dom.style.height = height + 'px';
 
@@ -8592,7 +8635,7 @@ define(
 
             if (this.domBack) {
                 this.domBack.setAttribute('width', width * devicePixelRatio);
-                this.domBack.setAttribute('height', width * devicePixelRatio);
+                this.domBack.setAttribute('height', height * devicePixelRatio);
 
                 if (devicePixelRatio != 1) { 
                     this.ctxBack.scale(devicePixelRatio, devicePixelRatio);
@@ -8635,16 +8678,16 @@ define(
                     ctx.fillStyle = this.config.clearColor;
                     ctx.fillRect(
                         0, 0,
-                        width * devicePixelRatio, 
-                        height * devicePixelRatio
+                        width / devicePixelRatio, 
+                        height / devicePixelRatio
                     );
                     ctx.restore();
                 }
                 else {
                     ctx.clearRect(
                         0, 0, 
-                        width * devicePixelRatio, 
-                        height * devicePixelRatio
+                        width / devicePixelRatio,
+                        height / devicePixelRatio
                     );
                 }
 
@@ -8663,8 +8706,8 @@ define(
             else {
                 ctx.clearRect(
                     0, 0, 
-                    width,
-                    height
+                    width / devicePixelRatio,
+                    height / devicePixelRatio
                 );
             }
         };
@@ -8708,6 +8751,8 @@ define('zrender/shape/Group',['require','../tool/guid','../tool/util','../tool/e
         Transformable.call(this);
         Dispatcher.call(this);
     }
+
+    Group.prototype.ignore = false;
 
     Group.prototype.children = function() {
         return this._children.slice();
@@ -8837,7 +8882,10 @@ define(
 
         function shapeCompareFunc(a, b) {
             if (a.zlevel == b.zlevel) {
-                return a.__renderidx - b.__renderidx;
+                if (a.z == b.z) {
+                    return a.__renderidx - b.__renderidx;
+                }
+                return a.z - b.z;
             }
             return a.zlevel - b.zlevel;
         }
@@ -8947,6 +8995,10 @@ define(
 
         Storage.prototype._updateAndAddShape = function(el) {
             
+            if (el.ignore) {
+                return;
+            }
+
             el.updateTransform();
 
             if (el.type == 'group') {
@@ -8966,7 +9018,7 @@ define(
                     var child = el._children[i];
 
                     // Force to mark as dirty if group is dirty
-                    child.__dirty = el.__dirty || el.__dirty;
+                    child.__dirty = el.__dirty || child.__dirty;
 
                     this._updateAndAddShape(child);
                 }
@@ -8977,6 +9029,10 @@ define(
                         stopClipShape.__stopClip = true;
                     }
                 }
+
+                // Mark group clean here
+                el.__dirty = false;
+                
             } else {
                 this._shapeList[this._shapeListOffset++] = el;
             }
@@ -10048,7 +10104,7 @@ define(
         var _instances = {};    //ZRender实例map索引
 
         var zrender = {};
-        zrender.version = '2.0.1';
+        zrender.version = '2.0.2';
 
         /**
          * zrender初始化
@@ -10119,7 +10175,6 @@ define(
 
                 if (animatingShapes.length || zrInstance._needsRefreshNextFrame) {
                     zrInstance.refresh();
-                    zrInstance._needsRefreshNextFrame = false;
                 }
             };
         }
@@ -10252,6 +10307,7 @@ define(
          */
         ZRender.prototype.render = function (callback) {
             this.painter.render(callback);
+            this._needsRefreshNextFrame = false;
             return this;
         };
 
@@ -10262,6 +10318,7 @@ define(
          */
         ZRender.prototype.refresh = function (callback) {
             this.painter.refresh(callback);
+            this._needsRefreshNextFrame = false;
             return this;
         };
 
@@ -22968,9 +23025,9 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
-    self.version = '2.0.1';
+    self.version = '2.0.2';
     self.dependencies = {
-        zrender : '2.0.1'
+        zrender : '2.0.2'
     };
     /**
      * 入口方法 
@@ -24677,7 +24734,7 @@ define('echarts/util/shape/GaugePointer',['require','zrender/shape/Base','zrende
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define('echarts/chart/gauge',['require','../component/base','./base','../util/shape/GaugePointer','zrender/shape/Text','zrender/shape/Line','zrender/shape/Rectangle','zrender/shape/Circle','zrender/shape/Sector','../config','../util/ecData','zrender/tool/util','../chart'],function (require) {
+define('echarts/chart/gauge',['require','../component/base','./base','../util/shape/GaugePointer','zrender/shape/Text','zrender/shape/Line','zrender/shape/Rectangle','zrender/shape/Circle','zrender/shape/Sector','../config','../util/ecData','../util/accMath','zrender/tool/util','../chart'],function (require) {
     var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
@@ -24691,6 +24748,7 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
 
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
+    var accMath = require('../util/accMath');
     var zrUtil = require('zrender/tool/util');
     
     /**
@@ -24937,7 +24995,7 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
             var cosAngle;
             var value;
             for (var i = 0; i <= splitNumber; i++) {
-                value = min + total / splitNumber * i;
+                value = min + accMath.accMul(accMath.accDiv(total , splitNumber) , i);
                 angle = startAngle - totalAngle / splitNumber * i;
                 sinAngle = Math.sin(angle * Math.PI / 180);
                 cosAngle = Math.cos(angle * Math.PI / 180);
@@ -31474,7 +31532,7 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
                 splitArea, strokeColor, lineWidth, show
             );
             
-            this._addLine(
+            axisLine.show && this._addLine(
                 __ecIndicator, center, axisLine
             );
         },
@@ -31499,6 +31557,7 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
             // var startAngle = this.deepQuery(this._queryTarget, 'startAngle');
             var offset;
             var precision = this.deepQuery(this._queryTarget, 'precision');
+            var interval;
 
             for (var i = 0; i < indicator.length; i ++) {
                 axisLabel = this.deepQuery(
@@ -31516,8 +31575,9 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
                     value = __ecIndicator[i].value;
                     theta = i / indicator.length * 2 * Math.PI;
                     offset = axisLabel.offset || 10;
+                    interval = axisLabel.interval || 0;
 
-                    for (var j = 1 ; j <= splitNumber; j ++) {
+                    for (var j = 1 ; j <= splitNumber; j += interval + 1) {
                         newStyle = zrUtil.merge({}, style);
                         text = 
                             j * (value.max - value.min) / splitNumber
@@ -36033,39 +36093,17 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
 
     return Chord;
 });
-(function __echartsForceLayoutWorker(glob) {
+// 1. Graph Drawing by Force-directed Placement
+// 2. http://webatlas.fr/tempshare/ForceAtlas2_Paper.pdf
+define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],function __echartsForceLayoutWorker(require) {
 
-// In web worker
-if (typeof(window) === 'undefined' || window !== glob) {
-    // Simple TMD implementation
-    self.tmd = {};
-    self.tmd.modules = {};
+    
 
-    self.tmd.require = function(id) {
-        return self.tmd.modules[id];
-    };
-
-    self.define = function(id, deps, constructor) {
-        if (arguments.length === 0) {
-            return;
-        } else if (arguments.length == 1) {
-            constructor = id;
-            // TODO
-            id = 'ForceLayout';
-        } else if (arguments.length == 2) {
-            constructor = deps;
-        }
-        // In release environment
-        // Ugliy polyfill
-        if (id.indexOf('ForceLayout') >= 0) {
-            id = 'ForceLayout';
-        }
-        self.tmd.modules[id] = constructor(self.tmd.require);
-    };
-
-    // Vector2 math functions
-    define('zrender/tool/vector', ['require'],function(require) {
-        return {
+    var vec2;
+    // In web worker
+    var inWorker = typeof(window) === 'undefined' && typeof(require) === 'undefined';
+    if (inWorker) {
+        vec2 = {
             create: function(x, y) {
                 var out = new Float32Array(2);
                 out[0] = x || 0;
@@ -36130,90 +36168,9 @@ if (typeof(window) === 'undefined' || window !== glob) {
                 return out;
             }
         };
-    });
-
-    /****************************
-     * Main process
-     ***************************/
-
-    var forceLayout = null;
-
-    self.onmessage = function(e) {
-        // Position read back
-        if (e.data instanceof ArrayBuffer) {
-            if (!forceLayout) {
-                return;
-            }
-            var positionArr = new Float32Array(e.data);
-            var nNodes = (positionArr.length - 1) / 2;
-            for (var i = 0; i < nNodes; i++) {
-                var node = forceLayout.nodes[i];
-                node.position[0] = positionArr[i * 2 + 1];
-                node.position[1] = positionArr[i * 2 + 2];
-            }
-            return;
-        }
-
-        var ForceLayout = self.tmd.modules.ForceLayout;
-
-        switch(e.data.cmd) {
-            case 'init':
-                if (!forceLayout) {
-                    forceLayout = new ForceLayout();
-                }
-                forceLayout.initNodes(e.data.nodesPosition, e.data.nodesMass, e.data.nodesSize);
-                forceLayout.initEdges(e.data.edges, e.data.edgesWeight);
-                forceLayout._token = e.data.token;
-                break;
-            case 'updateConfig':
-                if (forceLayout) {
-                    for (var name in e.data.config) {
-                        forceLayout[name] = e.data.config[name];
-                    }
-                }
-                break;
-            case 'update':
-                var steps = e.data.steps;
-
-                if (forceLayout) {
-                    var nNodes = forceLayout.nodes.length;
-                    var positionArr = new Float32Array(nNodes * 2 + 1);
-
-                    forceLayout.temperature = e.data.temperature;
-
-                    if (e.data.temperature > 0.01) {
-                        for (var i = 0; i < steps; i++) {
-                            forceLayout.update();
-                            forceLayout.temperature *= e.data.coolDown;
-                        }
-                        // Callback
-                        for (var i = 0; i < nNodes; i++) {
-                            var node = forceLayout.nodes[i];
-                            positionArr[i * 2 + 1] = node.position[0];
-                            positionArr[i * 2 + 2] = node.position[1];
-                        }
-
-                        positionArr[0] = forceLayout._token;
-                    }
-
-                    self.postMessage(positionArr.buffer, [positionArr.buffer]);
-                } else {
-                    // Not initialzied yet
-                    var emptyArr = new Float32Array();
-                    // Post transfer object
-                    self.postMessage(emptyArr.buffer, [emptyArr.buffer]);
-                }
-                break;
-        }
-    };
-}
-// 1. Graph Drawing by Force-directed Placement
-// 2. http://webatlas.fr/tempshare/ForceAtlas2_Paper.pdf
-define('echarts/chart/ForceLayoutWorker',['require','zrender/tool/vector'],function(require) {
-
-    
-
-    var vec2 = require('zrender/tool/vector');
+    } else {
+        vec2 = require('zrender/tool/vector');
+    }
     var ArrayCtor = typeof(Float32Array) == 'undefined' ? Array : Float32Array;
 
     /****************************
@@ -36405,6 +36362,8 @@ define('echarts/chart/ForceLayoutWorker',['require','zrender/tool/vector'],funct
         this.width = 500;
         this.height = 500;
 
+        this.maxSpeedIncrease = 1.0;
+
         this.nodes = [];
         this.edges = [];
 
@@ -36562,7 +36521,7 @@ define('echarts/chart/ForceLayoutWorker',['require','zrender/tool/vector'],funct
                 vec2.scale(v, v, 1 / swing);
                 var base = vec2.len(node.speedPrev);
                 if (base > 0) {
-                    swing = Math.min(swing / base, 1) * base;
+                    swing = Math.min(swing / base, this.maxSpeedIncrease) * base;
                     vec2.scaleAndAdd(speed, node.speedPrev, v, swing);
                 }
             }
@@ -36714,13 +36673,86 @@ define('echarts/chart/ForceLayoutWorker',['require','zrender/tool/vector'],funct
 
     ForceLayout.getWorkerCode = function() {
         var str = __echartsForceLayoutWorker.toString();
-        return str.slice(str.indexOf('{') + 1, str.lastIndexOf('}'));
+        return str.slice(str.indexOf('{') + 1, str.lastIndexOf('return'));
     };
+
+    /****************************
+     * Main process
+     ***************************/
+
+    if (inWorker) {
+        var forceLayout = null;
+
+        self.onmessage = function(e) {
+            // Position read back
+            if (e.data instanceof ArrayBuffer) {
+                if (!forceLayout) {
+                    return;
+                }
+                var positionArr = new Float32Array(e.data);
+                var nNodes = (positionArr.length - 1) / 2;
+                for (var i = 0; i < nNodes; i++) {
+                    var node = forceLayout.nodes[i];
+                    node.position[0] = positionArr[i * 2 + 1];
+                    node.position[1] = positionArr[i * 2 + 2];
+                }
+                return;
+            }
+
+            switch(e.data.cmd) {
+                case 'init':
+                    if (!forceLayout) {
+                        forceLayout = new ForceLayout();
+                    }
+                    forceLayout.initNodes(e.data.nodesPosition, e.data.nodesMass, e.data.nodesSize);
+                    forceLayout.initEdges(e.data.edges, e.data.edgesWeight);
+                    forceLayout._token = e.data.token;
+                    break;
+                case 'updateConfig':
+                    if (forceLayout) {
+                        for (var name in e.data.config) {
+                            forceLayout[name] = e.data.config[name];
+                        }
+                    }
+                    break;
+                case 'update':
+                    var steps = e.data.steps;
+
+                    if (forceLayout) {
+                        var nNodes = forceLayout.nodes.length;
+                        var positionArr = new Float32Array(nNodes * 2 + 1);
+
+                        forceLayout.temperature = e.data.temperature;
+
+                        if (e.data.temperature > 0.01) {
+                            for (var i = 0; i < steps; i++) {
+                                forceLayout.update();
+                                forceLayout.temperature *= e.data.coolDown;
+                            }
+                            // Callback
+                            for (var i = 0; i < nNodes; i++) {
+                                var node = forceLayout.nodes[i];
+                                positionArr[i * 2 + 1] = node.position[0];
+                                positionArr[i * 2 + 2] = node.position[1];
+                            }
+
+                            positionArr[0] = forceLayout._token;
+                        }
+
+                        self.postMessage(positionArr.buffer, [positionArr.buffer]);
+                    } else {
+                        // Not initialzied yet
+                        var emptyArr = new Float32Array();
+                        // Post transfer object
+                        self.postMessage(emptyArr.buffer, [emptyArr.buffer]);
+                    }
+                    break;
+            }
+        };
+    }
 
     return ForceLayout;
 });
-
-})(window);
 /**
  * echarts图表类：力导向图
  *
@@ -36728,13 +36760,13 @@ define('echarts/chart/ForceLayoutWorker',['require','zrender/tool/vector'],funct
  *
  */
 
-define('echarts/chart/force',['require','../component/base','./base','./ForceLayoutWorker','zrender/shape/Line','../util/shape/Icon','../config','../util/ecData','zrender/tool/util','zrender/config','zrender/tool/vector','../util/ndarray','../chart'],function (require) {
+define('echarts/chart/force',['require','../component/base','./base','./forceLayoutWorker','zrender/shape/Line','../util/shape/Icon','../config','../util/ecData','zrender/tool/util','zrender/config','zrender/tool/vector','../util/ndarray','../chart'],function (require) {
     
     
     var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
 
-    var ForceLayout = require('./ForceLayoutWorker');
+    var ForceLayout = require('./forceLayoutWorker');
     
     // 图形依赖
     var LineShape = require('zrender/shape/Line');
@@ -36761,8 +36793,12 @@ define('echarts/chart/force',['require','../component/base','./base','./ForceLay
         typeof(Worker) !== 'undefined' &&
         typeof(Blob) !== 'undefined'
     ) {
-        var blob = new Blob([ForceLayout.getWorkerCode()]);
-        workerUrl = window.URL.createObjectURL(blob);
+        try {
+            var blob = new Blob([ForceLayout.getWorkerCode()]);
+            workerUrl = window.URL.createObjectURL(blob);   
+        } catch(e) {
+            workerUrl = '';
+        }
     }
 
     function getToken() {
@@ -37604,6 +37640,7 @@ define('echarts/chart/force',['require','../component/base','./base','./ForceLay
 
     return Force;
 });
+
 /**
  * zrender
  *
@@ -39775,8 +39812,8 @@ define('echarts/chart/map',['require','../component/base','./base','zrender/shap
                             this.shapeList[i].style.xStart = geoAndPos[0];
                             this.shapeList[i].style.yStart = geoAndPos[1];
                             geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo[1]);
-                            this.shapeList[i].style.xEnd = geoAndPos[0];
-                            this.shapeList[i].style.yEnd = geoAndPos[1];
+                            this.shapeList[i]._x = this.shapeList[i].style.xEnd = geoAndPos[0];
+                            this.shapeList[i]._y = this.shapeList[i].style.yEnd = geoAndPos[1];
                         }
                         else if  (this.shapeList[i].type == 'icon') {
                             geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo);
