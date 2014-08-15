@@ -14932,8 +14932,16 @@ define('echarts/util/accMath',[],function() {
     // 说明：javascript的除法结果会有误差，在两个浮点数相除的时候会比较明显。这个函数返回较为精确的除法结果。 
     // 调用：accDiv(arg1,arg2) 
     // 返回值：arg1除以arg2的精确结果
-    function accDiv(arg1, arg2) {
-        return accMul(arg1, 1 / arg2);
+    function accDiv(arg1,arg2){
+        var s1 = arg1.toString();
+        var s2 = arg2.toString(); 
+        var m = 0;
+        try {
+            m = s2.split('.')[1].length - s1.split('.')[1].length;
+        }
+        catch(e) {}
+        
+        return (s1.replace('.', '') - 0) / (s2.replace('.', '') - 0) * Math.pow(10, m);
     }
 
     // 乘法函数，用来得到精确的乘法结果
@@ -14941,18 +14949,14 @@ define('echarts/util/accMath',[],function() {
     // 调用：accMul(arg1,arg2) 
     // 返回值：arg1乘以arg2的精确结果
     function accMul(arg1, arg2) {
-        var m = 0;
         var s1 = arg1.toString();
-        var s2 = arg2.toString(); 
+        var s2 = arg2.toString();
+        var m = 0;
         try {
             m += s1.split('.')[1].length;
-        }
-        catch(e) {}
-        
-        try {
             m += s2.split('.')[1].length;
         }
-        catch(e){}
+        catch(e) {}
         
         return (s1.replace('.', '') - 0) * (s2.replace('.', '') - 0) / Math.pow(10, m);
     }
@@ -14964,13 +14968,8 @@ define('echarts/util/accMath',[],function() {
     function accAdd(arg1, arg2) {
         var r1 = 0;
         var r2 = 0;
-
         try {
             r1 = arg1.toString().split('.')[1].length;
-        }
-        catch(e) {}
-        
-        try {
             r2 = arg2.toString().split('.')[1].length;
         }
         catch(e) {}
@@ -25402,7 +25401,9 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
             var cosAngle;
             var value;
             for (var i = 0; i <= splitNumber; i++) {
-                value = min + accMath.accMul(accMath.accDiv(total , splitNumber) , i);
+                value = accMath.accAdd(
+                            min , accMath.accMul(accMath.accDiv(total , splitNumber), i)
+                        );
                 angle = startAngle - totalAngle / splitNumber * i;
                 sinAngle = Math.sin(angle * Math.PI / 180);
                 cosAngle = Math.cos(angle * Math.PI / 180);

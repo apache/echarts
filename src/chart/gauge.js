@@ -266,7 +266,9 @@ define(function (require) {
             var cosAngle;
             var value;
             for (var i = 0; i <= splitNumber; i++) {
-                value = min + accMath.accMul(accMath.accDiv(total , splitNumber) , i);
+                value = accMath.accAdd(
+                            min , accMath.accMul(accMath.accDiv(total , splitNumber), i)
+                        );
                 angle = startAngle - totalAngle / splitNumber * i;
                 sinAngle = Math.sin(angle * Math.PI / 180);
                 cosAngle = Math.cos(angle * Math.PI / 180);
