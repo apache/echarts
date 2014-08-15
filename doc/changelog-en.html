@@ -44,356 +44,355 @@
             <div id="main" style="height:400px;"></div>
         </div>
         <audio id="audioV3"></audio>
-        <h2>修改记录</h2>
-        <span>[+]新增 [-]删除 [^]升级 [#]修复 【】重要</span>
+        <h2>Changelog</h2>
+        <span>[+]Add [-]Delete [^]Update [#]Fix 【】important</span>
         <div class="row-fluid">
             <div>
-                <h3>2.0.1<small>（2014-07-24）</small></h3>
+                <h3>2.0.1<small>(2014-07-24)</small></h3>
                 <ul>
-                    <li>【#】 移动设备事件失效</li>
-                    <li>[#] [gauge]min max非默认值时计算错误</li>
-                    <li>[#] [map]图例开关无数据时图表没更新</li>
-                    <li>[#] [map]选择切换图表类型时错误</li>
-                    <li>[#] [markLine]过渡更新错误fix <a href="https://github.com/ecomfe/echarts/issues/427" target="_blank">#427 »</a></li>
-                    <li>[#] 无option时resize报错</li>
-                    <li>[#] symbole无法显示0值数据，fix <a href="https://github.com/ecomfe/echarts/issues/442" target="_blank">#442 »</a></li>
-                    <li>[#] [timeline]起始index不为0时错误，fix <a href="https://github.com/ecomfe/echarts/issues/403" target="_blank">#403 »</a></li>
-                    <li>[#] 原数组长度为1时addData错误，fix <a href="https://github.com/ecomfe/echarts/issues/394" target="_blank">#394 »</a></li>
-                    <li>[#] loading动画bubble、dymnline刷新问题，fix <a href="https://github.com/ecomfe/echarts/issues/406" target="_blank">#406 »</a></li>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.0.1+</li>
+                    <li>【#】 Mobile devices event fail</li>
+                    <li>[#] [gauge]"min max" calculate error when a non-default value</li>
+                    <li>[#] [map]Legend switch when no data is not updated chart</li>
+                    <li>[#] [map]Change the chart type error</li>
+                    <li>[#] [markLine]Resize animation transitions error fix <a href="https://github.com/ecomfe/echarts/issues/427" target="_blank">#427 »</a></li>
+                    <li>[#] Resize error when no option</li>
+                    <li>[#] Symbole can not display 0 value of data,fix <a href="https://github.com/ecomfe/echarts/issues/442" target="_blank">#442 »</a></li>
+                    <li>[#] [timeline]Initial index is not 0 error,fix <a href="https://github.com/ecomfe/echarts/issues/403" target="_blank">#403 »</a></li>
+                    <li>[#] addData error when the original array length is 1,fix <a href="https://github.com/ecomfe/echarts/issues/394" target="_blank">#394 »</a></li>
+                    <li>[#] Loading animation - bubble、dymnline refresh problem,fix <a href="https://github.com/ecomfe/echarts/issues/406" target="_blank">#406 »</a></li>
+                    <li>[?] Dependence update,<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.0.1+</li>
                 </ul>
             </div>
             <div>
-                <h3>2.0.0<small>（2014-06-30）</small></h3>
+                <h3>2.0.0<small>(2014-06-30)</small></h3>
                 <ul>
-                    <li>【+】 [timeline]新增组件：时间轴（timeline），支持与任意图表组合使用，try <a href="./example/bar11.html" target="_blank">bar »</a>、<a href="./example/scatter4.html" target="_blank">scatter »</a>、<a href="./example/pie7.html" target="_blank">pie »</a>、<a href="./example/map14.html" target="_blank">map »</a></li>
-                    <li>【+】 [gauge]新增图表：仪表盘（gauge），查看 <a href="./example.html#gauge " target="_blank">this »</a></li>
-                    <li>【+】 [funnel]新增图表：漏斗图（funnel）查看 <a href="./example.html#funnel " target="_blank">this »</a></li>
-                    <li>【^】[map]支持svg扩展地图类型，try <a href="./example/map16.html" target="_blank">人体密码 »</a>、<a href="./example/map17.html" target="_blank">足球场 »</a>、<a href="./example/map18.html" target="_blank">百度大厦F3 »</a></li>
-                    <li>【^】 [line][bar][scatter][k]全浏览器支持大规模数据模式</li>
-                    <li>【^】 全系统图表动画优化、升级支持状态间的渐变过渡</li>
-                    <li>【^】 全系统图表、组件生命周期管理优化、多次setOption间的状态保持</li>
-                    <li>【+】 标注（markPoint）支持大规模特效，try <a href="./example/map15.html" target="_blank">百度人气（模拟） »</a></li>
-                    <li>【+】 动态标注标线接口，addMarkPoint、addMarkLine、delMarkPoint、delMarkLine见文档 <a href="./doc.html#实例方法 " target="_blank">this »</a></li>
-                    <li>[^] [map]支持缩放极限控制scaleLimit</li>
-                    <li>[^] [bar]标线（markLine）支持类目坐标指定-1、MAXNUMBER实现坐标系内满显示</li>
-                    <li>[^] [bar]附带文本位置itemStyle.X.label.position支持'insideLeft' | 'insideRight' | 'insideTop' | 'insideBottom'</li>
-                    <li>[^] [force]力导向布局图连线支持箭头linkSymbol</li>
-                    <li>[^] [chord]文本旋转支持</li>
-                    <li>[+] [tooltip]指示器（axisPointer）样式新增支持十字准星，原阴影指示器样式areaStyle更名为shadowStyle，详细见<a href="doc.html#Tooltip" target="_blank">this »</a></li>
-                    <li>[^] [tooltip]支持位置修正和回调，position，support <a href="https://github.com/ecomfe/echarts/issues/292" target="_blank">#292 »</a></li>
-                    <li>[^] [dataRange]自适应数据精度</li>
-                    <li>[^] [dataRange]数值区间文本支持个性化formatter，try <a href="./example/dataRange.html" target="_blank">this »</a></li>
-                    <li>[^] [legend]支持自定义图形样式</li>
-                    <li>[^] [legend]定位坐标x、y支持百分比。文本和图形高亮关联。垂直居中优化等</li>
-                    <li>[^] [categoryAxis][valueAxis]坐标轴axisLine支持自动0值定位，onZero</li>
-                    <li>[^] [categoryAxis][valueAxis]坐标轴文本样式axisLabel.textStyle支持align、baseline</li>
-                    <li>[^] [categoryAxis][valueAxis]坐标轴文本axisLabel.clickable，支持点击事件响应，support <a href="https://github.com/ecomfe/echarts/issues/287" target="_blank">#287 »</a></li>
-                    <li>[^] [toolbox]动态类型切换交互优化，点击永远作为启用，弃用原开关状态设计</li>
-                    <li>[^] [title]主（副）标题超链接支持指定窗口打开，target、subtarget</li>
-                    <li>[+] 事件回调时this指向当前实例</li>
-                    <li>[^] 升级标注（markPoint）、标线（markLine）事件参数携带value，dataIndex</li>
-                    <li>[^] 支持自定义过渡动画，loadingEffect.effect外部实现</li>
-                    <li>[#] [scatter]修复散点图emptySymbol不知道lineWidth下无法显示的问题</li>
-                    <li>[#] [radar]雷达图事件携带数据index、文本formatter支持</li>
-                    <li>[#] [chord]和弦图图形元素点击事件响应</li>
-                    <li>[#] [toolbox]修复数据视图dataView在IE下无法全选的问题</li>
-                    <li>[#] [dataRange]修复无法整除导致颜色异常</li>
-                    <li>[#] 修复setOption时series为空无法清除内容，merge无效等问题 </li>
-                    <li>[#] 修复视网屏下的特效shadow偏移问题</li>
-                    <li>[#] 若干issues，fix
-                        <a href="#" target="_blank">折线与坐标轴间1px位移 »</a>
+                    <li>【+】 [timeline]New component:timeline,support to use with any chart,try <a href="./example/bar11.html" target="_blank">bar »</a>、<a href="./example/scatter4.html" target="_blank">scatter »</a>、<a href="./example/pie7.html" target="_blank">pie »</a>、<a href="./example/map14.html" target="_blank">map »</a></li>
+                    <li>【+】 [gauge]New chart:gauge,look <a href="./example.html#gauge " target="_blank">this »</a></li>
+                    <li>【+】 [funnel]New chart:funnel,look <a href="./example.html#funnel " target="_blank">this »</a></li>
+                    <li>【^】 [map]Support svg to expand map,try <a href="./example/map16.html" target="_blank">Human password »</a>、<a href="./example/map17.html" target="_blank">Soccer field »</a>、<a href="./example/map18.html" target="_blank">Baidu Building F3 »</a></li>
+                    <li>【^】 Whole system chart animation optimization, upgrade to support gradual transition between states</li>
+                    <li>【^】 Whole system chart, component life cycle management optimization, multiple setOption state retention</li>
+                    <li>【+】 markPoint support large-scale effects,try <a href="./example/map15.html" target="_blank">Baidu popularity(simulation) »</a></li>
+                    <li>【+】 Dynamic label markLing interface,see addMarkPoint、addMarkLine、delMarkPoint、delMarkLine in documents <a href="./doc.html#实例方法 " target="_blank">this »</a></li>
+                    <li>[^] [map]Support the scaling limit control "scaleLimit" </li>
+                    <li>[^] [bar]markLine support category coordinates specify -1、MAXNUMBER achieve full display in the coordinate system</li>
+                    <li>[^] [bar]Accompanying text position itemStyle.X.label.position support 'insideLeft' | 'insideRight' | 'insideTop' | 'insideBottom'</li>
+                    <li>[^] [force]Connecting line support arrow linkSymbol</li>
+                    <li>[^] [chord]Support text rotation</li> 
+                    <li>[+] [tooltip]axisPointer added support crosshair style, original style areaStyle shadow indicator renamed shadowStyle, details see<a href="doc.html#Tooltip" target="_blank">this »</a></li>
+                    <li>[^] [tooltip]Support the position correction and callbacks,position,support <a href="https://github.com/ecomfe/echarts/issues/292" target="_blank">#292 »</a></li>
+                    <li>[^] [dataRange]Adaptive data accuracy</li>
+                    <li>[^] [dataRange]Numerical interval text support personalized formatter,try <a href="./example/dataRange.html" target="_blank">this »</a></li>
+                    <li>[^] [legend]Support custom graphic style</li>
+                    <li>[^] [legend]Coordinates x, y support the percentage. Text and graphics highlight association. Vertical centering optimization</li>
+                    <li>[^] [categoryAxis][valueAxis]axisLine supports automatic 0 value orientation,onZero</li>
+                    <li>[^] [categoryAxis][valueAxis]axis text style axisLabel.textStyle support align、baseline</li>
+                    <li>[^] [categoryAxis][valueAxis]axis text axisLabel.clickable, support the click event response,support <a href="https://github.com/ecomfe/echarts/issues/287" target="_blank">#287 »</a></li>
+                    <li>[^] [toolbox]Dynamic type switching interactive optimization, click on forever as enabled, the switch state abandoned the original design</li>
+                    <li>[^] [title]Main title and subtitle hyperlink support the specified window opens, target, subtarget </li>
+                    <li>[+] Event callback "this" to the current instance</li>
+                    <li>[^] Update markPoint、markLine event parameters with value,dataIndex</li>
+                    <li>[^] Support custom animated transitions, loadingEffect.effect external</li>
+                    <li>[#] [scatter]Repair scatter diagram emptySymbol don't know cannot display the lineWidth problem</li>
+                    <li>[#] [radar]Radar map events carry data, text index formatter support</li>
+                    <li>[#] [chord]Chord chart graphic elements click event response</li>
+                    <li>[#] [toolbox]Repair dataView in IE cannot select problem</li>
+                    <li>[#] [dataRange]Repair not divisible by causing abnormal color</li>
+                    <li>[#] Repair setOption when series is empty cannot clear contents, merge is invalid and so on</li>
+                    <li>[#] Reparation of optic effects shadow offset retina screen.</li>
+                    <li>[#] Several issues, fix 
+                        <a href="#" target="_blank">line and the coordinate axes of the displacement of 1px »</a>
                         <a href="https://github.com/ecomfe/echarts/issues/294" target="_blank">#294 »</a>
                         <a href="https://github.com/ecomfe/echarts/issues/303" target="_blank">#303 »</a>
                         <a href="https://github.com/ecomfe/echarts/issues/364" target="_blank">#364 »</a> 
                     </li>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.0.0+</li>
+                    <li>[?] Dependence update,<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.0.0+</li>
                 </ul>
             </div>
             <div>
-                <h3>1.4.1<small>（2014-04-14）</small></h3>
+                <h3>1.4.1<small>(2014-04-14)</small></h3>
                 <ul>
-                    <li>[#] [bar][line]空值数据计算特殊值错误</li>
-                    <li>[#] [dataZoom]数据阴影长度计算错误</li>
-                    <li>[#] [bar]修正计算宽度为0时改为1px</li>
-                    <li>[#] [toolbox]修复showTitle显示为false fix <a href="https://github.com/ecomfe/echarts/issues/269" target="_blank">#269 »</a></li>
-                    <li>[#] dom隐藏下初始化读取style错误，padding为小数是计算错误</li>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.1.1+</li>
+                    <li>[#] [bar][line]Null values calculated from special value data errors</li>
+                    <li>[#] [dataZoom]Data shadow length calculation error</li>
+                    <li>[#][bar] correction calculation width of 0:00 to 1px</li>
+                    <li>[#][toolbox] repair showTitle shown as false FIX <a href="https://github.com/ecomfe/echarts/issues/269" target="_blank"># 269 »</a></li>
+                    <li>[#] Dom read style hidden under the initialization errors, padding is calculated as a decimal error</li>
+                    <li>[?] Dependence update, <a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.1.1+</li>
                 </ul>
             </div>
             <div>
-                <h3>1.4.0<small>（2014-04-02）</small></h3>
+                <h3>1.4.0<small>(2014-04-02)</small></h3>
                 <ul>
-                    <li>【+】 多图联动，try <a href="./example/mix8.html" target="_blank">this »</a>，support <a href="https://github.com/ecomfe/echarts/issues/248" target="_blank">#248 »</a> <a href="http://www.oschina.net/question/1457761_145010" target="_blank">this »</a></li>
-                    <li>【+】 标注（markPoint）、标线（markLine）炫光特效，try <a href="./example/map11.html" target="_blank">百度迁徙（模拟） »</a> <a href="./example/map12.html" target="_blank">中国铁路运输主干线 »</a></li>
-                    <li>【+】 [line][bar][scatter]标注（markPoint）、标线（markLine）支持特殊值自动标记（max、min、average） support <a href="https://github.com/ecomfe/echarts/issues/218" target="_blank">#218 »</a> <a href="https://github.com/ecomfe/echarts/issues/249" target="_blank">#249 »</a></li>
-                    <li>【+】 [toolbox]magicType新增支持堆积平铺切换（stack、tiled）</li>
-                    <li>【^】 [toolbox]【重要】option格式欠规范，重新设计，详见  <a href="https://github.com/ecomfe/echarts/issues/252" target="_blank">#252 »</a></li>
-                    <li>【^】 [line][bar][scatter][pie][radar][map]样式itemStyle.[normal|emphasis].color支持function回调   <a href="https://github.com/ecomfe/echarts/issues/246" target="_blank">#246 »</a></li>
-                    <li>[^] [valueAxis]坐标轴文本axisLabel.textStyle.color支持funtion回调</li>
-                    <li>[+] [tooltip]模拟hover接口 （showTip、hideTip） support <a href="https://github.com/ecomfe/echarts/issues/237" target="_blank">#237 »</a></li>
-                    <li>[^] [dataRange]值域漫游控件样式优化</li>
-                    <li>[^] [title][legend][toolbox]hover文字高亮样式优化</li>
-                    <li>[^] [pie]数据排列方向默认逆时针改为顺时针</li>
-                    <li>[^] [legend]data个性化文字样式</li>
-                    <li>[^] [legend]支持单选（selectedMode），事件参数带当前变化target</li>
-                    <li>[^] [toolbox]工具栏支持自定义功能，try <a href="example/toolbox.html" target="_blank">this »</a>，support <a href="http://www.oschina.net/question/1020272_144976" target="_blank">this »</a></li>
-                    <li>[^] [categoryAxis][valueAxis]精度优化</li>
-                    <li>[^] [categoryAxis]支持name</li>
-                    <li>[^] 同一个dom上多次init图表自动释放已有实例</li>
-                    <li>[^] 标注（markPoint）、标线（markLine）支持数据级tooltip</li>
-                    <li>[#] [pie]饼图边框样式（borderColor、borderWidth）fix <a href="https://github.com/ecomfe/echarts/issues/223" target="_blank">#223 »</a></li>
-                    <li>【#】 [bar][line][valueAxis]堆积下scale计算错误</li>
-                    <li>[#] [bar]0值堆积显示错位</li>
-                    <li>[#] [bar]堆积自定义barWidth顺序问题</li>
-                    <li>[#] 标线（markLine）symbol为none显示错误</li>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.1.1+</li>
+                    <li>【+】 Multi linkage, TRY <a href="http://echarts.baidu.com/doc/example/mix8.html" target="_blank">this »</a> , Support <a href="https://github.com/ecomfe/echarts/issues/248" target="_blank"># 248 » </a> <a href="http://www.oschina.net/question/1457761_145010" target="_blank">this »</a></li>
+                    <li>【+】 markPoint, markLine glare effects, try <a href="http://echarts.baidu.com/doc/example/map11.html" target="_blank">Baidu migration (analog) » </a> <a href="http://echarts.baidu.com/doc/example/map12.html" target="_blank">Chinese mainline rail transport »</a></li>
+                    <li>【+】[Line][bar][scatter] markPoint,markLine supports special values automatically marked (max, min, Average) Support <a href="https://github.com/ecomfe/echarts/issues/218" target="_blank"># 218 » </a> <a href="https://github.com/ecomfe/echarts/issues/249" target="_blank"># 249 »</a></li>
+                    <li>【+】[Toolbox] magicType Added support for stacking tiled switch (stack, tiled)</li>
+                    <li>【^】[Toolbox]【important】 option owe format specifications, re-design, see   <a href="https://github.com/ecomfe/echarts/issues/252" target="_blank"># 252 »</a></li>
+                    <li>【^】[Line][bar][scatter][pie][radar][map] style itemStyle. [Normal | emphasis] .color support function callback    <a href="https://github.com/ecomfe/echarts/issues/246" target="_blank"># 246 »</a></li>
+                    <li>[^][ValueAxis] axis text axisLabel.textStyle.color support funtion callback</li>
+                    <li>[+][Tooltip] Analog hover interface (showTip, hideTip) Support <a href="https://github.com/ecomfe/echarts/issues/237" target="_blank"># 237 »</a></li>
+                    <li>[^][DataRange] range roaming control style optimization</li>
+                    <li>[^][Title][legend][toolbox] hover text highlight style optimization</li>
+                    <li>[^][Pie] data arrangement default counterclockwise to clockwise direction</li>
+                    <li>[^][Legend] data personalized text styles</li>
+                    <li>[^][Legend] support radio (selectedMode), the event parameters change with the current target</li>
+                    <li>[^][Toolbox] toolbar support custom features, TRY <a href="http://echarts.baidu.com/doc/example/toolbox.html" target="_blank">this »</a> , Support <a href="http://www.oschina.net/question/1020272_144976" target="_blank">this »</a></li>
+                    <li>[^][CategoryAxis][valueAxis] Accuracy Optimization</li>
+                    <li>[^][CategoryAxis] support the name</li>
+                    <li>[^] Init multiple times on the same chart is automatically released dom been instances</li>
+                    <li>[^] markPoint, markLine to support data-level tooltip</li>
+                    <li>[#][Pie] pie border style (borderColor, borderWidth) FIX <a href="https://github.com/ecomfe/echarts/issues/223" target="_blank"># 223 »</a></li>
+                    <li>[#][Bar][line][valueAxis] accumulation under the scale calculation error</li>
+                    <li>[#][Bar] 0 values displayed dislocation accumulation</li>
+                    <li>[#][Bar] accumulation custom barWidth order problems</li>
+                    <li>[#] markLine symbol to none displays an error</li>
+                    <li>[?] Dependence update, <a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.1.1+</li>
                 </ul>
             </div>
             <div>
-                <h3>1.3.8<small>（2014-03-04）</small></h3>
+                <h3>1.3.8<small>(2014-03-04)</small></h3>
                 <ul>
-                    <li>【+】 theme主题支持，try <a href='./example/themeDesigner.html' target="_blank">ECharts Theme Designer</a></li>
-                    <li>[+] symbolList 折线图、散点图、雷达图默认symbol顺序可控</li>
-                    <li>[+] 全图背景色可控，backgroundColor</li>
-                    <li>[^] 拖拽重计算交互优化，避免短click变drag</li>
-                    <li>[^] 优化同一个dom上多次init图表，返回已有实例</li>
-                    <li>[^] clear后清除组件及内存释放</li>
-                    <li>[#] IE8-文本hover问题</li>
-                    <li>[^] [dataZoom]数据区域缩放控件样式优化，fix <a href="http://www.oschina.net/question/1431801_143036" target="_blank">this »</a></li>
-                    <li>[^] [dataRange]数据精度格式</li>
-                    <li>[^] [axis]axisTick 显示位置可控，支持inside，support <a href="https://github.com/ecomfe/echarts/issues/220" target="_blank">#220 »</a></li>
-                    <li>[^] [valueAxis] axisLabel.textStyle.color可接受方法，support <a href="https://github.com/ecomfe/echarts/issues/226" target="_blank">#226 »</a></li>
-                    <li>[^] [map]小区域交互优化，点击文字选中，支持数据级selectable、hoverable</li>
-                    <li>[^] [map]显示样式参数规范，区域图形边框由borderWidth、borderColor控制</li>
-                    <li>[^] [pie]扇区边框可控，borderWidth、borderColor，support  <a href="https://github.com/ecomfe/echarts/issues/223" target="_blank">#223 »</a></li>
-                    <li>[^] [pie]360度扇区问题 ，fix <a href="https://github.com/ecomfe/echarts/issues/203" target="_blank">#203 »</a> </li>
-                    <li>[^] [pie]优化0值数据不受minAngle控制</li>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.1.0+</li>
+                    <li>【+】 Theme theme support, TRY <a href="http://echarts.baidu.com/doc/example/themeDesigner.html" target="_blank">ECharts Theme Designer</a></li>
+                    <li>[+] SymbolList line charts, scatter plots, radar charts default symbol sequence control</li>
+                    <li>[+] Full background color controllable, backgroundColor</li>
+                    <li>[^] Dragging heavy computing interactive optimization, avoid short click becomes drag</li>
+                    <li>[^] Optimization dom repeatedly on the same init charts, returns have been instances</li>
+                    <li>[^] After clear Clear components and memory release</li>
+                    <li>[#] IE8- text hover problem</li>
+                    <li>[^][DataZoom] style zoom control data area optimization, FIX <a href="http://www.oschina.net/question/1431801_143036" target="_blank">this »</a></li>
+                    <li>[^][DataRange] accuracy of the data format</li>
+                    <li>[^][Axis] axisTick display position control, support Inside, Support <a href="https://github.com/ecomfe/echarts/issues/220" target="_blank"># 220 »</a></li>
+                    <li>[^][ValueAxis] axisLabel.textStyle.color acceptable methods, Support <a href="https://github.com/ecomfe/echarts/issues/226" target="_blank"># 226 »</a></li>
+                    <li>[^][Map] small area interactive optimization, click on the text selected, support data-level selectable, hoverable</li>
+                    <li>[^][Map] display style parameter specification, drawing border region by borderWidth, borderColor control</li>
+                    <li>[^][Pie] sector border control, borderWidth, borderColor, Support   <a href="https://github.com/ecomfe/echarts/issues/223" target="_blank"># 223 »</a></li>
+                    <li>[^][Pie] 360 degree sector problem, FIX <a href="https://github.com/ecomfe/echarts/issues/203" target="_blank"># 203 »</a> </li>
+                    <li>[^][Pie] to optimize the value 0 data from minAngle control</li>
+                    <li>[?] Dependence update, <a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.1.0+</li>
                 </ul>
             </div>
             <div>
-                <h3>1.3.7<small>（2014-01-27）</small></h3>
+                <h3>1.3.7<small>(2014-01-27)</small></h3>
                 <ul>
-                    <li>[^] [categoryAxis]boundaryGap留空样式优化，前后一个类目空间调整为半个类目空间</li>
-                    <li>[^] [toolbox]工具箱支持自定义图标，featureImageIcon</li>
-                    <li>[^] [toolbox]动态类型切换boundaryGap一致性保持，support <a href="http://www.oschina.net/question/1440737_141336" target="_blank">#this »</a></li>
-                    <li>[^] [legend]多行横排居中优化</li>
-                    <li>[^] [pie]支持顺时针排列，support <a href="https://github.com/ecomfe/echarts/issues/128" target="_blank">#128 »</a></li>
-                    <li>[^] [pie]labelLine升级为折线，优化减少出现文字覆盖的情况，fix  <a href="https://github.com/ecomfe/echarts/issues/187" target="_blank">#187 »</a></li>
-                    <li>[^] [valueAxis][tooltip][polar]数值自动格式化，每隔三位加“,”</li>
-                    <li>[^] [valueAxis]支持配置数值轴名称文字样式，nameTextStyle</li>
-                    <li>[^] [map]均值计算小数点精度可配，mapValuePrecision，图例标识可配，showLegendSymbol</li>
-                    <li>[^] IE8-文本清晰度优化</li>
-                    <li>[#] [toolbox]修复动态类型可能造成的冲突样式污染</li>
-                    <li>[#] 修复borderWidth设为0时被转换为1的错误</li>
-                    <li>[#] 若干issues，fix 
-                        <a href="https://github.com/ecomfe/echarts/issues/189" target="_blank">#189 »</a> 
-                        <a href="https://github.com/ecomfe/echarts/issues/190" target="_blank">#190 »</a>
-                        <a href="https://github.com/ecomfe/echarts/issues/193" target="_blank">#193 »</a>
-                        <a href="http://www.oschina.net/question/1384706_141045" target="_blank">#IE8-红色背景 »</a>
+                    <li>[^][CategoryAxis] boundaryGap blank style optimization, space before and after adjustment for half a category category space</li>
+                    <li>[^][Toolbox] Toolbox supports custom icons, featureImageIcon</li>
+                    <li>[^][Toolbox] dynamic type switching boundaryGap maintain consistency, Support <a href="http://www.oschina.net/question/1440737_141336" target="_blank">#this »</a></li>
+                    <li>[^][Legend] multi-line horizontal center optimization</li>
+                    <li>[^][Pie] support clockwise arrangement, Support <a href="https://github.com/ecomfe/echarts/issues/128" target="_blank"># 128 »</a></li>
+                    <li>[^][Pie] labelLine updated to a polyline, optimization reduce the appearance of text coverage, FIX   <a href="https://github.com/ecomfe/echarts/issues/187" target="_blank"># 187 »</a></li>
+                    <li>[^][ValueAxis][tooltip][polar] value is automatically formatted, every three plus ""</li>
+                    <li>[^][ValueAxis] support the configuration value axis name text styles, nameTextStyle</li>
+                    <li>[^][Map] mean calculation decimal precision can be equipped, mapValuePrecision, Legend logo can be equipped, showLegendSymbol</li>
+                    <li>[^] IE8- text clarity optimization</li>
+                    <li>Conflict Styles [#][toolbox] fixes the dynamic type may cause pollution</li>
+                    <li>[#] Repair borderWidth to 0:00 is converted to an error 1</li>
+                    <li>[#] Several DELINQUENCY, FIX 
+                         <a href="https://github.com/ecomfe/echarts/issues/189" target="_blank"># 189 » </a> 
+                        <a href="https://github.com/ecomfe/echarts/issues/190" target="_blank"># 190 » </a>
+                        <a href="https://github.com/ecomfe/echarts/issues/193" target="_blank"># 193 » </a>
+                        <a href="http://www.oschina.net/question/1384706_141045" target="_blank"># IE8- red background »</a>
                     </li>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.9+</li>
+                    <li>[?] Dependence update, <a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.9+</li>
                 </ul>
             </div>
             <div>
-                <h3>1.3.6<small>（2014-01-15）</small></h3>
+                <h3>1.3.6<small>(2014-01-15)</small></h3>
                 <ul>
-                    <li>【^】 全图表支持标注（markPoint）、标线（markLine），try <a href="./example/map9.html" target="_blank">markPoine »</a> <a href="./example/map10.html" target="_blank">markLine »</a></li>
-                    <li>【^】 全面开放chart、component实例对象，实现更深度个性化，更多新奇玩法，try <a href="./example/mix7.html" target="_blank">this »</a></li>
-                    <li>[+] [sactter][line][map]symbol代码优化，新增三类symbol：heart、droplet、pin</li>
-                    <li>[^] [categoryAxis]类目轴重复项支持，support <a href="https://github.com/ecomfe/echarts/issues/165" target="_blank">this »</a></li>
-                    <li>[^] [map]非数值显示时支持关闭悬浮高亮，hoverable:false</li>
-                    <li>[^] [tooltip]支持图例开关过滤</li>
-                    <li>[^] [grid][dataRange]x，y，width，height支持百分比</li>
-                    <li>[^] 通用文本分行支持，'\n' 指定，support <a href="https://github.com/ecomfe/echarts/issues/186" target="_blank">this »</a></li>
-                    <li>[^] 动画元素阀值（大规模数据时强制关闭动画效果）</li>
-                    <li>[#] [dataZoom]数据区域缩放下抛出事件dataIndex参数修正</li>
-                    <li>[#] [sactter]大规模散点图像素偏移</li>
-                    <li>[#] [force]默认颜色从legend获取</li>
-                    <li>[#] 修复script标签式引入文件构建错误，fix <a href="https://github.com/ecomfe/echarts/issues/174" target="_blank">this »</a></li>
-                    <li>[+] 新增专题 <a href="example/topic/aqi-china/index.html" target="_blank">中国主要城市空气质量实况</a>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.8+</li>
+                    <li>【^】 The whole chart supports markPoint and markLine, TRY <a href="http://echarts.baidu.com/doc/example/map9.html" target="_blank">markPoint » </a> <a href="http://echarts.baidu.com/doc/example/map10.html" target="_blank">markLine »</a></li>
+                    <li>【^】 Fully open chart, component instance objects to achieve more depth personalized, more novelty play, TRY <a href="http://echarts.baidu.com/doc/example/mix7.html" target="_blank">this »</a></li>
+                    <li>[+][Sactter][line][map] symbol code optimization, the new three symbol: heart, droplet, pin</li>
+                    <li>[^][CategoryAxis] category axis duplicates support, Support <a href="https://github.com/ecomfe/echarts/issues/165" target="_blank">this »</a></li>
+                    <li>[^][Map] Close suspension highlighting support non-numeric display, hoverable: false</li>
+                    <li>[^][Tooltip] Legend switch filter support</li>
+                    <li>[^][Grid][dataRange] x, y, width, height support percentage</li>
+                    <li>[^] Generic text branch support, '\ n' is specified, Support <a href="https://github.com/ecomfe/echarts/issues/186" target="_blank">this »</a></li>
+                    <li>[^] Animated elements threshold (forced off animation effects when large-scale data)</li>
+                    <li>[#][DataZoom] throws event data area scaling parameter modification under dataIndex</li>
+                    <li>[#][Sactter] pixel offset massive scatterplot</li>
+                    <li>[#][Force] default color obtained from the legend</li>
+                    <li>[#] Repair script introduced tabbed file build errors, FIX <a href="https://github.com/ecomfe/echarts/issues/174" target="_blank">this »</a></li>
+                    <li>[+] New topic <a href="http://echarts.baidu.com/doc/example/topic/aqi-china/index.html" target="_blank">major cities in China live air quality</a>
+                    </li><li>[?] Dependence update, <a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.8+</li>
                 </ul>
             </div>
             <div>
-                <h3>1.3.5<small>（2013-12-19）</small></h3>
+                <h3>1.3.5<small>(2013-12-19)</small></h3>
                 <ul>
-                    <li>【+】 srcipt标签式引入，兼容非模块化或基于CMD模块化（如seajs）项目引入ECharts，详见 <a href="doc.html#引入ECharts3" target="_blank">this »</a></li>
-                    <li>【^】 [map]支持滚轮缩放和拖拽漫游，roam:true开启</li>
-                    <li>【^】 [map]支持标准GeoJson动态扩展地图类型，try <a href="./example/map6.html" target="_blank">HK »</a> <a href="./example/map7.html" target="_blank">USA »</a></li>
-                    <li>【+】 [map]内置地图类型新增世界地图类型world， try <a href="./example/map4.html" target="_blank">this »</a></li>
-                    <li>【^】 [map]mapType支持子区域模式，内置支持从wold、china以及中国32个省市自治区地图中扩展出176个国家地区和600多个省市区域简图， try <a href="./example/map8.html" target="_blank">this »</a></li>
-                    <li>[^] [map]中国地图加入南海诸岛区域</li>
-                    <li>[^] [map]mapLocation支持百分比</li>
-                    <li>[^] [force]tooltip完善，支持边的提示</li>
-                    <li>[^] [force]支持了CLICK等鼠标事件，小幅度的性能优化和数据过滤后动画的改进</li>
-                    <li>[^] [line][scatter]折线图、散点图支持symbol为image</li>
-                    <li>[^] mobile交互优化（拖拽，点击）</li>
-                    <li>[+] 新增专题 <a href="example/topic/10-me-china/index.html" target="_blank">中国经济十年时空漫游（2002-2011）</a> <a href="example/topic/24-population-china/index.html" target="_blank">中国人口流动大潮（1987-2011）</a></li>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.7+</li>
+                    <li>【+】 Srcipt tabbed introduced, compatible modular or non-modular-based CMD (eg seajs) project introduced ECharts, see <a href="http://echarts.baidu.com/doc/doc.html#引入ECharts3" target="_blank">this »</a></li>
+                    <li>【^】[Map] support wheel zoom and drag roam, roam: true open</li>
+                    <li>【^】[Map] supports standard GeoJson dynamic expansion of map types, TRY <a href="http://echarts.baidu.com/doc/example/map6.html" target="_blank">HK » </a> <a href="http://echarts.baidu.com/doc/example/map7.html" target="_blank">USA »</a></li>
+                    <li>【+】[Map] Built-map type new world map type World, TRY <a href="http://echarts.baidu.com/doc/example/map4.html" target="_blank">this »</a></li>
+                    <li>【^】[Map] mapType support sub-regional model, built-in support for expansion from the wold, china and China 32 provinces map out 176 countries and regions and more than 600 provinces and regions sketch, TRY <a href="http://echarts.baidu.com/doc/example/map8.html" target="_blank">this »</a></li>
+                    <li>[^][Map] Map of China joined the South China Sea islands region</li>
+                    <li>[^][Map] mapLocation support percentage</li>
+                    <li>[^][Force] tooltip perfect, prompt support edge</li>
+                    <li>Improved [^][force] support the CLICK event such as a mouse, a small margin performance optimization and data filtered animation</li>
+                    <li>[^][Line][scatter] line charts, scatter symbol support for image</li>
+                    <li>[^] Mobile interactive optimization (drag and drop, click)</li>
+                    <li>[+] New topic <a href="http://echarts.baidu.com/doc/example/topic/10-me-china/index.html" target="_blank">temporal ten years China's economy roaming (2002-2011) </a> <a href="http://echarts.baidu.com/doc/example/topic/24-population-china/index.html" target="_blank">Chinese migration tide (1987-2011)</a></li>
+                    <li>[?] Dependence update, <a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.7+</li>
                 </ul>
             </div>
             <div>
-                <h3>1.3.1<small>（2013-11-22）</small></h3>
+                <h3>1.3.1<small>(2013-11-22)</small></h3>
                 <ul>
-                    <li>【+】 支持渲染为图片模式 renderAsImage</li>
-                    <li>【+】 新增接口getOption/getSeries/getDataURL/getImage</li>
-                    <li>【^】 [bar]barMinHeight默认值从20改为0</li>
-                    <li>【^】 [pie]minAngle默认值从5改为0</li>
-                    <li>[^] [bar]柱形支持borderColor/borderWidth/borderRadius(圆角)</li>
-                    <li>[^] [bar]柱间距离可配，支持百分比，barGap/barCategoryGap</li>
-                    <li>[#] [pie][radar]center无设置时resize报错，fix <a href="https://github.com/ecomfe/echarts/issues/133" target="_blank">this »</a></li>
-                    <li>[^] [pie][polar]半径支持百分比格式</li>
-                    <li>[#] [island]孤岛数据小数精度bug，fix <a href="https://github.com/ecomfe/echarts/issues/126" target="_blank">this »</a></li>
-                    <li>[#] [bar]dom极小情况下递归死循环bug，fix <a href="https://github.com/ecomfe/echarts/issues/138" target="_blank">this »</a></li>
-                    <li>[+] [toolbox]文字提示，support <a href="https://github.com/ecomfe/echarts/issues/136" target="_blank">this »</a></li>
-                    <li>[^] [grid][axis]背景透明，直角系亚像素优化</li>
-                    <li>[#] [pie]拖拽重计算legend依赖修复</li>
-                    <li>[#] [chord][radar]文字样式修复</li>
+                    <li>【+】 Support rendered picture mode renderAsImage</li>
+                    <li>【+】 Added interface getOption / getSeries / getDataURL / getImage</li>
+                    <li>【^】[Bar] barMinHeight default value from 20 to 0</li>
+                    <li>【^】[Pie] minAngle default value from 5 to 0</li>
+                    <li>[^][Bar] cylindrical support borderColor / borderWidth / borderRadius (rounded)</li>
+                    <li>[^][Bar] distance between columns can be equipped to support percentage, barGap / barCategoryGap</li>
+                    <li>[#][Pie][radar] center set resize when there is no error, FIX <a href="https://github.com/ecomfe/echarts/issues/133" target="_blank">this »</a></li>
+                    <li>[^][Pie][polar] radius percentage format support</li>
+                    <li>[#][Island] silos of data decimal precision bug, FIX <a href="https://github.com/ecomfe/echarts/issues/126" target="_blank">this »</a></li>
+                    <li>Under the [#][bar] dom minimal case recursive loop bug, FIX <a href="https://github.com/ecomfe/echarts/issues/138" target="_blank">this »</a></li>
+                    <li>[+][Toolbox] text prompts, Support <a href="https://github.com/ecomfe/echarts/issues/136" target="_blank">this »</a></li>
+                    <li>[^][Grid][axis] background transparent, rectangular sub-pixel optimization system</li>
+                    <li>[#][Pie] dragging heavy computing legend dependent repair</li>
+                    <li>[#][Chord][radar] text styles repair</li>
                 </ul>
             </div>
             <div>
-                <h3>1.3.0<small>（2013-11-05）</small></h3>
+                <h3>1.3.0<small>(2013-11-05)</small></h3>
                 <ul>
-                    <li>【+】 [chord]新增和弦图，支持多维选择</li>
-                    <li>【^】 [pie]升级支持南丁格尔玫瑰图（半径/面积）模式</li>
-                    <li>[#] [tooltip]雷达图空数据bug fix</li>
-                    <li>[#] [categoryAxis]修复类目轴大数据小数精度问题，fix <a href="https://github.com/ecomfe/echarts/issues/110" target="_blank">this »</a></li>
-                    <li>[^] [tooltip][line][bar]优化高亮指示样式</li>
-                    <li>[#] [tooltip]encodeHTML修复</li>
-                    <li>[#] [k]修复阴阳线颜色错误，fix <a href="https://github.com/ecomfe/echarts/issues/112" target="_blank">this »</a></li>
-                    <li>[^] symbol增加箭头arrow，support <a href="http://www.oschina.net/question/1182177_128527" target="_blank">this »</a></li>
-                    <li>[^] [title]支持超链接跳转</li>
-                    <li>[^] [pie][polar]中心坐标支持百分比格式</li>
-                    <li>[^] [legend]多维选择和多行控制</li>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.5+</li>
+                    <li>【+】[Chord] new chord chart, support multidimensional choice</li>
+                    <li>【^】[Pie] updated to support Nightingale rose diagram (radius / area) mode</li>
+                    <li>[#][Tooltip] radar chart null data bug fix</li>
+                    <li>[#][CategoryAxis] Repair category decimal precision shaft big data problems, FIX <a href="https://github.com/ecomfe/echarts/issues/110" target="_blank">this »</a></li>
+                    <li>[^][Tooltip][line][bar] optimization highlighting indication style</li>
+                    <li>[#][Tooltip] encodeHTML repair</li>
+                    <li>[#][K] repair yin and yang line color error, FIX <a href="https://github.com/ecomfe/echarts/issues/112" target="_blank">this »</a></li>
+                    <li>[^] Symbol increased arrow arrow, Support <a href="http://www.oschina.net/question/1182177_128527" target="_blank">this »</a></li>
+                    <li>[^][Title] support hyperlinks to jump</li>
+                    <li>[^][Pie][polar] center coordinates percentage format support</li>
+                    <li>[^][Legend] multi-dimensional and multi-line selection control</li>
+                    <li>[?] Dependence update, <a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.5+</li>
                 </ul>
             </div>
             <div>
-                <h3>1.2.1<small>（2013-09-29）</small></h3>
+                <h3>1.2.1 <small>(2013-09-29)</small></h3>
                 <ul>
-                    <li>【^】 [line]平滑曲线支持，icon shape交互易用性优化</li>
-                    <li>【^】 [line][bar][scatter]文本标签支持</li>
-                    <li>[^] refresh后清除残留animation</li>
-                    <li>[^] 增加版本信息和依赖判断</li>
-                    <li>[^] [k]barWidth，barMaxWidth支持</li>
-                    <li>[^] [tooltip]内容主体显示策略配置，support <a href="https://github.com/ecomfe/echarts/issues/102" target="_blank">this »</a></li>
-                    <li>[+] [ndarray]加入多维数组模块</li>
-                    <li>[#] [legend]修复散点图个性化symbol图例不对</li>
-                    <li>[#] [pie][polar][title]修复resize响应 fix <a href="https://github.com/ecomfe/echarts/issues/83" target="_blank">this »</a></li>
-                    <li>[#] [categoryAxis]splitLine颜色数组中取值问题 fix <a href="https://github.com/ecomfe/echarts/issues/90" target="_blank">this »</a></li>
-                    <li>[#] [valueAxis]修复全系列0值无显示问题、 fix <a href="https://github.com/ecomfe/echarts/issues/101" target="_blank">this »</a></li>
-                    <li>[#] [tooltip]同步异步混搭时回调ticket匹配错误，代码优化</li>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.4+</li>
+                    <li>【^】[Line] smooth curve support, icon shape optimization of interactive usability</li>
+                    <li>【^】[Line][bar][scatter] text label support</li>
+                    <li>[^] After refresh remove residual animation</li>
+                    <li>[^] To increase the version information and rely on judgment</li>
+                    <li>[^][K] barWidth, barMaxWidth support</li>
+                    <li>[^][Tooltip] to display the contents of the main policy configuration, Support <a href="https://github.com/ecomfe/echarts/issues/102" target="_blank">this »</a></li>
+                    <li>[+][Ndarray] Jiaruduowei array module</li>
+                    <li>[#][Legend] repair Scatter symbol legend personalized wrong</li>
+                    <li>[#][Pie][polar][title] repair resize response FIX <a href="https://github.com/ecomfe/echarts/issues/83" target="_blank">this »</a></li>
+                    <li>[#][CategoryAxis] splitLine color array value problem FIX <a href="https://github.com/ecomfe/echarts/issues/90" target="_blank">this »</a></li>
+                    <li>[#][ValueAxis] fixes the value of the full range of 0 no display problem, FIX <a href="https://github.com/ecomfe/echarts/issues/101" target="_blank">this »</a></li>
+                    <li>[#][Tooltip] callback ticket matching errors, code optimization synchronous asynchronous mash</li>
+                    <li>[?] Dependence update, <a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.4+</li>
                 </ul>
             </div>
             <div>
-                <h3>1.2.0<small>（2013-09-13）</small></h3>
+                <h3>1.2.0<small>(2013-09-13)</small></h3>
                 <ul>
-                    <li>【+】 [radar] 雷达图</li>
-                    <li>【+】 动态数据添加接口及动画支持 support <a href="https://github.com/ecomfe/echarts/issues/45" target="_blank">this »</a></li>
-                    <li>【+】 [map] 数据压缩算法（1.65M > 350K）、动态加载</li>
-                    <li>[+] [polar] 极坐标</li>
-                    <li>[^] [grid] 直角坐标系网格自适应配置优化, support <a href="http://www.oschina.net/question/1255841_123578" target="_blank">this »</a></li>
-                    <li>[^] [dataZoom] zoomLock下手柄拖拽转移以提高用户体验</li>
-                    <li>[^] [tooltip] 全局mouseout、层级优化</li>
-                    <li>[+] [line] showAllSymbol控制显示所有拐点标识</li>
-                    <li>[^] refresh接口优化</li>
-                    <li>[#] 修复组件resize响应 fix <a href="https://github.com/ecomfe/echarts/issues/68" target="_blank">this »</a></li>
-                    <li>[#] [legend] 饼图个性化颜色取值错误，fix <a href="http://www.oschina.net/question/209138_125256" target="_blank">this »</a></li>
-                    <li>[#] [tooltip] 数组类型数值类型打包错误，fix <a href="https://github.com/ecomfe/echarts/issues/82" target="_blank">this »</a></li>
-                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.3+</li>
+                    <li>【+】[Radar] Radar map</li>
+                    <li>【+】 Add dynamic data interface and animation support Support <a href="https://github.com/ecomfe/echarts/issues/45" target="_blank">this »</a></li>
+                    <li>【+】[Map] data compression algorithm (1.65M&gt; 350K), dynamic loading</li>
+                    <li>[+][Polar] polar coordinates</li>
+                    <li>[^][Grid] Adaptive Cartesian coordinate system grid configuration optimization, Support <a href="http://www.oschina.net/question/1255841_123578" target="_blank">this »</a></li>
+                    <li>[^][DataZoom] zoomLock drag transferred under the handle to improve user experience</li>
+                    <li>[^][Tooltip] Global mouseout, hierarchical optimization</li>
+                    <li>[+][Line] showAllSymbol control the display of all inflection logo</li>
+                    <li>[^] Refresh interface optimization</li>
+                    <li>[#] Repair components resize response FIX <a href="https://github.com/ecomfe/echarts/issues/68" target="_blank">this »</a></li>
+                    <li>[#][Legend] pie personalized color values ​​wrong, FIX <a href="http://www.oschina.net/question/209138_125256" target="_blank">this »</a></li>
+                    <li>[#][Tooltip] array type value type packaging error, FIX <a href="https://github.com/ecomfe/echarts/issues/82" target="_blank">this »</a></li>
+                    <li>[?] Dependence update, <a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 1.0.3+</li>
                 </ul>
             </div>
             <div>
-                <h3>1.1.2<small>（2013-08-21）</small></h3>
+                <h3>1.1.2<small>(2013-08-21)</small></h3>
                 <ul>
-                    <li>【+】 [map] 新增全国34个省市自治区地图支持</li>
-                    <li>[^] [tooltip] 坐标轴指示器样式可配，新增shadow样式，见tooltip.axisPointer</li>
-                    <li>[^] [tooltip] 显示延迟（showDelay）、隐藏延迟（hideDelay）、缓动时长（transitionDuration）开放可配置</li>
-                    <li>[^] [legend] 可配置默认选中状态</li>
-                    <li>[^] [pie] 饼图默认起始角改为90度（12点钟方向）</li>
-                    <li>[^] [line] symbolRotate图形标志支持旋转</li>
-                    <li>[+] 单文件构建工具</li>
-                    <li>[#] [dataRange] 修正值域控件颜色拾取</li>
-                    <li>[#] [toolbox] 保存图片显示位置居中修正</li>
+                    <li>【+】[Map] Added 34 provinces and autonomous regions nationwide map support</li>
+                    <li>[^][Tooltip] axis indicator can be equipped with style, the new shadow style, see tooltip.axisPointer</li>
+                    <li>[^][Tooltip] showDelay, hideDelay, transitionDuration can be configured to open</li>
+                    <li>[^][Legend] can configure the default selected</li>
+                    <li>[^][Pie] pie default starting angle to 90 degrees (12 o'clock)</li>
+                    <li>[^][Line] symbolRotate graphic signs support rotation</li>
+                    <li>[+] Single-file build tools</li>
+                    <li>[#][DataRange] correction range color picker controls</li>
+                    <li>[#][Toolbox] to save the corrected image shows the location of the center</li>
                 </ul>
             </div>
             <div>
-                <h3>1.1.1<small>（2013-07-30）</small></h3>
-                <ul>
-                    <li>[+] [component] 新增Title组件，图表标题支持</li>
-                    <li>【+】 图片导出支持（IE8-不支持）</li>
-                    <li>[^] [line] 折线图主线支持阴影（IE8-不支持），调整symbo描边与主线等宽</li>
-                    <li>[^] [valueAxis] 支持数值坐标轴上显示项目文字，边界值线条显示优化</li>
-                    <li>[^] [map] 数值计算方式支持均值和求和</li>
-                    <li>[^] Retina视网屏优化</li>
-                    <li>[^] [legend] 图例选择增加可控开关</li>
-                    <li>[#] [axis] 修正福建省hover</li>
-                    <li>[#] [tooltip] 修正气泡边界自动折行</li>
-                    <li>[#] [island] 修正拖拽折线图的empty symbo生成白色孤岛数据</li>
-                    <li>[#] [dataRange] 修正小数状态下的取整显示</li>
-                    <li>[#] [line] 折线堆积图描边修正</li>
-                    <li>【#】 数据修改后（拖拽，数据视图）的反向同步及restore还原修复</li>
+                <h3>1.1.1<small>(2013-07-30)</small></h3>
+               <ul>
+                    <li>[+][Component] New Title components, chart title support</li>
+                    <li>【+】 Image Export Support (IE8- not supported)</li>
+                    <li>[^][Line] main support line chart shadow (IE8- not supported), adjust the symbo stroke and mainline monospaced</li>
+                    <li>[^][ValueAxis] support the value axis display item text, lines display optimization boundary value</li>
+                    <li>[^][Map] numerical calculations to support the mean and summing</li>
+                    <li>[^] Retina screen optimization</li>
+                    <li>[^][Legend] Legend choose to increase the controllable switch</li>
+                    <li>[#][Axis] fix Fujian hover</li>
+                    <li>[#][Tooltip] automatic correction bubble wrap boundary</li>
+                    <li>[#][Island] correction drag a line chart of empty symbo generation white silos of data</li>
+                    <li>[#][DataRange] rounding decimals state correction display</li>
+                    <li>[#][Line] a line stacked Stroke Correction</li>
+                    <li>【#】 After the data modification (drag and drop, data view) reverse sync and restore restored restoration</li>
                 </ul>
             </div>
-            <div>
-                <h3>1.1.0<small>（2013-07-08）</small></h3>
+<div>
+                <h3>1.1.0 <small>(2013-07-08)</small></h3>
                 <ul>
-                    <li>新增图表</li>
+                    <li>New Chart</li>
                     <ul>
-                        <li>散点图（气泡图）</li>
-                        <li>K线图</li>
-                        <li>地图（地图类型支持：中国）</li>
-                        <li>力导向布局图</li>
+                        <li>Scatter (bubble chart)</li>
+                        <li>K</li>
+                        <li>Map (map types supported: China)</li>
+                        <li>Force</li>
                     </ul>
-                    <li>新增组件</li>
+                    <li>New Components</li>
                     <ul>
                         <li>dataRange</li>
                     </ul>
-                    <li>新增特性</li>
+                    <li>New features</li>
                     <ul>
-                        <li>数据区域选择（支持框选）</li>
-                        <li>值域漫游</li>
-                        <li>大数据模式（仅散点图支持）</li>
+                        <li>Data region selection (support marquee)</li>
+                        <li>Range roaming</li>
+                        <li>Large data pattern (scattergram only supported)</li>
                     </ul>
-                    <li>新增事件：RESTORE，DATA_RANGE，MAP_SELECTED</li>
-                    <li>新增接口：</li>
+                    <li>New event: RESTORE, DATA_RANGE, MAP_SELECTED</li>
+                    <li>New interface:</li>
                     <ul>
-                        <li>resize，显示区域大小更新</li>
-                        <li>refresh，刷新图表，图例选择、数据区域缩放，拖拽状态均保持</li>
-                        <li>restore，还原图表，各种状态均被清除，还原为最初展现时的状态。</li>
-                        <li>getZrender，获取当前图表所用ZRender实例，可用于添加额外图形或进行深度定制</li>
+                        <li>resize, display area size update</li>
+                        <li>refresh, refresh the chart legend selection, data area zoom, drag the state remain</li>
+                        <li>restore, restore the charts, various states are cleared, reducing the time to show the status of the original.</li>
+                        <li>getZrender, get the chart currently used ZRender instance, can be used to add additional custom graphics or depth</li>
                     </ul>
-                    <li>【重要】 图表按需加载，需要使用方主动require</li>
-                    <li>toolbox.feature.refresh改为restore</li>
-                    <li>[bug fixed] tooltip 0值</li>
-                    <li>饼图升级selected Mode，label支持formatter</li>
-                    <li>图例升级为icon，折线图例有更形象的展现和更易点击</li>
-                    <li>数值轴升级scale模式，可以脱离0值，聚焦到数值变化区间</li>
-                    <li>默认动画缓动效果从'BounceOut'改为'ExponentialOut'</li>
+                    <li>【】 chart loaded on demand, you need to take the initiative to require the use of square</li>
+                    <li>toolbox.feature.refresh to restore</li>
+                    <li>[Bug fixed] tooltip value 0</li>
+                    <li>Pie update selected Mode, label support formatter</li>
+                    <li>Legend update to the icon, the legend polylines show more and more likely to click on the image</li>
+                    <li>update the value axis scale mode, from a value of 0, the focus changes to the value range</li>
+                    <li>The default animation easing effect from 'BounceOut' to 'ExponentialOut'</li>
                 </ul>
             </div>
             <div>
-                <h3>1.0.0<small>（2013-06-30）</small></h3>
+                <h3>1.0.0<small>(2013-06-30)</small></h3>
                 <ul>
-                    <li>提供商业产品常用图表库，支持折线图（区域图）、柱状图（条状图）、饼图（环形图）</li>
-                    <li>特性</li>
+                    <li>Provide commercial products commonly used charts library,support line,bar,pie</li><!--TODO-->
+                    <li>Features</li>
                     <ul>
-                        <li>图表混搭</li>
-                        <li>拖拽重计算</li>
-                        <li>数据视图</li>
-                        <li>动态类型切换</li>
-                        <li>图例开关</li>
-                        <li>数据区域选择</li>
-                        <li>标线辅助</li>
-                        <li>多维度堆积</li>
+                        <li>Chart mash</li>
+                        <li>Drag to recalculated</li>
+                        <li>Data View</li>
+                        <li>Dynamic type switching</li>
+                        <li>Legend switch</li>
+                        <li>Select the data area</li>
+                        <li>Marking auxiliary</li>
+                        <li>Multi-dimensional stacking</li>
                     </ul>
-                    <li>多级控制，个性化定制</li>
-                    <li>事件交互：
-                        <br/>REFRESH，CLICK，HOVER，DATA_CHANGED，MAGIC_TYPE_CHANGED，
-                        <br/>DATA_VIEW_CHANGED，DATA_ZOOM，LEGEND_SELECTED</li>
+                    <li>Multilevel control,customization</li>
+                    <li>Event interaction:
+                        <br/>REFRESH,CLICK,HOVER,DATA_CHANGED,MAGIC_TYPE_CHANGED,
+                        <br/>DATA_VIEW_CHANGED,DATA_ZOOM,LEGEND_SELECTED</li>
                 </ul>
             </div>
         </div>
