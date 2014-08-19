@@ -1177,6 +1177,7 @@ define(function() {
             RESTORE: 'restore',
             RESIZE: 'resize',
             CLICK: 'click',
+            DBLCLICK: 'dblclick',
             HOVER: 'hover',
             //MOUSEWHEEL: 'mousewheel',
             // -------业务交互逻辑

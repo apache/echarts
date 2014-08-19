@@ -135,7 +135,7 @@ define(function (require) {
      * @type {Array}
      */
     var ZR_EVENT_LISTENS = [
-        'CLICK', 'MOUSEOVER', 
+        'CLICK', 'DBLCLICK', 'MOUSEOVER', 
         'DRAGSTART', 'DRAGEND', 'DRAGENTER', 'DRAGOVER', 'DRAGLEAVE', 'DROP'
     ];
 
@@ -197,7 +197,7 @@ define(function (require) {
                 return self.__onevent(param);
             };
             for (var e in ecConfig.EVENT) {
-                if (e != 'CLICK' && e != 'HOVER' && e != 'MAP_ROAM') {
+                if (e != 'CLICK' && e != 'DBLCLICK' && e != 'HOVER' && e != 'MAP_ROAM') {
                     this._messageCenter.bind(ecConfig.EVENT[e], this._onevent, this);
                 }
             }
@@ -351,6 +351,25 @@ define(function (require) {
                 if (ecData && ecData.seriesIndex != null) {
                     this._messageCenter.dispatch(
                         ecConfig.EVENT.CLICK,
+                        param.event,
+                        ecData,
+                        this
+                    );
+                }
+            }
+        },
+        
+        /**
+         * 双击事件，响应zrender事件，包装后分发到Echarts层
+         */
+        _ondblclick : function (param) {
+            callChartListMethodReverse(this, 'ondblclick', param);
+
+            if (param.target) {
+                var ecData = this._eventPackage(param.target);
+                if (ecData && ecData.seriesIndex != null) {
+                    this._messageCenter.dispatch(
+                        ecConfig.EVENT.DBLCLICK,
                         param.event,
                         ecData,
                         this
