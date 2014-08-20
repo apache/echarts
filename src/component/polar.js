@@ -148,7 +148,7 @@ define(function (require) {
                 if (axisLabel.show) {
                     style = {};
                     style.textFont = this.getFont();
-                    //Todo: bug fix
+                    
                     style = zrUtil.merge(style, axisLabel);
                     style.lineWidth = style.width;
 
@@ -157,6 +157,10 @@ define(function (require) {
                     theta = i / indicator.length * 2 * Math.PI;
                     offset = axisLabel.offset || 10;
                     interval = axisLabel.interval || 0;
+
+                    if (!value) {
+                        return;
+                    }
 
                     for (var j = 1 ; j <= splitNumber; j += interval + 1) {
                         newStyle = zrUtil.merge({}, style);
