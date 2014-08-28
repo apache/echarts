@@ -507,12 +507,13 @@ define(function (require) {
                 }
                 
                 //console.log(this._min,this._max,'vvvvv111111')
+                var gap = Math.abs(this._max - this._min);
                 this._min = isNaN(this.option.min - 0)
-                       ? (this._min - Math.abs(this._min * this.option.boundaryGap[0]))
+                       ? (this._min - Math.abs(gap * this.option.boundaryGap[0]))
                        : (this.option.min - 0);    // 指定min忽略boundaryGay[0]
     
                 this._max = isNaN(this.option.max - 0)
-                       ? (this._max + Math.abs(this._max * this.option.boundaryGap[1]))
+                       ? (this._max + Math.abs(gap * this.option.boundaryGap[1]))
                        : (this.option.max - 0);    // 指定max忽略boundaryGay[1]
                 if (this._min == this._max) {
                     if (this._max === 0) {
