@@ -59,6 +59,7 @@ define(function (require) {
         
         this._isAlive = true;           // 活着标记
         this._selectedMode = {};        // 选择模式
+        this._activeMapType = {}; // 当前活跃的地图类型
         this._hoverable = {};           // 悬浮高亮模式，索引到图表
         this._showLegendSymbol = {};    // 显示图例颜色标识
         this._selected = {};            // 地图选择状态
@@ -966,9 +967,10 @@ define(function (require) {
             var height;
             for (var mapType in this._mapDataMap) {
                 transform = this._mapDataMap[mapType].transform;
-                if (!transform || !this._roamMap[mapType]) {
+                if (!transform || !this._roamMap[mapType] || !this._activeMapType[mapType]) {
                     continue;
                 }
+                
                 left = transform.left;
                 top = transform.top;
                 width = transform.width;
