@@ -503,6 +503,7 @@ define(function() {
         
         // 柱形图默认参数
         bar: {
+            clickable: true,
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
@@ -542,6 +543,7 @@ define(function() {
 
         // 折线图默认参数
         line: {
+            clickable: true,
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
@@ -584,6 +586,7 @@ define(function() {
         
         // K线图默认参数
         k: {
+            clickable: true,
             xAxisIndex: 0,
             yAxisIndex: 0,
             // barWidth : null          // 默认自适应
@@ -607,6 +610,7 @@ define(function() {
         
         // 散点图默认参数
         scatter: {
+            clickable: true,
             xAxisIndex: 0,
             yAxisIndex: 0,
             //symbol: null,      // 图形类型
@@ -656,6 +660,7 @@ define(function() {
 
         // 雷达图默认参数
         radar : {
+            clickable: true,
             polarIndex: 0,
             itemStyle: {
                 normal: {
@@ -682,6 +687,7 @@ define(function() {
 
         // 饼图默认参数
         pie: {
+            clickable: true,
             center : ['50%', '50%'],    // 默认全局居中
             radius : [0, '75%'],
             clockWise : true,           // 默认顺时针
@@ -748,6 +754,7 @@ define(function() {
             showLegendSymbol : true,       // 显示图例颜色标识（系列标识的小圆点），存在legend时生效
             // selectedMode: false,        // 选择模式，默认关闭，可选single，multiple
             hoverable: true,
+            clickable: true,
             // roam : false,               // 是否开启缩放及漫游模式
             // scaleLimit : null,
             itemStyle: {
@@ -822,6 +829,7 @@ define(function() {
             linkSymbol: null,
             linkSymbolSize: [10, 15],
             draggable: true,
+            clickable: true,
 
             // 分类里如果有样式会覆盖节点默认样式
             categories : [{
@@ -882,6 +890,7 @@ define(function() {
         },
 
         chord : {
+            clickable: true,
             radius : ['65%', '75%'],
             center : ['50%', '50%'],
             padding : 2,
@@ -1014,6 +1023,7 @@ define(function() {
         },
         
         funnel : {
+            clickable: true,
             x: 80,
             y: 60,
             x2: 80,

@@ -367,7 +367,7 @@ define(function (require) {
                         opacity: 1,
                         color : this.getColor(group.name)
                     },
-                    clickable: true,
+                    clickable: this.chordSerieSample.clickable,
                     highlightStyle : {
                         brushType : 'fill'
                     }
@@ -516,7 +516,7 @@ define(function (require) {
                                 lineWidth : chordLineStyle.width,
                                 strokeColor : chordLineStyle.color
                             },
-                            clickable: true,
+                            clickable: this.chordSerieSample.clickable,
                             highlightStyle : {
                                 brushType : 'both',
                                 lineWidth : chordLineStyleEmphsis.width,

@@ -366,7 +366,7 @@ define(function (require) {
 
             var sector = {
                 zlevel : this._zlevelBase,
-                clickable : true,
+                clickable: this.deepQuery(queryTarget, 'clickable'),
                 style : {
                     x : center[0],          // 圆心横坐标
                     y : center[1],          // 圆心纵坐标

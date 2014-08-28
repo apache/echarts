@@ -802,7 +802,7 @@ define(function (require) {
             );
             barShape = {
                 zlevel : this._zlevelBase,
-                clickable: true,
+                clickable: this.deepQuery(queryTarget, 'clickable'),
                 style : {
                     x : x,
                     y : y,

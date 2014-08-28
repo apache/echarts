@@ -415,7 +415,7 @@ define(function (require) {
                         x : 0,
                         y : 0
                     },
-                    clickable : true,
+                    clickable: this.query(serie, 'clickable'),
                     highlightStyle : {}
                 });
 
@@ -547,7 +547,7 @@ define(function (require) {
                         yEnd : 0,
                         lineWidth : 1
                     },
-                    clickable : true,
+                    clickable: this.query(serie, 'clickable'),
                     highlightStyle : {}
                 });
 

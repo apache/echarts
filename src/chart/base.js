@@ -749,7 +749,7 @@ define(function (require) {
                               || color,
                     lineWidth: eBorderWidth
                 },
-                clickable : true
+                clickable: this.deepQuery(queryTarget, 'clickable')
             });
 
             if (symbol.match('image')) {
@@ -758,7 +758,7 @@ define(function (require) {
                 itemShape = new ImageShape({
                     style : itemShape.style,
                     highlightStyle : itemShape.highlightStyle,
-                    clickable : true
+                    clickable: this.deepQuery(queryTarget, 'clickable')
                 });
             }
             
@@ -944,7 +944,7 @@ define(function (require) {
                                   ? (normal.borderWidth + 2)
                                   : (emphasis.borderWidth)
                 },
-                clickable : true
+                clickable: this.deepQuery(queryTarget, 'clickable')
             });
             
             itemShape = this.addLabel(

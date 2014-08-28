@@ -354,7 +354,7 @@ define(function (require) {
 
             var polygon = {
                 zlevel : this._zlevelBase,
-                clickable : true,
+                clickable: this.deepQuery(queryTarget, 'clickable'),
                 style : {
                     pointList : [
                         [x, y],
