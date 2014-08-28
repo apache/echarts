@@ -431,17 +431,20 @@ define(function (require) {
                 var xEnd = this.component.grid.getXend();
                 var curCoord = categoryAxis.getCoordByIndex(dataIndex);
                 while (curCoord < xEnd) {
+                    right = curCoord;
                     if (curCoord <= x) {
                         left = curCoord;
                     }
-                    if (curCoord >= x) {
+                    else {
                         break;
                     }
                     curCoord = categoryAxis.getCoordByIndex(++dataIndex);
-                    right = curCoord;
                 }
-                if (x - left < right - x) {
-                    dataIndex -= dataIndex !== 0 ? 1 : 0;
+                if (dataIndex <= 0) {
+                    dataIndex = 0;
+                }
+                else if (x - left <= right - x) {
+                    dataIndex -= 1;
                 }
                 else {
                     // 离右边近，看是否为最后一个
@@ -460,18 +463,21 @@ define(function (require) {
                 var yStart = this.component.grid.getY();
                 var curCoord = categoryAxis.getCoordByIndex(dataIndex);
                 while (curCoord > yStart) {
+                    top = curCoord;
                     if (curCoord >= y) {
                         bottom = curCoord;
                     }
-                    if (curCoord <= y) {
+                    else {
                         break;
                     }
                     curCoord = categoryAxis.getCoordByIndex(++dataIndex);
-                    top = curCoord;
                 }
 
-                if (y - top > bottom - y) {
-                    dataIndex -= dataIndex !== 0 ? 1 : 0;
+                if (dataIndex <= 0) {
+                    dataIndex = 0;
+                }
+                if (y - top >= bottom - y) {
+                    dataIndex -= 1;
                 }
                 else {
                     // 离上方边近，看是否为最后一个
