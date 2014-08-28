@@ -59,7 +59,8 @@ define(function (require) {
         
         this._isAlive = true;           // 活着标记
         this._selectedMode = {};        // 选择模式
-        this._activeMapType = {}; // 当前活跃的地图类型
+        this._activeMapType = {};       // 当前活跃的地图类型
+        this._clickable = {};           // 悬浮高亮模式，索引到图表
         this._hoverable = {};           // 悬浮高亮模式，索引到图表
         this._showLegendSymbol = {};    // 显示图例颜色标识
         this._selected = {};            // 地图选择状态
@@ -145,6 +146,11 @@ define(function (require) {
                         || this._hoverable[mapType]                  // false 1票否决
                     ) {
                         this._hoverable[mapType] = series[i].hoverable; 
+                    }
+                    if (typeof this._clickable[mapType] == 'undefined'
+                        || this._clickable[mapType]                  // false 1票否决
+                    ) {
+                        this._clickable[mapType] = series[i].clickable; 
                     }
                     if (typeof this._showLegendSymbol[mapType] == 'undefined'
                         || this._showLegendSymbol[mapType]           // false 1票否决
@@ -755,7 +761,8 @@ define(function (require) {
                 // 文字标签避免覆盖单独一个shape
                 textShape = {
                     zlevel : this._zlevelBase + 1,
-                    hoverable: this._hoverable[mapType],
+                    //hoverable: this._hoverable[mapType],
+                    //clickable: this._clickable[mapType],
                     position : zrUtil.clone(style.position),
                     _mapType : mapType,
                     _geo : this.pos2geo(
@@ -800,7 +807,8 @@ define(function (require) {
 
                 shape = {
                     zlevel : this._zlevelBase,
-                    hoverable: this._hoverable[mapType],
+                    //hoverable: this._hoverable[mapType],
+                    //clickable: this._clickable[mapType],
                     position : zrUtil.clone(style.position),
                     style : style,
                     highlightStyle : highlightStyle,
@@ -841,6 +849,10 @@ define(function (require) {
                     textShape.style = textShape.highlightStyle;
                     shape.style = shape.highlightStyle;
                 }
+                
+                textShape.clickable = shape.clickable =
+                    this._clickable[mapType]
+                    && (typeof data.clickable == 'undefined' || data.clickable);
                 
                 if (this._selectedMode[mapType]) {
                     this._selected[name] = typeof this._selected[name] != 'undefined'
