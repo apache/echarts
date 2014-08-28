@@ -135,7 +135,7 @@ define(function (require) {
      * @type {Array}
      */
     var ZR_EVENT_LISTENS = [
-        'CLICK', 'DBLCLICK', 'MOUSEOVER', 
+        'CLICK', 'DBLCLICK', 'MOUSEOVER', 'MOUSEOUT',
         'DRAGSTART', 'DRAGEND', 'DRAGENTER', 'DRAGOVER', 'DRAGLEAVE', 'DROP'
     ];
 
@@ -179,7 +179,7 @@ define(function (require) {
                 eventPackage.event = event;
 
                 self._messageCenter.dispatchWithContext(type, eventPackage, that);
-                if (type != 'HOVER') {
+                if (type != 'HOVER' && type != 'MOUSEOUT') {    // 频繁事件直接抛出
                     setTimeout(function(){
                         self._messageCenterOutSide.dispatchWithContext(
                             type, eventPackage, that
@@ -197,7 +197,9 @@ define(function (require) {
                 return self.__onevent(param);
             };
             for (var e in ecConfig.EVENT) {
-                if (e != 'CLICK' && e != 'DBLCLICK' && e != 'HOVER' && e != 'MAP_ROAM') {
+                if (e != 'CLICK' && e != 'DBLCLICK' 
+                    && e != 'HOVER' && e != 'MOUSEOUT' && e != 'MAP_ROAM'
+                ) {
                     this._messageCenter.bind(ecConfig.EVENT[e], this._onevent, this);
                 }
             }
@@ -378,15 +380,32 @@ define(function (require) {
             }
         },
 
-         /**
-          * 鼠标移入事件，响应zrender事件，包装后分发到Echarts层
-          */
+        /**
+         * 鼠标移入事件，响应zrender事件，包装后分发到Echarts层
+         */
         _onmouseover : function (param) {
             if (param.target) {
                 var ecData = this._eventPackage(param.target);
                 if (ecData && ecData.seriesIndex != null) {
                     this._messageCenter.dispatch(
                         ecConfig.EVENT.HOVER,
+                        param.event,
+                        ecData,
+                        this
+                    );
+                }
+            }
+        },
+        
+        /**
+         * 鼠标移出事件，响应zrender事件，包装后分发到Echarts层
+         */
+        _onmouseout : function (param) {
+            if (param.target) {
+                var ecData = this._eventPackage(param.target);
+                if (ecData && ecData.seriesIndex != null) {
+                    this._messageCenter.dispatch(
+                        ecConfig.EVENT.MOUSEOUT,
                         param.event,
                         ecData,
                         this

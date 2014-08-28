@@ -1179,6 +1179,7 @@ define(function() {
             CLICK: 'click',
             DBLCLICK: 'dblclick',
             HOVER: 'hover',
+            MOUSEOUT : 'mouseout',
             //MOUSEWHEEL: 'mousewheel',
             // -------业务交互逻辑
             DATA_CHANGED: 'dataChanged',
