@@ -1949,7 +1949,7 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> axisTick </td>
-                            <td> {show : false} </td>
+                            <td> 各异 </td>
                             <td> 通用 </td>
                             <td> 坐标轴小标记，默认不显示，属性show控制显示与否，属性length控制线长，属性lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式 </td>
                         </tr>
@@ -2037,7 +2037,7 @@ require(['echarts'], function (ec){
                     </table>
 
                     <h5>axis.axisTick<a name="AxisAxistick"> </a></h5>
-                    <P> 坐标轴小标记，默认不显示，默认样式见下：</P>
+                    <P> 坐标轴小标记，数值轴默认不显示，类目轴默认显示，默认样式见下：</P>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
                             <th> 名称 </th>
@@ -2047,7 +2047,7 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{boolean}</b> show </td>
-                            <td> false </td>
+                            <td> false（数值轴）<br/> true（类目轴） </td>
                             <td> 通用 </td>
                             <td> 是否显示，默认为false，设为true后下面为默认样式 </td>
                         </tr>

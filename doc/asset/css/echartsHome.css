@@ -1,6 +1,9 @@
 * {
     font-family: "Microsoft YaHei";
 }
+#sidebar-code * {
+    font-family: sans-serif;
+}
 html {
     background-color: rgb(6, 19, 37);
 }
