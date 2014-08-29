@@ -35,7 +35,7 @@ define(function (require) {
         this.dom = myChart.dom;
         
         this._magicType = {};
-        //this._magicMap;
+        this._magicMap = {};
         this._isSilence = false;
         
         this._iconList;
