@@ -134,10 +134,10 @@ var theme = {
     bar: {
         itemStyle: {
             normal: {
-                borderRadius: 0
+                barBorderRadius: 0
             },
             emphasis: {
-                borderRadius: 0
+                barBorderRadius: 0
             }
         }
     },

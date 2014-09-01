@@ -514,9 +514,9 @@ define(function() {
             itemStyle: {
                 normal: {
                     // color: '各异',
-                    borderColor: '#fff',       // 柱条边线
-                    borderRadius: 0,           // 柱条边线圆角，单位px，默认为0
-                    borderWidth: 0,            // 柱条边线线宽，单位px，默认为1
+                    barBorderColor: '#fff',       // 柱条边线
+                    barBorderRadius: 0,           // 柱条边线圆角，单位px，默认为0
+                    barBorderWidth: 0,            // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -527,9 +527,9 @@ define(function() {
                 },
                 emphasis: {
                     // color: '各异',
-                    borderColor: '#fff',            // 柱条边线
-                    borderRadius: 0,                // 柱条边线圆角，单位px，默认为0
-                    borderWidth: 0,                 // 柱条边线线宽，单位px，默认为1
+                    barBorderColor: '#fff',            // 柱条边线
+                    barBorderRadius: 0,                // 柱条边线圆角，单位px，默认为0
+                    barBorderWidth: 0,                 // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
