@@ -51,9 +51,11 @@ define(function (require) {
             // 设置transform
             this.setTransform(ctx);
 
+            ctx.save();
             ctx.beginPath();
             this.buildLinePath(ctx, style);
             ctx.stroke();
+            ctx.restore();
 
             this.brushSymbol(ctx, style, 0);
             this.brushSymbol(ctx, style, 1);
