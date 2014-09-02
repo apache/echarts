@@ -640,7 +640,7 @@ define(function (require) {
             }
             
             var componentList = [
-                'title', 'legend', 'tooltip', 'dataRange',
+                'title', 'legend', 'tooltip', 'dataRange', 'roamController',
                 'grid', 'dataZoom', 'xAxis', 'yAxis', 'polar'
             ];
             
