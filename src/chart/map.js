@@ -1022,7 +1022,7 @@ define(function (require) {
             if (!mapTypeControl) {
                 mapTypeControl = {};
                 mapType = this._findMapTypeByPos(mx, my);
-                if (mapType) {
+                if (mapType && this._roamMap[mapType] && this._roamMap[mapType] != 'move') {
                     mapTypeControl[mapType] = true;
                 }
             }
@@ -1154,12 +1154,11 @@ define(function (require) {
             var mx = zrEvent.getX(event);
             var my = zrEvent.getY(event);
             var mapType = this._findMapTypeByPos(mx, my);
-            if (mapType) {
+            if (mapType && this._roamMap[mapType] && this._roamMap[mapType] != 'scale') {
                 this._mousedown = true;
                 this._mx = mx;
                 this._my = my;
                 this._curMapType = mapType;
-                
                 this.zr.on(zrConfig.EVENT.MOUSEUP, this._onmouseup);
                 var self = this;
                 setTimeout(function (){
