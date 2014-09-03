@@ -74,6 +74,7 @@
                                 <li><a href="#Legend">legend</a></li>
                                 <li><a href="#DataRange">dataRange</a></li>
                                 <li><a href="#DataZoom">dataZoom</a></li>
+                                <li><a href="#RoamController">roamController</a></li>
                                 <li><a href="#Grid">grid</a></li>
                                 <li><a href="#Xaxis">xAxis</a></li>
                                 <li><a href="#Yaxis">yAxis</a></li>
@@ -217,6 +218,10 @@
                         <tr>
                             <td> dataZoom </td>
                             <td> 数据区域缩放，常用于展现大数据时选择可视范围 </td>
+                        </tr>
+                        <tr>
+                            <td> roamController </td>
+                            <td> 缩放漫游组件，搭配地图使用 </td>
                         </tr>
                         <tr>
                             <td> toolbox </td>
@@ -874,6 +879,10 @@ require(['echarts'], function (ec){
                         <tr class='bgRed'>
                             <td> <b>{Object}</b> dataZoom </td>
                             <td> 数据区域缩放（详见<a href="#DataZoom" title="">dataZoom</a>）,数据展现范围选择 </td>
+                        </tr>
+                        <tr class='bgRed'>
+                            <td> <b>{Object}</b> roamController </td>
+                            <td> 漫游缩放组件（详见<a href="#RoamController" title="">roamController</a>）,搭配地图使用 </td>
                         </tr>
                         <tr class='bgRed'>
                             <td> <b>{Object}</b> grid </td>
@@ -1691,7 +1700,6 @@ require(['echarts'], function (ec){
                     </table>
                     <p><img src="./asset/img/doc/dataRange.png" title="" alt="值域"/></P>
 
-
                     <h4>dataZoom<a name="DataZoom"> </a></h4>
                     <P> 数据区域缩放。与toolbox.feature.dataZoom同步，仅对直角坐标系图表有效。<a href="example/dataZoom.html" target="_blank">try this »</a></P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -1783,6 +1791,82 @@ require(['echarts'], function (ec){
                     </table>
                     <p><img src="./asset/img/doc/dataZoom.png" title="" alt="数据区域缩放"/></P>
 
+                    <h4>roamController<a name="RoamController"> </a></h4>
+                    <P> 缩放漫游组件，仅对地图有效。<a href="example/map1.html" target="_blank">try this »</a></P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> show </td>
+                            <td> false </td>
+                            <td> 是否显示。 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | number}</b> x </td>
+                            <td> 'left' </td>
+                            <td> 水平安放位置，默认为左侧，可选为：'center' | 'left' | 'right' | <b>{number}</b>（x坐标，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | number}</b> y </td>
+                            <td> 'top' </td>
+                            <td> 垂直安放位置，默认为全图顶端，可选为：'top' | 'bottom' | 'center' | <b>{number}</b>（y坐标，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> width </td>
+                            <td> 80</td>
+                            <td> 指定宽度，决定4向漫游圆盘大小，可指定 <b>{number}</b>（宽度，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> height </td>
+                            <td> 120</td>
+                            <td> 指定高度，缩放控制键默认会在指定高度的最下方最大化显示，可指定 <b>{number}</b>（高度，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{color}</b> backgroundColor </td>
+                            <td> 'rgba(0,0,0,0)' </td>
+                            <td> 缩放漫游组件背景颜色，默认透明 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> borderColor </td>
+                            <td> '#ccc' </td>
+                            <td> 缩放漫游组件边框颜色 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> borderWidth </td>
+                            <td> 0 </td>
+                            <td> 缩放漫游组件边框线宽，单位px，默认为0（无边框） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number | Array}</b> padding </td>
+                            <td> 5 </td>
+                            <td> 缩放漫游组件内边距，单位px，默认各方向内边距为5，接受数组分别设定上右下左边距，同css，见下图 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{color}</b> fillerColor </td>
+                            <td> '#fff' </td>
+                            <td> 漫游组件文字填充颜色 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{color}</b> handleColor </td>
+                            <td> '#6495ed' </td>
+                            <td> 控制手柄主体颜色  </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> step </td>
+                            <td> 15 </td>
+                            <td> 4向漫游移动步伐，单位px</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> mapTypeControl </td>
+                            <td> null </td>
+                            <td> 必须，指定漫游组件可控地图类型，如：{ china: true }<br/>当同一图表内同时呈现多个地图时，可以单独指定所需控制地图类型，如：{ china: false, '北京': true} </td>
+                        </tr>
+                    </table>
+                    <p><img src="./asset/img/doc/roamController.png" title="" alt="缩放漫游组件"/></P>
+                    
                     <h4>grid<a name="Grid"> </a></h4>
                     <P> 直角坐标系内绘图网格</P>
                     <table cellspacing="0" class="ADoc_table full">

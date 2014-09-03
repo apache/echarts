@@ -28,9 +28,14 @@ define(function (require) {
      * @param {Object} option 图表参数
      */
     function RoamController(ecTheme, messageCenter, zr, option, myChart) {
-        if (!option.roamController) {
+        if (!option.roamController || !option.roamController.show) {
             return;
         }
+        if (!option.roamController.mapTypeControl) {
+            console.error('option.roamController.mapTypeControl has not been defined.');
+            return;
+        }
+        
         Base.call(this, ecTheme, messageCenter, zr, option, myChart);
         
         this.rcOption = option.roamController;
