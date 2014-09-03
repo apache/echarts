@@ -1617,7 +1617,10 @@ define(function (require) {
                 this._axisLineWidth = this.option.tooltip.axisPointer.lineStyle.width;
             }
             if (this.showing) {
-                this._tryShow();
+                var self = this;
+                setTimeout(function(){
+                    self.zr.trigger(zrConfig.EVENT.MOUSEMOVE, self.zr.handler._event);
+                },50);
             }
         },
 

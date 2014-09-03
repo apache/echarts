@@ -38,6 +38,7 @@ define(function() {
         COMPONENT_TYPE_AXIS_CATEGORY: 'categoryAxis',
         COMPONENT_TYPE_AXIS_VALUE: 'valueAxis',
         COMPONENT_TYPE_TIMELINE: 'timeline',
+        COMPONENT_TYPE_ROAMCONTROLLER: 'roamController',
 
         // 全图默认背景
         backgroundColor: 'rgba(0,0,0,0)',
@@ -501,6 +502,29 @@ define(function() {
             // data : []
         },
         
+        roamController: {
+            show : false,
+            x: 'left',                // 水平安放位置，默认为全图左对齐，可选为：
+                                       // 'center' ¦ 'left' ¦ 'right'
+                                       // ¦ {number}（x坐标，单位px）
+            y: 'top',                  // 垂直安放位置，默认为全图顶端，可选为：
+                                       // 'top' ¦ 'bottom' ¦ 'center'
+                                       // ¦ {number}（y坐标，单位px）
+            width: 80,
+            height: 120,
+            backgroundColor: 'rgba(0,0,0,0)',
+            borderColor: '#ccc',       // 图例边框颜色
+            borderWidth: 0,            // 图例边框线宽，单位px，默认为0（无边框）
+            padding: 5,                // 图例内边距，单位px，默认各方向内边距为5，
+                                       // 接受数组分别设定上右下左边距，同css
+            itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
+                                       // 横向布局时为水平间隔，纵向布局时为纵向间隔
+            handlerColor: '#6495ed',
+            fillerColor: '#fff',
+            step: 15,                  // 移动幅度
+            mapTypeControl: null
+        },
+        
         // 柱形图默认参数
         bar: {
             clickable: true,
@@ -514,9 +538,9 @@ define(function() {
             itemStyle: {
                 normal: {
                     // color: '各异',
-                    borderColor: '#fff',       // 柱条边线
-                    borderRadius: 0,           // 柱条边线圆角，单位px，默认为0
-                    borderWidth: 0,            // 柱条边线线宽，单位px，默认为1
+                    barBorderColor: '#fff',       // 柱条边线
+                    barBorderRadius: 0,           // 柱条边线圆角，单位px，默认为0
+                    barBorderWidth: 0,            // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -527,9 +551,9 @@ define(function() {
                 },
                 emphasis: {
                     // color: '各异',
-                    borderColor: '#fff',            // 柱条边线
-                    borderRadius: 0,                // 柱条边线圆角，单位px，默认为0
-                    borderWidth: 0,                 // 柱条边线线宽，单位px，默认为1
+                    barBorderColor: '#fff',            // 柱条边线
+                    barBorderRadius: 0,                // 柱条边线圆角，单位px，默认为0
+                    barBorderWidth: 0,                 // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -1205,7 +1229,8 @@ define(function() {
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover',
             TOOLTIP_IN_GRID: 'tooltipInGrid',
-            TOOLTIP_OUT_GRID: 'tooltipOutGrid'
+            TOOLTIP_OUT_GRID: 'tooltipOutGrid',
+            ROAMCONTROLLER: 'roamController',
         },
         DRAG_ENABLE_TIME : 120,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
         EFFECT_ZLEVEL : 7,

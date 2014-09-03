@@ -67,7 +67,7 @@ option = {
         calculable : true
     },
     toolbox: {
-        show : true,
+        show: true,
         orient : 'vertical',
         x: 'right',
         y: 'center',
@@ -78,12 +78,19 @@ option = {
             saveAsImage : {show: true}
         }
     },
+    roamController: {
+        show: true,
+        x: 'right',
+        mapTypeControl: {
+            'china': true
+        }
+    },
     series : [
         {
             name: 'iphone3',
             type: 'map',
             mapType: 'china',
-            roam: true,
+            roam: false,
             itemStyle:{
                 normal:{label:{show:true}},
                 emphasis:{label:{show:true}}

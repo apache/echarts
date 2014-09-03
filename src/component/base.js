@@ -86,6 +86,7 @@ define(function (require) {
                 case ecConfig.COMPONENT_TYPE_DATARANGE:
                 case ecConfig.COMPONENT_TYPE_DATAZOOM :
                 case ecConfig.COMPONENT_TYPE_TIMELINE :
+                case ecConfig.COMPONENT_TYPE_ROAMCONTROLLER :
                     return 4;
 
                 case ecConfig.CHART_TYPE_ISLAND :

@@ -144,14 +144,14 @@ define(function (require) {
                     iconShape = legend.getItemShape(serieName);
                     if (iconShape) {
                         // 回调legend，换一个更形象的icon
-                        if (serie.itemStyle.normal.borderWidth > 0) {
+                        if (serie.itemStyle.normal.barBorderWidth > 0) {
                             iconShape.style.x += 1;
                             iconShape.style.y += 1;
                             iconShape.style.width -= 2;
                             iconShape.style.height -= 2;
                             iconShape.style.strokeColor = 
                             iconShape.highlightStyle.strokeColor =
-                                serie.itemStyle.normal.borderColor;
+                                serie.itemStyle.normal.barBorderColor;
                             iconShape.highlightStyle.lineWidth = 3;
                             iconShape.style.brushType = 'both';
                         }
@@ -795,7 +795,7 @@ define(function (require) {
                 queryTarget,
                 'itemStyle.normal'
             );
-            var normalBorderWidth = normal.borderWidth;
+            var normalBorderWidth = normal.barBorderWidth;
             var emphasis = this.deepMerge(
                 queryTarget,
                 'itemStyle.emphasis'
@@ -810,15 +810,15 @@ define(function (require) {
                     height : height,
                     brushType : 'both',
                     color : this.getItemStyleColor(normalColor, seriesIndex, dataIndex, data),
-                    radius : normal.borderRadius,
+                    radius : normal.barBorderRadius,
                     lineWidth : normalBorderWidth,
-                    strokeColor : normal.borderColor
+                    strokeColor : normal.barBorderColor
                 },
                 highlightStyle : {
                     color : this.getItemStyleColor(emphasisColor, seriesIndex, dataIndex, data),
-                    radius : emphasis.borderRadius,
-                    lineWidth : emphasis.borderWidth,
-                    strokeColor : emphasis.borderColor
+                    radius : emphasis.barBorderRadius,
+                    lineWidth : emphasis.barBorderWidth,
+                    strokeColor : emphasis.barBorderColor
                 },
                 _orient : orient
             };

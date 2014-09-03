@@ -19,6 +19,7 @@ define(function (require) {
     var EllipseShape = require('zrender/shape/Ellipse');
     // 组件依赖
     require('../component/dataRange');
+    require('../component/roamController');
     
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
@@ -44,18 +45,21 @@ define(function (require) {
         ChartBase.call(this);
         
         var self = this;
-        self._onmousewheel = function(param){
-            return self.__onmousewheel(param);
+        self._onmousewheel = function(params) {
+            return self.__onmousewheel(params);
         };
-        self._onmousedown = function(param){
-            return self.__onmousedown(param);
+        self._onmousedown = function(params) {
+            return self.__onmousedown(params);
         };
-        self._onmousemove = function(param){
-            return self.__onmousemove(param);
+        self._onmousemove = function(params) {
+            return self.__onmousemove(params);
         };
-        self._onmouseup = function(param){
-            return self.__onmouseup(param);
+        self._onmouseup = function(params) {
+            return self.__onmouseup(params);
         };
+        self._onroamcontroller = function(params) {
+            return self.__onroamcontroller(params);
+        }
         
         this._isAlive = true;           // 活着标记
         this._selectedMode = {};        // 选择模式
@@ -87,6 +91,8 @@ define(function (require) {
             this.zr.on(zrConfig.EVENT.MOUSEWHEEL, this._onmousewheel);
             this.zr.on(zrConfig.EVENT.MOUSEDOWN, this._onmousedown);
         }
+        
+        messageCenter.bind(ecConfig.EVENT.ROAMCONTROLLER, this._onroamcontroller);
     }
     
     Map.prototype = {
@@ -1001,105 +1007,121 @@ define(function (require) {
         /**
          * 滚轮缩放 
          */
-        __onmousewheel : function (param) {
+        __onmousewheel : function (params) {
             if (this.shapeList.length <= 0) {
                 return;
             }
-            var event = param.event;
+            
+            var event = params.event;
             var mx = zrEvent.getX(event);
             var my = zrEvent.getY(event);
             var delta = zrEvent.getDelta(event);
             //delta = delta > 0 ? (-1) : 1;
-            var mapType = this._findMapTypeByPos(mx, my);
-            if (mapType) {
-                zrEvent.stop(event);
-                var transform = this._mapDataMap[mapType].transform;
-                var left = transform.left;
-                var top = transform.top;
-                var width = transform.width;
-                var height = transform.height;
-                // 位置转经纬度
-                var geoAndPos = this.pos2geo(mapType, [mx - left, my - top]);
-                if (delta > 0) {
-                    delta = 1.2;        // 放大
-                    if (typeof this._scaleLimitMap[mapType].max != 'undefined'
-                        && transform.baseScale >= this._scaleLimitMap[mapType].max
-                    ) {
-                        return;     // 缩放限制
-                    }
+            var mapType;
+            var mapTypeControl = params.mapTypeControl;
+            if (!mapTypeControl) {
+                mapTypeControl = {};
+                mapType = this._findMapTypeByPos(mx, my);
+                if (mapType && this._roamMap[mapType] && this._roamMap[mapType] != 'move') {
+                    mapTypeControl[mapType] = true;
                 }
-                else {
-                    delta = 1 / 1.2;    // 缩小
-                    if (typeof this._scaleLimitMap[mapType].min != 'undefined'
-                        && transform.baseScale <= this._scaleLimitMap[mapType].min
-                    ) {
-                        return;     // 缩放限制
-                    }
-                }
-                transform.baseScale *= delta;
-                transform.scale.x *= delta;
-                transform.scale.y *= delta;
-                transform.width = width * delta;
-                transform.height = height * delta;
-                
-                this._mapDataMap[mapType].hasRoam = true;
-                this._mapDataMap[mapType].transform = transform;
-                // 经纬度转位置
-                geoAndPos = this.geo2pos(mapType, geoAndPos);
-                // 保持视觉中心
-                transform.left -= geoAndPos[0] - (mx - left);
-                transform.top -= geoAndPos[1] - (my - top);
-                this._mapDataMap[mapType].transform = transform;
-                
-                this.clearEffectShape(true);
-                for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                    if(this.shapeList[i]._mapType == mapType) {
-                        this.shapeList[i].position[0] = transform.left;
-                        this.shapeList[i].position[1] = transform.top;
-                        if (this.shapeList[i].type == 'path' 
-                            || this.shapeList[i].type == 'symbol'
-                            || this.shapeList[i].type == 'circle'
-                            || this.shapeList[i].type == 'rectangle'
-                            || this.shapeList[i].type == 'polygon'
-                            || this.shapeList[i].type == 'line'
-                            || this.shapeList[i].type == 'ellipse'
+            }
+            
+            var haveScale = false;
+            for (mapType in mapTypeControl) {
+                if (mapTypeControl[mapType]) {
+                    haveScale = true;
+                    var transform = this._mapDataMap[mapType].transform;
+                    var left = transform.left;
+                    var top = transform.top;
+                    var width = transform.width;
+                    var height = transform.height;
+                    // 位置转经纬度
+                    var geoAndPos = this.pos2geo(mapType, [mx - left, my - top]);
+                    if (delta > 0) {
+                        delta = 1.2;        // 放大
+                        if (typeof this._scaleLimitMap[mapType].max != 'undefined'
+                            && transform.baseScale >= this._scaleLimitMap[mapType].max
                         ) {
-                            this.shapeList[i].scale[0] *= delta;
-                            this.shapeList[i].scale[1] *= delta;
+                            return;     // 缩放限制
                         }
-                        else if (this.shapeList[i].type == 'mark-line') {
-                            this.shapeList[i].style.pointListLength = undefined;
-                            this.shapeList[i].style.pointList = false;
-                            geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo[0]);
-                            this.shapeList[i].style.xStart = geoAndPos[0];
-                            this.shapeList[i].style.yStart = geoAndPos[1];
-                            geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo[1]);
-                            this.shapeList[i]._x = this.shapeList[i].style.xEnd = geoAndPos[0];
-                            this.shapeList[i]._y = this.shapeList[i].style.yEnd = geoAndPos[1];
+                    }
+                    else {
+                        delta = 1 / 1.2;    // 缩小
+                        if (typeof this._scaleLimitMap[mapType].min != 'undefined'
+                            && transform.baseScale <= this._scaleLimitMap[mapType].min
+                        ) {
+                            return;     // 缩放限制
                         }
-                        else if  (this.shapeList[i].type == 'icon') {
-                            geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo);
-                            this.shapeList[i].style.x = this.shapeList[i].style._x =
-                                geoAndPos[0] - this.shapeList[i].style.width / 2;
-                            this.shapeList[i].style.y = this.shapeList[i].style._y =
-                                geoAndPos[1] - this.shapeList[i].style.height / 2;
-                        }
-                        else {
-                            geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo);
-                            this.shapeList[i].style.x = geoAndPos[0];
-                            this.shapeList[i].style.y = geoAndPos[1];
-                            if (this.shapeList[i].type == 'text') {
-                                this.shapeList[i]._style.x = this.shapeList[i].highlightStyle.x
-                                                           = geoAndPos[0];
-                                this.shapeList[i]._style.y = this.shapeList[i].highlightStyle.y
-                                                           = geoAndPos[1];
+                    }
+                    
+                    transform.baseScale *= delta;
+                    transform.scale.x *= delta;
+                    transform.scale.y *= delta;
+                    transform.width = width * delta;
+                    transform.height = height * delta;
+                    
+                    this._mapDataMap[mapType].hasRoam = true;
+                    this._mapDataMap[mapType].transform = transform;
+                    // 经纬度转位置
+                    geoAndPos = this.geo2pos(mapType, geoAndPos);
+                    // 保持视觉中心
+                    transform.left -= geoAndPos[0] - (mx - left);
+                    transform.top -= geoAndPos[1] - (my - top);
+                    this._mapDataMap[mapType].transform = transform;
+                    
+                    this.clearEffectShape(true);
+                    for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                        if(this.shapeList[i]._mapType == mapType) {
+                            this.shapeList[i].position[0] = transform.left;
+                            this.shapeList[i].position[1] = transform.top;
+                            if (this.shapeList[i].type == 'path' 
+                                || this.shapeList[i].type == 'symbol'
+                                || this.shapeList[i].type == 'circle'
+                                || this.shapeList[i].type == 'rectangle'
+                                || this.shapeList[i].type == 'polygon'
+                                || this.shapeList[i].type == 'line'
+                                || this.shapeList[i].type == 'ellipse'
+                            ) {
+                                this.shapeList[i].scale[0] *= delta;
+                                this.shapeList[i].scale[1] *= delta;
                             }
+                            else if (this.shapeList[i].type == 'mark-line') {
+                                this.shapeList[i].style.pointListLength = undefined;
+                                this.shapeList[i].style.pointList = false;
+                                geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo[0]);
+                                this.shapeList[i].style.xStart = geoAndPos[0];
+                                this.shapeList[i].style.yStart = geoAndPos[1];
+                                geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo[1]);
+                                this.shapeList[i]._x = this.shapeList[i].style.xEnd = geoAndPos[0];
+                                this.shapeList[i]._y = this.shapeList[i].style.yEnd = geoAndPos[1];
+                            }
+                            else if  (this.shapeList[i].type == 'icon') {
+                                geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo);
+                                this.shapeList[i].style.x = this.shapeList[i].style._x =
+                                    geoAndPos[0] - this.shapeList[i].style.width / 2;
+                                this.shapeList[i].style.y = this.shapeList[i].style._y =
+                                    geoAndPos[1] - this.shapeList[i].style.height / 2;
+                            }
+                            else {
+                                geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo);
+                                this.shapeList[i].style.x = geoAndPos[0];
+                                this.shapeList[i].style.y = geoAndPos[1];
+                                if (this.shapeList[i].type == 'text') {
+                                    this.shapeList[i]._style.x = this.shapeList[i].highlightStyle.x
+                                                               = geoAndPos[0];
+                                    this.shapeList[i]._style.y = this.shapeList[i].highlightStyle.y
+                                                               = geoAndPos[1];
+                                }
+                            }
+                            
+                            this.zr.modShape(this.shapeList[i].id);
                         }
-                        
-                        this.zr.modShape(this.shapeList[i].id);
                     }
                 }
-                
+            }
+            if (haveScale) {
+                zrEvent.stop(event);
                 this.zr.refresh();
                 
                 var self = this;
@@ -1113,31 +1135,30 @@ define(function (require) {
                 
                 this.messageCenter.dispatch(
                     ecConfig.EVENT.MAP_ROAM,
-                    param.event,
+                    params.event,
                     {type : 'scale'},
                     this.myChart
                 );
             }
         },
         
-        __onmousedown : function (param) {
+        __onmousedown : function (params) {
             if (this.shapeList.length <= 0) {
                 return;
             }
-            var target = param.target;
+            var target = params.target;
             if (target && target.draggable) {
                 return;
             }
-            var event = param.event;
+            var event = params.event;
             var mx = zrEvent.getX(event);
             var my = zrEvent.getY(event);
             var mapType = this._findMapTypeByPos(mx, my);
-            if (mapType) {
+            if (mapType && this._roamMap[mapType] && this._roamMap[mapType] != 'scale') {
                 this._mousedown = true;
                 this._mx = mx;
                 this._my = my;
                 this._curMapType = mapType;
-                
                 this.zr.on(zrConfig.EVENT.MOUSEUP, this._onmouseup);
                 var self = this;
                 setTimeout(function (){
@@ -1147,11 +1168,11 @@ define(function (require) {
             
         },
         
-        __onmousemove : function (param) {
+        __onmousemove : function (params) {
             if (!this._mousedown || !this._isAlive) {
                 return;
             }
-            var event = param.event;
+            var event = params.event;
             var mx = zrEvent.getX(event);
             var my = zrEvent.getY(event);
             var transform = this._mapDataMap[this._curMapType].transform;
@@ -1172,7 +1193,7 @@ define(function (require) {
             
             this.messageCenter.dispatch(
                 ecConfig.EVENT.MAP_ROAM,
-                param.event,
+                params.event,
                 {type : 'move'},
                 this.myChart
             );
@@ -1184,8 +1205,8 @@ define(function (require) {
             zrEvent.stop(event);
         },
         
-        __onmouseup : function (param) {
-            var event = param.event;
+        __onmouseup : function (params) {
+            var event = params.event;
             this._mx = zrEvent.getX(event);
             this._my = zrEvent.getY(event);
             this._mousedown = false;
@@ -1198,17 +1219,89 @@ define(function (require) {
             },120);
         },
         
+        __onroamcontroller: function(params) {
+            var event = params.event;
+            event.zrenderX = this.zr.getWidth() / 2;
+            event.zrenderY = this.zr.getHeight() / 2;
+            var mapTypeControl = params.mapTypeControl;
+            var top = 0;
+            var left = 0;
+            var step = params.step;
+            
+            switch(params.roamType) {
+                case 'scaleUp':
+                    event.zrenderDelta = 1;
+                    this.__onmousewheel({
+                        event: event,
+                        mapTypeControl: mapTypeControl
+                    });
+                    return;
+                case 'scaleDown':
+                    event.zrenderDelta = -1;
+                    this.__onmousewheel({
+                        event: event,
+                        mapTypeControl: mapTypeControl
+                    });
+                    return;
+                case 'up':
+                    top = -step;
+                    break;
+                case 'down':
+                    top = step;
+                    break;
+                case 'left':
+                    left = -step;
+                    break;
+                case 'right':
+                    left = step;
+                    break;
+            }
+            
+            var transform;
+            var curMapType;
+            for (curMapType in mapTypeControl) {
+                if (!this._mapDataMap[curMapType] || !this._activeMapType[curMapType]) {
+                    continue;
+                }
+                transform = this._mapDataMap[curMapType].transform;
+                transform.hasRoam = true;
+                transform.left -= left;
+                transform.top -= top;
+                this._mapDataMap[curMapType].transform = transform;
+            }
+            for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                curMapType = this.shapeList[i]._mapType;
+                if (!mapTypeControl[curMapType] || !this._activeMapType[curMapType]) {
+                    continue;
+                }
+                transform = this._mapDataMap[curMapType].transform;
+                this.shapeList[i].position[0] = transform.left;
+                this.shapeList[i].position[1] = transform.top;
+                this.zr.modShape(this.shapeList[i].id);
+            }
+            
+            this.messageCenter.dispatch(
+                ecConfig.EVENT.MAP_ROAM,
+                params.event,
+                {type : 'move'},
+                this.myChart
+            );
+            
+            this.clearEffectShape(true);
+            this.zr.refresh();
+        },
+        
         /**
          * 点击响应 
          */
-        onclick : function (param) {
-            if (!this.isClick || !param.target || this._justMove || param.target.type == 'icon') {
+        onclick : function (params) {
+            if (!this.isClick || !params.target || this._justMove || params.target.type == 'icon') {
                 // 没有在当前实例上发生点击直接返回
                 return;
             }
             this.isClick = false;
 
-            var target = param.target;
+            var target = params.target;
             var name = target.style._name;
             var len = this.shapeList.length;
             var mapType = target._mapType || '';
@@ -1249,7 +1342,7 @@ define(function (require) {
             }
             this.messageCenter.dispatch(
                 ecConfig.EVENT.MAP_SELECTED,
-                param.event,
+                params.event,
                 {
                     selected : this._selected,
                     target : name
@@ -1262,7 +1355,7 @@ define(function (require) {
             setTimeout(function(){
                 self.zr.trigger(
                     zrConfig.EVENT.MOUSEMOVE,
-                    param.event
+                    params.event
                 );
             },100);
         },
