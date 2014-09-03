@@ -102,7 +102,7 @@ define(function (require) {
                     textBaseline: 'middle',
                     textPosition: 'specific',
                     textColor: this.rcOption.fillerColor,
-                    textFont: '16px arial'
+                    textFont: Math.floor(r / 2) + 'px arial'
                 },
                 highlightStyle: {
                     color: zrColor.lift(this.rcOption.handlerColor, -0.2),
@@ -134,34 +134,29 @@ define(function (require) {
         
         _getScaleShape: function(text) {
             var width = this._itemGroupLocation.width;
-            var itemGap = this.rcOption.itemGap;
-            var x = this._itemGroupLocation.x + width / 2;
-            var y = this._itemGroupLocation.y + width + itemGap;
-            var height = this._itemGroupLocation.height - width - itemGap;
-            
-            width /= 2;
+            var height = this._itemGroupLocation.height - width;
             height = height < 0 ? 20 : height;  // 确保height不为负
-            var r = Math.min(width, height) / 2;
             
-            width /= 2;
-            x += text == 'scaleDown' ? width: -width;
+            var r = Math.min(width / 2 - 5, height) / 2;
+            var x = this._itemGroupLocation.x 
+                    + (text == 'scaleDown' ? (width - r) : r);
+            var y = this._itemGroupLocation.y + this._itemGroupLocation.height - r;
+
             var scaleShape = {
                 zlevel: this._zlevelBase,
                 style: {
                     x: x,
-                    y: y + r,
+                    y: y,
                     r: r,
-                    width: width,
-                    height: height,
                     color: this.rcOption.handlerColor,
                     text: text == 'scaleDown' ? '-' : '+',
                     textX: x,
-                    textY: y + r - 1,
+                    textY: y - 2,
                     textAlign: 'center',
                     textBaseline: 'middle',
                     textPosition: 'specific',
                     textColor: this.rcOption.fillerColor,
-                    textFont: '15px verdana'
+                    textFont: Math.floor(r) + 'px verdana'
                 },
                 highlightStyle: {
                     color: zrColor.lift(this.rcOption.handlerColor, -0.2),

@@ -79,7 +79,6 @@ define(function (require) {
         // 漫游相关信息
         this._roamMap = {};
         this._scaleLimitMap = {};
-        this._needRoam;
         this._mx;
         this._my;
         this._mousedown;
@@ -87,11 +86,9 @@ define(function (require) {
         this._curMapType; // 当前移动的地图类型
         
         this.refresh(option);
-        if (this._needRoam) {
-            this.zr.on(zrConfig.EVENT.MOUSEWHEEL, this._onmousewheel);
-            this.zr.on(zrConfig.EVENT.MOUSEDOWN, this._onmousedown);
-        }
         
+        this.zr.on(zrConfig.EVENT.MOUSEWHEEL, this._onmousewheel);
+        this.zr.on(zrConfig.EVENT.MOUSEDOWN, this._onmousedown);
         messageCenter.bind(ecConfig.EVENT.ROAMCONTROLLER, this._onroamcontroller);
     }
     
@@ -114,7 +111,6 @@ define(function (require) {
             var mapSeries = {};
             var mapValuePrecision = {};
             var valueCalculation = {};
-            this._needRoam = false;
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type == ecConfig.CHART_TYPE_MAP) { // map
                     series[i] = this.reformOption(series[i]);
@@ -128,7 +124,6 @@ define(function (require) {
                     && zrUtil.merge(this._scaleLimitMap[mapType], series[i].scaleLimit, true);
                     
                     this._roamMap[mapType] = series[i].roam || this._roamMap[mapType];
-                    this._needRoam = this._needRoam || this._roamMap[mapType];
                     
                     this._nameMap[mapType] = this._nameMap[mapType] || {};
                     series[i].nameMap 
@@ -1289,6 +1284,12 @@ define(function (require) {
             
             this.clearEffectShape(true);
             this.zr.refresh();
+            
+            clearTimeout(this.dircetionTimer);
+            var self = this;
+            this.dircetionTimer = setTimeout(function() {
+                self.animationEffect();
+            }, 150);
         },
         
         /**
@@ -1489,10 +1490,8 @@ define(function (require) {
             this.shapeList = null;
             this.effectList = null;
             this._isAlive = false;
-            if (this._needRoam) {
-                this.zr.un(zrConfig.EVENT.MOUSEWHEEL, this._onmousewheel);
-                this.zr.un(zrConfig.EVENT.MOUSEDOWN, this._onmousedown);
-            }
+            this.zr.un(zrConfig.EVENT.MOUSEWHEEL, this._onmousewheel);
+            this.zr.un(zrConfig.EVENT.MOUSEDOWN, this._onmousedown);
         }
     };
     
