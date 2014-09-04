@@ -173,6 +173,7 @@ define(function (require) {
          */
         self.initECharts = function () {
             self._ec = ec.init.apply(self, arguments);
+            self._bindEvent();
             return self._ec;
         }
 
@@ -263,6 +264,9 @@ define(function (require) {
 
             self._map.addEventListener('moving', _moveHandler('moving'));
             self._map.addEventListener('moveend', _moveHandler('moveend'));
+
+            self._ec.getZrender().on('dragstart', _dragZrenderHandler(true));
+            self._ec.getZrender().on('dragend', _dragZrenderHandler(false));
         }
 
         /**
@@ -298,6 +302,20 @@ define(function (require) {
         }
 
         /**
+         * Zrender拖拽触发事件
+         *
+         * @param {boolean} isStart
+         * @return {Function}
+         * @private
+         */
+        function _dragZrenderHandler(isStart) {
+            return function () {
+                var func = isStart ? 'disableDragging' : 'enableDragging';
+                self._map[func]();
+            }
+        }
+
+        /**
          * 触发事件
          *
          * @param {stirng}  type 事件类型
@@ -325,7 +343,6 @@ define(function (require) {
         }
 
         self._map.addOverlay(myOverlay);
-        self._bindEvent();
     };
 
     return BMapExt;

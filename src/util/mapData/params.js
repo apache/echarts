@@ -65,6 +65,24 @@ define(function (require) {
     }
 
     var mapParams = {
+        'none' : {
+            getGeoJson: function(callback) {
+                callback({
+                    type: 'FeatureCollection',
+                    features: [{
+                        type: 'Feature',
+                        geometry: {
+                            coordinates: [],
+                            encodeOffsets: [],
+                            type: 'Polygon'
+                        },
+                        properties: {
+                            
+                        }
+                    }]
+                });
+            }
+        },
         'world': {
             getGeoJson: function (callback) { 
                 require(['./geoJson/world_geo'], function (md){
@@ -74,7 +92,7 @@ define(function (require) {
         },
         'china': {
             getGeoJson: function (callback) { 
-                require(['./geoJson/china_geo'], function (md){
+                require(['./geoJson/china_geo'], function (md){console.log(decode(md));
                     callback(decode(md));
                 });
             }

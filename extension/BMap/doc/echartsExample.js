@@ -182,6 +182,7 @@ require(
         'echarts/chart/k',
         'echarts/chart/pie',
         'echarts/chart/radar',
+        'echarts/chart/map',
         'echarts/chart/force',
         'echarts/chart/chord',
         'echarts/chart/gauge',
