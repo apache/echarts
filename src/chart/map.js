@@ -59,7 +59,7 @@ define(function (require) {
         };
         self._onroamcontroller = function(params) {
             return self.__onroamcontroller(params);
-        }
+        };
         
         this._isAlive = true;           // 活着标记
         this._selectedMode = {};        // 选择模式

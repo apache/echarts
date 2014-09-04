@@ -1228,7 +1228,7 @@ define(function() {
             TOOLTIP_HOVER: 'tooltipHover',
             TOOLTIP_IN_GRID: 'tooltipInGrid',
             TOOLTIP_OUT_GRID: 'tooltipOutGrid',
-            ROAMCONTROLLER: 'roamController',
+            ROAMCONTROLLER: 'roamController'
         },
         DRAG_ENABLE_TIME : 120,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
         EFFECT_ZLEVEL : 7,

@@ -9,16 +9,12 @@ define(function (require) {
     var Base = require('./base');
     
     // 图形依赖
-    var TextShape = require('zrender/shape/Text');
     var RectangleShape = require('zrender/shape/Rectangle');
     var SectorShape = require('zrender/shape/Sector');
     var CircleShape = require('zrender/shape/Circle');
-    var IconShape = require('../util/shape/Icon');
-    var CandleShape = require('../util/shape/Candle');
     
     var ecConfig = require('../config');
     var zrUtil = require('zrender/tool/util');
-    var zrArea = require('zrender/tool/area');
     var zrColor = require('zrender/tool/color');
 
     /**
@@ -86,7 +82,6 @@ define(function (require) {
         },
         
         _getDirectionShape: function(direction) {
-            var width = this._itemGroupLocation.width;
             var r = this._itemGroupLocation.r;
             var x = this._itemGroupLocation.x + r;
             var y = this._itemGroupLocation.y + r;
@@ -215,13 +210,13 @@ define(function (require) {
                     x = Math.floor((zrWidth - width) / 2);
                     break;
                 case 'left' :
-                    x = this.rcOption.padding[3] + this.rcOption.borderWidth;
+                    x = padding[3] + this.rcOption.borderWidth;
                     break;
                 case 'right' :
                     x = zrWidth
                         - width
-                        - this.rcOption.padding[1]
-                        - this.rcOption.padding[3]
+                        - padding[1]
+                        - padding[3]
                         - this.rcOption.borderWidth * 2;
                     break;
                 default :
@@ -232,13 +227,13 @@ define(function (require) {
             var y;
             switch (this.rcOption.y) {
                 case 'top' :
-                    y = this.rcOption.padding[0] + this.rcOption.borderWidth;
+                    y = padding[0] + this.rcOption.borderWidth;
                     break;
                 case 'bottom' :
                     y = zrHeight
-                        - totalHeight
-                        - this.rcOption.padding[0]
-                        - this.rcOption.padding[2]
+                        - height
+                        - padding[0]
+                        - padding[2]
                         - this.rcOption.borderWidth * 2;
                     break;
                 case 'center' :
@@ -283,7 +278,7 @@ define(function (require) {
             clearInterval(this.dircetionTimer);
             var self = this;
             this.dircetionTimer = setInterval(function() {
-                self._dispatchEvent(params.event, params.target._roamType)
+                self._dispatchEvent(params.event, params.target._roamType);
             }, 100);
         },
         
@@ -292,7 +287,7 @@ define(function (require) {
         },
         
         __scaleHandler: function(params) {
-            this._dispatchEvent(params.event, params.target._roamType)
+            this._dispatchEvent(params.event, params.target._roamType);
         },
         
         _dispatchEvent : function(event, roamType){
