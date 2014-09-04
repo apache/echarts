@@ -171,7 +171,7 @@ define(function (require) {
             var self = this;
             var _zr = require('zrender').init(this.dom);
             this._zr = _zr;
-
+            
             // wrap: n,e,d,t for name event data this
             this._messageCenter.dispatch = function(type, event, eventPackage, that) {
                 eventPackage = eventPackage || {};
@@ -237,6 +237,10 @@ define(function (require) {
             componentLibrary.define('title', require('./component/title'));
             componentLibrary.define('tooltip', require('./component/tooltip'));
             componentLibrary.define('legend', require('./component/legend'));
+            
+            if (_zr.getWidth() == 0 || _zr.getHeight() == 0) {
+                console.error('Dom’s width & height should be ready before init.');
+            }
         },
 
         /**
@@ -593,6 +597,7 @@ define(function (require) {
                             : dataIndex;
                 return {
                     seriesIndex : seriesIndex,
+                    seriesName : ecData.get(target, 'series').name,
                     dataIndex : dataIndex,
                     data : ecData.get(target, 'data'),
                     name : ecData.get(target, 'name'),
