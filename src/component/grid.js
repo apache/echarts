@@ -118,6 +118,7 @@ define(function (require) {
                 else {
                     this._width = this.parsePercent(gridOption.width, this._zrWidth);
                 }
+                this._width = this._width <= 0 ? 10 : this._width;
     
                 if (typeof gridOption.height == 'undefined') {
                     this._height = this._zrHeight - this._y - y2;
@@ -125,6 +126,7 @@ define(function (require) {
                 else {
                     this._height = this.parsePercent(gridOption.height, this._zrHeight);
                 }
+                this._height = this._height <= 0 ? 10 : this._height;
                 
                 this._x = this.subPixelOptimize(this._x, gridOption.borderWidth);
                 this._y = this.subPixelOptimize(this._y, gridOption.borderWidth);
