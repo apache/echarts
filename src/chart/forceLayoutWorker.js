@@ -585,10 +585,11 @@ define(function __echartsForceLayoutWorker(require) {
      * Main process
      ***************************/
 
+    /* jshint ignore:start */
     if (inWorker) {
         var forceLayout = null;
-
-        onmessage = function(e) {
+        
+        self.onmessage = function(e) {
             // Position read back
             if (e.data instanceof ArrayBuffer) {
                 if (!forceLayout) {
@@ -644,17 +645,18 @@ define(function __echartsForceLayoutWorker(require) {
                             positionArr[0] = forceLayout._token;
                         }
 
-                        postMessage(positionArr.buffer, [positionArr.buffer]);
+                        self.postMessage(positionArr.buffer, [positionArr.buffer]);
                     } else {
                         // Not initialzied yet
                         var emptyArr = new Float32Array();
                         // Post transfer object
-                        postMessage(emptyArr.buffer, [emptyArr.buffer]);
+                        self.postMessage(emptyArr.buffer, [emptyArr.buffer]);
                     }
                     break;
             }
         };
     }
+    /* jshint ignore:end */
 
     return ForceLayout;
 });
