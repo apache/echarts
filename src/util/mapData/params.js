@@ -92,7 +92,7 @@ define(function (require) {
         },
         'china': {
             getGeoJson: function (callback) { 
-                require(['./geoJson/china_geo'], function (md){console.log(decode(md));
+                require(['./geoJson/china_geo'], function (md){
                     callback(decode(md));
                 });
             }

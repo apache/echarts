@@ -1492,6 +1492,9 @@ define(function (require) {
             this._isAlive = false;
             this.zr.un(zrConfig.EVENT.MOUSEWHEEL, this._onmousewheel);
             this.zr.un(zrConfig.EVENT.MOUSEDOWN, this._onmousedown);
+            this.messageCenter.unbind(
+                ecConfig.EVENT.ROAMCONTROLLER, this._onroamcontroller
+            );
         }
     };
     
