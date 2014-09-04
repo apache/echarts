@@ -588,7 +588,7 @@ define(function __echartsForceLayoutWorker(require) {
     if (inWorker) {
         var forceLayout = null;
 
-        self.onmessage = function(e) {
+        onmessage = function(e) {
             // Position read back
             if (e.data instanceof ArrayBuffer) {
                 if (!forceLayout) {
@@ -644,12 +644,12 @@ define(function __echartsForceLayoutWorker(require) {
                             positionArr[0] = forceLayout._token;
                         }
 
-                        self.postMessage(positionArr.buffer, [positionArr.buffer]);
+                        postMessage(positionArr.buffer, [positionArr.buffer]);
                     } else {
                         // Not initialzied yet
                         var emptyArr = new Float32Array();
                         // Post transfer object
-                        self.postMessage(emptyArr.buffer, [emptyArr.buffer]);
+                        postMessage(emptyArr.buffer, [emptyArr.buffer]);
                     }
                     break;
             }
