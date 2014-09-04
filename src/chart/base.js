@@ -471,6 +471,9 @@ define(function (require) {
             
             if (!mpOption.large) {
                 for (var i = 0, l = data.length; i < l; i++) {
+                    if (typeof data[i].x == 'undefined' || typeof data[i].y == 'undefined') {
+                        continue;
+                    }
                     value = typeof data[i] != 'undefined' && typeof data[i].value != 'undefined'
                             ? data[i].value
                             : '';
@@ -591,6 +594,14 @@ define(function (require) {
             var zrHeight = this.zr.getHeight();
             var mergeData;
             for (var i = 0, l = data.length; i < l; i++) {
+                if (typeof data[i][0].x == 'undefined' 
+                    || typeof data[i][0].y == 'undefined'
+                    || typeof data[i][1].x == 'undefined' 
+                    || typeof data[i][1].y == 'undefined'
+                ) {
+                    continue;
+                }
+                    
                 // 图例
                 if (legend) {
                     color = legend.getColor(serie.name);
