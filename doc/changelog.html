@@ -48,9 +48,36 @@
         <span>[+]新增 [-]删除 [^]升级 [#]修复 【】重要</span>
         <div class="row-fluid">
             <div>
+                <h3>2.0.3<small>（2014-09-05）</small></h3>
+                <ul>
+                    <li>【+】 [roamController]新增组件：缩放漫游组件（roamController），搭配地图使用，support <a href="https://github.com/ecomfe/echarts/issues/321" target="_blank">#321 »</a></li>
+                    <li>【^】 [bar]动态类型切换样式冲突，柱形样式borderWidth | Color | Radius改名为barBorderWidth | Color | Radius，见<a href="./doc.html#ItemStyle " target="_blank">itemStyle »</a>，fix <a href="https://github.com/ecomfe/echarts/issues/622" target="_blank">#622 »</a></li>
+                    <li>[+] 全系列图表增加clickable控制配置，解决鼠标默认手型显示和地图必须开启selectedMode才能触发点击事件的问题</li>
+                    <li>[+] 新增mouseout、dblclick事件，support <a href="https://github.com/ecomfe/echarts/issues/448" target="_blank">#448 »</a>，<a href="https://github.com/ecomfe/echarts/issues/384" target="_blank">#384 »</a></li>
+                    <li>[^] [valueAxis]两端留空策略优化，support <a href="https://github.com/ecomfe/echarts/issues/523" target="_blank">#523 »</a></li>
+                    <li>[^] [bar]柱形圆角barBorderRadius支持数组，支持4个圆角半径独立定义</li>
+                    <li>[#] [tooltip]timeline下连续显示，fix <a href="http://www.oschina.net/question/1991188_167046" target="_blank">this »</a></li>
+                    <li>[#] showLoading文字全局居中，fix <a href="https://github.com/ecomfe/echarts/issues/638" target="_blank">#638 »</a></li>
+                    <li>[#] [timeline]轴线节点虚线显示不完整</li>
+                    <li>[#] 修复交互触发页面被选中的问题</li>
+                    <li>[#] 若干issues，fix
+                        <a href="https://github.com/ecomfe/echarts/issues/540" target="_blank">#540（极坐标坐标轴显示）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/543" target="_blank">#543（多地图滚轮缩放错误）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/562" target="_blank">#562（dataZoom散点图缩放适用）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/568" target="_blank">#568（仪表盘js精度运算）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/600" target="_blank">#600（非直角系多图联动下的动态类型切换报错）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/616" target="_blank">#616（直角坐标计算临界点错误）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/617" target="_blank">#617（雷达图虚线显示）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/644" target="_blank">#644（dom宽高为0时死循环）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/650" target="_blank">#650（标注标线区域缩放后无法再显示）»</a>  
+                    </li>
+                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.0.3+</li>
+                </ul>
+            </div>
+            <div>
                 <h3>2.0.2<small>（2014-08-13）</small></h3>
                 <ul>
-                    <li>【#】 IE8-不显示bug fix <a href="https://github.com/ecomfe/echarts/issues/475" target="_blank">#475 »</a></li>
+                    <li>【#】 IE8-不显示bug，fix <a href="https://github.com/ecomfe/echarts/issues/475" target="_blank">#475 »</a></li>
                     <li>[#] [gauge]精度计算，fix <a href="http://www.oschina.net/question/1410502_164606" target="_blank">this »</a></li>
                     <li>[#] [polar]支持隐藏和axisLabel.interval，fix <a href="https://github.com/ecomfe/echarts/issues/540" target="_blank">#540 »</a></li>
                     <li>[#] [force]文件引用错误，worker重构，fix <a href="https://github.com/ecomfe/echarts/issues/533" target="_blank">#533 »</a></li>
@@ -80,7 +107,7 @@
                 <ul>
                     <li>【+】 [timeline]新增组件：时间轴（timeline），支持与任意图表组合使用，try <a href="./example/bar11.html" target="_blank">bar »</a>、<a href="./example/scatter4.html" target="_blank">scatter »</a>、<a href="./example/pie7.html" target="_blank">pie »</a>、<a href="./example/map14.html" target="_blank">map »</a></li>
                     <li>【+】 [gauge]新增图表：仪表盘（gauge），查看 <a href="./example.html#gauge " target="_blank">this »</a></li>
-                    <li>【+】 [funnel]新增图表：漏斗图（funnel）查看 <a href="./example.html#funnel " target="_blank">this »</a></li>
+                    <li>【+】 [funnel]新增图表：漏斗图（funnel），查看 <a href="./example.html#funnel " target="_blank">this »</a></li>
                     <li>【^】[map]支持svg扩展地图类型，try <a href="./example/map16.html" target="_blank">人体密码 »</a>、<a href="./example/map17.html" target="_blank">足球场 »</a>、<a href="./example/map18.html" target="_blank">百度大厦F3 »</a></li>
                     <li>【^】 [line][bar][scatter][k]全浏览器支持大规模数据模式</li>
                     <li>【^】 全系统图表动画优化、升级支持状态间的渐变过渡</li>

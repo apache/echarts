@@ -1212,7 +1212,7 @@ require(['echarts'], function (ec){
                             <td> 工具箱背景颜色，默认透明 </td>
                         </tr>
                         <tr>
-                            <td> <b>{string}</b> borderColor </td>
+                            <td> <b>{color}</b> borderColor </td>
                             <td> '#ccc' </td>
                             <td> 工具箱边框颜色 </td>
                         </tr>
@@ -1240,6 +1240,16 @@ require(['echarts'], function (ec){
                             <td> <b>{Array &lt;color&gt;}</b> color </td>
                             <td> ['#1e90ff','#22bb22','#4b0082','#d2691e'] </td>
                             <td> 工具箱icon颜色序列，循环使用，同时支持在具体feature内指定color </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{color}</b> disableColor </td>
+                            <td> '#ddd' </td>
+                            <td> 禁用颜色定义 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{color}</b> effectiveColor </td>
+                            <td> 'red' </td>
+                            <td> 生效颜色定义</td>
                         </tr>
                         <tr>
                             <td> <b>{boolean}</b> showTitle </td>
@@ -3654,10 +3664,10 @@ geoCoord : {
                             <td> 边框颜色 </td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> barBorderRadius </td>
+                            <td> <b>{number | Array}</b> barBorderRadius </td>
                             <td> 0 </td>
                             <td> 柱形图</td>
-                            <td> 柱形边框圆角，单位px，默认为0 </td>
+                            <td> 柱形边框圆角，单位px，默认为0，支持传入数组分别指定柱形4个圆角半径，如:[5, 5, 0, 0]（顺时针左上，右上，右下，左下） </td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> barBorderWidth </td>
