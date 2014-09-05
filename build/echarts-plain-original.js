@@ -17262,13 +17262,15 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 
                 serie[markType].data = markData.data;
                 this['_build' + markType.replace('m', 'M')](seriesIndex);
-                for (var i = lastLength, l = this.shapeList.length; i < l; i++) {
-                    this.zr.addShape(this.shapeList[i]);
-                }
-                this.zr.refresh();
-                
                 if (this.option.animation && !this.option.renderAsImage) {
+                    // animationMark就会addShape
                     this.animationMark(duration, easing, this.shapeList.slice(lastLength));
+                }
+                else {
+                    for (var i = lastLength, l = this.shapeList.length; i < l; i++) {
+                        this.zr.addShape(this.shapeList[i]);
+                    }
+                    this.zr.refresh();
                 }
                 // 还原，复用_buildMarkX
                 serie[markType].data = oriMarkData;
