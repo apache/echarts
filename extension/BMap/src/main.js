@@ -15,7 +15,7 @@ define(function (require) {
      * @constructor
      */
     function BMapExt(obj, BMap, ec) {
-        this.init(obj, BMap, ec);
+        this._init(obj, BMap, ec);
     };
 
     /**
@@ -65,9 +65,9 @@ define(function (require) {
      * @param {String|HTMLElement|BMap.Map} obj
      * @param {BMap} BMap
      * @param {echarts} ec
-     * @public
+     * @private
      */ 
-    BMapExt.prototype.init = function (obj, BMap, ec) {
+    BMapExt.prototype._init = function (obj, BMap, ec) {
         var self = this;
         self._map = obj.constructor == BMap.Map ? obj : new BMap.Map(obj);
 

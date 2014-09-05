@@ -915,6 +915,9 @@ define(function (require) {
                 this._mapDataMap[mapType].transform.left,
                 this._mapDataMap[mapType].transform.top
             ];
+            if (mapType == 'none') {
+                position = [0, 0];
+            }
             for (var sIdx in mapSeries) {
                 this._seriesIndexToMapType[sIdx] = mapType;
                 this.markAttachStyle[sIdx] = {
