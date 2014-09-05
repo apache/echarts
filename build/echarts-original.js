@@ -39,6 +39,7 @@ define('echarts/config',[],function() {
         COMPONENT_TYPE_AXIS_CATEGORY: 'categoryAxis',
         COMPONENT_TYPE_AXIS_VALUE: 'valueAxis',
         COMPONENT_TYPE_TIMELINE: 'timeline',
+        COMPONENT_TYPE_ROAMCONTROLLER: 'roamController',
 
         // 全图默认背景
         backgroundColor: 'rgba(0,0,0,0)',
@@ -502,8 +503,30 @@ define('echarts/config',[],function() {
             // data : []
         },
         
+        roamController: {
+            show : false,
+            x: 'left',                // 水平安放位置，默认为全图左对齐，可选为：
+                                       // 'center' ¦ 'left' ¦ 'right'
+                                       // ¦ {number}（x坐标，单位px）
+            y: 'top',                  // 垂直安放位置，默认为全图顶端，可选为：
+                                       // 'top' ¦ 'bottom' ¦ 'center'
+                                       // ¦ {number}（y坐标，单位px）
+            width: 80,
+            height: 120,
+            backgroundColor: 'rgba(0,0,0,0)',
+            borderColor: '#ccc',       // 图例边框颜色
+            borderWidth: 0,            // 图例边框线宽，单位px，默认为0（无边框）
+            padding: 5,                // 图例内边距，单位px，默认各方向内边距为5，
+                                       // 接受数组分别设定上右下左边距，同css
+            handlerColor: '#6495ed',
+            fillerColor: '#fff',
+            step: 15,                  // 移动幅度
+            mapTypeControl: null
+        },
+        
         // 柱形图默认参数
         bar: {
+            clickable: true,
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
@@ -514,9 +537,9 @@ define('echarts/config',[],function() {
             itemStyle: {
                 normal: {
                     // color: '各异',
-                    borderColor: '#fff',       // 柱条边线
-                    borderRadius: 0,           // 柱条边线圆角，单位px，默认为0
-                    borderWidth: 0,            // 柱条边线线宽，单位px，默认为1
+                    barBorderColor: '#fff',       // 柱条边线
+                    barBorderRadius: 0,           // 柱条边线圆角，单位px，默认为0
+                    barBorderWidth: 0,            // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -527,9 +550,9 @@ define('echarts/config',[],function() {
                 },
                 emphasis: {
                     // color: '各异',
-                    borderColor: '#fff',            // 柱条边线
-                    borderRadius: 0,                // 柱条边线圆角，单位px，默认为0
-                    borderWidth: 0,                 // 柱条边线线宽，单位px，默认为1
+                    barBorderColor: '#fff',            // 柱条边线
+                    barBorderRadius: 0,                // 柱条边线圆角，单位px，默认为0
+                    barBorderWidth: 0,                 // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
@@ -543,6 +566,7 @@ define('echarts/config',[],function() {
 
         // 折线图默认参数
         line: {
+            clickable: true,
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
@@ -585,6 +609,7 @@ define('echarts/config',[],function() {
         
         // K线图默认参数
         k: {
+            clickable: true,
             xAxisIndex: 0,
             yAxisIndex: 0,
             // barWidth : null          // 默认自适应
@@ -608,6 +633,7 @@ define('echarts/config',[],function() {
         
         // 散点图默认参数
         scatter: {
+            clickable: true,
             xAxisIndex: 0,
             yAxisIndex: 0,
             //symbol: null,      // 图形类型
@@ -657,6 +683,7 @@ define('echarts/config',[],function() {
 
         // 雷达图默认参数
         radar : {
+            clickable: true,
             polarIndex: 0,
             itemStyle: {
                 normal: {
@@ -683,6 +710,7 @@ define('echarts/config',[],function() {
 
         // 饼图默认参数
         pie: {
+            clickable: true,
             center : ['50%', '50%'],    // 默认全局居中
             radius : [0, '75%'],
             clockWise : true,           // 默认顺时针
@@ -749,6 +777,7 @@ define('echarts/config',[],function() {
             showLegendSymbol : true,       // 显示图例颜色标识（系列标识的小圆点），存在legend时生效
             // selectedMode: false,        // 选择模式，默认关闭，可选single，multiple
             hoverable: true,
+            clickable: true,
             // roam : false,               // 是否开启缩放及漫游模式
             // scaleLimit : null,
             itemStyle: {
@@ -823,6 +852,7 @@ define('echarts/config',[],function() {
             linkSymbol: null,
             linkSymbolSize: [10, 15],
             draggable: true,
+            clickable: true,
 
             // 分类里如果有样式会覆盖节点默认样式
             categories : [{
@@ -883,6 +913,7 @@ define('echarts/config',[],function() {
         },
 
         chord : {
+            clickable: true,
             radius : ['65%', '75%'],
             center : ['50%', '50%'],
             padding : 2,
@@ -1015,6 +1046,7 @@ define('echarts/config',[],function() {
         },
         
         funnel : {
+            clickable: true,
             x: 80,
             y: 60,
             x2: 80,
@@ -1178,7 +1210,9 @@ define('echarts/config',[],function() {
             RESTORE: 'restore',
             RESIZE: 'resize',
             CLICK: 'click',
+            DBLCLICK: 'dblclick',
             HOVER: 'hover',
+            MOUSEOUT : 'mouseout',
             //MOUSEWHEEL: 'mousewheel',
             // -------业务交互逻辑
             DATA_CHANGED: 'dataChanged',
@@ -1194,7 +1228,8 @@ define('echarts/config',[],function() {
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover',
             TOOLTIP_IN_GRID: 'tooltipInGrid',
-            TOOLTIP_OUT_GRID: 'tooltipOutGrid'
+            TOOLTIP_OUT_GRID: 'tooltipOutGrid',
+            ROAMCONTROLLER: 'roamController'
         },
         DRAG_ENABLE_TIME : 120,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
         EFFECT_ZLEVEL : 7,
@@ -1253,7 +1288,7 @@ define('echarts/config',[],function() {
 // * Optimize. There is always room for speed improvements.
 
 // AMD by kener.linfeng@gmail.com
-define('zrender/lib/excanvas',['require'],function(require) {
+define('zrender/dep/excanvas',['require'],function(require) {
     
 // Only add this code if we do not already have a canvas implementation
 if (!document.createElement('canvas').getContext) {
@@ -2679,7 +2714,7 @@ return G_vmlCanvasManager;
  * getContext：获取一个自由使用的canvas 2D context，使用原生方法，如isPointInPath，measureText等
  */
 define(
-    'zrender/tool/util',['require','../lib/excanvas'],function(require) {
+    'zrender/tool/util',['require','../dep/excanvas'],function(require) {
         // 用于处理merge时无法遍历Date等对象的问题
         var BUILTIN_OBJECT = {
             '[object Function]': 1,
@@ -2757,7 +2792,8 @@ define(
 
         function getContext() {
             if (!_ctx) {
-                require('../lib/excanvas');
+                require('../dep/excanvas');
+                /* jshint ignore:start */
                 if (G_vmlCanvasManager) {
                     var _div = document.createElement('div');
                     _div.style.position = 'absolute';
@@ -2770,6 +2806,7 @@ define(
                 else {
                     _ctx = document.createElement('canvas').getContext('2d');
                 }
+                /* jshint ignore:end */
             }
             return _ctx;
         }
@@ -2851,11 +2888,11 @@ define(
         /**
          * 查询数组中元素的index
          */
-        function indexOf(array, value){
+        function indexOf(array, value) {
             if (array.indexOf) {
                 return array.indexOf(value);
             }
-            for(var i = 0, len=array.length; i<len; i++) {
+            for (var i = 0, len = array.length; i < len; i++) {
                 if (array[i] === value) {
                     return i;
                 }
@@ -2895,24 +2932,288 @@ define(
 );
 
 /**
- * zrender: 事件辅助类
- *
+ * 事件扩展
+ * @module zrender/mixin/Eventful
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *
- * getX：获取事件横坐标
- * getY：或者事件纵坐标
- * getDelta：或者鼠标滚轮变化
- * stop：停止事件传播
- * Dispatcher：事件分发器
+ *         pissang (https://www.github.com/pissang)
+ */
+define('zrender/mixin/Eventful',['require'],function (require) {
+
+    /**
+     * 事件分发器
+     * @alias module:zrender/mixin/Eventful
+     * @constructor
+     */
+    var Eventful = function () {
+        this._handlers = {};
+    };
+    /**
+     * 单次触发绑定，dispatch后销毁
+     * 
+     * @param {string} event 事件名
+     * @param {Function} handler 响应函数
+     * @param {Object} context
+     */
+    Eventful.prototype.one = function (event, handler, context) {
+        var _h = this._handlers;
+
+        if (!handler || !event) {
+            return this;
+        }
+
+        if (!_h[event]) {
+            _h[event] = [];
+        }
+
+        _h[event].push({
+            h : handler,
+            one : true,
+            ctx: context || this
+        });
+
+        return this;
+    };
+
+    /**
+     * 绑定事件
+     * @param {string} event 事件名
+     * @param {Function} handler 事件处理函数
+     * @param {Object} context
+     */
+    Eventful.prototype.bind = function (event, handler, context) {
+        var _h = this._handlers;
+
+        if (!handler || !event) {
+            return this;
+        }
+
+        if (!_h[event]) {
+            _h[event] = [];
+        }
+
+        _h[event].push({
+            h : handler,
+            one : false,
+            ctx: context || this
+        });
+
+        return this;
+    };
+
+    /**
+     * 解绑事件
+     * @param {string} event 事件名
+     * @param {Function} [handler] 事件处理函数
+     */
+    Eventful.prototype.unbind = function (event, handler) {
+        var _h = this._handlers;
+
+        if (!event) {
+            this._handlers = {};
+            return this;
+        }
+
+        if (handler) {
+            if (_h[event]) {
+                var newList = [];
+                for (var i = 0, l = _h[event].length; i < l; i++) {
+                    if (_h[event][i]['h'] != handler) {
+                        newList.push(_h[event][i]);
+                    }
+                }
+                _h[event] = newList;
+            }
+
+            if (_h[event] && _h[event].length === 0) {
+                delete _h[event];
+            }
+        }
+        else {
+            delete _h[event];
+        }
+
+        return this;
+    };
+
+    /**
+     * 事件分发
+     * 
+     * @param {string} type 事件类型
+     */
+    Eventful.prototype.dispatch = function (type) {
+        if (this._handlers[type]) {
+            var args = arguments;
+            var argLen = args.length;
+
+            if (argLen > 3) {
+                args = Array.prototype.slice.call(args, 1);
+            }
+            
+            var _h = this._handlers[type];
+            var len = _h.length;
+            for (var i = 0; i < len;) {
+                // Optimize advise from backbone
+                switch (argLen) {
+                    case 1:
+                        _h[i]['h'].call(_h[i]['ctx']);
+                        break;
+                    case 2:
+                        _h[i]['h'].call(_h[i]['ctx'], args[1]);
+                        break;
+                    case 3:
+                        _h[i]['h'].call(_h[i]['ctx'], args[1], args[2]);
+                        break;
+                    default:
+                        // have more than 2 given arguments
+                        _h[i]['h'].apply(_h[i]['ctx'], args);
+                        break;
+                }
+                
+                if (_h[i]['one']) {
+                    _h.splice(i, 1);
+                    len--;
+                }
+                else {
+                    i++;
+                }
+            }
+        }
+
+        return this;
+    };
+
+    /**
+     * 带有context的事件分发, 最后一个参数是事件回调的context
+     * @param {string} type 事件类型
+     */
+    Eventful.prototype.dispatchWithContext = function (type) {
+        if (this._handlers[type]) {
+            var args = arguments;
+            var argLen = args.length;
+
+            if (argLen > 4) {
+                args = Array.prototype.slice.call(args, 1, args.length - 1);
+            }
+            var ctx = args[args.length - 1];
+
+            var _h = this._handlers[type];
+            var len = _h.length;
+            for (var i = 0; i < len;) {
+                // Optimize advise from backbone
+                switch (argLen) {
+                    case 1:
+                        _h[i]['h'].call(ctx);
+                        break;
+                    case 2:
+                        _h[i]['h'].call(ctx, args[1]);
+                        break;
+                    case 3:
+                        _h[i]['h'].call(ctx, args[1], args[2]);
+                        break;
+                    default:
+                        // have more than 2 given arguments
+                        _h[i]['h'].apply(ctx, args);
+                        break;
+                }
+                
+                if (_h[i]['one']) {
+                    _h.splice(i, 1);
+                    len--;
+                }
+                else {
+                    i++;
+                }
+            }
+        }
+
+        return this;
+    };
+
+    // 对象可以通过 onxxxx 绑定事件
+    /**
+     * @event module:zrender/mixin/Eventful#onclick
+     * @type {Function}
+     * @default null
+     */
+    /**
+     * @event module:zrender/mixin/Eventful#onmouseover
+     * @type {Function}
+     * @default null
+     */
+    /**
+     * @event module:zrender/mixin/Eventful#onmouseout
+     * @type {Function}
+     * @default null
+     */
+    /**
+     * @event module:zrender/mixin/Eventful#onmousemove
+     * @type {Function}
+     * @default null
+     */
+    /**
+     * @event module:zrender/mixin/Eventful#onmousewheel
+     * @type {Function}
+     * @default null
+     */
+    /**
+     * @event module:zrender/mixin/Eventful#onmousedown
+     * @type {Function}
+     * @default null
+     */
+    /**
+     * @event module:zrender/mixin/Eventful#onmouseup
+     * @type {Function}
+     * @default null
+     */
+    /**
+     * @event module:zrender/mixin/Eventful#ondragstart
+     * @type {Function}
+     * @default null
+     */
+    /**
+     * @event module:zrender/mixin/Eventful#ondragend
+     * @type {Function}
+     * @default null
+     */
+    /**
+     * @event module:zrender/mixin/Eventful#ondragenter
+     * @type {Function}
+     * @default null
+     */
+    /**
+     * @event module:zrender/mixin/Eventful#ondragleave
+     * @type {Function}
+     * @default null
+     */
+    /**
+     * @event module:zrender/mixin/Eventful#ondragover
+     * @type {Function}
+     * @default null
+     */
+    /**
+     * @event module:zrender/mixin/Eventful#ondrop
+     * @type {Function}
+     * @default null
+     */
+    
+    return Eventful;
+});
+
+/**
+ * 事件辅助类
+ * @module zrender/tool/event
+ * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  */
 define(
-    'zrender/tool/event',[],function() {
+    'zrender/tool/event',['require','../mixin/Eventful'],function(require) {
 
         
 
+        var Eventful = require('../mixin/Eventful');
+
         /**
         * 提取鼠标（手指）x坐标
-        * 
+        * @memberOf module:zrender/tool/event
         * @param  {Event} e 事件.
         * @return {number} 鼠标（手指）x坐标.
         */
@@ -2925,7 +3226,7 @@ define(
 
         /**
         * 提取鼠标y坐标
-        * 
+        * @memberOf module:zrender/tool/event
         * @param  {Event} e 事件.
         * @return {number} 鼠标（手指）y坐标.
         */
@@ -2938,229 +3239,40 @@ define(
 
         /**
         * 提取鼠标滚轮变化
-        * 
+        * @memberOf module:zrender/tool/event
         * @param  {Event} e 事件.
         * @return {number} 滚轮变化，正值说明滚轮是向上滚动，如果是负值说明滚轮是向下滚动
         */
         function getDelta(e) {
-            return typeof e.wheelDelta != 'undefined' && e.wheelDelta
+            return typeof e.zrenderDelta != 'undefined' && e.zrenderDelta
+                   || typeof e.wheelDelta != 'undefined' && e.wheelDelta
                    || typeof e.detail != 'undefined' && -e.detail;
         }
 
         /**
          * 停止冒泡和阻止默认行为
-         * 
-         * @type {Function}
+         * @memberOf module:zrender/tool/event
+         * @method
          * @param {Event} e : event对象
          */
         var stop = typeof window.addEventListener === 'function'
             ? function (e) {
                 e.preventDefault();
                 e.stopPropagation();
+                e.cancelBubble = true;
             }
             : function (e) {
                 e.returnValue = false;
                 e.cancelBubble = true;
             };
-
-        /**
-         * 事件分发器
-         */
-        function Dispatcher() {
-            this._handlers = {};
-        }
-        /**
-         * 单次触发绑定，dispatch后销毁
-         * 
-         * @param {string} event 事件字符串
-         * @param {Function} handler 响应函数
-         * @param {Object} [context]
-         */
-        Dispatcher.prototype.one = function(event, handler, context) {
-            
-            var _h = this._handlers;
-
-            if(!handler || !event) {
-                return this;
-            }
-
-            if(!_h[event]) {
-                _h[event] = [];
-            }
-
-            _h[event].push({
-                h : handler,
-                one : true,
-                ctx: context || this
-            });
-
-            return this;
-        };
-
-        /**
-         * 事件绑定
-         * 
-         * @param {string} event 事件字符串
-         * @param {Function} handler : 响应函数
-         * @param {Object} [context]
-         */
-        Dispatcher.prototype.bind = function(event, handler, context) {
-            
-            var _h = this._handlers;
-
-            if(!handler || !event) {
-                return this;
-            }
-
-            if(!_h[event]) {
-                _h[event] = [];
-            }
-
-            _h[event].push({
-                h : handler,
-                one : false,
-                ctx: context || this
-            });
-
-            return this;
-        };
-
-        /**
-         * 事件解绑定
-         * 
-         * @param {string} event 事件字符串
-         * @param {Function} handler : 响应函数
-         */
-        Dispatcher.prototype.unbind = function(event, handler) {
-
-            var _h = this._handlers;
-
-            if(!event) {
-                this._handlers = {};
-                return this;
-            }
-
-            if(handler) {
-                if(_h[event]) {
-                    var newList = [];
-                    for (var i = 0, l = _h[event].length; i < l; i++) {
-                        if (_h[event][i]['h'] != handler) {
-                            newList.push(_h[event][i]);
-                        }
-                    }
-                    _h[event] = newList;
-                }
-
-                if(_h[event] && _h[event].length === 0) {
-                    delete _h[event];
-                }
-            }
-            else {
-                delete _h[event];
-            }
-
-            return this;
-        };
-
-        /**
-         * 事件分发
-         * 
-         * @param {string} type : 事件类型
-         */
-        Dispatcher.prototype.dispatch = function(type) {
-            var args = arguments;
-            var argLen = args.length;
-
-            if (argLen > 3) {
-                args = Array.prototype.slice.call(args, 1);
-            }
-
-            if(this._handlers[type]) {
-                var _h = this._handlers[type];
-                var len = _h.length;
-                for (var i = 0; i < len;) {
-                    // Optimize advise from backbone
-                    switch (argLen) {
-                        case 1:
-                            _h[i]['h'].call(_h[i]['ctx']);
-                            break;
-                        case 2:
-                            _h[i]['h'].call(_h[i]['ctx'], args[1]);
-                            break;
-                        case 3:
-                            _h[i]['h'].call(_h[i]['ctx'], args[1], args[2]);
-                            break;
-                        default:
-                            // have more than 2 given arguments
-                            _h[i]['h'].apply(_h[i]['ctx'], args);
-                            break;
-                    }
-                    
-                    if (_h[i]['one']) {
-                        _h.splice(i, 1);
-                        len--;
-                    } else {
-                        i++;
-                    }
-                }
-            }
-
-            return this;
-        };
-
-        /**
-         * 带有context的事件分发, 最后一个参数是事件回调的context
-         * 
-         * @param {string} type : 事件类型
-         */
-        Dispatcher.prototype.dispatchWithContext = function(type) {
-            var args = arguments;
-            var argLen = args.length;
-
-            if (argLen > 4) {
-                args = Array.prototype.slice.call(args, 1, args.length - 1);
-            }
-            var ctx = args[args.length - 1];
-
-            if(this._handlers[type]) {
-                var _h = this._handlers[type];
-                var len = _h.length;
-                for (var i = 0; i < len;) {
-                    // Optimize advise from backbone
-                    switch (argLen) {
-                        case 1:
-                            _h[i]['h'].call(ctx);
-                            break;
-                        case 2:
-                            _h[i]['h'].call(ctx, args[1]);
-                            break;
-                        case 3:
-                            _h[i]['h'].call(ctx, args[1], args[2]);
-                            break;
-                        default:
-                            // have more than 2 given arguments
-                            _h[i]['h'].apply(ctx, args);
-                            break;
-                    }
-                    
-                    if (_h[i]['one']) {
-                        _h.splice(i, 1);
-                        len--;
-                    } else {
-                        i++;
-                    }
-                }
-            }
-
-            return this;
-        };
-
+        
         return {
             getX : getX,
             getY : getY,
             getDelta : getDelta,
             stop : stop,
-            Dispatcher : Dispatcher
+            // 做向上兼容
+            Dispatcher : Eventful
         };
     }
 );
@@ -3177,7 +3289,7 @@ define('zrender/tool/env',[],function() {
     // (c) 2010-2013 Thomas Fuchs
     // Zepto.js may be freely distributed under the MIT license.
 
-    function detect( ua ) {
+    function detect(ua) {
         var os = this.os = {};
         var browser = this.browser = {};
         var webkit = ua.match(/Web[kK]it[\/]{0,1}([\d.]+)/);
@@ -3240,44 +3352,110 @@ define('zrender/tool/env',[],function() {
             // 原生canvas支持
             canvasSupported : document.createElement('canvas').getContext 
                               ? true : false 
-        }
+        };
     }
 
-    return detect( navigator.userAgent );
+    return detect(navigator.userAgent);
 });
-/**
- * zrender: config默认配置项
- *
- * @desc zrender是一个轻量级的Canvas类库，MVC封装，数据驱动，提供类Dom事件模型。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *
- */
-define(
-    'zrender/config',{
-        EVENT : {                       // 支持事件列表
-            RESIZE : 'resize',          // 窗口大小变化
-            CLICK : 'click',            // 鼠标按钮被（手指）按下，事件对象是：目标图形元素或空
-
-            MOUSEWHEEL : 'mousewheel',  // 鼠标滚轮变化，事件对象是：目标图形元素或空
-            MOUSEMOVE : 'mousemove',    // 鼠标（手指）被移动，事件对象是：目标图形元素或空
-            MOUSEOVER : 'mouseover',    // 鼠标移到某图形元素之上，事件对象是：目标图形元素
-            MOUSEOUT : 'mouseout',      // 鼠标从某图形元素移开，事件对象是：目标图形元素
-            MOUSEDOWN : 'mousedown',    // 鼠标按钮（手指）被按下，事件对象是：目标图形元素或空
-            MOUSEUP : 'mouseup',        // 鼠标按键（手指）被松开，事件对象是：目标图形元素或空
-
-            //
-            GLOBALOUT : 'globalout',    // 全局离开，MOUSEOUT触发比较频繁，一次离开优化绑定
+define('zrender/config',[],function () {
+    /**
+     * config默认配置项
+     * @exports zrender/config
+     * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+     */
+    var config = {
+        /**
+         * @namespace module:zrender/config.EVENT
+         */
+        EVENT : {
+            /**
+             * 窗口大小变化
+             * @type {string}
+             */
+            RESIZE : 'resize',
+            /**
+             * 鼠标按钮被（手指）按下，事件对象是：目标图形元素或空
+             * @type {string}
+             */
+            CLICK : 'click',
+            /**
+             * 双击事件
+             * @type {string}
+             */
+            DBLCLICK : 'dblclick',
+            /**
+             * 鼠标滚轮变化，事件对象是：目标图形元素或空
+             * @type {string}
+             */
+            MOUSEWHEEL : 'mousewheel',
+            /**
+             * 鼠标（手指）被移动，事件对象是：目标图形元素或空
+             * @type {string}
+             */
+            MOUSEMOVE : 'mousemove',
+            /**
+             * 鼠标移到某图形元素之上，事件对象是：目标图形元素
+             * @type {string}
+             */
+            MOUSEOVER : 'mouseover',
+            /**
+             * 鼠标从某图形元素移开，事件对象是：目标图形元素
+             * @type {string}
+             */
+            MOUSEOUT : 'mouseout',
+            /**
+             * 鼠标按钮（手指）被按下，事件对象是：目标图形元素或空
+             * @type {string}
+             */
+            MOUSEDOWN : 'mousedown',
+            /**
+             * 鼠标按键（手指）被松开，事件对象是：目标图形元素或空
+             * @type {string}
+             */
+            MOUSEUP : 'mouseup',
+            /**
+             * 全局离开，MOUSEOUT触发比较频繁，一次离开优化绑定
+             * @type {string}
+             */
+            GLOBALOUT : 'globalout',    // 
 
             // 一次成功元素拖拽的行为事件过程是：
             // dragstart > dragenter > dragover [> dragleave] > drop > dragend
-            DRAGSTART : 'dragstart',    // 开始拖拽时触发，事件对象是：被拖拽图形元素
-            DRAGEND : 'dragend',        // 拖拽完毕时触发（在drop之后触发），事件对象是：被拖拽图形元素
-            DRAGENTER : 'dragenter',    // 拖拽图形元素进入目标图形元素时触发，事件对象是：目标图形元素
-            DRAGOVER : 'dragover',      // 拖拽图形元素在目标图形元素上移动时触发，事件对象是：目标图形元素
-            DRAGLEAVE : 'dragleave',    // 拖拽图形元素离开目标图形元素时触发，事件对象是：目标图形元素
-            DROP : 'drop',              // 拖拽图形元素放在目标图形元素内时触发，事件对象是：目标图形元素
-
-            touchClickDelay : 300       // touch end - start < delay is click
+            /**
+             * 开始拖拽时触发，事件对象是：被拖拽图形元素
+             * @type {string}
+             */
+            DRAGSTART : 'dragstart',
+            /**
+             * 拖拽完毕时触发（在drop之后触发），事件对象是：被拖拽图形元素
+             * @type {string}
+             */
+            DRAGEND : 'dragend',
+            /**
+             * 拖拽图形元素进入目标图形元素时触发，事件对象是：目标图形元素
+             * @type {string}
+             */
+            DRAGENTER : 'dragenter',
+            /**
+             * 拖拽图形元素在目标图形元素上移动时触发，事件对象是：目标图形元素
+             * @type {string}
+             */
+            DRAGOVER : 'dragover',
+            /**
+             * 拖拽图形元素离开目标图形元素时触发，事件对象是：目标图形元素
+             * @type {string}
+             */
+            DRAGLEAVE : 'dragleave',
+            /**
+             * 拖拽图形元素放在目标图形元素内时触发，事件对象是：目标图形元素
+             * @type {string}
+             */
+            DROP : 'drop',
+            /**
+             * touch end - start < delay is click
+             * @type {number}
+             */
+            touchClickDelay : 300
         },
 
         // 是否异常捕获
@@ -3290,18 +3468,19 @@ define(
          * 2 : 控制台输出，调试用
          */
         debugMode: 0
-    }
-);
-/**
- * zrender: 日志记录
- *
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- */
+    };
+    return config;
+});
+
 
 define(
     'zrender/tool/log',['require','../config'],function (require) {
         var config = require('../config');
 
+        /**
+         * @exports zrender/tool/log
+         * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+         */
         return function() {
             if (config.debugMode === 0) {
                 return;
@@ -3345,15 +3524,411 @@ define(
     }
 );
 
+define(
+    'zrender/tool/vector',[],function () {
+        var ArrayCtor = typeof Float32Array === 'undefined'
+            ? Array
+            : Float32Array;
+        /**
+         * 二维向量类
+         * @exports zrender/tool/vector
+         */
+        var vector = {
+            /**
+             * 创建一个向量
+             * @param {number} [x=0]
+             * @param {number} [y=0]
+             * @return {Float32Array|Array.<number>}
+             */
+            create: function (x, y) {
+                var out = new ArrayCtor(2);
+                out[0] = x || 0;
+                out[1] = y || 0;
+                return out;
+            },
+
+            /**
+             * 复制一个向量
+             * @return {Float32Array|Array.<number>} out
+             * @return {Float32Array|Array.<number>} v
+             */
+            copy: function (out, v) {
+                out[0] = v[0];
+                out[1] = v[1];
+                return out;
+            },
+
+            /**
+             * 设置向量的两个项
+             * @param {Float32Array|Array.<number>} out
+             * @param {number} a
+             * @param {number} b
+             * @return {Float32Array|Array.<number>} 结果
+             */
+            set: function (out, a, b) {
+                out[0] = a;
+                out[1] = b;
+                return out;
+            },
+
+            /**
+             * 向量相加
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} v1
+             * @param {Float32Array|Array.<number>} v2
+             */
+            add: function (out, v1, v2) {
+                out[0] = v1[0] + v2[0];
+                out[1] = v1[1] + v2[1];
+                return out;
+            },
+
+            /**
+             * 向量缩放后相加
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} v1
+             * @param {Float32Array|Array.<number>} v2
+             * @param {number} a
+             */
+            scaleAndAdd: function (out, v1, v2, a) {
+                out[0] = v1[0] + v2[0] * a;
+                out[1] = v1[1] + v2[1] * a;
+                return out;
+            },
+
+            /**
+             * 向量相减
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} v1
+             * @param {Float32Array|Array.<number>} v2
+             */
+            sub: function (out, v1, v2) {
+                out[0] = v1[0] - v2[0];
+                out[1] = v1[1] - v2[1];
+                return out;
+            },
+
+            /**
+             * 向量长度
+             * @param {Float32Array|Array.<number>} v
+             * @return {number}
+             */
+            len: function (v) {
+                return Math.sqrt(this.lenSquare(v));
+            },
+
+            /**
+             * 向量长度平方
+             * @param {Float32Array|Array.<number>} v
+             * @return {number}
+             */
+            lenSquare: function (v) {
+                return v[0] * v[0] + v[1] * v[1];
+            },
+
+            /**
+             * 向量乘法
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} v1
+             * @param {Float32Array|Array.<number>} v2
+             */
+            mul: function (out, v1, v2) {
+                out[0] = v1[0] * v2[0];
+                out[1] = v1[1] * v2[1];
+                return out;
+            },
+
+            /**
+             * 向量除法
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} v1
+             * @param {Float32Array|Array.<number>} v2
+             */
+            div: function (out, v1, v2) {
+                out[0] = v1[0] / v2[0];
+                out[1] = v1[1] / v2[1];
+                return out;
+            },
+
+            /**
+             * 向量点乘
+             * @param {Float32Array|Array.<number>} v1
+             * @param {Float32Array|Array.<number>} v2
+             * @return {number}
+             */
+            dot: function (v1, v2) {
+                return v1[0] * v2[0] + v1[1] * v2[1];
+            },
+
+            /**
+             * 向量缩放
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} v
+             * @param {number} s
+             */
+            scale: function (out, v, s) {
+                out[0] = v[0] * s;
+                out[1] = v[1] * s;
+                return out;
+            },
+
+            /**
+             * 向量归一化
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} v
+             */
+            normalize: function (out, v) {
+                var d = vector.len(v);
+                if (d === 0) {
+                    out[0] = 0;
+                    out[1] = 0;
+                }
+                else {
+                    out[0] = v[0] / d;
+                    out[1] = v[1] / d;
+                }
+                return out;
+            },
+
+            /**
+             * 计算向量间距离
+             * @param {Float32Array|Array.<number>} v1
+             * @param {Float32Array|Array.<number>} v2
+             * @return {number}
+             */
+            distance: function (v1, v2) {
+                return Math.sqrt(
+                    (v1[0] - v2[0]) * (v1[0] - v2[0]) +
+                    (v1[1] - v2[1]) * (v1[1] - v2[1])
+                );
+            },
+
+            /**
+             * 求负向量
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} v
+             */
+            negate: function (out, v) {
+                out[0] = -v[0];
+                out[1] = -v[1];
+            },
+
+            /**
+             * 计算两个点的中间点
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} v1
+             * @param {Float32Array|Array.<number>} v2
+             */
+            middle: function (out, v1, v2) {
+                out[0] = (v1[0] + v2[0]) / 2;
+                out[1] = (v1[1] + v2[1]) / 2;
+                return out;
+            },
+            
+            /**
+             * 矩阵左乘向量
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} v
+             * @param {Float32Array|Array.<number>} m
+             */
+            applyTransform: function (out, v, m) {
+                var x = v[0];
+                var y = v[1];
+                out[0] = m[0] * x + m[2] * y + m[4];
+                out[1] = m[1] * x + m[3] * y + m[5];
+                return out;
+            }
+        };
+
+        vector.length = vector.len;
+        vector.dist = vector.distance;
+
+        return vector;
+    }
+);
+
+define(
+    'zrender/tool/matrix',[],function () {
+
+        var ArrayCtor = typeof Float32Array === 'undefined'
+            ? Array
+            : Float32Array;
+        /**
+         * 3x2矩阵操作类
+         * @exports zrender/tool/matrix
+         */
+        var matrix = {
+            /**
+             * 创建一个单位矩阵
+             * @return {Float32Array|Array.<number>}
+             */
+            create : function() {
+                var out = new ArrayCtor(6);
+                matrix.identity(out);
+                
+                return out;
+            },
+            /**
+             * 设置矩阵为单位矩阵
+             * @param {Float32Array|Array.<number>} out
+             */
+            identity : function(out) {
+                out[0] = 1;
+                out[1] = 0;
+                out[2] = 0;
+                out[3] = 1;
+                out[4] = 0;
+                out[5] = 0;
+                return out;
+            },
+            /**
+             * 复制矩阵
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} m
+             */
+            copy: function(out, m) {
+                out[0] = m[0];
+                out[1] = m[1];
+                out[2] = m[2];
+                out[3] = m[3];
+                out[4] = m[4];
+                out[5] = m[5];
+                return out;
+            },
+            /**
+             * 矩阵相乘
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} m1
+             * @param {Float32Array|Array.<number>} m2
+             */
+            mul : function (out, m1, m2) {
+                out[0] = m1[0] * m2[0] + m1[2] * m2[1];
+                out[1] = m1[1] * m2[0] + m1[3] * m2[1];
+                out[2] = m1[0] * m2[2] + m1[2] * m2[3];
+                out[3] = m1[1] * m2[2] + m1[3] * m2[3];
+                out[4] = m1[0] * m2[4] + m1[2] * m2[5] + m1[4];
+                out[5] = m1[1] * m2[4] + m1[3] * m2[5] + m1[5];
+                return out;
+            },
+            /**
+             * 平移变换
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} a
+             * @param {Float32Array|Array.<number>} v
+             */
+            translate : function(out, a, v) {
+                out[0] = a[0];
+                out[1] = a[1];
+                out[2] = a[2];
+                out[3] = a[3];
+                out[4] = a[4] + v[0];
+                out[5] = a[5] + v[1];
+                return out;
+            },
+            /**
+             * 旋转变换
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} a
+             * @param {number} rad
+             */
+            rotate : function(out, a, rad) {
+                var aa = a[0];
+                var ac = a[2];
+                var atx = a[4];
+                var ab = a[1];
+                var ad = a[3];
+                var aty = a[5];
+                var st = Math.sin(rad);
+                var ct = Math.cos(rad);
+
+                out[0] = aa * ct + ab * st;
+                out[1] = -aa * st + ab * ct;
+                out[2] = ac * ct + ad * st;
+                out[3] = -ac * st + ct * ad;
+                out[4] = ct * atx + st * aty;
+                out[5] = ct * aty - st * atx;
+                return out;
+            },
+            /**
+             * 缩放变换
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} a
+             * @param {Float32Array|Array.<number>} v
+             */
+            scale : function(out, a, v) {
+                var vx = v[0];
+                var vy = v[1];
+                out[0] = a[0] * vx;
+                out[1] = a[1] * vy;
+                out[2] = a[2] * vx;
+                out[3] = a[3] * vy;
+                out[4] = a[4] * vx;
+                out[5] = a[5] * vy;
+                return out;
+            },
+            /**
+             * 求逆矩阵
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} a
+             */
+            invert : function(out, a) {
+            
+                var aa = a[0];
+                var ac = a[2];
+                var atx = a[4];
+                var ab = a[1];
+                var ad = a[3];
+                var aty = a[5];
+
+                var det = aa * ad - ab * ac;
+                if (!det) {
+                    return null;
+                }
+                det = 1.0 / det;
+
+                out[0] = ad * det;
+                out[1] = -ab * det;
+                out[2] = -ac * det;
+                out[3] = aa * det;
+                out[4] = (ac * aty - ad * atx) * det;
+                out[5] = (ab * atx - aa * aty) * det;
+                return out;
+            },
+
+            /**
+             * 矩阵左乘向量
+             * @param {Float32Array|Array.<number>} out
+             * @param {Float32Array|Array.<number>} a
+             * @param {Float32Array|Array.<number>} v
+             */
+            mulVector : function(out, a, v) {
+                var aa = a[0];
+                var ac = a[2];
+                var atx = a[4];
+                var ab = a[1];
+                var ad = a[3];
+                var aty = a[5];
+
+                out[0] = v[0] * aa + v[1] * ac + atx;
+                out[1] = v[0] * ab + v[1] * ad + aty;
+
+                return out;
+            }
+        };
+
+        return matrix;
+    }
+);
+
 /**
  * Handler控制模块
- *
+ * @module zrender/Handler
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *         errorrik (errorrik@gmail.com)
  */
 
 define(
-    'zrender/Handler',['require','./config','./tool/env','./tool/event','./tool/util'],function (require) {
+    'zrender/Handler',['require','./config','./tool/env','./tool/event','./tool/util','./tool/vector','./tool/matrix','./mixin/Eventful'],function (require) {
 
         
 
@@ -3361,10 +3936,14 @@ define(
         var env = require('./tool/env');
         var eventTool = require('./tool/event');
         var util = require('./tool/util');
+        var vec2 = require('./tool/vector');
+        var mat2d = require('./tool/matrix');
         var EVENT = config.EVENT;
 
+        var Eventful = require('./mixin/Eventful');
+
         var domHandlerNames = [
-            'resize', 'click', 
+            'resize', 'click', 'dblclick',
             'mousewheel', 'mousemove', 'mouseout', 'mouseup', 'mousedown',
             'touchstart', 'touchend', 'touchmove'
         ];
@@ -3372,8 +3951,8 @@ define(
         var domHandlers = {
             /**
              * 窗口大小改变响应函数
-             * 
-             * @param {event} event dom事件对象
+             * @inner
+             * @param {Event} event
              */
             resize: function (event) {
                 event = event || window.event;
@@ -3386,15 +3965,15 @@ define(
 
             /**
              * 点击响应函数
-             * 
-             * @param {event} event dom事件对象
+             * @inner
+             * @param {Event} event
              */
             click: function (event) {
                 event = this._zrenderEventFixed(event);
 
-                //分发config.EVENT.CLICK事件
+                // 分发config.EVENT.CLICK事件
                 var _lastHover = this._lastHover;
-                if (( _lastHover && _lastHover.clickable )
+                if ((_lastHover && _lastHover.clickable)
                     || !_lastHover
                 ) {
                     this._dispatchAgency(_lastHover, EVENT.CLICK, event);
@@ -3402,24 +3981,81 @@ define(
 
                 this._mousemoveHandler(event);
             },
+            
+            /**
+             * 双击响应函数
+             * @inner
+             * @param {Event} event
+             */
+            dblclick: function (event) {
+                event = this._zrenderEventFixed(event);
+
+                // 分发config.EVENT.DBLCLICK事件
+                var _lastHover = this._lastHover;
+                if ((_lastHover && _lastHover.clickable)
+                    || !_lastHover
+                ) {
+                    this._dispatchAgency(_lastHover, EVENT.DBLCLICK, event);
+                }
+
+                this._mousemoveHandler(event);
+            },
+            
 
             /**
              * 鼠标滚轮响应函数
-             * 
-             * @param {event} event dom事件对象
+             * @inner
+             * @param {Event} event
              */
             mousewheel: function (event) {
                 event = this._zrenderEventFixed(event);
 
-                //分发config.EVENT.MOUSEWHEEL事件
+                // http://www.sitepoint.com/html5-javascript-mouse-wheel/
+                // https://developer.mozilla.org/en-US/docs/DOM/DOM_event_reference/mousewheel
+                var delta = event.wheelDelta // Webkit
+                            || -event.detail; // Firefox
+                var scale = delta > 0 ? 1.1 : 1 / 1.1;
+
+                var layers = this.painter.getLayers();
+
+                var needsRefresh = false;
+                for (var z in layers) {
+                    if (z !== 'hover') {
+                        var layer = layers[z];
+                        var pos = layer.position;
+                        if (layer.zoomable) {
+                            layer.__zoom = layer.__zoom || 1;
+                            var newZoom = layer.__zoom;
+                            newZoom *= scale;
+                            newZoom = Math.max(
+                                Math.min(layer.maxZoom, newZoom),
+                                layer.minZoom
+                            );
+                            scale = newZoom / layer.__zoom;
+                            layer.__zoom = newZoom;
+                            // Keep the mouse center when scaling
+                            pos[0] -= (this._mouseX - pos[0]) * (scale - 1);
+                            pos[1] -= (this._mouseY - pos[1]) * (scale - 1);
+                            layer.scale[0] *= scale;
+                            layer.scale[1] *= scale;
+                            layer.dirty = true;
+                            needsRefresh = true;
+                        }
+                    }
+                }
+                if (needsRefresh) {
+                    this.painter.refresh();
+                }
+
+                // 分发config.EVENT.MOUSEWHEEL事件
                 this._dispatchAgency(this._lastHover, EVENT.MOUSEWHEEL, event);
                 this._mousemoveHandler(event);
             },
 
             /**
              * 鼠标（手指）移动响应函数
-             * 
-             * @param {event} event dom事件对象
+             * @inner
+             * @param {Event} event
              */
             mousemove: function (event) {
                 if (this.painter.isLoading()) {
@@ -3431,15 +4067,18 @@ define(
                 this._lastY = this._mouseY;
                 this._mouseX = eventTool.getX(event);
                 this._mouseY = eventTool.getY(event);
+                var dx = this._mouseX - this._lastX;
+                var dy = this._mouseY - this._lastY;
 
                 // 可能出现config.EVENT.DRAGSTART事件
                 // 避免手抖点击误认为拖拽
-                //if (this._mouseX - this._lastX > 1 || this._mouseY - this._lastY > 1) {
-                    this._processDragStart(event);
-                //}
+                // if (this._mouseX - this._lastX > 1 || this._mouseY - this._lastY > 1) {
+                this._processDragStart(event);
+                // }
                 this._hasfound = 0;
                 this._event = event;
-                this.storage.iterShape(this._findHover, { normal: 'down'});
+
+                this._iterateAndFindHover();
 
                 // 找到的在迭代函数里做了处理，没找到得在迭代完后处理
                 if (!this._hasfound) {
@@ -3458,18 +4097,39 @@ define(
                     this.storage.delHover();
                     this.painter.clearHover();
                 }
-                //如果存在拖拽中元素，被拖拽的图形元素最后addHover
-                if (this._draggingTarget) {
-                    this.storage.drift(
-                        this._draggingTarget.id,
-                        this._mouseX - this._lastX,
-                        this._mouseY - this._lastY
-                    );
-                    this.storage.addHover(this._draggingTarget);
-                }
 
                 // set cursor for root element
                 var cursor = 'default';
+
+                // 如果存在拖拽中元素，被拖拽的图形元素最后addHover
+                if (this._draggingTarget) {
+                    this.storage.drift(this._draggingTarget.id, dx, dy);
+                    this.storage.addHover(this._draggingTarget);
+                }
+                else if (this._isMouseDown) {
+                    // Layer dragging
+                    var layers = this.painter.getLayers();
+
+                    var needsRefresh = false;
+                    for (var z in layers) {
+                        if (z !== 'hover') {
+                            var layer = layers[z];
+                            if (layer.panable) {
+                                // PENDING
+                                cursor = 'move';
+                                // Keep the mouse center when scaling
+                                layer.position[0] += dx;
+                                layer.position[1] += dy;
+                                needsRefresh = true;
+                                layer.dirty = true;
+                            }
+                        }
+                    }
+                    if (needsRefresh) {
+                        this.painter.refresh();
+                    }
+                }
+
                 if (this._draggingTarget || (this._hasfound && this._lastHover.draggable)) {
                     cursor = 'move';
                 }
@@ -3488,8 +4148,8 @@ define(
 
             /**
              * 鼠标（手指）离开响应函数
-             * 
-             * @param {event} event dom事件对象
+             * @inner
+             * @param {Event} event
              */
             mouseout: function (event) {
                 event = this._zrenderEventFixed(event);
@@ -3524,8 +4184,8 @@ define(
 
             /**
              * 鼠标（手指）按下响应函数
-             * 
-             * @param {event} event dom事件对象
+             * @inner
+             * @param {Event} event
              */
             mousedown: function (event) {
                 if (this._lastDownButton == 2) {
@@ -3539,7 +4199,7 @@ define(
                 event = this._zrenderEventFixed(event);
                 this._isMouseDown = 1;
 
-                //分发config.EVENT.MOUSEDOWN事件
+                // 分发config.EVENT.MOUSEDOWN事件
                 this._mouseDownTarget = this._lastHover;
                 this._dispatchAgency(this._lastHover, EVENT.MOUSEDOWN, event);
                 this._lastDownButton = event.button;
@@ -3547,16 +4207,16 @@ define(
 
             /**
              * 鼠标（手指）抬起响应函数
-             * 
-             * @param {event} event dom事件对象
+             * @inner
+             * @param {Event} event
              */
-            mouseup:function (event) {
+            mouseup: function (event) {
                 event = this._zrenderEventFixed(event);
                 this.root.style.cursor = 'default';
                 this._isMouseDown = 0;
                 this._mouseDownTarget = null;
 
-                //分发config.EVENT.MOUSEUP事件
+                // 分发config.EVENT.MOUSEUP事件
                 this._dispatchAgency(this._lastHover, EVENT.MOUSEUP, event);
                 this._processDrop(event);
                 this._processDragEnd(event);
@@ -3564,23 +4224,23 @@ define(
 
             /**
              * Touch开始响应函数
-             * 
-             * @param {event} event dom事件对象
+             * @inner
+             * @param {Event} event
              */
             touchstart: function (event) {
-                //eventTool.stop(event);// 阻止浏览器默认事件，重要
+                // eventTool.stop(event);// 阻止浏览器默认事件，重要
                 event = this._zrenderEventFixed(event, true);
                 this._lastTouchMoment = new Date();
 
-                //平板补充一次findHover
+                // 平板补充一次findHover
                 this._mobildFindFixed(event);
                 this._mousedownHandler(event);
             },
 
             /**
              * Touch移动响应函数
-             * 
-             * @param {event} event dom事件对象
+             * @inner
+             * @param {Event} event
              */
             touchmove: function (event) {
                 event = this._zrenderEventFixed(event, true);
@@ -3592,17 +4252,25 @@ define(
 
             /**
              * Touch结束响应函数
-             * 
-             * @param {event} event dom事件对象
+             * @inner
+             * @param {Event} event
              */
             touchend: function (event) {
-                //eventTool.stop(event);// 阻止浏览器默认事件，重要
+                // eventTool.stop(event);// 阻止浏览器默认事件，重要
                 event = this._zrenderEventFixed(event, true);
                 this._mouseupHandler(event);
-
-                if (new Date() - this._lastTouchMoment < EVENT.touchClickDelay) {
+                
+                var now = new Date();
+                if (now - this._lastTouchMoment < EVENT.touchClickDelay) {
                     this._mobildFindFixed(event);
                     this._clickHandler(event);
+                    if (now - this._lastClickMoment < EVENT.touchClickDelay / 2) {
+                        this._dblclickHandler(event);
+                        if (this._lastHover && this._lastHover.clickable) {
+                            eventTool.stop(event);// 阻止浏览器默认事件，重要
+                        }
+                    }
+                    this._lastClickMoment = now;
                 }
                 this.painter.clearHover();
             }
@@ -3616,38 +4284,47 @@ define(
          * @param {Object} context 运行时this环境
          * @return {Function}
          */
-        function bind1Arg( handler, context ) {
-            return function ( e ) {
-                return handler.call( context, e );
+        function bind1Arg(handler, context) {
+            return function (e) {
+                return handler.call(context, e);
             };
         }
+        /**function bind2Arg(handler, context) {
+            return function (arg1, arg2) {
+                return handler.call(context, arg1, arg2);
+            };
+        }*/
 
+        function bind3Arg(handler, context) {
+            return function (arg1, arg2, arg3) {
+                return handler.call(context, arg1, arg2, arg3);
+            };
+        }
         /**
          * 为控制类实例初始化dom 事件处理函数
          * 
          * @inner
-         * @param {Handler} instance 控制类实例
+         * @param {module:zrender/Handler} instance 控制类实例
          */
-        function initDomHandler( instance ) {
+        function initDomHandler(instance) {
             var len = domHandlerNames.length;
-            while ( len-- ) {
-                var name = domHandlerNames[ len ];
-                instance[ '_' + name + 'Handler' ] = bind1Arg( domHandlers[ name ], instance );
+            while (len--) {
+                var name = domHandlerNames[len];
+                instance['_' + name + 'Handler'] = bind1Arg(domHandlers[name], instance);
             }
         }
 
         /**
-         * 控制类 (C)
-         * 
+         * @alias module:zrender/Handler
+         * @constructor
+         * @extends module:zrender/mixin/Eventful
          * @param {HTMLElement} root 绘图区域
-         * @param {storage} storage Storage实例
-         * @param {painter} painter Painter实例
-         *
-         * 分发事件支持详见config.EVENT
+         * @param {module:zrender/Storage} storage Storage实例
+         * @param {module:zrender/Painter} painter Painter实例
          */
-        function Handler(root, storage, painter) {
+        var Handler = function(root, storage, painter) {
             // 添加事件分发器特性
-            eventTool.Dispatcher.call(this);
+            Eventful.call(this);
 
             this.root = root;
             this.storage = storage;
@@ -3669,7 +4346,7 @@ define(
             this._mouseX = 
             this._mouseY = 0;
 
-            this._findHover = bind1Arg(findHover, this);
+            this._findHover = bind3Arg(findHover, this);
             this._domHover = painter.getDomHover();
             initDomHandler(this);
 
@@ -3686,6 +4363,7 @@ define(
                 else {
                     // mobile的click/move/up/down自己模拟
                     root.addEventListener('click', this._clickHandler);
+                    root.addEventListener('dblclick', this._dblclickHandler);
                     root.addEventListener('mousewheel', this._mousewheelHandler);
                     root.addEventListener('mousemove', this._mousemoveHandler);
                     root.addEventListener('mousedown', this._mousedownHandler);
@@ -3698,13 +4376,14 @@ define(
                 window.attachEvent('onresize', this._resizeHandler);
 
                 root.attachEvent('onclick', this._clickHandler);
+                root.attachEvent('ondblclick ', this._dblclickHandler);
                 root.attachEvent('onmousewheel', this._mousewheelHandler);
                 root.attachEvent('onmousemove', this._mousemoveHandler);
                 root.attachEvent('onmouseout', this._mouseoutHandler);
                 root.attachEvent('onmousedown', this._mousedownHandler);
                 root.attachEvent('onmouseup', this._mouseupHandler);
             }
-        }
+        };
 
         /**
          * 自定义事件绑定
@@ -3735,6 +4414,7 @@ define(
             switch (eventName) {
                 case EVENT.RESIZE:
                 case EVENT.CLICK:
+                case EVENT.DBLCLICK:
                 case EVENT.MOUSEWHEEL:
                 case EVENT.MOUSEMOVE:
                 case EVENT.MOUSEDOWN:
@@ -3746,7 +4426,7 @@ define(
         };
 
         /**
-         * 释放
+         * 释放，解绑所有事件
          */
         Handler.prototype.dispose = function () {
             var root = this.root;
@@ -3763,6 +4443,7 @@ define(
                 else {
                     // mobile的click自己模拟
                     root.removeEventListener('click', this._clickHandler);
+                    root.removeEventListener('dblclick', this._dblclickHandler);
                     root.removeEventListener('mousewheel', this._mousewheelHandler);
                     root.removeEventListener('mousemove', this._mousemoveHandler);
                     root.removeEventListener('mousedown', this._mousedownHandler);
@@ -3775,6 +4456,7 @@ define(
                 window.detachEvent('onresize', this._resizeHandler);
 
                 root.detachEvent('onclick', this._clickHandler);
+                root.detachEvent('dblclick', this._dblclickHandler);
                 root.detachEvent('onmousewheel', this._mousewheelHandler);
                 root.detachEvent('onmousemove', this._mousemoveHandler);
                 root.detachEvent('onmouseout', this._mouseoutHandler);
@@ -3819,7 +4501,7 @@ define(
                 _draggingTarget.invisible = true;
                 this.storage.mod(_draggingTarget.id);
 
-                //分发config.EVENT.DRAGSTART事件
+                // 分发config.EVENT.DRAGSTART事件
                 this._dispatchAgency(
                     _draggingTarget,
                     EVENT.DRAGSTART,
@@ -3837,7 +4519,7 @@ define(
          */
         Handler.prototype._processDragEnter = function (event) {
             if (this._draggingTarget) {
-                //分发config.EVENT.DRAGENTER事件
+                // 分发config.EVENT.DRAGENTER事件
                 this._dispatchAgency(
                     this._lastHover,
                     EVENT.DRAGENTER,
@@ -3855,7 +4537,7 @@ define(
          */
         Handler.prototype._processDragOver = function (event) {
             if (this._draggingTarget) {
-                //分发config.EVENT.DRAGOVER事件
+                // 分发config.EVENT.DRAGOVER事件
                 this._dispatchAgency(
                     this._lastHover,
                     EVENT.DRAGOVER,
@@ -3873,7 +4555,7 @@ define(
          */
         Handler.prototype._processDragLeave = function (event) {
             if (this._draggingTarget) {
-                //分发config.EVENT.DRAGLEAVE事件
+                // 分发config.EVENT.DRAGLEAVE事件
                 this._dispatchAgency(
                     this._lastHover,
                     EVENT.DRAGLEAVE,
@@ -3895,7 +4577,7 @@ define(
                 this.storage.mod(this._draggingTarget.id);
                 this.painter.refresh();
 
-                //分发config.EVENT.DROP事件
+                // 分发config.EVENT.DROP事件
                 this._dispatchAgency(
                     this._lastHover,
                     EVENT.DROP,
@@ -3913,7 +4595,7 @@ define(
          */
         Handler.prototype._processDragEnd = function (event) {
             if (this._draggingTarget) {
-                //分发config.EVENT.DRAGEND事件
+                // 分发config.EVENT.DRAGEND事件
                 this._dispatchAgency(
                     this._draggingTarget,
                     EVENT.DRAGEND,
@@ -3934,7 +4616,7 @@ define(
          * @param {Object} event 事件对象
          */
         Handler.prototype._processOverShape = function (event) {
-            //分发config.EVENT.MOUSEOVER事件
+            // 分发config.EVENT.MOUSEOVER事件
             this._dispatchAgency(this._lastHover, EVENT.MOUSEOVER, event);
         };
 
@@ -3945,7 +4627,7 @@ define(
          * @param {Object} event 事件对象
          */
         Handler.prototype._processOutShape = function (event) {
-            //分发config.EVENT.MOUSEOUT事件
+            // 分发config.EVENT.MOUSEOUT事件
             this._dispatchAgency(this._lastHover, EVENT.MOUSEOUT, event);
         };
 
@@ -3974,7 +4656,8 @@ define(
             }
 
             while (el) {
-                el[eventHandler] && el[eventHandler](eventPacket);
+                el[eventHandler] 
+                && (eventPacket.cancelBubble = el[eventHandler](eventPacket));
                 el.dispatch(eventName, eventPacket);
 
                 el = el.parent;
@@ -3991,20 +4674,53 @@ define(
                 }
             }
             else if (!draggedShape) {
-                //无hover目标，无拖拽对象，原生事件分发
+                // 无hover目标，无拖拽对象，原生事件分发
                 this.dispatch(eventName, {
                     type: eventName,
                     event: event
                 });
             }
         };
+
+        /**
+         * 迭代寻找hover shape
+         * @private
+         * @method
+         */
+        Handler.prototype._iterateAndFindHover = (function() {
+            var invTransform = mat2d.create();
+            return function() {
+                var list = this.storage.getShapeList();
+                var currentZLevel;
+                var currentLayer;
+                var tmp = [ 0, 0 ];
+                for (var i = list.length - 1; i >= 0 ; i--) {
+                    var shape = list[i];
+
+                    if (currentZLevel !== shape.zlevel) {
+                        currentLayer = this.painter.getLayer(shape.zlevel, currentLayer);
+                        tmp[0] = this._mouseX;
+                        tmp[1] = this._mouseY;
+
+                        if (currentLayer.needTransform) {
+                            mat2d.invert(invTransform, currentLayer.transform);
+                            vec2.applyTransform(tmp, tmp, invTransform);
+                        }
+                    }
+
+                    if (this._findHover(shape, tmp[0], tmp[1])) {
+                        break;
+                    }
+                }
+            };
+        })();
         
         // touch指尖错觉的尝试偏移量配置
         var MOBILE_TOUCH_OFFSETS = [
             { x: 10 },
             { x: -20 },
-            { x: 10, y: 10},
-            { y: -20}
+            { x: 10, y: 10 },
+            { y: -20 }
         ];
 
         // touch有指尖错觉，四向尝试，让touch上的点击更好触发事件
@@ -4014,12 +4730,15 @@ define(
             this._mouseY = event.zrenderY;
 
             this._event = event;
-            this.storage.iterShape(this._findHover, { normal: 'down'});
-            for ( var i = 0; !this._lastHover && i < MOBILE_TOUCH_OFFSETS.length ; i++ ) {
+
+            this._iterateAndFindHover();
+
+            for (var i = 0; !this._lastHover && i < MOBILE_TOUCH_OFFSETS.length ; i++) {
                 var offset = MOBILE_TOUCH_OFFSETS[ i ];
-                offset.x && ( this._mouseX += offset.x );
-                offset.y && ( this._mouseX += offset.y );
-                this.storage.iterShape(this._findHover, { normal: 'down'});
+                offset.x && (this._mouseX += offset.x);
+                offset.y && (this._mouseX += offset.y);
+
+                this._iterateAndFindHover();
             }
 
             if (this._lastHover) {
@@ -4031,19 +4750,21 @@ define(
         /**
          * 迭代函数，查找hover到的图形元素并即时做些事件分发
          * 
-         * @private
-         * @param {Object} e 图形元素
+         * @inner
+         * @param {Object} shape 图形元素
+         * @param {number} x
+         * @param {number} y
          */
-        function findHover(shape) {
+        function findHover(shape, x, y) {
             if (
-                ( this._draggingTarget && this._draggingTarget.id == shape.id ) //迭代到当前拖拽的图形上
+                (this._draggingTarget && this._draggingTarget.id == shape.id) // 迭代到当前拖拽的图形上
                 || shape.isSilent() // 打酱油的路过，啥都不响应的shape~
             ) {
                 return false;
             }
 
             var event = this._event;
-            if (shape.isCover(this._mouseX, this._mouseY)) {
+            if (shape.isCover(x, y)) {
                 if (shape.hoverable) {
                     this.storage.addHover(shape);
                 }
@@ -4060,23 +4781,23 @@ define(
                 if (this._lastHover != shape) {
                     this._processOutShape(event);
 
-                    //可能出现config.EVENT.DRAGLEAVE事件
+                    // 可能出现config.EVENT.DRAGLEAVE事件
                     this._processDragLeave(event);
 
                     this._lastHover = shape;
 
-                    //可能出现config.EVENT.DRAGENTER事件
+                    // 可能出现config.EVENT.DRAGENTER事件
                     this._processDragEnter(event);
                 }
 
                 this._processOverShape(event);
 
-                //可能出现config.EVENT.DRAGOVER
+                // 可能出现config.EVENT.DRAGOVER
                 this._processDragOver(event);
 
                 this._hasfound = 1;
 
-                return true;    //找到则中断迭代查找
+                return true;    // 找到则中断迭代查找
             }
 
             return false;
@@ -4088,7 +4809,7 @@ define(
          * @private
          */
         Handler.prototype._zrenderEventFixed = function (event, isTouch) {
-            if ( event.zrenderFixed ) {
+            if (event.zrenderFixed) {
                 return event;
             }
 
@@ -4127,148 +4848,72 @@ define(
             return event;
         };
 
-        util.merge(Handler.prototype, eventTool.Dispatcher.prototype, true);
+        util.merge(Handler.prototype, Eventful.prototype, true);
 
         return Handler;
     }
 );
 
 /**
- * zrender: 3x2矩阵操作类
- *
- * author: https://github.com/pissang
+ * 提供变换扩展
+ * @module zrender/mixin/Transformable
+ * @author pissang (https://www.github.com/pissang)
  */
+define('zrender/mixin/Transformable',['require','../tool/matrix','../tool/vector'],function (require) {
 
-define(
-    'zrender/tool/matrix',[],function() {
+    
 
-        var ArrayCtor = typeof Float32Array === 'undefined'
-            ? Array
-            : Float32Array;
+    var matrix = require('../tool/matrix');
+    var vector = require('../tool/vector');
+    var origin = [ 0, 0 ];
 
-        var matrix = {
-            create : function() {
-                var out = new ArrayCtor(6);
-                matrix.identity(out);
-                
-                return out;
-            },
-            identity : function(out) {
-                out[0] = 1;
-                out[1] = 0;
-                out[2] = 0;
-                out[3] = 1;
-                out[4] = 0;
-                out[5] = 0;
-            },
-            copy: function(out, m) {
-                out[0] = m[0];
-                out[1] = m[1];
-                out[2] = m[2];
-                out[3] = m[3];
-                out[4] = m[4];
-                out[5] = m[5];
-            },
-            mul : function(out, m1, m2) {
-               out[0] = m1[0] * m2[0] + m1[2] * m2[1];
-               out[1] = m1[1] * m2[0] + m1[3] * m2[1];
-               out[2] = m1[0] * m2[2] + m1[2] * m2[3];
-               out[3] = m1[1] * m2[2] + m1[3] * m2[3];
-               out[4] = m1[0] * m2[4] + m1[2] * m2[5] + m1[4];
-               out[5] = m1[1] * m2[4] + m1[3] * m2[5] + m1[5];
-               return out;
-            },
-            translate : function(out, a, v) {
-                out[0] = a[0];
-                out[1] = a[1];
-                out[2] = a[2];
-                out[3] = a[3];
-                out[4] = a[4] + v[0];
-                out[5] = a[5] + v[1];
-                return out;
-            },
-            rotate : function(out, a, rad) {
-                var aa = a[0], ac = a[2], atx = a[4];
-                var ab = a[1], ad = a[3], aty = a[5];
-                var st = Math.sin(rad);
-                var ct = Math.cos(rad);
+    var EPSILON = 5e-5;
 
-                out[0] = aa*ct + ab*st;
-                out[1] = -aa*st + ab*ct;
-                out[2] = ac*ct + ad*st;
-                out[3] = -ac*st + ct*ad;
-                out[4] = ct*atx + st*aty;
-                out[5] = ct*aty - st*atx;
-                return out;
-            },
-            scale : function(out, a, v) {
-                var vx = v[0], vy = v[1];
-                out[0] = a[0] * vx;
-                out[1] = a[1] * vy;
-                out[2] = a[2] * vx;
-                out[3] = a[3] * vy;
-                out[4] = a[4] * vx;
-                out[5] = a[5] * vy;
-                return out;
-            },
-            /**
-             * 求逆矩阵
-             */
-            invert : function(out, a) {
-            
-                var aa = a[0], ac = a[2], atx = a[4];
-                var ab = a[1], ad = a[3], aty = a[5];
-
-                var det = aa * ad - ab * ac;
-                if(!det){
-                    return null;
-                }
-                det = 1.0 / det;
-
-                out[0] = ad * det;
-                out[1] = -ab * det;
-                out[2] = -ac * det;
-                out[3] = aa * det;
-                out[4] = (ac * aty - ad * atx) * det;
-                out[5] = (ab * atx - aa * aty) * det;
-                return out;
-            },
-
-            /**
-             * 矩阵左乘向量
-             */
-            mulVector : function(out, a, v) {
-                var aa = a[0], ac = a[2], atx = a[4];
-                var ab = a[1], ad = a[3], aty = a[5];
-
-                out[0] = v[0] * aa + v[1] * ac + atx;
-                out[1] = v[0] * ab + v[1] * ad + aty;
-
-                return out;
-            }
-        };
-
-        return matrix;
+    function isAroundZero(val) {
+        return val > -EPSILON && val < EPSILON;
     }
-);
-define('zrender/shape/mixin/Transformable',['require','../../tool/matrix'],function(require) {
+    function isNotAroundZero(val) {
+        return val > EPSILON || val < -EPSILON;
+    }
 
-    var matrix = require('../../tool/matrix');
-    var origin = [0, 0];
-
-    var Transformable = function() {
+    /**
+     * @alias module:zrender/mixin/Transformable
+     * @constructor
+     */
+    var Transformable = function () {
 
         if (!this.position) {
-            this.position = [0, 0];
+            /**
+             * 平移
+             * @type {Array.<number>}
+             * @default [0, 0]
+             */
+            this.position = [ 0, 0 ];
         }
         if (typeof(this.rotation) == 'undefined') {
-            this.rotation = [0, 0, 0];
+            /**
+             * 旋转，可以通过数组二三项指定旋转的原点
+             * @type {Array.<number>}
+             * @default [0, 0, 0]
+             */
+            this.rotation = [ 0, 0, 0 ];
         }
         if (!this.scale) {
-            this.scale = [1, 1, 0, 0];
+            /**
+             * 缩放，可以通过数组三四项指定缩放的原点
+             * @type {Array.<number>}
+             * @default [1, 1, 0, 0]
+             */
+            this.scale = [ 1, 1, 0, 0 ];
         }
 
         this.needLocalTransform = false;
+
+        /**
+         * 是否有坐标变换
+         * @type {boolean}
+         * @readOnly
+         */
         this.needTransform = false;
     };
 
@@ -4276,21 +4921,26 @@ define('zrender/shape/mixin/Transformable',['require','../../tool/matrix'],funct
         
         constructor: Transformable,
 
-        updateNeedTransform: function() {
-            this.needLocalTransform = Math.abs(this.rotation[0]) > 0.0001
-                || Math.abs(this.position[0]) > 0.0001
-                || Math.abs(this.position[1]) > 0.0001
-                || Math.abs(this.scale[0] - 1) > 0.0001
-                || Math.abs(this.scale[1] - 1) > 0.0001;
+        updateNeedTransform: function () {
+            this.needLocalTransform = isNotAroundZero(this.rotation[0])
+                || isNotAroundZero(this.position[0])
+                || isNotAroundZero(this.position[1])
+                || isNotAroundZero(this.scale[0] - 1)
+                || isNotAroundZero(this.scale[1] - 1);
         },
 
-        updateTransform: function() {
+        /**
+         * 判断是否需要有坐标变换，更新needTransform属性。
+         * 如果有坐标变换, 则从position, rotation, scale以及父节点的transform计算出自身的transform矩阵
+         */
+        updateTransform: function () {
             
             this.updateNeedTransform();
 
             if (this.parent) {
                 this.needTransform = this.needLocalTransform || this.parent.needTransform;
-            } else {
+            }
+            else {
                 this.needTransform = this.needLocalTransform;
             }
             
@@ -4302,16 +4952,21 @@ define('zrender/shape/mixin/Transformable',['require','../../tool/matrix'],funct
             matrix.identity(m);
 
             if (this.needLocalTransform) {
-                if (this.scale && (this.scale[0] !== 1 || this.scale[1] !== 1)) {
+                if (
+                    isNotAroundZero(this.scale[0])
+                 || isNotAroundZero(this.scale[1])
+                ) {
                     origin[0] = -this.scale[2] || 0;
                     origin[1] = -this.scale[3] || 0;
-                    if (origin[0] || origin[1]) {
+                    var haveOrigin = isNotAroundZero(origin[0])
+                                  || isNotAroundZero(origin[1]);
+                    if (haveOrigin) {
                         matrix.translate(
                             m, m, origin
                         );
                     }
                     matrix.scale(m, m, this.scale);
-                    if (origin[0] || origin[1]) {
+                    if (haveOrigin) {
                         origin[0] = -origin[0];
                         origin[1] = -origin[1];
                         matrix.translate(
@@ -4320,34 +4975,36 @@ define('zrender/shape/mixin/Transformable',['require','../../tool/matrix'],funct
                     }
                 }
 
-                if (this.rotation) {
-                    if (this.rotation instanceof Array) {
-                        if (this.rotation[0] !== 0) {
-                            origin[0] = -this.rotation[1] || 0;
-                            origin[1] = -this.rotation[2] || 0;
-                            if (origin[0] || origin[1]) {
-                                matrix.translate(
-                                    m, m, origin
-                                );
-                            }
-                            matrix.rotate(m, m, this.rotation[0]);
-                            if (origin[0] || origin[1]) {
-                                origin[0] = -origin[0];
-                                origin[1] = -origin[1];
-                                matrix.translate(
-                                    m, m, origin
-                                );
-                            }
+                if (this.rotation instanceof Array) {
+                    if (this.rotation[0] !== 0) {
+                        origin[0] = -this.rotation[1] || 0;
+                        origin[1] = -this.rotation[2] || 0;
+                        var haveOrigin = isNotAroundZero(origin[0])
+                                      || isNotAroundZero(origin[1]);
+                        if (haveOrigin) {
+                            matrix.translate(
+                                m, m, origin
+                            );
                         }
-                    }
-                    else {
-                        if (this.rotation !== 0) {
-                            matrix.rotate(m, m, this.rotation);
+                        matrix.rotate(m, m, this.rotation[0]);
+                        if (haveOrigin) {
+                            origin[0] = -origin[0];
+                            origin[1] = -origin[1];
+                            matrix.translate(
+                                m, m, origin
+                            );
                         }
                     }
                 }
+                else {
+                    if (this.rotation !== 0) {
+                        matrix.rotate(m, m, this.rotation);
+                    }
+                }
 
-                if (this.position && (this.position[0] !==0 || this.position[1] !== 0)) {
+                if (
+                    isNotAroundZero(this.position[0]) || isNotAroundZero(this.position[1])
+                ) {
                     matrix.translate(m, m, this.position);
                 }
             }
@@ -4359,13 +5016,17 @@ define('zrender/shape/mixin/Transformable',['require','../../tool/matrix'],funct
             if (this.parent && this.parent.needTransform) {
                 if (this.needLocalTransform) {
                     matrix.mul(this.transform, this.parent.transform, this.transform);
-                } else {
+                }
+                else {
                     matrix.copy(this.transform, this.parent.transform);
                 }
             }
         },
-
-        setTransform: function(ctx) {
+        /**
+         * 将自己的transform应用到context上
+         * @param {Context2D} ctx
+         */
+        setTransform: function (ctx) {
             if (this.needTransform) {
                 var m = this.transform;
                 ctx.transform(
@@ -4374,48 +5035,76 @@ define('zrender/shape/mixin/Transformable',['require','../../tool/matrix'],funct
                     m[4], m[5]
                 );
             }
+        },
+        /**
+         * 设置图形的朝向
+         * @param  {Array.<number>|Float32Array} target
+         * @method
+         */
+        lookAt: (function () {
+            var v = vector.create();
+            return function(target) {
+                if (!this.transform) {
+                    this.transform = matrix.create();
+                }
+                var m = this.transform;
+                vector.sub(v, target, this.position);
+                if (isAroundZero(v[0]) && isAroundZero(v[1])) {
+                    return;
+                }
+                vector.normalize(v, v);
+                // Y Axis
+                // TODO Scale origin ?
+                m[2] = v[0] * this.scale[1];
+                m[3] = v[1] * this.scale[1];
+                // X Axis
+                m[0] = v[1] * this.scale[0];
+                m[1] = -v[0] * this.scale[0];
+                // Position
+                m[4] = this.position[0];
+                m[5] = this.position[1];
+
+                this.decomposeTransform();
+            };
+        })(),
+        /**
+         * 分解`transform`矩阵到`position`, `rotation`, `scale`
+         */
+        decomposeTransform: function () {
+            if (!this.transform) {
+                return;
+            }
+            var m = this.transform;
+            var sx = m[0] * m[0] + m[1] * m[1];
+            var position = this.position;
+            var scale = this.scale;
+            var rotation = this.rotation;
+            if (isNotAroundZero(sx - 1)) {
+                sx = Math.sqrt(sx);
+            }
+            var sy = m[2] * m[2] + m[3] * m[3];
+            if (isNotAroundZero(sy - 1)) {
+                sy = Math.sqrt(sy);
+            }
+            position[0] = m[4];
+            position[1] = m[5];
+            scale[0] = sx;
+            scale[1] = sy;
+            scale[2] = scale[3] = 0;
+            rotation[0] = Math.atan2(-m[1] / sy, m[0] / sx);
+            rotation[1] = rotation[2] = 0;
         }
     };
 
     return Transformable;
 });
+
 /**
- * zrender : 颜色辅助类
- *
- * author: CrossDo (chenhuaimu@baidu.com)
- *
- * getColor：获取色板颜色
- * customPalette : 自定义调色板
- * resetPalette : 重置调色板
- *
- * getHighlightColor : 获取默认高亮颜色
- * customHighlight : 自定义默认高亮颜色
- * resetHighlight : 重置默认高亮颜色
- *
- * getRadialGradient : 径向渐变
- * getLinearGradient : 线性渐变
- * getGradientColors : 获取颜色之间渐变颜色数组
- * getStepColors : 获取两种颜色之间渐变颜色数组
- * reverse : 颜色翻转
- * mix : 颜色混合
- * lift : 颜色升降
- * trim : 清除空格
- * random : 随机颜色
- * toRGB  : 转为RGB格式
- * toRGBA : 转为RGBA格式
- * toHex  : 转为#RRGGBB格式
- * toHSL  : 转为HSL格式
- * toHSLA : 转为HSLA格式
- * toHSB  : 转为HSB格式
- * toHSBA : 转为HSBA格式
- * toHSV  : 转为HSV格式
- * toHSVA : 转为HSVA格式
- * toName : 转为颜色名字
- * toColor: 颜色值数组转为指定格式颜色
- * toArray: 返回颜色值数组
- * alpha  : 设置颜色的透明度
- **/
-define( 'zrender/tool/color',['require','../tool/util'],function(require) {
+ * 颜色辅助类
+ * @module zrender/tool/color
+ * @author CrossDo (chenhuaimu@baidu.com)
+ */
+define('zrender/tool/color',['require','../tool/util'],function(require) {
     var util = require('../tool/util');
 
     var _ctx;
@@ -4608,11 +5297,10 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 获取色板颜色
-     *
-     * @param {number} idx : 色板位置
-     * @param {array} [userPalete] : 自定义色板
-     *
-     * @return {color} 颜色#000000~#ffffff
+     * @memberOf module:zrender/tool/color
+     * @param {number} idx 色板位置
+     * @param {Array.<string>} [userPalete] 自定义色板
+     * @return {string} 颜色
      */
     function getColor(idx, userPalete) {
         idx = idx | 0;
@@ -4643,7 +5331,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 径向渐变
-     *
+     * @memberOf module:zrender/tool/color
      * @param {number} x0 渐变起点
      * @param {number} y0
      * @param {number} r0
@@ -4651,13 +5339,14 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
      * @param {number} y1
      * @param {number} r1
      * @param {Array} colorList 颜色列表
+     * @return {CanvasGradient}
      */
     function getRadialGradient(x0, y0, r0, x1, y1, r1, colorList) {
         if (!_ctx) {
             _ctx = util.getContext();
         }
         var gradient = _ctx.createRadialGradient(x0, y0, r0, x1, y1, r1);
-        for ( var i = 0, l = colorList.length; i < l; i++) {
+        for (var i = 0, l = colorList.length; i < l; i++) {
             gradient.addColorStop(colorList[i][0], colorList[i][1]);
         }
         gradient.__nonRecursion = true;
@@ -4677,7 +5366,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
             _ctx = util.getContext();
         }
         var gradient = _ctx.createLinearGradient(x0, y0, x1, y1);
-        for ( var i = 0, l = colorList.length; i < l; i++) {
+        for (var i = 0, l = colorList.length; i < l; i++) {
             gradient.addColorStop(colorList[i][0], colorList[i][1]);
         }
         gradient.__nonRecursion = true;
@@ -4706,9 +5395,9 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
         for (var i = 0, r = start[0], g = start[1], b = start[2]; i < step; i++
         ) {
             colors[i] = toColor([
-                adjust(Math.floor(r), [0, 255]),
-                adjust(Math.floor(g), [0, 255]), 
-                adjust(Math.floor(b), [0, 255])
+                adjust(Math.floor(r), [ 0, 255 ]),
+                adjust(Math.floor(g), [ 0, 255 ]), 
+                adjust(Math.floor(b), [ 0, 255 ])
             ]);
             r += stepR;
             g += stepG;
@@ -4717,15 +5406,16 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
         r = end[0];
         g = end[1];
         b = end[2];
-        colors[i] = toColor([r, g, b]);
+        colors[i] = toColor([ r, g, b ]);
         return colors;
     }
 
     /**
      * 获取指定级数的渐变颜色数组
-     * @param {Array} colors 颜色组
-     * @param {number=20} step 渐变级数
-     * @return {Array}  颜色数组
+     * @memberOf module:zrender/tool/color
+     * @param {Array.<string>} colors 颜色组
+     * @param {number} [step=20] 渐变级数
+     * @return {Array.<string>}  颜色数组
      */
     function getGradientColors(colors, step) {
         var ret = [];
@@ -4735,8 +5425,9 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
         }
         if (len === 1) {
             ret = getStepColors(colors[0], colors[0], step);
-        } else if (len > 1) {
-            for ( var i = 0, n = len - 1; i < n; i++) {
+        }
+        else if (len > 1) {
+            for (var i = 0, n = len - 1; i < n; i++) {
                 var steps = getStepColors(colors[i], colors[i + 1], step);
                 if (i < n - 1) {
                     steps.pop();
@@ -4761,15 +5452,18 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
             data = map(data,
                 function(c) {
                     return c > 1 ? Math.ceil(c) : c;
-            });
+                }
+            );
 
             if (format.indexOf('hex') > -1) {
                 return '#' + ((1 << 24) + (data[0] << 16) + (data[1] << 8) + (+data[2])).toString(16).slice(1);
-            } else if (format.indexOf('hs') > -1) {
+            }
+            else if (format.indexOf('hs') > -1) {
                 var sx = map(data.slice(1, 3),
                     function(c) {
                         return c + '%';
-                });
+                    }
+                );
                 data[1] = sx[0];
                 data[2] = sx[1];
             }
@@ -4778,7 +5472,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
                 if (data.length === 3) {
                     data.push(1);
                 }
-                data[3] = adjust(data[3], [0, 1]);
+                data[3] = adjust(data[3], [ 0, 1 ]);
                 return format + '(' + data.slice(0, 4).join(',') + ')';
             }
 
@@ -4787,10 +5481,10 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
     }
 
     /**
-     * 返回颜色值数组
-     *
-     * @param {color} color 颜色
-     * @return {Array} 颜色值数组
+     * 颜色字符串转换为rgba数组
+     * @memberOf module:zrender/tool/color
+     * @param {string} color 颜色
+     * @return {Array.<number>} 颜色值数组
      */
     function toArray(color) {
         color = trim(color);
@@ -4803,7 +5497,8 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
         color.replace(/[\d.]+/g, function (n) {
             if (i < 3) {
                 n = n | 0;
-            } else {
+            }
+            else {
                 // Alpha
                 n = +n;
             }
@@ -4815,26 +5510,28 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
     /**
      * 颜色格式转化
      *
-     * @param {Array} data 颜色值数组
+     * @param {string} color 颜色值数组
      * @param {string} format 格式,默认rgb
      * @return {string} 颜色
      */
     function convert(color, format) {
         var data = getData(color);
         var alpha = data[3];
-        if(typeof alpha === 'undefined') {
+        if (typeof alpha === 'undefined') {
             alpha = 1;
         }
 
         if (color.indexOf('hsb') > -1) {
             data = _HSV_2_RGB(data);
-        } else if (color.indexOf('hsl') > -1) {
+        }
+        else if (color.indexOf('hsl') > -1) {
             data = _HSL_2_RGB(data);
         }
 
         if (format.indexOf('hsb') > -1 || format.indexOf('hsv') > -1) {
             data = _RGB_2_HSB(data);
-        } else if (format.indexOf('hsl') > -1) {
+        }
+        else if (format.indexOf('hsl') > -1) {
             data = _RGB_2_HSL(data);
         }
 
@@ -4845,7 +5542,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 转换为rgba格式的颜色
-     * 
+     * @memberOf module:zrender/tool/color
      * @param {string} color 颜色
      * @return {string} rgba颜色，rgba(r,g,b,a)
      */
@@ -4855,7 +5552,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 转换为rgb数字格式的颜色
-     * 
+     * @memberOf module:zrender/tool/color
      * @param {string} color 颜色
      * @return {string} rgb颜色，rgb(0,0,0)格式
      */
@@ -4865,7 +5562,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 转换为16进制颜色
-     * 
+     * @memberOf module:zrender/tool/color
      * @param {string} color 颜色
      * @return {string} 16进制颜色，#rrggbb格式
      */
@@ -4875,7 +5572,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 转换为HSV颜色
-     * 
+     * @memberOf module:zrender/tool/color
      * @param {string} color 颜色
      * @return {string} HSVA颜色，hsva(h,s,v,a)
      */
@@ -4885,7 +5582,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 转换为HSV颜色
-     * 
+     * @memberOf module:zrender/tool/color
      * @param {string} color 颜色
      * @return {string} HSV颜色，hsv(h,s,v)
      */
@@ -4895,7 +5592,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 转换为HSBA颜色
-     * 
+     * @memberOf module:zrender/tool/color
      * @param {string} color 颜色
      * @return {string} HSBA颜色，hsba(h,s,b,a)
      */
@@ -4905,7 +5602,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 转换为HSB颜色
-     * 
+     * @memberOf module:zrender/tool/color
      * @param {string} color 颜色
      * @return {string} HSB颜色，hsb(h,s,b)
      */
@@ -4915,7 +5612,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 转换为HSLA颜色
-     * 
+     * @memberOf module:zrender/tool/color
      * @param {string} color 颜色
      * @return {string} HSLA颜色，hsla(h,s,l,a)
      */
@@ -4925,7 +5622,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 转换为HSL颜色
-     * 
+     * @memberOf module:zrender/tool/color
      * @param {string} color 颜色
      * @return {string} HSL颜色，hsl(h,s,l)
      */
@@ -4940,7 +5637,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
      * @return {string} 颜色名
      */
     function toName(color) {
-        for ( var key in _nameColors) {
+        for (var key in _nameColors) {
             if (toHex(_nameColors[key]) === toHex(color)) {
                 return key;
             }
@@ -4960,7 +5657,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 颜色规范化
-     * 
+     * @memberOf module:zrender/tool/color
      * @param {string} color 颜色
      * @return {string} 规范化后的颜色
      */
@@ -4980,7 +5677,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
             var g = (color & 0xf0) << 4;
             var b = color & 0xf;
 
-            color = '#'+ ((1 << 24) + (r << 4) + r + (g << 4) + g + (b << 4) + b).toString(16).slice(1);
+            color = '#' + ((1 << 24) + (r << 4) + r + (g << 4) + g + (b << 4) + b).toString(16).slice(1);
         }
         // 或者使用以下正则替换，不过 chrome 下性能相对差点
         // color = color.replace(/^#([\da-f])([\da-f])([\da-f])$/i, '#$1$1$2$2$3$3');
@@ -4989,7 +5686,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 颜色加深或减淡，当level>0加深，当level<0减淡
-     * 
+     * @memberOf module:zrender/tool/color
      * @param {string} color 颜色
      * @param {number} level 升降程度,取值区间[-1,1]
      * @return {string} 加深或减淡后颜色值
@@ -5002,10 +5699,11 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
         level = Math.abs(level) > 1 ? 1 : Math.abs(level);
         color = toRGB(color);
         var data = getData(color);
-        for ( var i = 0; i < 3; i++) {
+        for (var i = 0; i < 3; i++) {
             if (direct === 1) {
                 data[i] = data[i] * (1 - level) | 0;
-            } else {
+            }
+            else {
                 data[i] = ((255 - data[i]) * level + data[i]) | 0;
             }
         }
@@ -5014,7 +5712,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 颜色翻转,[255-r,255-g,255-b,1-a]
-     * 
+     * @memberOf module:zrender/tool/color
      * @param {string} color 颜色
      * @return {string} 翻转颜色
      */
@@ -5023,23 +5721,24 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
         data = map(data,
             function(c) {
                 return 255 - c;
-        });
+            }
+        );
         return toColor(data, 'rgb');
     }
 
     /**
      * 简单两种颜色混合
-     * 
+     * @memberOf module:zrender/tool/color
      * @param {string} color1 第一种颜色
      * @param {string} color2 第二种颜色
-     * @param {string} weight 混合权重[0-1]
+     * @param {number} weight 混合权重[0-1]
      * @return {string} 结果色,rgb(r,g,b)或rgba(r,g,b,a)
      */
     function mix(color1, color2, weight) {
-        if(typeof weight === 'undefined') {
+        if (typeof weight === 'undefined') {
             weight = 0.5;
         }
-        weight = 1 - adjust(weight, [0, 1]);
+        weight = 1 - adjust(weight, [ 0, 1 ]);
 
         var w = weight * 2 - 1;
         var data1 = getData(toRGBA(color1));
@@ -5052,7 +5751,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
         var data = [];
 
-        for ( var i = 0; i < 3; i++) {
+        for (var i = 0; i < 3; i++) {
             data[i] = data1[i] * weight1 + data2[i] * weight2;
         }
 
@@ -5094,7 +5793,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
      * hsla(h,s,l,a)
      *
      * @param {string} color 颜色
-     * @return {Array} 颜色值数组或null
+     * @return {Array.<number>} 颜色值数组或null
      */
     function getData(color) {
         color = normalize(color);
@@ -5110,11 +5809,12 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
         if (r[2]) {
             // #rrggbb
             d = r[2].replace('#', '').split('');
-            rgb = [d[0] + d[1], d[2] + d[3], d[4] + d[5]];
+            rgb = [ d[0] + d[1], d[2] + d[3], d[4] + d[5] ];
             data = map(rgb,
                 function(c) {
-                    return adjust(parseInt(c, 16), [0, 255]);
-            });
+                    return adjust(parseInt(c, 16), [ 0, 255 ]);
+                }
+            );
 
         }
         else if (r[4]) {
@@ -5128,12 +5828,12 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
                     c = Math.floor(
                         c.indexOf('%') > 0 ? parseInt(c, 0) * 2.55 : c
                     );
-                    return adjust(c, [0, 255]);
+                    return adjust(c, [ 0, 255 ]);
                 }
             );
 
-            if(typeof a !== 'undefined') {
-                data.push(adjust(parseFloat(a), [0, 1]));
+            if (typeof a !== 'undefined') {
+                data.push(adjust(parseFloat(a), [ 0, 1 ]));
             }
         }
         else if (r[5] || r[6]) {
@@ -5143,13 +5843,14 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
             var s = hsxa[1];
             var x = hsxa[2];
             a = hsxa[3];
-            data = map([s, x],
+            data = map([ s, x ],
                 function(c) {
-                    return adjust(parseFloat(c) / 100, [0, 1]);
-            });
+                    return adjust(parseFloat(c) / 100, [ 0, 1 ]);
+                }
+            );
             data.unshift(h);
-            if( typeof a !== 'undefined') {
-                data.push(adjust(parseFloat(a), [0, 1]));
+            if (typeof a !== 'undefined') {
+                data.push(adjust(parseFloat(a), [ 0, 1 ]));
             }
         }
         return data;
@@ -5157,8 +5858,9 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
     /**
      * 设置颜色透明度
+     * @memberOf module:zrender/tool/color
      * @param {string} color 颜色
-     * @param {number} alpha 透明度,区间[0,1]
+     * @param {number} a 透明度,区间[0,1]
      * @return {string} rgba颜色值
      */
     function alpha(color, a) {
@@ -5166,7 +5868,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
             a = 1;
         }
         var data = getData(toRGBA(color));
-        data[3] = adjust(Number(a).toFixed(4), [0, 1]);
+        data[3] = adjust(Number(a).toFixed(4), [ 0, 1 ]);
 
         return toColor(data, 'rgba');
     }
@@ -5177,7 +5879,7 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
             throw new TypeError();
         }
         var len = array ? array.length : 0;
-        for ( var i = 0; i < len; i++) {
+        for (var i = 0; i < len; i++) {
             array[i] = fun(array[i]);
         }
         return array;
@@ -5202,12 +5904,15 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
         var S = data[1];
         var V = data[2];
         // HSV from 0 to 1
-        var R, G, B;
+        var R; 
+        var G;
+        var B;
         if (S === 0) {
             R = V * 255;
             G = V * 255;
             B = V * 255;
-        } else {
+        }
+        else {
             var h = H * 6;
             if (h === 6) {
                 h = 0;
@@ -5224,23 +5929,28 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
                 r = V;
                 g = v3;
                 b = v1;
-            } else if (i === 1) {
+            }
+            else if (i === 1) {
                 r = v2;
                 g = V;
                 b = v1;
-            } else if (i === 2) {
+            }
+            else if (i === 2) {
                 r = v1;
                 g = V;
                 b = v3;
-            } else if (i === 3) {
+            }
+            else if (i === 3) {
                 r = v1;
                 g = v2;
                 b = V;
-            } else if (i === 4) {
+            }
+            else if (i === 4) {
                 r = v3;
                 g = v1;
                 b = V;
-            } else {
+            }
+            else {
                 r = V;
                 g = v1;
                 b = v2;
@@ -5259,16 +5969,20 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
         var S = data[1];
         var L = data[2];
         // HSL from 0 to 1
-        var R, G, B;
+        var R;
+        var G;
+        var B;
         if (S === 0) {
             R = L * 255;
             G = L * 255;
             B = L * 255;
-        } else {
+        }
+        else {
             var v2;
             if (L < 0.5) {
                 v2 = L * (1 + S);
-            } else {
+            }
+            else {
                 v2 = (L + S) - (S * L);
             }
 
@@ -5317,7 +6031,8 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
         if (delta === 0) {
             H = 0;
             S = 0;
-        } else {
+        }
+        else {
             S = delta / vMax;
 
             var deltaR = (((vMax - R) / 6) + (delta / 2)) / delta;
@@ -5326,9 +6041,11 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
             if (R === vMax) {
                 H = deltaB - deltaG;
-            } else if (G === vMax) {
+            }
+            else if (G === vMax) {
                 H = (1 / 3) + deltaR - deltaB;
-            } else if (B === vMax) {
+            }
+            else if (B === vMax) {
                 H = (2 / 3) + deltaG - deltaR;
             }
 
@@ -5362,10 +6079,12 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
         if (delta === 0) {
             H = 0;
             S = 0;
-        } else {
+        }
+        else {
             if (L < 0.5) {
                 S = delta / (vMax + vMin);
-            } else {
+            }
+            else {
                 S = delta / (2 - vMax - vMin);
             }
 
@@ -5375,9 +6094,11 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
             if (R === vMax) {
                 H = deltaB - deltaG;
-            } else if (G === vMax) {
+            }
+            else if (G === vMax) {
                 H = (1 / 3) + deltaR - deltaB;
-            } else if (B === vMax) {
+            }
+            else if (B === vMax) {
                 H = (2 / 3) + deltaG - deltaR;
             }
 
@@ -5432,129 +6153,51 @@ define( 'zrender/tool/color',['require','../tool/util'],function(require) {
 
 
 /**
- * zrender : shape基类
- *
- * desc:    zrender是一个轻量级的Canvas类库，MVC封装，数据驱动，提供类Dom事件模型。
- * author:  Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * shape基类
+ * @module zrender/shape/Base
+ * @author  Kener (@Kener-林峰, linzhifeng@baidu.com)
  *          errorrik (errorrik@gmail.com)
- *
- * 可配图形属性：
-   {
-       // 基础属性，详见各shape
-       shape  : {string},       // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
-
-       // 变换
-       position : {array},        // 默认为[0, 0], shape的坐标
-       rotation : {number|array}, // 默认为[0, 0, 0]，shape绕自身旋转的角度，不被translate 影响
-                                  // 后两个值为旋转的origin
-       scale : {array},           // 默认为[1, 1, 0, 0], shape纵横缩放比例，不被translate影响
-                                  // 后两个值为缩放的origin
-
-       // 样式属性，详见各shape，默认状态样式属性
-       style  : {Object},
-
-       // 样式属性，详见各shape，高亮样式属性，当不存在highlightStyle时使用默认样式扩展显示
-       highlightStyle : {Object},
-
-       // 交互属性，zrender支持，非图形类实现
-       hoverable : {boolean},   // 默认为true，可悬浮响应，默认悬浮响应为高亮显示
-                                // 可在onbrush中捕获并阻塞高亮绘画
-       clickable : {boolean},   // 默认为false，可点击响应，影响鼠标hover时图标是否为可点击样式
-                                // 为false则阻断点击事件抛出，为true可在onclick中捕获
-       draggable : {boolean},   // 默认为false，可拖拽响应，默认拖拽响应改变图形位置，
-                                // 可在ondrift中捕获并阻塞默认拖拽行为
-
-       // 事件属性
-       onbrush : {Function}, // 默认为null，当前图形被刷画时回调，可用于实现自定义绘画
-                 // 回传参数为：
-                 // @param {2D Context} context 当前canvas context
-                 // @param {Object} shape 当前shape
-                 // @param {boolean} isHighlight 是否高亮
-                 // @return {boolean} 回调返回true则不执行默认绘画
-       ondrift : {Function}, // 默认为null，当前图形被拖拽改变位置时回调，可用于限制拖拽范围
-                 // 回传参数为：
-                 // @param {Object} shape 当前shape
-                 // @param {number} dx x方向变化
-                 // @param {number} dy y方向变化
-       onclick : {Function}, // 默认为null，当前图形点击响应，回传参数为：
-                 // @param {Object} eventPacket 对象内容如下：
-                 // @param {string} eventPacket.type 事件类型，EVENT.CLICK
-                 // @param {event} eventPacket.event 原始dom事件对象
-                 // @param {Object} eventPacket.target 当前图形shape对象
-                 // @return {boolean} 回调返回true则阻止抛出全局事件
-
-       onmousewheel : {Function}, // 默认为null，当前图形上鼠标滚轮触发，回传参数格式同onclick，其中：
-                      // 事件类型为confit.EVENT.MOUSEWHEEL
-                      // @return {boolean} 回调返回true则阻止抛出全局事件
-
-       onmousemove : {Function}, // 默认为null，当前图上形鼠标（或手指）移动触发，回传参数格式同onclick，其中：
-                     // 事件类型为confit.EVENT.MOUSEMOVE
-                     // @return {boolean} 回调返回true则阻止抛出全局事件
-
-       onmouseover : {Function}, // 默认为null，鼠标（或手指）移动到当前图形上触发，回传参数格式同onclick：
-                     // 事件类型为confit.EVENT.MOUSEOVER
-                     // @return {boolean} 回调返回true则阻止抛出全局事件
-
-       onmouseout : {Function}, // 默认为null，鼠标（或手指）从当前图形移开，回传参数格式同onclick，其中：
-                    // 事件类型为confit.EVENT.MOUSEOUT
-                    // @return {boolean} 回调返回true则阻止抛出全局事件
-
-       onmousedown : {Function}, // 默认为null，鼠标按钮（或手指）按下，回传参数格式同onclick，其中：
-                     // 事件类型为confit.EVENT.MOUSEDOWN
-                     // @return {boolean} 回调返回true则阻止抛出全局事件
-
-       onmouseup : {Function}, // 默认为null，鼠标按钮（或手指）松开，回传参数格式同onclick，其中：
-                   // 事件类型为confit.EVENT.MOUSEUP
-                   // @return {boolean} 回调返回true则阻止抛出全局事件
-
-       ondragstart : {Function}, // 默认为null，开始拖拽时触发，回传参数格式同onclick，其中：
-                     // 事件类型为confit.EVENT.DRAGSTART
-                     // @return {boolean} 回调返回true则阻止抛出全局事件
-
-       ondragend : {Function}, // 默认为null，拖拽完毕时触发，回传参数格式同onclick，其中：
-                   // 事件类型为confit.EVENT.DRAGEND
-                   // @return {boolean} 回调返回true则阻止抛出全局事件
-
-       ondragenter : {Function}, // 默认为null，拖拽图形元素进入目标图形元素时触发
-                     // 回传参数格式同onclick，其中：
-                     // @param {string} eventPacket.type 事件类型，EVENT.DRAGENTER
-                     // @param {Object} eventPacket.target 目标图形元素shape对象
-                     // @param {Object} eventPacket.dragged 拖拽图形元素shape对象
-                     // @return {boolean} 回调返回true则阻止抛出全局事件
-
-       ondragover : {Function}, // 默认为null，拖拽图形元素在目标图形元素上移动时触发，
-                    // 回传参数格式同onclick，其中：
-                    // @param {string} eventPacket.type 事件类型，EVENT.DRAGOVER
-                    // @param {Object} eventPacket.target 目标图形元素shape对象
-                    // @param {Object} eventPacket.dragged 拖拽图形元素shape对象
-                    // @return {boolean} 回调返回true则阻止抛出全局事件
-
-       ondragleave : {Function}, // 默认为null，拖拽图形元素离开目标图形元素时触发，
-                     // 回传参数格式同onclick，其中：
-                     // @param {string} eventPacket.type 事件类型，EVENT.DRAGLEAVE
-                     // @param {Object} eventPacket.target 目标图形元素shape对象
-                     // @param {Object} eventPacket.dragged 拖拽图形元素shape对象
-                     // @return {boolean} 回调返回true则阻止抛出全局事件
-
-       ondrop : {Function}, // 默认为null，拖拽图形元素放在目标图形元素内时触发，
-                // 回传参数格式同onclick，其中：
-                // @param {string} eventPacket.type 事件类型，EVENT.DRAG
-                // @param {Object} eventPacket.target 目标图形元素shape对象
-                // @param {Object} eventPacket.dragged 拖拽图形元素shape对象
-                // @return {boolean} 回调返回true则阻止抛出全局事件
-   }
  */
+
+/**
+ * @typedef {Object} IBaseShapeStyle
+ * @property {string} [brushType='fill']
+ * @property {string} [color='#000000'] 填充颜色
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
+ */
+
+/**
+ * @typedef {Object} module:zrender/shape/Base~IBoundingRect
+ * @property {number} x 左上角顶点x轴坐标 
+ * @property {number} y 左上角顶点y轴坐标
+ * @property {number} width 包围盒矩形宽度
+ * @property {number} height 包围盒矩形高度
+ */
+
 define(
-    'zrender/shape/Base',['require','../tool/matrix','../tool/guid','../tool/util','./mixin/Transformable','../tool/event','../tool/area','../tool/area','../tool/color','../tool/area'],function(require) {
+    'zrender/shape/Base',['require','../tool/matrix','../tool/guid','../tool/util','../tool/log','../mixin/Transformable','../mixin/Eventful','../tool/area','../tool/area','../tool/color','../tool/area'],function(require) {
         var matrix = require('../tool/matrix');
         var guid = require('../tool/guid');
         var util = require('../tool/util');
+        var log = require('../tool/log');
 
-        var Transformable = require('./mixin/Transformable');
-        var Dispatcher = require('../tool/event').Dispatcher;
+        var Transformable = require('../mixin/Transformable');
+        var Eventful = require('../mixin/Eventful');
 
         function _fillText(ctx, text, x, y, textFont, textAlign, textBaseline) {
             if (textFont) {
@@ -5588,9 +6231,13 @@ define(
 
         /**
          * 返回矩形区域，用于局部刷新和文字定位
-         * 
          * @inner
-         * @param {Object} style
+         * @param {string} text
+         * @param {number} x
+         * @param {number} y
+         * @param {string} textFont
+         * @param {string} textAlign
+         * @param {string} textBaseline
          */
         function _getTextRect(text, x, y, textFont, textAlign, textBaseline) {
             var area = require('../tool/area');
@@ -5627,47 +6274,118 @@ define(
             };
         }
 
-        function Base( options ) {
+        /**
+         * @alias module:zrender/shape/Base
+         * @constructor
+         * @extends module:zrender/mixin/Transformable
+         * @extends module:zrender/mixin/Eventful
+         * @param {Object} options 关于shape的配置项，可以是shape的自有属性，也可以是自定义的属性。
+         */
+        var Base = function(options) {
             
             options = options || {};
             
+            /**
+             * Shape id, 全局唯一
+             * @type {string}
+             */
             this.id = options.id || guid();
 
-            for ( var key in options ) {
-                this[ key ] = options[ key ];
+            for (var key in options) {
+                this[key] = options[key];
             }
 
+            /**
+             * 基础绘制样式
+             * @type {module:zrender/shape/Base~IBaseShapeStyle}
+             */
             this.style = this.style || {};
 
+            /**
+             * 高亮样式
+             * @type {module:zrender/shape/Base~IBaseShapeStyle}
+             */
+            this.highlightStyle = this.highlightStyle || null;
+
+            /**
+             * 父节点
+             * @readonly
+             * @type {module:zrender/Group}
+             * @default null
+             */
             this.parent = null;
 
             this.__dirty = true;
 
             Transformable.call(this);
-            Dispatcher.call(this);
-        }
-
+            Eventful.call(this);
+        };
+        /**
+         * 图形是否可见，为true时不绘制图形，但是仍能触发鼠标事件
+         * @name module:zrender/shape/Base#invisible
+         * @type {boolean}
+         * @default false
+         */
         Base.prototype.invisible = false;
 
+        /**
+         * 图形是否忽略，为true时忽略图形的绘制以及事件触发
+         * @name module:zrender/shape/Base#ignore
+         * @type {boolean}
+         * @default false
+         */
         Base.prototype.ignore = false;
 
+        /**
+         * z层level，决定绘画在哪层canvas中
+         * @name module:zrender/shape/Base#zlevel
+         * @type {number}
+         * @default 0
+         */
         Base.prototype.zlevel = 0;
 
+        /**
+         * 是否可拖拽
+         * @name module:zrender/shape/Base#draggable
+         * @type {boolean}
+         * @default false
+         */
         Base.prototype.draggable = false;
 
+        /**
+         * 是否可点击
+         * @name module:zrender/shape/Base#clickable
+         * @type {boolean}
+         * @default false
+         */
         Base.prototype.clickable = false;
 
+        /**
+         * 是否可以hover
+         * @name module:zrender/shape/Base#hoverable
+         * @type {boolean}
+         * @default true
+         */
         Base.prototype.hoverable = true;
-
+        
+        /**
+         * z值，跟zlevel一样影响shape绘制的前后顺序，z值大的shape会覆盖在z值小的上面，
+         * 但是并不会创建新的canvas，所以优先级低于zlevel，而且频繁改动的开销比zlevel小很多。
+         * 
+         * @name module:zrender/shape/Base#z
+         * @type {number}
+         * @default 0
+         */
         Base.prototype.z = 0;
 
         /**
-         * 画刷
+         * 绘制图形
          * 
-         * @param ctx       画布句柄
-         * @param isHighlight   是否为高亮状态
-         * @param updateCallback 需要异步加载资源的shape可以通过这个callback(e)
-         *                       让painter更新视图，base.brush没用，需要的话重载brush
+         * @param {CanvasRenderingContext2D} ctx
+         * @param {boolean} [isHighlight=false] 是否使用高亮属性
+         * @param {Function} [updateCallback]
+         *        需要异步加载资源的shape可以通过这个callback(e), 
+         *        让painter更新视图，base.brush没用，需要的话重载brush
          */
         Base.prototype.brush = function (ctx, isHighlight) {
             var style = this.style;
@@ -5703,41 +6421,40 @@ define(
             }
 
             switch (style.brushType) {
+                /* jshint ignore:start */
                 case 'both':
                     ctx.fill();
                 case 'stroke':
                     style.lineWidth > 0 && ctx.stroke();
                     break;
+                /* jshint ignore:end */
                 default:
                     ctx.fill();
             }
-
+            
             this.drawText(ctx, style, this.style);
 
             ctx.restore();
         };
 
         var STYLE_CTX_MAP = [
-            ['color', 'fillStyle'],
-            ['strokeColor', 'strokeStyle'],
-            ['opacity', 'globalAlpha'],
-            ['lineCap', 'lineCap'],
-            ['lineJoin', 'lineJoin'],
-            ['miterLimit', 'miterLimit'],
-            ['lineWidth', 'lineWidth'],
-            ['shadowBlur', 'shadowBlur'],
-            ['shadowColor', 'shadowColor'],
-            ['shadowOffsetX', 'shadowOffsetX'],
-            ['shadowOffsetY', 'shadowOffsetY']
+            [ 'color', 'fillStyle' ],
+            [ 'strokeColor', 'strokeStyle' ],
+            [ 'opacity', 'globalAlpha' ],
+            [ 'lineCap', 'lineCap' ],
+            [ 'lineJoin', 'lineJoin' ],
+            [ 'miterLimit', 'miterLimit' ],
+            [ 'lineWidth', 'lineWidth' ],
+            [ 'shadowBlur', 'shadowBlur' ],
+            [ 'shadowColor', 'shadowColor' ],
+            [ 'shadowOffsetX', 'shadowOffsetX' ],
+            [ 'shadowOffsetY', 'shadowOffsetY' ]
         ];
 
         /**
-         * 画布通用设置
-         * 
-         * TODO Performance
-         * 
-         * @param ctx       画布句柄
-         * @param style     通用样式
+         * 设置 fillStyle, strokeStyle, shadow 等通用绘制样式
+         * @param {CanvasRenderingContext2D} ctx
+         * @param {module:zrender/shape/Base~IBaseShapeStyle} style
          */
         Base.prototype.setContext = function (ctx, style) {
             for (var i = 0, len = STYLE_CTX_MAP.length; i < len; i++) {
@@ -5754,9 +6471,9 @@ define(
         /**
          * 根据默认样式扩展高亮样式
          * 
-         * @param ctx Canvas 2D上下文
-         * @param {Object} style 默认样式
-         * @param {Object} highlightStyle 高亮样式
+         * @param {module:zrender/shape/Base~IBaseShapeStyle} style 默认样式
+         * @param {module:zrender/shape/Base~IBaseShapeStyle} highlightStyle 高亮样式
+         * @param {string} brushTypeOnly
          */
         Base.prototype.getHighlightStyle = function (style, highlightStyle, brushTypeOnly) {
             var newStyle = {};
@@ -5801,19 +6518,16 @@ define(
             return newStyle;
         };
 
-        /**
-         * 高亮放大效果参数
-         * 当前统一设置为6，如有需要差异设置，通过this.type判断实例类型
-         */
+        // 高亮放大效果参数
+        // 当前统一设置为6，如有需要差异设置，通过this.type判断实例类型
         Base.prototype.getHighlightZoom = function () {
             return this.type != 'text' ? 6 : 2;
         };
 
         /**
-         * 默认漂移
-         * 
-         * @param dx 横坐标变化
-         * @param dy 纵坐标变化
+         * 移动位置
+         * @param {number} dx 横坐标变化
+         * @param {number} dy 纵坐标变化
          */
         Base.prototype.drift = function (dx, dy) {
             this.position[0] += dx;
@@ -5821,20 +6535,23 @@ define(
         };
 
         /**
-         * 获取鼠标坐标变换 
-         * TODO Performance
+         * 变换鼠标位置到 shape 的局部坐标空间
+         * @method
+         * @param {number} x
+         * @param {number} y
+         * @return {Array.<number>}
          */
         Base.prototype.getTansform = (function() {
             
             var invTransform = [];
 
             return function (x, y) {
-                var originPos = [x, y];
+                var originPos = [ x, y ];
                 // 对鼠标的坐标也做相同的变换
                 if (this.needTransform && this.transform) {
                     matrix.invert(invTransform, this.transform);
 
-                    matrix.mulVector(originPos, invTransform, [x, y, 1]);
+                    matrix.mulVector(originPos, invTransform, [ x, y, 1 ]);
 
                     if (x == originPos[0] && y == originPos[1]) {
                         // 避免外部修改导致的needTransform不准确
@@ -5844,12 +6561,30 @@ define(
                 return originPos;
             };
         })();
+
+        /**
+         * 构建绘制的Path
+         * @param {CanvasRenderingContext2D} ctx
+         * @param {module:zrender/shape/Base~IBaseShapeStyle} style
+         */
+        Base.prototype.buildPath = function (ctx, style) {
+            log('buildPath not implemented in ' + this.type);
+        };
+
+        /**
+         * 计算返回包围盒矩形
+         * @param {module:zrender/shape/Base~IBaseShapeStyle} style
+         * @return {module:zrender/shape/Base~IBoundingRect}
+         */
+        Base.prototype.getRect = function (style) {
+            log('getRect not implemented in ' + this.type);   
+        };
         
         /**
-         * 默认区域包含判断
-         * 
-         * @param x 横坐标
-         * @param y 纵坐标
+         * 判断鼠标位置是否在图形内
+         * @param {number} x
+         * @param {number} y
+         * @return {boolean}
          */
         Base.prototype.isCover = function (x, y) {
             var originPos = this.getTansform(x, y);
@@ -5875,25 +6610,18 @@ define(
         };
 
         /**
-         * 附加文本
-         * 
-         * @param {Context2D} ctx Canvas 2D上下文
-         * @param {Object} style 样式
-         * @param {Object} normalStyle 默认样式，用于定位文字显示
+         * 绘制附加文本
+         * @param {CanvasRenderingContext2D} ctx
+         * @param {module:zrender/shape/Base~IBaseShapeStyle} style 样式
+         * @param {module:zrender/shape/Base~IBaseShapeStyle} normalStyle 默认样式，用于定位文字显示
          */
         Base.prototype.drawText = function (ctx, style, normalStyle) {
-            if (typeof(style.text) == 'undefined' || style.text === false ) {
+            if (typeof(style.text) == 'undefined' || style.text === false) {
                 return;
             }
             // 字体颜色策略
             var textColor = style.textColor || style.color || style.strokeColor;
             ctx.fillStyle = textColor;
-
-            /*
-            if (style.textPosition == 'inside') {
-                ctx.shadowColor = 'rgba(0,0,0,0)';   // 内部文字不带shadowColor
-            }
-            */
 
             // 文本与图形间空白间隙
             var dd = 10;
@@ -6038,10 +6766,15 @@ define(
                 );
             }
         };
-        // TODO
+
+        /**
+         * 图形是否会触发事件
+         * @return {boolean}
+         */
+        // TODO, 通过 bind 绑定的事件
         Base.prototype.isSilent = function () {
             return !(
-                this.hoverable || this.draggable
+                this.hoverable || this.draggable || this.clickable
                 || this.onmousemove || this.onmouseover || this.onmouseout
                 || this.onmousedown || this.onmouseup || this.onclick
                 || this.ondragenter || this.ondragover || this.ondragleave
@@ -6050,92 +6783,80 @@ define(
         };
 
         util.merge(Base.prototype, Transformable.prototype, true);
-        util.merge(Base.prototype, Dispatcher.prototype, true);
+        util.merge(Base.prototype, Eventful.prototype, true);
 
         return Base;
     }
 );
 
 /**
- * zrender
- *
- * author: CrossDo (chenhuaimu@baidu.com)
- *
- * shape类：路径
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'path',         // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
+ * SVG Path
+ * @module zrender/shape/Path
+ * @see http://www.w3.org/TR/2011/REC-SVG11-20110816/paths.html#PathData
+ * @author: CrossDo (chenhuaimu@baidu.com)
+ */
 
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           path          : {string},// 必须，路径。例如:M 0 0 L 0 10 L 10 10 Z (一个三角形)
-                                    //M = moveto
-                                    //L = lineto
-                                    //H = horizontal lineto
-                                    //V = vertical lineto
-                                    //C = curveto
-                                    //S = smooth curveto
-                                    //Q = quadratic Belzier curve
-                                    //T = smooth quadratic Belzier curveto
-                                    //Z = closepath
-
-
-           x             : {number},  // 必须，x轴坐标
-           y             : {number},  // 必须，y轴坐标
-
-
-           brushType     : {string},  // 默认为fill，绘画方式
-                                      // fill(填充) | stroke(描边) | both(填充+描边)
-           color         : {color},   // 默认为'#000'，填充颜色，支持rgba
-           strokeColor   : {color},   // 默认为'#000'，描边颜色（轮廓），支持rgba
-           lineWidth     : {number},  // 默认为1，线条宽度，描边下有效
-
-           opacity       : {number},  // 默认为1，透明度设置，如果color为rgba，则最终透明度效果叠加
-           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
-           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
-           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-           shadowOffsetY : {number},  // 默认为0，阴影纵向偏移，正值往下，负值往上
-
-           text          : {string},  // 默认为null，附加文本
-           textFont      : {string},  // 默认为null，附加文本样式，eg:'bold 18px verdana'
-           textPosition  : {string},  // 默认为top，附加文本位置。
-                                      // inside | left | right | top | bottom
-           textAlign     : {string},  // 默认根据textPosition自动设置，附加文本水平对齐。
-                                      // start | end | left | right | center
-           textBaseline  : {string},  // 默认根据textPosition自动设置，附加文本垂直对齐。
-                                      // top | bottom | middle |
-                                      // alphabetic | hanging | ideographic
-           textColor     : {color},   // 默认根据textPosition自动设置，默认策略如下，附加文本颜色
-                                      // 'inside' ? '#fff' : color
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
-
- **/
-
+/**
+ * @typedef {Object} IPathStyle
+ * @property {string} path path描述数据, 详见 {@link http://www.w3.org/TR/2011/REC-SVG11-20110816/paths.html#PathData}
+ * @property {number} x x轴位移
+ * @property {number} y y轴位移
+ * @property {string} [brushType='fill']
+ * @property {string} [color='#000000'] 填充颜色
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
+ */
 define('zrender/shape/Path',['require','./Base','../tool/util'],function (require) {
     var Base = require('./Base');
-    
-    function Path(options) {
+
+    var vMag = function(v) {
+        return Math.sqrt(v[0] * v[0] + v[1] * v[1]);
+    };
+    var vRatio = function(u, v) {
+        return (u[0] * v[0] + u[1] * v[1]) / (vMag(u) * vMag(v));
+    };
+    var vAngle = function(u, v) {
+        return (u[0] * v[1] < u[1] * v[0] ? -1 : 1)
+                * Math.acos(vRatio(u, v));
+    };
+    /**
+     * @alias module:zrender/shape/Path
+     * @constructor
+     * @extends module:zrender/shape/Base
+     * @param {Object} options
+     */
+    var Path = function (options) {
         Base.call(this, options);
-    }
+        /**
+         * Path绘制样式
+         * @name module:zrender/shape/Path#style
+         * @type {module:zrender/shape/Path~IPathStyle}
+         */
+        /**
+         * Path高亮绘制样式
+         * @name module:zrender/shape/Path#highlightStyle
+         * @type {module:zrender/shape/Path~IPathStyle}
+         */
+    };
 
     Path.prototype = {
         type: 'path',
 
-        _parsePathData : function(data) {
+        _parsePathData : function (data) {
             if (!data) {
                 return [];
             }
@@ -6382,7 +7103,7 @@ define('zrender/shape/Path',['require','./Base','../tool/util'],function (requir
 
         },
 
-        _convertPoint : function(x1, y1, x2, y2, fa, fs, rx, ry, psiDeg) {
+        _convertPoint : function (x1, y1, x2, y2, fa, fs, rx, ry, psiDeg) {
             var psi = psiDeg * (Math.PI / 180.0);
             var xp = Math.cos(psi) * (x1 - x2) / 2.0
                      + Math.sin(psi) * (y1 - y2) / 2.0;
@@ -6419,16 +7140,6 @@ define('zrender/shape/Path',['require','./Base','../tool/util'],function (requir
                     + Math.sin(psi) * cxp
                     + Math.cos(psi) * cyp;
 
-            var vMag = function(v) {
-                return Math.sqrt(v[0] * v[0] + v[1] * v[1]);
-            };
-            var vRatio = function(u, v) {
-                return (u[0] * v[0] + u[1] * v[1]) / (vMag(u) * vMag(v));
-            };
-            var vAngle = function(u, v) {
-                return (u[0] * v[1] < u[1] * v[0] ? -1 : 1)
-                        * Math.acos(vRatio(u, v));
-            };
             var theta = vAngle([ 1, 0 ], [ (xp - cxp) / rx, (yp - cyp) / ry ]);
             var u = [ (xp - cxp) / rx, (yp - cyp) / ry ];
             var v = [ (-1 * xp - cxp) / rx, (-1 * yp - cyp) / ry ];
@@ -6451,10 +7162,10 @@ define('zrender/shape/Path',['require','./Base','../tool/util'],function (requir
 
         /**
          * 创建路径
-         * @param {Context2D} ctx Canvas 2D上下文
-         * @param {Object} style 样式
+         * @param {CanvasRenderingContext2D} ctx
+         * @param {module:zrender/shape/Path~IPathStyle} style
          */
-        buildPath : function(ctx, style) {
+        buildPath : function (ctx, style) {
             var path = style.path;
 
             var pathArray = this.pathArray || this._parsePathData(path);
@@ -6475,7 +7186,7 @@ define('zrender/shape/Path',['require','./Base','../tool/util'],function (requir
                 }
                 p = pathArray[i].points;
                 for (var j = 0, k = p.length; j < k; j += 2) {
-                    singlePointList.push([p[j] + x, p[j+1] + y]);
+                    singlePointList.push([ p[j] + x, p[j + 1] + y ]);
                 }
             }
             singlePointList.length > 0 && pointList.push(singlePointList);
@@ -6488,7 +7199,8 @@ define('zrender/shape/Path',['require','./Base','../tool/util'],function (requir
                 for (var j = 0, k = p.length; j < k; j++) {
                     if (j % 2 === 0) {
                         p[j] += x;
-                    } else {
+                    }
+                    else {
                         p[j] += y;
                     }
                 }
@@ -6536,10 +7248,11 @@ define('zrender/shape/Path',['require','./Base','../tool/util'],function (requir
         },
 
         /**
-         * 返回矩形区域，用于局部刷新和文字定位
-         * @param {Object} style 样式
+         * 计算返回Path包围盒矩形。
+         * @param {module:zrender/shape/Path~IPathStyle} style
+         * @return {module:zrender/shape/Base~IBoundingRect}
          */
-        getRect : function(style) {
+        getRect : function (style) {
             if (style.__rect) {
                 return style.__rect;
             }
@@ -6615,6 +7328,7 @@ define('zrender/shape/Path',['require','./Base','../tool/util'],function (requir
     require('../tool/util').inherits(Path, Base);
     return Path;
 });
+
 /**
  * zrender: 图形空间辅助类
  *
@@ -6625,7 +7339,7 @@ define('zrender/shape/Path',['require','./Base','../tool/util'],function (requir
  * getTextWidth：测算单行文本宽度
  */
 define(
-    'zrender/tool/area',['require','../tool/util','../shape/Path'],function(require) {
+    'zrender/tool/area',['require','../tool/util','../shape/Path'],function (require) {
         var util = require('../tool/util');
 
         var _ctx;
@@ -6634,7 +7348,7 @@ define(
         var _textHeightCache = {};
         var _textWidthCacheCounter = 0;
         var _textHeightCacheCounter = 0;
-        var TEXT_CACHE_MAX = 20000;
+        var TEXT_CACHE_MAX = 5000;
         
         /**
          * 包含判断
@@ -6676,7 +7390,7 @@ define(
 
             // 上面的方法都行不通时
             switch (zoneType) {
-                case 'heart': //心形---------10 // Todo，不精确
+                case 'heart': // 心形---------10 // Todo，不精确
                 case 'droplet':// 水滴----------11 // Todo，不精确
                 case 'ellipse': // Todo，不精确
                     return true;
@@ -6689,7 +7403,7 @@ define(
                 // 玫瑰线 不准确
                 case 'rose' :
                     return _isInsideCircle(area, x, y, area.maxr);
-                //路径，椭圆，曲线等-----------------13
+                // 路径，椭圆，曲线等-----------------13
                 default:
                     return false;   // Todo，暂不支持
             }
@@ -6707,35 +7421,35 @@ define(
         function _mathMethod(zoneType, area, x, y) {
             // 在矩形内则部分图形需要进一步判断
             switch (zoneType) {
-                //线-----------------------1
+                // 线-----------------------1
                 case 'line':
                     return _isInsideLine(area, x, y);
-                //折线----------------------2
+                // 折线----------------------2
                 case 'broken-line':
                     return _isInsideBrokenLine(area, x, y);
-                //文本----------------------3
+                // 文本----------------------3
                 case 'text':
                     return true;
-                //圆环----------------------4
+                // 圆环----------------------4
                 case 'ring':
                     return _isInsideRing(area, x, y);
-                //矩形----------------------5
+                // 矩形----------------------5
                 case 'rectangle':
                     return true;
-                //圆形----------------------6
+                // 圆形----------------------6
                 case 'circle':
                     return _isInsideCircle(area, x, y, area.r);
-                //扇形----------------------7
+                // 扇形----------------------7
                 case 'sector':
                     return _isInsideSector(area, x, y);
-                //多边形---------------------8
+                // 多边形---------------------8
                 case 'path':
-                    return _isInsidePath(area, x, y);
+                     return _isInsidePath(area, x, y);
                 case 'polygon':
                 case 'star':
                 case 'isogon':
                     return _isInsidePolygon(area, x, y);
-                //图片----------------------9
+                // 图片----------------------9
                 case 'image':
                     return true;
             }
@@ -6777,7 +7491,7 @@ define(
             util.adjustCanvasSize(x, y);
             _context.clearRect(_rect.x, _rect.y, _rect.width, _rect.height);
             _context.beginPath();
-            shape.brush(_context, {style : area});
+            shape.brush(_context, { style: area });
             _context.closePath();
 
             return _isPainted(_context, x + _offset.x, y + _offset.y);
@@ -6796,7 +7510,7 @@ define(
             var pixelsData;
 
             if (typeof unit != 'undefined') {
-                unit = (unit || 1 ) >> 1;
+                unit = (unit || 1) >> 1;
                 pixelsData = context.getImageData(
                     x - unit,
                     y - unit,
@@ -6837,17 +7551,21 @@ define(
             var _a = 0;
             var _b = _x1;
 
-            var minX, maxX;
+            var minX;
+            var maxX;
             if (_x1 < _x2) {
                 minX = _x1 - _l; maxX = _x2 + _l;
-            } else {
+            }
+            else {
                 minX = _x2 - _l; maxX = _x1 + _l;
             }
 
-            var minY, maxY;
+            var minY;
+            var maxY;
             if (_y1 < _y2) {
                 minY = _y1 - _l; maxY = _y2 + _l;
-            } else {
+            }
+            else {
                 minY = _y2 - _l; maxY = _y1 + _l;
             }
 
@@ -6864,7 +7582,7 @@ define(
             }
 
             var _s = (_a * x - y + _b) * (_a * x - y + _b) / (_a * _a + 1);
-            return  _s <= _l / 2 * _l / 2;
+            return _s <= _l / 2 * _l / 2;
         }
 
         function _isInsideBrokenLine(area, x, y) {
@@ -6893,7 +7611,7 @@ define(
 
         function _isInsideRing(area, x, y) {
             return _isInsideCircle(area, x, y, area.r)
-                && !_isInsideCircle({x: area.x, y: area.y}, x, y, area.r0 || 0);
+                && !_isInsideCircle({ x: area.x, y: area.y }, x, y, area.r0 || 0);
         }
 
         /**
@@ -6929,7 +7647,7 @@ define(
                             area.r0
                         )
                     )
-            ){
+            ) {
                 // 大圆外或者小圆内直接false
                 return false;
             }
@@ -6974,7 +7692,7 @@ define(
 
             for (i = 0; i < N; ++i) {
                 // 是否在顶点上
-                if (polygon[i][0] == x && polygon[i][1] == y ) {
+                if (polygon[i][0] == x && polygon[i][1] == y) {
                     redo = false;
                     inside = true;
                     break;
@@ -6984,7 +7702,7 @@ define(
             if (redo) {
                 redo = false;
                 inside = false;
-                for (i = 0,j = N - 1; i < N; j = i++) {
+                for (i = 0, j = N - 1; i < N; j = i++) {
                     if ((polygon[i][1] < y && y < polygon[j][1])
                         || (polygon[j][1] < y && y < polygon[i][1])
                     ) {
@@ -7005,7 +7723,7 @@ define(
                     else if (y == polygon[i][1]) {
                         if (x < polygon[i][0]) {    // 交点在顶点上
                             polygon[i][1] > polygon[j][1] ? --y : ++y;
-                            //redo = true;
+                            // redo = true;
                             break;
                         }
                     }
@@ -7043,14 +7761,14 @@ define(
 
             return insideCatch;
         }
-
+        
         /**
          * 测算多行文本宽度
          * @param {Object} text
          * @param {Object} textFont
          */
         function getTextWidth(text, textFont) {
-            var key = text+':'+textFont;
+            var key = text + ':' + textFont;
             if (_textWidthCache[key]) {
                 return _textWidthCache[key];
             }
@@ -7087,7 +7805,7 @@ define(
          * @param {Object} textFont
          */
         function getTextHeight(text, textFont) {
-            var key = text+':'+textFont;
+            var key = text + ':' + textFont;
             if (_textHeightCache[key]) {
                 return _textHeightCache[key];
             }
@@ -7100,7 +7818,7 @@ define(
             }
             
             text = (text + '').split('\n');
-            //比较粗暴
+            // 比较粗暴
             var height = (_ctx.measureText('国').width + 2) * text.length;
 
             _ctx.restore();
@@ -7124,91 +7842,72 @@ define(
 );
 
 /**
- * zrender
- *
+ * @module zrender/shape/Text
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *
- * shape类：文字
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'text',         // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
-
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           x             : {number},  // 必须，横坐标
-           y             : {number},  // 必须，纵坐标
-           brushType     : {string},  // 默认为fill，绘画方式
-                                      // fill(填充) | stroke(描边) | both(填充+描边)
-           color         : {color},   // 默认为'#000'，填充颜色，支持rgba
-           strokeColor   : {color},   // 默认为'#000'，线条颜色（轮廓），支持rgba
-           lineWidth     : {number},  // 默认为1，线条宽度
-
-           opacity       : {number},  // 默认为1，透明度设置，如果color为rgba，则最终透明度效果叠加
-           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
-           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
-           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-           shadowOffsetY : {number},  // 默认为0，阴影纵向偏移，正值往下，负值往上
-
-           text          : {string},  // 必须，文本内容
-           textFont      : {string},  // 默认为null，文本文字样式，eg:'bold 18px verdana'
-           textAlign     : {string},  // 默认为start，文本水平对齐。
-                                      // start | end | left | right | center
-           textBaseline  : {string},  // 默认为middle，文本垂直对齐。
-                                      // top | bottom | middle |
-                                      // alphabetic | hanging | ideographic
-           maxWidth      : {number}   // 默认为null，最大宽度
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
-         例子：
-   {
-       shape  : 'text',
-       id     : '123456',
-       zlevel : 1,
-       style  : {
-           x : 200,
-           y : 100,
-           color : 'red',
-           text : 'Baidu'
-       },
-       myName : 'kener',  //可自带任何有效自定义属性
-
-       clickable : true,
-       onClick : function(eventPacket) {
-           alert(eventPacket.target.myName);
-       }
-   }
+ * @example
+ *     var Text = require('zrender/shape/Text');
+ *     var shape = new Text({
+ *         style: {
+ *             text: 'Label',
+ *             x: 100,
+ *             y: 100,
+ *             textFont: '14px Arial'
+ *         }
+ *     });
+ *     zr.addShape(shape);
  */
+
+/**
+ * @typedef {Object} ITextStyle
+ * @property {number} x 横坐标
+ * @property {number} y 纵坐标
+ * @property {string} text 文本内容
+ * @property {number} [maxWidth=null] 最大宽度限制
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
+ * @property {string} [brushType='fill']
+ * @property {string} [color='#000000'] 填充颜色
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ */
+
 define(
     'zrender/shape/Text',['require','../tool/area','./Base','../tool/util'],function (require) {
         var area = require('../tool/area');
         var Base = require('./Base');
         
-        function Text(options) {
+        /**
+         * @alias module:zrender/shape/Text
+         * @constructor
+         * @extends module:zrender/shape/Base
+         * @param {Object} options
+         */
+        var Text = function (options) {
             Base.call(this, options);
-        }
+            /**
+             * 文字绘制样式
+             * @name module:zrender/shape/Text#style
+             * @type {module:zrender/shape/Text~ITextStyle}
+             */
+            /**
+             * 文字高亮绘制样式
+             * @name module:zrender/shape/Text#highlightStyle
+             * @type {module:zrender/shape/Text~ITextStyle}
+             */
+        };
 
         Text.prototype =  {
             type: 'text',
 
-            /**
-             * 画刷，重载基类方法
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param isHighlight 是否为高亮状态
-             */
-            brush : function(ctx, isHighlight) {
+            brush : function (ctx, isHighlight) {
                 var style = this.style;
                 if (isHighlight) {
                     // 根据style扩展默认高亮样式
@@ -7280,7 +7979,7 @@ define(
                                 );
                         }
                     }
-                    else{
+                    else {
                         switch (style.brushType) {
                             case 'fill':
                                 ctx.fillText(text[i], x, y);
@@ -7304,10 +8003,11 @@ define(
             },
 
             /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
+             * 返回文字包围盒矩形
+             * @param {module:zrender/shape/Text~ITextStyle} style
+             * @return {module:zrender/shape/Base~IBoundingRect}
              */
-            getRect : function(style) {
+            getRect : function (style) {
                 if (style.__rect) {
                     return style.__rect;
                 }
@@ -7315,7 +8015,7 @@ define(
                 var width = area.getTextWidth(style.text, style.textFont);
                 var height = area.getTextHeight(style.text, style.textFont);
                 
-                var textX = style.x;                 //默认start == left
+                var textX = style.x;                 // 默认start == left
                 if (style.textAlign == 'end' || style.textAlign == 'right') {
                     textX -= width;
                 }
@@ -7351,105 +8051,85 @@ define(
     }
 );
 
+
 /**
- * zrender
- *
+ * 矩形
+ * @module zrender/shape/Rectangle
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com) , 
  *         strwind (@劲风FEI, yaofeifei@baidu.com)
- *
- * shape类：矩形
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'rectangle',       // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
+ * @example
+ *     var Rectangle = require('zrender/shape/Rectangle');
+ *     var shape = new Rectangle({
+ *         style: {
+ *             x: 0,
+ *             y: 0,
+ *             width: 100,
+ *             height: 100,
+ *             radius: 20
+ *         }
+ *     });
+ *     zr.addShape(shape);
+ */
 
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           x             : {number},  // 必须，左上角横坐标
-           y             : {number},  // 必须，左上角纵坐标
-           width         : {number},  // 必须，宽度
-           height        : {number},  // 必须，高度
-           radius        : {array},   // 默认为[0]，圆角 
-           brushType     : {string},  // 默认为fill，绘画方式
-                                      // fill(填充) | stroke(描边) | both(填充+描边)
-           color         : {color},   // 默认为'#000'，填充颜色，支持rgba
-           strokeColor   : {color},   // 默认为'#000'，描边颜色（轮廓），支持rgba
-           lineWidth     : {number},  // 默认为1，线条宽度，描边下有效
-
-           opacity       : {number},  // 默认为1，透明度设置，如果color为rgba，则最终透明度效果叠加
-           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
-           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
-           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-           shadowOffsetY : {number},  // 默认为0，阴影纵向偏移，正值往下，负值往上
-
-           text          : {string},  // 默认为null，附加文本
-           textFont      : {string},  // 默认为null，附加文本样式，eg:'bold 18px verdana'
-           textPosition  : {string},  // 默认为top，附加文本位置。
-                                      // inside | left | right | top | bottom
-           textAlign     : {string},  // 默认根据textPosition自动设置，附加文本水平对齐。
-                                      // start | end | left | right | center
-           textBaseline  : {string},  // 默认根据textPosition自动设置，附加文本垂直对齐。
-                                      // top | bottom | middle |
-                                      // alphabetic | hanging | ideographic
-           textColor     : {color},   // 默认根据textPosition自动设置，默认策略如下，附加文本颜色
-                                      // 'inside' ? '#fff' : color
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
-         例子：
-   {
-       shape  : 'rectangle',
-       id     : '123456',
-       zlevel : 1,
-       style  : {
-           x : 200,
-           y : 100,
-           width : 150,
-           height : 50,
-           color : '#eee',
-           text : 'Baidu'
-       },
-       myName : 'kener',  // 可自带任何有效自定义属性
-
-       clickable : true,
-       onClick : function(eventPacket) {
-           alert(eventPacket.target.myName);
-       }
-   }
+/**
+ * @typedef {Object} IRectangleStyle
+ * @property {number} x 左上角x坐标
+ * @property {number} y 左上角y坐标
+ * @property {number} width 宽度
+ * @property {number} height 高度
+ * @property {number|Array.<number>} radius 矩形圆角，可以用数组分别指定四个角的圆角
+ * @property {string} [brushType='fill']
+ * @property {string} [color='#000000'] 填充颜色
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
  */
 define(
     'zrender/shape/Rectangle',['require','./Base','../tool/util'],function (require) {
         var Base = require('./Base');
         
-        function Rectangle(options) {
+        /**
+         * @alias module:zrender/shape/Rectangle
+         * @constructor
+         * @extends module:zrender/shape/Base
+         * @param {Object} options
+         */
+        var Rectangle = function (options) {
             Base.call(this, options);
-        }
+            /**
+             * 矩形绘制样式
+             * @name module:zrender/shape/Rectangle#style
+             * @type {module:zrender/shape/Rectangle~IRectangleStyle}
+             */
+            /**
+             * 矩形高亮绘制样式
+             * @name module:zrender/shape/Rectangle#highlightStyle
+             * @type {module:zrender/shape/Rectangle~IRectangleStyle}
+             */
+        };
 
         Rectangle.prototype =  {
             type: 'rectangle',
 
-            /**
-             * 绘制圆角矩形
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
-             */
-            _buildRadiusPath: function(ctx, style) {
-                //左上、右上、右下、左下角的半径依次为r1、r2、r3、r4
-                //r缩写为1         相当于 [1, 1, 1, 1]
-                //r缩写为[1]       相当于 [1, 1, 1, 1]
-                //r缩写为[1, 2]    相当于 [1, 2, 1, 2]
-                //r缩写为[1, 2, 3] 相当于 [1, 2, 3, 2]
+            _buildRadiusPath: function (ctx, style) {
+                // 左上、右上、右下、左下角的半径依次为r1、r2、r3、r4
+                // r缩写为1         相当于 [1, 1, 1, 1]
+                // r缩写为[1]       相当于 [1, 1, 1, 1]
+                // r缩写为[1, 2]    相当于 [1, 2, 1, 2]
+                // r缩写为[1, 2, 3] 相当于 [1, 2, 3, 2]
                 var x = style.x;
                 var y = style.y;
                 var width = style.width;
@@ -7460,29 +8140,53 @@ define(
                 var r3; 
                 var r4;
                   
-                if(typeof r === 'number') {
+                if (typeof r === 'number') {
                     r1 = r2 = r3 = r4 = r;
                 }
-                else if(r instanceof Array) {
+                else if (r instanceof Array) {
                     if (r.length === 1) {
                         r1 = r2 = r3 = r4 = r[0];
                     }
-                    else if(r.length === 2) {
+                    else if (r.length === 2) {
                         r1 = r3 = r[0];
                         r2 = r4 = r[1];
                     }
-                    else if(r.length === 3) {
+                    else if (r.length === 3) {
                         r1 = r[0];
                         r2 = r4 = r[1];
                         r3 = r[2];
-                    } else {
+                    }
+                    else {
                         r1 = r[0];
                         r2 = r[1];
                         r3 = r[2];
                         r4 = r[3];
                     }
-                } else {
+                }
+                else {
                     r1 = r2 = r3 = r4 = 0;
+                }
+                
+                var total;
+                if (r1 + r2 > width) {
+                    total = r1 + r2;
+                    r1 *= width / total;
+                    r2 *= width / total;
+                }
+                if (r3 + r4 > width) {
+                    total = r3 + r4;
+                    r3 *= width / total;
+                    r4 *= width / total;
+                }
+                if (r2 + r3 > height) {
+                    total = r2 + r3;
+                    r2 *= height / total;
+                    r3 *= height / total;
+                }
+                if (r1 + r4 > height) {
+                    total = r1 + r4;
+                    r1 *= height / total;
+                    r4 *= height / total;
                 }
                 ctx.moveTo(x + r1, y);
                 ctx.lineTo(x + width - r2, y);
@@ -7503,26 +8207,28 @@ define(
             
             /**
              * 创建矩形路径
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
+             * @param {CanvasRenderingContext2D} ctx
+             * @param {Object} style
              */
-            buildPath : function(ctx, style) {
-                if(!style.radius) {
+            buildPath : function (ctx, style) {
+                if (!style.radius) {
                     ctx.moveTo(style.x, style.y);
                     ctx.lineTo(style.x + style.width, style.y);
                     ctx.lineTo(style.x + style.width, style.y + style.height);
                     ctx.lineTo(style.x, style.y + style.height);
                     ctx.lineTo(style.x, style.y);
-                    //ctx.rect(style.x, style.y, style.width, style.height);
-                } else {
+                    // ctx.rect(style.x, style.y, style.width, style.height);
+                }
+                else {
                     this._buildRadiusPath(ctx, style);
                 }
                 return;
             },
 
             /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
+             * 计算返回矩形包围盒矩阵
+             * @param {module:zrender/shape/Rectangle~IRectangleStyle} style
+             * @return {module:zrender/shape/Base~IBoundingRect}
              */
             getRect : function(style) {
                 if (style.__rect) {
@@ -7551,6 +8257,7 @@ define(
         return Rectangle;
     }
 );
+
 /**
  * zrender: loading特效类
  *
@@ -7652,7 +8359,8 @@ define(
         };
 
         Base.prototype._start = function (/*addShapeHandle, refreshHandle*/) {
-            return setInterval(function(){}, 10000);
+            return setInterval(function () {
+            }, 10000);
         };
 
         Base.prototype.stop = function () {
@@ -7672,101 +8380,115 @@ define(
             }
             return value;
         };
+        
+        Base.prototype.getLocation = function(loc, totalWidth, totalHeight) {
+            var x = loc.x != null ? loc.x : 'center';
+            switch (x) {
+                case 'center' :
+                    x = Math.floor((this.canvasWidth - totalWidth) / 2);
+                    break;
+                case 'left' :
+                    x = 0;
+                    break;
+                case 'right' :
+                    x = this.canvasWidth - totalWidth;
+                    break;
+            }
+            var y = loc.y != null ? loc.y : 'center';
+            switch (y) {
+                case 'center' :
+                    y = Math.floor((this.canvasHeight - totalHeight) / 2);
+                    break;
+                case 'top' :
+                    y = 0;
+                    break;
+                case 'bottom' :
+                    y = this.canvasHeight - totalHeight;
+                    break;
+            }
+            return {
+                x : x,
+                y : y,
+                width : totalWidth,
+                height : totalHeight
+            };
+        };
 
         return Base;
     }
 );
 
 /**
- * zrender
- *
- * @author lang( shenyi01@baidu.com )
- *
- * shape类：图片
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'image',       // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
+ * 图片绘制
+ * @module zrender/shape/Image
+ * @author pissang(https://www.github.com/pissang)
+ * @example
+ *     var ImageShape = require('zrender/shape/Image');
+ *     var image = new ImageShape({
+ *         style: {
+ *             image: 'test.jpg',
+ *             x: 100,
+ *             y: 100
+ *         }
+ *     });
+ *     zr.addShape(image);
+ */
 
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           x             : {number},  // 必须，左上角横坐标
-           y             : {number},  // 必须，左上角纵坐标
-           width         : {number},  // 可选，宽度
-           height        : {number},  // 可选，高度
-           sx            : {number},  // 可选, 从图片中裁剪的x
-           sy            : {number},  // 可选, 从图片中裁剪的y
-           sWidth        : {number},  // 可选, 从图片中裁剪的宽度
-           sHeight       : {number},  // 可选, 从图片中裁剪的高度
-           image         : {string|Image} // 必须，图片url或者图片对象
-           lineWidth     : {number},  // 默认为1，线条宽度，描边下有效
-
-           opacity       : {number},  // 默认为1，透明度设置，如果color为rgba，则最终透明度效果叠加
-           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
-           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
-           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-           shadowOffsetY : {number},  // 默认为0，阴影纵向偏移，正值往下，负值往上
-
-           text          : {string},  // 默认为null，附加文本
-           textFont      : {string},  // 默认为null，附加文本样式，eg:'bold 18px verdana'
-           textPosition  : {string},  // 默认为top，附加文本位置。
-                                      // inside | left | right | top | bottom
-           textAlign     : {string},  // 默认根据textPosition自动设置，附加文本水平对齐。
-                                      // start | end | left | right | center
-           textBaseline  : {string},  // 默认根据textPosition自动设置，附加文本垂直对齐。
-                                      // top | bottom | middle |
-                                      // alphabetic | hanging | ideographic
-           textColor     : {color},   // 默认根据textPosition自动设置，默认策略如下，附加文本颜色
-                                      // 'inside' ? '#fff' : color
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
-         例子：
-   {
-       shape  : 'image',
-       id     : '123456',
-       zlevel : 1,
-       style  : {
-           x : 200,
-           y : 100,
-           width : 150,
-           height : 50,
-           image : 'tests.jpg',
-           text : 'Baidu'
-       },
-       myName : 'kener',  // 可自带任何有效自定义属性
-
-       clickable : true,
-       onClick : function(eventPacket) {
-           alert(eventPacket.target.myName);
-       }
-   }
+/**
+ * @typedef {Object} IImageStyle
+ * @property {string|HTMLImageElement|HTMLCanvasElement} image 图片url或者图片对象
+ * @property {number} x 左上角横坐标
+ * @property {number} y 左上角纵坐标
+ * @property {number} [width] 绘制到画布上的宽度，默认为图片宽度
+ * @property {number} [height] 绘制到画布上的高度，默认为图片高度
+ * @property {number} [sWidth] 从图片中裁剪的宽度，默认为图片高度
+ * @property {number} [sHeight] 从图片中裁剪的高度，默认为图片高度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
  */
 define(
     'zrender/shape/Image',['require','./Base','../tool/util'],function (require) {
-        var _cache = {};
+
         var _needsRefresh = [];
         var _refreshTimeout;
 
         var Base = require('./Base');
 
-        function ZImage(options) {
+        /**
+         * @alias zrender/shape/Image
+         * @constructor
+         * @extends module:zrender/shape/Base
+         * @param {Object} options
+         */
+        var ZImage = function(options) {
             Base.call(this, options);
-        }
+            /**
+             * 图片绘制样式
+             * @name module:zrender/shape/Image#style
+             * @type {module:zrender/shape/Image~IImageStyle}
+             */
+            /**
+             * 图片高亮绘制样式
+             * @name module:zrender/shape/Image#highlightStyle
+             * @type {module:zrender/shape/Image~IImageStyle}
+             */
+        };
 
         ZImage.prototype = {
+            
             type: 'image',
+
             brush : function(ctx, isHighlight, refresh) {
                 var style = this.style || {};
 
@@ -7782,29 +8504,23 @@ define(
 
                 if (typeof(image) === 'string') {
                     var src = image;
-                    if (_cache[src]) {
-                        image = _cache[src];
-                    }
-                    else {
-                        image = new Image();//document.createElement('image');
-                        image.onload = function(){
-                            image.onload = null;
-                            clearTimeout(_refreshTimeout);
-                            _needsRefresh.push( me );
-                            // 防止因为缓存短时间内触发多次onload事件
-                            _refreshTimeout = setTimeout(function(){
-                                refresh && refresh( _needsRefresh );
-                                // 清空needsRefresh
-                                _needsRefresh = [];
-                            }, 10);
-                        };
-                        _cache[src] = image;
+                    image = new Image();
+                    image.onload = function () {
+                        image.onload = null;
+                        clearTimeout(_refreshTimeout);
+                        _needsRefresh.push(me);
+                        // 防止因为缓存短时间内触发多次onload事件
+                        _refreshTimeout = setTimeout(function () {
+                            refresh && refresh(_needsRefresh);
+                            // 清空needsRefresh
+                            _needsRefresh = [];
+                        }, 10);
+                    };
 
-                        image.src = src;
-                    }
+                    image.src = src;
                 }
                 if (image) {
-                    //图片已经加载完成
+                    // 图片已经加载完成
                     if (image.nodeName.toUpperCase() == 'IMG') {
                         if (window.ActiveXObject) {
                             if (image.readyState != 'complete') {
@@ -7818,7 +8534,6 @@ define(
                         }
                     }
                     // Else is canvas
-
                     var width = style.width || image.width;
                     var height = style.height || image.height;
                     var x = style.x;
@@ -7859,11 +8574,18 @@ define(
                         ctx.drawImage(image, x, y, width, height);
                     }
                     // 如果没设置宽和高的话自动根据图片宽高设置
-                    style.width = width;
-                    style.height = height;
-                    this.style.width = width;
-                    this.style.height = height;
-
+                    if (!style.width) {
+                        style.width = width;
+                    }
+                    if (!style.height) {
+                        style.height = height;
+                    }
+                    if (!this.style.width) {
+                        this.style.width = width;
+                    }
+                    if (!this.style.height) {
+                        this.style.height = height;
+                    }
 
                     this.drawText(ctx, style, this.style);
 
@@ -7872,18 +8594,9 @@ define(
             },
 
             /**
-             * 创建路径，用于判断hover时调用isPointInPath~
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
-             */
-            buildPath : function(ctx, style) {
-                ctx.rect(style.x, style.y, style.width, style.height);
-                return;
-            },
-
-            /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
+             * 计算返回图片的包围盒矩形
+             * @param {module:zrender/shape/Image~IImageStyle} style
+             * @return {module:zrender/shape/Base~IBoundingRect}
              */
             getRect : function(style) {
                 return {
@@ -7899,55 +8612,55 @@ define(
         return ZImage;
     }
 );
+
 /**
  * Painter绘图模块
- *
+ * @module zrender/Painter
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *         errorrik (errorrik@gmail.com)
+ *         pissang (https://www.github.com/pissang)
  */
-
-
-
-define(
-    'zrender/Painter',['require','./config','./tool/util','./tool/log','./tool/matrix','./loadingEffect/Base','./shape/Image'],function (require) {
-
+ define(
+    'zrender/Painter',['require','./config','./tool/util','./tool/log','./tool/matrix','./loadingEffect/Base','./mixin/Transformable','./shape/Image'],function (require) {
         
 
         var config = require('./config');
         var util = require('./tool/util');
+        // var vec2 = require('./tool/vector');
         var log = require('./tool/log');
         var matrix = require('./tool/matrix');
         var BaseLoadingEffect = require('./loadingEffect/Base');
+        var Transformable = require('./mixin/Transformable');
 
         // retina 屏幕优化
         var devicePixelRatio = window.devicePixelRatio || 1;
         devicePixelRatio = Math.max(devicePixelRatio, 1);
-        var vmlCanvasManager = window.G_vmlCanvasManager;
+        var vmlCanvasManager = window['G_vmlCanvasManager'];
 
-        /**
-         * 返回false的方法，用于避免页面被选中
-         * 
-         * @inner
-         */
+        
+        // 返回false的方法，用于避免页面被选中
         function returnFalse() {
             return false;
         }
 
-        /**
-         * 什么都不干的空方法
-         * 
-         * @inner
-         */
+        // 什么都不干的空方法
         function doNothing() {}
 
         /**
-         * 绘图类 (V)
-         * 
-         * @param {HTMLElement} root 绘图区域
-         * @param {storage} storage Storage实例
+         * @alias module:zrender/Painter
+         * @constructor
+         * @param {HTMLElement} root 绘图容器
+         * @param {module:zrender/Storage} storage
          */
-        function Painter(root, storage) {
+        var Painter = function (root, storage) {
+            /**
+             * 绘图容器
+             * @type {HTMLElement}
+             */
             this.root = root;
+            /**
+             * @type {module:zrender/Storage}
+             */
             this.storage = storage;
 
             root.innerHTML = '';
@@ -7957,7 +8670,7 @@ define(
             var domRoot = document.createElement('div');
             this._domRoot = domRoot;
 
-            //domRoot.onselectstart = returnFalse; // 避免页面选中的尴尬
+            // domRoot.onselectstart = returnFalse; // 避免页面选中的尴尬
             domRoot.style.position = 'relative';
             domRoot.style.overflow = 'hidden';
             domRoot.style.width = this._width + 'px';
@@ -7975,6 +8688,10 @@ define(
             // 背景
             this._bgDom = createDom('bg', 'div', this);
             domRoot.appendChild(this._bgDom);
+            this._bgDom.onselectstart = returnFalse;
+            this._bgDom.style['-webkit-user-select'] = 'none';
+            this._bgDom.style['user-select'] = 'none';
+            // this._bgDom.style[' -webkit-touch-callout'] = 'none';
 
             // 高亮
             var hoverLayer = new Layer('_zrender_hover_', this);
@@ -7982,18 +8699,21 @@ define(
             domRoot.appendChild(hoverLayer.dom);
             hoverLayer.initContext();
 
-            hoverLayer.onselectstart = returnFalse;
+            hoverLayer.dom.onselectstart = returnFalse;
+            hoverLayer.dom.style['-webkit-user-select'] = 'none';
+            hoverLayer.dom.style['user-select'] = 'none';
+            // hoverLayer.dom.style[' -webkit-touch-callout'] = 'none';
 
             var me = this;
-            this.updatePainter = function(shapeList, callback) {
-                me.update(shapeList, callback);
+            this.updatePainter = function (shapeList, callback) {
+                me.refreshShapes(shapeList, callback);
             };
-        }
+        };
 
         /**
          * 首次绘图，创建各种dom和context
          * 
-         * @param {Function=} callback 绘画结束后的回调函数
+         * @param {Function} callback 绘画结束后的回调函数
          */
         Painter.prototype.render = function (callback) {
             if (this.isLoading()) {
@@ -8007,9 +8727,8 @@ define(
 
         /**
          * 刷新
-         * 
-         * @param {Function=} callback 刷新结束后的回调函数
-         * @param {Boolean} paintAll 强制绘制所有shape
+         * @param {Function} callback 刷新结束后的回调函数
+         * @param {boolean} paintAll 强制绘制所有shape
          */
         Painter.prototype.refresh = function (callback, paintAll) {
             var list = this.storage.getShapeList(true);
@@ -8022,7 +8741,7 @@ define(
             return this;
         };
 
-        Painter.prototype._paintList = function(list, paintAll) {
+        Painter.prototype._paintList = function (list, paintAll) {
 
             if (typeof(paintAll) == 'undefined') {
                 paintAll = false;
@@ -8037,6 +8756,7 @@ define(
             for (var id in this._layers) {
                 if (id !== 'hover') {
                     this._layers[id].unusedCount++;
+                    this._layers[id].updateTransform();
                 }
             }
 
@@ -8046,6 +8766,10 @@ define(
                 var shape = list[i];
 
                 if (currentZLevel !== shape.zlevel) {
+                    if (currentLayer && currentLayer.needTransform) {
+                        ctx.restore();
+                    }
+
                     currentLayer = this.getLayer(shape.zlevel, currentLayer);
                     ctx = currentLayer.ctx;
                     currentZLevel = shape.zlevel;
@@ -8055,6 +8779,11 @@ define(
 
                     if (currentLayer.dirty || paintAll) {
                         currentLayer.clear();
+                    }
+
+                    if (currentLayer.needTransform) {
+                        ctx.save();
+                        currentLayer.setTransform(ctx);
                     }
                 }
 
@@ -8097,14 +8826,15 @@ define(
                             try {
                                 shape.brush(ctx, false, this.updatePainter);
                             }
-                            catch(error) {
+                            catch (error) {
                                 log(
                                     error,
                                     'brush error of ' + shape.type,
                                     shape
                                 );
                             }
-                        } else {
+                        }
+                        else {
                             shape.brush(ctx, false, this.updatePainter);
                         }
                     }
@@ -8118,23 +8848,33 @@ define(
                 shape.__dirty = false;
             }
 
+            if (currentLayer && currentLayer.needTransform) {
+                ctx.restore();
+            }
+
             for (var id in this._layers) {
                 if (id !== 'hover') {
                     var layer = this._layers[id];
                     layer.dirty = false;
                     // 删除过期的层
-                    if (layer.unusedCount >= 500) {
-                        delete this._layers[id];
-                        layer.dom.parentNode.removeChild(layer.dom);
-                    }
-                    else if (layer.unusedCount == 1) {
+                    // PENDING
+                    // if (layer.unusedCount >= 500) {
+                    //     this.delLayer(id);
+                    // }
+                    if (layer.unusedCount == 1) {
                         layer.clear();
                     }
                 }
             }
         };
 
-        Painter.prototype.getLayer = function(zlevel, prevLayer) {
+        /**
+         * 获取 zlevel 所在层，如果不存在则会创建一个新的层
+         * @param {number} zlevel
+         * @param {module:zrender/Painter~Layer} [prevLayer]
+         *        在需要创建新的层时需要使用，新创建层的dom节点会插在该层后面
+         */
+        Painter.prototype.getLayer = function (zlevel, prevLayer) {
             // Change draw layer
             var currentLayer = this._layers[zlevel];
             if (!currentLayer) {
@@ -8146,7 +8886,8 @@ define(
                         currentLayer.dom,
                         prevDom.nextSibling
                     );
-                } else {
+                }
+                else {
                     prevDom.parentNode.appendChild(
                         currentLayer.dom
                     );
@@ -8155,13 +8896,25 @@ define(
                 
                 this._layers[zlevel] = currentLayer;
 
-                currentLayer.config = this._layerConfig[zlevel];
+                if (this._layerConfig[zlevel]) {
+                    util.merge(currentLayer, this._layerConfig[zlevel], true);
+                }
+
+                currentLayer.updateTransform();
             }
 
             return currentLayer;
         };
 
-        Painter.prototype._updateLayerStatus = function(list) {
+        /**
+         * 获取所有已创建的层
+         * @param {Array.<module:zrender/Painter~Layer>} [prevLayer]
+         */
+        Painter.prototype.getLayers = function () {
+            return this._layers;
+        };
+
+        Painter.prototype._updateLayerStatus = function (list) {
             
             var layers = this._layers;
 
@@ -8198,12 +8951,11 @@ define(
         };
 
         /**
-         * 视图更新
-         * 
-         * @param {Array} shapeList 需要更新的图形元素列表
-         * @param {Function} callback  视图更新后回调函数
+         * 指定的图形列表
+         * @param {Array.<module:zrender/shape/Base>} shapeList 需要更新的图形元素列表
+         * @param {Function} [callback] 视图更新后回调函数
          */
-        Painter.prototype.update = function (shapeList, callback) {
+        Painter.prototype.refreshShapes = function (shapeList, callback) {
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 var shape = shapeList[i];
                 this.storage.mod(shape.id);
@@ -8240,21 +8992,53 @@ define(
 
         /**
          * 修改指定zlevel的绘制参数
+         * 
+         * @param {string} zlevel
+         * @param {Object} config 配置对象
+         * @param {string} [config.clearColor=0] 每次清空画布的颜色
+         * @param {string} [config.motionBlur=false] 是否开启动态模糊
+         * @param {number} [config.lastFrameAlpha=0.7]
+         *                 在开启动态模糊的时候使用，与上一帧混合的alpha值，值越大尾迹越明显
+         * @param {Array.<number>} [position] 层的平移
+         * @param {Array.<number>} [rotation] 层的旋转
+         * @param {Array.<number>} [scale] 层的缩放
+         * @param {boolean} [zoomable=false] 层是否支持鼠标缩放操作
+         * @param {boolean} [panable=false] 层是否支持鼠标平移操作
          */
         Painter.prototype.modLayer = function (zlevel, config) {
             if (config) {
                 if (!this._layerConfig[zlevel]) {
                     this._layerConfig[zlevel] = config;
-                } else {
+                }
+                else {
                     util.merge(this._layerConfig[zlevel], config, true);
                 }
 
                 var layer = this._layers[zlevel];
 
                 if (layer) {
-                    layer.config = this._layerConfig[zlevel];
+                    util.merge(layer, this._layerConfig[zlevel], true);
                 }
             }
+        };
+
+        /**
+         * 删除指定层
+         * @param {number} zlevel 层所在的zlevel
+         */
+        Painter.prototype.delLayer = function (zlevel) {
+            var layer = this._layers[zlevel];
+            if (!layer) {
+                return;
+            }
+            // Save config
+            this.modLayer(zlevel, {
+                position: layer.position,
+                rotation: layer.rotation,
+                scale: layer.scale
+            });
+            layer.dom.parentNode.removeChild(layer.dom);
+            delete this._layers[zlevel];
         };
 
         /**
@@ -8326,7 +9110,7 @@ define(
             domRoot.style.display = '';
 
             // 优化没有实际改变的resize
-            if (this._width != width || height != this._height){
+            if (this._width != width || height != this._height) {
                 this._width = width;
                 this._height = height;
 
@@ -8346,9 +9130,10 @@ define(
 
         /**
          * 清除单独的一个层
+         * @param {number} zLevel
          */
-        Painter.prototype.clearLayer = function (k) {
-            var layer = this._layers[k];
+        Painter.prototype.clearLayer = function (zLevel) {
+            var layer = this._layers[zLevel];
             if (layer) {
                 layer.clear();
             }
@@ -8375,6 +9160,12 @@ define(
             return this._layers.hover.dom;
         };
 
+        /**
+         * 图像导出
+         * @param {string} type
+         * @param {string} [backgroundColor='#fff'] 背景色
+         * @return {string} 图片的Base64 url
+         */
         Painter.prototype.toDataURL = function (type, backgroundColor, args) {
             if (vmlCanvasManager) {
                 return null;
@@ -8394,20 +9185,21 @@ define(
             );
             ctx.fill();
             
-            //升序遍历，shape上的zlevel指定绘画图层的z轴层叠
+            var self = this;
+            // 升序遍历，shape上的zlevel指定绘画图层的z轴层叠
             
             this.storage.iterShape(
                 function (shape) {
                     if (!shape.invisible) {
-                        if (!shape.onbrush //没有onbrush
-                            //有onbrush并且调用执行返回false或undefined则继续粉刷
+                        if (!shape.onbrush // 没有onbrush
+                            // 有onbrush并且调用执行返回false或undefined则继续粉刷
                             || (shape.onbrush && !shape.onbrush(ctx, false))
                         ) {
                             if (config.catchBrushException) {
                                 try {
-                                    shape.brush(ctx, false, this.updatePainter);
+                                    shape.brush(ctx, false, self.updatePainter);
                                 }
-                                catch(error) {
+                                catch (error) {
                                     log(
                                         error,
                                         'brush error of ' + shape.type,
@@ -8416,7 +9208,7 @@ define(
                                 }
                             }
                             else {
-                                shape.brush(ctx, false, this.updatePainter);
+                                shape.brush(ctx, false, self.updatePainter);
                             }
                         }
                     }
@@ -8443,7 +9235,7 @@ define(
             return this._height;
         };
 
-        Painter.prototype._getWidth = function() {
+        Painter.prototype._getWidth = function () {
             var root = this.root;
             var stl = root.currentStyle
                       || document.defaultView.getComputedStyle(root);
@@ -8463,22 +9255,24 @@ define(
                     - parseInt(stl.paddingBottom, 10)).toFixed(0) - 0;
         };
 
-        /**
-         * 鼠标悬浮刷画
-         */
         Painter.prototype._brushHover = function (shape) {
             var ctx = this._layers.hover.ctx;
 
-            if (!shape.onbrush //没有onbrush
-                //有onbrush并且调用执行返回false或undefined则继续粉刷
+            if (!shape.onbrush // 没有onbrush
+                // 有onbrush并且调用执行返回false或undefined则继续粉刷
                 || (shape.onbrush && !shape.onbrush(ctx, true))
             ) {
+                var layer = this.getLayer(shape.zlevel);
+                if (layer.needTransform) {
+                    ctx.save();
+                    layer.setTransform(ctx);
+                }
                 // Retina 优化
                 if (config.catchBrushException) {
                     try {
                         shape.brush(ctx, true, this.updatePainter);
                     }
-                    catch(error) {
+                    catch (error) {
                         log(
                             error, 'hoverBrush error of ' + shape.type, shape
                         );
@@ -8486,6 +9280,9 @@ define(
                 }
                 else {
                     shape.brush(ctx, true, this.updatePainter);
+                }
+                if (layer.needTransform) {
+                    ctx.restore();
                 }
             }
         };
@@ -8509,14 +9306,14 @@ define(
                 rotation : shape.rotation,
                 scale : shape.scale
             };
-            shape.position = [0, 0, 0];
+            shape.position = [ 0, 0, 0 ];
             shape.rotation = 0;
-            shape.scale = [1, 1];
+            shape.scale = [ 1, 1 ];
             if (shape) {
                 shape.brush(ctx, false);
             }
 
-            var ImageShape = require( './shape/Image' );
+            var ImageShape = require('./shape/Image');
             var imgShape = new ImageShape({
                 id : id,
                 style : {
@@ -8546,10 +9343,10 @@ define(
                 return doNothing;
             }
 
-            var painter = this;
+            var me = this;
 
             return function (id, e, width, height) {
-                return painter._shapeToImage(
+                return me._shapeToImage(
                     id, e, width, height, devicePixelRatio
                 );
             };
@@ -8582,11 +9379,19 @@ define(
             return newDom;
         }
 
-        /*****************************************
-         * Layer
-         *****************************************/
-        function Layer(id, painter) {
+        /**
+         * @alias module:zrender/Painter~Layer
+         * @constructor
+         * @extends module:zrender/mixin/Transformable
+         * @param {string} id
+         * @param {module:zrender/Painter} painter
+         */
+        var Layer = function(id, painter) {
             this.dom = createDom(id, 'canvas', painter);
+            this.dom.onselectstart = returnFalse; // 避免页面选中的尴尬
+            this.dom.style['-webkit-user-select'] = 'none';
+            this.dom.style['user-select'] = 'none';
+            // this.dom.style[' -webkit-touch-callout'] = 'none';
             vmlCanvasManager && vmlCanvasManager.initElement(this.dom);
 
             this.domBack = null;
@@ -8601,16 +9406,53 @@ define(
             this.dirty = true;
 
             this.elCount = 0;
-        }
 
-        Layer.prototype.initContext = function() {
+            // Configs
+            /**
+             * 每次清空画布的颜色
+             * @type {string}
+             * @default 0
+             */
+            this.clearColor = 0;
+            /**
+             * 是否开启动态模糊
+             * @type {boolean}
+             * @default false
+             */
+            this.motionBlur = false;
+            /**
+             * 在开启动态模糊的时候使用，与上一帧混合的alpha值，值越大尾迹越明显
+             * @type {number}
+             * @default 0.7
+             */
+            this.lastFrameAlpha = 0.7;
+            /**
+             * 层是否支持鼠标平移操作
+             * @type {boolean}
+             * @default false
+             */
+            this.zoomable = false;
+            /**
+             * 层是否支持鼠标缩放操作
+             * @type {boolean}
+             * @default false
+             */
+            this.panable = false;
+
+            this.maxZoom = Infinity;
+            this.minZoom = 0;
+
+            Transformable.call(this);
+        };
+
+        Layer.prototype.initContext = function () {
             this.ctx = this.dom.getContext('2d');
             if (devicePixelRatio != 1) { 
                 this.ctx.scale(devicePixelRatio, devicePixelRatio);
             }
-        }
+        };
 
-        Layer.prototype.createBackBuffer = function() {
+        Layer.prototype.createBackBuffer = function () {
             if (vmlCanvasManager) { // IE 8- should not support back buffer
                 return;
             }
@@ -8622,7 +9464,11 @@ define(
             }
         };
 
-        Layer.prototype.resize = function(width, height) {
+        /**
+         * @param  {number} width
+         * @param  {number} height
+         */
+        Layer.prototype.resize = function (width, height) {
             this.dom.style.width = width + 'px';
             this.dom.style.height = height + 'px';
 
@@ -8643,65 +9489,41 @@ define(
             }
         };
 
-        Layer.prototype.clear = function() {
-            var config = this.config;
+        /**
+         * 清空该层画布
+         */
+        Layer.prototype.clear = function () {
             var dom = this.dom;
             var ctx = this.ctx;
             var width = dom.width;
             var height = dom.height;
 
-            if (config) {
-                var haveClearColor =
-                    typeof(config.clearColor) !== 'undefined'
-                    && !vmlCanvasManager;
-                var haveMotionBLur = config.motionBlur && !vmlCanvasManager;
-                var lastFrameAlpha = config.lastFrameAlpha;
-                if (typeof(lastFrameAlpha) == 'undefined') {
-                    lastFrameAlpha = 0.7;
-                }
+            var haveClearColor = this.clearColor && !vmlCanvasManager;
+            var haveMotionBLur = this.motionBlur && !vmlCanvasManager;
+            var lastFrameAlpha = this.lastFrameAlpha;
 
-                if (haveMotionBLur) {
-                    if (!this.domBack) {
-                        this.createBackBuffer();
-                    } 
+            if (haveMotionBLur) {
+                if (!this.domBack) {
+                    this.createBackBuffer();
+                } 
 
-                    this.ctxBack.globalCompositeOperation = 'copy';
-                    this.ctxBack.drawImage(
-                        dom, 0, 0,
-                        width / devicePixelRatio,
-                        height / devicePixelRatio
-                    );
-                }
+                this.ctxBack.globalCompositeOperation = 'copy';
+                this.ctxBack.drawImage(
+                    dom, 0, 0,
+                    width / devicePixelRatio,
+                    height / devicePixelRatio
+                );
+            }
 
-                if (haveClearColor) {
-                    ctx.save();
-                    ctx.fillStyle = this.config.clearColor;
-                    ctx.fillRect(
-                        0, 0,
-                        width / devicePixelRatio, 
-                        height / devicePixelRatio
-                    );
-                    ctx.restore();
-                }
-                else {
-                    ctx.clearRect(
-                        0, 0, 
-                        width / devicePixelRatio,
-                        height / devicePixelRatio
-                    );
-                }
-
-                if (haveMotionBLur) {
-                    var domBack = this.domBack;
-                    ctx.save();
-                    ctx.globalAlpha = lastFrameAlpha;
-                    ctx.drawImage(
-                        domBack, 0, 0,
-                        width / devicePixelRatio,
-                        height / devicePixelRatio
-                    );
-                    ctx.restore();
-                }
+            if (haveClearColor) {
+                ctx.save();
+                ctx.fillStyle = this.config.clearColor;
+                ctx.fillRect(
+                    0, 0,
+                    width / devicePixelRatio, 
+                    height / devicePixelRatio
+                );
+                ctx.restore();
             }
             else {
                 ctx.clearRect(
@@ -8710,35 +9532,84 @@ define(
                     height / devicePixelRatio
                 );
             }
+
+            if (haveMotionBLur) {
+                var domBack = this.domBack;
+                ctx.save();
+                ctx.globalAlpha = lastFrameAlpha;
+                ctx.drawImage(
+                    domBack, 0, 0,
+                    width / devicePixelRatio,
+                    height / devicePixelRatio
+                );
+                ctx.restore();
+            }
         };
+
+        util.merge(Layer.prototype, Transformable.prototype);
 
         return Painter;
     }
 );
 
-define('zrender/shape/Group',['require','../tool/guid','../tool/util','../tool/event','./mixin/Transformable'],function(require) {
+/**
+ * Group是一个容器，可以插入子节点，Group的变换也会被应用到子节点上
+ * @module zrender/Group
+ * @example
+ *     var Group = require('zrender/Group');
+ *     var Circle = require('zrender/shape/Circle');
+ *     var g = new Group();
+ *     g.position[0] = 100;
+ *     g.position[1] = 100;
+ *     g.addChild(new Circle({
+ *         style: {
+ *             x: 100,
+ *             y: 100,
+ *             r: 20,
+ *             brushType: 'fill'
+ *         }
+ *     }));
+ *     zr.addGroup(g);
+ */
+define('zrender/Group',['require','./tool/guid','./tool/util','./mixin/Transformable','./mixin/Eventful'],function(require) {
 
-    var guid = require('../tool/guid');
-    var util = require('../tool/util');
+    var guid = require('./tool/guid');
+    var util = require('./tool/util');
 
-    var Dispatcher = require('../tool/event').Dispatcher;
     var Transformable = require('./mixin/Transformable');
+    var Eventful = require('./mixin/Eventful');
 
     /**
-     * @constructor zrender.shape.Group
+     * @alias module:zrender/Group
+     * @constructor
+     * @extends module:zrender/mixin/Transformable
+     * @extends module:zrender/mixin/Eventful
      */
-    function Group(options) {
+    var Group = function(options) {
 
         options = options || {};
 
+        /**
+         * Group id
+         * @type {string}
+         */
         this.id = options.id || guid();
 
         for (var key in options) {
             this[key] = options[key];
         }
 
+        /**
+         * @type {string}
+         */
         this.type = 'group';
 
+        /**
+         * 用于裁剪的图形(shape)，所有 Group 内的图形在绘制时都会被这个图形裁剪
+         * 该图形会继承Group的变换
+         * @type {module:zrender/shape/Base}
+         * @see http://www.w3.org/TR/2dcontext/#clipping-region
+         */
         this.clipShape = null;
 
         this._children = [];
@@ -8749,19 +9620,37 @@ define('zrender/shape/Group',['require','../tool/guid','../tool/util','../tool/e
 
         // Mixin
         Transformable.call(this);
-        Dispatcher.call(this);
-    }
+        Eventful.call(this);
+    };
 
+    /**
+     * 是否忽略该 Group 及其所有子节点
+     * @type {boolean}
+     * @default false
+     */
     Group.prototype.ignore = false;
 
+    /**
+     * 复制并返回一份新的包含所有儿子节点的数组
+     * @return {Array.<module:zrender/Group|module:zrender/shape/Base>}
+     */
     Group.prototype.children = function() {
         return this._children.slice();
     };
 
+    /**
+     * 获取指定 index 的儿子节点
+     * @param  {number} idx
+     * @return {module:zrender/Group|module:zrender/shape/Base}
+     */
     Group.prototype.childAt = function(idx) {
         return this._children[idx];
     };
 
+    /**
+     * 添加子节点，可以是Shape或者Group
+     * @param {module:zrender/Group|module:zrender/shape/Base} child
+     */
     Group.prototype.addChild = function(child) {
         if (child == this) {
             return;
@@ -8787,6 +9676,10 @@ define('zrender/shape/Group',['require','../tool/guid','../tool/util','../tool/e
         }
     };
 
+    /**
+     * 移除子节点
+     * @param {module:zrender/Group|module:zrender/shape/Base} child
+     */
     Group.prototype.removeChild = function(child) {
         var idx = util.indexOf(this._children, child);
 
@@ -8803,7 +9696,12 @@ define('zrender/shape/Group',['require','../tool/guid','../tool/util','../tool/e
         }
     };
 
-    Group.prototype.each = function(cb, context) {
+    /**
+     * 遍历所有子节点
+     * @param  {Function} cb
+     * @param  {}   context
+     */
+    Group.prototype.eachChild = function(cb, context) {
         var haveContext = !!context;
         for (var i = 0; i < this._children.length; i++) {
             var child = this._children[i];
@@ -8815,9 +9713,13 @@ define('zrender/shape/Group',['require','../tool/guid','../tool/util','../tool/e
         }
     };
 
-    Group.prototype.iterate = function(cb, context) {
+    /**
+     * 深度优先遍历所有子孙节点
+     * @param  {Function} cb
+     * @param  {}   context
+     */
+    Group.prototype.traverse = function(cb, context) {
         var haveContext = !!context;
-
         for (var i = 0; i < this._children.length; i++) {
             var child = this._children[i];
             if (haveContext) {
@@ -8827,7 +9729,7 @@ define('zrender/shape/Group',['require','../tool/guid','../tool/util','../tool/e
             }
 
             if (child.type === 'group') {
-                child.iterate(cb, context);
+                child.traverse(cb, context);
             }
         }
     };
@@ -8853,26 +9755,25 @@ define('zrender/shape/Group',['require','../tool/guid','../tool/util','../tool/e
     };
 
     util.merge(Group.prototype, Transformable.prototype, true);
-    util.merge(Group.prototype, Dispatcher.prototype, true);
+    util.merge(Group.prototype, Eventful.prototype, true);
 
     return Group;
 });
 /**
  * Storage内容仓库模块
- *
+ * @module zrender/Storage
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *         errorrik (errorrik@gmail.com)
+ * @author errorrik (errorrik@gmail.com)
+ * @author pissang (https://github.com/pissang/)
  */
-
-
 define(
-    'zrender/Storage',['require','./tool/util','./shape/Group'],function (require) {
+    'zrender/Storage',['require','./tool/util','./Group'],function (require) {
 
         
 
         var util = require('./tool/util');
 
-        var Group = require('./shape/Group');
+        var Group = require('./Group');
 
         var defaultIterateOption = {
             hover: false,
@@ -8891,9 +9792,10 @@ define(
         }
         /**
          * 内容仓库 (M)
-         * 
+         * @alias module:zrender/Storage
+         * @constructor
          */
-        function Storage() {
+        var Storage = function () {
             // 所有常规形状，id索引的map
             this._elements = {};
 
@@ -8905,16 +9807,17 @@ define(
             this._shapeList = [];
 
             this._shapeListOffset = 0;
-        }
+        };
 
         /**
          * 遍历迭代器
          * 
          * @param {Function} fun 迭代回调函数，return true终止迭代
-         * @param {Object=} option 迭代参数，缺省为仅降序遍历常规形状
-         *     hover : true 是否迭代高亮层数据
-         *     normal : 'down' | 'up' 是否迭代常规数据，迭代时是否指定及z轴顺序
-         *     update : false 是否更新shapeList
+         * @param {Object} [option] 迭代参数，缺省为仅降序遍历普通层图形
+         * @param {boolean} [option.hover=true] 是否是高亮层图形
+         * @param {string} [option.normal='up'] 是否是普通层图形，迭代时是否指定及z轴顺序
+         * @param {boolean} [option.update=false] 是否在迭代前更新形状列表
+         * 
          */
         Storage.prototype.iterShape = function (fun, option) {
             if (!option) {
@@ -8922,7 +9825,7 @@ define(
             }
 
             if (option.hover) {
-                //高亮层数据遍历
+                // 高亮层数据遍历
                 for (var i = 0, l = this._hoverElements.length; i < l; i++) {
                     var el = this._hoverElements[i];
                     el.updateTransform();
@@ -8936,7 +9839,7 @@ define(
                 this.updateShapeList();
             }
 
-            //遍历: 'down' | 'up'
+            // 遍历: 'down' | 'up'
             switch (option.normal) {
                 case 'down':
                     // 降序遍历，高层优先
@@ -8949,7 +9852,7 @@ define(
                     break;
                 // case 'up':
                 default:
-                    //升序遍历，底层优先
+                    // 升序遍历，底层优先
                     for (var i = 0, l = this._shapeList.length; i < l; i++) {
                         if (fun(this._shapeList[i])) {
                             return this;
@@ -8961,7 +9864,12 @@ define(
             return this;
         };
 
-        Storage.prototype.getHoverShapes = function(update) {
+        /**
+         * 返回hover层的形状数组
+         * @param  {boolean} [update=false] 是否在返回前更新图形的变换
+         * @return {Array.<module:zrender/shape/Base>}
+         */
+        Storage.prototype.getHoverShapes = function (update) {
             if (update) {
                 for (var i = 0, l = this._hoverElements.length; i < l; i++) {
                     this._hoverElements[i].updateTransform();
@@ -8970,15 +9878,25 @@ define(
             return this._hoverElements;
         };
 
-        Storage.prototype.getShapeList = function(update) {
+        /**
+         * 返回所有图形的绘制队列
+         * @param  {boolean} [update=false] 是否在返回前更新该数组
+         * 详见{@link module:zrender/shape/Base.prototype.updateShapeList}
+         * @return {Array.<module:zrender/shape/Base>}
+         */
+        Storage.prototype.getShapeList = function (update) {
             if (update) {
                 this.updateShapeList();
             }
             return this._shapeList;
         };
 
-
-        Storage.prototype.updateShapeList = function() {
+        /**
+         * 更新图形的绘制队列。
+         * 每次绘制前都会调用，该方法会先深度优先遍历整个树，更新所有Group和Shape的变换并且把所有可见的Shape保存到数组中，
+         * 最后根据绘制的优先级（zlevel > z > 插入顺序）排序得到绘制队列
+         */
+        Storage.prototype.updateShapeList = function () {
             this._shapeListOffset = 0;
             for (var i = 0, len = this._roots.length; i < len; i++) {
                 var root = this._roots[i];
@@ -8993,7 +9911,7 @@ define(
             this._shapeList.sort(shapeCompareFunc);
         };
 
-        Storage.prototype._updateAndAddShape = function(el) {
+        Storage.prototype._updateAndAddShape = function (el) {
             
             if (el.ignore) {
                 return;
@@ -9033,15 +9951,16 @@ define(
                 // Mark group clean here
                 el.__dirty = false;
                 
-            } else {
+            }
+            else {
                 this._shapeList[this._shapeListOffset++] = el;
             }
         };
 
         /**
-         * 修改
+         * 修改图形(Shape)或者组(Group)
          * 
-         * @param {string} idx 唯一标识
+         * @param {string} elId 唯一标识
          * @param {Object} [params] 参数
          */
         Storage.prototype.mod = function (elId, params) {
@@ -9071,7 +9990,8 @@ define(
                             }
                         }
                         util.merge(el, target, true);
-                    } else {
+                    }
+                    else {
                         util.merge(el, params, true);
                     }
                 }
@@ -9081,16 +10001,17 @@ define(
         };
 
         /**
-         * 常规形状位置漂移，形状自身定义漂移函数
-         * 
-         * @param {string} idx 形状唯一标识
+         * 移动指定的图形(Shape)或者组(Group)的位置
+         * @param {string} shapeId 形状唯一标识
+         * @param {number} dx
+         * @param {number} dy
          */
         Storage.prototype.drift = function (shapeId, dx, dy) {
             var shape = this._elements[shapeId];
             if (shape) {
                 shape.needTransform = true;
-                if (!shape.ondrift //ondrift
-                    //有onbrush并且调用执行返回false或undefined则继续
+                if (!shape.ondrift // ondrift
+                    // 有onbrush并且调用执行返回false或undefined则继续
                     || (shape.ondrift && !shape.ondrift(dx, dy))
                 ) {
                     shape.drift(dx, dy);
@@ -9103,7 +10024,7 @@ define(
         /**
          * 添加高亮层数据
          * 
-         * @param {Object} params 参数
+         * @param {module:zrender/shape/Base} shape
          */
         Storage.prototype.addHover = function (shape) {
             shape.updateNeedTransform();
@@ -9112,21 +10033,24 @@ define(
         };
 
         /**
-         * 删除高亮层数据
+         * 清空高亮层数据
          */
         Storage.prototype.delHover = function () {
             this._hoverElements = [];
             return this;
         };
 
+        /**
+         * 是否有图形在高亮层里
+         * @return {boolean}
+         */
         Storage.prototype.hasHoverShape = function () {
             return this._hoverElements.length > 0;
         };
 
         /**
-         * 添加到根节点
-         * 
-         * @param {Shape|Group} el 参数
+         * 添加图形(Shape)或者组(Group)到根节点
+         * @param {module:zrender/shape/Shape|module:zrender/Group} el
          */
         Storage.prototype.addRoot = function (el) {
             if (el instanceof Group) {
@@ -9137,6 +10061,10 @@ define(
             this._roots.push(el);
         };
 
+        /**
+         * 删除指定的图形(Shape)或者组(Group)
+         * @param  {string|Array.<string>} [elId] 如果为空清空整个Storage
+         */
         Storage.prototype.delRoot = function (elId) {
             if (typeof(elId) == 'undefined') {
                 // 不指定elId清空
@@ -9164,7 +10092,8 @@ define(
             var el;
             if (typeof(elId) == 'string') {
                 el = this._elements[elId];
-            } else {
+            }
+            else {
                 el = elId;
             }
 
@@ -9178,15 +10107,11 @@ define(
             }
         };
 
-        /**
-         * 添加
-         * 
-         * @param {Shape|Group} el 参数
-         */
         Storage.prototype.addToMap = function (el) {
             if (el instanceof Group) {
                 el._storage = this;
-            } else {
+            }
+            else {
                 el.style.__rect = null;
             }
 
@@ -9195,20 +10120,10 @@ define(
             return this;
         };
 
-        /**
-         * 根据指定的elId获取相应的shape属性
-         * 
-         * @param {string=} idx 唯一标识
-         */
         Storage.prototype.get = function (elId) {
             return this._elements[elId];
         };
 
-        /**
-         * 删除，elId不指定则全清空
-         * 
-         * @param {string} idx 唯一标识
-         */
         Storage.prototype.delFromMap = function (elId) {
             var el = this._elements[elId];
             if (el) {
@@ -9224,7 +10139,7 @@ define(
 
 
         /**
-         * 释放
+         * 清空并且释放Storage
          */
         Storage.prototype.dispose = function () {
             this._elements = 
@@ -9237,40 +10152,69 @@ define(
     }
 );
 
-/**
- * 缓动代码来自 https://github.com/sole/tween.js/blob/master/src/Tween.js
- * author: lang(shenyi01@baidu.com)
- */
 define(
     'zrender/animation/easing',[],function() {
-        var Easing = {
+        /**
+         * 缓动代码来自 https://github.com/sole/tween.js/blob/master/src/Tween.js
+         * @see http://sole.github.io/tween.js/examples/03_graphs.html
+         * @exports zrender/animation/easing
+         */
+        var easing = {
             // 线性
-            Linear: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            Linear: function (k) {
                 return k;
             },
 
             // 二次方的缓动（t^2）
-            QuadraticIn: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            QuadraticIn: function (k) {
                 return k * k;
             },
-            QuadraticOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            QuadraticOut: function (k) {
                 return k * (2 - k);
             },
-            QuadraticInOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            QuadraticInOut: function (k) {
                 if ((k *= 2) < 1) {
                     return 0.5 * k * k;
                 }
-                return - 0.5 * (--k * (k - 2) - 1);
+                return -0.5 * (--k * (k - 2) - 1);
             },
 
             // 三次方的缓动（t^3）
-            CubicIn: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            CubicIn: function (k) {
                 return k * k * k;
             },
-            CubicOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            CubicOut: function (k) {
                 return --k * k * k + 1;
             },
-            CubicInOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            CubicInOut: function (k) {
                 if ((k *= 2) < 1) {
                     return 0.5 * k * k * k;
                 }
@@ -9278,28 +10222,51 @@ define(
             },
 
             // 四次方的缓动（t^4）
-            QuarticIn: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            QuarticIn: function (k) {
                 return k * k * k * k;
             },
-            QuarticOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            QuarticOut: function (k) {
                 return 1 - (--k * k * k * k);
             },
-            QuarticInOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            QuarticInOut: function (k) {
                 if ((k *= 2) < 1) {
                     return 0.5 * k * k * k * k;
                 }
-                return - 0.5 * ((k -= 2) * k * k * k - 2);
+                return -0.5 * ((k -= 2) * k * k * k - 2);
             },
 
             // 五次方的缓动（t^5）
-            QuinticIn: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            QuinticIn: function (k) {
                 return k * k * k * k * k;
             },
-
-            QuinticOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            QuinticOut: function (k) {
                 return --k * k * k * k * k + 1;
             },
-            QuinticInOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            QuinticInOut: function (k) {
                 if ((k *= 2) < 1) {
                     return 0.5 * k * k * k * k * k;
                 }
@@ -9307,24 +10274,48 @@ define(
             },
 
             // 正弦曲线的缓动（sin(t)）
-            SinusoidalIn: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            SinusoidalIn: function (k) {
                 return 1 - Math.cos(k * Math.PI / 2);
             },
-            SinusoidalOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            SinusoidalOut: function (k) {
                 return Math.sin(k * Math.PI / 2);
             },
-            SinusoidalInOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            SinusoidalInOut: function (k) {
                 return 0.5 * (1 - Math.cos(Math.PI * k));
             },
 
             // 指数曲线的缓动（2^t）
-            ExponentialIn: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            ExponentialIn: function (k) {
                 return k === 0 ? 0 : Math.pow(1024, k - 1);
             },
-            ExponentialOut: function(k) {
-                return k === 1 ? 1 : 1 - Math.pow(2, - 10 * k);
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            ExponentialOut: function (k) {
+                return k === 1 ? 1 : 1 - Math.pow(2, -10 * k);
             },
-            ExponentialInOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            ExponentialInOut: function (k) {
                 if (k === 0) {
                     return 0;
                 }
@@ -9334,26 +10325,44 @@ define(
                 if ((k *= 2) < 1) {
                     return 0.5 * Math.pow(1024, k - 1);
                 }
-                return 0.5 * (- Math.pow(2, - 10 * (k - 1)) + 2);
+                return 0.5 * (-Math.pow(2, -10 * (k - 1)) + 2);
             },
 
             // 圆形曲线的缓动（sqrt(1-t^2)）
-            CircularIn: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            CircularIn: function (k) {
                 return 1 - Math.sqrt(1 - k * k);
             },
-            CircularOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            CircularOut: function (k) {
                 return Math.sqrt(1 - (--k * k));
             },
-            CircularInOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            CircularInOut: function (k) {
                 if ((k *= 2) < 1) {
-                    return - 0.5 * (Math.sqrt(1 - k * k) - 1);
+                    return -0.5 * (Math.sqrt(1 - k * k) - 1);
                 }
                 return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
             },
 
             // 创建类似于弹簧在停止前来回振荡的动画
-            ElasticIn: function(k) {
-                var s, a = 0.1, p = 0.4;
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            ElasticIn: function (k) {
+                var s; 
+                var a = 0.1;
+                var p = 0.4;
                 if (k === 0) {
                     return 0;
                 }
@@ -9362,14 +10371,21 @@ define(
                 }
                 if (!a || a < 1) {
                     a = 1; s = p / 4;
-                }else{
+                }
+                else {
                     s = p * Math.asin(1 / a) / (2 * Math.PI);
                 }
-                return - (a * Math.pow(2, 10 * (k -= 1)) *
+                return -(a * Math.pow(2, 10 * (k -= 1)) *
                             Math.sin((k - s) * (2 * Math.PI) / p));
             },
-            ElasticOut: function(k) {
-                var s, a = 0.1, p = 0.4;
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            ElasticOut: function (k) {
+                var s;
+                var a = 0.1;
+                var p = 0.4;
                 if (k === 0) {
                     return 0;
                 }
@@ -9379,14 +10395,20 @@ define(
                 if (!a || a < 1) {
                     a = 1; s = p / 4;
                 }
-                else{
+                else {
                     s = p * Math.asin(1 / a) / (2 * Math.PI);
                 }
-                return (a * Math.pow(2, - 10 * k) *
+                return (a * Math.pow(2, -10 * k) *
                         Math.sin((k - s) * (2 * Math.PI) / p) + 1);
             },
-            ElasticInOut: function(k) {
-                var s, a = 0.1, p = 0.4;
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            ElasticInOut: function (k) {
+                var s;
+                var a = 0.1;
+                var p = 0.4;
                 if (k === 0) {
                     return 0;
                 }
@@ -9396,11 +10418,11 @@ define(
                 if (!a || a < 1) {
                     a = 1; s = p / 4;
                 }
-                else{
+                else {
                     s = p * Math.asin(1 / a) / (2 * Math.PI);
                 }
                 if ((k *= 2) < 1) {
-                    return - 0.5 * (a * Math.pow(2, 10 * (k -= 1))
+                    return -0.5 * (a * Math.pow(2, 10 * (k -= 1))
                         * Math.sin((k - s) * (2 * Math.PI) / p));
                 }
                 return a * Math.pow(2, -10 * (k -= 1))
@@ -9409,15 +10431,27 @@ define(
             },
 
             // 在某一动画开始沿指示的路径进行动画处理前稍稍收回该动画的移动
-            BackIn: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            BackIn: function (k) {
                 var s = 1.70158;
                 return k * k * ((s + 1) * k - s);
             },
-            BackOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            BackOut: function (k) {
                 var s = 1.70158;
                 return --k * k * ((s + 1) * k + s) + 1;
             },
-            BackInOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            BackInOut: function (k) {
                 var s = 1.70158 * 1.525;
                 if ((k *= 2) < 1) {
                     return 0.5 * (k * k * ((s + 1) * k - s));
@@ -9426,30 +10460,44 @@ define(
             },
 
             // 创建弹跳效果
-            BounceIn: function(k) {
-                return 1 - Easing.BounceOut(1 - k);
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            BounceIn: function (k) {
+                return 1 - easing.BounceOut(1 - k);
             },
-            BounceOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            BounceOut: function (k) {
                 if (k < (1 / 2.75)) {
                     return 7.5625 * k * k;
                 }
                 else if (k < (2 / 2.75)) {
                     return 7.5625 * (k -= (1.5 / 2.75)) * k + 0.75;
-                } else if (k < (2.5 / 2.75)) {
+                }
+                else if (k < (2.5 / 2.75)) {
                     return 7.5625 * (k -= (2.25 / 2.75)) * k + 0.9375;
-                } else {
+                }
+                else {
                     return 7.5625 * (k -= (2.625 / 2.75)) * k + 0.984375;
                 }
             },
-            BounceInOut: function(k) {
+            /**
+             * @param {number} k
+             * @return {number}
+             */
+            BounceInOut: function (k) {
                 if (k < 0.5) {
-                    return Easing.BounceIn(k * 2) * 0.5;
+                    return easing.BounceIn(k * 2) * 0.5;
                 }
-                return Easing.BounceOut(k * 2 - 1) * 0.5 + 0.5;
+                return easing.BounceOut(k * 2 - 1) * 0.5 + 0.5;
             }
         };
 
-        return Easing;
+        return easing;
     }
 );
 
@@ -9475,20 +10523,20 @@ define(
 
             this._targetPool = options.target || {};
             if (!(this._targetPool instanceof Array)) {
-                this._targetPool = [this._targetPool];
+                this._targetPool = [ this._targetPool ];
             }
 
-            //生命周期
+            // 生命周期
             this._life = options.life || 1000;
-            //延时
+            // 延时
             this._delay = options.delay || 0;
-            //开始时间
-            this._startTime = new Date().getTime() + this._delay;//单位毫秒
+            // 开始时间
+            this._startTime = new Date().getTime() + this._delay;// 单位毫秒
 
-            //结束时间
+            // 结束时间
             this._endTime = this._startTime + this._life * 1000;
 
-            //是否循环
+            // 是否循环
             this.loop = typeof options.loop == 'undefined'
                         ? false : options.loop;
 
@@ -9505,7 +10553,7 @@ define(
             step : function (time) {
                 var percent = (time - this._startTime) / this._life;
 
-                //还没开始
+                // 还没开始
                 if (percent < 0) {
                     return;
                 }
@@ -9560,17 +10608,9 @@ define(
 
 /**
  * 动画主类, 调度和管理所有动画控制器
- *
+ * 
+ * @module zrender/animation/Animation
  * @author pissang(https://github.com/pissang)
- *
- * @class : Animation
- * @config : stage(optional) 绘制类, 需要提供update接口
- * @config : onframe(optional)
- * @method : add
- * @method : remove
- * @method : update
- * @method : start
- * @method : stop
  */
 define(
     'zrender/animation/Animation',['require','./Clip','../tool/color','../tool/util','../tool/event'],function(require) {
@@ -9586,11 +10626,41 @@ define(
                                     || window.msRequestAnimationFrame
                                     || window.mozRequestAnimationFrame
                                     || window.webkitRequestAnimationFrame
-                                    || function(func){setTimeout(func, 16);};
+                                    || function (func) {
+                                        setTimeout(func, 16);
+                                    };
 
         var arraySlice = Array.prototype.slice;
 
-        function Animation(options) {
+        /**
+         * @typedef {Object} IZRenderStage
+         * @property {Function} update
+         */
+        
+        /** 
+         * @alias module:zrender/animation/Animation
+         * @constructor
+         * @param {Object} [options]
+         * @param {Function} [options.onframe]
+         * @param {IZRenderStage} [options.stage]
+         * @example
+         *     var animation = new Animation();
+         *     var obj = {
+         *         x: 100,
+         *         y: 100
+         *     };
+         *     animation.animate(node.position)
+         *         .when(1000, {
+         *             x: 500,
+         *             y: 500
+         *         })
+         *         .when(2000, {
+         *             x: 100,
+         *             y: 100
+         *         })
+         *         .start('spline');
+         */
+        var Animation = function (options) {
 
             options = options || {};
 
@@ -9606,19 +10676,27 @@ define(
             this._time = 0;
 
             Dispatcher.call(this);
-        }
+        };
 
         Animation.prototype = {
-            add : function(clip) {
+            /**
+             * 添加动画片段
+             * @param {module:zrender/animation/Clip} clip
+             */
+            add: function(clip) {
                 this._clips.push(clip);
             },
-            remove : function(clip) {
+            /**
+             * 删除动画片段
+             * @param {module:zrender/animation/Clip} clip
+             */
+            remove: function(clip) {
                 var idx = util.indexOf(this._clips, clip);
                 if (idx >= 0) {
                     this._clips.splice(idx, 1);
                 }
             },
-            update : function() {
+            _update: function() {
 
                 var time = new Date().getTime();
                 var delta = time - this._time;
@@ -9644,10 +10722,11 @@ define(
                 // Remove the finished clip
                 for (var i = 0; i < len;) {
                     if (clips[i]._needsRemove) {
-                        clips[i] = clips[len-1];
+                        clips[i] = clips[len - 1];
                         clips.pop();
                         len--;
-                    } else {
+                    }
+                    else {
                         i++;
                     }
                 }
@@ -9663,14 +10742,17 @@ define(
 
                 this.dispatch('frame', delta);
             },
-            start : function() {
+            /**
+             * 开始运行动画
+             */
+            start: function () {
                 var self = this;
 
                 this._running = true;
 
                 function step() {
                     if (self._running) {
-                        self.update();
+                        self._update();
                         requestAnimationFrame(step);
                     }
                 }
@@ -9678,15 +10760,32 @@ define(
                 this._time = new Date().getTime();
                 requestAnimationFrame(step);
             },
-            stop : function() {
+            /**
+             * 停止运行动画
+             */
+            stop: function () {
                 this._running = false;
             },
-            clear : function() {
+            /**
+             * 清除所有动画片段
+             */
+            clear : function () {
                 this._clips = [];
             },
-            animate : function(target, options) {
+            /**
+             * 对一个目标创建一个animator对象，可以指定目标中的属性使用动画
+             * @param  {Object} target
+             * @param  {Object} options
+             * @param  {boolean} [options.loop=false] 是否循环播放动画
+             * @param  {Function} [options.getter=null]
+             *         如果指定getter函数，会通过getter函数取属性值
+             * @param  {Function} [options.setter=null]
+             *         如果指定setter函数，会通过setter函数设置属性值
+             * @return {module:zrender/animation/Animation~Animator}
+             */
+            animate : function (target, options) {
                 options = options || {};
-                var deferred = new Deferred(
+                var deferred = new Animator(
                     target,
                     options.loop,
                     options.getter, 
@@ -9718,7 +10817,8 @@ define(
                 for (var i = 0; i < len; i++) {
                     out[i] = _interpolateNumber(p0[i], p1[i], percent); 
                 }
-            } else {
+            }
+            else {
                 var len2 = p0[0].length;
                 for (var i = 0; i < len; i++) {
                     for (var j = 0; j < len2; j++) {
@@ -9750,7 +10850,8 @@ define(
                         p0[i], p1[i], p2[i], p3[i], t, t2, t3
                     );
                 }
-            } else {
+            }
+            else {
                 var len2 = p0[0].length;
                 for (var i = 0; i < len; i++) {
                     for (var j = 0; j < len2; j++) {
@@ -9767,7 +10868,7 @@ define(
             var v0 = (p2 - p0) * 0.5;
             var v1 = (p3 - p1) * 0.5;
             return (2 * (p1 - p2) + v0 + v1) * t3 
-                    + (- 3 * (p1 - p2) - 2 * v0 - v1) * t2
+                    + (-3 * (p1 - p2) - 2 * v0 - v1) * t2
                     + v0 * t + p1;
         }
 
@@ -9780,10 +10881,12 @@ define(
                         ret.push(arraySlice.call(value[i]));
                     }
                     return ret;
-                } else {
+                }
+                else {
                     return arraySlice.call(value);
                 }
-            } else {
+            }
+            else {
                 return value;
             }
         }
@@ -9796,7 +10899,15 @@ define(
             return 'rgba(' + rgba.join(',') + ')';
         }
 
-        function Deferred(target, loop, getter, setter) {
+        /**
+         * @alias module:zrender/animation/Animation~Animator
+         * @constructor
+         * @param {Object} target
+         * @param {boolean} loop
+         * @param {Function} getter
+         * @param {Function} setter
+         */
+        var Animator = function(target, loop, getter, setter) {
             this._tracks = {};
             this._target = target;
 
@@ -9814,12 +10925,18 @@ define(
             this._onframeList = [];
 
             this._clipList = [];
-        }
+        };
 
-        Deferred.prototype = {
+        Animator.prototype = {
+            /**
+             * 设置动画关键帧
+             * @param  {number} time 关键帧时间，单位是ms
+             * @param  {Object} props 关键帧的属性值，key-value表示
+             * @return {module:zrender/animation/Animation~Animator}
+             */
             when : function(time /* ms */, props) {
                 for (var propName in props) {
-                    if (! this._tracks[propName]) {
+                    if (!this._tracks[propName]) {
                         this._tracks[propName] = [];
                         // If time is 0 
                         //  Then props is given initialize value
@@ -9841,11 +10958,22 @@ define(
                 }
                 return this;
             },
-            during : function(callback) {
+            /**
+             * 添加动画每一帧的回调函数
+             * @param  {Function} callback
+             * @return {module:zrender/animation/Animation~Animator}
+             */
+            during: function (callback) {
                 this._onframeList.push(callback);
                 return this;
             },
-            start : function(easing) {
+            /**
+             * 开始执行动画
+             * @param  {string|Function} easing 
+             *         动画缓动函数，详见{@link module:zrender/animation/easing}
+             * @return {module:zrender/animation/Animation~Animator}
+             */
+            start: function (easing) {
 
                 var self = this;
                 var setter = this._setter;
@@ -9866,7 +10994,7 @@ define(
                     }
                 };
 
-                var createTrackClip = function(keyframes, propName) {
+                var createTrackClip = function (keyframes, propName) {
                     var trackLen = keyframes.length;
                     if (!trackLen) {
                         return;
@@ -9888,8 +11016,9 @@ define(
                     });
                     var trackMaxTime;
                     if (trackLen) {
-                        trackMaxTime = keyframes[trackLen-1].time;
-                    }else{
+                        trackMaxTime = keyframes[trackLen - 1].time;
+                    }
+                    else {
                         return;
                     }
                     // Percents of each keyframe
@@ -9916,15 +11045,19 @@ define(
                     var cacheKey = 0;
                     var cachePercent = 0;
                     var start;
-                    var i, w;
-                    var p0, p1, p2, p3;
+                    var i;
+                    var w;
+                    var p0;
+                    var p1;
+                    var p2;
+                    var p3;
 
 
                     if (isValueColor) {
-                        var rgba = [0, 0, 0, 0];
+                        var rgba = [ 0, 0, 0, 0 ];
                     }
 
-                    var onframe = function(target, percent) {
+                    var onframe = function (target, percent) {
                         // Find the range keyframes
                         // kf1-----kf2---------current--------kf3
                         // find kf2 and kf3 and do interpolation
@@ -9936,22 +11069,24 @@ define(
                                     break;
                                 }
                             }
-                            i = Math.min(i, trackLen-2);
-                        } else {
+                            i = Math.min(i, trackLen - 2);
+                        }
+                        else {
                             for (i = cacheKey; i < trackLen; i++) {
                                 if (kfPercents[i] > percent) {
                                     break;
                                 }
                             }
-                            i = Math.min(i-1, trackLen-2);
+                            i = Math.min(i - 1, trackLen - 2);
                         }
                         cacheKey = i;
                         cachePercent = percent;
 
-                        var range = (kfPercents[i+1] - kfPercents[i]);
+                        var range = (kfPercents[i + 1] - kfPercents[i]);
                         if (range === 0) {
                             return;
-                        } else {
+                        }
+                        else {
                             w = (percent - kfPercents[i]) / range;
                         }
                         if (useSpline) {
@@ -9961,21 +11096,23 @@ define(
                             p3 = kfValues[i > trackLen - 3 ? trackLen - 1 : i + 2];
                             if (isValueArray) {
                                 _catmullRomInterpolateArray(
-                                    p0, p1, p2, p3, w, w*w, w*w*w,
+                                    p0, p1, p2, p3, w, w * w, w * w * w,
                                     getter(target, propName),
                                     arrDim
                                 );
-                            } else {
+                            }
+                            else {
                                 var value;
                                 if (isValueColor) {
                                     value = _catmullRomInterpolateArray(
-                                        p0, p1, p2, p3, w, w*w, w*w*w,
+                                        p0, p1, p2, p3, w, w * w, w * w * w,
                                         rgba, 1
                                     );
                                     value = rgba2String(rgba);
-                                } else {
+                                }
+                                else {
                                     value = _catmullRomInterpolate(
-                                        p0, p1, p2, p3, w, w*w, w*w*w
+                                        p0, p1, p2, p3, w, w * w, w * w * w
                                     );
                                 }
                                 setter(
@@ -9984,23 +11121,26 @@ define(
                                     value
                                 );
                             }
-                        } else {
+                        }
+                        else {
                             if (isValueArray) {
                                 _interpolateArray(
-                                    kfValues[i], kfValues[i+1], w,
+                                    kfValues[i], kfValues[i + 1], w,
                                     getter(target, propName),
                                     arrDim
                                 );
-                            } else {
+                            }
+                            else {
                                 var value;
                                 if (isValueColor) {
                                     _interpolateArray(
-                                        kfValues[i], kfValues[i+1], w,
+                                        kfValues[i], kfValues[i + 1], w,
                                         rgba, 1
                                     );
                                     value = rgba2String(rgba);
-                                } else {
-                                    value = _interpolateNumber(kfValues[i], kfValues[i+1], w);
+                                }
+                                else {
+                                    value = _interpolateNumber(kfValues[i], kfValues[i + 1], w);
                                 }
                                 setter(
                                     target,
@@ -10037,6 +11177,9 @@ define(
                 }
                 return this;
             },
+            /**
+             * 停止动画
+             */
             stop : function() {
                 for (var i = 0; i < this._clipList.length; i++) {
                     var clip = this._clipList[i];
@@ -10044,12 +11187,22 @@ define(
                 }
                 this._clipList = [];
             },
-            delay : function(time){
+            /**
+             * 设置动画延迟开始的时间
+             * @param  {number} time 单位ms
+             * @return {module:zrender/animation/Animation~Animator}
+             */
+            delay : function (time) {
                 this._delay = time;
                 return this;
             },
-            done : function(func) {
-                this._doneList.push(func);
+            /**
+             * 添加动画结束的回调
+             * @param  {Function} cb
+             * @return {module:zrender/animation/Animation~Animator}
+             */
+            done : function(cb) {
+                this._doneList.push(cb);
                 return this;
             }
         };
@@ -10059,8 +11212,7 @@ define(
 );
 
 /*!
- * ZRender, a lightweight canvas library with a MVC architecture, data-driven 
- * and provides an event model like DOM.
+ * ZRender, a high performance canvas library.
  *  
  * Copyright (c) 2013, Baidu Inc.
  * All rights reserved.
@@ -10068,16 +11220,8 @@ define(
  * LICENSE
  * https://github.com/ecomfe/zrender/blob/master/LICENSE.txt
  */
-
-/**
- * zrender: core核心类
- *
- * @desc zrender是一个轻量级的Canvas类库，MVC封装，数据驱动，提供类Dom事件模型。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *
- */
 define(
-    'zrender/zrender',['require','./lib/excanvas','./tool/util','./tool/log','./tool/guid','./Handler','./Painter','./Storage','./animation/Animation','./tool/env'],function(require) {
+    'zrender/zrender',['require','./dep/excanvas','./tool/util','./tool/log','./tool/guid','./Handler','./Painter','./Storage','./animation/Animation','./tool/env'],function(require) {
         /*
          * HTML5 Canvas for Internet Explorer!
          * Modern browsers like Firefox, Safari, Chrome and Opera support
@@ -10090,7 +11234,7 @@ define(
          * http://explorercanvas.googlecode.com/svn/trunk/excanvas.js
          */
         // 核心代码会生成一个全局变量 G_vmlCanvasManager，模块改造后借用于快速判断canvas支持
-        require('./lib/excanvas');
+        require('./dep/excanvas');
 
         var util = require('./tool/util');
         var log = require('./tool/log');
@@ -10101,37 +11245,43 @@ define(
         var Storage = require('./Storage');
         var Animation = require('./animation/Animation');
 
-        var _instances = {};    //ZRender实例map索引
-
-        var zrender = {};
-        zrender.version = '2.0.2';
+        var _instances = {};    // ZRender实例map索引
 
         /**
-         * zrender初始化
-         * 不让外部直接new ZRender实例，为啥？
-         * 不为啥，提供全局可控同时减少全局污染和降低命名冲突的风险！
-         *
-         * @param {HTMLElement} dom dom对象，不帮你做document.getElementById了
-         * @param {Object=} params 个性化参数，如自定义shape集合，带进来就好
-         *
-         * @return {ZRender} ZRender实例
+         * @exports zrender
+         * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+         *         pissang (https://www.github.com/pissang)
          */
-        zrender.init = function(dom, params) {
-            var zi = new ZRender(guid(), dom, params || {});
-            _instances[zi.id] = zi;
-            return zi;
+        var zrender = {};
+        /**
+         * @type {string}
+         */
+        zrender.version = '2.0.3';
+
+        /**
+         * 创建zrender实例
+         *
+         * @param {HTMLElement} dom 绘图容器
+         * @return {module:zrender~ZRender} ZRender实例
+         */
+        // 不让外部直接new ZRender实例，为啥？
+        // 不为啥，提供全局可控同时减少全局污染和降低命名冲突的风险！
+        zrender.init = function(dom) {
+            var zr = new ZRender(guid(), dom);
+            _instances[zr.id] = zr;
+            return zr;
         };
 
         /**
-         * zrender实例销毁，记在_instances里的索引也会删除了
-         * 管生就得管死，可以通过zrender.dispose(zi)销毁指定ZRender实例
-         * 当然也可以直接zi.dispose()自己销毁
-         *
-         * @param {ZRender=} zi ZRender对象，不传则销毁全部
+         * zrender实例销毁
+         * @param {module:zrender~ZRender} zr ZRender对象，不传则销毁全部
          */
-        zrender.dispose = function (zi) {
-            if (zi) {
-                zi.dispose();
+        // 在_instances里的索引也会删除了
+        // 管生就得管死，可以通过zrender.dispose(zr)销毁指定ZRender实例
+        // 当然也可以直接zr.dispose()自己销毁
+        zrender.dispose = function (zr) {
+            if (zr) {
+                zr.dispose();
             }
             else {
                 for (var key in _instances) {
@@ -10145,8 +11295,8 @@ define(
 
         /**
          * 获取zrender实例
-         *
          * @param {string} id ZRender对象索引
+         * @return {module:zrender~ZRender}
          */
         zrender.getInstance = function (id) {
             return _instances[id];
@@ -10167,7 +11317,7 @@ define(
         };
 
         function getFrameCallback(zrInstance) {
-            return function(){
+            return function () {
                 var animatingShapes = zrInstance.animatingShapes;
                 for (var i = 0, l = animatingShapes.length; i < l; i++) {
                     zrInstance.storage.mod(animatingShapes[i].id);
@@ -10180,16 +11330,20 @@ define(
         }
 
         /**
-         * ZRender接口类，对外可用的所有接口都在这里！！
-         * storage（M）、painter（V）、handler（C）为内部私有类，外部接口不可见
-         * 非get接口统一返回支持链式调用~
+         * ZRender接口类，对外可用的所有接口都在这里
+         * 非get接口统一返回支持链式调用
          *
+         * @constructor
+         * @alias module:zrender~ZRender
          * @param {string} id 唯一标识
          * @param {HTMLElement} dom dom对象，不帮你做document.getElementById
-         *
          * @return {ZRender} ZRender实例
          */
-        function ZRender(id, dom) {
+        var ZRender = function(id, dom) {
+            /**
+             * 实例 id
+             * @type {string}
+             */
             this.id = id;
             this.env = require('./tool/env');
 
@@ -10199,6 +11353,9 @@ define(
 
             // 动画控制
             this.animatingShapes = [];
+            /**
+             * @type {module:zrender/animation/Animation}
+             */
             this.animation = new Animation({
                 stage : {
                     update : getFrameCallback(this)
@@ -10207,10 +11364,11 @@ define(
             this.animation.start();
 
             this._needsRefreshNextFrame = false;
-        }
+        };
 
         /**
          * 获取实例唯一标识
+         * @return {string}
          */
         ZRender.prototype.getId = function () {
             return this.id;
@@ -10219,7 +11377,7 @@ define(
         /**
          * 添加图形形状到根节点
          * 
-         * @param {zrender.shape.Base} shape 形状对象，可用属性全集，详见各shape
+         * @param {module:zrender/shape/Base} shape 形状对象，可用属性全集，详见各shape
          */
         ZRender.prototype.addShape = function (shape) {
             this.storage.addRoot(shape);
@@ -10229,7 +11387,7 @@ define(
         /**
          * 添加组到根节点
          *
-         * @param {zrender.shape.Group} group
+         * @param {module:zrender/Group} group
          */
         ZRender.prototype.addGroup = function(group) {
             this.storage.addRoot(group);
@@ -10270,7 +11428,7 @@ define(
         /**
          * 修改组
          * 
-         * @param {string} shapeId
+         * @param {string} groupId
          * @param {Object} group
          */
         ZRender.prototype.modGroup = function (groupId, group) {
@@ -10279,10 +11437,19 @@ define(
         };
 
         /**
-         * 修改指定zlevel的绘制配置项，例如clearColor
+         * 修改指定zlevel的绘制配置项
          * 
          * @param {string} zLevel
-         * @param {Object} config 配置对象, 目前支持clearColor 
+         * @param {Object} config 配置对象
+         * @param {string} [config.clearColor=0] 每次清空画布的颜色
+         * @param {string} [config.motionBlur=false] 是否开启动态模糊
+         * @param {number} [config.lastFrameAlpha=0.7]
+         *                 在开启动态模糊的时候使用，与上一帧混合的alpha值，值越大尾迹越明显
+         * @param {Array.<number>} [config.position] 层的平移
+         * @param {Array.<number>} [config.rotation] 层的旋转
+         * @param {Array.<number>} [config.scale] 层的缩放
+         * @param {boolean} [config.zoomable=false] 层是否支持鼠标缩放操作
+         * @param {boolean} [config.panable=false] 层是否支持鼠标平移操作
          */
         ZRender.prototype.modLayer = function (zLevel, config) {
             this.painter.modLayer(zLevel, config);
@@ -10303,7 +11470,6 @@ define(
          * 渲染
          * 
          * @param {Function} callback  渲染结束后回调函数
-         * todo:增加缓动函数
          */
         ZRender.prototype.render = function (callback) {
             this.painter.render(callback);
@@ -10322,16 +11488,16 @@ define(
             return this;
         };
 
-        // TODO
-        // 好像会有奇怪的问题
+        /**
+         * 标记视图在浏览器下一帧需要绘制
+         */
         ZRender.prototype.refreshNextFrame = function() {
             this._needsRefreshNextFrame = true;
             return this;
         };
         
         /**
-         * 高亮层更新
-         * 
+         * 绘制高亮层
          * @param {Function} callback  视图更新后回调函数
          */
         ZRender.prototype.refreshHover = function (callback) {
@@ -10342,14 +11508,17 @@ define(
         /**
          * 视图更新
          * 
-         * @param {Array} shapeList 需要更新的图形元素列表
+         * @param {Array.<module:zrender/shape/Base>} shapeList 需要更新的图形列表
          * @param {Function} callback  视图更新后回调函数
          */
-        ZRender.prototype.update = function (shapeList, callback) {
-            this.painter.update(shapeList, callback);
+        ZRender.prototype.refreshShapes = function (shapeList, callback) {
+            this.painter.refreshShapes(shapeList, callback);
             return this;
         };
 
+        /**
+         * 调整视图大小
+         */
         ZRender.prototype.resize = function() {
             this.painter.resize();
             return this;
@@ -10360,13 +11529,13 @@ define(
          * 
          * @param {string} shapeId 形状对象唯一标识
          * @param {string} path 需要添加动画的属性获取路径，可以通过a.b.c来获取深层的属性
-         * @param {boolean} loop 动画是否循环
-         * @return {Object} 动画的Deferred对象
-         * Example:
-         * zr.animate(circleId, 'style', false)
-         *   .when(1000, { x: 10} )
-         *   .done(function(){ console.log('Animation done')})
-         *   .start()
+         * @param {boolean} [loop] 动画是否循环
+         * @return {module:zrender/animation/Animation~Animator}
+         * @example:
+         *     zr.animate(circle.id, 'style', false)
+         *         .when(1000, {x: 10} )
+         *         .done(function(){ // Animation done })
+         *         .start()
          */
         ZRender.prototype.animate = function (shapeId, path, loop) {
             var shape = this.storage.get(shapeId);
@@ -10409,9 +11578,9 @@ define(
                 }
                 shape.__aniCount++;
 
-                return this.animation.animate(target, {loop : loop})
-                    .done(function() {
-                        shape.__aniCount --;
+                return this.animation.animate(target, { loop: loop })
+                    .done(function () {
+                        shape.__aniCount--;
                         if (shape.__aniCount === 0) {
                             // 从animatingShapes里移除
                             var idx = util.indexOf(animatingShapes, shape);
@@ -10420,7 +11589,7 @@ define(
                     });
             }
             else {
-                log('Shape "'+ shapeId + '" not existed');
+                log('Shape "' + shapeId + '" not existed');
             }
         };
 
@@ -10464,7 +11633,10 @@ define(
         };
 
         /**
-         * 图像导出 
+         * 图像导出
+         * @param {string} type
+         * @param {string} [backgroundColor='#fff'] 背景色
+         * @return {string} 图片的Base64 url
          */
         ZRender.prototype.toDataURL = function(type, backgroundColor, args) {
             return this.painter.toDataURL(type, backgroundColor, args);
@@ -10472,6 +11644,9 @@ define(
 
         /**
          * 将常规shape转成image shape
+         * @param {module:zrender/shape/Base} e
+         * @param {number} width
+         * @param {number} height
          */
         ZRender.prototype.shapeToImage = function(e, width, height) {
             var id = guid();
@@ -10503,7 +11678,7 @@ define(
         /**
          * 事件触发
          * 
-         * @param {string} event 事件名称，resize，hover，drag，etc~
+         * @param {string} eventName 事件名称，resize，hover，drag，etc
          * @param {event=} event event dom事件对象
          */
         ZRender.prototype.trigger = function (eventName, event) {
@@ -10538,7 +11713,7 @@ define(
             this.painter = 
             this.handler = null;
 
-            //释放后告诉全局删除对自己的索引，没想到啥好方法
+            // 释放后告诉全局删除对自己的索引，没想到啥好方法
             zrender.delInstance(this.id);
         };
 
@@ -10788,6 +11963,7 @@ define('echarts/component/base',['require','../config','../util/ecQuery','../uti
                 case ecConfig.COMPONENT_TYPE_DATARANGE:
                 case ecConfig.COMPONENT_TYPE_DATAZOOM :
                 case ecConfig.COMPONENT_TYPE_TIMELINE :
+                case ecConfig.COMPONENT_TYPE_ROAMCONTROLLER :
                     return 4;
 
                 case ecConfig.CHART_TYPE_ISLAND :
@@ -10930,48 +12106,30 @@ define('echarts/component/base',['require','../config','../util/ecQuery','../uti
  *
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
- * sin：正弦函数，自动缓存
- * cos：余弦函数，自动缓存
+ * sin：正弦函数
+ * cos：余弦函数
  * degreeToRadian：角度转弧度
  * radianToDegree：弧度转角度
  */
 define(
-    'zrender/tool/math',[],function() {
-        /*
-        var _cache = {
-            sin : {},     //sin缓存
-            cos : {}      //cos缓存
-        };
-        */
+    'zrender/tool/math',[],function () {
+
         var _radians = Math.PI / 180;
 
         /**
-         * @param angle 弧度（角度）参数
-         * @param isDegrees angle参数是否为角度计算，默认为false，angle为以弧度计量的角度
+         * @param {number} angle 弧度（角度）参数
+         * @param {boolean} isDegrees angle参数是否为角度计算，默认为false，angle为以弧度计量的角度
          */
         function sin(angle, isDegrees) {
             return Math.sin(isDegrees ? angle * _radians : angle);
-            /*
-            angle = (isDegrees ? angle * _radians : angle).toFixed(4);
-            if(typeof _cache.sin[angle] == 'undefined') {
-                _cache.sin[angle] = Math.sin(angle);
-            }
-            return _cache.sin[angle];
-            */
         }
 
         /**
-         * @param radians 弧度参数
+         * @param {number} angle 弧度（角度）参数
+         * @param {boolean} isDegrees angle参数是否为角度计算，默认为false，angle为以弧度计量的角度
          */
         function cos(angle, isDegrees) {
             return Math.cos(isDegrees ? angle * _radians : angle);
-            /*
-            angle = (isDegrees ? angle * _radians : angle).toFixed(4);
-            if(typeof _cache.cos[angle] == 'undefined') {
-                _cache.cos[angle] = Math.cos(angle);
-            }
-            return _cache.cos[angle];
-            */
         }
 
         /**
@@ -10998,82 +12156,53 @@ define(
         };
     }
 );
+
 /**
- * zrender
- *
+ * n角星（n>3）
+ * @module zrender/shape/Star
  * @author sushuang (宿爽, sushuang@baidu.com)
- *
- * shape类：n角星（n>3）
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'star',       // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
-
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           x             : {number},  // 必须，n角星外接圆心横坐标
-           y             : {number},  // 必须，n角星外接圆心纵坐标
-           r             : {number},  // 必须，n角星外接圆半径
-           r0            : {number},  // n角星内部顶点（凹点）的外接圆半径，
-                                      // 如果不指定此参数，则自动计算：取相隔外部顶点连线的交点作内部顶点
-           n             : {number},  // 必须，指明几角星
-           brushType     : {string},  // 默认为fill，绘画方式
-                                      // fill(填充) | stroke(描边) | both(填充+描边)
-           color         : {color},   // 默认为'#000'，填充颜色，支持rgba
-           strokeColor   : {color},   // 默认为'#000'，描边颜色（轮廓），支持rgba
-           lineWidth     : {number},  // 默认为1，线条宽度，描边下有效
-           lineJoin      : {string},  // 默认为miter，线段连接样式。miter | round | bevel
-
-           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
-           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
-           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-           shadowOffsetY : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-
-           text          : {string},  // 默认为null，附加文本
-           textFont      : {string},  // 默认为null，附加文本样式，eg:'bold 18px verdana'
-           textPosition  : {string},  // 默认为outside，附加文本位置。
-                                      // outside | inside
-           textAlign     : {string},  // 默认根据textPosition自动设置，附加文本水平对齐。
-                                      // start | end | left | right | center
-           textBaseline  : {string},  // 默认根据textPosition自动设置，附加文本垂直对齐。
-                                      // top | bottom | middle |
-                                      // alphabetic | hanging | ideographic
-           textColor     : {color},   // 默认根据textPosition自动设置，默认策略如下，附加文本颜色
-                                      // 'inside' ? '#fff' : color
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
-         例子：
-   {
-       shape  : 'star',
-       id     : '123456',
-       zlevel : 1,
-       style  : {
-           x : 200,
-           y : 100,
-           r : 150,
-           n : 5,
-           color : '#eee'
-       },
-       myName : 'kener',   // 可自带任何有效自定义属性
-
-       clickable : true,
-       onClick : function(eventPacket) {
-           alert(eventPacket.target.myName);
-       }
-   }
+ * @example
+ *     var Star = require('zrender/shape/Star');
+ *     var shape = new Star({
+ *         style: {
+ *             x: 200,
+ *             y: 100,
+ *             r: 150,
+ *             n: 5,
+ *             text: '五角星'
+ *         }
+ *     });
+ *     zr.addShape(shape);
  */
+
+/**
+ * @typedef {Object} IStarStyle
+ * @property {number} x n角星外接圆心x坐标
+ * @property {number} y n角星外接圆心y坐标
+ * @property {number} r n角星外接圆半径
+ * @property {number} [r0] n角星内部顶点（凹点）的外接圆半径。
+ *                         如果不指定此参数，则自动计算：取相隔外部顶点连线的交点作内部顶点。
+ * @property {number} n 指明几角星
+ * @property {string} [brushType='fill']
+ * @property {string} [color='#000000'] 填充颜色
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
+ */
+
 define(
     'zrender/shape/Star',['require','../tool/math','./Base','../tool/util'],function (require) {
 
@@ -11084,21 +12213,39 @@ define(
 
         var Base = require('./Base');
 
-        function Star(options) {
+        /**
+         * @alias module:zrender/shape/Star
+         * @param {Object} options
+         * @constructor
+         * @extends module:zrender/shape/Base
+         */
+        var Star = function(options) {
             Base.call(this, options);
-        }
+            /**
+             * n角星绘制样式
+             * @name module:zrender/shape/Star#style
+             * @type {module:zrender/shape/Star~IStarStyle}
+             */
+            /**
+             * n角星高亮绘制样式
+             * @name module:zrender/shape/Star#highlightStyle
+             * @type {module:zrender/shape/Star~IStarStyle}
+             */
+        };
 
         Star.prototype = {
             type: 'star',
 
             /**
              * 创建n角星（n>3）路径
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
+             * @param {CanvasRenderingContext2D} ctx
+             * @param {module:zrender/shape/Star~IStarStyle} style
              */
             buildPath : function(ctx, style) {
                 var n = style.n;
-                if (!n || n < 2) { return; }
+                if (!n || n < 2) {
+                    return;
+                }
 
                 var x = style.x;
                 var y = style.y;
@@ -11123,17 +12270,17 @@ define(
 
                 // 记录边界点，用于判断inside
                 var pointList = style.pointList = [];
-                pointList.push([xStart, yStart]);
-                for (var i = 0, end = n * 2 - 1, ri; i < end; i ++) {
+                pointList.push([ xStart, yStart ]);
+                for (var i = 0, end = n * 2 - 1, ri; i < end; i++) {
                     ri = i % 2 === 0 ? r0 : r;
-                    pointList.push([x + ri * cos(deg), y + ri * sin(deg)]);
+                    pointList.push([ x + ri * cos(deg), y + ri * sin(deg) ]);
                     deg += dStep;
                 }
-                pointList.push([xStart, yStart]);
+                pointList.push([ xStart, yStart ]);
 
                 // 绘制
                 ctx.moveTo(pointList[0][0], pointList[0][1]);
-                for (var i = 0; i < pointList.length; i ++) {
+                for (var i = 0; i < pointList.length; i++) {
                     ctx.lineTo(pointList[i][0], pointList[i][1]);
                 }
 
@@ -11141,8 +12288,9 @@ define(
             },
 
             /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
+             * 返回n角星包围盒矩形
+             * @param {module:zrender/shape/Star~IStarStyle} style
+             * @return {module:zrender/shape/Base~IBoundingRect}
              */
             getRect : function(style) {
                 if (style.__rect) {
@@ -11171,97 +12319,88 @@ define(
         return Star;
     }
 );
+
 /**
- * zrender
- *
+ * @module zrender/shape/Heart
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *
- * shape类：心形
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'heart',       // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
+ * @example
+ *   var Heart = require('zrender/shape/Heart');
+ *   var shape = new Heart({
+ *       style: {
+ *           x: 100,
+ *           y: 100,
+ *           a: 40,
+ *           b: 40,
+ *           brushType: 'both',
+ *           color: 'blue',
+ *           strokeColor: 'red',
+ *           lineWidth: 3,
+ *           text: 'Heart'
+ *       }    
+ *   });
+ *   zr.addShape(shape);
+ */
 
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           x             : {number},  // 必须，心形内部尖端横坐标
-           y             : {number},  // 必须，心形内部尖端纵坐标
-           a             : {number},  // 必须，心形横宽（中轴线到水平边缘最宽处距离）
-           b             : {number},  // 必须，心形纵高（内尖到外尖距离）
-           brushType     : {string},  // 默认为fill，绘画方式
-                                      // fill(填充) | stroke(描边) | both(填充+描边)
-           color         : {color},   // 默认为'#000'，填充颜色，支持rgba
-           strokeColor   : {color},   // 默认为'#000'，描边颜色（轮廓），支持rgba
-           lineWidth     : {number},  // 默认为1，线条宽度，描边下有效
-
-           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
-           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
-           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-           shadowOffsetY : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-
-           text          : {string},  // 默认为null，附加文本
-           textFont      : {string},  // 默认为null，附加文本样式，eg:'bold 18px verdana'
-           textPosition  : {string},  // 默认为outside，附加文本位置。
-                                      // outside | inside
-           textAlign     : {string},  // 默认根据textPosition自动设置，附加文本水平对齐。
-                                      // start | end | left | right | center
-           textBaseline  : {string},  // 默认根据textPosition自动设置，附加文本垂直对齐。
-                                      // top | bottom | middle |
-                                      // alphabetic | hanging | ideographic
-           textColor     : {color},   // 默认根据textPosition自动设置，默认策略如下，附加文本颜色
-                                      // 'inside' ? '#fff' : color
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
-         例子：
-   {
-       shape  : 'heart',
-       id     : '123456',
-       zlevel : 1,
-       style  : {
-           x : 200,
-           y : 100,
-           a : 50,
-           b : 80,
-           color : '#eee',
-           text : 'Baidu'
-       },
-       myName : 'kener',  // 可自带任何有效自定义属性
-
-       clickable : true,
-       onClick : function(eventPacket) {
-           alert(eventPacket.target.myName);
-       }
-   }
+/**
+ * @typedef {Object} IHeartStyle
+ * @property {number} x 心形内部尖端横坐标
+ * @property {number} y 心形内部尖端纵坐标
+ * @property {number} a 心形横宽（中轴线到水平边缘最宽处距离）
+ * @property {number} b 心形纵高（内尖到外尖距离）
+ * @property {string} [brushType='fill']
+ * @property {string} [color='#000000'] 填充颜色
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
  */
 define(
     'zrender/shape/Heart',['require','./Base','../tool/util'],function (require) {
+        
+        
         var Base = require('./Base');
         
-        function Heart(options) {
+        /**
+         * @alias module:zrender/shape/Heart
+         * @constructor
+         * @extends module:zrender/shape/Base
+         * @param {Object} options
+         */
+        var Heart = function (options) {
             Base.call(this, options);
-        }
+            /**
+             * 心形绘制样式
+             * @name module:zrender/shape/Heart#style
+             * @type {module:zrender/shape/Heart~IHeartStyle}
+             */
+            /**
+             * 心形高亮绘制样式
+             * @name module:zrender/shape/Heart#highlightStyle
+             * @type {module:zrender/shape/Heart~IHeartStyle}
+             */
+        };
 
         Heart.prototype = {
             type: 'heart',
 
             /**
              * 创建扇形路径
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
+             * @param {CanvasRenderingContext2D} ctx
+             * @param {module:zrender/shape/Heart~IHeartStyle} style
              */
-            buildPath : function(ctx, style) {
+            buildPath : function (ctx, style) {
                 ctx.moveTo(style.x, style.y);
                 ctx.bezierCurveTo(
                     style.x + style.a / 2,
@@ -11283,10 +12422,11 @@ define(
             },
 
             /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
+             * 计算返回心形的包围盒矩形
+             * @param {module:zrender/shape/Heart~IHeartStyle} style
+             * @return {module:zrender/shape/Base~IBoundingRect}
              */
-            getRect : function(style) {
+            getRect : function (style) {
                 if (style.__rect) {
                     return style.__rect;
                 }
@@ -11313,95 +12453,87 @@ define(
         return Heart;
     }
 );
+
 /**
- * zrender
- *
+ * 水滴形状
+ * @module zrender/shape/Droplet
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *
- * shape类：水滴
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'heart',       // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
+ * @example
+ *   var Droplet = require('zrender/shape/Droplet');
+ *   var shape = new Droplet({
+ *       style: {
+ *           x: 100,
+ *           y: 100,
+ *           a: 40,
+ *           b: 40,
+ *           brushType: 'both',
+ *           color: 'blue',
+ *           strokeColor: 'red',
+ *           lineWidth: 3,
+ *           text: 'Droplet'
+ *       }    
+ *   });
+ *   zr.addShape(shape);
+ */
 
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           x             : {number},  // 必须，水滴中心横坐标
-           y             : {number},  // 必须，水滴中心纵坐标
-           a             : {number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
-           b             : {number},  // 必须，水滴纵高（中心到尖端距离）
-           brushType     : {string},  // 默认为fill，绘画方式
-                                      // fill(填充) | stroke(描边) | both(填充+描边)
-           color         : {color},   // 默认为'#000'，填充颜色，支持rgba
-           strokeColor   : {color},   // 默认为'#000'，描边颜色（轮廓），支持rgba
-           lineWidth     : {number},  // 默认为1，线条宽度，描边下有效
-
-           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
-           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
-           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-           shadowOffsetY : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-
-           text          : {string},  // 默认为null，附加文本
-           textFont      : {string},  // 默认为null，附加文本样式，eg:'bold 18px verdana'
-           textPosition  : {string},  // 默认为outside，附加文本位置。
-                                      // outside | inside
-           textAlign     : {string},  // 默认根据textPosition自动设置，附加文本水平对齐。
-                                      // start | end | left | right | center
-           textBaseline  : {string},  // 默认根据textPosition自动设置，附加文本垂直对齐。
-                                      // top | bottom | middle |
-                                      // alphabetic | hanging | ideographic
-           textColor     : {color},   // 默认根据textPosition自动设置，默认策略如下，附加文本颜色
-                                      // 'inside' ? '#fff' : color
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
-         例子：
-   {
-       shape  : 'droplet',
-       id     : '123456',
-       zlevel : 1,
-       style  : {
-           x : 200,
-           y : 100,
-           a : 50,
-           b : 80,
-           color : '#eee',
-           text : 'Baidu'
-       },
-       myName : 'kener',  // 可自带任何有效自定义属性
-
-       clickable : true,
-       onClick : function(eventPacket) {
-           alert(eventPacket.target.myName);
-       }
-   }
+/**
+ * @typedef {Object} IDropletStyle
+ * @property {number} x 水滴中心x坐标
+ * @property {number} y 水滴中心y坐标
+ * @property {number} a 水滴横宽（中心到水平边缘最宽处距离）
+ * @property {number} b 水滴纵高（中心到尖端距离）
+ * @property {string} [brushType='fill']
+ * @property {string} [color='#000000'] 填充颜色
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
  */
 define(
     'zrender/shape/Droplet',['require','./Base','../tool/util'],function (require) {
+        
+
         var Base = require('./Base');
 
-        function Droplet(options) {
+        /**
+         * @alias module:zrender/shape/Droplet
+         * @constructor
+         * @extends module:zrender/shape/Base
+         * @param {Object} options
+         */
+        var Droplet = function(options) {
             Base.call(this, options);
-        }
+            /**
+             * 水滴绘制样式
+             * @name module:zrender/shape/Droplet#style
+             * @type {module:zrender/shape/Droplet~IDropletStyle}
+             */
+            /**
+             * 水滴高亮绘制样式
+             * @name module:zrender/shape/Droplet#highlightStyle
+             * @type {module:zrender/shape/Droplet~IDropletStyle}
+             */
+        };
 
         Droplet.prototype = {
             type: 'droplet',
 
             /**
-             * 创建扇形路径
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
+             * 创建水滴路径
+             * @param {CanvasRenderingContext2D} ctx
+             * @param {module:zrender/shape/Droplet~IDropletStyle} style
              */
             buildPath : function(ctx, style) {
                 ctx.moveTo(style.x, style.y + style.a);
@@ -11424,8 +12556,9 @@ define(
             },
 
             /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
+             * 计算返回水滴的包围盒矩形
+             * @param {module:zrender/shape/Droplet~IDropletStyle} style
+             * @return {module:zrender/shape/Base~IBoundingRect}
              */
             getRect : function(style) {
                 if (style.__rect) {
@@ -11454,6 +12587,7 @@ define(
         return Droplet;
     }
 );
+
 /**
  * echarts扩展zrender shape
  *
@@ -11991,7 +13125,7 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
 define(
     'zrender/shape/util/dashedLineTo',[],function (/* require */) {
 
-        var dashPattern = [5, 5];
+        var dashPattern = [ 5, 5 ];
         /**
          * 虚线lineTo 
          */
@@ -12020,7 +13154,8 @@ define(
             for (var i = 0; i < numDashes; ++i) {
                 if (flag) {
                     ctx.moveTo(x1, y1);
-                } else {
+                }
+                else {
                     ctx.lineTo(x1, y1);
                 }
                 flag = !flag;
@@ -12033,102 +13168,85 @@ define(
 );
 
 /**
- * zrender
- *
+ * 直线
+ * @module zrender/shape/Line
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *
- * shape类：直线
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'line',         // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
-
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           xStart        : {number},  // 必须，起点横坐标
-           yStart        : {number},  // 必须，起点纵坐标
-           xEnd          : {number},  // 必须，终点横坐标
-           yEnd          : {number},  // 必须，终点纵坐标
-           strokeColor   : {color},   // 默认为'#000'，线条颜色（轮廓），支持rgba
-           lineType      : {string},  // 默认为solid，线条类型，solid | dashed | dotted
-           lineWidth     : {number},  // 默认为1，线条宽度
-           lineCap       : {string},  // 默认为butt，线帽样式。butt | round | square
-
-           opacity       : {number},  // 默认为1，透明度设置，如果color为rgba，则最终透明度效果叠加
-           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
-           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
-           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-           shadowOffsetY : {number},  // 默认为0，阴影纵向偏移，正值往下，负值往上
-
-           text          : {string},  // 默认为null，附加文本
-           textFont      : {string},  // 默认为null，附加文本样式，eg:'bold 18px verdana'
-           textPosition  : {string},  // 默认为end，附加文本位置。
-                                      // inside | start | end
-           textAlign     : {string},  // 默认根据textPosition自动设置，附加文本水平对齐。
-                                      // start | end | left | right | center
-           textBaseline  : {string},  // 默认根据textPosition自动设置，附加文本垂直对齐。
-                                      // top | bottom | middle |
-                                      // alphabetic | hanging | ideographic
-           textColor     : {color},   // 默认根据textPosition自动设置，默认策略如下，附加文本颜色
-                                      // 'inside' ? '#000' : color
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
-         例子：
-   {
-       shape  : 'line',
-       id     : '123456',
-       zlevel : 1,
-       style  : {
-           xStart : 100,
-           yStart : 100,
-           xEnd : 200,
-           yEnd : 200,
-           strokeColor : '#eee',
-           lineWidth : 20,
-           text : 'Baidu'
-       },
-       myName : 'kener',  //可自带任何有效自定义属性
-
-       clickable : true,
-       onClick : function(eventPacket) {
-           alert(eventPacket.target.myName);
-       }
-   }
+ * @example
+ *   var Line = require('zrender/shape/Line');
+ *   var shape = new Line({
+ *       style: {
+ *           xStart: 0,
+ *           yStart: 0,
+ *           xEnd: 100,
+ *           yEnd: 100,
+ *           strokeColor: '#000',
+ *           lineWidth: 10
+ *       }
+ *   });
+ *   zr.addShape(line);
+ */
+/**
+ * @typedef {Object} ILineStyle
+ * @property {number} xStart 起点x坐标
+ * @property {number} yStart 起点y坐标
+ * @property {number} xEnd 终止点x坐标
+ * @property {number} yEnd 终止点y坐标
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
  */
 define(
     'zrender/shape/Line',['require','./Base','./util/dashedLineTo','../tool/util'],function (require) {
         var Base = require('./Base');
         var dashedLineTo = require('./util/dashedLineTo');
         
-        function Line(options) {
-            this.brushTypeOnly = 'stroke';  //线条只能描边，填充后果自负
+        /**
+         * @alias module:zrender/shape/Line
+         * @param {Object} options
+         * @constructor
+         * @extends module:zrender/shape/Base
+         */
+        var Line = function (options) {
+            this.brushTypeOnly = 'stroke';  // 线条只能描边，填充后果自负
             this.textPosition = 'end';
             Base.call(this, options);
-        }
+
+            /**
+             * 直线绘制样式
+             * @name module:zrender/shape/Line#style
+             * @type {module:zrender/shape/Line~ILineStyle}
+             */
+            /**
+             * 直线高亮绘制样式
+             * @name module:zrender/shape/Line#highlightStyle
+             * @type {module:zrender/shape/Line~ILineStyle}
+             */
+        };
 
         Line.prototype =  {
             type: 'line',
 
             /**
              * 创建线条路径
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
+             * @param {CanvasRenderingContext2D} ctx
+             * @param {module:zrender/shape/Line~ILineStyle} style
              */
-            buildPath : function(ctx, style) {
+            buildPath : function (ctx, style) {
                 if (!style.lineType || style.lineType == 'solid') {
-                    //默认为实线
+                    // 默认为实线
                     ctx.moveTo(style.xStart, style.yStart);
                     ctx.lineTo(style.xEnd, style.yEnd);
                 }
@@ -12147,10 +13265,11 @@ define(
             },
 
             /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
+             * 计算返回线条的包围盒矩形
+             * @param {module:zrender/shape/Line~ILineStyle} style
+             * @return {module:zrender/shape/Base~IBoundingRect}
              */
-            getRect : function(style) {
+            getRect : function (style) {
                 if (style.__rect) {
                     return style.__rect;
                 }
@@ -12173,107 +13292,7 @@ define(
         return Line;
     }
 );
-/**
- * zrender: 向量操作类
- *
- * author : https://github.com/pissang
- */
-define(
-    'zrender/tool/vector',[],function() {
-        var ArrayCtor = typeof Float32Array === 'undefined'
-            ? Array
-            : Float32Array;
-            
-        var vector = {
-            create : function(x, y) {
-                var out = new ArrayCtor(2);
-                out[0] = x || 0;
-                out[1] = y || 0;
-                return out;
-            },
-            copy : function(out, v) {
-                out[0] = v[0];
-                out[1] = v[1];
-            },
-            set : function(out, a, b) {
-                out[0] = a;
-                out[1] = b;
-            },
-            add : function(out, v1, v2) {
-                out[0] = v1[0] + v2[0];
-                out[1] = v1[1] + v2[1];
-                return out;
-            },
-            scaleAndAdd : function(out, v1, v2, a) {
-                out[0] = v1[0] + v2[0] * a;
-                out[1] = v1[1] + v2[1] * a;
-                return out;
-            },
-            sub : function(out, v1, v2) {
-                out[0] = v1[0] - v2[0];
-                out[1] = v1[1] - v2[1];
-                return out;
-            },
-            length : function(v) {
-                return Math.sqrt(this.lengthSquare(v));
-            },
-            lengthSquare : function(v) {
-                return v[0] * v[0] + v[1] * v[1];
-            },
-            mul : function(out, v1, v2) {
-                out[0] = v1[0] * v2[0];
-                out[1] = v1[1] * v2[1];
-                return out;
-            },
-            dot : function(v1, v2) {
-                return v1[0] * v2[0] + v1[1] * v2[1];
-            },
-            scale : function(out, v, s) {
-                out[0] = v[0] * s;
-                out[1] = v[1] * s;
-                return out;
-            },
-            normalize : function(out, v) {
-                var d = vector.length(v);
-                if(d === 0){
-                    out[0] = 0;
-                    out[1] = 0;
-                }else{
-                    out[0] = v[0]/d;
-                    out[1] = v[1]/d;
-                }
-                return out;
-            },
-            distance : function(v1, v2) {
-                return Math.sqrt(
-                    (v1[0] - v2[0]) * (v1[0] - v2[0]) +
-                    (v1[1] - v2[1]) * (v1[1] - v2[1])
-                );
-            },
-            negate : function(out, v) {
-                out[0] = -v[0];
-                out[1] = -v[1];
-            },
-            middle : function(out, v1, v2) {
-                out[0] = (v1[0] + v2[0])/2;
-                out[1] = (v1[1] + v2[1])/2;
-                return out;
-            },
-            applyTransform: function(out, v, m) {
-                var x = v[0];
-                var y = v[1];
-                out[0] = m[0] * x + m[2] * y + m[4];
-                out[1] = m[1] * x + m[3] * y + m[5];
-                return out;
-            }
-        };
 
-        vector.len = vector.length;
-        vector.dist = vector.distance;
-
-        return vector;
-    }
-);
 /**
  * 多线段平滑曲线 Catmull-Rom spline
  *
@@ -12283,7 +13302,7 @@ define(
 
 
 define(
-    'zrender/shape/util/smoothSpline',['require','../../tool/vector'],function ( require ) {
+    'zrender/shape/util/smoothSpline',['require','../../tool/vector'],function (require) {
         var vector = require('../../tool/vector');
 
         /**
@@ -12293,7 +13312,7 @@ define(
             var v0 = (p2 - p0) * 0.5;
             var v1 = (p3 - p1) * 0.5;
             return (2 * (p1 - p2) + v0 + v1) * t3 
-                    + (- 3 * (p1 - p2) - 2 * v0 - v1) * t2
+                    + (-3 * (p1 - p2) - 2 * v0 - v1) * t2
                     + v0 * t + p1;
         }
 
@@ -12306,13 +13325,13 @@ define(
 
             var distance = 0;
             for (var i = 1; i < len; i++) {
-                distance += vector.distance(points[i-1], points[i]);
+                distance += vector.distance(points[i - 1], points[i]);
             }
             
             var segs = distance / 5;
             segs = segs < len ? len : segs;
             for (var i = 0; i < segs; i++) {
-                var pos = i / (segs-1) * (isLoop ? len : len - 1);
+                var pos = i / (segs - 1) * (isLoop ? len : len - 1);
                 var idx = Math.floor(pos);
 
                 var w = pos - idx;
@@ -12325,8 +13344,9 @@ define(
                     p0 = points[idx === 0 ? idx : idx - 1];
                     p2 = points[idx > len - 2 ? len - 1 : idx + 1];
                     p3 = points[idx > len - 3 ? len - 1 : idx + 2];
-                } else {
-                    p0 = points[(idx -1 + len) % len];
+                }
+                else {
+                    p0 = points[(idx - 1 + len) % len];
                     p2 = points[(idx + 1) % len];
                     p3 = points[(idx + 2) % len];
                 }
@@ -12352,7 +13372,7 @@ define(
  */
 
 define(
-    'zrender/shape/util/smoothBezier',['require','../../tool/vector'],function ( require ) {
+    'zrender/shape/util/smoothBezier',['require','../../tool/vector'],function (require) {
         var vector = require('../../tool/vector');
 
         /**
@@ -12389,7 +13409,7 @@ define(
 
                 vector.sub(v, nextPoint, prevPoint);
 
-                //use degree to scale the handle length
+                // use degree to scale the handle length
                 vector.scale(v, v, smooth);
 
                 var d0 = vector.distance(point, prevPoint);
@@ -12415,73 +13435,42 @@ define(
 );
 
 /**
- * zrender
- *
+ * 多边形
+ * @module zrender/shape/Polygon
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *
- * shape类：多边形
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'polygon',      // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
+ * @example
+ *     var Polygon = require('zrender/shape/Polygon');
+ *     var shape = new Polygon({
+ *         style: {
+ *             // 100x100的正方形
+ *             pointList: [[0, 0], [100, 0], [100, 100], [0, 100]],
+ *             color: 'blue'
+ *         }
+ *     });
+ *     zr.addShape(shape);
+ */
 
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           pointList     : {Array},   // 必须，多边形各个顶角坐标
-           brushType     : {string},  // 默认为fill，绘画方式
-                                      // fill(填充) | stroke(描边) | both(填充+描边)
-           color         : {color},   // 默认为'#000'，填充颜色，支持rgba
-           strokeColor   : {color},   // 默认为'#000'，描边颜色（轮廓），支持rgba
-           lineWidth     : {number},  // 默认为1，线条宽度，描边下有效
-
-           opacity       : {number},  // 默认为1，透明度设置，如果color为rgba，则最终透明度效果叠加
-           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
-           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
-           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-           shadowOffsetY : {number},  // 默认为0，阴影纵向偏移，正值往下，负值往上
-
-           text          : {string},  // 默认为null，附加文本
-           textFont      : {string},  // 默认为null，附加文本样式，eg:'bold 18px verdana'
-           textPosition  : {string},  // 默认为top，附加文本位置。
-                                      // inside | left | right | top | bottom
-           textAlign     : {string},  // 默认根据textPosition自动设置，附加文本水平对齐。
-                                      // start | end | left | right | center
-           textBaseline  : {string},  // 默认根据textPosition自动设置，附加文本垂直对齐。
-                                      // top | bottom | middle |
-                                      // alphabetic | hanging | ideographic
-           textColor     : {color},   // 默认根据textPosition自动设置，默认策略如下，附加文本颜色
-                                      // 'inside' ? '#fff' : color
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
-         例子：
-   {
-       shape  : 'polygon',
-       id     : '123456',
-       zlevel : 1,
-       style  : {
-           pointList : [[10, 10], [300, 20], [298, 400], [50, 450]]
-           color : '#eee',
-           text : 'Baidu'
-       },
-       myName : 'kener',  // 可自带任何有效自定义属性
-
-       clickable : true,
-       onClick : function(eventPacket) {
-           alert(eventPacket.target.myName);
-       }
-   }
+/**
+ * @typedef {Object} IPolygonStyle
+ * @property {string} pointList 多边形顶点数组
+ * @property {string} [brushType='fill']
+ * @property {string} [color='#000000'] 填充颜色
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
  */
 define(
     'zrender/shape/Polygon',['require','./Base','./util/smoothSpline','./util/smoothBezier','./util/dashedLineTo','../tool/util'],function (require) {
@@ -12490,21 +13479,29 @@ define(
         var smoothBezier = require('./util/smoothBezier');
         var dashedLineTo = require('./util/dashedLineTo');
 
-        
-        function Polygon(options) {
+        /**
+         * @alias module:zrender/shape/Polygon
+         * @param {Object} options
+         * @constructor
+         * @extends module:zrender/shape/Base
+         */
+        var Polygon = function (options) {
             Base.call(this, options);
-        }
+            /**
+             * 多边形绘制样式
+             * @name module:zrender/shape/Polygon#style
+             * @type {module:zrender/shape/Polygon~IPolygonStyle}
+             */
+            /**
+             * 多边形高亮绘制样式
+             * @name module:zrender/shape/Polygon#highlightStyle
+             * @type {module:zrender/shape/Polygon~IPolygonStyle}
+             */
+        };
 
         Polygon.prototype = {
             type: 'polygon',
 
-            /**
-             * 画刷
-             * @param ctx       画布句柄
-             * @param isHighlight   是否为高亮状态
-             * @param updateCallback 需要异步加载资源的shape可以通过这个callback(e)
-             *                       让painter更新视图，base.brush没用，需要的话重载brush
-             */
             brush : function (ctx, isHighlight) {
                 var style = this.style;
                 if (isHighlight) {
@@ -12556,7 +13553,6 @@ define(
                     if (!hasPath) {
                         ctx.beginPath();
                         this.buildPath(ctx, style);
-                        ctx.closePath();
                     }
                     ctx.stroke();
                 }
@@ -12570,10 +13566,10 @@ define(
         
             /**
              * 创建多边形路径
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
+             * @param {CanvasRenderingContext2D} ctx
+             * @param {module:zrender/shape/Polygon~IPolygonStyle} style
              */
-            buildPath : function(ctx, style) {
+            buildPath : function (ctx, style) {
                 // 虽然能重用brokenLine，但底层图形基于性能考虑，重复代码减少调用吧
                 var pointList = style.pointList;
                 // 开始点和结束点重复
@@ -12620,10 +13616,10 @@ define(
                     }
 
                     if (!style.lineType || style.lineType == 'solid') {
-                        //默认为实线
-                        ctx.moveTo(pointList[0][0],pointList[0][1]);
+                        // 默认为实线
+                        ctx.moveTo(pointList[0][0], pointList[0][1]);
                         for (var i = 1, l = pointList.length; i < l; i++) {
-                            ctx.lineTo(pointList[i][0],pointList[i][1]);
+                            ctx.lineTo(pointList[i][0], pointList[i][1]);
                         }
                         ctx.lineTo(pointList[0][0], pointList[0][1]);
                     }
@@ -12635,7 +13631,7 @@ define(
                             || (style.lineWidth || 1) 
                                * (style.lineType == 'dashed' ? 5 : 1);
                         style._dashLength = dashLength;
-                        ctx.moveTo(pointList[0][0],pointList[0][1]);
+                        ctx.moveTo(pointList[0][0], pointList[0][1]);
                         for (var i = 1, l = pointList.length; i < l; i++) {
                             dashedLineTo(
                                 ctx,
@@ -12658,10 +13654,11 @@ define(
             },
 
             /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
+             * 计算返回多边形包围盒矩阵
+             * @param {module:zrender/shape/Polygon~IPolygonStyle} style
+             * @return {module:zrender/shape/Base~IBoundingRect}
              */
-            getRect : function(style) {
+            getRect : function (style) {
                 if (style.__rect) {
                     return style.__rect;
                 }
@@ -12672,7 +13669,7 @@ define(
                 var maxY = Number.MIN_VALUE;
 
                 var pointList = style.pointList;
-                for(var i = 0, l = pointList.length; i < l; i++) {
+                for (var i = 0, l = pointList.length; i < l; i++) {
                     if (pointList[i][0] < minX) {
                         minX = pointList[i][0];
                     }
@@ -12709,77 +13706,45 @@ define(
         return Polygon;
     }
 );
+
+
 /**
- * zrender
- *
+ * 折线
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *
- * shape类：折线
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'brokenLine',         // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
+ * @module zrender/shape/BrokenLine
+ * @example
+ *     var BrokenLine = require('zrender/shape/BrokenLine');
+ *     var shape = new BrokenLine({
+ *         style: {
+ *             pointList: [[0, 0], [100, 100], [100, 0]],
+ *             smooth: 'bezier',
+ *             strokeColor: 'purple'
+ *         }
+ *     });
+ *     zr.addShape(shape);
+ */
 
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           pointList     : {Array},   // 必须，各个顶角坐标
-           smooth        : {Number},  // 默认为0
-           strokeColor   : {color},   // 默认为'#000'，线条颜色（轮廓），支持rgba
-           lineType      : {string},  // 默认为solid，线条类型，solid | dashed | dotted
-           lineWidth     : {number},  // 默认为1，线条宽度
-           lineCap       : {string},  // 默认为butt，线帽样式。butt | round | square
-           lineJoin      : {string},  // 默认为miter，线段连接样式。miter | round | bevel
-           miterLimit    : {number},  // 默认为10，最大斜接长度，仅当lineJoin为miter时生效
-
-           opacity       : {number},  // 默认为1，透明度设置，如果color为rgba，则最终透明度效果叠加
-           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
-           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
-           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-           shadowOffsetY : {number},  // 默认为0，阴影纵向偏移，正值往下，负值往上
-
-           text          : {string},  // 默认为null，附加文本
-           textFont      : {string},  // 默认为null，附加文本样式，eg:'bold 18px verdana'
-           textPosition  : {string},  // 默认为end，附加文本位置。
-                                      // start | end
-           textAlign     : {string},  // 默认根据textPosition自动设置，附加文本水平对齐。
-                                      // start | end | left | right | center
-           textBaseline  : {string},  // 默认根据textPosition自动设置，附加文本垂直对齐。
-                                      // top | bottom | middle |
-                                      // alphabetic | hanging | ideographic
-           textColor     : {color},   // 默认根据textPosition自动设置，默认策略如下，附加文本颜色
-                                      // 'inside' ? '#000' : color
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
-         例子：
-   {
-       shape  : 'brokenLine',
-       id     : '123456',
-       zlevel : 1,
-       style  : {
-           pointList : [[10, 10], [300, 20], [298, 400], [50, 450]],
-           strokeColor : '#eee',
-           lineWidth : 20,
-           text : 'Baidu'
-       },
-       myName : 'kener',  //可自带任何有效自定义属性
-
-       clickable : true,
-       onClick : function(eventPacket) {
-           alert(eventPacket.target.myName);
-       }
-   }
+/**
+ * @typedef {Object} IBrokenLineStyle
+ * @property {Array.<number>} pointList 顶点坐标数组
+ * @property {string} [smooth=''] 是否做平滑插值, 平滑算法可以选择 bezier, spline
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {string} [lineJoin='miter'] 线段连接样式，可以是 miter, round, bevel
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
  */
 define(
     'zrender/shape/BrokenLine',['require','./Base','./util/smoothSpline','./util/smoothBezier','./util/dashedLineTo','./Polygon','../tool/util'],function (require) {
@@ -12788,19 +13753,35 @@ define(
         var smoothBezier = require('./util/smoothBezier');
         var dashedLineTo = require('./util/dashedLineTo');
 
-        function BrokenLine( options ) {
-            this.brushTypeOnly = 'stroke';  //线条只能描边，填充后果自负
+        /**
+         * @alias module:zrender/shape/BrokenLine
+         * @constructor
+         * @extends module:zrender/shape/Base
+         * @param {Object} options
+         */
+        var BrokenLine = function(options) {
+            this.brushTypeOnly = 'stroke';  // 线条只能描边，填充后果自负
             this.textPosition = 'end';
             Base.call(this, options);
-        }
+            /**
+             * 贝赛尔曲线绘制样式
+             * @name module:zrender/shape/BrokenLine#style
+             * @type {module:zrender/shape/BrokenLine~IBrokenLineStyle}
+             */
+            /**
+             * 贝赛尔曲线高亮绘制样式
+             * @name module:zrender/shape/BrokenLine#highlightStyle
+             * @type {module:zrender/shape/BrokenLine~IBrokenLineStyle}
+             */
+        };
 
         BrokenLine.prototype =  {
             type: 'broken-line',
 
             /**
              * 创建多边形路径
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
+             * @param {CanvasRenderingContext2D} ctx
+             * @param {module:zrender/shape/BrokenLine~IBrokenLineStyle} style
              */
             buildPath : function(ctx, style) {
                 var pointList = style.pointList;
@@ -12838,10 +13819,10 @@ define(
                         len = pointList.length;
                     }
                     if (!style.lineType || style.lineType == 'solid') {
-                        //默认为实线
-                        ctx.moveTo(pointList[0][0],pointList[0][1]);
+                        // 默认为实线
+                        ctx.moveTo(pointList[0][0], pointList[0][1]);
                         for (var i = 1; i < len; i++) {
-                            ctx.lineTo(pointList[i][0],pointList[i][1]);
+                            ctx.lineTo(pointList[i][0], pointList[i][1]);
                         }
                     }
                     else if (style.lineType == 'dashed'
@@ -12849,7 +13830,7 @@ define(
                     ) {
                         var dashLength = (style.lineWidth || 1) 
                                          * (style.lineType == 'dashed' ? 5 : 1);
-                        ctx.moveTo(pointList[0][0],pointList[0][1]);
+                        ctx.moveTo(pointList[0][0], pointList[0][1]);
                         for (var i = 1; i < len; i++) {
                             dashedLineTo(
                                 ctx,
@@ -12864,8 +13845,9 @@ define(
             },
 
             /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
+             * 计算返回折线包围盒矩形。
+             * @param {IZRenderBezierCurveStyle} style
+             * @return {module:zrender/shape/Base~IBoundingRect}
              */
             getRect : function(style) {
                 return require('./Polygon').prototype.getRect(style);
@@ -12930,9 +13912,11 @@ define('echarts/util/shape/MarkLine',['require','zrender/shape/Base','./Icon','z
             // 设置transform
             this.setTransform(ctx);
 
+            ctx.save();
             ctx.beginPath();
             this.buildLinePath(ctx, style);
             ctx.stroke();
+            ctx.restore();
 
             this.brushSymbol(ctx, style, 0);
             this.brushSymbol(ctx, style, 1);
@@ -14122,92 +15106,82 @@ define('echarts/util/ecAnimation',['require','zrender/tool/util','zrender/shape/
 });
 
 /**
- * zrender
- *
+ * 圆形
+ * @module zrender/shape/Circle
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *
- * shape类：圆
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'circle',       // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
+ * @example
+ *   var Circle = require('zrender/shape/Circle');
+ *   var shape = new Circle({
+ *       style: {
+ *           x: 100,
+ *           y: 100,
+ *           r: 40,
+ *           brushType: 'both',
+ *           color: 'blue',
+ *           strokeColor: 'red',
+ *           lineWidth: 3,
+ *           text: 'Circle'
+ *       }    
+ *   });
+ *   zr.addShape(shape);
+ */
 
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           x             : {number},  // 必须，圆心横坐标
-           y             : {number},  // 必须，圆心纵坐标
-           r             : {number},  // 必须，圆半径
-           brushType     : {string},  // 默认为fill，绘画方式
-                                      // fill(填充) | stroke(描边) | both(填充+描边)
-           color         : {color},   // 默认为'#000'，填充颜色，支持rgba
-           strokeColor   : {color},   // 默认为'#000'，描边颜色（轮廓），支持rgba
-           lineWidth     : {number},  // 默认为1，线条宽度，描边下有效
-
-           opacity       : {number},  // 默认为1，透明度设置，如果color为rgba，则最终透明度效果叠加
-           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
-           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
-           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-           shadowOffsetY : {number},  // 默认为0，阴影纵向偏移，正值往下，负值往上
-
-           text          : {string},  // 默认为null，附加文本
-           textFont      : {string},  // 默认为null，附加文本样式，eg:'bold 18px verdana'
-           textPosition  : {string},  // 默认为top，附加文本位置。
-                                      // inside | left | right | top | bottom
-           textAlign     : {string},  // 默认根据textPosition自动设置，附加文本水平对齐。
-                                      // start | end | left | right | center
-           textBaseline  : {string},  // 默认根据textPosition自动设置，附加文本垂直对齐。
-                                      // top | bottom | middle |
-                                      // alphabetic | hanging | ideographic
-           textColor     : {color},   // 默认根据textPosition自动设置，默认策略如下，附加文本颜色
-                                      // 'inside' ? '#fff' : color
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
-         例子：
-   {
-       shape  : 'circle',
-       id     : '123456',
-       zlevel : 1,
-       style  : {
-           x : 200,
-           y : 100,
-           r : 50,
-           color : '#eee',
-           text : 'Baidu'
-       },
-       myName : 'kener',  // 可自带任何有效自定义属性
-
-       clickable : true,
-       onClick : function(eventPacket) {
-           alert(eventPacket.target.myName);
-       }
-   }
+/**
+ * @typedef {Object} ICircleStyle
+ * @property {number} x 圆心x坐标
+ * @property {number} y 圆心y坐标
+ * @property {number} r 半径
+ * @property {string} [brushType='fill']
+ * @property {string} [color='#000000'] 填充颜色
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
  */
 define(
     'zrender/shape/Circle',['require','./Base','../tool/util'],function (require) {
+        
+
         var Base = require('./Base');
 
-        function Circle(options) {
+        /**
+         * @alias module:zrender/shape/Circle
+         * @constructor
+         * @extends module:zrender/shape/Base
+         * @param {Object} options
+         */
+        var Circle = function(options) {
             Base.call(this, options);
-        }
+            /**
+             * 圆形绘制样式
+             * @name module:zrender/shape/Circle#style
+             * @type {module:zrender/shape/Circle~ICircleStyle}
+             */
+            /**
+             * 圆形高亮绘制样式
+             * @name module:zrender/shape/Circle#highlightStyle
+             * @type {module:zrender/shape/Circle~ICircleStyle}
+             */
+        };
 
         Circle.prototype = {
             type: 'circle',
             /**
              * 创建圆形路径
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
+             * @param {CanvasRenderingContext2D} ctx
+             * @param {module:zrender/shape/Circle~ICircleStyle} style
              */
             buildPath : function (ctx, style) {
                 ctx.arc(style.x, style.y, style.r, 0, Math.PI * 2, true);
@@ -14215,8 +15189,9 @@ define(
             },
 
             /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
+             * 计算返回圆形的包围盒矩形
+             * @param {module:zrender/shape/Circle~ICircleStyle} style
+             * @return {module:zrender/shape/Base~IBoundingRect}
              */
             getRect : function (style) {
                 if (style.__rect) {
@@ -14245,6 +15220,7 @@ define(
         return Circle;
     }
 );
+
 /**
  * echarts图表特效基类
  *
@@ -15059,6 +16035,9 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             
             if (!mpOption.large) {
                 for (var i = 0, l = data.length; i < l; i++) {
+                    if (typeof data[i].x == 'undefined' || typeof data[i].y == 'undefined') {
+                        continue;
+                    }
                     value = typeof data[i] != 'undefined' && typeof data[i].value != 'undefined'
                             ? data[i].value
                             : '';
@@ -15179,6 +16158,14 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             var zrHeight = this.zr.getHeight();
             var mergeData;
             for (var i = 0, l = data.length; i < l; i++) {
+                if (typeof data[i][0].x == 'undefined' 
+                    || typeof data[i][0].y == 'undefined'
+                    || typeof data[i][1].x == 'undefined' 
+                    || typeof data[i][1].y == 'undefined'
+                ) {
+                    continue;
+                }
+                    
                 // 图例
                 if (legend) {
                     color = legend.getColor(serie.name);
@@ -15337,7 +16324,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                               || color,
                     lineWidth: eBorderWidth
                 },
-                clickable : true
+                clickable: this.deepQuery(queryTarget, 'clickable')
             });
 
             if (symbol.match('image')) {
@@ -15346,7 +16333,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 itemShape = new ImageShape({
                     style : itemShape.style,
                     highlightStyle : itemShape.highlightStyle,
-                    clickable : true
+                    clickable: this.deepQuery(queryTarget, 'clickable')
                 });
             }
             
@@ -15532,7 +16519,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                                   ? (normal.borderWidth + 2)
                                   : (emphasis.borderWidth)
                 },
-                clickable : true
+                clickable: this.deepQuery(queryTarget, 'clickable')
             });
             
             itemShape = this.addLabel(
@@ -16729,7 +17716,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
         this.dom = myChart.dom;
         
         this._magicType = {};
-        //this._magicMap;
+        this._magicMap = {};
         this._isSilence = false;
         
         this._iconList;
@@ -18598,17 +19585,20 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                 var xEnd = this.component.grid.getXend();
                 var curCoord = categoryAxis.getCoordByIndex(dataIndex);
                 while (curCoord < xEnd) {
+                    right = curCoord;
                     if (curCoord <= x) {
                         left = curCoord;
                     }
-                    if (curCoord >= x) {
+                    else {
                         break;
                     }
                     curCoord = categoryAxis.getCoordByIndex(++dataIndex);
-                    right = curCoord;
                 }
-                if (x - left < right - x) {
-                    dataIndex -= dataIndex !== 0 ? 1 : 0;
+                if (dataIndex <= 0) {
+                    dataIndex = 0;
+                }
+                else if (x - left <= right - x) {
+                    dataIndex -= 1;
                 }
                 else {
                     // 离右边近，看是否为最后一个
@@ -18627,18 +19617,21 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                 var yStart = this.component.grid.getY();
                 var curCoord = categoryAxis.getCoordByIndex(dataIndex);
                 while (curCoord > yStart) {
+                    top = curCoord;
                     if (curCoord >= y) {
                         bottom = curCoord;
                     }
-                    if (curCoord <= y) {
+                    else {
                         break;
                     }
                     curCoord = categoryAxis.getCoordByIndex(++dataIndex);
-                    top = curCoord;
                 }
 
-                if (y - top > bottom - y) {
-                    dataIndex -= dataIndex !== 0 ? 1 : 0;
+                if (dataIndex <= 0) {
+                    dataIndex = 0;
+                }
+                if (y - top >= bottom - y) {
+                    dataIndex -= 1;
                 }
                 else {
                     // 离上方边近，看是否为最后一个
@@ -19778,7 +20771,10 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                 this._axisLineWidth = this.option.tooltip.axisPointer.lineStyle.width;
             }
             if (this.showing) {
-                this._tryShow();
+                var self = this;
+                setTimeout(function(){
+                    self.zr.trigger(zrConfig.EVENT.MOUSEMOVE, self.zr.handler._event);
+                },50);
             }
         },
 
@@ -19823,96 +20819,80 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
     return Tooltip;
 });
 /**
- * zrender
- *
+ * 圆环
+ * @module zrender/shape/Ring
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
- * shape类：圆环
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'ring',         // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
+ * @example
+ *     var Ring = require('zrender/shape/Ring');
+ *     var shape = new Ring({
+ *         style: {
+ *             x: 100,
+ *             y: 100,
+ *             r0: 30,
+ *             r: 50
+ *         }
+ *     });
+ *     zr.addShape(shape);
+ */
 
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           x             : {number},  // 必须，圆心横坐标
-           y             : {number},  // 必须，圆心纵坐标
-           r0            : {number},  // 必须，内圆半径
-           r             : {number},  // 必须，外圆半径
-           brushType     : {string},  // 默认为fill，绘画方式
-                                      // fill(填充) | stroke(描边) | both(填充+描边)
-           color         : {color},   // 默认为'#000'，填充颜色，支持rgba
-           strokeColor   : {color},   // 默认为'#000'，描边颜色（轮廓），支持rgba
-           lineWidth     : {number},  // 默认为1，线条宽度，描边下有效
-
-           opacity       : {number},  // 默认为1，透明度设置，如果color为rgba，则最终透明度效果叠加
-           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
-           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
-           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-           shadowOffsetY : {number},  // 默认为0，阴影纵向偏移，正值往下，负值往上
-
-           text          : {string},  // 默认为null，附加文本
-           textFont      : {string},  // 默认为null，附加文本样式，eg:'bold 18px verdana'
-           textPosition  : {string},  // 默认为outside，附加文本位置。
-                                      // outside | inside
-           textAlign     : {string},  // 默认根据textPosition自动设置，附加文本水平对齐。
-                                      // start | end | left | right | center
-           textBaseline  : {string},  // 默认根据textPosition自动设置，附加文本垂直对齐。
-                                      // top | bottom | middle |
-                                      // alphabetic | hanging | ideographic
-           textColor     : {color},   // 默认根据textPosition自动设置，默认策略如下，附加文本颜色
-                                      // 'inside' ? '#fff' : color
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
-         例子：
-   {
-       shape  : 'ring',
-       id     : '123456',
-       zlevel : 1,
-       style  : {
-           x : 200,
-           y : 100,
-           r : 50,
-           color : '#eee',
-           text : 'Baidu'
-       },
-       myName : 'kener',  // 可自带任何有效自定义属性
-
-       clickable : true,
-       onClick : function(eventPacket) {
-           alert(eventPacket.target.myName);
-       }
-   }
+/**
+ * @typedef {Object} IRingStyle
+ * @property {number} x 圆心x坐标
+ * @property {number} y 圆心y坐标
+ * @property {number} r0 内圆半径
+ * @property {number} r 外圆半径
+ * @property {string} [color='#000000'] 填充颜色
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
  */
 define(
     'zrender/shape/Ring',['require','./Base','../tool/util'],function (require) {
         var Base = require('./Base');
         
-        function Ring(options) {
+        /**
+         * @alias module:zrender/shape/Ring
+         * @constructor
+         * @extends module:zrender/shape/Base
+         * @param {Object} options
+         */
+        var Ring = function (options) {
             Base.call(this, options);
-        }
+            /**
+             * 圆环绘制样式
+             * @name module:zrender/shape/Ring#style
+             * @type {module:zrender/shape/Ring~IRingStyle}
+             */
+            /**
+             * 圆环高亮绘制样式
+             * @name module:zrender/shape/Ring#highlightStyle
+             * @type {module:zrender/shape/Ring~IRingStyle}
+             */
+        };
 
         Ring.prototype = {
             type: 'ring',
 
             /**
-             * 创建圆环路径，依赖扇形路径
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
+             * 创建圆环路径
+             * @param {CanvasRenderingContext2D} ctx
+             * @param {module:zrender/shape/Ring~IRingStyle} style
              */
-            buildPath : function(ctx, style) {
+            buildPath : function (ctx, style) {
                 // 非零环绕填充优化
                 ctx.arc(style.x, style.y, style.r, 0, Math.PI * 2, false);
                 ctx.moveTo(style.x + style.r0, style.y);
@@ -19921,10 +20901,11 @@ define(
             },
 
             /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
+             * 计算返回圆环包围盒矩阵
+             * @param {module:zrender/shape/Ring~IRingStyle} style
+             * @return {module:zrender/shape/Base~IBoundingRect}
              */
-            getRect : function(style) {
+            getRect : function (style) {
                 if (style.__rect) {
                     return style.__rect;
                 }
@@ -19951,100 +20932,88 @@ define(
         return Ring;
     }
 );
+
 /**
- * zrender
- *
+ * 扇形
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *
- * shape类：扇形
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'sector',       // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
-
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           x             : {number},  // 必须，圆心横坐标
-           y             : {number},  // 必须，圆心纵坐标
-           r0            : {number},  // 默认为0，内圆半径，指定后将出现内弧，同时扇边长度 = r - r0
-           r             : {number},  // 必须，外圆半径
-           startAngle    : {number},  // 必须，起始角度[0, 360)
-           endAngle      : {number},  // 必须，结束角度(0, 360]
-           brushType     : {string},  // 默认为fill，绘画方式
-                                      // fill(填充) | stroke(描边) | both(填充+描边)
-           color         : {color},   // 默认为'#000'，填充颜色，支持rgba
-           strokeColor   : {color},   // 默认为'#000'，描边颜色（轮廓），支持rgba
-           lineWidth     : {number},  // 默认为1，线条宽度，描边下有效
-
-           opacity       : {number},  // 默认为1，透明度设置，如果color为rgba，则最终透明度效果叠加
-           shadowBlur    : {number},  // 默认为0，阴影模糊度，大于0有效
-           shadowColor   : {color},   // 默认为'#000'，阴影色彩，支持rgba
-           shadowOffsetX : {number},  // 默认为0，阴影横向偏移，正值往右，负值往左
-           shadowOffsetY : {number},  // 默认为0，阴影纵向偏移，正值往下，负值往上
-
-           text          : {string},  // 默认为null，附加文本
-           textFont      : {string},  // 默认为null，附加文本样式，eg:'bold 18px verdana'
-           textPosition  : {string},  // 默认为outside，附加文本位置。
-                                      // outside | inside
-           textAlign     : {string},  // 默认根据textPosition自动设置，附加文本水平对齐。
-                                      // start | end | left | right | center
-           textBaseline  : {string},  // 默认根据textPosition自动设置，附加文本垂直对齐。
-                                      // top | bottom | middle |
-                                      // alphabetic | hanging | ideographic
-           textColor     : {color},   // 默认根据textPosition自动设置，默认策略如下，附加文本颜色
-                                      // 'inside' ? '#fff' : color
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
-         例子：
-   {
-       shape  : 'sector',
-       id     : '123456',
-       zlevel : 1,
-       style  : {
-           x : 200,
-           y : 100,
-           r : 50,
-           color : '#eee',
-           text : 'Baidu'
-       },
-       myName : 'kener',  // 可自带任何有效自定义属性
-
-       clickable : true,
-       onClick : function(eventPacket) {
-           alert(eventPacket.target.myName);
-       }
-   }
+ * @module zrender/shape/Sector
+ * @example
+ *     var Sector = require('zrender/shape/Sector');
+ *     var shape = new Sector({
+ *         style: {
+ *             x: 100,
+ *             y: 100,
+ *             r: 60,
+ *             r0: 30,
+ *             startAngle: 0,
+ *             endEngle: 180
+ *         } 
+ *     });
+ *     zr.addShape(shape);
  */
+
+/**
+ * @typedef {Object} ISectorStyle
+ * @property {number} x 圆心x坐标
+ * @property {number} y 圆心y坐标
+ * @property {number} r 外圆半径
+ * @property {number} [r0=0] 内圆半径，指定后将出现内弧，同时扇边长度为`r - r0`
+ * @property {number} startAngle 起始角度，`[0, 360)`
+ * @property {number} endAngle 结束角度，`(0, 360]`
+ * @property {string} [brushType='fill']
+ * @property {string} [color='#000000'] 填充颜色
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
+ */
+
 define(
     'zrender/shape/Sector',['require','../tool/math','./Base','./Ring','./Polygon','../tool/util'],function (require) {
         var math = require('../tool/math');
         var Base = require('./Base');
 
-        function Sector(options) {
+        /**
+         * @alias module:zrender/shape/Sector
+         * @constructor
+         * @extends module:zrender/shape/Base
+         * @param {Object} options
+         */
+        var Sector = function (options) {
             Base.call(this, options);
-        }
+            /**
+             * 扇形绘制样式
+             * @name module:zrender/shape/Sector#style
+             * @type {module:zrender/shape/Sector~ISectorStyle}
+             */
+            /**
+             * 扇形高亮绘制样式
+             * @name module:zrender/shape/Sector#highlightStyle
+             * @type {module:zrender/shape/Sector~ISectorStyle}
+             */
+        };
 
         Sector.prototype = {
             type: 'sector',
 
             /**
              * 创建扇形路径
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
+             * @param {CanvasRenderingContext2D} ctx
+             * @param {module:zrender/shape/Sector~ISectorStyle} style
              */
-            buildPath : function(ctx, style) {
+            buildPath : function (ctx, style) {
                 var x = style.x;   // 圆心x
                 var y = style.y;   // 圆心y
                 var r0 = typeof style.r0 == 'undefined'     // 形内半径[0,r)
@@ -20094,10 +21063,11 @@ define(
             },
 
             /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
+             * 返回扇形包围盒矩形
+             * @param {module:zrender/shape/Sector~ISectorStyle} style
+             * @return {module:zrender/shape/Base~IBoundingRect}
              */
-            getRect : function(style) {
+            getRect : function (style) {
                 if (style.__rect) {
                     return style.__rect;
                 }
@@ -20182,6 +21152,7 @@ define(
         return Sector;
     }
 );
+
 /**
  * zrender
  *
@@ -21283,10 +22254,12 @@ define('echarts/util/shape/Chain',['require','zrender/shape/Base','./Icon','zren
             // 设置transform
             this.setTransform(ctx);
 
+            ctx.save();
             ctx.beginPath();
             this.buildLinePath(ctx, style);
             ctx.stroke();
-
+            ctx.restore();
+            
             this.brushSymbol(ctx, style);
 
             ctx.restore();
@@ -22352,7 +23325,7 @@ define(
                     effectOption.y,
                     effectOption.x + effectOption.width,
                     effectOption.y + effectOption.height,
-                    [[0, '#ff6400'], [0.5, '#ffe100'], [1, '#b1ff00']]
+                    [ [ 0, '#ff6400' ], [ 0.5, '#ffe100' ], [ 1, '#b1ff00' ] ]
                 );
 
             if (options.progress != null) {
@@ -22360,7 +23333,7 @@ define(
                 addShapeHandle(background);
 
                 barShape.highlightStyle.width =
-                    this.adjust(options.progress, [0,1])
+                    this.adjust(options.progress, [ 0, 1 ])
                     * options.effectOption.width;
                     
                 addShapeHandle(barShape);
@@ -22373,7 +23346,7 @@ define(
                 // 循环显示
                 barShape.highlightStyle.width = 0;
                 return setInterval(
-                    function() {
+                    function () {
                         addShapeHandle(background);
 
                         if (barShape.highlightStyle.width < effectOption.width) {
@@ -22447,7 +23420,7 @@ define(
             var canvasHeight = this.canvasHeight;
             
             // 初始化动画元素
-            for(var i = 0; i < n; i++) {
+            for (var i = 0; i < n; i++) {
                 var color = effectOption.color == 'random'
                     ? zrColor.alpha(zrColor.random(), 0.3)
                     : effectOption.color;
@@ -22470,10 +23443,10 @@ define(
                 function () {
                     addShapeHandle(background);
                     
-                    for(var i = 0; i < n; i++) {
+                    for (var i = 0; i < n; i++) {
                         var style = shapeList[i].highlightStyle;
 
-                        if (style.y - shapeList[i].animationY + style.r <= 0){
+                        if (style.y - shapeList[i].animationY + style.r <= 0) {
                             shapeList[i].highlightStyle.y = canvasHeight + style.r;
                             shapeList[i].highlightStyle.x = Math.ceil(
                                 Math.random() * canvasWidth
@@ -22546,7 +23519,7 @@ define(
             var canvasHeight = this.canvasHeight;
             
             // 初始化动画元素
-            for(var i = 0; i < n; i++) {
+            for (var i = 0; i < n; i++) {
                 var xStart = -Math.ceil(Math.random() * 1000);
                 var len = Math.ceil(Math.random() * 400);
                 var pos = Math.ceil(Math.random() * canvasHeight);
@@ -22573,10 +23546,10 @@ define(
                 function() {
                     addShapeHandle(background);
                     
-                    for(var i = 0; i < n; i++) {
+                    for (var i = 0; i < n; i++) {
                         var style = shapeList[i].highlightStyle;
 
-                        if (style.xStart >= canvasWidth){
+                        if (style.xStart >= canvasWidth) {
                             
                             shapeList[i].len = Math.ceil(Math.random() * 400);
                             style.xStart = -400;
@@ -22675,12 +23648,12 @@ define(
             // 初始化动画元素
             var shapeList = [];
             var clolrList = zrColor.getGradientColors(
-                ['#ff6400', '#ffe100', '#97ff00'], 25
+                [ '#ff6400', '#ffe100', '#97ff00' ], 25
             );
             var preAngle = 15;
             var endAngle = 240;
 
-            for(var i = 0; i < 16; i++) {
+            for (var i = 0; i < 16; i++) {
                 shapeList.push(new SectorShape({
                     highlightStyle  : {
                         x : x,
@@ -22698,15 +23671,15 @@ define(
                         x + r0 * Math.cos(endAngle - preAngle, true),
                         y - r0 * Math.sin(endAngle - preAngle, true),
                         [
-                            [0, clolrList[i * 2]],
-                            [1, clolrList[i * 2 + 1]]
+                            [ 0, clolrList[i * 2] ],
+                            [ 1, clolrList[i * 2 + 1] ]
                         ]
                     )
                 }));
                 endAngle -= preAngle;
             }
             endAngle = 360;
-            for(var i = 0; i < 4; i++) {
+            for (var i = 0; i < 4; i++) {
                 shapeList.push(new SectorShape({
                     highlightStyle  : {
                         x : x,
@@ -22724,8 +23697,8 @@ define(
                         x + r0 * Math.cos(endAngle - preAngle, true),
                         y - r0 * Math.sin(endAngle - preAngle, true),
                         [
-                            [0, clolrList[i * 2 + 32]],
-                            [1, clolrList[i * 2 + 33]]
+                            [ 0, clolrList[i * 2 + 32] ],
+                            [ 1, clolrList[i * 2 + 33] ]
                         ]
                     )
                 }));
@@ -22737,11 +23710,11 @@ define(
                 // 指定进度
                 addShapeHandle(background);
 
-                n = this.adjust(options.progress, [0,1]).toFixed(2) * 100 / 5;
+                n = this.adjust(options.progress, [ 0, 1 ]).toFixed(2) * 100 / 5;
                 shapeRing.highlightStyle.text = n * 5 + '%';
                 addShapeHandle(shapeRing);
 
-                for(var i = 0; i < 20; i++) {
+                for (var i = 0; i < 20; i++) {
                     shapeList[i].highlightStyle.color = i < n
                         ? shapeList[i]._color : darkColor;
                     addShapeHandle(shapeList[i]);
@@ -22759,10 +23732,10 @@ define(
 
                     n += n >= 20 ? -20 : 1;
 
-                    //shapeRing.highlightStyle.text = n * 5 + '%';
+                    // shapeRing.highlightStyle.text = n * 5 + '%';
                     addShapeHandle(shapeRing);
 
-                    for(var i = 0; i < 20; i++) {
+                    for (var i = 0; i < 20; i++) {
                         shapeList[i].highlightStyle.color = i < n
                             ? shapeList[i]._color : darkColor;
                         addShapeHandle(shapeList[i]);
@@ -22781,10 +23754,11 @@ define(
 
 
 define(
-    'zrender/loadingEffect/Spin',['require','./Base','../tool/util','../tool/color','../shape/Sector'],function (require) {
+    'zrender/loadingEffect/Spin',['require','./Base','../tool/util','../tool/color','../tool/area','../shape/Sector'],function (require) {
         var Base = require('./Base');
         var util = require('../tool/util');
         var zrColor = require('../tool/color');
+        var zrArea = require('../tool/area');
         var SectorShape = require('../shape/Sector');
 
         function Spin(options) {
@@ -22799,12 +23773,30 @@ define(
          * @param {Object} refreshHandle
          */
         Spin.prototype._start = function (addShapeHandle, refreshHandle) {
+            var options = util.merge(
+                this.options,
+                {
+                    textStyle : {
+                        color : '#fff',
+                        textAlign : 'start'
+                    },
+                    backgroundColor : 'rgba(0, 0, 0, 0.8)'
+                }
+            );
+            var textShape = this.createTextShape(options.textStyle);
+            
+            var textGap = 10;
+            var textWidth = zrArea.getTextWidth(
+                textShape.highlightStyle.text, textShape.highlightStyle.textFont
+            );
+            var textHeight = zrArea.getTextHeight(
+                textShape.highlightStyle.text, textShape.highlightStyle.textFont
+            );
+            
             // 特效默认配置
             var effectOption =  util.merge(
                 this.options.effect || {},
                 {
-                    x : this.canvasWidth / 2 - 80,
-                    y : this.canvasHeight / 2,
                     r0 : 9,
                     r : 15,
                     n : 18,
@@ -22812,23 +23804,17 @@ define(
                     timeInterval : 100
                 }
             );
-
-            var options = util.merge(
-                this.options,
-                {
-                    textStyle : {
-                        color : '#fff',
-                        x : effectOption.x + effectOption.r + 10,
-                        y : effectOption.y,
-                        textAlign : 'start'
-                    },
-                    backgroundColor : 'rgba(0, 0, 0, 0.8)'
-                }
+            
+            var location = this.getLocation(
+                this.options.textStyle,
+                textWidth + textGap + effectOption.r * 2,
+                Math.max(effectOption.r * 2, textHeight)
             );
-
-            var textShape = this.createTextShape(options.textStyle);
+            effectOption.x = location.x + effectOption.r;
+            effectOption.y = textShape.highlightStyle.y = location.y + location.height / 2;
+            textShape.highlightStyle.x = effectOption.x + effectOption.r + textGap;
+            
             var background = this.createBackgroundShape(options.backgroundColor);
-
             var n = effectOption.n;
             var x = effectOption.x;
             var y = effectOption.y;
@@ -22839,7 +23825,7 @@ define(
             // 初始化动画元素
             var shapeList = [];
             var preAngle = Math.round(180 / n);
-            for(var i = 0; i < n; i++) {
+            for (var i = 0; i < n; i++) {
                 shapeList[i] = new SectorShape({
                     highlightStyle  : {
                         x : x,
@@ -22854,13 +23840,13 @@ define(
                 });
             }
 
-            var pos = [0, x, y];
+            var pos = [ 0, x, y ];
 
             return setInterval(
                 function() {
                     addShapeHandle(background);
                     pos[0] -= 0.3;
-                    for(var i = 0; i < n; i++) {
+                    for (var i = 0; i < n; i++) {
                         shapeList[i].rotation = pos;
                         addShapeHandle(shapeList[i]);
                     }
@@ -22878,9 +23864,10 @@ define(
 
 
 define(
-    'zrender/loadingEffect/Whirling',['require','./Base','../tool/util','../shape/Ring','../shape/Droplet','../shape/Circle'],function (require) {
+    'zrender/loadingEffect/Whirling',['require','./Base','../tool/util','../tool/area','../shape/Ring','../shape/Droplet','../shape/Circle'],function (require) {
         var Base = require('./Base');
         var util = require('../tool/util');
+        var zrArea = require('../tool/area');
         var RingShape = require('../shape/Ring');
         var DropletShape = require('../shape/Droplet');
         var CircleShape = require('../shape/Circle');
@@ -22897,12 +23884,30 @@ define(
          * @param {Object} refreshHandle
          */
         Whirling.prototype._start = function (addShapeHandle, refreshHandle) {
+            var options = util.merge(
+                this.options,
+                {
+                    textStyle : {
+                        color : '#888',
+                        textAlign : 'start'
+                    },
+                    backgroundColor : 'rgba(250, 250, 250, 0.8)'
+                }
+            );
+            var textShape = this.createTextShape(options.textStyle);
+            
+            var textGap = 10;
+            var textWidth = zrArea.getTextWidth(
+                textShape.highlightStyle.text, textShape.highlightStyle.textFont
+            );
+            var textHeight = zrArea.getTextHeight(
+                textShape.highlightStyle.text, textShape.highlightStyle.textFont
+            );
+            
             // 特效默认配置
             var effectOption = util.merge(
                 this.options.effect || {},
                 {
-                    x : this.canvasWidth / 2 - 80,
-                    y : this.canvasHeight / 2,
                     r : 18,
                     colorIn : '#fff',
                     colorOut : '#555',
@@ -22910,23 +23915,17 @@ define(
                     timeInterval : 50
                 }
             );
-
-            var options = util.merge(
-                this.options,
-                {
-                    textStyle : {
-                        color : '#888',
-                        x : effectOption.x + effectOption.r + 10,
-                        y : effectOption.y,
-                        textAlign : 'start'
-                    },
-                    backgroundColor : 'rgba(250, 250, 250, 0.8)'
-                }
+            
+            var location = this.getLocation(
+                this.options.textStyle,
+                textWidth + textGap + effectOption.r * 2,
+                Math.max(effectOption.r * 2, textHeight)
             );
-
-            var textShape = this.createTextShape(options.textStyle);
+            effectOption.x = location.x + effectOption.r;
+            effectOption.y = textShape.highlightStyle.y = location.y + location.height / 2;
+            textShape.highlightStyle.x = effectOption.x + effectOption.r + textGap;
+            
             var background = this.createBackgroundShape(options.backgroundColor);
-
             // 初始化动画元素
             var droplet = new DropletShape({
                 highlightStyle : {
@@ -22952,7 +23951,7 @@ define(
                 }
             });
 
-            var pos = [0, effectOption.x, effectOption.y];
+            var pos = [ 0, effectOption.x, effectOption.y ];
 
             droplet.highlightStyle.x
                 = circleIn.highlightStyle.x
@@ -23024,9 +24023,9 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
-    self.version = '2.0.2';
+    self.version = '2.0.3';
     self.dependencies = {
-        zrender : '2.0.2'
+        zrender : '2.0.3'
     };
     /**
      * 入口方法 
@@ -23132,7 +24131,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
      * @type {Array}
      */
     var ZR_EVENT_LISTENS = [
-        'CLICK', 'MOUSEOVER', 
+        'CLICK', 'DBLCLICK', 'MOUSEOVER', 'MOUSEOUT',
         'DRAGSTART', 'DRAGEND', 'DRAGENTER', 'DRAGOVER', 'DRAGLEAVE', 'DROP'
     ];
 
@@ -23168,7 +24167,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
             var self = this;
             var _zr = require('zrender').init(this.dom);
             this._zr = _zr;
-
+            
             // wrap: n,e,d,t for name event data this
             this._messageCenter.dispatch = function(type, event, eventPackage, that) {
                 eventPackage = eventPackage || {};
@@ -23176,7 +24175,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                 eventPackage.event = event;
 
                 self._messageCenter.dispatchWithContext(type, eventPackage, that);
-                if (type != 'HOVER') {
+                if (type != 'HOVER' && type != 'MOUSEOUT') {    // 频繁事件直接抛出
                     setTimeout(function(){
                         self._messageCenterOutSide.dispatchWithContext(
                             type, eventPackage, that
@@ -23194,7 +24193,9 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                 return self.__onevent(param);
             };
             for (var e in ecConfig.EVENT) {
-                if (e != 'CLICK' && e != 'HOVER' && e != 'MAP_ROAM') {
+                if (e != 'CLICK' && e != 'DBLCLICK' 
+                    && e != 'HOVER' && e != 'MOUSEOUT' && e != 'MAP_ROAM'
+                ) {
                     this._messageCenter.bind(ecConfig.EVENT[e], this._onevent, this);
                 }
             }
@@ -23232,6 +24233,10 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
             componentLibrary.define('title', require('./component/title'));
             componentLibrary.define('tooltip', require('./component/tooltip'));
             componentLibrary.define('legend', require('./component/legend'));
+            
+            if (_zr.getWidth() === 0 || _zr.getHeight() === 0) {
+                console.error('Dom’s width & height should be ready before init.');
+            }
         },
 
         /**
@@ -23355,16 +24360,52 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                 }
             }
         },
+        
+        /**
+         * 双击事件，响应zrender事件，包装后分发到Echarts层
+         */
+        _ondblclick : function (param) {
+            callChartListMethodReverse(this, 'ondblclick', param);
 
-         /**
-          * 鼠标移入事件，响应zrender事件，包装后分发到Echarts层
-          */
+            if (param.target) {
+                var ecData = this._eventPackage(param.target);
+                if (ecData && ecData.seriesIndex != null) {
+                    this._messageCenter.dispatch(
+                        ecConfig.EVENT.DBLCLICK,
+                        param.event,
+                        ecData,
+                        this
+                    );
+                }
+            }
+        },
+
+        /**
+         * 鼠标移入事件，响应zrender事件，包装后分发到Echarts层
+         */
         _onmouseover : function (param) {
             if (param.target) {
                 var ecData = this._eventPackage(param.target);
                 if (ecData && ecData.seriesIndex != null) {
                     this._messageCenter.dispatch(
                         ecConfig.EVENT.HOVER,
+                        param.event,
+                        ecData,
+                        this
+                    );
+                }
+            }
+        },
+        
+        /**
+         * 鼠标移出事件，响应zrender事件，包装后分发到Echarts层
+         */
+        _onmouseout : function (param) {
+            if (param.target) {
+                var ecData = this._eventPackage(param.target);
+                if (ecData && ecData.seriesIndex != null) {
+                    this._messageCenter.dispatch(
+                        ecConfig.EVENT.MOUSEOUT,
                         param.event,
                         ecData,
                         this
@@ -23552,6 +24593,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                             : dataIndex;
                 return {
                     seriesIndex : seriesIndex,
+                    seriesName : (ecData.get(target, 'series') || {}).name,
                     dataIndex : dataIndex,
                     data : ecData.get(target, 'data'),
                     name : ecData.get(target, 'name'),
@@ -23599,7 +24641,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
             }
             
             var componentList = [
-                'title', 'legend', 'tooltip', 'dataRange',
+                'title', 'legend', 'tooltip', 'dataRange', 'roamController',
                 'grid', 'dataZoom', 'xAxis', 'yAxis', 'polar'
             ];
             
@@ -25631,7 +26673,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
 
             var polygon = {
                 zlevel : this._zlevelBase,
-                clickable : true,
+                clickable: this.deepQuery(queryTarget, 'clickable'),
                 style : {
                     pointList : [
                         [x, y],
@@ -27162,12 +28204,13 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                 }
                 
                 //console.log(this._min,this._max,'vvvvv111111')
+                var gap = Math.abs(this._max - this._min);
                 this._min = isNaN(this.option.min - 0)
-                       ? (this._min - Math.abs(this._min * this.option.boundaryGap[0]))
+                       ? (this._min - Math.abs(gap * this.option.boundaryGap[0]))
                        : (this.option.min - 0);    // 指定min忽略boundaryGay[0]
     
                 this._max = isNaN(this.option.max - 0)
-                       ? (this._max + Math.abs(this._max * this.option.boundaryGap[1]))
+                       ? (this._max + Math.abs(gap * this.option.boundaryGap[1]))
                        : (this.option.max - 0);    // 指定max忽略boundaryGay[1]
                 if (this._min == this._max) {
                     if (this._max === 0) {
@@ -27980,6 +29023,7 @@ define('echarts/component/grid',['require','./base','zrender/shape/Rectangle','.
                 else {
                     this._width = this.parsePercent(gridOption.width, this._zrWidth);
                 }
+                this._width = this._width <= 0 ? 10 : this._width;
     
                 if (typeof gridOption.height == 'undefined') {
                     this._height = this._zrHeight - this._y - y2;
@@ -27987,6 +29031,7 @@ define('echarts/component/grid',['require','./base','zrender/shape/Rectangle','.
                 else {
                     this._height = this.parsePercent(gridOption.height, this._zrHeight);
                 }
+                this._height = this._height <= 0 ? 10 : this._height;
                 
                 this._x = this.subPixelOptimize(this._x, gridOption.borderWidth);
                 this._y = this.subPixelOptimize(this._y, gridOption.borderWidth);
@@ -28307,11 +29352,13 @@ define('echarts/component/dataZoom',['require','./base','zrender/shape/Rectangle
             var axisOption = zrUtil.clone(this.option.xAxis);
             if (axisOption instanceof Array) {
                 axisOption[0].type = 'value';
+                axisOption[0].scale = true;
                 axisOption[0].boundary = [0, 0];
                 axisOption[1] && (axisOption[1].type = 'value', axisOption[1].boundary = [0, 0]);
             }
             else {
                 axisOption.type = 'value';
+                axisOption.scale = true;
                 axisOption.boundary = [0, 0];
             }
             var vAxis = new Axis(
@@ -28333,10 +29380,12 @@ define('echarts/component/dataZoom',['require','./base','zrender/shape/Rectangle
             axisOption = zrUtil.clone(this.option.yAxis);
             if (axisOption instanceof Array) {
                 axisOption[0].type = 'value';
+                axisOption[0].scale = true;
                 axisOption[1] && (axisOption[1].type = 'value', axisOption[1].boundary = [0, 0]);
             }
             else {
                 axisOption.type = 'value';
+                axisOption.scale = true;
                 axisOption.boundary = [0, 0];
             }
             vAxis = new Axis(
@@ -31261,7 +32310,9 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
             var series = this.series;
             var itemShape = {
                 zlevel : this._zlevelBase,
-                clickable: true,
+                clickable: this.deepQuery(
+                    [series[seriesIndex].data[dataIndex], series[seriesIndex]], 'clickable'
+                ),
                 style : {
                     x : x,
                     y : [y0, y1, y2, y3],
@@ -31568,7 +32619,7 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
                 if (axisLabel.show) {
                     style = {};
                     style.textFont = this.getFont();
-                    //Todo: bug fix
+                    
                     style = zrUtil.merge(style, axisLabel);
                     style.lineWidth = style.width;
 
@@ -31577,6 +32628,10 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
                     theta = i / indicator.length * 2 * Math.PI;
                     offset = axisLabel.offset || 10;
                     interval = axisLabel.interval || 0;
+
+                    if (!value) {
+                        return;
+                    }
 
                     for (var j = 1 ; j <= splitNumber; j += interval + 1) {
                         newStyle = zrUtil.merge({}, style);
@@ -35698,7 +36753,7 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
                         opacity: 1,
                         color : this.getColor(group.name)
                     },
-                    clickable: true,
+                    clickable: this.chordSerieSample.clickable,
                     highlightStyle : {
                         brushType : 'fill'
                     }
@@ -35847,7 +36902,7 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
                                 lineWidth : chordLineStyle.width,
                                 strokeColor : chordLineStyle.color
                             },
-                            clickable: true,
+                            clickable: this.chordSerieSample.clickable,
                             highlightStyle : {
                                 brushType : 'both',
                                 lineWidth : chordLineStyleEmphsis.width,
@@ -36681,9 +37736,10 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
      * Main process
      ***************************/
 
+    /* jshint ignore:start */
     if (inWorker) {
         var forceLayout = null;
-
+        
         self.onmessage = function(e) {
             // Position read back
             if (e.data instanceof ArrayBuffer) {
@@ -36751,6 +37807,7 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
             }
         };
     }
+    /* jshint ignore:end */
 
     return ForceLayout;
 });
@@ -37171,7 +38228,7 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
                         x : 0,
                         y : 0
                     },
-                    clickable : true,
+                    clickable: this.query(serie, 'clickable'),
                     highlightStyle : {}
                 });
 
@@ -37303,7 +38360,7 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
                         yEnd : 0,
                         lineWidth : 1
                     },
-                    clickable : true,
+                    clickable: this.query(serie, 'clickable'),
                     highlightStyle : {}
                 });
 
@@ -38963,14 +40020,14 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                     iconShape = legend.getItemShape(serieName);
                     if (iconShape) {
                         // 回调legend，换一个更形象的icon
-                        if (serie.itemStyle.normal.borderWidth > 0) {
+                        if (serie.itemStyle.normal.barBorderWidth > 0) {
                             iconShape.style.x += 1;
                             iconShape.style.y += 1;
                             iconShape.style.width -= 2;
                             iconShape.style.height -= 2;
                             iconShape.style.strokeColor = 
                             iconShape.highlightStyle.strokeColor =
-                                serie.itemStyle.normal.borderColor;
+                                serie.itemStyle.normal.barBorderColor;
                             iconShape.highlightStyle.lineWidth = 3;
                             iconShape.style.brushType = 'both';
                         }
@@ -39614,14 +40671,14 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                 queryTarget,
                 'itemStyle.normal'
             );
-            var normalBorderWidth = normal.borderWidth;
+            var normalBorderWidth = normal.barBorderWidth;
             var emphasis = this.deepMerge(
                 queryTarget,
                 'itemStyle.emphasis'
             );
             barShape = {
                 zlevel : this._zlevelBase,
-                clickable: true,
+                clickable: this.deepQuery(queryTarget, 'clickable'),
                 style : {
                     x : x,
                     y : y,
@@ -39629,15 +40686,15 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                     height : height,
                     brushType : 'both',
                     color : this.getItemStyleColor(normalColor, seriesIndex, dataIndex, data),
-                    radius : normal.borderRadius,
+                    radius : normal.barBorderRadius,
                     lineWidth : normalBorderWidth,
-                    strokeColor : normal.borderColor
+                    strokeColor : normal.barBorderColor
                 },
                 highlightStyle : {
                     color : this.getItemStyleColor(emphasisColor, seriesIndex, dataIndex, data),
-                    radius : emphasis.borderRadius,
-                    lineWidth : emphasis.borderWidth,
-                    strokeColor : emphasis.borderColor
+                    radius : emphasis.barBorderRadius,
+                    lineWidth : emphasis.barBorderWidth,
+                    strokeColor : emphasis.barBorderColor
                 },
                 _orient : orient
             };
@@ -40224,7 +41281,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
 
             var sector = {
                 zlevel : this._zlevelBase,
-                clickable : true,
+                clickable: this.deepQuery(queryTarget, 'clickable'),
                 style : {
                     x : center[0],          // 圆心横坐标
                     y : center[1],          // 圆心纵坐标
