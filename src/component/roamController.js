@@ -16,6 +16,7 @@ define(function (require) {
     var ecConfig = require('../config');
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
+    var zrEvent = require('zrender/tool/event');
 
     /**
      * 构造函数
@@ -43,8 +44,8 @@ define(function (require) {
         this._drictionMouseUp = function(params) {
             return self.__drictionMouseUp(params);
         };
-        this._drictionMouseOver = function(params) {
-            return self.__drictionMouseOver(params);
+        this._drictionMouseMove = function(params) {
+            return self.__drictionMouseMove(params);
         };
         this._drictionMouseOut = function(params) {
             return self.__drictionMouseOut(params);
@@ -126,7 +127,7 @@ define(function (require) {
             sectorShape._roamType = direction;
             sectorShape.onmousedown = this._drictionMouseDown;
             sectorShape.onmouseup = this._drictionMouseUp;
-            sectorShape.onmouseover = this._drictionMouseOver;
+            sectorShape.onmousemove = this._drictionMouseMove;
             sectorShape.onmouseout = this._drictionMouseOut;
             
             return sectorShape;
@@ -167,7 +168,7 @@ define(function (require) {
             
             scaleShape = new CircleShape(scaleShape);
             scaleShape._roamType = text;
-            scaleShape.onclick = this._scaleHandler;
+            scaleShape.onmousedown = this._scaleHandler;
             
             return scaleShape;
         },
@@ -263,7 +264,7 @@ define(function (require) {
             this._drictionHandlerOff(params);
         },
         
-        __drictionMouseOver: function(params) {
+        __drictionMouseMove: function(params) {
             if (this.mousedown) {
                 this._drictionHandlerOn(params);
             }
@@ -301,6 +302,7 @@ define(function (require) {
                 },
                 this.myChart
             );
+            zrEvent.stop(event);
         },
         /**
          * 刷新

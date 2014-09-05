@@ -27,9 +27,9 @@ define(function (require) {
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
-    self.version = '2.0.2';
+    self.version = '2.0.3';
     self.dependencies = {
-        zrender : '2.0.2'
+        zrender : '2.0.3'
     };
     /**
      * 入口方法 
@@ -238,7 +238,7 @@ define(function (require) {
             componentLibrary.define('tooltip', require('./component/tooltip'));
             componentLibrary.define('legend', require('./component/legend'));
             
-            if (_zr.getWidth() == 0 || _zr.getHeight() == 0) {
+            if (_zr.getWidth() === 0 || _zr.getHeight() === 0) {
                 console.error('Dom’s width & height should be ready before init.');
             }
         },
@@ -597,7 +597,7 @@ define(function (require) {
                             : dataIndex;
                 return {
                     seriesIndex : seriesIndex,
-                    seriesName : ecData.get(target, 'series').name,
+                    seriesName : (ecData.get(target, 'series') || {}).name,
                     dataIndex : dataIndex,
                     data : ecData.get(target, 'data'),
                     name : ecData.get(target, 'name'),
