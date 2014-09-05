@@ -338,6 +338,7 @@ define(function (require) {
         self.refresh = function () {
             if (self._ec) {
                 var option = self._ec.getOption();
+                self._ec.clear();
                 self.setOption(option);
             }
         }
