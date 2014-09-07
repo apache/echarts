@@ -839,7 +839,7 @@ define(function (require) {
                         break;
                     default :
                         shape = new PathShape(shape);
-                        shape.pathArray = shape._parsePathData(shape.style.path);
+                        shape.style.pathArray = shape.buildPathArray(shape.style.path);
                         break;
                 }
                 
