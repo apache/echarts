@@ -37,11 +37,11 @@ define(function (require) {
     var zrUtil = require('zrender/tool/util');
     var _ctx = zrUtil.getContext();
     
-    function ChordShape(options) {
+    function RibbonShape(options) {
         Base.call(this, options);
     }
 
-    ChordShape.prototype = {
+    RibbonShape.prototype = {
         type : 'chord',
         
         // center, source0, source1, target0, target1, r
@@ -105,14 +105,14 @@ define(function (require) {
             y = originPos[1];
             
             _ctx.beginPath();
-            ChordShape.prototype.buildPath.call(null, _ctx, this.style);
+            RibbonShape.prototype.buildPath.call(null, _ctx, this.style);
             _ctx.closePath();
             
             return _ctx.isPointInPath(x, y);
         }
     };
 
-    zrUtil.inherits(ChordShape, Base);
+    zrUtil.inherits(RibbonShape, Base);
     
-    return ChordShape;
+    return RibbonShape;
 });

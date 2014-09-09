@@ -15,7 +15,7 @@ define(function (require) {
     var TextShape = require('zrender/shape/Text');
     var LineShape = require('zrender/shape/Line');
     var SectorShape = require('zrender/shape/Sector');
-    var ChordShape = require('../util/shape/Chord');
+    var RibbonShapeShape = require('../util/shape/Ribbon');
     
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
@@ -534,7 +534,7 @@ define(function (require) {
                             dataArr[j][i][k]
                         );
 
-                        chord = new ChordShape(chord);
+                        chord = new RibbonShapeShape(chord);
                         this.chordShapes[i][j][k] = chord;
                         this.shapeList.push(chord);
                     }
