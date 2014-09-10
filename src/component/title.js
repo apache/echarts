@@ -30,8 +30,8 @@ define(function (require) {
     }
     
     Title.prototype = {
-        type : ecConfig.COMPONENT_TYPE_TITLE,
-        _buildShape : function () {
+        type: ecConfig.COMPONENT_TYPE_TITLE,
+        _buildShape: function () {
             // 标题元素组的位置参数，通过计算所得x, y, width, height
             this._itemGroupLocation = this._getItemGroupLocation();
 
@@ -46,7 +46,7 @@ define(function (require) {
         /**
          * 构建所有标题元素
          */
-        _buildItem : function () {
+        _buildItem: function () {
             var text = this.titleOption.text;
             var link = this.titleOption.link;
             var target = this.titleOption.target;
@@ -62,16 +62,16 @@ define(function (require) {
             var height = this._itemGroupLocation.height;
             
             var textShape = {
-                zlevel : this._zlevelBase,
-                style : {
-                    y : y,
-                    color : this.titleOption.textStyle.color,
+                zlevel: this._zlevelBase,
+                style: {
+                    y: y,
+                    color: this.titleOption.textStyle.color,
                     text: text,
                     textFont: font,
                     textBaseline: 'top'
                 },
                 highlightStyle: {
-                    color : zrColor.lift(this.titleOption.textStyle.color, 1),
+                    color: zrColor.lift(this.titleOption.textStyle.color, 1),
                     brushType: 'fill'
                 },
                 hoverable: false
@@ -90,16 +90,16 @@ define(function (require) {
             }
             
             var subtextShape = {
-                zlevel : this._zlevelBase,
-                style : {
-                    y : y + height,
-                    color : this.titleOption.subtextStyle.color,
+                zlevel: this._zlevelBase,
+                style: {
+                    y: y + height,
+                    color: this.titleOption.subtextStyle.color,
                     text: subtext,
                     textFont: subfont,
                     textBaseline: 'bottom'
                 },
                 highlightStyle: {
-                    color : zrColor.lift(this.titleOption.subtextStyle.color, 1),
+                    color: zrColor.lift(this.titleOption.subtextStyle.color, 1),
                     brushType: 'fill'
                 },
                 hoverable: false
@@ -149,25 +149,24 @@ define(function (require) {
             subtext !== '' && this.shapeList.push(new TextShape(subtextShape));
         },
 
-        _buildBackground : function () {
+        _buildBackground: function () {
             var pTop = this.titleOption.padding[0];
             var pRight = this.titleOption.padding[1];
             var pBottom = this.titleOption.padding[2];
             var pLeft = this.titleOption.padding[3];
 
             this.shapeList.push(new RectangleShape({
-                zlevel : this._zlevelBase,
+                zlevel: this._zlevelBase,
                 hoverable :false,
-                style : {
-                    x : this._itemGroupLocation.x - pLeft,
-                    y : this._itemGroupLocation.y - pTop,
-                    width : this._itemGroupLocation.width + pLeft + pRight,
-                    height : this._itemGroupLocation.height + pTop + pBottom,
-                    brushType : this.titleOption.borderWidth === 0
-                                ? 'fill' : 'both',
-                    color : this.titleOption.backgroundColor,
-                    strokeColor : this.titleOption.borderColor,
-                    lineWidth : this.titleOption.borderWidth
+                style: {
+                    x: this._itemGroupLocation.x - pLeft,
+                    y: this._itemGroupLocation.y - pTop,
+                    width: this._itemGroupLocation.width + pLeft + pRight,
+                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    brushType: this.titleOption.borderWidth === 0 ? 'fill' : 'both',
+                    color: this.titleOption.backgroundColor,
+                    strokeColor: this.titleOption.borderColor,
+                    lineWidth: this.titleOption.borderWidth
                 }
             }));
         },
@@ -175,7 +174,7 @@ define(function (require) {
         /**
          * 根据选项计算标题实体的位置坐标
          */
-        _getItemGroupLocation : function () {
+        _getItemGroupLocation: function () {
             var text = this.titleOption.text;
             var subtext = this.titleOption.subtext;
             var font = this.getFont(this.titleOption.textStyle);
@@ -235,17 +234,17 @@ define(function (require) {
             }
 
             return {
-                x : x,
-                y : y,
-                width : totalWidth,
-                height : totalHeight
+                x: x,
+                y: y,
+                width: totalWidth,
+                height: totalHeight
             };
         },
         
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption;
 
