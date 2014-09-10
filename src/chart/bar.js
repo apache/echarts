@@ -38,11 +38,11 @@ define(function (require) {
     }
     
     Bar.prototype = {
-        type : ecConfig.CHART_TYPE_BAR,
+        type: ecConfig.CHART_TYPE_BAR,
         /**
          * 绘制图形
          */
-        _buildShape : function () {
+        _buildShape: function () {
             var series = this.series;
             this.selectedMap = {};
             this.xMarkMap = {};
@@ -52,27 +52,27 @@ define(function (require) {
             
             // 水平垂直双向series索引 ，position索引到seriesIndex
             var _position2sIndexMap = {
-                top : [],
-                bottom : [],
-                left : [],
-                right : []
+                top: [ ],
+                bottom: [ ],
+                left: [ ],
+                right: [ ]
             };
             var xAxisIndex;
             var yAxisIndex;
             var xAxis;
             var yAxis;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].type == ecConfig.CHART_TYPE_BAR) {
+                if (series[i].type === ecConfig.CHART_TYPE_BAR) {
                     series[i] = this.reformOption(series[i]);
                     xAxisIndex = series[i].xAxisIndex;
                     yAxisIndex = series[i].yAxisIndex;
                     xAxis = this.component.xAxis.getAxis(xAxisIndex);
                     yAxis = this.component.yAxis.getAxis(yAxisIndex);
-                    if (xAxis.type == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                    if (xAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         _position2sIndexMap[xAxis.getPosition()].push(i);
                     }
-                    else if (yAxis.type == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                    else if (yAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         _position2sIndexMap[yAxis.getPosition()].push(i);
                     }
@@ -95,7 +95,7 @@ define(function (require) {
          *
          * @param {number} seriesIndex 系列索引
          */
-        _buildSinglePosition : function (position, seriesArray, xMarkMap) {
+        _buildSinglePosition: function (position, seriesArray, xMarkMap) {
             var mapData = this._mapData(seriesArray);
             var locationMap = mapData.locationMap;
             var maxDataLength = mapData.maxDataLength;
@@ -120,7 +120,7 @@ define(function (require) {
          * 数据整形
          * 数组位置映射到系列索引
          */
-        _mapData : function (seriesArray) {
+        _mapData: function (seriesArray) {
             var series = this.series;
             var serie;                              // 临时映射变量
             var dataIndex = 0;                      // 堆积数据所在位置映射
@@ -129,7 +129,7 @@ define(function (require) {
             var stackKey;                           // 临时映射变量
             var serieName;                          // 临时映射变量
             var legend = this.component.legend;
-            var locationMap = [];                   // 需要返回的东西：数组位置映射到系列索引
+            var locationMap = [ ];                   // 需要返回的东西：数组位置映射到系列索引
             var maxDataLength = 0;                  // 需要返回的东西：最大数据长度
             var iconShape;
             // 计算需要显示的个数和分配位置并记在下面这个结构里
@@ -165,7 +165,7 @@ define(function (require) {
 
                 if (this.selectedMap[serieName]) {
                     stackKey = serie.stack || (magicStackKey + seriesArray[i]);
-                    if (typeof stackMap[stackKey] == 'undefined') {
+                    if (stackMap[stackKey] == null) {
                         stackMap[stackKey] = dataIndex;
                         locationMap[dataIndex] = [seriesArray[i]];
                         dataIndex++;
@@ -199,15 +199,15 @@ define(function (require) {
             */
 
             return {
-                locationMap : locationMap,
-                maxDataLength : maxDataLength
+                locationMap: locationMap,
+                maxDataLength: maxDataLength
             };
         },
 
         /**
          * 构建类目轴为水平方向的柱形图系列
          */
-        _buildHorizontal : function (maxDataLength, locationMap, seriesArray, xMarkMap) {
+        _buildHorizontal: function (maxDataLength, locationMap, seriesArray, xMarkMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
@@ -236,7 +236,7 @@ define(function (require) {
             var data;
             var value;
             for (var i = 0, l = maxDataLength; i < l; i++) {
-                if (typeof categoryAxis.getNameByIndex(i) == 'undefined') {
+                if (categoryAxis.getNameByIndex(i) == null) {
                     // 系列数据超出类目轴长度
                     break;
                 }
@@ -250,20 +250,20 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
                                                 || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
+                                                    min: Number.POSITIVE_INFINITY,
+                                                    max: Number.NEGATIVE_INFINITY,
+                                                    sum: 0,
+                                                    counter: 0,
+                                                    average: 0
                                                 };
-                        if (value == '-') {
+                        if (value === '-') {
                             // 空数据在做完后补充拖拽提示框
                             continue;
                         }
@@ -275,7 +275,7 @@ define(function (require) {
                                         ? valueAxis.getCoordSize(value)
                                         : (baseYP - valueAxis.getCoord(value));
                             // 非堆积数据最小高度有效
-                            if (n == 1
+                            if (n === 1
                                 && barMinHeightMap[seriesIndex] > barHeight
                             ) {
                                 barHeight = barMinHeightMap[seriesIndex];
@@ -290,7 +290,7 @@ define(function (require) {
                                         ? valueAxis.getCoordSize(value)
                                         : (valueAxis.getCoord(value) - baseYN);
                             // 非堆积数据最小高度有效
-                            if (n == 1
+                            if (n === 1
                                 && barMinHeightMap[seriesIndex] > barHeight
                             ) {
                                 barHeight = barMinHeightMap[seriesIndex];
@@ -338,8 +338,8 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
@@ -413,7 +413,7 @@ define(function (require) {
         /**
          * 构建类目轴为垂直方向的柱形图系列
          */
-        _buildVertical : function (maxDataLength, locationMap, seriesArray, xMarkMap) {
+        _buildVertical: function (maxDataLength, locationMap, seriesArray, xMarkMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
@@ -442,7 +442,7 @@ define(function (require) {
             var data;
             var value;
             for (var i = 0, l = maxDataLength; i < l; i++) {
-                if (typeof categoryAxis.getNameByIndex(i) == 'undefined') {
+                if (categoryAxis.getNameByIndex(i) == null) {
                     // 系列数据超出类目轴长度
                     break;
                 }
@@ -456,20 +456,20 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
                                                 || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
+                                                    min: Number.POSITIVE_INFINITY,
+                                                    max: Number.NEGATIVE_INFINITY,
+                                                    sum: 0,
+                                                    counter: 0,
+                                                    average: 0
                                                 };
-                        if (value == '-') {
+                        if (value === '-') {
                             // 空数据在做完后补充拖拽提示框
                             continue;
                         }
@@ -481,7 +481,7 @@ define(function (require) {
                                         ? valueAxis.getCoordSize(value)
                                         : (valueAxis.getCoord(value) - baseXP);
                             // 非堆积数据最小高度有效
-                            if (n == 1
+                            if (n === 1
                                 && barMinHeightMap[seriesIndex] > barHeight
                             ) {
                                 barHeight = barMinHeightMap[seriesIndex];
@@ -496,7 +496,7 @@ define(function (require) {
                                         ? valueAxis.getCoordSize(value)
                                         : (baseXN - valueAxis.getCoord(value));
                             // 非堆积数据最小高度有效
-                            if (n == 1
+                            if (n === 1
                                 && barMinHeightMap[seriesIndex] > barHeight
                             ) {
                                 barHeight = barMinHeightMap[seriesIndex];
@@ -545,8 +545,8 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
@@ -623,7 +623,7 @@ define(function (require) {
          * @param {CategoryAxis} categoryAxis 类目坐标轴，需要知道类目间隔大小
          * @param {Array} locationMap 整形数据的系列索引
          */
-        _mapSize : function (categoryAxis, locationMap, ignoreUserDefined) {
+        _mapSize: function (categoryAxis, locationMap, ignoreUserDefined) {
             var series = this.series;
             var seriesIndex;
             var barWidthMap = {};
@@ -648,7 +648,7 @@ define(function (require) {
                                 queryTarget,
                                 'barWidth'
                             );
-                            if (typeof sBarWidth != 'undefined') {
+                            if (sBarWidth != null) {
                                 // 同一堆积第一个生效barWidth
                                 barWidthMap[seriesIndex] = sBarWidth;
                                 sBarWidthTotal += sBarWidth;
@@ -665,22 +665,10 @@ define(function (require) {
                         }
                     }
 
-                    barMinHeightMap[seriesIndex] = this.query(
-                        queryTarget,
-                        'barMinHeight'
-                    );
-                    barGap = typeof barGap != 'undefined' 
-                             ? barGap
-                             : this.query(
-                                   queryTarget,
-                                   'barGap'
-                               );
-                    barCategoryGap = typeof barCategoryGap != 'undefined' 
-                                     ? barCategoryGap
-                                     : this.query(
-                                           queryTarget,
-                                           'barCategoryGap'
-                                       );
+                    barMinHeightMap[seriesIndex] = this.query(queryTarget, 'barMinHeight');
+                    barGap = barGap != null ? barGap : this.query(queryTarget, 'barGap');
+                    barCategoryGap = barCategoryGap != null 
+                                     ? barCategoryGap : this.query(queryTarget, 'barCategoryGap');
                 }
             }
 
@@ -689,7 +677,7 @@ define(function (require) {
             if (locationMap.length != sBarWidthCounter) {
                 // 至少存在一个自适应宽度的柱形图
                 if (!ignoreUserDefined) {
-                    gap = typeof barCategoryGap == 'string' 
+                    gap = typeof barCategoryGap === 'string' 
                           && barCategoryGap.match(/%$/)
                               // 百分比
                               ? Math.floor(
@@ -699,7 +687,7 @@ define(function (require) {
                                 )
                               // 数值
                               : (categoryAxis.getGap() - barCategoryGap);
-                    if (typeof barGap == 'string' && barGap.match(/%$/)) {
+                    if (typeof barGap === 'string' && barGap.match(/%$/)) {
                         barGap = parseFloat(barGap) / 100;
                         barWidth = Math.floor(
                             (gap - sBarWidthTotal)
@@ -737,7 +725,7 @@ define(function (require) {
             else {
                 // 全是自定义宽度，barGap无效，系列间隔决定barGap
                 gap = sBarWidthCounter > 1
-                      ? (typeof barCategoryGap == 'string' 
+                      ? (typeof barCategoryGap === 'string' 
                          && barCategoryGap.match(/%$/)
                         )
                           // 百分比
@@ -763,19 +751,19 @@ define(function (require) {
             }
 
             return {
-                barWidthMap : barWidthMap,
-                barMinHeightMap : barMinHeightMap ,
-                gap : gap,
-                barWidth : barWidth,
-                barGap : barGap,
-                interval : interval
+                barWidthMap: barWidthMap,
+                barMinHeightMap: barMinHeightMap ,
+                gap: gap,
+                barWidth: barWidth,
+                barGap: barGap,
+                interval: interval
             };
         },
 
         /**
          * 生成最终图形数据
          */
-        _getBarItem : function (seriesIndex, dataIndex, name, x, y, width, height, orient) {
+        _getBarItem: function (seriesIndex, dataIndex, name, x, y, width, height, orient) {
             var series = this.series;
             var barShape;
             var serie = series[seriesIndex];
@@ -801,29 +789,29 @@ define(function (require) {
                 'itemStyle.emphasis'
             );
             barShape = {
-                zlevel : this._zlevelBase,
+                zlevel: this._zlevelBase,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
-                style : {
-                    x : x,
-                    y : y,
-                    width : width,
-                    height : height,
-                    brushType : 'both',
-                    color : this.getItemStyleColor(normalColor, seriesIndex, dataIndex, data),
-                    radius : normal.barBorderRadius,
-                    lineWidth : normalBorderWidth,
-                    strokeColor : normal.barBorderColor
+                style: {
+                    x: x,
+                    y: y,
+                    width: width,
+                    height: height,
+                    brushType: 'both',
+                    color: this.getItemStyleColor(normalColor, seriesIndex, dataIndex, data),
+                    radius: normal.barBorderRadius,
+                    lineWidth: normalBorderWidth,
+                    strokeColor: normal.barBorderColor
                 },
-                highlightStyle : {
-                    color : this.getItemStyleColor(emphasisColor, seriesIndex, dataIndex, data),
-                    radius : emphasis.barBorderRadius,
-                    lineWidth : emphasis.barBorderWidth,
-                    strokeColor : emphasis.barBorderColor
+                highlightStyle: {
+                    color: this.getItemStyleColor(emphasisColor, seriesIndex, dataIndex, data),
+                    radius: emphasis.barBorderRadius,
+                    lineWidth: emphasis.barBorderWidth,
+                    strokeColor: emphasis.barBorderColor
                 },
-                _orient : orient
+                _orient: orient
             };
             barShape.highlightStyle.color = barShape.highlightStyle.color
-                            || (typeof barShape.style.color == 'string'
+                            || (typeof barShape.style.color === 'string'
                                 ? zrColor.lift(barShape.style.color, -0.3)
                                 : barShape.style.color
                                );
@@ -845,32 +833,32 @@ define(function (require) {
             barShape.highlightStyle.textColor = barShape.highlightStyle.color;
             
             barShape = this.addLabel(barShape, serie, data, name, orient);
-            if (barShape.style.textPosition == 'insideLeft'
-                || barShape.style.textPosition == 'insideRight'
-                || barShape.style.textPosition == 'insideTop'
-                || barShape.style.textPosition == 'insideBottom'
+            if (barShape.style.textPosition === 'insideLeft'
+                || barShape.style.textPosition === 'insideRight'
+                || barShape.style.textPosition === 'insideTop'
+                || barShape.style.textPosition === 'insideBottom'
             ) {
                 var gap = 5;
                 switch (barShape.style.textPosition) {
-                    case 'insideLeft' : 
+                    case 'insideLeft':
                         barShape.style.textX = barShape.style.x + gap;
                         barShape.style.textY = barShape.style.y + barShape.style.height / 2;
                         barShape.style.textAlign = 'left';
                         barShape.style.textBaseline = 'middle';
                         break;
-                    case 'insideRight' : 
+                    case 'insideRight':
                         barShape.style.textX = barShape.style.x + barShape.style.width - gap;
                         barShape.style.textY = barShape.style.y + barShape.style.height / 2;
                         barShape.style.textAlign = 'right';
                         barShape.style.textBaseline = 'middle';
                         break;
-                    case 'insideTop' : 
+                    case 'insideTop':
                         barShape.style.textX = barShape.style.x + barShape.style.width / 2;
                         barShape.style.textY = barShape.style.y + gap / 2;
                         barShape.style.textAlign = 'center';
                         barShape.style.textBaseline = 'top';
                         break;
-                    case 'insideBottom' : 
+                    case 'insideBottom':
                         barShape.style.textX = barShape.style.x + barShape.style.width / 2;
                         barShape.style.textY = barShape.style.y + barShape.style.height - gap / 2;
                         barShape.style.textAlign = 'center';
@@ -899,7 +887,7 @@ define(function (require) {
         },
 
         // 位置转换
-        getMarkCoord : function (seriesIndex, mpData) {
+        getMarkCoord: function (seriesIndex, mpData) {
             var serie = this.series[seriesIndex];
             var xMarkMap = this.xMarkMap[seriesIndex];
             var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex);
@@ -907,7 +895,7 @@ define(function (require) {
             var dataIndex;
             var pos;
             if (mpData.type
-                && (mpData.type == 'max' || mpData.type == 'min' || mpData.type == 'average')
+                && (mpData.type === 'max' || mpData.type === 'min' || mpData.type === 'average')
             ) {
                 // 特殊值内置支持
                 pos = [
@@ -919,12 +907,12 @@ define(function (require) {
             }
             else if (xMarkMap.isHorizontal) {
                 // 横向
-                dataIndex = typeof mpData.xAxis == 'string' && xAxis.getIndexByName
+                dataIndex = typeof mpData.xAxis === 'string' && xAxis.getIndexByName
                             ? xAxis.getIndexByName(mpData.xAxis)
                             : (mpData.xAxis || 0);
                 
                 var x = xMarkMap[dataIndex];
-                x = typeof x != 'undefined'
+                x = x != null
                     ? x 
                     : typeof mpData.xAxis != 'string' && xAxis.getCoordByIndex
                       ? xAxis.getCoordByIndex(mpData.xAxis || 0)
@@ -934,12 +922,12 @@ define(function (require) {
             }
             else {
                 // 纵向
-                dataIndex = typeof mpData.yAxis == 'string' && yAxis.getIndexByName
+                dataIndex = typeof mpData.yAxis === 'string' && yAxis.getIndexByName
                             ? yAxis.getIndexByName(mpData.yAxis)
                             : (mpData.yAxis || 0);
                 
                 var y = xMarkMap[dataIndex];
-                y = typeof y != 'undefined'
+                y = y != null
                     ? y
                     : typeof mpData.yAxis != 'string' && yAxis.getCoordByIndex
                       ? yAxis.getCoordByIndex(mpData.yAxis || 0)
@@ -954,7 +942,7 @@ define(function (require) {
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption;
                 this.series = newOption.series;
@@ -967,7 +955,7 @@ define(function (require) {
         /**
          * 动态数据增加动画 
          */
-        addDataAnimation : function (params) {
+        addDataAnimation: function (params) {
             var series = this.series;
             var aniMap = {}; // seriesIndex索引参数
             for (var i = 0, l = params.length; i < l; i++) {
@@ -984,12 +972,12 @@ define(function (require) {
                 seriesIndex = ecData.get(this.shapeList[i], 'seriesIndex');
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
                     // 有数据删除才有移动的动画
-                    if (this.shapeList[i].type == 'rectangle') {
+                    if (this.shapeList[i].type === 'rectangle') {
                         // 主动画
                         dataIndex = ecData.get(this.shapeList[i], 'dataIndex');
                         serie = series[seriesIndex];
                         if (aniMap[seriesIndex][2] 
-                            && dataIndex == serie.data.length - 1
+                            && dataIndex === serie.data.length - 1
                         ) {
                             // 队头加入删除末尾
                             this.zr.delShape(this.shapeList[i].id);
@@ -1000,7 +988,7 @@ define(function (require) {
                             this.zr.delShape(this.shapeList[i].id);
                             continue;
                         }
-                        if (this.shapeList[i]._orient == 'horizontal') {
+                        if (this.shapeList[i]._orient === 'horizontal') {
                             // 条形图
                             dy = this.component.yAxis.getAxis(
                                     serie.yAxisIndex || 0
@@ -1020,7 +1008,7 @@ define(function (require) {
                         this.zr.animate(this.shapeList[i].id, '')
                             .when(
                                 500,
-                                {position : [x, y]}
+                                { position: [x, y] }
                             )
                             .start();
                     }
