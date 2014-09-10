@@ -37,25 +37,25 @@ define(function (require) {
     }
     
     K.prototype = {
-        type : ecConfig.CHART_TYPE_K,
+        type: ecConfig.CHART_TYPE_K,
         /**
          * 绘制图形
          */
-        _buildShape : function () {
+        _buildShape: function () {
             var series = this.series;
             this.selectedMap = {};
 
             // 水平垂直双向series索引 ，position索引到seriesIndex
             var _position2sIndexMap = {
-                top : [],
-                bottom : []
+                top: [ ],
+                bottom: [ ]
             };
             var xAxis;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].type == ecConfig.CHART_TYPE_K) {
+                if (series[i].type === ecConfig.CHART_TYPE_K) {
                     series[i] = this.reformOption(series[i]);
                     xAxis = this.component.xAxis.getAxis(series[i].xAxisIndex);
-                    if (xAxis.type == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                    if (xAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         _position2sIndexMap[xAxis.getPosition()].push(i);
                     }
@@ -78,7 +78,7 @@ define(function (require) {
          *
          * @param {number} seriesIndex 系列索引
          */
-        _buildSinglePosition : function (position, seriesArray) {
+        _buildSinglePosition: function (position, seriesArray) {
             var mapData = this._mapData(seriesArray);
             var locationMap = mapData.locationMap;
             var maxDataLength = mapData.maxDataLength;
@@ -97,7 +97,7 @@ define(function (require) {
          * 数据整形
          * 数组位置映射到系列索引
          */
-        _mapData : function (seriesArray) {
+        _mapData: function (seriesArray) {
             var series = this.series;
             var serie;                              // 临时映射变量
             var serieName;                          // 临时映射变量
@@ -121,15 +121,15 @@ define(function (require) {
                 maxDataLength = Math.max(maxDataLength, serie.data.length);
             }
             return {
-                locationMap : locationMap,
-                maxDataLength : maxDataLength
+                locationMap: locationMap,
+                maxDataLength: maxDataLength
             };
         },
 
         /**
          * 构建类目轴为水平方向的K线图系列
          */
-        _buildHorizontal : function (seriesArray, maxDataLength, locationMap) {
+        _buildHorizontal: function (seriesArray, maxDataLength, locationMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex;
@@ -161,18 +161,18 @@ define(function (require) {
                 
                 pointList[seriesIndex] = [];
                 for (var i = 0, l = maxDataLength; i < l; i++) {
-                    if (typeof categoryAxis.getNameByIndex(i) == 'undefined') {
+                    if (categoryAxis.getNameByIndex(i) == null) {
                         // 系列数据超出类目轴长度
                         break;
                     }
                     
                     data = serie.data[i];
-                    value = typeof data != 'undefined'
-                            ? (typeof data.value != 'undefined'
+                    value = data != null
+                            ? (data.value != null
                               ? data.value
                               : data)
                             : '-';
-                    if (value == '-' || value.length != 4) {
+                    if (value === '-' || value.length != 4) {
                         // 数据格式不符
                         continue;
                     }
@@ -195,7 +195,7 @@ define(function (require) {
         /**
          * 生成K线
          */
-        _buildKLine : function (seriesArray, pointList) {
+        _buildKLine: function (seriesArray, pointList) {
             var series = this.series;
             // normal:
             var nLineWidth;
@@ -228,9 +228,7 @@ define(function (require) {
                     seriesPL = this._getLargePointList(seriesPL);
                 }
                 
-                if (serie.type == ecConfig.CHART_TYPE_K
-                    && typeof seriesPL != 'undefined'
-                ) {
+                if (serie.type === ecConfig.CHART_TYPE_K && seriesPL != null) {
                     // 多级控制
                     queryTarget = serie;
                     nLineWidth = this.query(
@@ -352,14 +350,14 @@ define(function (require) {
             // console.log(this.shapeList)
         },
 
-        _isLarge : function(singlePL) {
+        _isLarge: function(singlePL) {
             return singlePL[0][1] < 0.5;
         },
         
         /**
          * 大规模pointList优化 
          */
-        _getLargePointList : function(singlePL) {
+        _getLargePointList: function(singlePL) {
             var total = this.component.grid.getWidth();
             var len = singlePL.length;
             var newList = [];
@@ -372,7 +370,7 @@ define(function (require) {
         /**
          * 生成K线图上的图形
          */
-        _getCandle : function (
+        _getCandle: function (
             seriesIndex, dataIndex, name, 
             x, width, y0, y1, y2, y3, 
             nColor, nLinewidth, nLineColor, 
@@ -380,23 +378,23 @@ define(function (require) {
         ) {
             var series = this.series;
             var itemShape = {
-                zlevel : this._zlevelBase,
+                zlevel: this._zlevelBase,
                 clickable: this.deepQuery(
                     [series[seriesIndex].data[dataIndex], series[seriesIndex]], 'clickable'
                 ),
-                style : {
-                    x : x,
-                    y : [y0, y1, y2, y3],
-                    width : width,
-                    color : nColor,
-                    strokeColor : nLineColor,
-                    lineWidth : nLinewidth,
-                    brushType : 'both'
+                style: {
+                    x: x,
+                    y: [y0, y1, y2, y3],
+                    width: width,
+                    color: nColor,
+                    strokeColor: nLineColor,
+                    lineWidth: nLinewidth,
+                    brushType: 'both'
                 },
-                highlightStyle : {
-                    color : eColor,
-                    strokeColor : eLineColor,
-                    lineWidth : eLinewidth
+                highlightStyle: {
+                    color: eColor,
+                    strokeColor: eLineColor,
+                    lineWidth: eLinewidth
                 },
                 _seriesIndex: seriesIndex
             };
@@ -412,7 +410,7 @@ define(function (require) {
         },
 
         // 位置转换
-        getMarkCoord : function (seriesIndex, mpData) {
+        getMarkCoord: function (seriesIndex, mpData) {
             var serie = this.series[seriesIndex];
             var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex);
             var yAxis = this.component.yAxis.getAxis(serie.yAxisIndex);
@@ -431,7 +429,7 @@ define(function (require) {
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption;
                 this.series = newOption.series;
@@ -444,7 +442,7 @@ define(function (require) {
         /**
          * 动画设定
          */
-        addDataAnimation : function (params) {
+        addDataAnimation: function (params) {
             var series = this.series;
             var aniMap = {}; // seriesIndex索引参数
             for (var i = 0, l = params.length; i < l; i++) {
@@ -460,11 +458,11 @@ define(function (require) {
                 seriesIndex = this.shapeList[i]._seriesIndex;
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
                     // 有数据删除才有移动的动画
-                    if (this.shapeList[i].type == 'candle') {
+                    if (this.shapeList[i].type === 'candle') {
                         dataIndex = ecData.get(this.shapeList[i], 'dataIndex');
                         serie = series[seriesIndex];
                         if (aniMap[seriesIndex][2] 
-                            && dataIndex == serie.data.length - 1
+                            && dataIndex === serie.data.length - 1
                         ) {
                             // 队头加入删除末尾
                             this.zr.delShape(this.shapeList[i].id);
@@ -483,7 +481,7 @@ define(function (require) {
                         this.zr.animate(this.shapeList[i].id, '')
                             .when(
                                 500,
-                                {position : [x, y]}
+                                { position: [ x, y ] }
                             )
                             .start();
                     }
