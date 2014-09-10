@@ -55,12 +55,12 @@ define(function (require) {
      * 基类方法
      */
     Base.prototype = {
-        canvasSupported : require('zrender/tool/env').canvasSupported,
+        canvasSupported: require('zrender/tool/env').canvasSupported,
         /**
          * 获取zlevel基数配置
          * @param {Object} contentType
          */
-        getZlevelBase : function (contentType) {
+        getZlevelBase: function (contentType) {
             contentType = contentType || this.type + '';
 
             switch (contentType) {
@@ -112,7 +112,7 @@ define(function (require) {
          *
          * @return {Object} 修正后的参数
          */
-        reformOption : function (opt) {
+        reformOption: function (opt) {
             return zrUtil.merge(
                        opt || {},
                        zrUtil.clone(this.ecTheme[this.type] || {})
@@ -122,7 +122,7 @@ define(function (require) {
         /**
          * css类属性数组补全，如padding，margin等~
          */
-        reformCssArray : function (p) {
+        reformCssArray: function (p) {
             if (p instanceof Array) {
                 switch (p.length + '') {
                     case '4':
@@ -142,9 +142,9 @@ define(function (require) {
             }
         },
 
-        getShapeById : function(id) {
+        getShapeById: function(id) {
             for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                if (this.shapeList[i].id == id) {
+                if (this.shapeList[i].id === id) {
                     return this.shapeList[i];
                 }
             }
@@ -154,7 +154,7 @@ define(function (require) {
         /**
          * 获取自定义和默认配置合并后的字体设置
          */
-        getFont : function (textStyle) {
+        getFont: function (textStyle) {
             var finalTextStyle = zrUtil.merge(
                 zrUtil.clone(textStyle) || {},
                 this.ecTheme.textStyle
@@ -165,16 +165,16 @@ define(function (require) {
                    + finalTextStyle.fontFamily;
         },
         
-        getItemStyleColor : function (itemColor, seriesIndex, dataIndex, data) {
-            return typeof itemColor == 'function'
+        getItemStyleColor: function (itemColor, seriesIndex, dataIndex, data) {
+            return typeof itemColor === 'function'
                    ? itemColor(seriesIndex, dataIndex, data) : itemColor;
             
         },        
         
         // 亚像素优化
-        subPixelOptimize : function (position, lineWidth) {
-            if (lineWidth % 2 == 1) {
-                //position += position == Math.ceil(position) ? 0.5 : 0;
+        subPixelOptimize: function (position, lineWidth) {
+            if (lineWidth % 2 === 1) {
+                //position += position === Math.ceil(position) ? 0.5 : 0;
                 position = Math.floor(position) + 0.5;
             }
             else {
@@ -184,7 +184,7 @@ define(function (require) {
         },
         
         
-        resize : function () {
+        resize: function () {
             this.refresh && this.refresh();
             this.clearEffectShape && this.clearEffectShape(true);
             var self = this;
@@ -205,20 +205,20 @@ define(function (require) {
         /**
          * 释放后实例不可用
          */
-        dispose : function () {
+        dispose: function () {
             this.clear();
             this.shapeList = null;
             this.effectList = null;
         },
         
-        query : ecQuery.query,
-        deepQuery : ecQuery.deepQuery,
-        deepMerge : ecQuery.deepMerge,
+        query: ecQuery.query,
+        deepQuery: ecQuery.deepQuery,
+        deepMerge: ecQuery.deepMerge,
         
-        parsePercent : number.parsePercent,
-        parseCenter : number.parseCenter,
-        parseRadius : number.parseRadius,
-        numAddCommas : number.addCommas
+        parsePercent: number.parsePercent,
+        parseCenter: number.parseCenter,
+        parseRadius: number.parseRadius,
+        numAddCommas: number.addCommas
     };
     
     return Base;
