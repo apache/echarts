@@ -706,7 +706,8 @@ define(function (require) {
                     this._tDom.innerHTML = formatter;
                 }
 
-                if (!showContent || !this.option.tooltip.showContent) {
+                // don't modify, just false, showContent == undefined == true
+                if (showContent === false || !this.option.tooltip.showContent) {
                     // 只用tooltip的行为，不显示主体
                     return;
                 }
@@ -838,7 +839,8 @@ define(function (require) {
                     this._tDom.innerHTML = formatter;
                 }
 
-                if (!showContent || !this.option.tooltip.showContent) {
+                // don't modify, just false, showContent == undefined == true
+                if (showContent === false || !this.option.tooltip.showContent) {
                     // 只用tooltip的行为，不显示主体
                     return;
                 }
@@ -1001,7 +1003,8 @@ define(function (require) {
                 this.zr.refresh();
             }
             
-            if (!showContent || !this.option.tooltip.showContent) {
+            // don't modify, just false, showContent == undefined == true
+            if (showContent === false || !this.option.tooltip.showContent) {
                 // 只用tooltip的行为，不显示主体
                 return;
             }
