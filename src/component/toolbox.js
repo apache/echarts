@@ -104,8 +104,8 @@ define(function (require) {
     }
 
     Toolbox.prototype = {
-        type : ecConfig.COMPONENT_TYPE_TOOLBOX,
-        _buildShape : function () {
+        type: ecConfig.COMPONENT_TYPE_TOOLBOX,
+        _buildShape: function () {
             this._iconList = [];
             var toolboxOption = this.option.toolbox;
             this._enableColor = toolboxOption.effectiveColor;
@@ -116,28 +116,28 @@ define(function (require) {
                 if (feature[key].show) {
                     switch (key) {
                         case 'mark' :
-                            iconName.push({key : key, name : 'mark'});
-                            iconName.push({key : key, name : 'markUndo'});
-                            iconName.push({key : key, name : 'markClear'});
+                            iconName.push({ key: key, name: 'mark' });
+                            iconName.push({ key: key, name: 'markUndo' });
+                            iconName.push({ key: key, name: 'markClear' });
                             break;
                         case 'magicType' :
                             for (var i = 0, l = feature[key].type.length; i < l; i++) {
                                 feature[key].title[feature[key].type[i] + 'Chart']
                                     = feature[key].title[feature[key].type[i]];
-                                iconName.push({key : key, name : feature[key].type[i] + 'Chart'});
+                                iconName.push({ key: key, name: feature[key].type[i] + 'Chart' });
                             }
                             break;
                         case 'dataZoom' :
-                            iconName.push({key : key, name : 'dataZoom'});
-                            iconName.push({key : key, name : 'dataZoomReset'});
+                            iconName.push({ key: key, name: 'dataZoom' });
+                            iconName.push({ key: key, name: 'dataZoomReset' });
                             break;
                         case 'saveAsImage' :
                             if (this.canvasSupported) {
-                                iconName.push({key : key, name : 'saveAsImage'});
+                                iconName.push({ key: key, name: 'saveAsImage' });
                             }
                             break;
                         default :
-                            iconName.push({key : key, name : key});
+                            iconName.push({ key: key, name: key });
                             break;
                     }
                 }
@@ -178,7 +178,7 @@ define(function (require) {
         /**
          * 构建所有图例元素
          */
-        _buildItem : function () {
+        _buildItem: function () {
             var toolboxOption = this.option.toolbox;
             var iconLength = this._iconList.length;
             var lastX = this._itemGroupLocation.x;
@@ -194,7 +194,7 @@ define(function (require) {
             var textPosition;
             var textAlign;
             var textBaseline;
-            if (toolboxOption.orient == 'horizontal') {
+            if (toolboxOption.orient === 'horizontal') {
                 textPosition = this._itemGroupLocation.y / this.zr.getHeight() < 0.5
                                ? 'bottom' : 'top';
                 textAlign = this._itemGroupLocation.x / this.zr.getWidth() < 0.5
@@ -218,31 +218,31 @@ define(function (require) {
             for (var i = 0; i < iconLength; i++) {
                 // 图形
                 itemShape = {
-                    type : 'icon',
-                    zlevel : this._zlevelBase,
-                    style : {
-                        x : lastX,
-                        y : lastY,
-                        width : itemSize,
-                        height : itemSize,
-                        iconType : this._iconList[i],
-                        lineWidth : 1,
-                        strokeColor : this._featureColor[this._iconList[i]] 
-                                      || color[i % color.length],
+                    type: 'icon',
+                    zlevel: this._zlevelBase,
+                    style: {
+                        x: lastX,
+                        y: lastY,
+                        width: itemSize,
+                        height: itemSize,
+                        iconType: this._iconList[i],
+                        lineWidth: 1,
+                        strokeColor: this._featureColor[this._iconList[i]] 
+                                     || color[i % color.length],
                         brushType: 'stroke'
                     },
-                    highlightStyle : {
-                        lineWidth : 1,
-                        text : toolboxOption.showTitle 
-                               ? this._featureTitle[this._iconList[i]]
-                               : undefined,
-                        textFont : textFont,
-                        textPosition : textPosition,
-                        strokeColor : this._featureColor[this._iconList[i]] 
-                                      || color[i % color.length]
+                    highlightStyle: {
+                        lineWidth: 1,
+                        text: toolboxOption.showTitle 
+                              ? this._featureTitle[this._iconList[i]]
+                              : undefined,
+                        textFont: textFont,
+                        textPosition: textPosition,
+                        strokeColor: this._featureColor[this._iconList[i]] 
+                                     || color[i % color.length]
                     },
-                    hoverable : true,
-                    clickable : true
+                    hoverable: true,
+                    clickable: true
                 };
                 
                 if (this._featureIcon[this._iconList[i]]) {
@@ -254,23 +254,23 @@ define(function (require) {
                     itemShape.type = 'image';
                 }
                 
-                if (toolboxOption.orient == 'horizontal') {
+                if (toolboxOption.orient === 'horizontal') {
                     // 修正左对齐第一个或右对齐最后一个
-                    if (i === 0 && textAlign == 'left') {
+                    if (i === 0 && textAlign === 'left') {
                         itemShape.highlightStyle.textPosition = 'specific';
                         itemShape.highlightStyle.textAlign = textAlign;
                         itemShape.highlightStyle.textBaseline = textBaseline;
                         itemShape.highlightStyle.textX = lastX;
-                        itemShape.highlightStyle.textY = textBaseline == 'top' 
+                        itemShape.highlightStyle.textY = textBaseline === 'top' 
                                                      ? lastY + itemSize + 10
                                                      : lastY - 10;
                     }
-                    if (i == iconLength - 1 && textAlign == 'right') {
+                    if (i === iconLength - 1 && textAlign === 'right') {
                         itemShape.highlightStyle.textPosition = 'specific';
                         itemShape.highlightStyle.textAlign = textAlign;
                         itemShape.highlightStyle.textBaseline = textBaseline;
                         itemShape.highlightStyle.textX = lastX + itemSize;
-                        itemShape.highlightStyle.textY = textBaseline == 'top' 
+                        itemShape.highlightStyle.textY = textBaseline === 'top' 
                                                      ? lastY + itemSize + 10
                                                      : lastY - 10;
                     }
@@ -323,16 +323,16 @@ define(function (require) {
                         break;
                 }
 
-                if (itemShape.type == 'icon') {
+                if (itemShape.type === 'icon') {
                     itemShape = new IconShape(itemShape);
                 }
-                else if (itemShape.type == 'image') {
+                else if (itemShape.type === 'image') {
                     itemShape = new ImageShape(itemShape);
                 }
                 this.shapeList.push(itemShape);
                 this._iconShapeMap[this._iconList[i]] = itemShape;
 
-                if (toolboxOption.orient == 'horizontal') {
+                if (toolboxOption.orient === 'horizontal') {
                     lastX += itemSize + itemGap;
                 }
                 else {
@@ -341,7 +341,7 @@ define(function (require) {
             }
         },
 
-        _buildBackground : function () {
+        _buildBackground: function () {
             var toolboxOption = this.option.toolbox;
             var pTop = toolboxOption.padding[0];
             var pRight = toolboxOption.padding[1];
@@ -349,18 +349,17 @@ define(function (require) {
             var pLeft = toolboxOption.padding[3];
 
             this.shapeList.push(new RectangleShape({
-                zlevel : this._zlevelBase,
+                zlevel: this._zlevelBase,
                 hoverable :false,
-                style : {
-                    x : this._itemGroupLocation.x - pLeft,
-                    y : this._itemGroupLocation.y - pTop,
-                    width : this._itemGroupLocation.width + pLeft + pRight,
-                    height : this._itemGroupLocation.height + pTop + pBottom,
-                    brushType : toolboxOption.borderWidth === 0
-                                ? 'fill' : 'both',
-                    color : toolboxOption.backgroundColor,
-                    strokeColor : toolboxOption.borderColor,
-                    lineWidth : toolboxOption.borderWidth
+                style: {
+                    x: this._itemGroupLocation.x - pLeft,
+                    y: this._itemGroupLocation.y - pTop,
+                    width: this._itemGroupLocation.width + pLeft + pRight,
+                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    brushType: toolboxOption.borderWidth === 0 ? 'fill' : 'both',
+                    color: toolboxOption.backgroundColor,
+                    strokeColor: toolboxOption.borderColor,
+                    lineWidth: toolboxOption.borderWidth
                 }
             }));
         },
@@ -368,7 +367,7 @@ define(function (require) {
         /**
          * 根据选项计算图例实体的位置坐标
          */
-        _getItemGroupLocation : function () {
+        _getItemGroupLocation: function () {
             var toolboxOption = this.option.toolbox;
             var iconLength = this._iconList.length;
             var itemGap = toolboxOption.itemGap;
@@ -376,7 +375,7 @@ define(function (require) {
             var totalWidth = 0;
             var totalHeight = 0;
 
-            if (toolboxOption.orient == 'horizontal') {
+            if (toolboxOption.orient === 'horizontal') {
                 // 水平布局，计算总宽度，别忘减去最后一个的itemGap
                 totalWidth = (itemSize + itemGap) * iconLength - itemGap;
                 totalHeight = itemSize;
@@ -430,14 +429,14 @@ define(function (require) {
             }
 
             return {
-                x : x,
-                y : y,
-                width : totalWidth,
-                height : totalHeight
+                x: x,
+                y: y,
+                width: totalWidth,
+                height: totalHeight
             };
         },
 
-        __onmousemove : function (param) {
+        __onmousemove: function (param) {
             if (this._marking) {
                 this._markShape.style.xEnd = zrEvent.getX(param.event);
                 this._markShape.style.yEnd = zrEvent.getY(param.event);
@@ -458,7 +457,7 @@ define(function (require) {
             }
         },
 
-        __onmousedown : function (param) {
+        __onmousedown: function (param) {
             if (param.target) {
                 return;
             }
@@ -467,19 +466,19 @@ define(function (require) {
             var y = zrEvent.getY(param.event);
             var zoomOption = this.option.dataZoom || {};
             this._zoomShape = new RectangleShape({
-                zlevel : this._zlevelBase,
-                style : {
-                    x : x,
-                    y : y,
-                    width : 1,
-                    height : 1,
+                zlevel: this._zlevelBase,
+                style: {
+                    x: x,
+                    y: y,
+                    width: 1,
+                    height: 1,
                     brushType: 'both'
                 },
-                highlightStyle : {
-                    lineWidth : 2,
+                highlightStyle: {
+                    lineWidth: 2,
                     color: zoomOption.fillerColor 
                            || ecConfig.dataZoom.fillerColor,
-                    strokeColor : zoomOption.handleColor 
+                    strokeColor: zoomOption.handleColor 
                                   || ecConfig.dataZoom.handleColor,
                     brushType: 'both'
                 }
@@ -488,7 +487,7 @@ define(function (require) {
             return true; // 阻塞全局事件
         },
         
-        __onmouseup : function (/*param*/) {
+        __onmouseup: function (/*param*/) {
             if (!this._zoomShape 
                 || Math.abs(this._zoomShape.style.width) < 10 
                 || Math.abs(this._zoomShape.style.height) < 10
@@ -502,10 +501,10 @@ define(function (require) {
                 var zoom = this.component.dataZoom.rectZoom(this._zoomShape.style);
                 if (zoom) {
                     this._zoomQueue.push({
-                        start : zoom.start,
-                        end : zoom.end,
-                        start2 : zoom.start2,
-                        end2 : zoom.end2
+                        start: zoom.start,
+                        end: zoom.end,
+                        start2: zoom.start2,
+                        end2: zoom.end2
                     });
                     this._iconEnable(this._iconShapeMap['dataZoomReset']);
                     this.zr.refresh();
@@ -514,7 +513,7 @@ define(function (require) {
             return true; // 阻塞全局事件
         },
         
-        __onclick : function (param) {
+        __onclick: function (param) {
             if (param.target) {
                 return;
             }
@@ -531,31 +530,31 @@ define(function (require) {
                 var x = zrEvent.getX(param.event);
                 var y = zrEvent.getY(param.event);
                 this._markShape = new LineShape({
-                    zlevel : this._zlevelBase,
-                    style : {
-                        xStart : x,
-                        yStart : y,
-                        xEnd : x,
-                        yEnd : y,
-                        lineWidth : this.query(
-                                        this.option,
-                                        'toolbox.feature.mark.lineStyle.width'
-                                    ),
-                        strokeColor : this.query(
-                                          this.option,
-                                          'toolbox.feature.mark.lineStyle.color'
-                                      ),
-                        lineType : this.query(
+                    zlevel: this._zlevelBase,
+                    style: {
+                        xStart: x,
+                        yStart: y,
+                        xEnd: x,
+                        yEnd: y,
+                        lineWidth: this.query(
                                        this.option,
-                                       'toolbox.feature.mark.lineStyle.type'
-                                   )
+                                       'toolbox.feature.mark.lineStyle.width'
+                                   ),
+                        strokeColor: this.query(
+                                         this.option,
+                                         'toolbox.feature.mark.lineStyle.color'
+                                     ),
+                        lineType: this.query(
+                                      this.option,
+                                      'toolbox.feature.mark.lineStyle.type'
+                                  )
                     }
                 });
                 this.zr.addHoverShape(this._markShape);
             }
         },
         
-        __onMark : function (param) {
+        __onMark: function (param) {
             var target = param.target;
             if (this._marking || this._markStart) {
                 // 取消
@@ -579,7 +578,7 @@ define(function (require) {
             return true; // 阻塞全局事件
         },
         
-        __onMarkUndo : function () {
+        __onMarkUndo: function () {
             if (this._marking) {
                 this._marking = false;
             } else {
@@ -589,7 +588,7 @@ define(function (require) {
                     this.zr.delShape(target.id);
                     this.zr.refresh();
                     this._markShapeList.pop();
-                    if (len == 1) {
+                    if (len === 1) {
                         this._iconDisable(this._iconShapeMap['markUndo']);
                         this._iconDisable(this._iconShapeMap['markClear']);
                     }
@@ -598,7 +597,7 @@ define(function (require) {
             return true;
         },
 
-        __onMarkClear : function () {
+        __onMarkClear: function () {
             if (this._marking) {
                 this._marking = false;
             }
@@ -614,7 +613,7 @@ define(function (require) {
             return true;
         },
         
-        __onDataZoom : function (param) {
+        __onDataZoom: function (param) {
             var target = param.target;
             if (this._zooming || this._zoomStart) {
                 // 取消
@@ -642,7 +641,7 @@ define(function (require) {
             return true; // 阻塞全局事件
         },
         
-        __onDataZoomReset : function () {
+        __onDataZoomReset: function () {
             if (this._zooming) {
                 this._zooming = false;
             }
@@ -662,7 +661,7 @@ define(function (require) {
             return true;
         },
 
-        _resetMark : function () {
+        _resetMark: function () {
             this._marking = false;
             if (this._markStart) {
                 this._markStart = false;
@@ -685,7 +684,7 @@ define(function (require) {
             }
         },
         
-        _resetZoom : function () {
+        _resetZoom: function () {
             this._zooming = false;
             if (this._zoomStart) {
                 this._zoomStart = false;
@@ -709,61 +708,61 @@ define(function (require) {
             }
         },
 
-        _iconDisable : function (target) {
+        _iconDisable: function (target) {
             if (target.type != 'image') {
                 this.zr.modShape(target.id, {
-                    hoverable : false,
-                    clickable : false,
-                    style : {
-                        strokeColor : this._disableColor
+                    hoverable: false,
+                    clickable: false,
+                    style: {
+                        strokeColor: this._disableColor
                     }
                 });
             }
             else {
                 this.zr.modShape(target.id, {
-                    hoverable : false,
-                    clickable : false,
-                    style : {
-                        opacity : 0.3
+                    hoverable: false,
+                    clickable: false,
+                    style: {
+                        opacity: 0.3
                     }
                 });
             }
         },
 
-        _iconEnable : function (target) {
+        _iconEnable: function (target) {
             if (target.type != 'image') {
                 this.zr.modShape(target.id, {
-                    hoverable : true,
-                    clickable : true,
-                    style : {
-                        strokeColor : target.highlightStyle.strokeColor
+                    hoverable: true,
+                    clickable: true,
+                    style: {
+                        strokeColor: target.highlightStyle.strokeColor
                     }
                 });
             }
             else {
                 this.zr.modShape(target.id, {
-                    hoverable : true,
-                    clickable : true,
-                    style : {
-                        opacity : 0.8
+                    hoverable: true,
+                    clickable: true,
+                    style: {
+                        opacity: 0.8
                     }
                 });
             }
         },
 
-        __onDataView : function () {
+        __onDataView: function () {
             this._dataView.show(this.option);
             return true;
         },
 
-        __onRestore : function (){
+        __onRestore: function (){
             this._resetMark();
             this._resetZoom();
             this.messageCenter.dispatch(ecConfig.EVENT.RESTORE, null, null, this.myChart);
             return true;
         },
         
-        __onSaveAsImage : function () {
+        __onSaveAsImage: function () {
             var saveOption = this.option.toolbox.feature.saveAsImage;
             var imgType = saveOption.type || 'png';
             if (imgType != 'png' && imgType != 'jpeg') {
@@ -775,7 +774,7 @@ define(function (require) {
                 image = this.zr.toDataURL(
                     'image/' + imgType,
                     this.option.backgroundColor 
-                    && this.option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
+                    && this.option.backgroundColor.replace(' ','') === 'rgba(0,0,0,0)'
                         ? '#fff' : this.option.backgroundColor
                 );
             }
@@ -847,30 +846,30 @@ define(function (require) {
             return;
         },
 
-        __onMagicType : function (param) {
+        __onMagicType: function (param) {
             this._resetMark();
             var itemName = param.target._name;
             if (!this._magicType[itemName]) {
                 // 启用
                 this._magicType[itemName] = true;
                 // 折柱互斥
-                if (itemName == ecConfig.CHART_TYPE_LINE) {
+                if (itemName === ecConfig.CHART_TYPE_LINE) {
                     this._magicType[ecConfig.CHART_TYPE_BAR] = false;
                 }
-                else if (itemName == ecConfig.CHART_TYPE_BAR) {
+                else if (itemName === ecConfig.CHART_TYPE_BAR) {
                     this._magicType[ecConfig.CHART_TYPE_LINE] = false;
                 }
                 // 堆积平铺互斥
-                if (itemName == _MAGICTYPE_STACK) {
+                if (itemName === _MAGICTYPE_STACK) {
                     this._magicType[_MAGICTYPE_TILED] = false;
                 }
-                else if (itemName == _MAGICTYPE_TILED) {
+                else if (itemName === _MAGICTYPE_TILED) {
                     this._magicType[_MAGICTYPE_STACK] = false;
                 }
                 this.messageCenter.dispatch(
                     ecConfig.EVENT.MAGIC_TYPE_CHANGED,
                     param.event,
-                    {magicType : this._magicType},
+                    { magicType: this._magicType },
                     this.myChart
                 );
             }
@@ -878,20 +877,20 @@ define(function (require) {
             return true;
         },
         
-        setMagicType : function (magicType) {
+        setMagicType: function (magicType) {
             this._resetMark();
             this._magicType = magicType;
             
             !this._isSilence && this.messageCenter.dispatch(
                 ecConfig.EVENT.MAGIC_TYPE_CHANGED,
                 null,
-                {magicType : this._magicType},
+                { magicType: this._magicType },
                 this.myChart
             );
         },
         
         // 用户自定义扩展toolbox方法
-        __onCustomHandler : function (param) {
+        __onCustomHandler: function (param) {
             var target = param.target.style.iconType;
             var featureHandler = this.option.toolbox.feature[target].onclick;
             if (typeof featureHandler === 'function') {
@@ -900,7 +899,7 @@ define(function (require) {
         },
 
         // 重置备份还原状态等
-        reset : function (newOption, isRestore) {
+        reset: function (newOption, isRestore) {
             isRestore && this.clear();
             
             if (this.query(newOption, 'toolbox.show')
@@ -922,15 +921,15 @@ define(function (require) {
                         axis = newOption.xAxis instanceof Array
                                ? newOption.xAxis[newOption.series[len].xAxisIndex || 0]
                                : newOption.xAxis;
-                        if (axis && (axis.type || 'category') == 'category') {
-                            axis.__boundaryGap = typeof axis.boundaryGap != 'undefined'
+                        if (axis && (axis.type || 'category') === 'category') {
+                            axis.__boundaryGap = axis.boundaryGap != null
                                                  ? axis.boundaryGap : true;
                         }
                         axis = newOption.yAxis instanceof Array
                                ? newOption.yAxis[newOption.series[len].yAxisIndex || 0]
                                : newOption.yAxis;
-                        if (axis && axis.type == 'category') {
-                            axis.__boundaryGap = typeof axis.boundaryGap != 'undefined'
+                        if (axis && axis.type === 'category') {
+                            axis.__boundaryGap = axis.boundaryGap != null
                                                  ? axis.boundaryGap : true;
                         }
                         newOption.series[len].__type = oriType;
@@ -958,11 +957,11 @@ define(function (require) {
             // 框选缩放
             var zoomOption = newOption.dataZoom;
             if (zoomOption && zoomOption.show) {
-                var start = typeof zoomOption.start != 'undefined'
+                var start = zoomOption.start != null
                             && zoomOption.start >= 0
                             && zoomOption.start <= 100
                             ? zoomOption.start : 0;
-                var end = typeof zoomOption.end != 'undefined'
+                var end = zoomOption.end != null
                           && zoomOption.end >= 0
                           && zoomOption.end <= 100
                           ? zoomOption.end : 100;
@@ -973,10 +972,10 @@ define(function (require) {
                     start = start - end;
                 }
                 this._zoomQueue = [{
-                    start : start,
-                    end : end,
-                    start2 : 0,
-                    end2 : 100
+                    start: start,
+                    end: end,
+                    start2: 0,
+                    end2: 100
                 }];
             }
             else {
@@ -984,7 +983,7 @@ define(function (require) {
             }
         },
         
-        getMagicOption : function (){
+        getMagicOption: function (){
             var axis;
             if (this._magicType[ecConfig.CHART_TYPE_LINE] 
                 || this._magicType[ecConfig.CHART_TYPE_BAR]
@@ -1004,13 +1003,13 @@ define(function (require) {
                         axis = this.option.xAxis instanceof Array
                                ? this.option.xAxis[this.option.series[i].xAxisIndex || 0]
                                : this.option.xAxis;
-                        if (axis && (axis.type || 'category') == 'category') {
+                        if (axis && (axis.type || 'category') === 'category') {
                             axis.boundaryGap = boundaryGap ? true : axis.__boundaryGap;
                         }
                         axis = this.option.yAxis instanceof Array
                                ? this.option.yAxis[this.option.series[i].yAxisIndex || 0]
                                : this.option.yAxis;
-                        if (axis && axis.type == 'category') {
+                        if (axis && axis.type === 'category') {
                             axis.boundaryGap = boundaryGap ? true : axis.__boundaryGap;
                         }
                     }
@@ -1034,11 +1033,11 @@ define(function (require) {
             return this.option;
         },
 
-        silence : function (s) {
+        silence: function (s) {
             this._isSilence = s;
         },
         
-        resize : function () {
+        resize: function () {
             this._resetMark();
             this.clear();
             if (this.option && this.option.toolbox && this.option.toolbox.show) {
@@ -1049,13 +1048,13 @@ define(function (require) {
             }
         },
 
-        hideDataView : function () {
+        hideDataView: function () {
             if (this._dataView) {
                 this._dataView.hide();
             }
         },
         
-        clear : function(notMark) {
+        clear: function(notMark) {
             if (this.zr) {
                 this.zr.delShape(this.shapeList);
                 this.shapeList = [];
@@ -1070,7 +1069,7 @@ define(function (require) {
         /**
          * 释放后实例不可用
          */
-        dispose : function () {
+        dispose: function () {
             if (this._dataView) {
                 this._dataView.dispose();
                 this._dataView = null;
@@ -1083,7 +1082,7 @@ define(function (require) {
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this._resetMark();
                 this._resetZoom();
