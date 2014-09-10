@@ -68,9 +68,9 @@ define(function (require) {
         
         getBbox: function() {
             return [
-                [this._x, this._y],
-                [this.getXend(), this.getYend()]
-            ]
+                [ this._x, this._y ],
+                [ this.getXend(), this.getYend() ]
+            ];
         },
         
         /**
