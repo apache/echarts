@@ -1099,6 +1099,7 @@ define(function() {
         },
         
         markPoint : {
+            clickable: true,
             symbol: 'pin',         // 标注类型
             symbolSize: 10,        // 标注大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             //symbolRotate : null, // 标注旋转控制
@@ -1139,6 +1140,7 @@ define(function() {
         },
         
         markLine : {
+            clickable: true,
             // 标线起始和结束的symbol介绍类型，如果都一样，可以直接传string
             symbol: ['circle', 'arrow'],  
             // 标线起始和结束的symbol大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
