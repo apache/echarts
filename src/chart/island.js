@@ -69,14 +69,14 @@ define(function (require) {
     }
     
     Island.prototype = {
-        type : ecConfig.CHART_TYPE_ISLAND,
+        type: ecConfig.CHART_TYPE_ISLAND,
         /**
          * 孤岛合并
          *
          * @param {string} tarShapeIndex 目标索引
          * @param {Object} srcShape 源目标，合入目标后删除
          */
-        _combine : function (tarShape, srcShape) {
+        _combine: function (tarShape, srcShape) {
             var zrColor = require('zrender/tool/color');
             var accMath = require('../util/accMath');
             var value = accMath.accAdd(
@@ -101,7 +101,7 @@ define(function (require) {
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 newOption.island = this.reformOption(newOption.island);
                 this.option = newOption;
@@ -111,16 +111,16 @@ define(function (require) {
             }
         },
         
-        getOption : function () {
+        getOption: function () {
             return this.option;
         },
 
-        resize : function () {
+        resize: function () {
             var newWidth = this.zr.getWidth();
             var newHieght = this.zr.getHeight();
             var xScale = newWidth / (this._zrWidth || newWidth);
             var yScale = newHieght / (this._zrHeight || newHieght);
-            if (xScale == 1 && yScale == 1) {
+            if (xScale === 1 && yScale === 1) {
                 return;
             }
             this._zrWidth = newWidth;
@@ -138,29 +138,29 @@ define(function (require) {
             }
         },
 
-        add : function (shape) {
+        add: function (shape) {
             var name = ecData.get(shape, 'name');
             var value = ecData.get(shape, 'value');
-            var seriesName = typeof ecData.get(shape, 'series') != 'undefined'
+            var seriesName = ecData.get(shape, 'series') != null
                              ? ecData.get(shape, 'series').name
                              : '';
             var font = this.getFont(this.option.island.textStyle);
             var islandShape = {
-                zlevel : this._zlevelBase,
-                style : {
-                    x : shape.style.x,
-                    y : shape.style.y,
-                    r : this.option.island.r,
-                    color : shape.style.color || shape.style.strokeColor,
-                    text : name + this._valueConnector + value,
-                    textFont : font
+                zlevel: this._zlevelBase,
+                style: {
+                    x: shape.style.x,
+                    y: shape.style.y,
+                    r: this.option.island.r,
+                    color: shape.style.color || shape.style.strokeColor,
+                    text: name + this._valueConnector + value,
+                    textFont: font
                 },
-                draggable : true,
-                hoverable : true,
-                onmousewheel : this.shapeHandler.onmousewheel,
-                _type : 'island'
+                draggable: true,
+                hoverable: true,
+                onmousewheel: this.shapeHandler.onmousewheel,
+                _type: 'island'
             };
-            if (islandShape.style.color == '#fff') {
+            if (islandShape.style.color === '#fff') {
                 islandShape.style.color = shape.style.strokeColor;
             }
             this.setCalculable(islandShape);
@@ -176,7 +176,7 @@ define(function (require) {
             this.zr.addShape(islandShape);
         },
 
-        del : function (shape) {
+        del: function (shape) {
             this.zr.delShape(shape.id);
             var newShapeList = [];
             for (var i = 0, l = this.shapeList.length; i < l; i++) {
@@ -190,7 +190,7 @@ define(function (require) {
         /**
          * 数据项被拖拽进来， 重载基类方法
          */
-        ondrop : function (param, status) {
+        ondrop: function (param, status) {
             if (!this.isDrop || !param.target) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
@@ -213,7 +213,7 @@ define(function (require) {
         /**
          * 数据项被拖拽出去， 重载基类方法
          */
-        ondragend : function (param, status) {
+        ondragend: function (param, status) {
             var target = param.target;      // 拖拽安放目标
             if (!this.isDragend) {
                 // 拖拽的不是孤岛数据，如果没有图表接受孤岛数据，需要新增孤岛数据
