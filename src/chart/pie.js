@@ -173,6 +173,10 @@ define(function (require) {
                     maxValue = Math.max(maxValue, +data[i].value);
                 }
             }
+            
+            if (totalValue === 0) {
+                return;
+            }
 
             var percent = 100;
             var lastPercent;    // 相邻细角度优化
