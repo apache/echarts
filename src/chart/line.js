@@ -584,10 +584,12 @@ define(function (require) {
             
             // 堆积层叠需求，反顺序构建
             var seriesIndex;
+            var bbox;
             for (var sIdx = seriesArray.length - 1; sIdx >= 0; sIdx--) {
                 seriesIndex = seriesArray[sIdx];
                 serie = series[seriesIndex];
                 seriesPL = pointList[seriesIndex];
+                bbox = this._getBbox(seriesIndex, orient);
                 if (serie.type == this.type && typeof seriesPL != 'undefined') {
                     defaultColor = this._sIndex2ColorMap[seriesIndex];
                     // 多级控制
@@ -659,6 +661,7 @@ define(function (require) {
                                 lineWidth : lineWidth,
                                 lineType : lineType,
                                 smooth : this._getSmooth(serie.smooth),
+                                smoothConstraint : bbox,
                                 shadowColor : this.query(
                                   serie,
                                   'itemStyle.normal.lineStyle.shadowColor'
@@ -707,6 +710,7 @@ define(function (require) {
                                     ]),
                                     brushType : 'fill',
                                     smooth : this._getSmooth(serie.smooth),
+                                    smoothConstraint : bbox,
                                     color : fillNormalColor
                                             ? fillNormalColor
                                             : zrColor.alpha(defaultColor,0.5)
@@ -726,6 +730,20 @@ define(function (require) {
                     }
                 }
             }
+        },
+        
+        _getBbox: function(seriesIndex, orient) {
+            var bbox = this.component.grid.getBbox();
+            var xMarkMap = this.xMarkMap[seriesIndex];
+            if (orient == 'horizontal') {
+                bbox[0][1] = Math.min(xMarkMap.minY, xMarkMap.maxY);
+                bbox[1][1] = Math.max(xMarkMap.minY, xMarkMap.maxY);
+            }
+            else {
+                bbox[0][0] = Math.min(xMarkMap.minX, xMarkMap.maxX);
+                bbox[1][0] = Math.max(xMarkMap.minX, xMarkMap.maxX);
+            }
+            return bbox;
         },
         
         _isLarge : function(orient, singlePL) {

@@ -31,45 +31,52 @@ define(function (require) {
     }
     
     Grid.prototype = {
-        type : ecConfig.COMPONENT_TYPE_GRID,
+        type: ecConfig.COMPONENT_TYPE_GRID,
 
-        getX : function () {
+        getX: function () {
             return this._x;
         },
 
-        getY : function () {
+        getY: function () {
             return this._y;
         },
 
-        getWidth : function () {
+        getWidth: function () {
             return this._width;
         },
 
-        getHeight : function () {
+        getHeight: function () {
             return this._height;
         },
 
-        getXend : function () {
+        getXend: function () {
             return this._x + this._width;
         },
 
-        getYend : function () {
+        getYend: function () {
             return this._y + this._height;
         },
 
-        getArea : function () {
+        getArea: function () {
             return {
-                x : this._x,
-                y : this._y,
-                width : this._width,
-                height : this._height
+                x: this._x,
+                y: this._y,
+                width: this._width,
+                height: this._height
             };
+        },
+        
+        getBbox: function() {
+            return [
+                [this._x, this._y],
+                [this.getXend(), this.getYend()]
+            ]
         },
         
         /**
          * 实在找不到合适的地方做了，各种粗暴的写法~ -_-
          */
-        refixAxisShape : function(component) {
+        refixAxisShape: function(component) {
             var zeroX;
             var zeroY;
             var axisList = component.xAxis._axisList.concat(component.yAxis._axisList);
@@ -94,7 +101,7 @@ define(function (require) {
             }
         },
         
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption
                 || this._zrWidth != this.zr.getWidth() 
                 || this._zrHeight != this.zr.getHeight()
@@ -132,18 +139,18 @@ define(function (require) {
                 this._y = this.subPixelOptimize(this._y, gridOption.borderWidth);
     
                 this.shapeList.push(new RectangleShape({
-                    zlevel : this._zlevelBase,
-                    hoverable : false,
-                    style : {
-                        x : this._x,
-                        y : this._y,
-                        width : this._width,
-                        height : this._height,
-                        brushType : gridOption.borderWidth > 0 ? 'both' : 'fill',
-                        color : gridOption.backgroundColor,
+                    zlevel: this._zlevelBase,
+                    hoverable: false,
+                    style: {
+                        x: this._x,
+                        y: this._y,
+                        width: this._width,
+                        height: this._height,
+                        brushType: gridOption.borderWidth > 0 ? 'both' : 'fill',
+                        color: gridOption.backgroundColor,
                         strokeColor: gridOption.borderColor,
-                        lineWidth : gridOption.borderWidth
-                        // type : this.option.splitArea.areaStyle.type,
+                        lineWidth: gridOption.borderWidth
+                        // type: this.option.splitArea.areaStyle.type,
                     }
                 }));
                 this.zr.addShape(this.shapeList[0]);
