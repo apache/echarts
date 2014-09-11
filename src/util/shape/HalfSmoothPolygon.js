@@ -68,7 +68,7 @@ define(function (require) {
             }
             if (style.smooth) {
                 var controlPoints = smoothBezier(
-                    pointList.slice(0, -2), style.smooth
+                    pointList.slice(0, -2), style.smooth, false, style.smoothConstraint
                 );
 
                 ctx.moveTo(pointList[0][0], pointList[0][1]);

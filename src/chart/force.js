@@ -15,6 +15,7 @@ define(function (require) {
     
     // 图形依赖
     var LineShape = require('zrender/shape/Line');
+    var ImageShape = require('zrender/shape/Image');
     var IconShape = require('../util/shape/Icon');
 
     var ecConfig = require('../config');
@@ -451,6 +452,17 @@ define(function (require) {
                 shape.style.width = shape.style.height
                     = (this.deepQuery(queryTarget, 'symbolSize') || 0) * 2;
 
+                if (shape.style.iconType.match('image')) {
+                    shape.style.image = shape.style.iconType.replace(
+                        new RegExp('^image:\\/\\/'), ''
+                    );
+                    shape = new ImageShape({
+                        style: shape.style,
+                        highlightStyle: shape.highlightStyle,
+                        clickable: shape.clickable
+                    });
+                }
+
                 // 节点样式
                 for (var k = 0; k < shapeNormalStyle.length; k++) {
                     if (shapeNormalStyle[k]) {
@@ -462,7 +474,7 @@ define(function (require) {
                     if (shapeEmphasisStyle[k]) {
                         zrUtil.merge(shape.highlightStyle, shapeEmphasisStyle[k], true);
                     }
-                } 
+                }
                 
                 // 节点标签样式
                 if (this.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {

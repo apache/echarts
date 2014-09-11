@@ -40,11 +40,11 @@ define(function (require) {
     }
     
     Line.prototype = {
-        type : ecConfig.CHART_TYPE_LINE,
+        type: ecConfig.CHART_TYPE_LINE,
         /**
          * 绘制图形
          */
-        _buildShape : function () {
+        _buildShape: function () {
             var series = this.series;
             this.finalPLMap = {}; // 完成的point list(PL)
             this._sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
@@ -56,27 +56,27 @@ define(function (require) {
 
             // 水平垂直双向series索引 ，position索引到seriesIndex
             var _position2sIndexMap = {
-                top : [],
-                bottom : [],
-                left : [],
-                right : []
+                top: [ ],
+                bottom: [ ],
+                left: [ ],
+                right: [ ]
             };
             var xAxisIndex;
             var yAxisIndex;
             var xAxis;
             var yAxis;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].type == this.type) {
+                if (series[i].type === this.type) {
                     series[i] = this.reformOption(series[i]);
                     xAxisIndex = series[i].xAxisIndex;
                     yAxisIndex = series[i].yAxisIndex;
                     xAxis = this.component.xAxis.getAxis(xAxisIndex);
                     yAxis = this.component.yAxis.getAxis(yAxisIndex);
-                    if (xAxis.type == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                    if (xAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         _position2sIndexMap[xAxis.getPosition()].push(i);
                     }
-                    else if (yAxis.type == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                    else if (yAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         _position2sIndexMap[yAxis.getPosition()].push(i);
                     }
@@ -98,7 +98,7 @@ define(function (require) {
          *
          * @param {number} seriesIndex 系列索引
          */
-        _buildSinglePosition : function (position, seriesArray) {
+        _buildSinglePosition: function (position, seriesArray) {
             var mapData = this._mapData(seriesArray);
             var locationMap = mapData.locationMap;
             var maxDataLength = mapData.maxDataLength;
@@ -126,7 +126,7 @@ define(function (require) {
          * 数据整形
          * 数组位置映射到系列索引
          */
-        _mapData : function (seriesArray) {
+        _mapData: function (seriesArray) {
             var series = this.series;
             var serie;                              // 临时映射变量
             var dataIndex = 0;                      // 堆积数据所在位置映射
@@ -171,7 +171,7 @@ define(function (require) {
 
                 if (this.selectedMap[serieName]) {
                     stackKey = serie.stack || (magicStackKey + seriesArray[i]);
-                    if (typeof stackMap[stackKey] == 'undefined') {
+                    if (stackMap[stackKey] == null) {
                         stackMap[stackKey] = dataIndex;
                         locationMap[dataIndex] = [seriesArray[i]];
                         dataIndex++;
@@ -204,15 +204,15 @@ define(function (require) {
             */
 
             return {
-                locationMap : locationMap,
-                maxDataLength : maxDataLength
+                locationMap: locationMap,
+                maxDataLength: maxDataLength
             };
         },
 
         /**
          * 构建类目轴为水平方向的折线图系列
          */
-        _buildHorizontal : function (seriesArray, maxDataLength, locationMap, xMarkMap) {
+        _buildHorizontal: function (seriesArray, maxDataLength, locationMap, xMarkMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
@@ -233,7 +233,7 @@ define(function (require) {
             var data;
             var value;
             for (var i = 0, l = maxDataLength; i < l; i++) {
-                if (typeof categoryAxis.getNameByIndex(i) == 'undefined') {
+                if (categoryAxis.getNameByIndex(i) == null) {
                     // 系列数据超出类目轴长度
                     break;
                 }
@@ -247,21 +247,21 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
                         curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
                                                 || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
+                                                    min: Number.POSITIVE_INFINITY,
+                                                    max: Number.NEGATIVE_INFINITY,
+                                                    sum: 0,
+                                                    counter: 0,
+                                                    average: 0
                                                 };
-                        if (value == '-') {
+                        if (value === '-') {
                             // 空数据则把正在记录的curPLMap添加到finalPLMap中
                             if (curPLMap[seriesIndex].length > 0) {
                                 this.finalPLMap[seriesIndex] =
@@ -316,8 +316,8 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
@@ -385,7 +385,7 @@ define(function (require) {
         /**
          * 构建类目轴为垂直方向的折线图系列
          */
-        _buildVertical : function (seriesArray, maxDataLength, locationMap, xMarkMap) {
+        _buildVertical: function (seriesArray, maxDataLength, locationMap, xMarkMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
@@ -406,7 +406,7 @@ define(function (require) {
             var data;
             var value;
             for (var i = 0, l = maxDataLength; i < l; i++) {
-                if (typeof categoryAxis.getNameByIndex(i) == 'undefined') {
+                if (categoryAxis.getNameByIndex(i) == null) {
                     // 系列数据超出类目轴长度
                     break;
                 }
@@ -420,21 +420,21 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
                         curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
                                                 || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
+                                                    min: Number.POSITIVE_INFINITY,
+                                                    max: Number.NEGATIVE_INFINITY,
+                                                    sum: 0,
+                                                    counter: 0,
+                                                    average: 0
                                                 };
-                        if (value == '-') {
+                        if (value === '-') {
                             // 空数据则把正在记录的curPLMap添加到finalPLMap中
                             if (curPLMap[seriesIndex].length > 0) {
                                 this.finalPLMap[seriesIndex] =
@@ -489,8 +489,8 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
@@ -559,62 +559,42 @@ define(function (require) {
         /**
          * 生成折线和折线上的拐点
          */
-        _buildBorkenLine : function (seriesArray, pointList, categoryAxis, orient) {
+        _buildBorkenLine: function (seriesArray, pointList, categoryAxis, orient) {
             var series = this.series;
-            var defaultColor;
 
-            // 折线相关
-            var lineWidth;
-            var lineType;
-            var lineColor;
-            var normalColor;
-
-            // 填充相关
-            var isFill;
-            var fillNormalColor;
-
-            var serie;
             var data;
-            var seriesPL;
-            var singlePL;
-            var brokenLineShape;
-            var halfSmoothPolygonShape;
-            
-            var isLarge;
             
             // 堆积层叠需求，反顺序构建
-            var seriesIndex;
             for (var sIdx = seriesArray.length - 1; sIdx >= 0; sIdx--) {
-                seriesIndex = seriesArray[sIdx];
-                serie = series[seriesIndex];
-                seriesPL = pointList[seriesIndex];
-                if (serie.type == this.type && typeof seriesPL != 'undefined') {
-                    defaultColor = this._sIndex2ColorMap[seriesIndex];
-                    // 多级控制
-                    lineWidth = this.query(
+                var seriesIndex = seriesArray[sIdx];
+                var serie = series[seriesIndex];
+                var seriesPL = pointList[seriesIndex];
+                if (serie.type === this.type && seriesPL != null) {
+                    var bbox = this._getBbox(seriesIndex, orient);
+                    var defaultColor = this._sIndex2ColorMap[seriesIndex];
+                    // 折线相关，多级控制
+                    var lineWidth = this.query(
                         serie, 'itemStyle.normal.lineStyle.width'
                     );
-                    lineType = this.query(
+                    var lineType = this.query(
                         serie, 'itemStyle.normal.lineStyle.type'
                     );
-                    lineColor = this.query(
+                    var lineColor = this.query(
                         serie, 'itemStyle.normal.lineStyle.color'
                     );
-                    normalColor = this.getItemStyleColor(
+                    var normalColor = this.getItemStyleColor(
                         this.query(serie, 'itemStyle.normal.color'), seriesIndex, -1
                     );
 
-                    isFill = typeof this.query(
-                        serie, 'itemStyle.normal.areaStyle'
-                    ) != 'undefined';
-
-                    fillNormalColor = this.query(
+                    // 填充相关
+                    var isFill = this.query(serie, 'itemStyle.normal.areaStyle') != null;
+                    var fillNormalColor = this.query(
                         serie, 'itemStyle.normal.areaStyle.color'
                     );
 
                     for (var i = 0, l = seriesPL.length; i < l; i++) {
-                        singlePL = seriesPL[i];
-                        isLarge = this._isLarge(orient, singlePL);
+                        var singlePL = seriesPL[i];
+                        var isLarge = this._isLarge(orient, singlePL);
                         if (!isLarge) { // 非大数据模式才显示拐点symbol
                             for (var j = 0, k = singlePL.length; j < k; j++) {
                                 data = serie.data[singlePL[j][2]];
@@ -648,18 +628,19 @@ define(function (require) {
                         }
                         
                         // 折线图
-                        brokenLineShape = new BrokenLineShape({
-                            zlevel : this._zlevelBase,
-                            style : {
+                        var brokenLineShape = new BrokenLineShape({
+                            zlevel: this._zlevelBase,
+                            style: {
                                 miterLimit: lineWidth,
-                                pointList : singlePL,
-                                strokeColor : lineColor
-                                              || normalColor 
-                                              || defaultColor,
-                                lineWidth : lineWidth,
-                                lineType : lineType,
-                                smooth : this._getSmooth(serie.smooth),
-                                shadowColor : this.query(
+                                pointList: singlePL,
+                                strokeColor: lineColor
+                                             || normalColor 
+                                             || defaultColor,
+                                lineWidth: lineWidth,
+                                lineType: lineType,
+                                smooth: this._getSmooth(serie.smooth),
+                                smoothConstraint: bbox,
+                                shadowColor: this.query(
                                   serie,
                                   'itemStyle.normal.lineStyle.shadowColor'
                                 ),
@@ -676,10 +657,10 @@ define(function (require) {
                                   'itemStyle.normal.lineStyle.shadowOffsetY'
                                 )
                             },
-                            hoverable : false,
-                            _main : true,
-                            _seriesIndex : seriesIndex,
-                            _orient : orient
+                            hoverable: false,
+                            _main: true,
+                            _seriesIndex: seriesIndex,
+                            _orient: orient
                         });
                         
                         ecData.pack(
@@ -691,11 +672,11 @@ define(function (require) {
                         this.shapeList.push(brokenLineShape);
                         
                         if (isFill) {
-                            halfSmoothPolygonShape = new HalfSmoothPolygonShape({
-                                zlevel : this._zlevelBase,
-                                style : {
+                            var halfSmoothPolygonShape = new HalfSmoothPolygonShape({
+                                zlevel: this._zlevelBase,
+                                style: {
                                     miterLimit: lineWidth,
-                                    pointList : zrUtil.clone(singlePL).concat([
+                                    pointList: zrUtil.clone(singlePL).concat([
                                         [
                                             singlePL[singlePL.length - 1][4],
                                             singlePL[singlePL.length - 1][5]
@@ -705,16 +686,17 @@ define(function (require) {
                                             singlePL[0][5]
                                         ]
                                     ]),
-                                    brushType : 'fill',
-                                    smooth : this._getSmooth(serie.smooth),
-                                    color : fillNormalColor
-                                            ? fillNormalColor
-                                            : zrColor.alpha(defaultColor,0.5)
+                                    brushType: 'fill',
+                                    smooth: this._getSmooth(serie.smooth),
+                                    smoothConstraint: bbox,
+                                    color: fillNormalColor
+                                           ? fillNormalColor
+                                           : zrColor.alpha(defaultColor,0.5)
                                 },
-                                hoverable : false,
-                                _main : true,
-                                _seriesIndex : seriesIndex,
-                                _orient : orient
+                                hoverable: false,
+                                _main: true,
+                                _seriesIndex: seriesIndex,
+                                _orient: orient
                             });
                             ecData.pack(
                                 halfSmoothPolygonShape,
@@ -728,12 +710,26 @@ define(function (require) {
             }
         },
         
-        _isLarge : function(orient, singlePL) {
+        _getBbox: function(seriesIndex, orient) {
+            var bbox = this.component.grid.getBbox();
+            var xMarkMap = this.xMarkMap[seriesIndex];
+            if (orient === 'horizontal') {
+                bbox[0][1] = Math.min(xMarkMap.minY, xMarkMap.maxY);
+                bbox[1][1] = Math.max(xMarkMap.minY, xMarkMap.maxY);
+            }
+            else {
+                bbox[0][0] = Math.min(xMarkMap.minX, xMarkMap.maxX);
+                bbox[1][0] = Math.max(xMarkMap.minX, xMarkMap.maxX);
+            }
+            return bbox;
+        },
+        
+        _isLarge: function(orient, singlePL) {
             if (singlePL.length < 2) {
                 return false;
             }
             else {
-                return orient == 'horizontal'
+                return orient === 'horizontal'
                        ? (Math.abs(singlePL[0][0] - singlePL[1][0]) < 0.5)
                        : (Math.abs(singlePL[0][1] - singlePL[1][1]) < 0.5);
             }
@@ -742,9 +738,9 @@ define(function (require) {
         /**
          * 大规模pointList优化 
          */
-        _getLargePointList : function(orient, singlePL) {
+        _getLargePointList: function(orient, singlePL) {
             var total;
-            if (orient == 'horizontal') {
+            if (orient === 'horizontal') {
                 total = this.component.grid.getWidth();
             }
             else {
@@ -759,11 +755,11 @@ define(function (require) {
             return newList;
         },
         
-        _getSmooth : function (isSmooth/*, pointList, orient*/) {
+        _getSmooth: function (isSmooth/*, pointList, orient*/) {
             if (isSmooth) {
                 /* 不科学啊，发现0.3通用了
                 var delta;
-                if (orient == 'horizontal') {
+                if (orient === 'horizontal') {
                     delta = Math.abs(pointList[0][0] - pointList[1][0]);
                 }
                 else {
@@ -780,7 +776,7 @@ define(function (require) {
         /**
          * 生成空数据所需的可计算提示图形
          */
-        _getCalculableItem : function (seriesIndex, dataIndex, name, x, y, orient) {
+        _getCalculableItem: function (seriesIndex, dataIndex, name, x, y, orient) {
             var series = this.series;
             var color = series[seriesIndex].calculableHolderColor
                         || this.ecTheme.calculableHolderColor;
@@ -802,7 +798,7 @@ define(function (require) {
         /**
          * 生成折线图上的拐点图形
          */
-        _getSymbol : function (seriesIndex, dataIndex, name, x, y, orient) {
+        _getSymbol: function (seriesIndex, dataIndex, name, x, y, orient) {
             var series = this.series;
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
@@ -813,7 +809,7 @@ define(function (require) {
                 this._sIndex2ShapeMap[seriesIndex], 
                 this._sIndex2ColorMap[seriesIndex],
                 '#fff',
-                orient == 'vertical' ? 'horizontal' : 'vertical' // 翻转
+                orient === 'vertical' ? 'horizontal' : 'vertical' // 翻转
             );
             itemShape.zlevel = this._zlevelBase + 1;
             
@@ -826,14 +822,14 @@ define(function (require) {
         },
 
         // 位置转换
-        getMarkCoord : function (seriesIndex, mpData) {
+        getMarkCoord: function (seriesIndex, mpData) {
             var serie = this.series[seriesIndex];
             var xMarkMap = this.xMarkMap[seriesIndex];
             var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex);
             var yAxis = this.component.yAxis.getAxis(serie.yAxisIndex);
             
             if (mpData.type
-                && (mpData.type == 'max' || mpData.type == 'min' || mpData.type == 'average')
+                && (mpData.type === 'max' || mpData.type === 'min' || mpData.type === 'average')
             ) {
                 // 特殊值内置支持
                 return [
@@ -858,7 +854,7 @@ define(function (require) {
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption;
                 this.series = newOption.series;
@@ -868,7 +864,7 @@ define(function (require) {
             this._buildShape();
         },
         
-        ontooltipHover : function (param, tipShape) {
+        ontooltipHover: function (param, tipShape) {
             var seriesIndex = param.seriesIndex;
             var dataIndex = param.dataIndex;
             var seriesPL;
@@ -880,7 +876,7 @@ define(function (require) {
                     for (var i = 0, l = seriesPL.length; i < l; i++) {
                         singlePL = seriesPL[i];
                         for (var j = 0, k = singlePL.length; j < k; j++) {
-                            if (dataIndex == singlePL[j][2]) {
+                            if (dataIndex === singlePL[j][2]) {
                                 tipShape.push(this._getSymbol(
                                     seriesIndex[len],   // seriesIndex
                                     singlePL[j][2],     // dataIndex
@@ -899,7 +895,7 @@ define(function (require) {
         /**
          * 动态数据增加动画 
          */
-        addDataAnimation : function (params) {
+        addDataAnimation: function (params) {
             var series = this.series;
             var aniMap = {}; // seriesIndex索引参数
             for (var i = 0, l = params.length; i < l; i++) {
@@ -922,11 +918,11 @@ define(function (require) {
                         dx = Math.abs(pointList[0][0] - pointList[1][0]);
                         dy = Math.abs(pointList[0][1] - pointList[1][1]);
                         isHorizontal = 
-                            this.shapeList[i]._orient == 'horizontal';
+                            this.shapeList[i]._orient === 'horizontal';
                             
                         if (aniMap[seriesIndex][2]) {
                             // 队头加入删除末尾
-                            if (this.shapeList[i].type == 'polygon') {
+                            if (this.shapeList[i].type === 'polygon') {
                                 //区域图
                                 var len = pointList.length;
                                 this.shapeList[i].style.pointList[len - 3]
@@ -948,7 +944,7 @@ define(function (require) {
                         else {
                             // 队尾加入删除头部
                             this.shapeList[i].style.pointList.shift();
-                            if (this.shapeList[i].type == 'polygon') {
+                            if (this.shapeList[i].type === 'polygon') {
                                 //区域图
                                 var targetPoint = 
                                     this.shapeList[i].style.pointList.pop();
@@ -965,7 +961,7 @@ define(function (require) {
                         this.zr.modShape(
                             this.shapeList[i].id, 
                             {
-                                style : {
+                                style: {
                                     pointList: this.shapeList[i].style.pointList
                                 }
                             },
@@ -976,7 +972,7 @@ define(function (require) {
                         // 拐点动画
                         if (aniMap[seriesIndex][2] 
                             && this.shapeList[i]._dataIndex 
-                                == series[seriesIndex].data.length - 1
+                                === series[seriesIndex].data.length - 1
                         ) {
                             // 队头加入删除末尾
                             this.zr.delShape(this.shapeList[i].id);
@@ -994,7 +990,7 @@ define(function (require) {
                     this.zr.animate(this.shapeList[i].id, '')
                         .when(
                             500,
-                            {position : [x, y]}
+                            { position: [ x, y ] }
                         )
                         .start();
                 }
@@ -1021,7 +1017,7 @@ define(function (require) {
             y -= 1;
             symbol = 'star';
         } 
-        else if (symbol == 'rectangle' || symbol == 'arrow') {
+        else if (symbol === 'rectangle' || symbol === 'arrow') {
             x += (width - height) / 2;
             width = height;
         }
@@ -1046,12 +1042,12 @@ define(function (require) {
             ctx.lineTo(x2 + style.width, y2 + dy);
             
             symbol(ctx, {
-                x : x + 4,
-                y : y + 4,
-                width : width - 8,
-                height : height - 8,
-                n : dy,
-                image : imageLocation
+                x: x + 4,
+                y: y + 4,
+                width: width - 8,
+                height: height - 8,
+                n: dy,
+                image: imageLocation
             });
             
         }

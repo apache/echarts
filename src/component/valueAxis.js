@@ -43,8 +43,8 @@ define(function (require) {
     }
     
     ValueAxis.prototype = {
-        type : ecConfig.COMPONENT_TYPE_AXIS_VALUE,
-        _buildShape : function () {
+        type: ecConfig.COMPONENT_TYPE_AXIS_VALUE,
+        _buildShape: function () {
             this._hasData = false;
             this._calculateValue();
             if (!this._hasData) {
@@ -62,7 +62,7 @@ define(function (require) {
         },
 
         // 小标记
-        _buildAxisTick : function () {
+        _buildAxisTick: function () {
             var axShape;
             var data       = this._valueList;
             var dataLength = this._valueList.length;
@@ -73,7 +73,7 @@ define(function (require) {
 
             if (this.isHorizontal()) {
                 // 横向
-                var yPosition = this.option.position == 'bottom'
+                var yPosition = this.option.position === 'bottom'
                         ? (tickOption.inside 
                            ? (this.grid.getYend() - length - 1) : (this.grid.getYend()) + 1)
                         : (tickOption.inside 
@@ -83,16 +83,16 @@ define(function (require) {
                     // 亚像素优化
                     x = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        _axisShape : 'axisTick',
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            xStart : x,
-                            yStart : yPosition,
-                            xEnd : x,
-                            yEnd : yPosition + length,
-                            strokeColor : color,
-                            lineWidth : lineWidth
+                        _axisShape: 'axisTick',
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            xStart: x,
+                            yStart: yPosition,
+                            xEnd: x,
+                            yEnd: yPosition + length,
+                            strokeColor: color,
+                            lineWidth: lineWidth
                         }
                     };
                     this.shapeList.push(new LineShape(axShape));
@@ -100,7 +100,7 @@ define(function (require) {
             }
             else {
                 // 纵向
-                var xPosition = this.option.position == 'left'
+                var xPosition = this.option.position === 'left'
                     ? (tickOption.inside 
                        ? (this.grid.getX() + 1) : (this.grid.getX() - length - 1))
                     : (tickOption.inside 
@@ -111,16 +111,16 @@ define(function (require) {
                     // 亚像素优化
                     y = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        _axisShape : 'axisTick',
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            xStart : xPosition,
-                            yStart : y,
-                            xEnd : xPosition + length,
-                            yEnd : y,
-                            strokeColor : color,
-                            lineWidth : lineWidth
+                        _axisShape: 'axisTick',
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            xStart: xPosition,
+                            yStart: y,
+                            xEnd: xPosition + length,
+                            yEnd: y,
+                            strokeColor: color,
+                            lineWidth: lineWidth
                         }
                     };
                     this.shapeList.push(new LineShape(axShape));
@@ -129,7 +129,7 @@ define(function (require) {
         },
 
         // 坐标轴文本
-        _buildAxisLabel : function () {
+        _buildAxisLabel: function () {
             var axShape;
             var data       = this._valueList;
             var dataLength = this._valueList.length;
@@ -142,7 +142,7 @@ define(function (require) {
                 // 横向
                 var yPosition;
                 var baseLine;
-                if (this.option.position == 'bottom') {
+                if (this.option.position === 'bottom') {
                     yPosition = this.grid.getYend() + margin;
                     baseLine = 'top';
                 }
@@ -153,24 +153,24 @@ define(function (require) {
 
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            x : this.getCoord(data[i]),
-                            y : yPosition,
-                            color : typeof textStyle.color == 'function'
-                                    ? textStyle.color(data[i]) : textStyle.color,
-                            text : this._valueLabel[i],
-                            textFont : this.getFont(textStyle),
-                            textAlign : textStyle.align || 'center',
-                            textBaseline : textStyle.baseline || baseLine
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            x: this.getCoord(data[i]),
+                            y: yPosition,
+                            color: typeof textStyle.color === 'function'
+                                   ? textStyle.color(data[i]) : textStyle.color,
+                            text: this._valueLabel[i],
+                            textFont: this.getFont(textStyle),
+                            textAlign: textStyle.align || 'center',
+                            textBaseline: textStyle.baseline || baseLine
                         }
                     };
                     if (rotate) {
                         axShape.style.textAlign = rotate > 0
-                                                  ? (this.option.position == 'bottom'
+                                                  ? (this.option.position === 'bottom'
                                                     ? 'right' : 'left')
-                                                  : (this.option.position == 'bottom'
+                                                  : (this.option.position === 'bottom'
                                                     ? 'left' : 'right');
                         axShape.rotation = [
                             rotate * Math.PI / 180,
@@ -187,7 +187,7 @@ define(function (require) {
                 // 纵向
                 var xPosition;
                 var align;
-                if (this.option.position == 'left') {
+                if (this.option.position === 'left') {
                     xPosition = this.grid.getX() - margin;
                     align = 'right';
                 }
@@ -198,23 +198,23 @@ define(function (require) {
 
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            x : xPosition,
-                            y : this.getCoord(data[i]),
-                            color : typeof textStyle.color == 'function'
-                                    ? textStyle.color(data[i]) : textStyle.color,
-                            text : this._valueLabel[i],
-                            textFont : this.getFont(textStyle),
-                            textAlign : textStyle.align || align,
-                            textBaseline : textStyle.baseline 
-                                           || (i === 0 && this.option.name !== '')
-                                               ? 'bottom'
-                                               : (i == (dataLength - 1) 
-                                                  && this.option.name !== '')
-                                                 ? 'top'
-                                                 : 'middle'
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            x: xPosition,
+                            y: this.getCoord(data[i]),
+                            color: typeof textStyle.color === 'function'
+                                   ? textStyle.color(data[i]) : textStyle.color,
+                            text: this._valueLabel[i],
+                            textFont: this.getFont(textStyle),
+                            textAlign: textStyle.align || align,
+                            textBaseline: textStyle.baseline 
+                                          || (i === 0 && this.option.name !== '')
+                                              ? 'bottom'
+                                              : (i === (dataLength - 1) 
+                                                 && this.option.name !== '')
+                                                ? 'top'
+                                                : 'middle'
                         }
                     };
                     
@@ -232,7 +232,7 @@ define(function (require) {
             }
         },
 
-        _buildSplitLine : function () {
+        _buildSplitLine: function () {
             var axShape;
             var data        = this._valueList;
             var dataLength  = this._valueList.length;
@@ -253,16 +253,16 @@ define(function (require) {
                     // 亚像素优化
                     x = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            xStart : x,
-                            yStart : sy,
-                            xEnd : x,
-                            yEnd : ey,
-                            strokeColor : color[i % colorLength],
-                            lineType : lineType,
-                            lineWidth : lineWidth
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            xStart: x,
+                            yStart: sy,
+                            xEnd: x,
+                            yEnd: ey,
+                            strokeColor: color[i % colorLength],
+                            lineType: lineType,
+                            lineWidth: lineWidth
                         }
                     };
                     this.shapeList.push(new LineShape(axShape));
@@ -279,16 +279,16 @@ define(function (require) {
                     // 亚像素优化
                     y = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            xStart : sx,
-                            yStart : y,
-                            xEnd : ex,
-                            yEnd : y,
-                            strokeColor : color[i % colorLength],
-                            lineType : lineType,
-                            lineWidth : lineWidth
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            xStart: sx,
+                            yStart: y,
+                            xEnd: ex,
+                            yEnd: y,
+                            strokeColor: color[i % colorLength],
+                            lineType: lineType,
+                            lineWidth: lineWidth
                         }
                     };
                     this.shapeList.push(new LineShape(axShape));
@@ -296,22 +296,22 @@ define(function (require) {
             }
         },
 
-        _buildSplitArea : function () {
+        _buildSplitArea: function () {
             var axShape;
             var color = this.option.splitArea.areaStyle.color;
 
             if (!(color instanceof Array)) {
                 // 非数组一律认为是单一颜色的字符串，单一颜色则用一个背景，颜色错误不负责啊！！！
                 axShape = {
-                    zlevel : this._zlevelBase,
-                    hoverable : false,
-                    style : {
-                        x : this.grid.getX(),
-                        y : this.grid.getY(),
-                        width : this.grid.getWidth(),
-                        height : this.grid.getHeight(),
-                        color : color
-                        // type : this.option.splitArea.areaStyle.type,
+                    zlevel: this._zlevelBase,
+                    hoverable: false,
+                    style: {
+                        x: this.grid.getX(),
+                        y: this.grid.getY(),
+                        width: this.grid.getWidth(),
+                        height: this.grid.getHeight(),
+                        color: color
+                        // type: this.option.splitArea.areaStyle.type,
                     }
                 };
                 this.shapeList.push(new RectangleShape(axShape));
@@ -334,15 +334,15 @@ define(function (require) {
                                ? this.getCoord(data[i])
                                : this.grid.getXend();
                         axShape = {
-                            zlevel : this._zlevelBase,
-                            hoverable : false,
-                            style : {
-                                x : lastX,
-                                y : y,
-                                width : curX - lastX,
-                                height : height,
-                                color : color[i % colorLength]
-                                // type : this.option.splitArea.areaStyle.type,
+                            zlevel: this._zlevelBase,
+                            hoverable: false,
+                            style: {
+                                x: lastX,
+                                y: y,
+                                width: curX - lastX,
+                                height: height,
+                                color: color[i % colorLength]
+                                // type: this.option.splitArea.areaStyle.type,
                             }
                         };
                         this.shapeList.push(new RectangleShape(axShape));
@@ -361,15 +361,15 @@ define(function (require) {
                                ? this.getCoord(data[i])
                                : this.grid.getY();
                         axShape = {
-                            zlevel : this._zlevelBase,
-                            hoverable : false,
-                            style : {
-                                x : x,
-                                y : curY,
-                                width : width,
-                                height : lastYend - curY,
-                                color : color[i % colorLength]
-                                // type : this.option.splitArea.areaStyle.type
+                            zlevel: this._zlevelBase,
+                            hoverable: false,
+                            style: {
+                                x: x,
+                                y: curY,
+                                width: width,
+                                height: lastYend - curY,
+                                color: color[i % colorLength]
+                                // type: this.option.splitArea.areaStyle.type
                             }
                         };
                         this.shapeList.push(new RectangleShape(axShape));
@@ -382,7 +382,7 @@ define(function (require) {
         /**
          * 极值计算
          */
-        _calculateValue : function () {
+        _calculateValue: function () {
             if (isNaN(this.option.min - 0) || isNaN(this.option.max - 0)) {
                 // 有一个没指定都得算
                 // 数据整形
@@ -421,10 +421,10 @@ define(function (require) {
                         data[key] = data[key] || [];
                         oriData = this.series[i].data;
                         for (var j = 0, k = oriData.length; j < k; j++) {
-                            value = typeof oriData[j].value != 'undefined'
+                            value = oriData[j].value != null
                                     ? oriData[j].value
                                     : oriData[j];
-                            if (this.series[i].type == ecConfig.CHART_TYPE_SCATTER) {
+                            if (this.series[i].type === ecConfig.CHART_TYPE_SCATTER) {
                                 if (this.option.xAxisIndex != -1) {
                                     data[key].push(value[0]);
                                 }
@@ -432,7 +432,7 @@ define(function (require) {
                                     data[key].push(value[1]);
                                 }
                             }
-                            else if (this.series[i].type == ecConfig.CHART_TYPE_K) {
+                            else if (this.series[i].type === ecConfig.CHART_TYPE_K) {
                                 data[key].push(value[0]);
                                 data[key].push(value[1]);
                                 data[key].push(value[2]);
@@ -452,15 +452,15 @@ define(function (require) {
                         data[key] = data[key] || [];  // scale下还需要记录每一个量
                         oriData = this.series[i].data;
                         for (var j = 0, k = oriData.length; j < k; j++) {
-                            value = typeof oriData[j].value != 'undefined'
+                            value = oriData[j].value != null
                                     ? oriData[j].value
                                     : oriData[j];
-                            if (value == '-') {
+                            if (value === '-') {
                                 continue;
                             }
                             value = value - 0;
                             if (value >= 0) {
-                                if (typeof data[keyP][j] != 'undefined') {
+                                if (data[keyP][j] != null) {
                                     data[keyP][j] += value;
                                 }
                                 else {
@@ -468,7 +468,7 @@ define(function (require) {
                                 }
                             }
                             else {
-                                if (typeof data[keyN][j] != 'undefined') {
+                                if (data[keyN][j] != null) {
                                     data[keyN][j] += value;
                                 }
                                 else {
@@ -515,7 +515,7 @@ define(function (require) {
                 this._max = isNaN(this.option.max - 0)
                        ? (this._max + Math.abs(gap * this.option.boundaryGap[1]))
                        : (this.option.max - 0);    // 指定max忽略boundaryGay[1]
-                if (this._min == this._max) {
+                if (this._min === this._max) {
                     if (this._max === 0) {
                         // 修复全0数据
                         this._max = this.option.power > 0 ? this.option.power : 1;
@@ -614,7 +614,7 @@ define(function (require) {
             (this._min == -2.4 && this._max == 0.6) ? 'success' : 'failed');
          * --------
          */
-        _reformValue : function (scale) {
+        _reformValue: function (scale) {
             var splitNumber = this.option.splitNumber;
             var precision = this.option.precision;
             var splitGap;
@@ -692,7 +692,7 @@ define(function (require) {
                 // 正数部分的分隔数
                 var partSplitNumber = Math.round(this._max / total * splitNumber);
                 // 修正数据范围极度偏正向，留给负数一个
-                partSplitNumber -= (partSplitNumber == splitNumber ? 1 : 0);
+                partSplitNumber -= (partSplitNumber === splitNumber ? 1 : 0);
                 // 修正数据范围极度偏负向，留给正数一个
                 partSplitNumber += partSplitNumber === 0 ? 1 : 0;
                 splitGap = (Math.ceil(Math.max(
@@ -724,7 +724,7 @@ define(function (require) {
             this._reformLabelData();
         },
         
-        _customerValue : function () {
+        _customerValue: function () {
             var splitNumber = this.option.splitNumber;
             var precision = this.option.precision;
             var splitGap = (this._max - this._min) / splitNumber;
@@ -736,15 +736,15 @@ define(function (require) {
             this._reformLabelData();
         },
 
-        _reformLabelData : function () {
+        _reformLabelData: function () {
             this._valueLabel = [];
             var formatter = this.option.axisLabel.formatter;
             if (formatter) {
                 for (var i = 0, l = this._valueList.length; i < l; i++) {
-                    if (typeof formatter == 'function') {
+                    if (typeof formatter === 'function') {
                         this._valueLabel.push(formatter.call(this.myChart, this._valueList[i]));
                     }
-                    else if (typeof formatter == 'string') {
+                    else if (typeof formatter === 'string') {
                         this._valueLabel.push(
                             formatter.replace('{value}',this._valueList[i])
                         );
@@ -760,7 +760,7 @@ define(function (require) {
 
         },
         
-        getExtremum : function () {
+        getExtremum: function () {
             this._calculateValue();
             return {
                 min: this._min,
@@ -771,7 +771,7 @@ define(function (require) {
         /**
          * 刷新
          */
-        refresh : function (newOption, newSeries) {
+        refresh: function (newOption, newSeries) {
             if (newOption) {
                 this.option = this.reformOption(newOption);
                 // 通用字体设置
@@ -788,7 +788,7 @@ define(function (require) {
         },
 
         // 根据值换算位置
-        getCoord : function (value) {
+        getCoord: function (value) {
             value = value < this._min ? this._min : value;
             value = value > this._max ? this._max : value;
 
@@ -811,14 +811,14 @@ define(function (require) {
             return result;
             // Math.floor可能引起一些偏差，但性能会更好
             /* 准确更重要
-            return (value == this._min || value == this._max)
+            return (value === this._min || value === this._max)
                    ? result
                    : Math.floor(result);
             */
         },
         
         // 根据值换算绝对大小
-        getCoordSize : function (value) {
+        getCoordSize: function (value) {
             if (!this.isHorizontal()) {
                 // 纵向
                 return Math.abs(value / (this._max - this._min) * this.grid.getHeight());
@@ -830,7 +830,7 @@ define(function (require) {
         },
         
         // 根据位置换算值
-        getValueFromCoord : function(coord) {
+        getValueFromCoord: function(coord) {
             var result;
             if (!this.isHorizontal()) {
                 // 纵向

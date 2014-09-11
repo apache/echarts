@@ -65,7 +65,7 @@ define(function (require) {
     }
 
     var mapParams = {
-        'none' : {
+        'none': {
             getGeoJson: function(callback) {
                 callback({
                     type: 'FeatureCollection',
@@ -97,10 +97,10 @@ define(function (require) {
                 });
             }
         },
-        '南海诸岛' : {
-            textCoord : [126, 25],
-            getPath : function (leftTop, scale) {
-                // scale.x : width  = 10.51 : 64
+        '南海诸岛': {
+            textCoord: [126, 25],
+            getPath: function (leftTop, scale) {
+                // scale.x: width  = 10.51 : 64
                 var pList = [
                     [
                         [0,3.5],[7,11.2],[15,11.9],[30,7],[42,0.7],[52,0.7],
@@ -402,7 +402,7 @@ define(function (require) {
     };
     
     return {
-        decode : decode,
-        params : mapParams
+        decode: decode,
+        params: mapParams
     };
 });

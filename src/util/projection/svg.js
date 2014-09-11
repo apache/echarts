@@ -25,10 +25,10 @@ define(function(require) {
         var width = toFloat(svgNode.getAttribute('width'));
         var height = toFloat(svgNode.getAttribute('height'));
         return {
-            left : x,
-            top : y,
-            width : width,
-            height : height
+            left: x,
+            top: y,
+            width: width,
+            height: height
         };
     }
     
@@ -44,7 +44,7 @@ define(function(require) {
                     // Common attributes
                     obj.scale = scale;
                     obj.properties = {
-                        name : root.getAttribute('name') || ''
+                        name: root.getAttribute('name') || ''
                     };
                     obj.id = root.id;
                     extendCommonAttributes(obj, root);
@@ -126,11 +126,11 @@ define(function(require) {
     var shapeBuilders = {
         path: function(xmlNode, scale) {
             var path = xmlNode.getAttribute('d');
-            var rect = PathShape.prototype.getRect({path : path});
+            var rect = PathShape.prototype.getRect({ path : path });
             return {
                 shapeType: 'path',
-                path : path,
-                cp : [
+                path: path,
+                cp: [
                     (rect.x + rect.width / 2) * scale[0], 
                     (rect.y + rect.height / 2) * scale[1]
                 ]
@@ -149,7 +149,7 @@ define(function(require) {
                 y: y,
                 width: width,
                 height: height,
-                cp : [
+                cp: [
                     (x + width / 2) * scale[0], 
                     (y + height / 2) * scale[1]
                 ]
@@ -168,7 +168,7 @@ define(function(require) {
                 yStart: y1,
                 xEnd: x2,
                 yEnd: y2,
-                cp : [
+                cp: [
                     (x1 + x2) * 0.5 * scale[0], 
                     (y1 + y2) * 0.5 * scale[1]
                 ]
@@ -231,7 +231,7 @@ define(function(require) {
                 return {
                     shapeType: 'polygon',
                     pointList: points,
-                    cp : [
+                    cp: [
                         (min[0] + max[0]) / 2 * scale[0],
                         (min[1] + max[1]) / 2 * scale[0]
                     ]
@@ -246,9 +246,9 @@ define(function(require) {
     };
     
     return {
-        getBbox : getBbox,
-        geoJson2Path : geoJson2Path,
-        pos2geo : pos2geo,
-        geo2pos : geo2pos
+        getBbox: getBbox,
+        geoJson2Path: geoJson2Path,
+        pos2geo: pos2geo,
+        geo2pos: geo2pos
     };
 }); 

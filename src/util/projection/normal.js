@@ -48,10 +48,10 @@ define(function() {
         }
 
         json.srcSize = {
-            left : convertorParse.xmin.toFixed(4)*1,
-            top : convertorParse.ymin.toFixed(4)*1,
-            width : (convertorParse.xmax - convertorParse.xmin).toFixed(4)*1,
-            height : (convertorParse.ymax - convertorParse.ymin).toFixed(4)*1
+            left: convertorParse.xmin.toFixed(4)*1,
+            top: convertorParse.ymin.toFixed(4)*1,
+            width: (convertorParse.xmax - convertorParse.xmin).toFixed(4)*1,
+            height: (convertorParse.ymax - convertorParse.ymin).toFixed(4)*1
         };
 
         return json;
@@ -59,13 +59,13 @@ define(function() {
 
     var convertor = {
         //调整俄罗斯东部到地图右侧与俄罗斯相连
-        formatPoint : function (p) {
+        formatPoint: function (p) {
             return [
                 ((p[0] < -168.5 && p[1] > 63.8) ? p[0] + 360 : p[0]) + 168.5, 
                 90 - p[1]
             ];
         },
-        makePoint : function (p) {
+        makePoint: function (p) {
             var self = this;
             var point = self.formatPoint(p);
             // for cp
@@ -79,11 +79,11 @@ define(function() {
                     + convertor.offset.top;
             return [x, y];
         },
-        Point : function (coordinates) {
+        Point: function (coordinates) {
             coordinates = this.makePoint(coordinates);
             return coordinates.join(',');
         },
-        LineString : function (coordinates) {
+        LineString: function (coordinates) {
             var str = '';
             var point;
             for (var i = 0, len = coordinates.length; i < len; i++) {
@@ -96,28 +96,28 @@ define(function() {
             }
             return str;
         },
-        Polygon : function (coordinates) {
+        Polygon: function (coordinates) {
             var str = '';
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 str = str + convertor.LineString(coordinates[i]) + 'z';
             }
             return str;
         },
-        MultiPoint : function (coordinates) {
+        MultiPoint: function (coordinates) {
             var arr = [];
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 arr.push(convertor.Point(coordinates[i]));
             }
             return arr;
         },
-        MultiLineString : function (coordinates) {
+        MultiLineString: function (coordinates) {
             var str = '';
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 str += convertor.LineString(coordinates[i]);
             }
             return str;
         },
-        MultiPolygon : function (coordinates) {
+        MultiPolygon: function (coordinates) {
             var str = '';
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 str += convertor.Polygon(coordinates[i]);
@@ -127,9 +127,9 @@ define(function() {
     };
     
     var convertorParse = {
-        formatPoint : convertor.formatPoint,
+        formatPoint: convertor.formatPoint,
 
-        makePoint : function (p) {
+        makePoint: function (p) {
             var self = this;
             var point = self.formatPoint(p);
             var x = point[0];
@@ -139,30 +139,30 @@ define(function() {
             if (self.ymin > y) { self.ymin = y; }
             if (self.ymax < y) { self.ymax = y; }
         },
-        Point : function (coordinates) {
+        Point: function (coordinates) {
             this.makePoint(coordinates);
         },
-        LineString : function (coordinates) {
+        LineString: function (coordinates) {
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 this.makePoint(coordinates[i]);
             }
         },
-        Polygon : function (coordinates) {
+        Polygon: function (coordinates) {
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 this.LineString(coordinates[i]);
             }
         },
-        MultiPoint : function (coordinates) {
+        MultiPoint: function (coordinates) {
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 this.Point(coordinates[i]);
             }
         },
-        MultiLineString : function (coordinates) {
+        MultiLineString: function (coordinates) {
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 this.LineString(coordinates[i]);
             }
         },
-        MultiPolygon : function (coordinates) {
+        MultiPolygon: function (coordinates) {
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 this.Polygon(coordinates[i]);
             }
@@ -179,10 +179,10 @@ define(function() {
         }
         
         transform.offset = {
-            x : json.srcSize.left,
-            y : json.srcSize.top,
-            left : transform.OffsetLeft || 0,
-            top : transform.OffsetTop || 0
+            x: json.srcSize.left,
+            y: json.srcSize.top,
+            left: transform.OffsetLeft || 0,
+            top: transform.OffsetTop || 0
         };
 
         convertor.scale = transform.scale;
@@ -218,23 +218,23 @@ define(function() {
             shapeType = gm.type;
             shapeCoordinates = gm.coordinates;
             convertor._bbox = {
-                xmin : 360,
-                xmax : -360,
-                ymin : 180,
-                ymax : -180
+                xmin: 360,
+                xmax: -360,
+                ymin: 180,
+                ymax: -180
             };
             str = convertor[shapeType](shapeCoordinates);
             pathArray.push({
-                //type : shapeType,
-                path : str,
-                cp : shape.properties.cp
-                     ? convertor.makePoint(shape.properties.cp)
-                     : convertor.makePoint([
-                            (convertor._bbox.xmin + convertor._bbox.xmax) / 2,
-                            (convertor._bbox.ymin + convertor._bbox.ymax) / 2
-                       ]),
-                properties : shape.properties,
-                id : shape.id
+                // type: shapeType,
+                path: str,
+                cp: shape.properties.cp
+                    ? convertor.makePoint(shape.properties.cp)
+                    : convertor.makePoint([
+                           (convertor._bbox.xmin + convertor._bbox.xmax) / 2,
+                           (convertor._bbox.ymin + convertor._bbox.ymax) / 2
+                      ]),
+                properties: shape.properties,
+                id: shape.id
             });
         }
 
@@ -276,9 +276,9 @@ define(function() {
     }
     
     return {
-        getBbox : getBbox,
-        geoJson2Path : geoJson2Path,
-        pos2geo : pos2geo,
-        geo2pos : geo2pos
+        getBbox: getBbox,
+        geoJson2Path: geoJson2Path,
+        pos2geo: pos2geo,
+        geo2pos: geo2pos
     };
 }); 

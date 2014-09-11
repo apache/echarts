@@ -143,19 +143,18 @@ define(function (require) {
                     
                     this._selectedMode[mapType] = this._selectedMode[mapType] 
                                                   || series[i].selectedMode;
-                    if (typeof this._hoverable[mapType] == 'undefined'
-                        || this._hoverable[mapType]                  // false 1票否决
-                    ) {
+                    if (this._hoverable[mapType] == null || this._hoverable[mapType]) {
+                        // false 1票否决
                         this._hoverable[mapType] = series[i].hoverable; 
                     }
-                    if (typeof this._clickable[mapType] == 'undefined'
-                        || this._clickable[mapType]                  // false 1票否决
-                    ) {
+                    if (this._clickable[mapType] == null || this._clickable[mapType]) {
+                        // false 1票否决
                         this._clickable[mapType] = series[i].clickable; 
                     }
-                    if (typeof this._showLegendSymbol[mapType] == 'undefined'
-                        || this._showLegendSymbol[mapType]           // false 1票否决
+                    if (this._showLegendSymbol[mapType] == null 
+                        || this._showLegendSymbol[mapType]
                     ) {
+                        // false 1票否决
                         this._showLegendSymbol[mapType] = series[i].showLegendSymbol;
                     }
                     
@@ -179,12 +178,10 @@ define(function (require) {
                                         data[j][key];
                                 }
                                 else if (!isNaN(data[j].value)) {
-                                    typeof valueData[mapType][name].value
-                                        == 'undefined'
+                                    valueData[mapType][name].value == null
                                     && (valueData[mapType][name].value = 0);
                                     
-                                    valueData[mapType][name].value += 
-                                        data[j].value;
+                                    valueData[mapType][name].value +=  data[j].value;
                                 }
                             }
                             //索引有该区域的系列样式
@@ -561,19 +558,13 @@ define(function (require) {
             //y = isNaN(cusY) ? padding : cusY;
             y = this.parsePercent(cusY, zrHeight);
             y = isNaN(y) ? padding : y;
-            if (typeof width == 'undefined') {
-                width = zrWidth - x - 2 * padding;
-            }
-            else {
-                width = this.parsePercent(width, zrWidth);
-            }
-            
-            if (typeof height == 'undefined') {
-                height = zrHeight - y - 2 * padding;
-            }
-            else {
-                height = this.parsePercent(height, zrHeight);
-            }
+
+            width = width == null
+                    ? (zrWidth - x - 2 * padding)
+                    : (this.parsePercent(width, zrWidth));
+            height = height == null
+                     ? (zrHeight - y - 2 * padding)
+                     : (this.parsePercent(height, zrHeight));
             
             var mapWidth = bbox.width;
             var mapHeight = bbox.height;
@@ -816,7 +807,7 @@ define(function (require) {
                     _style: zrUtil.clone(style),
                     _mapType: mapType
                 };
-                if (typeof style.scale != 'undefined') {
+                if (style.scale != null) {
                     shape.scale = zrUtil.clone(style.scale);
                 }
                 
@@ -839,7 +830,7 @@ define(function (require) {
                         break;
                     default :
                         shape = new PathShape(shape);
-                        shape.pathArray = shape._parsePathData(shape.style.path);
+                        shape.style.pathArray = shape.buildPathArray(shape.style.path);
                         break;
                 }
                 
@@ -853,22 +844,22 @@ define(function (require) {
                 
                 textShape.clickable = shape.clickable =
                     this._clickable[mapType]
-                    && (typeof data.clickable == 'undefined' || data.clickable);
+                    && (data.clickable == null || data.clickable);
                 
                 if (this._selectedMode[mapType]) {
-                    this._selected[name] = typeof this._selected[name] != 'undefined'
+                    this._selected[name] = this._selected[name] != null
                                            ? this._selected[name]
                                            : data.selected;
                     this._mapTypeMap[name] = mapType;
                     
-                    if (typeof data.selectable == 'undefined' || data.selectable) {
+                    if (data.selectable == null || data.selectable) {
                         shape.clickable = textShape.clickable = true;
                         shape.onclick = textShape.onclick = this.shapeHandler.onclick;
                     }
                 }
                 
                 if (this._hoverable[mapType]
-                    && (typeof data.hoverable == 'undefined' || data.hoverable)
+                    && (data.hoverable == null || data.hoverable)
                 ) {
                     textShape.hoverable = shape.hoverable = true;
                     shape.hoverConnect = textShape.id;
@@ -1038,7 +1029,7 @@ define(function (require) {
                     var geoAndPos = this.pos2geo(mapType, [mx - left, my - top]);
                     if (delta > 0) {
                         delta = 1.2;        // 放大
-                        if (typeof this._scaleLimitMap[mapType].max != 'undefined'
+                        if (this._scaleLimitMap[mapType].max != null
                             && transform.baseScale >= this._scaleLimitMap[mapType].max
                         ) {
                             return;     // 缩放限制
@@ -1046,7 +1037,7 @@ define(function (require) {
                     }
                     else {
                         delta = 1 / 1.2;    // 缩小
-                        if (typeof this._scaleLimitMap[mapType].min != 'undefined'
+                        if (this._scaleLimitMap[mapType].min != null
                             && transform.baseScale <= this._scaleLimitMap[mapType].min
                         ) {
                             return;     // 缩放限制

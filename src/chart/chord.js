@@ -15,7 +15,7 @@ define(function (require) {
     var TextShape = require('zrender/shape/Text');
     var LineShape = require('zrender/shape/Line');
     var SectorShape = require('zrender/shape/Sector');
-    var ChordShape = require('../util/shape/Chord');
+    var RibbonShape = require('../util/shape/Ribbon');
     
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
@@ -35,11 +35,11 @@ define(function (require) {
     }
     
     Chord.prototype = {
-        type : ecConfig.CHART_TYPE_CHORD,
+        type: ecConfig.CHART_TYPE_CHORD,
         /**
          * 绘制图形
          */
-        _buildShape : function () {
+        _buildShape: function () {
             var series = this.series;
             this.selectedMap = {};
             this.chordSeries = [];
@@ -233,7 +233,7 @@ define(function (require) {
             this.addShapeList();
         },
 
-        _filterData : function  (dataMat, groups) {
+        _filterData: function  (dataMat, groups) {
             var indices = [];
             var groupsFilted = [];
             // Filter by selected group
@@ -275,7 +275,7 @@ define(function (require) {
             return [dataMat, groupsFilted2];
         },
 
-        _buildSectors : function (angles, data) {
+        _buildSectors: function (angles, data) {
             var len = this.groups.length;
             var len2 = this.chordSeries.length;
 
@@ -355,21 +355,21 @@ define(function (require) {
                 var _end = (this.clockWise ? (360 - angle[0]) : angle[1]) + this.startAngle;
 
                 var sector = {
-                    zlevel : this._zlevelBase,
-                    style : {
-                        x : this.center[0],
-                        y : this.center[1],
-                        r0 : this.innerRadius,
-                        r : this.outerRadius,
-                        startAngle : _start,
-                        endAngle : _end,
-                        brushType : 'fill',
+                    zlevel: this._zlevelBase,
+                    style: {
+                        x: this.center[0],
+                        y: this.center[1],
+                        r0: this.innerRadius,
+                        r: this.outerRadius,
+                        startAngle: _start,
+                        endAngle: _end,
+                        brushType: 'fill',
                         opacity: 1,
-                        color : this.getColor(group.name)
+                        color: this.getColor(group.name)
                     },
                     clickable: this.chordSerieSample.clickable,
-                    highlightStyle : {
-                        brushType : 'fill'
+                    highlightStyle: {
+                        brushType: 'fill'
                     }
                 };
                 sector.style.lineWidth = this.deepQuery(
@@ -414,12 +414,12 @@ define(function (require) {
                     vec2.add(start, start, this.center);
 
                     var labelShape = {
-                        zlevel : this._zlevelBase - 1,
-                        hoverable : false,
-                        style : {
-                            text : group.name,
-                            textAlign : isRightSide ? 'left' : 'right',
-                            color : labelColor
+                        zlevel: this._zlevelBase - 1,
+                        hoverable: false,
+                        style: {
+                            text: group.name,
+                            textAlign: isRightSide ? 'left' : 'right',
+                            color: labelColor
                         }
                     };
                     if (rotateLabel) {
@@ -463,9 +463,9 @@ define(function (require) {
             }
             var len2 = angles[0][0].length;
 
-            var chordLineStyle 
+            var ribbonLineStyle 
                 = this.chordSerieSample.itemStyle.normal.chordStyle.lineStyle;
-            var chordLineStyleEmphsis
+            var ribbonLineStyleEmphsis
                 = this.chordSerieSample.itemStyle.emphasis.chordStyle.lineStyle;
 
             for (var i = 0; i < len; i++) {
@@ -481,8 +481,10 @@ define(function (require) {
                         var angleIJ1 = angles[i][j][k][1];
                         var angleJI1 = angles[j][i][k][1];
 
-                        if (angleIJ0 - angleJI1 === 0 ||
-                            angleJI0 - angleJI1 === 0) {
+                        if (
+                            angleIJ0 - angleJI1 === 0
+                            || angleJI0 - angleJI1 === 0
+                        ) {
                             this.chordShapes[i][j][k] = null;
                             continue;
                         }
@@ -502,25 +504,26 @@ define(function (require) {
                         var t0 = !this.clockWise ? (360 - angleJI1) : angleJI0;
                         var t1 = !this.clockWise ? (360 - angleJI0) : angleJI1;
                         var chord = {
-                            zlevel : this._zlevelBase,
-                            style : {
-                                center : this.center,
-                                r : this.innerRadius,
-                                source0 : s0 - this.startAngle,
-                                source1 : s1 - this.startAngle,
-                                target0 : t0 - this.startAngle,
-                                target1 : t1 - this.startAngle,
-                                brushType : 'both',
-                                opacity : 0.5,
-                                color : color,
-                                lineWidth : chordLineStyle.width,
-                                strokeColor : chordLineStyle.color
+                            zlevel: this._zlevelBase,
+                            style: {
+                                x: this.center[0],
+                                y: this.center[1],
+                                r: this.innerRadius,
+                                source0: s0 - this.startAngle,
+                                source1: s1 - this.startAngle,
+                                target0: t0 - this.startAngle,
+                                target1: t1 - this.startAngle,
+                                brushType: 'both',
+                                opacity: 0.5,
+                                color: color,
+                                lineWidth: ribbonLineStyle.width,
+                                strokeColor: ribbonLineStyle.color
                             },
                             clickable: this.chordSerieSample.clickable,
-                            highlightStyle : {
-                                brushType : 'both',
-                                lineWidth : chordLineStyleEmphsis.width,
-                                strokeColor : chordLineStyleEmphsis.color
+                            highlightStyle: {
+                                brushType: 'both',
+                                lineWidth: ribbonLineStyleEmphsis.width,
+                                strokeColor: ribbonLineStyleEmphsis.color
                             }
                         };
 
@@ -534,7 +537,7 @@ define(function (require) {
                             dataArr[j][i][k]
                         );
 
-                        chord = new ChordShape(chord);
+                        chord = new RibbonShape(chord);
                         this.chordShapes[i][j][k] = chord;
                         this.shapeList.push(chord);
                     }
@@ -565,16 +568,16 @@ define(function (require) {
                     var end = vec2.scale([], v, this.outerRadius + this.scaleLineLength);
                     vec2.add(end, end, this.center);
                     var scaleShape = {
-                        zlevel : this._zlevelBase - 1,
-                        hoverable : false,
-                        style : {
-                            xStart : start[0],
-                            yStart : start[1],
-                            xEnd : end[0],
-                            yEnd : end[1],
-                            lineCap : 'round',
-                            brushType : 'stroke',
-                            strokeColor : '#666',
+                        zlevel: this._zlevelBase - 1,
+                        hoverable: false,
+                        style: {
+                            xStart: start[0],
+                            yStart: start[1],
+                            xEnd: end[0],
+                            yEnd: end[1],
+                            lineCap: 'round',
+                            brushType: 'stroke',
+                            strokeColor: '#666',
                             lineWidth: 1
                         }
                     };
@@ -598,19 +601,19 @@ define(function (require) {
                     var isRightSide = thelta <= 90
                                      || thelta >= 270;
                     var textShape = {
-                        zlevel : this._zlevelBase - 1,
-                        hoverable : false,
-                        style : {
-                            x : isRightSide 
+                        zlevel: this._zlevelBase - 1,
+                        hoverable: false,
+                        style: {
+                            x: isRightSide 
                                     ? this.outerRadius + this.scaleLineLength + 4 
                                     : -this.outerRadius - this.scaleLineLength - 4,
-                            y : 0,
-                            text : Math.round(scaleValues.shift()*10)/10 
+                            y: 0,
+                            text: Math.round(scaleValues.shift()*10)/10 
                                     + unitPostfix,
-                            textAlign : isRightSide ? 'left' : 'right'
+                            textAlign: isRightSide ? 'left' : 'right'
                         },
-                        position : this.center.slice(),
-                        rotation : isRightSide
+                        position: this.center.slice(),
+                        rotation: isRightSide
                             ? [thelta / 180 * Math.PI, 0, 0]
                             : [
                                 (thelta + 180) / 180 * Math.PI,
@@ -655,28 +658,9 @@ define(function (require) {
                 this.series = newOption.series;
             }
             
-            /*
-            this.legend;
-            this.getColor;
-            this.isSelected;
-            this.chordSerieSample;
-            */
             // Config
             this.chordSeries = [];
-            /*
-            this.groups;
-            this.startAngle;
-            this.clockWise;
-            this.innerRadius;
-            this.outerRadius;
-            this.padding;
-            this.sortGroups;
-            this.sortSubGroups;
-            this.center;
-            this.showScale;
-            this.showScaleText;
-            this.dataMat;
-            */
+
             this.strokeFix = 0;
             // Adjacency matrix
             this.sectorShapes = [];

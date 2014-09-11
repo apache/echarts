@@ -43,56 +43,56 @@ define(function (require) {
     }
     
     Axis.prototype = {
-        type : ecConfig.COMPONENT_TYPE_AXIS,
-        axisBase : {
+        type: ecConfig.COMPONENT_TYPE_AXIS,
+        axisBase: {
             // 轴线
-            _buildAxisLine : function () {
+            _buildAxisLine: function () {
                 var lineWidth = this.option.axisLine.lineStyle.width;
                 var halfLineWidth = lineWidth / 2;
                 var axShape = {
-                    _axisShape : 'axisLine',
-                    zlevel : this._zlevelBase + 1,
-                    hoverable : false
+                    _axisShape: 'axisLine',
+                    zlevel: this._zlevelBase + 1,
+                    hoverable: false
                 };
                 switch (this.option.position) {
                     case 'left' :
                         axShape.style = {
-                            xStart : this.grid.getX() - halfLineWidth,
-                            yStart : this.grid.getYend(),
-                            xEnd : this.grid.getX() - halfLineWidth,
-                            yEnd : this.grid.getY(),
-                            lineCap : 'round'
+                            xStart: this.grid.getX() - halfLineWidth,
+                            yStart: this.grid.getYend(),
+                            xEnd: this.grid.getX() - halfLineWidth,
+                            yEnd: this.grid.getY(),
+                            lineCap: 'round'
                         };
                         break;
                     case 'right' :
                         axShape.style = {
-                            xStart : this.grid.getXend() + halfLineWidth,
-                            yStart : this.grid.getYend(),
-                            xEnd : this.grid.getXend() + halfLineWidth,
-                            yEnd : this.grid.getY(),
-                            lineCap : 'round'
+                            xStart: this.grid.getXend() + halfLineWidth,
+                            yStart: this.grid.getYend(),
+                            xEnd: this.grid.getXend() + halfLineWidth,
+                            yEnd: this.grid.getY(),
+                            lineCap: 'round'
                         };
                         break;
                     case 'bottom' :
                         axShape.style = {
-                            xStart : this.grid.getX(),
-                            yStart : this.grid.getYend() + halfLineWidth,
-                            xEnd : this.grid.getXend(),
-                            yEnd : this.grid.getYend() + halfLineWidth,
-                            lineCap : 'round'
+                            xStart: this.grid.getX(),
+                            yStart: this.grid.getYend() + halfLineWidth,
+                            xEnd: this.grid.getXend(),
+                            yEnd: this.grid.getYend() + halfLineWidth,
+                            lineCap: 'round'
                         };
                         break;
                     case 'top' :
                         axShape.style = {
-                            xStart : this.grid.getX(),
-                            yStart : this.grid.getY() - halfLineWidth,
-                            xEnd : this.grid.getXend(),
-                            yEnd : this.grid.getY() - halfLineWidth,
-                            lineCap : 'round'
+                            xStart: this.grid.getX(),
+                            yStart: this.grid.getY() - halfLineWidth,
+                            xEnd: this.grid.getXend(),
+                            yEnd: this.grid.getY() - halfLineWidth,
+                            lineCap: 'round'
                         };
                         break;
                 }
-                if (this.option.name !== '') {
+                if (this.option.name !== '') { // 别帮我代码规范
                     axShape.style.text = this.option.name;
                     axShape.style.textPosition = this.option.nameLocation;
                     axShape.style.textFont = this.getFont(this.option.nameTextStyle);
@@ -129,7 +129,7 @@ define(function (require) {
                 this.shapeList.push(axShape);
             },
             
-            _axisLabelClickable : function(clickable, axShape) {
+            _axisLabelClickable: function(clickable, axShape) {
                 if (clickable) {
                     ecData.pack(
                         axShape, undefined, -1, undefined, -1, axShape.style.text
@@ -137,7 +137,7 @@ define(function (require) {
                     axShape.hoverable = true;
                     axShape.clickable = true;
                     axShape.highlightStyle = {
-                        color : zrColor.lift(axShape.style.color, 1),
+                        color: zrColor.lift(axShape.style.color, 1),
                         brushType: 'fill'
                     };
                     return axShape;
@@ -147,15 +147,15 @@ define(function (require) {
                 }
             },
             
-            refixAxisShape : function(zeroX, zeroY) {
+            refixAxisShape: function(zeroX, zeroY) {
                 if (!this.option.axisLine.onZero) {
                     return;
                 }
                 var tickLength;
-                if (this.isHorizontal() && typeof zeroY != 'undefined') {
+                if (this.isHorizontal() && zeroY != null) {
                     // 横向布局调整纵向y
                     for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                        if (this.shapeList[i]._axisShape == 'axisLine') {
+                        if (this.shapeList[i]._axisShape === 'axisLine') {
                             this.shapeList[i].style.yStart 
                                 = this.shapeList[i].style.yEnd 
                                 = this.subPixelOptimize(
@@ -163,7 +163,7 @@ define(function (require) {
                                 );
                             this.zr.modShape(this.shapeList[i].id);
                         }
-                        else if (this.shapeList[i]._axisShape == 'axisTick') {
+                        else if (this.shapeList[i]._axisShape === 'axisTick') {
                             tickLength = this.shapeList[i].style.yEnd 
                                          - this.shapeList[i].style.yStart;
                             this.shapeList[i].style.yStart = zeroY - tickLength;
@@ -172,10 +172,10 @@ define(function (require) {
                         }
                     }
                 }
-                if (!this.isHorizontal() && typeof zeroX != 'undefined') {
+                if (!this.isHorizontal() && zeroX != null) {
                     // 纵向布局调整横向x
                     for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                        if (this.shapeList[i]._axisShape == 'axisLine') {
+                        if (this.shapeList[i]._axisShape === 'axisLine') {
                             this.shapeList[i].style.xStart 
                                 = this.shapeList[i].style.xEnd 
                                 = this.subPixelOptimize(
@@ -183,7 +183,7 @@ define(function (require) {
                                 );
                             this.zr.modShape(this.shapeList[i].id);
                         }
-                        else if (this.shapeList[i]._axisShape == 'axisTick') {
+                        else if (this.shapeList[i]._axisShape === 'axisTick') {
                             tickLength = this.shapeList[i].style.xEnd 
                                          - this.shapeList[i].style.xStart;
                             this.shapeList[i].style.xStart = zeroX;
@@ -194,22 +194,22 @@ define(function (require) {
                 }
             },
             
-            getPosition : function () {
+            getPosition: function () {
                 return this.option.position;
             },
             
-            isHorizontal : function() {
-                return this.option.position == 'bottom' || this.option.position == 'top';
+            isHorizontal: function() {
+                return this.option.position === 'bottom' || this.option.position === 'top';
             }
         },
         /**
          * 参数修正&默认值赋值，重载基类方法
          * @param {Object} opt 参数
          */
-        reformOption : function (opt) {
+        reformOption: function (opt) {
             // 不写或传了个空数值默认为数值轴
             if (!opt || (opt instanceof Array && opt.length === 0)) {
-                opt = [{type : ecConfig.COMPONENT_TYPE_AXIS_VALUE}];
+                opt = [ { type: ecConfig.COMPONENT_TYPE_AXIS_VALUE } ];
             }
             else if (!(opt instanceof Array)){
                 opt = [opt];
@@ -220,7 +220,7 @@ define(function (require) {
                 opt = [opt[0],opt[1]];
             }
 
-            if (this.axisType == 'xAxis') {
+            if (this.axisType === 'xAxis') {
                 // 横轴位置默认配置
                 if (!opt[0].position            // 没配置或配置错
                     || (opt[0].position != 'bottom'
@@ -229,8 +229,7 @@ define(function (require) {
                     opt[0].position = 'bottom';
                 }
                 if (opt.length > 1) {
-                    opt[1].position = opt[0].position == 'bottom'
-                                      ? 'top' : 'bottom';
+                    opt[1].position = opt[0].position === 'bottom' ? 'top' : 'bottom';
                 }
 
                 for (var i = 0, l = opt.length; i < l; i++) {
@@ -251,8 +250,7 @@ define(function (require) {
                 }
 
                 if (opt.length > 1) {
-                    opt[1].position = opt[0].position == 'left'
-                                      ? 'right' : 'left';
+                    opt[1].position = opt[0].position === 'left' ? 'right' : 'left';
                 }
 
                 for (var i = 0, l = opt.length; i < l; i++) {
@@ -270,11 +268,11 @@ define(function (require) {
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             var axisOption;
             if (newOption) {
                 this.option = newOption;
-                if (this.axisType == 'xAxis') {
+                if (this.axisType === 'xAxis') {
                     this.option.xAxis = this.reformOption(newOption.xAxis);
                     axisOption = this.option.xAxis;
                 }
@@ -304,7 +302,7 @@ define(function (require) {
                     );
                 }
                 else if (axisOption && axisOption[i]) {
-                    this._axisList[i] =  axisOption[i].type == 'category'
+                    this._axisList[i] =  axisOption[i].type === 'category'
                                          ? new CategoryAxis(
                                                this.ecTheme, this.messageCenter, this.zr,
                                                axisOption[i], this.myChart, this.axisBase
@@ -323,11 +321,11 @@ define(function (require) {
          * 根据值换算位置
          * @param {number} idx 坐标轴索引0~1
          */
-        getAxis : function (idx) {
+        getAxis: function (idx) {
             return this._axisList[idx];
         },
 
-        clear : function () {
+        clear: function () {
             for (var i = 0, l = this._axisList.length; i < l; i++) {
                 this._axisList[i].dispose && this._axisList[i].dispose();
             }

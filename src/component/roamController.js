@@ -140,7 +140,7 @@ define(function (require) {
             
             var r = Math.min(width / 2 - 5, height) / 2;
             var x = this._itemGroupLocation.x 
-                    + (text == 'scaleDown' ? (width - r) : r);
+                    + (text === 'scaleDown' ? (width - r) : r);
             var y = this._itemGroupLocation.y + this._itemGroupLocation.height - r;
 
             var scaleShape = {
@@ -150,7 +150,7 @@ define(function (require) {
                     y: y,
                     r: r,
                     color: this.rcOption.handlerColor,
-                    text: text == 'scaleDown' ? '-' : '+',
+                    text: text === 'scaleDown' ? '-' : '+',
                     textX: x,
                     textY: y - 2,
                     textAlign: 'center',
@@ -291,7 +291,7 @@ define(function (require) {
             this._dispatchEvent(params.event, params.target._roamType);
         },
         
-        _dispatchEvent : function(event, roamType){
+        _dispatchEvent: function(event, roamType){
             this.messageCenter.dispatch(
                 ecConfig.EVENT.ROAMCONTROLLER,
                 event, 

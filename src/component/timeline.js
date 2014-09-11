@@ -49,9 +49,9 @@ define(function (require) {
                 null,
                 {
                     currentIndex: self.currentIndex,
-                    data : typeof timelineOption.data[self.currentIndex].name != 'undefined'
-                           ? timelineOption.data[self.currentIndex].name
-                           : timelineOption.data[self.currentIndex]
+                    data: timelineOption.data[self.currentIndex].name != null
+                          ? timelineOption.data[self.currentIndex].name
+                          : timelineOption.data[self.currentIndex]
                 },
                 self.myChart
             );
@@ -114,8 +114,8 @@ define(function (require) {
     }
     
     Timeline.prototype = {
-        type : ecConfig.COMPONENT_TYPE_TIMELINE,
-        _buildShape : function () {
+        type: ecConfig.COMPONENT_TYPE_TIMELINE,
+        _buildShape: function () {
             // 位置参数，通过计算所得x, y, width, height
             this._location = this._getLocation();
             this._buildBackground();
@@ -139,7 +139,7 @@ define(function (require) {
         /**
          * 根据选项计算实体的位置坐标
          */
-        _getLocation : function () {
+        _getLocation: function () {
             var timelineOption = this.timelineOption;
             var padding = timelineOption.padding;
             
@@ -148,7 +148,7 @@ define(function (require) {
             var x = this.parsePercent(timelineOption.x, zrWidth);
             var x2 = this.parsePercent(timelineOption.x2, zrWidth);
             var width;
-            if (typeof timelineOption.width == 'undefined') {
+            if (timelineOption.width == null) {
                 width = zrWidth - x - x2;
                 x2 = zrWidth - x2;
             }
@@ -161,7 +161,7 @@ define(function (require) {
             var height = this.parsePercent(timelineOption.height, zrHeight);
             var y;
             var y2;
-            if (typeof timelineOption.y != 'undefined') {
+            if (timelineOption.y != null) {
                 y = this.parsePercent(timelineOption.y, zrHeight);
                 y2 = y + height;
             }
@@ -171,27 +171,27 @@ define(function (require) {
             }
 
             return {
-                x : x + padding[3],
-                y : y + padding[0],
-                x2 : x2 - padding[1],
-                y2 : y2 - padding[2],
-                width : width - padding[1] - padding[3],
-                height : height - padding[0] - padding[2]
+                x: x + padding[3],
+                y: y + padding[0],
+                x2: x2 - padding[1],
+                y2: y2 - padding[2],
+                width: width - padding[1] - padding[3],
+                height: height - padding[0] - padding[2]
             };
         },
 
-        _getReformedLabel : function (idx) {
+        _getReformedLabel: function (idx) {
             var timelineOption = this.timelineOption;
-            var data = typeof timelineOption.data[idx].name != 'undefined'
+            var data = timelineOption.data[idx].name != null
                        ? timelineOption.data[idx].name
                        : timelineOption.data[idx];
             var formatter = timelineOption.data[idx].formatter 
                             || timelineOption.label.formatter;
             if (formatter) {
-                if (typeof formatter == 'function') {
+                if (typeof formatter === 'function') {
                     data = formatter.call(this.myChart, data);
                 }
-                else if (typeof formatter == 'string') {
+                else if (typeof formatter === 'string') {
                     data = formatter.replace('{value}', data);
                 }
             }
@@ -201,11 +201,11 @@ define(function (require) {
         /**
          * 计算标签显示挑选间隔
          */
-        _getInterval : function () {
+        _getInterval: function () {
             var chainPoint = this._chainPoint;
             var timelineOption = this.timelineOption;
             var interval   = timelineOption.label.interval;
-            if (interval == 'auto') {
+            if (interval === 'auto') {
                 // 麻烦的自适应计算
                 var fontSize = timelineOption.label.textStyle.fontSize;
                 var data = timelineOption.data;
@@ -264,7 +264,7 @@ define(function (require) {
         /**
          * 根据选项计算时间链条上的坐标及symbolList
          */
-        _getChainPoint : function() {
+        _getChainPoint: function() {
             var timelineOption = this.timelineOption;
             var symbol = timelineOption.symbol.toLowerCase();
             var symbolSize = timelineOption.symbolSize;
@@ -279,14 +279,14 @@ define(function (require) {
             var len = data.length;
             
             function _getName(i) {
-                return typeof data[i].name != 'undefined' ? data[i].name : data[i];
+                return data[i].name != null ? data[i].name : data[i];
             }
             var xList = [];
             if (len > 1) {
                 var boundaryGap = width / len;
                 boundaryGap = boundaryGap > 50 ? 50 : (boundaryGap < 20 ? 5 : boundaryGap);
                 width -= boundaryGap * 2;
-                if (timelineOption.type == 'number') {
+                if (timelineOption.type === 'number') {
                     // 平均分布
                     for (var i = 0; i < len; i++) {
                         xList.push(x + boundaryGap + width / (len - 1) * i);
@@ -345,30 +345,30 @@ define(function (require) {
                 }
                 
                 list.push({
-                    x : x,
-                    n : n,
-                    isEmpty : isEmpty,
-                    symbol : curSymbol,
-                    symbolSize : data[i].symbolSize || symbolSize,
-                    color : data[i].color,
-                    borderColor : data[i].borderColor,
-                    borderWidth : data[i].borderWidth,
-                    name : this._getReformedLabel(i),
-                    textColor : dataTextStyle.color,
-                    textAlign : textAlign,
-                    textBaseline : dataTextStyle.baseline || 'middle',
-                    textX : x,
-                    textY : y - (rotate ? 5 : 0),
-                    textFont : data[i].textStyle ? this.getFont(dataTextStyle) : textFont,
-                    rotation : rotation,
-                    showLabel : false
+                    x: x,
+                    n: n,
+                    isEmpty: isEmpty,
+                    symbol: curSymbol,
+                    symbolSize: data[i].symbolSize || symbolSize,
+                    color: data[i].color,
+                    borderColor: data[i].borderColor,
+                    borderWidth: data[i].borderWidth,
+                    name: this._getReformedLabel(i),
+                    textColor: dataTextStyle.color,
+                    textAlign: textAlign,
+                    textBaseline: dataTextStyle.baseline || 'middle',
+                    textX: x,
+                    textY: y - (rotate ? 5 : 0),
+                    textFont: data[i].textStyle ? this.getFont(dataTextStyle) : textFont,
+                    rotation: rotation,
+                    showLabel: false
                 });
             }
             
             return list;
         },
         
-        _buildBackground : function () {
+        _buildBackground: function () {
             var timelineOption = this.timelineOption;
             var padding = timelineOption.padding;
             var width = this._location.width;
@@ -379,35 +379,34 @@ define(function (require) {
             ) {
                 // 背景
                 this.shapeList.push(new RectangleShape({
-                    zlevel : this._zlevelBase,
+                    zlevel: this._zlevelBase,
                     hoverable :false,
-                    style : {
-                        x : this._location.x - padding[3],
-                        y : this._location.y - padding[0],
-                        width : width + padding[1] + padding[3],
-                        height : height + padding[0] + padding[2],
-                        brushType : timelineOption.borderWidth === 0
-                                    ? 'fill' : 'both',
-                        color : timelineOption.backgroundColor,
-                        strokeColor : timelineOption.borderColor,
-                        lineWidth : timelineOption.borderWidth
+                    style: {
+                        x: this._location.x - padding[3],
+                        y: this._location.y - padding[0],
+                        width: width + padding[1] + padding[3],
+                        height: height + padding[0] + padding[2],
+                        brushType: timelineOption.borderWidth === 0 ? 'fill' : 'both',
+                        color: timelineOption.backgroundColor,
+                        strokeColor: timelineOption.borderColor,
+                        lineWidth: timelineOption.borderWidth
                     }
                 }));
             }
         },
 
-        _buildControl : function() {
+        _buildControl: function() {
             var self = this;
             var timelineOption = this.timelineOption;
             var lineStyle = timelineOption.lineStyle;
             var controlStyle = timelineOption.controlStyle;
-            if (timelineOption.controlPosition == 'none') {
+            if (timelineOption.controlPosition === 'none') {
                 return;
             }
             var iconSize = 15;
             var iconGap = 5;
             var x;
-            if (timelineOption.controlPosition == 'left') {
+            if (timelineOption.controlPosition === 'left') {
                 x = this._location.x;
                 this._location.x += (iconSize + iconGap) * 3;
             }
@@ -418,25 +417,25 @@ define(function (require) {
             
             var y = this._location.y;
             var iconStyle = {
-                zlevel : this._zlevelBase + 1,
-                style : {
-                    iconType : 'timelineControl',
-                    symbol : 'last',
-                    x : x,
-                    y : y,
-                    width : iconSize,
-                    height : iconSize,
-                    brushType : 'stroke',
+                zlevel: this._zlevelBase + 1,
+                style: {
+                    iconType: 'timelineControl',
+                    symbol: 'last',
+                    x: x,
+                    y: y,
+                    width: iconSize,
+                    height: iconSize,
+                    brushType: 'stroke',
                     color: controlStyle.normal.color,
-                    strokeColor : controlStyle.normal.color,
-                    lineWidth : lineStyle.width
+                    strokeColor: controlStyle.normal.color,
+                    lineWidth: lineStyle.width
                 },
-                highlightStyle : {
-                    color : controlStyle.emphasis.color,
-                    strokeColor : controlStyle.emphasis.color,
-                    lineWidth : lineStyle.width + 1
+                highlightStyle: {
+                    color: controlStyle.emphasis.color,
+                    strokeColor: controlStyle.emphasis.color,
+                    lineWidth: lineStyle.width + 1
                 },
-                clickable : true
+                clickable: true
             };
             
             this._ctrLastShape = new IconShape(iconStyle);
@@ -452,7 +451,7 @@ define(function (require) {
             this._ctrPlayShape.style.status = this.timelineOption.autoPlay ? 'playing' : 'stop';
             this._ctrPlayShape.style.x = x;
             this._ctrPlayShape.onclick = function() {
-                if (self._ctrPlayShape.style.status == 'stop') {
+                if (self._ctrPlayShape.style.status === 'stop') {
                     self.play();
                 }
                 else {
@@ -474,25 +473,25 @@ define(function (require) {
         /**
          * 构建时间轴
          */
-        _buildChain : function () {
+        _buildChain: function () {
             var timelineOption = this.timelineOption;
             var lineStyle = timelineOption.lineStyle;
             this._timelineShae = {
-                zlevel : this._zlevelBase,
-                style : {
-                    x : this._location.x,
-                    y : this.subPixelOptimize(this._location.y, lineStyle.width),
-                    width : this._location.x2 - this._location.x,
-                    height : this._location.height,
-                    chainPoint : this._chainPoint,
+                zlevel: this._zlevelBase,
+                style: {
+                    x: this._location.x,
+                    y: this.subPixelOptimize(this._location.y, lineStyle.width),
+                    width: this._location.x2 - this._location.x,
+                    height: this._location.height,
+                    chainPoint: this._chainPoint,
                     brushType:'both',
-                    strokeColor : lineStyle.color,
-                    lineWidth : lineStyle.width,
-                    lineType : lineStyle.type
+                    strokeColor: lineStyle.color,
+                    lineWidth: lineStyle.width,
+                    lineType: lineStyle.type
                 },
-                hoverable : false,
-                clickable : true,
-                onclick : this._onclick
+                hoverable: false,
+                clickable: true,
+                onclick: this._onclick
             };
 
             this._timelineShae = new ChainShape(this._timelineShae);
@@ -502,32 +501,32 @@ define(function (require) {
         /**
          * 构建拖拽手柄
          */
-        _buildHandle : function () {
+        _buildHandle: function () {
             var curPoint = this._chainPoint[this.currentIndex];
             var symbolSize = curPoint.symbolSize + 1;
             symbolSize = symbolSize < 5 ? 5 : symbolSize;
             
             this._handleShape = {
-                zlevel : this._zlevelBase + 1,
-                hoverable : false,
-                draggable : true,
-                style : {
-                    iconType : 'diamond',
-                    n : curPoint.n,
-                    x : curPoint.x - symbolSize,
-                    y : this._location.y + this._location.height / 4 - symbolSize,
-                    width : symbolSize * 2,
-                    height : symbolSize * 2,
+                zlevel: this._zlevelBase + 1,
+                hoverable: false,
+                draggable: true,
+                style: {
+                    iconType: 'diamond',
+                    n: curPoint.n,
+                    x: curPoint.x - symbolSize,
+                    y: this._location.y + this._location.height / 4 - symbolSize,
+                    width: symbolSize * 2,
+                    height: symbolSize * 2,
                     brushType:'both',
-                    textPosition : 'specific',
-                    textX : curPoint.x,
-                    textY : this._location.y - this._location.height / 4,
-                    textAlign : 'center',
-                    textBaseline : 'middle'
+                    textPosition: 'specific',
+                    textX: curPoint.x,
+                    textY: this._location.y - this._location.height / 4,
+                    textAlign: 'center',
+                    textBaseline: 'middle'
                 },
-                highlightStyle : {},
-                ondrift : this._ondrift,
-                ondragend : this._ondragend
+                highlightStyle: {},
+                ondrift: this._ondrift,
+                ondragend: this._ondragend
             };
             
             this._handleShape = new IconShape(this._handleShape);
@@ -537,7 +536,7 @@ define(function (require) {
         /**
          * 同步拖拽图形样式 
          */
-        _syncHandleShape : function() {
+        _syncHandleShape: function() {
             if (!this.timelineOption.show) {
                 return;
             }
@@ -550,7 +549,7 @@ define(function (require) {
             this._handleShape.style.textFont = curPoint.textFont;
             
             this._handleShape.style.n = curPoint.n;
-            if (cpStyle.symbol == 'auto') {
+            if (cpStyle.symbol === 'auto') {
                 this._handleShape.style.iconType = curPoint.symbol != 'none' 
                                                    ? curPoint.symbol : 'diamond';
             }
@@ -563,7 +562,7 @@ define(function (require) {
             }
             
             var symbolSize;
-            if (cpStyle.symbolSize == 'auto') {
+            if (cpStyle.symbolSize === 'auto') {
                 symbolSize = curPoint.symbolSize + 2;
                 symbolSize = symbolSize < 5 ? 5 : symbolSize;
             }
@@ -571,20 +570,20 @@ define(function (require) {
                 symbolSize = cpStyle.symbolSize - 0;
             }
             
-            this._handleShape.style.color = cpStyle.color == 'auto'
+            this._handleShape.style.color = cpStyle.color === 'auto'
                                             ? (curPoint.color 
                                                ? curPoint.color 
                                                : timelineOption.controlStyle.emphasis.color
                                               )
                                             : cpStyle.color;
-            this._handleShape.style.textColor = cpStyle.label.textStyle.color == 'auto'
+            this._handleShape.style.textColor = cpStyle.label.textStyle.color === 'auto'
                                                 ? this._handleShape.style.color
                                                 : cpStyle.label.textStyle.color;
             this._handleShape.highlightStyle.strokeColor = 
-            this._handleShape.style.strokeColor = cpStyle.borderColor == 'auto'
+            this._handleShape.style.strokeColor = cpStyle.borderColor === 'auto'
                                 ? (curPoint.borderColor ? curPoint.borderColor : '#fff')
                                 : cpStyle.borderColor;
-            this._handleShape.style.lineWidth = cpStyle.borderWidth == 'auto'
+            this._handleShape.style.lineWidth = cpStyle.borderWidth === 'auto'
                                 ? (curPoint.borderWidth ? curPoint.borderWidth : 0)
                                 : (cpStyle.borderWidth - 0);
             this._handleShape.highlightStyle.lineWidth = this._handleShape.style.lineWidth + 1;
@@ -593,17 +592,17 @@ define(function (require) {
                 .when(
                     500,
                     {
-                        x : curPoint.x - symbolSize,
-                        textX : curPoint.x,
-                        y : this._location.y + this._location.height / 4 - symbolSize,
-                        width : symbolSize * 2,
-                        height : symbolSize * 2
+                        x: curPoint.x - symbolSize,
+                        textX: curPoint.x,
+                        y: this._location.y + this._location.height / 4 - symbolSize,
+                        width: symbolSize * 2,
+                        height: symbolSize * 2
                     }
                 )
                 .start('ExponentialOut');
         },
 
-        _findChainIndex : function(x) {
+        _findChainIndex: function(x) {
             var chainPoint = this._chainPoint;
             var len = chainPoint.length;
             if (x <= chainPoint[0].x) {
@@ -621,10 +620,10 @@ define(function (require) {
             }
         },
         
-        __onclick : function(param) {
+        __onclick: function(param) {
             var x = zrEvent.getX(param.event);
             var newIndex =  this._findChainIndex(x);
-            if (newIndex == this.currentIndex) {
+            if (newIndex === this.currentIndex) {
                 return true; // 啥事都没发生
             }
             
@@ -637,7 +636,7 @@ define(function (require) {
         /**
          * 拖拽范围控制
          */
-        __ondrift : function (shape, dx) {
+        __ondrift: function (shape, dx) {
             this.timelineOption.autoPlay && this.stop(); // 停止自动播放
             
             var chainPoint = this._chainPoint;
@@ -666,7 +665,7 @@ define(function (require) {
             shape.style.text = curPoint.name;
             
             //console.log(newIndex)
-            if (newIndex == this.currentIndex) {
+            if (newIndex === this.currentIndex) {
                 return true; // 啥事都没发生
             }
             
@@ -682,14 +681,14 @@ define(function (require) {
             return true;
         },
         
-        __ondragend : function () {
+        __ondragend: function () {
             this.isDragend = true;
         },
         
         /**
          * 数据项被拖拽出去
          */
-        ondragend : function (param, status) {
+        ondragend: function (param, status) {
             if (!this.isDragend || !param.target) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
@@ -706,7 +705,7 @@ define(function (require) {
             return;
         },
         
-        last : function () {
+        last: function () {
             this.timelineOption.autoPlay && this.stop(); // 停止自动播放
             
             this.currentIndex -= 1;
@@ -718,7 +717,7 @@ define(function (require) {
             return this.currentIndex;
         },
         
-        next : function () {
+        next: function () {
             this.timelineOption.autoPlay && this.stop(); // 停止自动播放
             
             this.currentIndex += 1;
@@ -730,7 +729,7 @@ define(function (require) {
             return this.currentIndex;
         },
         
-        play : function (targetIndex, autoPlay) {
+        play: function (targetIndex, autoPlay) {
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'playing') {
                 this._ctrPlayShape.style.status = 'playing';
                 this.zr.modShape(this._ctrPlayShape.id);
@@ -738,15 +737,13 @@ define(function (require) {
             }
             
             
-            this.timelineOption.autoPlay = typeof autoPlay != 'undefined'
-                                           ? autoPlay : true;
+            this.timelineOption.autoPlay = autoPlay != null ? autoPlay : true;
             
             if (!this.timelineOption.autoPlay) {
                 clearTimeout(this.playTicket);
             }
             
-            this.currentIndex = typeof targetIndex != 'undefined' 
-                                ? targetIndex : (this.currentIndex + 1);
+            this.currentIndex = targetIndex != null ? targetIndex : (this.currentIndex + 1);
             if (this.currentIndex >= this.timelineOption.data.length) {
                 this.currentIndex = 0;
             }
@@ -755,7 +752,7 @@ define(function (require) {
             return this.currentIndex;
         },
         
-        stop : function () {
+        stop: function () {
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'stop') {
                 this._ctrPlayShape.style.status = 'stop';
                 this.zr.modShape(this._ctrPlayShape.id);
@@ -772,7 +769,7 @@ define(function (require) {
         /**
          * 避免dataZoom带来两次refresh，不设refresh接口，resize重复一下buildshape逻辑 
          */
-        resize : function () {
+        resize: function () {
             if (this.timelineOption.show) {
                 this.clear();
                 this._buildShape();
@@ -780,7 +777,7 @@ define(function (require) {
             }
         },
         
-        setTheme : function(needRefresh) {
+        setTheme: function(needRefresh) {
             this.timelineOption = this.reformOption(zrUtil.clone(this.option.timeline));
             // 补全padding属性
             this.timelineOption.padding = this.reformCssArray(
@@ -806,7 +803,7 @@ define(function (require) {
         /**
          * 释放后实例不可用，重载基类方法
          */
-        dispose : function () {
+        dispose: function () {
             this.clear();
             this.shapeList = null;
             
@@ -823,7 +820,7 @@ define(function (require) {
         
         
         var symbol = style.symbol;
-        if (symbol == 'last') {
+        if (symbol === 'last') {
             ctx.moveTo(x + width - 2, y + height / 3);
             ctx.lineTo(x + width - 2, y);
             ctx.lineTo(x + 2, y + height / 2);
@@ -832,7 +829,7 @@ define(function (require) {
             ctx.moveTo(x, y);
             ctx.lineTo(x, y);
         } 
-        else if (symbol == 'next') {
+        else if (symbol === 'next') {
             ctx.moveTo(x + 2, y + height / 3);
             ctx.lineTo(x + 2, y);
             ctx.lineTo(x + width - 2, y + height / 2);
@@ -841,15 +838,15 @@ define(function (require) {
             ctx.moveTo(x, y);
             ctx.lineTo(x, y);
         }
-        else if (symbol == 'play') {
-            if (style.status == 'stop') {
+        else if (symbol === 'play') {
+            if (style.status === 'stop') {
                 ctx.moveTo(x + 2, y);
                 ctx.lineTo(x + width - 2, y + height / 2);
                 ctx.lineTo(x + 2, y + height);
                 ctx.lineTo(x + 2, y);
             }
             else {
-                var delta = style.brushType == 'both' ? 2 : 3;
+                var delta = style.brushType === 'both' ? 2 : 3;
                 ctx.rect(x + 2, y, delta, height);
                 ctx.rect(x + width - delta - 2, y, delta, height);
             }
@@ -861,11 +858,11 @@ define(function (require) {
                 );
             symbol = IconShape.prototype.iconLibrary.image;
             symbol(ctx, {
-                x : x,
-                y : y,
-                width : width,
-                height : height,
-                image : imageLocation
+                x: x,
+                y: y,
+                width: width,
+                height: height,
+                image: imageLocation
             });
         }
     }
