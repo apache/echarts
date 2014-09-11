@@ -3,7 +3,6 @@
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
  * @author Neil (杨骥, yangji01@baidu.com)
- *
  */
 
  define(function (require) {
@@ -26,6 +25,8 @@
      * @param {ZRender} zr zrender实例
      * @param {Object} series 数据
      * @param {Object} component 组件
+     * @constructor
+     * @exports Radar
      */
     function Radar(ecTheme, messageCenter, zr, option, myChart) {
         // 基类
@@ -51,8 +52,8 @@
             var series = this.series;
             var legend = this.component.legend;
             var serieName;
-            for (var i = 0, l = series.length; i < l ; i ++) {
-                if (series[i].type == ecConfig.CHART_TYPE_RADAR) {
+            for (var i = 0, l = series.length; i < l ; i++) {
+                if (series[i].type === ecConfig.CHART_TYPE_RADAR) {
                     this.serie = this.reformOption(series[i]);
                     serieName = this.serie.name || '';
                     // 系列图例开关
@@ -88,13 +89,12 @@
             var pointList;
             var calculable = this.deepQuery(this._queryTarget, 'calculable');
            
-            for (var i = 0; i < data.length; i ++) {
+            for (var i = 0; i < data.length; i++) {
                 name = data[i].name || '';
                 
                 // 图例开关
                 this.selectedMap[name] = legend 
-                                         ? legend.isSelected(name) 
-                                         : true;
+                    ? legend.isSelected(name) : true;
                 if (!this.selectedMap[name]) {
                     continue;
                 }
@@ -119,7 +119,8 @@
 
                 pointList = this._getPointList(this.serie.polarIndex, data[i]);
                 // 添加拐点形状
-                this._addSymbol(pointList, defaultColor, i, index, this.serie.polarIndex);
+                this._addSymbol(
+                    pointList, defaultColor, i, index, this.serie.polarIndex);
                 // 添加数据形状
                 this._addDataShape(
                     pointList, defaultColor, data[i],
@@ -161,7 +162,7 @@
          * @param {object} data 数据
          * @param {number} serieIndex
          */
-        _addSymbol : function (pointList, defaultColor, dataIndex, seriesIndex, polarIndex) {
+        _addSymbol :function (pointList, defaultColor, dataIndex, seriesIndex, polarIndex) {
             var series = this.series;
             var itemShape;
             var polar = this.component.polar;
@@ -233,7 +234,7 @@
                     brushType   : nIsAreaFill ? 'both' : 'stroke',
                     color       : nAreaColor 
                                   || nColor 
-                                  || zrColor.alpha(defaultColor,0.5),
+                                  || (typeof defaultColor === 'string' ? zrColor.alpha(defaultColor,0.5) : defaultColor),
                     strokeColor : nColor || defaultColor,
                     lineWidth   : nLineWidth,
                     lineType    : nLineType
@@ -250,7 +251,7 @@
                                   ) 
                                   || nAreaColor 
                                   || nColor 
-                                  || zrColor.alpha(defaultColor,0.5),
+                                  || (typeof defaultColor === 'string' ? zrColor.alpha(defaultColor,0.5) : defaultColor),
                     strokeColor : this.getItemStyleColor(
                                        this.deepQuery(
                                            queryTarget, 'itemStyle.emphasis.color'
@@ -318,7 +319,8 @@
                 return;
             }
 
-            var target = param.target;      // 被拖拽图形元素
+            // 被拖拽图形元素
+            var target = param.target;
 
             var seriesIndex = ecData.get(target, 'seriesIndex');
             var dataIndex = ecData.get(target, 'dataIndex');
@@ -360,7 +362,7 @@
             var legend = this.component.legend;
             var value;
 
-            if (dataIndex == -1) {
+            if (dataIndex === -1) {
                 data = {
                     value : ecData.get(dragged, 'value'),
                     name : ecData.get(dragged, 'name')
@@ -381,7 +383,7 @@
                 data.name += this.option.nameConnector
                              + ecData.get(dragged, 'name');
                 value = ecData.get(dragged, 'value');
-                for (var i = 0 ; i < value.length; i ++) {
+                for (var i = 0 ; i < value.length; i++) {
                     data.value[i] = accMath.accAdd(data.value[i], value[i]);
                 }
                 
