@@ -73,7 +73,7 @@ define(function(require) {
         if (typeof(n2) == 'string') {
             n2 = this._nodesMap[n2];
         }
-        if (! n1 || !n2) {
+        if (!n1 || !n2) {
             return;
         }
 
@@ -118,11 +118,17 @@ define(function(require) {
 
     /**
      * 移除节点（及其邻接边）
-     * @param  {module:echarts/data/Graph~Node} node
+     * @param  {module:echarts/data/Graph~Node|string} node
      */
     Graph.prototype.removeNode = function(node) {
-        var name = node.name;
-        delete this._nodesMap[name];
+        if (typeof(node) === 'string') {
+            node = this._nodesMap[node];
+            if (!node) {
+                return;
+            }
+        }
+
+        delete this._nodesMap[node.name];
         this.nodes.splice(util.indexOf(this.nodes, node), 1);
 
         for (var i = 0; i < this.edges.length;) {
@@ -155,7 +161,16 @@ define(function(require) {
             cb.call(context, this.edges[i]);
         }
     }
+    /**
+     * 清空图
+     */
+    Graph.prototype.clear = function() {
+        this.nodes.length = 0;
+        this.edges.length = 0;
 
+        this._nodesMap = {};
+        this._edgesMap = {};
+    }
     /**
      * 图节点
      * @alias module:echarts/data/Graph~Node

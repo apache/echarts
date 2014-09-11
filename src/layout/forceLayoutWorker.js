@@ -73,7 +73,8 @@ define(function __echartsForceLayoutWorker(require) {
                 return out;
             }
         };
-    } else {
+    }
+    else {
         vec2 = require('zrender/tool/vector');
     }
     var ArrayCtor = typeof(Float32Array) == 'undefined' ? Array : Float32Array;
@@ -125,7 +126,8 @@ define(function __echartsForceLayoutWorker(require) {
             if (this.node == null) {
                 this.node = node;
                 return;
-            } else {
+            }
+            else {
                 this._addNodeToSubRegion(this.node);
                 this.node = null;
             }
@@ -238,9 +240,9 @@ define(function __echartsForceLayoutWorker(require) {
     /****************************
      * Class: Graph Edge
      ***************************/
-    function GraphEdge(source, target) {
-        this.source = source;
-        this.target = target;
+    function GraphEdge(node1, node2) {
+        this.node1 = node1;
+        this.node2 = node2;
 
         this.weight = 1;
     }
@@ -351,7 +353,8 @@ define(function __echartsForceLayoutWorker(require) {
                 this._rootRegion.addNode(this.nodes[i]);
             }
             this._rootRegion.afterUpdate();
-        } else {
+        }
+        else {
             // Update center of mass of whole graph
             var mass = 0;
             var centerOfMass = this._rootRegion.centerOfMass;
@@ -378,7 +381,8 @@ define(function __echartsForceLayoutWorker(require) {
             var na = this.nodes[i];
             if (this.barnesHutOptimize) {
                 this.applyRegionToNodeRepulsion(this._rootRegion, na);
-            } else {
+            }
+            else {
                 for (var j = i + 1; j < nNodes; j++) {
                     var nb = this.nodes[j];
                     this.applyNodeToNodeRepulsion(na, nb, false);
@@ -445,13 +449,15 @@ define(function __echartsForceLayoutWorker(require) {
         return function applyRegionToNodeRepulsion(region, node) {
             if (region.node) { // Region is a leaf 
                 this.applyNodeToNodeRepulsion(region.node, node, true);
-            } else {
+            }
+            else {
                 vec2.sub(v, node.position, region.centerOfMass);
                 var d2 = v[0] * v[0] + v[1] * v[1];
                 if (d2 > this.barnesHutTheta * region.size * region.size) {
                     var factor = this._k * this._k * (node.mass + region.mass) / (d2 + 1);
                     vec2.scaleAndAdd(node.force, node.force, v, factor * 2);
-                } else {
+                }
+                else {
                     for (var i = 0; i < region.nSubRegions; i++) {
                         this.applyRegionToNodeRepulsion(region.subRegions[i], node);
                     }
@@ -483,11 +489,13 @@ define(function __echartsForceLayoutWorker(require) {
                 d = d - na.size - nb.size;
                 if (d > 0) {
                     factor = k2 * mass / (d * d);
-                } else if (d <= 0) {
+                }
+                else if (d <= 0) {
                     // A stronger repulsion if overlap
                     factor = k2 * 10 * mass;
                 }
-            } else {
+            }
+            else {
                 // Divide factor by an extra `d` to normalize the `v`
                 factor = k2 * mass / d2;
             }
@@ -502,8 +510,8 @@ define(function __echartsForceLayoutWorker(require) {
     ForceLayout.prototype.applyEdgeAttraction = (function() {
         var v = vec2.create();
         return function applyEdgeAttraction(edge) {
-            var na = edge.source;
-            var nb = edge.target;
+            var na = edge.node1;
+            var nb = edge.node2;
 
             vec2.sub(v, na.position, nb.position);
             var d = vec2.len(v);
@@ -511,9 +519,11 @@ define(function __echartsForceLayoutWorker(require) {
             var w;
             if (this.edgeWeightInfluence === 0) {
                 w = 1;
-            } else if (this.edgeWeightInfluence == 1) {
+            }
+            else if (this.edgeWeightInfluence == 1) {
                 w = edge.weight;
-            } else {
+            }
+            else {
                 w = Math.pow(edge.weight, this.edgeWeightInfluence);
             }
 
@@ -544,7 +554,8 @@ define(function __echartsForceLayoutWorker(require) {
             if (this.width > this.height) {
                 // Stronger gravity on y axis
                 v[1] *= this.width / this.height;
-            } else {
+            }
+            else {
                 // Stronger gravity on x axis
                 v[0] *= this.height / this.width;
             }
@@ -552,7 +563,8 @@ define(function __echartsForceLayoutWorker(require) {
             
             if (this.strongGravity) {
                 vec2.scaleAndAdd(node.force, node.force, v, d * this.gravity * node.mass);
-            } else {
+            }
+            else {
                 vec2.scaleAndAdd(node.force, node.force, v, this.gravity * node.mass / (d + 1));
             }
         };
@@ -580,6 +592,14 @@ define(function __echartsForceLayoutWorker(require) {
         var str = __echartsForceLayoutWorker.toString();
         return str.slice(str.indexOf('{') + 1, str.lastIndexOf('return'));
     };
+
+    ForceLayout.prototype.setToken = function(token) {
+        this._token = token;
+    }
+
+    ForceLayout.prototype.tokenMatch = function(token) {
+        return token === this._token;
+    }
 
     /****************************
      * Main process
@@ -630,23 +650,22 @@ define(function __echartsForceLayoutWorker(require) {
 
                         forceLayout.temperature = e.data.temperature;
 
-                        if (e.data.temperature > 0.01) {
-                            for (var i = 0; i < steps; i++) {
-                                forceLayout.update();
-                                forceLayout.temperature *= e.data.coolDown;
-                            }
-                            // Callback
-                            for (var i = 0; i < nNodes; i++) {
-                                var node = forceLayout.nodes[i];
-                                positionArr[i * 2 + 1] = node.position[0];
-                                positionArr[i * 2 + 2] = node.position[1];
-                            }
-
-                            positionArr[0] = forceLayout._token;
+                        for (var i = 0; i < steps; i++) {
+                            forceLayout.update();
+                            forceLayout.temperature *= e.data.coolDown;
+                        }
+                        // Callback
+                        for (var i = 0; i < nNodes; i++) {
+                            var node = forceLayout.nodes[i];
+                            positionArr[i * 2 + 1] = node.position[0];
+                            positionArr[i * 2 + 2] = node.position[1];
                         }
 
+                        positionArr[0] = forceLayout._token;
+
                         self.postMessage(positionArr.buffer, [positionArr.buffer]);
-                    } else {
+                    }
+                    else {
                         // Not initialzied yet
                         var emptyArr = new Float32Array();
                         // Post transfer object

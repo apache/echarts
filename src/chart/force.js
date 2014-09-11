@@ -11,7 +11,8 @@ define(function (require) {
     var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
 
-    var ForceLayout = require('./forceLayoutWorker');
+    var Graph = require('../data/Graph');
+    var ForceLayout = require('../layout/Force');
     
     // 图形依赖
     var LineShape = require('zrender/shape/Line');
@@ -24,32 +25,11 @@ define(function (require) {
     var zrConfig = require('zrender/config');
     var vec2 = require('zrender/tool/vector');
 
-    var NDArray = require('../util/ndarray');
-    var ArrayCtor = typeof(Float32Array) == 'undefined' ? Array : Float32Array;
-
     var requestAnimationFrame = window.requestAnimationFrame
                                 || window.msRequestAnimationFrame
                                 || window.mozRequestAnimationFrame
                                 || window.webkitRequestAnimationFrame
                                 || function (func){setTimeout(func, 16);};
-
-    // Use inline web worker
-    var workerUrl;
-    if (
-        typeof(Worker) !== 'undefined' &&
-        typeof(Blob) !== 'undefined'
-    ) {
-        try {
-            var blob = new Blob([ForceLayout.getWorkerCode()]);
-            workerUrl = window.URL.createObjectURL(blob);   
-        } catch(e) {
-            workerUrl = '';
-        }
-    }
-
-    function getToken() {
-        return Math.round(new Date().getTime() / 100) % 10000000;
-    }
 
     /**
      * 构造函数
@@ -66,21 +46,16 @@ define(function (require) {
         ChartBase.call(this);
 
         // 保存节点的位置，改变数据时能够有更好的动画效果
-        // TODO
         this.__nodePositionMap = {};
 
-        this._nodeShapes = [];
-        this._linkShapes = [];
+        this._graph = new Graph(true);
+        this._layout = new ForceLayout();
 
-        this._updating = true;
-
-        this._filteredNodes = null;
-        this._filteredLinks = null;
-        this._rawNodes = null;
-        this._rawLinks = null;
+        this._layout.onupdate = function() {
+            self._step();
+        }
 
         this._steps = 1;
-        this._coolDown = 0.99;
 
         // 关闭可拖拽属性
         this.ondragstart = function() {
@@ -110,51 +85,11 @@ define(function (require) {
 
         _init: function() {
             var self = this;
-
-            this.clear();
-
-            this._updating = true;
-        
-            this._buildShape();
-
-            if (this._layoutWorker) {
-                this._layoutWorker.onmessage = function(e) {
-                    if (self._temperature < 0.01) {
-                        requestAnimationFrame(function() {
-                            self._step.call(self, e);
-                        });   
-                    } else {
-                        self._step.call(self, e);
-                    }
-                };
-
-                this._layoutWorker.postMessage({
-                    cmd: 'update',
-                    steps: this._steps,
-                    temperature: this._temperature,
-                    coolDown: this._coolDown
-                });
-            }
-            else {
-                var cb = function() {
-                    if (self._updating) {
-                        self._step();
-                        requestAnimationFrame(cb);
-                    }
-                };
-
-                requestAnimationFrame(cb);
-            }
-        },
-
-        _buildShape: function() {
             var legend = this.component.legend;
             var series = this.series;
             var serieName;
 
-            this._temperature = 1;
-
-            this.shapeList.length = 0;
+            this.clear();
 
             for (var i = 0, l = series.length; i < l; i++) {
                 var serie = series[i];
@@ -162,28 +97,6 @@ define(function (require) {
                     series[i] = this.reformOption(series[i]);
                     serieName = series[i].name || '';
                     
-                    if (workerUrl && serie.useWorker) {
-                        try {
-                            if (!this._layoutWorker) {
-                                this._layoutWorker = new Worker(workerUrl);
-                            }
-                            this._layout = null;   
-                        } catch(e) {    // IE10-11 will throw security error when using blog url
-                            this._layoutWorker = null;
-                            if (!this._layout) {
-                                this._layout = new ForceLayout();
-                            }
-                        }
-                    } else {
-                        if (!this._layout) {
-                            this._layout = new ForceLayout();
-                        }
-                        if (this._layoutWorker) {
-                            this._layoutWorker.terminate();
-                            this._layoutWorker = null;
-                        }
-                    }
-
                     // 系列图例开关
                     this.selectedMap[serieName] = 
                         legend ? legend.isSelected(serieName) : true;
@@ -206,210 +119,166 @@ define(function (require) {
                         }
                     }
 
-                    this._preProcessData(serie);
-
-                    this._nodeShapes.length = 0;
-                    this._linkShapes.length = 0;
-
-                    this._buildLinkShapes(serie);
-                    this._buildNodeShapes(serie);
-
-                    this._initLayout(serie);
-
-                    this._updateLinkShapes();
-
                     // TODO 多个 force 
                     this._forceSerie = serie;
+
+                    this._initSerie(serie);
                     break;
                 }
             }
         },
 
-        _preProcessData: function(serie) {
-            this._rawNodes = this.query(serie, 'nodes');
-            this._rawLinks = zrUtil.clone(this.query(serie, 'links'));
+        _initSerie: function(serie) {
+            this._temperature = 1;
 
-            var filteredNodeList = [];
-            var filteredNodeMap = {};
-            var cursor = 0;
-            var self = this;
-            this._filteredNodes = _filter(this._rawNodes, function (node, i) {
-                if (!node) {
-                    return;
-                }
-                if (node.ignore) {
-                    return;
-                }
-                var idx = -1;
+            var graph = this._graph;
+            graph.clear();
+
+            for (var i = 0, len = serie.nodes.length; i < len; i++) {
+                var n = serie.nodes[i];
                 if (
-                    typeof(node.category) == 'undefined'
-                    || self.selectedMap[node.category]
+                    !n || n.ignore
+                    || (n.category && !this.selectedMap[n.category])
                 ) {
-                    idx = cursor++;
+                    continue;
                 }
-                if (node.name) {
-                    filteredNodeMap[node.name] = idx;
+                var node = graph.addNode(n.name, n);
+                node.rawIndex = i;
+            }
+            for (var i = 0, len = serie.links.length; i < len; i++) {
+                var e = serie.links[i];
+                var n1 = e.source;
+                var n2 = e.target;
+                if (typeof(n1) === 'number') {
+                    n1 = serie.nodes[n1];
+                    if (n1) {
+                        n1 = n1.name;
+                    }
                 }
-                filteredNodeList[i] = idx;
+                if (typeof(n2) === 'number') {
+                    n2 = serie.nodes[n2];
+                    if (n2) {
+                        n2 = n2.name;
+                    }
+                }
+                var edge = graph.addEdge(n1, n2, e);
+                if (edge) {
+                    edge.rawIndex = i;
+                }
+            }
 
-                return idx >= 0;
-            });
-            var source;
-            var target;
-            this._filteredLinks = _filter(this._rawLinks, function (link, i){
-                source = link.source;
-                target = link.target;
-                var ret = true;
-                var idx = typeof(source) === 'string'
-                    ? filteredNodeMap[source]    // source 用 node id 表示
-                    : filteredNodeList[source];  // source 用 node index 表示
-                if (typeof(idx) == 'undefined') {
-                    idx = -1;
-                }
+            this._buildLinkShapes(serie);
+            this._buildNodeShapes(serie);
 
-                if (idx >= 0) {
-                    link.source = idx;
-                } else {
-                    ret = false;
-                }
+            this._initLayout(serie);
 
-                var idx = typeof(target) === 'string'
-                    ? filteredNodeMap[target]    // target 用 node id 表示
-                    : filteredNodeList[target];  // target 用 node index 表示
-                if (typeof(idx) == 'undefined') {
-                    idx = -1;
-                }
-
-                if (idx >= 0) {
-                    link.target = idx;
-                } else {
-                    ret = false;
-                }
-                // 保存原始链接中的index
-                link.rawIndex = i;
-
-                return ret;
-            });
+            this._step();
         },
 
         _initLayout: function(serie) {
-
-            var nodes = this._filteredNodes;
-            var links = this._filteredLinks;
-            var shapes = this._nodeShapes;
-            var len = nodes.length;
+            var graph = this._graph;
+            var len = graph.nodes.length;
 
             var minRadius = this.query(serie, 'minRadius');
             var maxRadius = this.query(serie, 'maxRadius');
-            this._steps = serie.steps || 1;
-            this._coolDown = serie.coolDown || 0.99;
 
-            var center = this.parseCenter(this.zr, serie.center);
-            var width = this.parsePercent(serie.size, this.zr.getWidth());
-            var height = this.parsePercent(serie.size, this.zr.getHeight());
-            var size = Math.min(width, height);
+            this._steps = serie.steps || 1;
+
+            this._layout.center = this.parseCenter(this.zr, serie.center);
+            this._layout.width = this.parsePercent(serie.size, this.zr.getWidth());
+            this._layout.height = this.parsePercent(serie.size, this.zr.getHeight());
+
+            this._layout.large = serie.large;
+            this._layout.scaling = serie.scaling;
+            this._layout.ratioScaling = serie.ratioScaling;
+            this._layout.gravity = serie.gravity;
+            this._layout.temperature = 1;
+            this._layout.coolDown = serie.coolDown;
 
             // 将值映射到minRadius-maxRadius的范围上
-            var radius = [];
+            var min = Infinity; var max = -Infinity;
             for (var i = 0; i < len; i++) {
-                var node = nodes[i];
-                radius.push(node.value || 1);
+                var gNode = graph.nodes[i];
+                gNode.layout = {
+                    radius: gNode.data.value || 1,
+                    mass: 0
+                };
+                max = Math.max(gNode.data.value, max);
+                min = Math.min(gNode.data.value, min);
             }
-
-            var arr = new NDArray(radius);
-            radius = arr.map(minRadius, maxRadius).toArray();
-            var max = arr.max();
-            if (max === 0) {
-                return;
+            var divider = max - min;
+            for (var i = 0; i < len; i++) {
+                var gNode = graph.nodes[i];
+                if (divider > 0) {
+                    gNode.layout.radius = 
+                        (gNode.layout.radius - min) * (maxRadius - minRadius) / divider
+                        + minRadius;
+                    // 节点质量是归一的
+                    gNode.layout.mass = gNode.layout.radius / maxRadius;
+                } else {
+                    gNode.layout.radius = (maxRadius - minRadius) / 2;
+                    gNode.layout.mass = 0.5;
+                }
             }
-            var massArr = arr.mul(1/max, arr).toArray();
-            var positionArr = new ArrayCtor(len * 2);
 
             for (var i = 0; i < len; i++) {
                 var initPos;
-                var node = nodes[i];
-                if (typeof(this.__nodePositionMap[node.name]) !== 'undefined') {
-                    initPos = vec2.create();
-                    vec2.copy(initPos, this.__nodePositionMap[node.name]);
-                } else if (typeof(node.initial) !== 'undefined') {
-                    initPos = Array.prototype.slice.call(node.initial);
-                } else {
-                    initPos = _randomInSquare(
+                var gNode = graph.nodes[i];
+                if (typeof(this.__nodePositionMap[gNode.name]) !== 'undefined') {
+                    gNode.layout.position = vec2.create();
+                    vec2.copy(gNode.layout.position, this.__nodePositionMap[gNode.name]);
+                }
+                else if (typeof(gNode.data.initial) !== 'undefined') {
+                    gNode.layout.position = vec2.create();
+                    vec2.copy(gNode.layout.position, gNode.data.initial)
+                }
+                else {
+                    var center = this._layout.center;
+                    var size = Math.min(this._layout.width, this._layout.height);
+                    gNode.layout.position = _randomInSquare(
                         center[0], center[1], size * 0.8
                     );
                 }
-                var style = shapes[i].style;
-                style.width = style.width || (radius[i] * 2);
-                style.height = style.height || (radius[i] * 2);
+                var style = gNode.shape.style;
+                var radius = gNode.layout.radius;
+                style.width = style.width || (radius * 2);
+                style.height = style.height || (radius * 2);
                 style.x = -style.width / 2;
                 style.y = -style.height / 2;
-                shapes[i].position = initPos;
-
-                positionArr[i * 2] = initPos[0];
-                positionArr[i * 2 + 1] = initPos[1];
+                vec2.copy(gNode.shape.position, gNode.layout.position);
             }
 
-            len = links.length;
-            var edgeArr = new ArrayCtor(len * 2);
-            var edgeWeightArr = new ArrayCtor(len);
+            // 边
+            len = graph.edges.length;
+            max = -Infinity;
             for (var i = 0; i < len; i++) {
-                var link = links[i];
-                edgeArr[i * 2] = link.source;
-                edgeArr[i * 2 + 1] = link.target;
-                edgeWeightArr[i] = link.weight || 1;
+                var e = graph.edges[i];
+                e.layout = {
+                    weight: e.data.weight || 1
+                }
+                if (e.layout.weight > max) {
+                    max = e.layout.weight;
+                }
+            }
+            // 权重归一
+            for (var i = 0; i < len; i++) {
+                var e = graph.edges[i];
+                e.layout.weight /= max;
             }
 
-            arr = new NDArray(edgeWeightArr);
-            var max = arr.max();
-            if (max === 0) {
-                return;
-            }
-            var edgeWeightArr = arr.mul(1 / max, arr)._array;
-
-            var config = {
-                center: center,
-                width: serie.ratioScaling ? width : size,
-                height: serie.ratioScaling ? height : size,
-                scaling: serie.scaling || 1.0,
-                gravity: serie.gravity || 1.0,
-                barnesHutOptimize: serie.large
-            };
-
-            if (this._layoutWorker) {
-
-                this._token = getToken();
-
-                this._layoutWorker.postMessage({
-                    cmd: 'init',
-                    nodesPosition: positionArr,
-                    nodesMass: massArr,
-                    nodesSize: radius,
-                    edges: edgeArr,
-                    edgesWeight: edgeWeightArr,
-                    token: this._token
-                });
-
-                this._layoutWorker.postMessage({
-                    cmd: 'updateConfig',
-                    config: config
-                });
-
-            } else {
-
-                zrUtil.merge(this._layout, config, true);
-                this._layout.initNodes(positionArr, massArr, radius);
-                this._layout.initEdges(edgeArr, edgeWeightArr);   
-            }
+            this._layout.init(graph, serie.useWorker);
         },
 
         _buildNodeShapes: function(serie) {
+            var graph = this._graph;
+
             var categories = this.query(serie, 'categories');
-            var nodes = this._filteredNodes;
-            var len = nodes.length;
+            var len = graph.nodes.length;
             var legend = this.component.legend;
 
             for (var i = 0; i < len; i++) {
-                var node = nodes[i];
+                var gNode = graph.nodes[i];
+                var node = gNode.data;
 
                 var shape = new IconShape({
                     style : {
@@ -527,29 +396,29 @@ define(function (require) {
                     // data
                     node,
                     // data index
-                    zrUtil.indexOf(this._rawNodes, node),
+                    gNode.rawIndex,
                     // name
                     node.name || '',
                     // value
                     node.value
                 );
                 
-                this._nodeShapes.push(shape);
                 this.shapeList.push(shape);
                 this.zr.addShape(shape);
+
+                gNode.shape = shape;
             }
         },
 
         _buildLinkShapes: function(serie) {
-
-            var nodes = this._filteredNodes;
-            var links = this._filteredLinks;
-            var len = links.length;
+            var graph = this._graph;
+            var len = graph.edges.length;
 
             for (var i = 0; i < len; i++) {
-                var link = links[i];
-                var source = nodes[link.source];
-                var target = nodes[link.target];
+                var gEdge = graph.edges[i];
+                var link = gEdge.data;
+                var source = gEdge.node1;
+                var target = gEdge.node2;
 
                 var linkShape = new LineShape({
                     style : {
@@ -586,7 +455,6 @@ define(function (require) {
                     }
                 }
 
-                var link = this._rawLinks[link.rawIndex];
                 ecData.pack(
                     linkShape,
                     // serie
@@ -595,24 +463,24 @@ define(function (require) {
                     0,
                     // link data
                     {
-                        source : link.source,
-                        target : link.target,
-                        weight : link.weight || 0
+                        source : source.data,
+                        target : target.data,
+                        weight : gEdge.data.weight || 0
                     },
                     // link data index
-                    link.rawIndex,
+                    gEdge.rawIndex,
                     // source name - target name
                     source.name + ' - ' + target.name,
                     // link weight
-                    link.weight || 0,
+                    gEdge.data.weight || 0,
                     // special
                     // 这一项只是为了表明这是条边
                     true
                 );
 
-                this._linkShapes.push(linkShape);
                 this.shapeList.push(linkShape);
                 this.zr.addShape(linkShape);
+                gEdge.shape = linkShape;
 
                 // Arrow shape
                 if (serie.linkSymbol && serie.linkSymbol !== 'none') {
@@ -647,22 +515,21 @@ define(function (require) {
 
         _updateLinkShapes: function() {
             var v = vec2.create();
-            var links = this._filteredLinks;
-            for (var i = 0, len = links.length; i < len; i++) {
-                var link = links[i];
-                var linkShape = this._linkShapes[i];
-                var sourceShape = this._nodeShapes[link.source];
-                var targetShape = this._nodeShapes[link.target];
+            var edges = this._graph.edges;
+            for (var i = 0, len = edges.length; i < len; i++) {
+                var edge = edges[i];
+                var sourceShape = edge.node1.shape;
+                var targetShape = edge.node2.shape;
 
-                linkShape.style.xStart = sourceShape.position[0];
-                linkShape.style.yStart = sourceShape.position[1];
-                linkShape.style.xEnd = targetShape.position[0];
-                linkShape.style.yEnd = targetShape.position[1];
+                edge.shape.style.xStart = sourceShape.position[0];
+                edge.shape.style.yStart = sourceShape.position[1];
+                edge.shape.style.xEnd = targetShape.position[0];
+                edge.shape.style.yEnd = targetShape.position[1];
 
-                this.zr.modShape(linkShape.id);
+                this.zr.modShape(edge.shape.id);
 
-                if (linkShape._symbolShape) {
-                    var symbolShape = linkShape._symbolShape;
+                if (edge.shape._symbolShape) {
+                    var symbolShape = edge.shape._symbolShape;
                     vec2.copy(symbolShape.position, targetShape.position);
 
                     vec2.sub(v, sourceShape.position, targetShape.position);
@@ -676,34 +543,36 @@ define(function (require) {
                     var angle;
                     if (v[1] < 0) {
                         angle = 2 * Math.PI - Math.acos(-v[0]);
-                    } else {
+                    }
+                    else {
                         angle = Math.acos(-v[0]);
                     }
-                    symbolShape.rotation = angle  - Math.PI / 2;
+                    symbolShape.rotation = angle - Math.PI / 2;
 
                     this.zr.modShape(symbolShape.id);
                 }
             }
         },
 
-        _update: function(e) {
-
-            this._layout.temperature = this._temperature;
-            this._layout.update();
-
-            for (var i = 0; i < this._layout.nodes.length; i++) {
-                var position = this._layout.nodes[i].position;
-                var shape = this._nodeShapes[i];
-                var node = this._filteredNodes[i];
+        _syncNodePositions: function() {
+            var graph = this._graph;
+            for (var i = 0; i < graph.nodes.length; i++) {
+                var gNode = graph.nodes[i];
+                var position = gNode.layout.position;
+                var node = gNode.data;
+                var shape = gNode.shape;
                 if (shape.fixed || (node.fixX && node.fixY)) {
                     vec2.copy(position, shape.position);
-                } else if (node.fixX) {
+                }
+                else if (node.fixX) {
                     position[0] = shape.position[0];
                     shape.position[1] = position[1];
-                } else if (node.fixY) {
+                }
+                else if (node.fixY) {
                     position[1] = shape.position[1];
                     shape.position[0] = position[0];
-                } else  {
+                }
+                else  {
                     vec2.copy(shape.position, position);
                 }
 
@@ -715,92 +584,21 @@ define(function (require) {
                     }
                     vec2.copy(gPos, position);
                 }
-            }
 
-            this._temperature *= this._coolDown;
+                this.zr.modShape(shape.id);
+            }
         },
 
-        _updateWorker: function(e) {
-            if (!this._updating) {
-                return;
-            }
-
-            var positionArr = new Float32Array(e.data);
-            var token = positionArr[0];
-            var ret = token === this._token;
-            // If token is from current layout instance
-            if (ret) {
-                var nNodes = (positionArr.length - 1) / 2;
-
-                for (var i = 0; i < nNodes; i++) {
-                    var shape = this._nodeShapes[i];
-                    var node = this._filteredNodes[i];
-                    
-                    var x = positionArr[i * 2 + 1];
-                    var y = positionArr[i * 2 + 2];
-
-                    if (shape.fixed || (node.fixX && node.fixY)) {
-                        positionArr[i * 2 + 1] = shape.position[0];
-                        positionArr[i * 2 + 2] = shape.position[1];
-                    } else if (node.fixX) {
-                        positionArr[i * 2 + 1] = shape.position[0];
-                        shape.position[1] = y;
-                    } else if (node.fixY) {
-                        positionArr[i * 2 + 2] = shape.position[1];
-                        shape.position[0] = x;
-                    } else  {
-                        shape.position[0] = x;
-                        shape.position[1] = y;
-                    }
-
-                    var nodeName = node.name;
-                    if (nodeName) {
-                        var gPos = this.__nodePositionMap[nodeName];
-                        if (!gPos) {
-                            gPos = this.__nodePositionMap[nodeName] = vec2.create();
-                        }
-                        vec2.copy(gPos, shape.position);
-                    }
-                }
-
-                this._layoutWorker.postMessage(positionArr.buffer, [positionArr.buffer]);
-            }
-
-            var self = this;
-            self._layoutWorker.postMessage({
-                cmd: 'update',
-                steps: this._steps,
-                temperature: this._temperature,
-                coolDown: this._coolDown
-            });  
-
-            for (var i = 0; i < this._steps; i++) {
-                this._temperature *= this._coolDown;
-            }
-
-            return ret;
-        },
-
-        _step: function(e){
-            if (this._layoutWorker) {
-                var res = this._updateWorker(e);
-                if (!res) {
-                    return;
-                }
-            } else {
-                if (this._temperature < 0.01) {
-                    return;
-                }
-                this._update();
-            }
+        _step: function(e) {
+            this._syncNodePositions();
 
             this._updateLinkShapes();
 
-            for (var i = 0; i < this._nodeShapes.length; i++) {
-                this.zr.modShape(this._nodeShapes[i].id);
-            }
+            this.zr.refreshNextFrame();
 
-            this.zr.refresh();
+            if (this._layout.temperature > 0.01) {
+                this._layout.step(this._steps);
+            }
         },
 
         refresh: function(newOption) {
@@ -808,20 +606,16 @@ define(function (require) {
                 this.option = newOption;
                 this.series = this.option.series;
             }
-            this.clear();
-            this._buildShape();
+            this._init();
         },
 
         dispose: function(){
-            this._updating = false;
             this.clear();
             this.shapeList = null;
             this.effectList = null;
 
-            if (this._layoutWorker) {
-                this._layoutWorker.terminate();
-            }
-            this._layoutWorker = null;
+            this._layout.dispose();
+            this._layout = null;
 
             this.__nodePositionMap = {};
         }
@@ -846,7 +640,8 @@ define(function (require) {
     }
 
     function onmousemove() {
-        this._temperature = 0.8;
+        this._layout.temperature = 0.8;
+        this._step();
     }
     
     /**
@@ -872,10 +667,10 @@ define(function (require) {
     }
    
     function _randomInSquare(x, y, size) {
-        return [
-            (Math.random() - 0.5) * size + x,
-            (Math.random() - 0.5) * size + y
-        ];
+        var v = vec2.create();
+        v[0] = (Math.random() - 0.5) * size + x;
+        v[1] = (Math.random() - 0.5) * size + y;
+        return v;
     }
 
     function _filter(array, callback){
