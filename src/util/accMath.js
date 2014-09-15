@@ -11,7 +11,11 @@ define(function() {
         var s2 = arg2.toString(); 
         var m = 0;
         try {
-            m = s2.split('.')[1].length - s1.split('.')[1].length;
+            m = s2.split('.')[1].length;
+        }
+        catch(e) {}
+        try {
+            m -= s1.split('.')[1].length;
         }
         catch(e) {}
         
@@ -28,6 +32,9 @@ define(function() {
         var m = 0;
         try {
             m += s1.split('.')[1].length;
+        }
+        catch(e) {}
+        try {
             m += s2.split('.')[1].length;
         }
         catch(e) {}
@@ -44,6 +51,9 @@ define(function() {
         var r2 = 0;
         try {
             r1 = arg1.toString().split('.')[1].length;
+        }
+        catch(e) {}
+        try {
             r2 = arg2.toString().split('.')[1].length;
         }
         catch(e) {}
