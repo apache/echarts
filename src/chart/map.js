@@ -810,7 +810,7 @@ define(function (require) {
                 if (style.scale != null) {
                     shape.scale = zrUtil.clone(style.scale);
                 }
-                
+                console.log(shape);
                 textShape = new TextShape(textShape);
                 switch (shape.style.shapeType) {
                     case 'rectangle' : 
@@ -830,7 +830,9 @@ define(function (require) {
                         break;
                     default :
                         shape = new PathShape(shape);
-                        shape.style.pathArray = shape.buildPathArray(shape.style.path);
+                        if (shape.buildPathArray) {
+                            shape.style.pathArray = shape.buildPathArray(shape.style.path);
+                        }
                         break;
                 }
                 
