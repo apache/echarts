@@ -810,7 +810,7 @@ define(function (require) {
                 if (style.scale != null) {
                     shape.scale = zrUtil.clone(style.scale);
                 }
-                console.log(shape);
+                
                 textShape = new TextShape(textShape);
                 switch (shape.style.shapeType) {
                     case 'rectangle' : 
