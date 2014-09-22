@@ -124,6 +124,18 @@ hr {
 .team i {
     font-size:12px;
 }
+
+.e-list dt {
+    float: left;
+    clear: left;
+    width: 60px;
+}
+.e-list dd {
+    float: left;
+    clear: right;
+    color: #666;
+}
+
 #footer {
     clear:both;
     background-color: rgb(6, 19, 37);
