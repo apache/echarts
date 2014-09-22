@@ -894,7 +894,7 @@ define(function (require) {
             var target = param.target.style.iconType;
             var featureHandler = this.option.toolbox.feature[target].onclick;
             if (typeof featureHandler === 'function') {
-                featureHandler(this.option);
+                featureHandler.call(this, this.option);
             }
         },
 
