@@ -234,7 +234,8 @@
                     brushType   : nIsAreaFill ? 'both' : 'stroke',
                     color       : nAreaColor 
                                   || nColor 
-                                  || (typeof defaultColor === 'string' ? zrColor.alpha(defaultColor,0.5) : defaultColor),
+                                  || (typeof defaultColor === 'string' 
+                                      ? zrColor.alpha(defaultColor,0.5) : defaultColor),
                     strokeColor : nColor || defaultColor,
                     lineWidth   : nLineWidth,
                     lineType    : nLineType
@@ -251,7 +252,8 @@
                                   ) 
                                   || nAreaColor 
                                   || nColor 
-                                  || (typeof defaultColor === 'string' ? zrColor.alpha(defaultColor,0.5) : defaultColor),
+                                  || (typeof defaultColor === 'string' 
+                                      ? zrColor.alpha(defaultColor,0.5) : defaultColor),
                     strokeColor : this.getItemStyleColor(
                                        this.deepQuery(
                                            queryTarget, 'itemStyle.emphasis.color'

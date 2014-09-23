@@ -36,7 +36,7 @@ define(function (require) {
     var zrUtil = require('zrender/tool/util');
     var area = require('zrender/tool/area');
 
-    var _ctx = zrUtil.getContext();
+    // var _ctx = zrUtil.getContext();
     
     function RibbonShape(options) {
         Base.call(this, options);

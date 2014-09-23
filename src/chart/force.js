@@ -25,12 +25,6 @@ define(function (require) {
     var zrConfig = require('zrender/config');
     var vec2 = require('zrender/tool/vector');
 
-    var requestAnimationFrame = window.requestAnimationFrame
-                                || window.msRequestAnimationFrame
-                                || window.mozRequestAnimationFrame
-                                || window.webkitRequestAnimationFrame
-                                || function (func){setTimeout(func, 16);};
-
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -53,7 +47,7 @@ define(function (require) {
 
         this._layout.onupdate = function() {
             self._step();
-        }
+        };
 
         this._steps = 1;
 
@@ -84,7 +78,7 @@ define(function (require) {
         type : ecConfig.CHART_TYPE_FORCE,
 
         _init: function() {
-            var self = this;
+            // var self = this;
             var legend = this.component.legend;
             var series = this.series;
             var serieName;
@@ -222,7 +216,7 @@ define(function (require) {
             }
 
             for (var i = 0; i < len; i++) {
-                var initPos;
+                // var initPos;
                 var gNode = graph.nodes[i];
                 if (typeof(this.__nodePositionMap[gNode.name]) !== 'undefined') {
                     gNode.layout.position = vec2.create();
@@ -230,7 +224,7 @@ define(function (require) {
                 }
                 else if (typeof(gNode.data.initial) !== 'undefined') {
                     gNode.layout.position = vec2.create();
-                    vec2.copy(gNode.layout.position, gNode.data.initial)
+                    vec2.copy(gNode.layout.position, gNode.data.initial);
                 }
                 else {
                     var center = this._layout.center;
@@ -255,7 +249,7 @@ define(function (require) {
                 var e = graph.edges[i];
                 e.layout = {
                     weight: e.data.weight || 1
-                }
+                };
                 if (e.layout.weight > max) {
                     max = e.layout.weight;
                 }
@@ -673,6 +667,7 @@ define(function (require) {
         return v;
     }
 
+    /*
     function _filter(array, callback){
         var len = array.length;
         var result = [];
@@ -683,6 +678,7 @@ define(function (require) {
         }
         return result;
     }
+    */
     
     zrUtil.inherits(Force, ChartBase);
     zrUtil.inherits(Force, ComponentBase);

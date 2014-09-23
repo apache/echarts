@@ -595,11 +595,11 @@ define(function __echartsForceLayoutWorker(require) {
 
     ForceLayout.prototype.setToken = function(token) {
         this._token = token;
-    }
+    };
 
     ForceLayout.prototype.tokenMatch = function(token) {
         return token === this._token;
-    }
+    };
 
     /****************************
      * Main process

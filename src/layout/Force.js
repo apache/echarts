@@ -67,8 +67,8 @@ define(function(require) {
         var _$onupdate = this._$onupdate;
         this._$onupdate = function(e) {
             _$onupdate.call(self, e);
-        }
-    }
+        };
+    };
 
     ForceLayout.prototype.updateConfig = function () {
         var width = this.width;
@@ -95,7 +95,7 @@ define(function(require) {
                 this._layout[name] = config[name];
             }
         }
-    }
+    };
 
     ForceLayout.prototype.init = function(graph, useWorker) {
         if (workerUrl && useWorker) {
@@ -174,7 +174,7 @@ define(function(require) {
         }
 
         this.updateConfig();
-    }
+    };
 
     ForceLayout.prototype.step = function (steps) {
         var nodes = this.graph.nodes;
@@ -212,7 +212,7 @@ define(function(require) {
                 this.temperature *= this.coolDown;
             }
         }
-    }
+    };
 
     ForceLayout.prototype._$onupdate = function (e) {
         if (this._layoutWorker) {
@@ -237,7 +237,7 @@ define(function(require) {
                 this.onupdate && this.onupdate();
             }
         }
-    }
+    };
 
     ForceLayout.prototype.dispose = function() {
         if (this._layoutWorker) {
@@ -246,7 +246,7 @@ define(function(require) {
         this._layoutWorker = null;
         this._layout = null;
         this._token = 0;
-    }
+    };
 
     return ForceLayout;
 });

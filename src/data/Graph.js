@@ -31,7 +31,7 @@ define(function(require) {
 
         this._nodesMap = {};
         this._edgesMap = {};
-    }
+    };
 
     /**
      * 添加一个新的节点
@@ -49,7 +49,8 @@ define(function(require) {
 
         this._nodesMap[name] = node;
         return node;
-    }
+    };
+    
     /**
      * 获取节点
      * @param  {string} name
@@ -57,7 +58,7 @@ define(function(require) {
      */
     Graph.prototype.getNodeByName = function(name) {
         return this._nodesMap[name];
-    }
+    };
 
     /**
      * 添加边
@@ -95,7 +96,7 @@ define(function(require) {
         this._edgesMap[key] = edge;
 
         return edge;
-    }
+    };
 
     /**
      * 移除边
@@ -114,7 +115,7 @@ define(function(require) {
 
         delete this._edgesMap[key];
         this.edges.splice(util.indexOf(this.edges, edge), 1);
-    }
+    };
 
     /**
      * 移除节点（及其邻接边）
@@ -139,7 +140,7 @@ define(function(require) {
                 i++;
             }
         }
-    }
+    };
 
     /**
      * 线性遍历所有节点
@@ -150,7 +151,8 @@ define(function(require) {
         for (var i = 0; i < this.nodes.length; i++) {
             cb.call(context, this.nodes[i]);
         }
-    }
+    };
+    
     /**
      * 线性遍历所有边
      * @param  {Function} cb
@@ -160,7 +162,8 @@ define(function(require) {
         for (var i = 0; i < this.edges.length; i++) {
             cb.call(context, this.edges[i]);
         }
-    }
+    };
+    
     /**
      * 清空图
      */
@@ -170,7 +173,8 @@ define(function(require) {
 
         this._nodesMap = {};
         this._edgesMap = {};
-    }
+    };
+    
     /**
      * 图节点
      * @alias module:echarts/data/Graph~Node
@@ -203,28 +207,31 @@ define(function(require) {
          * @type {Array.<module:echarts/data/Graph~Edge>}
          */
         this.edges = [];
-    }
+    };
+    
     /**
      * 度
      * @return {number}
      */
     Node.prototype.degree = function() {
         return this.edges.length; 
-    }
+    };
+    
     /**
      * 入度，只在有向图上有效
      * @return {number}
      */
     Node.prototype.inDegree = function() {
         return this.inEdges.length;
-    }
+    };
+    
     /**
      * 出度，只在有向图上有效
      * @return {number}
      */
     Node.prototype.outDegree = function() {
         return this.outEdges.length;
-    }
+    };
 
     /**
      * 图边
@@ -250,7 +257,7 @@ define(function(require) {
          * @type {*}
          */
         this.data = data || null;
-    }
+    };
 
     Graph.Node = Node;
     Graph.Edge = Edge;
@@ -334,7 +341,7 @@ define(function(require) {
                 }
             }
         }
-    }
+    };
 
     return Graph;
 });
