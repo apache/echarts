@@ -541,10 +541,17 @@ define(function (require) {
                                    || position;
                         
                         specialCssText += this._style(this.query(series[i], 'tooltip'));
-                        seriesArray.push(series[i]);
-                        seriesIndex.push(i);
+                        if (series[i].stack != null) {
+                            seriesArray.unshift(series[i]);
+                            seriesIndex.unshift(i);
+                        }
+                        else {
+                            seriesArray.push(series[i]);
+                            seriesIndex.push(i);
+                        }
                     }
                 }
+                
                 // 寻找高亮元素
                 this.messageCenter.dispatch(
                     ecConfig.EVENT.TOOLTIP_HOVER,
