@@ -281,6 +281,7 @@ define(function (require) {
             this.dircetionTimer = setInterval(function() {
                 self._dispatchEvent(params.event, params.target._roamType);
             }, 100);
+            zrEvent.stop(params.event);
         },
         
         _drictionHandlerOff: function(params) {
@@ -289,6 +290,7 @@ define(function (require) {
         
         __scaleHandler: function(params) {
             this._dispatchEvent(params.event, params.target._roamType);
+            zrEvent.stop(params.event);
         },
         
         _dispatchEvent: function(event, roamType){
@@ -302,7 +304,6 @@ define(function (require) {
                 },
                 this.myChart
             );
-            zrEvent.stop(event);
         },
         /**
          * 刷新
