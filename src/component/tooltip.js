@@ -465,7 +465,7 @@ define(function (require) {
                 if (dataIndex <= 0) {
                     dataIndex = 0;
                 }
-                if (y - top >= bottom - y) {
+                else if (y - top >= bottom - y) {
                     dataIndex -= 1;
                 }
                 else {
