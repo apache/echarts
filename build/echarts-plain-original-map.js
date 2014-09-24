@@ -425,10 +425,10 @@ define('echarts/config',[],function() {
         CHART_TYPE_MAP: 'map',
         CHART_TYPE_K: 'k',
         CHART_TYPE_ISLAND: 'island',
-        CHART_TYPE_FORCE : 'force',
-        CHART_TYPE_CHORD : 'chord',
-        CHART_TYPE_GAUGE : 'gauge',
-        CHART_TYPE_FUNNEL : 'funnel',
+        CHART_TYPE_FORCE: 'force',
+        CHART_TYPE_CHORD: 'chord',
+        CHART_TYPE_GAUGE: 'gauge',
+        CHART_TYPE_FUNNEL: 'funnel',
 
         // 组件类型
         COMPONENT_TYPE_TITLE: 'title',
@@ -460,11 +460,11 @@ define('echarts/config',[],function() {
         // 图表标题
         title: {
             text: '',
-            //link: null,              // 超链接跳转
-            //target: null,            // 仅支持self | blank
+            // link: null,             // 超链接跳转
+            // target: null,           // 仅支持self | blank
             subtext: '',
-            //sublink: null,           // 超链接跳转
-            //subtarget: null,         // 仅支持self | blank
+            // sublink: null,          // 超链接跳转
+            // subtarget: null,        // 仅支持self | blank
             x: 'left',                 // 水平安放位置，默认为左对齐，可选为：
                                        // 'center' ¦ 'left' ¦ 'right'
                                        // ¦ {number}（x坐标，单位px）
@@ -477,7 +477,7 @@ define('echarts/config',[],function() {
             borderWidth: 0,            // 标题边框线宽，单位px，默认为0（无边框）
             padding: 5,                // 标题内边距，单位px，默认各方向内边距为5，
                                        // 接受数组分别设定上右下左边距，同css
-            itemGap: 5,               // 主副标题纵向间隔，单位px，默认为10，
+            itemGap: 5,                // 主副标题纵向间隔，单位px，默认为10，
             textStyle: {
                 fontSize: 18,
                 fontWeight: 'bolder',
@@ -510,7 +510,7 @@ define('echarts/config',[],function() {
             textStyle: {
                 color: '#333'          // 图例文字颜色
             },
-            selectedMode: true        // 选择模式，默认开启图例开关
+            selectedMode: true         // 选择模式，默认开启图例开关
             // selected: null,         // 配置默认选中状态，可配合LEGEND.SELECTED事件做动态数据载入
             // data: [],               // 图例内容（详见legend.data，数组中每一项代表一个item
         },
@@ -541,15 +541,15 @@ define('echarts/config',[],function() {
             calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
             realtime: true,
             color:['#006edd','#e0ffff'],//颜色 
-            //formatter: null,
-            //text:['高','低'],           // 文本，默认为数值文本
+            // formatter: null,
+            // text:['高','低'],         // 文本，默认为数值文本
             textStyle: {
                 color: '#333'          // 值域文字颜色
             }
         },
 
         toolbox: {
-            show : false,
+            show: false,
             orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
             x: 'right',                // 水平安放位置，默认为全图右对齐，可选为：
@@ -558,9 +558,9 @@ define('echarts/config',[],function() {
             y: 'top',                  // 垂直安放位置，默认为全图顶端，可选为：
                                        // 'top' ¦ 'bottom' ¦ 'center'
                                        // ¦ {number}（y坐标，单位px）
-            color : ['#1e90ff','#22bb22','#4b0082','#d2691e'],
-            disableColor : '#ddd',
-            effectiveColor : 'red',
+            color: ['#1e90ff','#22bb22','#4b0082','#d2691e'],
+            disableColor: '#ddd',
+            effectiveColor: 'red',
             backgroundColor: 'rgba(0,0,0,0)', // 工具箱背景颜色
             borderColor: '#ccc',       // 工具箱边框颜色
             borderWidth: 0,            // 工具箱边框线宽，单位px，默认为0（无边框）
@@ -568,55 +568,55 @@ define('echarts/config',[],function() {
                                        // 接受数组分别设定上右下左边距，同css
             itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
-            itemSize: 16,             // 工具箱图形宽度
-            showTitle : true,
-            //textStyle : {},
-            feature : {
-                mark : {
-                    show : false,
-                    title : {
-                        mark : '辅助线开关',
-                        markUndo : '删除辅助线',
-                        markClear : '清空辅助线'
+            itemSize: 16,              // 工具箱图形宽度
+            showTitle: true,
+            // textStyle: { },
+            feature: {
+                mark: {
+                    show: false,
+                    title: {
+                        mark: '辅助线开关',
+                        markUndo: '删除辅助线',
+                        markClear: '清空辅助线'
                     },
-                    lineStyle : {
-                        width : 1,
-                        color : '#1e90ff',
-                        type : 'dashed'
+                    lineStyle: {
+                        width: 1,
+                        color: '#1e90ff',
+                        type: 'dashed'
                     }
                 },
-                dataZoom : {
-                    show : false,
-                    title : {
-                        dataZoom : '区域缩放',
-                        dataZoomReset : '区域缩放后退'
+                dataZoom: {
+                    show: false,
+                    title: {
+                        dataZoom: '区域缩放',
+                        dataZoomReset: '区域缩放后退'
                     }
                 },
-                dataView : {
-                    show : false,
-                    title : '数据视图',
+                dataView: {
+                    show: false,
+                    title: '数据视图',
                     readOnly: false,
-                    lang : ['Data View', 'close', 'refresh']
+                    lang: ['Data View', 'close', 'refresh']
                 },
                 magicType: {
-                    show : false,
-                    title : {
-                        line : '折线图切换',
-                        bar : '柱形图切换',
-                        stack : '堆积',
-                        tiled : '平铺'
+                    show: false,
+                    title: {
+                        line: '折线图切换',
+                        bar: '柱形图切换',
+                        stack: '堆积',
+                        tiled: '平铺'
                     },
-                    type : [] // 'line', 'bar', 'stack', 'tiled'
+                    type: [ ] // 'line', 'bar', 'stack', 'tiled'
                 },
-                restore : {
-                    show : false,
-                    title : '还原'
+                restore: {
+                    show: false,
+                    title: '还原'
                 },
-                saveAsImage : {
-                    show : false,
-                    title : '保存为图片',
-                    type : 'png',
-                    lang : ['点击保存'] 
+                saveAsImage: {
+                    show: false,
+                    title: '保存为图片',
+                    type: 'png',
+                    lang: ['点击保存'] 
                 }
             }
         },
@@ -626,21 +626,21 @@ define('echarts/config',[],function() {
             show: true,
             showContent: true,         // tooltip主体内容
             trigger: 'item',           // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
-            // position : null         // 位置 {Array} | {Function}
+            // position: null          // 位置 {Array} | {Function}
             // formatter: null         // 内容格式器：{string}（Template） ¦ {Function}
             islandFormatter: '{a} <br/>{b} : {c}',  // 数据孤岛内容格式器
             showDelay: 20,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
             hideDelay: 100,            // 隐藏延迟，单位ms
-            transitionDuration : 0.4,  // 动画变换时间，单位s
+            transitionDuration: 0.4,   // 动画变换时间，单位s
             backgroundColor: 'rgba(0,0,0,0.7)',     // 提示背景颜色，默认为透明度为0.7的黑色
             borderColor: '#333',       // 提示边框颜色
             borderRadius: 4,           // 提示边框圆角，单位px，默认为4
             borderWidth: 0,            // 提示边框线宽，单位px，默认为0（无边框）
             padding: 5,                // 提示内边距，单位px，默认各方向内边距为5，
                                        // 接受数组分别设定上右下左边距，同css
-            axisPointer : {            // 坐标轴指示器，坐标轴触发有效
-                type : 'line',         // 默认为直线，可选为：'line' | 'shadow' | 'cross'
-                lineStyle : {          // 直线指示器样式设置
+            axisPointer: {             // 坐标轴指示器，坐标轴触发有效
+                type: 'line',          // 默认为直线，可选为：'line' | 'shadow' | 'cross'
+                lineStyle: {           // 直线指示器样式设置
                     color: '#48b',
                     width: 2,
                     type: 'solid'
@@ -650,7 +650,7 @@ define('echarts/config',[],function() {
                     width: 1,
                     type: 'dashed'
                 },
-                shadowStyle : {                     // 阴影指示器样式设置
+                shadowStyle: {                      // 阴影指示器样式设置
                     color: 'rgba(150,150,150,0.3)', // 阴影颜色
                     width: 'auto',                  // 阴影大小
                     type: 'default'
@@ -664,8 +664,8 @@ define('echarts/config',[],function() {
         // 区域缩放控制器
         dataZoom: {
             show: false,
-            orient: 'horizontal',          // 布局方式，默认为水平布局，可选为：
-                                           // 'horizontal' ¦ 'vertical'
+            orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
+                                       // 'horizontal' ¦ 'vertical'
             // x: {number},            // 水平安放位置，默认为根据grid参数适配，可选为：
                                        // {number}（x坐标，单位px）
             // y: {number},            // 垂直安放位置，默认为根据grid参数适配，可选为：
@@ -716,7 +716,7 @@ define('echarts/config',[],function() {
             axisTick: {            // 坐标轴小标记
                 show: true,        // 属性show控制显示与否，默认不显示
                 interval: 'auto',
-                inside : false,    // 控制小标记是否在grid里 
+                inside: false,    // 控制小标记是否在grid里 
                 // onGap: null,
                 length :5,         // 属性length控制线长
                 lineStyle: {       // 属性lineStyle控制线条样式
@@ -777,7 +777,7 @@ define('echarts/config',[],function() {
             },
             axisTick: {            // 坐标轴小标记
                 show: false,       // 属性show控制显示与否，默认不显示
-                inside : false,    // 控制小标记是否在grid里 
+                inside: false,     // 控制小标记是否在grid里 
                 length :5,         // 属性length控制线长
                 lineStyle: {       // 属性lineStyle控制线条样式
                     color: '#333',
@@ -810,12 +810,12 @@ define('echarts/config',[],function() {
             }
         },
 
-        polar : {
-            center : ['50%', '50%'],    // 默认全局居中
-            radius : '75%',
-            startAngle : 90,
-            splitNumber : 5,
-            name : {
+        polar: {
+            center: ['50%', '50%'],    // 默认全局居中
+            radius: '75%',
+            startAngle: 90,
+            splitNumber: 5,
+            name: {
                 show: true,
                 // formatter: null,
                 textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
@@ -837,28 +837,28 @@ define('echarts/config',[],function() {
                     color: '#333'
                 }
             },
-            splitArea : {
-                show : true,
-                areaStyle : {
+            splitArea: {
+                show: true,
+                areaStyle: {
                     color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']
                 }
             },
-            splitLine : {
-                show : true,
-                lineStyle : {
-                    width : 1,
-                    color : '#ccc'
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    width: 1,
+                    color: '#ccc'
                 }
             },
             type: 'polygon'
-            //indicator : []
+            // indicator: [ ]
         },
 
-        timeline : {
+        timeline: {
             show: true,
-            type : 'time',  // 模式是时间类型，支持 number
-            notMerge : false,
-            realtime : true,
+            type: 'time',  // 模式是时间类型，支持 number
+            notMerge: false,
+            realtime: true,
             x: 80,
             // y: {number},
             x2: 80,
@@ -866,17 +866,17 @@ define('echarts/config',[],function() {
             // width: {totalWidth} - x - x2,
             height: 50,
             backgroundColor: 'rgba(0,0,0,0)',   // 时间轴背景颜色
-            borderColor : '#ccc',               // 时间轴边框颜色
-            borderWidth : 0,                    // 时间轴边框线宽，单位px，默认为0（无边框）
-            padding : 5,                        // 时间轴内边距，单位px，默认各方向内边距为5，
-            controlPosition : 'left',           // 'right' | 'none'
-            autoPlay : false,
-            loop : true,
-            playInterval : 2000,                // 播放时间间隔，单位ms
-            lineStyle : {
-                width : 1,
-                color : '#666',
-                type : 'dashed'
+            borderColor: '#ccc',               // 时间轴边框颜色
+            borderWidth: 0,                    // 时间轴边框线宽，单位px，默认为0（无边框）
+            padding: 5,                        // 时间轴内边距，单位px，默认各方向内边距为5，
+            controlPosition: 'left',           // 'right' | 'none'
+            autoPlay: false,
+            loop: true,
+            playInterval: 2000,                // 播放时间间隔，单位ms
+            lineStyle: {
+                width: 1,
+                color: '#666',
+                type: 'dashed'
             },
             label: {                            // 文本标签
                 show: true,
@@ -887,12 +887,12 @@ define('echarts/config',[],function() {
                     color: '#333'
                 }
             },
-            checkpointStyle : {
-                symbol : 'auto',
-                symbolSize : 'auto',
-                color : 'auto',
-                borderColor : 'auto',
-                borderWidth : 'auto',
+            checkpointStyle: {
+                symbol: 'auto',
+                symbolSize: 'auto',
+                color: 'auto',
+                borderColor: 'auto',
+                borderWidth: 'auto',
                 label: {                            // 文本标签
                     show: false,
                     textStyle: {                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
@@ -900,19 +900,19 @@ define('echarts/config',[],function() {
                     }
                 }
             },
-            controlStyle : {
-                normal : { color : '#333'},
-                emphasis : { color : '#1e90ff'}
+            controlStyle: {
+                normal: { color: '#333'},
+                emphasis: { color: '#1e90ff'}
             },
-            symbol : 'emptyDiamond',
-            symbolSize : 4,
-            currentIndex : 0
-            // data : []
+            symbol: 'emptyDiamond',
+            symbolSize: 4,
+            currentIndex: 0
+            // data: []
         },
         
         roamController: {
-            show : false,
-            x: 'left',                // 水平安放位置，默认为全图左对齐，可选为：
+            show: false,
+            x: 'left',                 // 水平安放位置，默认为全图左对齐，可选为：
                                        // 'center' ¦ 'left' ¦ 'right'
                                        // ¦ {number}（x坐标，单位px）
             y: 'top',                  // 垂直安放位置，默认为全图顶端，可选为：
@@ -940,7 +940,7 @@ define('echarts/config',[],function() {
             barMinHeight: 0,          // 最小高度改为0
             // barWidth: null,        // 默认自适应
             barGap: '30%',            // 柱间距离，默认为柱形宽度的30%，可设固定值
-            barCategoryGap : '20%',   // 类目间柱形距离，默认为类目间距的20%，可设固定值
+            barCategoryGap: '20%',    // 类目间柱形距离，默认为类目间距的20%，可设固定值
             itemStyle: {
                 normal: {
                     // color: '各异',
@@ -990,7 +990,7 @@ define('echarts/config',[],function() {
                     lineStyle: {
                         width: 2,
                         type: 'solid',
-                        shadowColor : 'rgba(0,0,0,0)', //默认透明
+                        shadowColor: 'rgba(0,0,0,0)', //默认透明
                         shadowBlur: 0,
                         shadowOffsetX: 0,
                         shadowOffsetY: 0
@@ -1007,11 +1007,11 @@ define('echarts/config',[],function() {
                     }
                 }
             },
-            //smooth : false,
-            //symbol: null,         // 拐点图形类型
-            symbolSize: 2,          // 拐点图形大小
-            //symbolRotate : null,  // 拐点图形旋转控制
-            showAllSymbol: false    // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
+            // smooth: false,
+            // symbol: null,         // 拐点图形类型
+            symbolSize: 2,           // 拐点图形大小
+            // symbolRotate: null,   // 拐点图形旋转控制
+            showAllSymbol: false     // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
         },
         
         // K线图默认参数
@@ -1019,8 +1019,8 @@ define('echarts/config',[],function() {
             clickable: true,
             xAxisIndex: 0,
             yAxisIndex: 0,
-            // barWidth : null          // 默认自适应
-            // barMaxWidth : null       // 默认自适应 
+            // barWidth: null               // 默认自适应
+            // barMaxWidth: null            // 默认自适应 
             itemStyle: {
                 normal: {
                     color: '#fff',          // 阳线填充颜色
@@ -1043,18 +1043,18 @@ define('echarts/config',[],function() {
             clickable: true,
             xAxisIndex: 0,
             yAxisIndex: 0,
-            //symbol: null,      // 图形类型
-            symbolSize: 4,       // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
-            //symbolRotate : null,  // 图形旋转控制
-            large: false,        // 大规模散点图
-            largeThreshold: 2000,// 大规模阀值，large为true且数据量>largeThreshold才启用大规模模式
+            // symbol: null,        // 图形类型
+            symbolSize: 4,          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            // symbolRotate: null,  // 图形旋转控制
+            large: false,           // 大规模散点图
+            largeThreshold: 2000,   // 大规模阀值，large为true且数据量>largeThreshold才启用大规模模式
             itemStyle: {
                 normal: {
                     // color: 各异,
                     label: {
                         show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        formatter : function (a, b, c) {
+                        formatter: function (a, b, c) {
                             if (typeof c[2] != 'undefined') {
                                 return c[2];
                             }
@@ -1072,7 +1072,7 @@ define('echarts/config',[],function() {
                     label: {
                         show: false,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        formatter : function (a, b, c) {
+                        formatter: function (a, b, c) {
                             if (typeof c[2] != 'undefined') {
                                 return c[2];
                             }
@@ -1089,7 +1089,7 @@ define('echarts/config',[],function() {
         },
 
         // 雷达图默认参数
-        radar : {
+        radar: {
             clickable: true,
             polarIndex: 0,
             itemStyle: {
@@ -1110,22 +1110,22 @@ define('echarts/config',[],function() {
                     }
                 }
             },
-            //symbol: null,         // 拐点图形类型
-            symbolSize: 2           // 可计算特性参数，空数据拖拽提示图形大小
-            //symbolRotate : null,  // 图形旋转控制
+            // symbol: null,            // 拐点图形类型
+            symbolSize: 2               // 可计算特性参数，空数据拖拽提示图形大小
+            // symbolRotate: null,      // 图形旋转控制
         },
 
         // 饼图默认参数
         pie: {
             clickable: true,
-            center : ['50%', '50%'],    // 默认全局居中
-            radius : [0, '75%'],
-            clockWise : true,           // 默认顺时针
+            center: ['50%', '50%'],     // 默认全局居中
+            radius: [0, '75%'],
+            clockWise: true,            // 默认顺时针
             startAngle: 90,
             minAngle: 0,                // 最小角度改为0
             selectedOffset: 10,         // 选中是扇区偏移量
             // selectedMode: false,     // 选择模式，默认关闭，可选single，multiple
-            // roseType : null,     // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
+            // roseType: null,          // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
             itemStyle: {
                 normal: {
                     // color: 各异,
@@ -1173,20 +1173,20 @@ define('echarts/config',[],function() {
         map: {
             mapType: 'china',   // 各省的mapType暂时都用中文
             //mapLocation: {
-                // x : 'center' | 'left' | 'right' | 'x%' | {number},
-                // y : 'center' | 'top' | 'bottom' | 'x%' | {number}
+                // x: 'center' | 'left' | 'right' | 'x%' | {number},
+                // y: 'center' | 'top' | 'bottom' | 'x%' | {number}
                 // width    // 自适应
                 // height   // 自适应
             //},
-            // mapValueCalculation: 'sum', // 数值合并方式，默认加和，可选为：
-                                           // 'sum' | 'average' | 'max' | 'min' 
-            mapValuePrecision : 0,         // 地图数值计算结果小数精度
-            showLegendSymbol : true,       // 显示图例颜色标识（系列标识的小圆点），存在legend时生效
-            // selectedMode: false,        // 选择模式，默认关闭，可选single，multiple
+            // mapValueCalculation: 'sum',  // 数值合并方式，默认加和，可选为：
+                                            // 'sum' | 'average' | 'max' | 'min' 
+            mapValuePrecision: 0,           // 地图数值计算结果小数精度
+            showLegendSymbol: true,         // 显示图例颜色标识（系列标识的小圆点），存在legend时生效
+            // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
             hoverable: true,
             clickable: true,
-            // roam : false,               // 是否开启缩放及漫游模式
-            // scaleLimit : null,
+            // roam: false,                 // 是否开启缩放及漫游模式
+            // scaleLimit: null,
             itemStyle: {
                 normal: {
                     // color: 各异,
@@ -1219,7 +1219,7 @@ define('echarts/config',[],function() {
             }
         },
         
-        force : {
+        force: {
             // 布局中心
             center: ['50%', '50%'],
 
@@ -1230,8 +1230,8 @@ define('echarts/config',[],function() {
             coolDown: 0.99,
             
             // 数据映射到圆的半径的最小值和最大值
-            minRadius : 10,
-            maxRadius : 20,
+            minRadius: 10,
+            maxRadius: 20,
 
             // 是否根据屏幕比例拉伸
             ratioScaling: false,
@@ -1247,10 +1247,10 @@ define('echarts/config',[],function() {
             steps: 1,
 
             // 布局缩放因子，并不完全精确, 效果跟布局大小类似
-            scaling : 1.0,
+            scaling: 1.0,
 
             // 向心力因子，越大向心力越大（ 所有顶点会往 center 的位置收拢 )
-            gravity : 1,
+            gravity: 1,
 
             symbol: 'circle',
             // symbolSize 为 0 的话使用映射到minRadius-maxRadius后的值
@@ -1262,7 +1262,7 @@ define('echarts/config',[],function() {
             clickable: true,
 
             // 分类里如果有样式会覆盖节点默认样式
-            categories : [{
+            categories: [{
                 // itemStyle
                 // symbol
                 // symbolSize
@@ -1275,14 +1275,14 @@ define('echarts/config',[],function() {
                         show: false
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
-                    nodeStyle : {
-                        brushType : 'both',
-                        color : '#f08c2e',
-                        strokeColor : '#5182ab',
+                    nodeStyle: {
+                        brushType: 'both',
+                        color: '#f08c2e',
+                        strokeColor: '#5182ab',
                         lineWidth: 1
                     },
-                    linkStyle : {
-                        strokeColor : '#5182ab'
+                    linkStyle: {
+                        strokeColor: '#5182ab'
                     }
                 },
                 emphasis: {
@@ -1291,8 +1291,8 @@ define('echarts/config',[],function() {
                         show: false
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
-                    nodeStyle : {},
-                    linkStyle : {
+                    nodeStyle: {},
+                    linkStyle: {
                         opacity: 0
                     }
                 }
@@ -1319,45 +1319,45 @@ define('echarts/config',[],function() {
             // }]
         },
 
-        chord : {
+        chord: {
             clickable: true,
-            radius : ['65%', '75%'],
-            center : ['50%', '50%'],
-            padding : 2,
-            sort : 'none', // can be 'none', 'ascending', 'descending'
-            sortSub : 'none', // can be 'none', 'ascending', 'descending'
-            startAngle : 90,
-            clockWise : true,
-            showScale : false,
-            showScaleText : false,
-            itemStyle : {
-                normal : {
-                    label : {
-                        show : true,
+            radius: ['65%', '75%'],
+            center: ['50%', '50%'],
+            padding: 2,
+            sort: 'none',       // can be 'none', 'ascending', 'descending'
+            sortSub: 'none',    // can be 'none', 'ascending', 'descending'
+            startAngle: 90,
+            clockWise: true,
+            showScale: false,
+            showScaleText: false,
+            itemStyle: {
+                normal: {
+                    label: {
+                        show: true,
                         rotate: false,
                         distance: 10
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
-                    lineStyle : {
-                        width : 0,
-                        color : '#000'
+                    lineStyle: {
+                        width: 0,
+                        color: '#000'
                     },
-                    chordStyle : {
-                        lineStyle : {
-                            width : 1,
-                            color : '#999'
+                    chordStyle: {
+                        lineStyle: {
+                            width: 1,
+                            color: '#999'
                         }
                     }
                 },
-                emphasis : {
-                    lineStyle : {
-                        width : 0,
-                        color : '#000'
+                emphasis: {
+                    lineStyle: {
+                        width: 0,
+                        color: '#000'
                     },
-                    chordStyle : {
-                        lineStyle : {
-                            width : 1,
-                            color : '#666'
+                    chordStyle: {
+                        lineStyle: {
+                            width: 1,
+                            color: '#666'
                         }
                     }
                 }
@@ -1377,14 +1377,14 @@ define('echarts/config',[],function() {
              *  
              *  Row based
              */
-            matrix : []
+            matrix: [ ]
         },
 
-        gauge : {
-            center : ['50%', '50%'],    // 默认全局居中
-            radius : '75%',
+        gauge: {
+            center: ['50%', '50%'],    // 默认全局居中
+            radius: '75%',
             startAngle: 225,
-            endAngle : -45,
+            endAngle: -45,
             min: 0,                     // 最小值
             max: 100,                   // 最大值
             precision: 0,               // 小数精度，默认为0，无小数点
@@ -1422,37 +1422,37 @@ define('echarts/config',[],function() {
                     type: 'solid'
                 }
             },
-            pointer : {
-                show : true,
-                length : '80%',
-                width : 8,
-                color : 'auto'
+            pointer: {
+                show: true,
+                length: '80%',
+                width: 8,
+                color: 'auto'
             },
-            title : {
-                show : true,
-                offsetCenter: [0, '-40%'],       // x, y，单位px
-                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+            title: {
+                show: true,
+                offsetCenter: [0, '-40%'],      // x, y，单位px
+                textStyle: {                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
                     color: '#333',
-                    fontSize : 15
+                    fontSize: 15
                 }
             },
-            detail : {
-                show : true,
+            detail: {
+                show: true,
                 backgroundColor: 'rgba(0,0,0,0)',
                 borderWidth: 0,
                 borderColor: '#ccc',
                 width: 100,
                 height: 40,
-                offsetCenter: [0, '40%'],       // x, y，单位px
+                offsetCenter: [0, '40%'],   // x, y，单位px
                 // formatter: null,
-                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                textStyle: {                // 其余属性默认使用全局文本样式，详见TEXTSTYLE
                     color: 'auto',
-                    fontSize : 30
+                    fontSize: 30
                 }
             }
         },
         
-        funnel : {
+        funnel: {
             clickable: true,
             x: 80,
             y: 60,
@@ -1464,8 +1464,8 @@ define('echarts/config',[],function() {
             max: 100,
             minSize: '0%',
             maxSize: '100%',
-            sort : 'descending', // 'ascending', 'descending'
-            gap : 0,
+            sort: 'descending', // 'ascending', 'descending'
+            gap: 0,
             itemStyle: {
                 normal: {
                     // color: 各异,
@@ -1506,30 +1506,31 @@ define('echarts/config',[],function() {
             calculateStep: 0.1  // 滚轮可计算步长 0.1 = 10%
         },
         
-        markPoint : {
+        markPoint: {
+            clickable: true,
             symbol: 'pin',         // 标注类型
             symbolSize: 10,        // 标注大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
-            //symbolRotate : null, // 标注旋转控制
-            large : false,
-            effect : {
+            // symbolRotate: null, // 标注旋转控制
+            large: false,
+            effect: {
                 show: false,
                 loop: true,
                 period: 15,             // 运动周期，无单位，值越大越慢
-                scaleSize : 2         // 放大倍数，以markPoint点size为基准
-                // color : 'gold',
-                // shadowColor : 'rgba(255,215,0,0.8)',
-                // shadowBlur : 0          // 炫光模糊
+                scaleSize: 2            // 放大倍数，以markPoint点size为基准
+                // color: 'gold',
+                // shadowColor: 'rgba(255,215,0,0.8)',
+                // shadowBlur: 0          // 炫光模糊
             },
             itemStyle: {
                 normal: {
                     // color: 各异，
-                    // borderColor: 各异,     // 标注边线颜色，优先于color 
-                    borderWidth: 2,            // 标注边线线宽，单位px，默认为1
+                    // borderColor: 各异,        // 标注边线颜色，优先于color 
+                    borderWidth: 2,             // 标注边线线宽，单位px，默认为1
                     label: {
                         show: true,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        // formatter : null,
-                        position: 'inside' // 可选为'left'|'right'|'top'|'bottom'
+                        // formatter: null,
+                        position: 'inside'      // 可选为'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
                 },
@@ -1538,7 +1539,7 @@ define('echarts/config',[],function() {
                     label: {
                         show: true
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        // formatter : null,
+                        // formatter: null,
                         // position: 'inside'  // 'left'|'right'|'top'|'bottom'
                         // textStyle: null     // 默认使用全局文本样式，详见TEXTSTYLE
                     }
@@ -1546,33 +1547,34 @@ define('echarts/config',[],function() {
             }
         },
         
-        markLine : {
+        markLine: {
+            clickable: true,
             // 标线起始和结束的symbol介绍类型，如果都一样，可以直接传string
             symbol: ['circle', 'arrow'],  
             // 标线起始和结束的symbol大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             symbolSize: [2, 4],
             // 标线起始和结束的symbol旋转控制
-            //symbolRotate : null,
-            //smooth : false,
-            large : false,
-            effect : {
+            //symbolRotate: null,
+            //smooth: false,
+            large: false,
+            effect: {
                 show: false,
                 loop: true,
-                period: 15,             // 运动周期，无单位，值越大越慢
-                scaleSize : 2           // 放大倍数，以markLine线lineWidth为基准
-                // color : 'gold',
-                // shadowColor : 'rgba(255,215,0,0.8)',
-                // shadowBlur : lineWidth * 2      // 炫光模糊，默认等于scaleSize计算所得
+                period: 15,                     // 运动周期，无单位，值越大越慢
+                scaleSize: 2                    // 放大倍数，以markLine线lineWidth为基准
+                // color: 'gold',
+                // shadowColor: 'rgba(255,215,0,0.8)',
+                // shadowBlur: lineWidth * 2    // 炫光模糊，默认等于scaleSize计算所得
             },
             itemStyle: {
                 normal: {
-                    // color: 各异,           // 标线主色，线色，symbol主色
+                    // color: 各异,               // 标线主色，线色，symbol主色
                     // borderColor: 随color,     // 标线symbol边框颜色，优先于color 
-                    borderWidth: 1.5,          // 标线symbol边框线宽，单位px，默认为2
+                    borderWidth: 1.5,           // 标线symbol边框线宽，单位px，默认为2
                     label: {
                         show: true,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        // formatter : null,
+                        // formatter: null,
                         // 可选为 'start'|'end'|'left'|'right'|'top'|'bottom'
                         position: 'end'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -1581,7 +1583,7 @@ define('echarts/config',[],function() {
                         // color: 随borderColor, // 主色，线色，优先级高于borderColor和color
                         // width: 随borderWidth, // 优先于borderWidth
                         type: 'dashed'
-                        // shadowColor : 'rgba(0,0,0,0)', //默认透明
+                        // shadowColor: 'rgba(0,0,0,0)', //默认透明
                         // shadowBlur: 0,
                         // shadowOffsetX: 0,
                         // shadowOffsetY: 0
@@ -1592,11 +1594,11 @@ define('echarts/config',[],function() {
                     label: {
                         show: false
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        // formatter : null,
+                        // formatter: null,
                         // position: 'inside' // 'left'|'right'|'top'|'bottom'
                         // textStyle: null    // 默认使用全局文本样式，详见TEXTSTYLE
                     },
-                    lineStyle : {}
+                    lineStyle: {}
                 }
             }
         },
@@ -1619,7 +1621,7 @@ define('echarts/config',[],function() {
             CLICK: 'click',
             DBLCLICK: 'dblclick',
             HOVER: 'hover',
-            MOUSEOUT : 'mouseout',
+            MOUSEOUT: 'mouseout',
             //MOUSEWHEEL: 'mousewheel',
             // -------业务交互逻辑
             DATA_CHANGED: 'dataChanged',
@@ -1631,28 +1633,28 @@ define('echarts/config',[],function() {
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',
             DATA_VIEW_CHANGED: 'dataViewChanged',
             TIMELINE_CHANGED: 'timelineChanged',
-            MAP_ROAM : 'mapRoam',
+            MAP_ROAM: 'mapRoam',
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover',
             TOOLTIP_IN_GRID: 'tooltipInGrid',
             TOOLTIP_OUT_GRID: 'tooltipOutGrid',
             ROAMCONTROLLER: 'roamController'
         },
-        DRAG_ENABLE_TIME : 120,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
-        EFFECT_ZLEVEL : 7,
+        DRAG_ENABLE_TIME: 120,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
+        EFFECT_ZLEVEL: 7,
         // 主题，默认标志图形类型列表
-        symbolList : [
+        symbolList: [
           'circle', 'rectangle', 'triangle', 'diamond',
           'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
         ],
-        loadingText : 'Loading...',
+        loadingText: 'Loading...',
         // 可计算特性配置，孤岛，提示颜色
-        calculable: false,              // 默认关闭可计算特性
-        calculableColor: 'rgba(255,165,0,0.6)',       // 拖拽提示边框颜色
-        calculableHolderColor: '#ccc', // 可计算占位提示颜色
+        calculable: false,                      // 默认关闭可计算特性
+        calculableColor: 'rgba(255,165,0,0.6)', // 拖拽提示边框颜色
+        calculableHolderColor: '#ccc',          // 可计算占位提示颜色
         nameConnector: ' & ',
-        valueConnector: ' : ',
-        animation: true,
+        valueConnector: ': ',
+        animation: true,                // 过渡动画是否开启
         addDataAnimation: true,         // 动态数据接口是否开启动画效果
         animationThreshold: 2000,       // 动画元素阀值，产生的图形原素超过2000不出动画
         animationDuration: 2000,
@@ -4105,9 +4107,20 @@ define(
              */
             distance: function (v1, v2) {
                 return Math.sqrt(
-                    (v1[0] - v2[0]) * (v1[0] - v2[0]) +
-                    (v1[1] - v2[1]) * (v1[1] - v2[1])
+                    (v1[0] - v2[0]) * (v1[0] - v2[0])
+                    + (v1[1] - v2[1]) * (v1[1] - v2[1])
                 );
+            },
+
+            /**
+             * 向量距离平方
+             * @param {Float32Array|Array.<number>} v1
+             * @param {Float32Array|Array.<number>} v2
+             * @return {number}
+             */
+            distanceSquare: function (v1, v2) {
+                return (v1[0] - v2[0]) * (v1[0] - v2[0])
+                    + (v1[1] - v2[1]) * (v1[1] - v2[1]);
             },
 
             /**
@@ -4118,17 +4131,21 @@ define(
             negate: function (out, v) {
                 out[0] = -v[0];
                 out[1] = -v[1];
+                return out;
             },
 
             /**
-             * 计算两个点的中间点
+             * 插值两个点
              * @param {Float32Array|Array.<number>} out
              * @param {Float32Array|Array.<number>} v1
              * @param {Float32Array|Array.<number>} v2
+             * @param {number} t
              */
-            middle: function (out, v1, v2) {
-                out[0] = (v1[0] + v2[0]) / 2;
-                out[1] = (v1[1] + v2[1]) / 2;
+            lerp: function (out, v1, v2, t) {
+                // var ax = v1[0];
+                // var ay = v1[1];
+                out[0] = v1[0] + t * (v2[0] - v1[0]);
+                out[1] = v1[1] + t * (v2[1] - v1[1]);
                 return out;
             },
             
@@ -4144,11 +4161,35 @@ define(
                 out[0] = m[0] * x + m[2] * y + m[4];
                 out[1] = m[1] * x + m[3] * y + m[5];
                 return out;
+            },
+            /**
+             * 求两个向量最小值
+             * @param  {Float32Array|Array.<number>} out
+             * @param  {Float32Array|Array.<number>} v1
+             * @param  {Float32Array|Array.<number>} v2
+             */
+            min: function (out, v1, v2) {
+                out[0] = Math.min(v1[0], v2[0]);
+                out[1] = Math.min(v1[1], v2[1]);
+                return out;
+            },
+            /**
+             * 求两个向量最大值
+             * @param  {Float32Array|Array.<number>} out
+             * @param  {Float32Array|Array.<number>} v1
+             * @param  {Float32Array|Array.<number>} v2
+             */
+            max: function (out, v1, v2) {
+                out[0] = Math.max(v1[0], v2[0]);
+                out[1] = Math.max(v1[1], v2[1]);
+                return out;
             }
         };
 
         vector.length = vector.len;
+        vector.lengthSquare = vector.lenSquare;
         vector.dist = vector.distance;
+        vector.distSquare = vector.distanceSquare;
 
         return vector;
     }
@@ -5258,6 +5299,1346 @@ define(
         util.merge(Handler.prototype, Eventful.prototype, true);
 
         return Handler;
+    }
+);
+
+/**
+ * @module zrender/tool/curve
+ * @author pissang(https://www.github.com/pissang)
+ */
+define('zrender/tool/curve',['require','./vector'],function(require) {
+
+    var vector = require('./vector');
+
+    
+
+    var EPSILON = 1e-4;
+
+    var THREE_SQRT = Math.sqrt(3);
+    var ONE_THIRD = 1 / 3;
+
+    // 临时变量
+    var _v0 = vector.create();
+    var _v1 = vector.create();
+    var _v2 = vector.create();
+    // var _v3 = vector.create();
+
+    function isAroundZero(val) {
+        return val > -EPSILON && val < EPSILON;
+    }
+    function isNotAroundZero(val) {
+        return val > EPSILON || val < -EPSILON;
+    }
+    /*
+    function evalCubicCoeff(a, b, c, d, t) {
+        return ((a * t + b) * t + c) * t + d;
+    }
+    */
+
+    /** 
+     * 计算三次贝塞尔值
+     * @memberOf module:zrender/tool/curve
+     * @param  {number} p0
+     * @param  {number} p1
+     * @param  {number} p2
+     * @param  {number} p3
+     * @param  {number} t
+     * @return {number}
+     */
+    function cubicAt(p0, p1, p2, p3, t) {
+        var onet = 1 - t;
+        return onet * onet * (onet * p0 + 3 * t * p1)
+             + t * t * (t * p3 + 3 * onet * p2);
+    }
+
+    /** 
+     * 计算三次贝塞尔导数值
+     * @memberOf module:zrender/tool/curve
+     * @param  {number} p0
+     * @param  {number} p1
+     * @param  {number} p2
+     * @param  {number} p3
+     * @param  {number} t
+     * @return {number}
+     */
+    function cubicDerivativeAt(p0, p1, p2, p3, t) {
+        var onet = 1 - t;
+        return 3 * (
+            ((p1 - p0) * onet + 2 * (p2 - p1) * t) * onet
+            + (p3 - p2) * t * t
+        );
+    }
+
+    /**
+     * 计算三次贝塞尔方程根，使用盛金公式
+     * @memberOf module:zrender/tool/curve
+     * @param  {number} p0
+     * @param  {number} p1
+     * @param  {number} p2
+     * @param  {number} p3
+     * @param  {number} val
+     * @param  {Array.<number>} roots
+     * @return {number} 有效根数目
+     */
+    function cubicRootAt(p0, p1, p2, p3, val, roots) {
+        // Evaluate roots of cubic functions
+        var a = p3 + 3 * (p1 - p2) - p0;
+        var b = 3 * (p2 - p1 * 2 + p0);
+        var c = 3 * (p1  - p0);
+        var d = p0 - val;
+
+        var A = b * b - 3 * a * c;
+        var B = b * c - 9 * a * d;
+        var C = c * c - 3 * b * d;
+
+        var n = 0;
+
+        if (isAroundZero(A) && isAroundZero(B)) {
+            if (isAroundZero(b)) {
+                roots[0] = 0;
+            }
+            else {
+                var t1 = -c / b;  //t1, t2, t3, b is not zero
+                if (t1 >=0 && t1 <= 1) {
+                    roots[n++] = t1;
+                }
+            }
+        }
+        else {
+            var disc = B * B - 4 * A * C;
+
+            if (isAroundZero(disc)) {
+                var K = B / A;
+                var t1 = -b / a + K;  // t1, a is not zero
+                var t2 = -K / 2;  // t2, t3
+                if (t1 >= 0 && t1 <= 1) {
+                    roots[n++] = t1;
+                }
+                if (t2 >= 0 && t2 <= 1) {
+                    roots[n++] = t2;
+                }
+            }
+            else if (disc > 0) {
+                var discSqrt = Math.sqrt(disc);
+                var Y1 = A * b + 1.5 * a * (-B + discSqrt);
+                var Y2 = A * b + 1.5 * a * (-B - discSqrt);
+                if (Y1 < 0) {
+                    Y1 = -Math.pow(-Y1, ONE_THIRD);
+                }
+                else {
+                    Y1 = Math.pow(Y1, ONE_THIRD);
+                }
+                if (Y2 < 0) {
+                    Y2 = -Math.pow(-Y2, ONE_THIRD);
+                }
+                else {
+                    Y2 = Math.pow(Y2, ONE_THIRD);
+                }
+                var t1 = (-b - (Y1 + Y2)) / (3 * a);
+                if (t1 >= 0 && t1 <= 1) {
+                    roots[n++] = t1;
+                }
+            }
+            else {
+                var T = (2 * A * b - 3 * a * B) / (2 * Math.sqrt(A * A * A));
+                var theta = Math.acos(T) / 3;
+                var ASqrt = Math.sqrt(A);
+                var tmp = Math.cos(theta);
+                
+                var t1 = (-b - 2 * ASqrt * tmp) / (3 * a);
+                var t2 = (-b + ASqrt * (tmp + THREE_SQRT * Math.sin(theta))) / (3 * a);
+                var t3 = (-b + ASqrt * (tmp - THREE_SQRT * Math.sin(theta))) / (3 * a);
+                if (t1 >= 0 && t1 <= 1) {
+                    roots[n++] = t1;
+                }
+                if (t2 >= 0 && t2 <= 1) {
+                    roots[n++] = t2;
+                }
+                if (t3 >= 0 && t3 <= 1) {
+                    roots[n++] = t3;
+                }
+            }
+        }
+        return n;
+    }
+
+    /**
+     * 计算三次贝塞尔方程极限值的位置
+     * @memberOf module:zrender/tool/curve
+     * @param  {number} p0
+     * @param  {number} p1
+     * @param  {number} p2
+     * @param  {number} p3
+     * @param  {Array.<number>} extrema
+     * @return {number} 有效数目
+     */
+    function cubicExtrema(p0, p1, p2, p3, extrema) {
+        var b = 6 * p2 - 12 * p1 + 6 * p0;
+        var a = 9 * p1 + 3 * p3 - 3 * p0 - 9 * p2;
+        var c = 3 * p1 - 3 * p0;
+
+        var n = 0;
+        if (isAroundZero(a)) {
+            if (isNotAroundZero(b)) {
+                var t1 = -c / b;
+                if (t1 >= 0 && t1 <=1) {
+                    extrema[n++] = t1;
+                }
+            }
+        }
+        else {
+            var disc = b * b - 4 * a * c;
+            if (isAroundZero(disc)) {
+                extrema[0] = -b / (2 * a);
+            }
+            else if (disc > 0) {
+                var discSqrt = Math.sqrt(disc);
+                var t1 = (-b + discSqrt) / (2 * a);
+                var t2 = (-b - discSqrt) / (2 * a);
+                if (t1 >= 0 && t1 <= 1) {
+                    extrema[n++] = t1;
+                }
+                if (t2 >= 0 && t2 <= 1) {
+                    extrema[n++] = t2;
+                }
+            }
+        }
+        return n;
+    }
+
+    /**
+     * 细分三次贝塞尔曲线
+     * @memberOf module:zrender/tool/curve
+     * @param  {number} p0
+     * @param  {number} p1
+     * @param  {number} p2
+     * @param  {number} p3
+     * @param  {number} t
+     * @param  {Array.<number>} out
+     */
+    function cubicSubdivide(p0, p1, p2, p3, t, out) {
+        var p01 = (p1 - p0) * t + p0;
+        var p12 = (p2 - p1) * t + p1;
+        var p23 = (p3 - p2) * t + p2;
+
+        var p012 = (p12 - p01) * t + p01;
+        var p123 = (p23 - p12) * t + p12;
+
+        var p0123 = (p123 - p012) * t + p012;
+        // Seg0
+        out[0] = p0;
+        out[1] = p01;
+        out[2] = p012;
+        out[3] = p0123;
+        // Seg1
+        out[4] = p0123;
+        out[5] = p123;
+        out[6] = p23;
+        out[7] = p3;
+    }
+
+    /**
+     * 投射点到三次贝塞尔曲线上，返回投射距离。
+     * 投射点有可能会有一个或者多个，这里只返回其中距离最短的一个。
+     * @param {number} x0
+     * @param {number} y0
+     * @param {number} x1
+     * @param {number} y1
+     * @param {number} x2
+     * @param {number} y2
+     * @param {number} x3
+     * @param {number} y3
+     * @param {number} x
+     * @param {number} y
+     * @param {Array.<number>} [out] 投射点
+     * @return {number}
+     */
+    function cubicProjectPoint(
+        x0, y0, x1, y1, x2, y2, x3, y3,
+        x, y, out
+    ) {
+        // http://pomax.github.io/bezierinfo/#projections
+        var t;
+        var interval = 0.005;
+        var d = Infinity;
+
+        _v0[0] = x;
+        _v0[1] = y;
+
+        // 先粗略估计一下可能的最小距离的 t 值
+        // PENDING
+        for (var _t = 0; _t < 1; _t += 0.05) {
+            _v1[0] = cubicAt(x0, x1, x2, x3, _t);
+            _v1[1] = cubicAt(y0, y1, y2, y3, _t);
+            var d1 = vector.distSquare(_v0, _v1);
+            if (d1 < d) {
+                t = _t;
+                d = d1;
+            }
+        }
+        d = Infinity;
+
+        // At most 32 iteration
+        for (var i = 0; i < 32; i++) {
+            if (interval < EPSILON) {
+                break;
+            }
+            var prev = t - interval;
+            var next = t + interval;
+            // t - interval
+            _v1[0] = cubicAt(x0, x1, x2, x3, prev);
+            _v1[1] = cubicAt(y0, y1, y2, y3, prev);
+
+            var d1 = vector.distSquare(_v1, _v0);
+
+            if (prev >= 0 && d1 < d) {
+                t = prev;
+                d = d1;
+            }
+            else {
+                // t + interval
+                _v2[0] = cubicAt(x0, x1, x2, x3, next);
+                _v2[1] = cubicAt(y0, y1, y2, y3, next);
+                var d2 = vector.distSquare(_v2, _v0);
+
+                if (next <= 1 && d2 < d) {
+                    t = next;
+                    d = d2;
+                }
+                else {
+                    interval *= 0.5;
+                }
+            }
+        }
+        // t
+        if (out) {
+            out[0] = cubicAt(x0, x1, x2, x3, t);
+            out[1] = cubicAt(y0, y1, y2, y3, t);   
+        }
+        // console.log(interval, i);
+        return Math.sqrt(d);
+    }
+
+    /**
+     * 计算二次方贝塞尔值
+     * @param  {number} p0
+     * @param  {number} p1
+     * @param  {number} p2
+     * @param  {number} t
+     * @return {number}
+     */
+    function quadraticAt(p0, p1, p2, t) {
+        var onet = 1 - t;
+        return onet * (onet * p0 + 2 * t * p1) + t * t * p2;
+    }
+
+    /**
+     * 计算二次方贝塞尔导数值
+     * @param  {number} p0
+     * @param  {number} p1
+     * @param  {number} p2
+     * @param  {number} t
+     * @return {number}
+     */
+    function quadraticDerivativeAt(p0, p1, p2, t) {
+        return 2 * ((1 - t) * (p1 - p0) + t * (p2 - p1));
+    }
+
+    /**
+     * 计算二次方贝塞尔方程根
+     * @param  {number} p0
+     * @param  {number} p1
+     * @param  {number} p2
+     * @param  {number} t
+     * @param  {Array.<number>} roots
+     * @return {number} 有效根数目
+     */
+    function quadraticRootAt(p0, p1, p2, val, roots) {
+        var a = p0 - 2 * p1 + p2;
+        var b = 2 * (p1 - p0);
+        var c = p0 - val;
+
+        var n = 0;
+        if (isAroundZero(a)) {
+            if (isNotAroundZero(b)) {
+                var t1 = -c / b;
+                if (t1 >= 0 && t1 <= 1) {
+                    roots[n++] = t1;
+                }
+            }
+        }
+        else {
+            var disc = b * b - 4 * a * c;
+            if (isAroundZero(disc)) {
+                var t1 = -b / (2 * a);
+                if (t1 >= 0 && t1 <= 1) {
+                    roots[n++] = t1;
+                }
+            }
+            else if (disc > 0) {
+                var discSqrt = Math.sqrt(disc);
+                var t1 = (-b + discSqrt) / (2 * a);
+                var t2 = (-b - discSqrt) / (2 * a);
+                if (t1 >= 0 && t1 <= 1) {
+                    roots[n++] = t1;
+                }
+                if (t2 >= 0 && t2 <= 1) {
+                    roots[n++] = t2;
+                }
+            }
+        }
+        return n;
+    }
+
+    /**
+     * 计算二次贝塞尔方程极限值
+     * @memberOf module:zrender/tool/curve
+     * @param  {number} p0
+     * @param  {number} p1
+     * @param  {number} p2
+     * @return {number}
+     */
+    function quadraticExtremum(p0, p1, p2) {
+        var divider = p0 + p2 - 2 * p1;
+        if (divider === 0) {
+            // p1 is center of p0 and p2 
+            return 0.5;
+        }
+        else {
+            return (p0 - p1) / divider;
+        }
+    }
+
+    /**
+     * 投射点到二次贝塞尔曲线上，返回投射距离。
+     * 投射点有可能会有一个或者多个，这里只返回其中距离最短的一个。
+     * @param {number} x0
+     * @param {number} y0
+     * @param {number} x1
+     * @param {number} y1
+     * @param {number} x2
+     * @param {number} y2
+     * @param {number} x
+     * @param {number} y
+     * @param {Array.<number>} out 投射点
+     * @return {number}
+     */
+    function quadraticProjectPoint(
+        x0, y0, x1, y1, x2, y2,
+        x, y, out
+    ) {
+        // http://pomax.github.io/bezierinfo/#projections
+        var t;
+        var interval = 0.005;
+        var d = Infinity;
+
+        _v0[0] = x;
+        _v0[1] = y;
+
+        // 先粗略估计一下可能的最小距离的 t 值
+        // PENDING
+        for (var _t = 0; _t < 1; _t += 0.05) {
+            _v1[0] = quadraticAt(x0, x1, x2, _t);
+            _v1[1] = quadraticAt(y0, y1, y2, _t);
+            var d1 = vector.distSquare(_v0, _v1);
+            if (d1 < d) {
+                t = _t;
+                d = d1;
+            }
+        }
+        d = Infinity;
+
+        // At most 32 iteration
+        for (var i = 0; i < 32; i++) {
+            if (interval < EPSILON) {
+                break;
+            }
+            var prev = t - interval;
+            var next = t + interval;
+            // t - interval
+            _v1[0] = quadraticAt(x0, x1, x2, prev);
+            _v1[1] = quadraticAt(y0, y1, y2, prev);
+
+            var d1 = vector.distSquare(_v1, _v0);
+
+            if (prev >= 0 && d1 < d) {
+                t = prev;
+                d = d1;
+            }
+            else {
+                // t + interval
+                _v2[0] = quadraticAt(x0, x1, x2, next);
+                _v2[1] = quadraticAt(y0, y1, y2, next);
+                var d2 = vector.distSquare(_v2, _v0);
+                if (next <= 1 && d2 < d) {
+                    t = next;
+                    d = d2;
+                }
+                else {
+                    interval *= 0.5;
+                }
+            }
+        }
+        // t
+        if (out) {
+            out[0] = quadraticAt(x0, x1, x2, t);
+            out[1] = quadraticAt(y0, y1, y2, t);   
+        }
+        // console.log(interval, i);
+        return Math.sqrt(d);
+    }
+
+    return {
+
+        cubicAt: cubicAt,
+
+        cubicDerivativeAt: cubicDerivativeAt,
+
+        cubicRootAt: cubicRootAt,
+
+        cubicExtrema: cubicExtrema,
+
+        cubicSubdivide: cubicSubdivide,
+
+        cubicProjectPoint: cubicProjectPoint,
+
+        quadraticAt: quadraticAt,
+
+        quadraticDerivativeAt: quadraticDerivativeAt,
+
+        quadraticRootAt: quadraticRootAt,
+
+        quadraticExtremum: quadraticExtremum,
+
+        quadraticProjectPoint: quadraticProjectPoint
+    };
+});
+/**
+ * zrender: 图形空间辅助类
+ *
+ * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ *         pissang (https://www.github.com/pissang)
+ *
+ * isInside：是否在区域内部
+ * isOutside：是否在区域外部
+ * getTextWidth：测算单行文本宽度
+ */
+define(
+    'zrender/tool/area',['require','./util','./curve'],function (require) {
+
+        
+
+        var util = require('./util');
+        var curve = require('./curve');
+
+        var _ctx;
+        
+        var _textWidthCache = {};
+        var _textHeightCache = {};
+        var _textWidthCacheCounter = 0;
+        var _textHeightCacheCounter = 0;
+        var TEXT_CACHE_MAX = 5000;
+            
+        var PI2 = Math.PI * 2;
+
+        function normalizeRadian(angle) {
+            angle %= PI2;
+            if (angle < 0) {
+                angle += PI2;
+            }
+            return angle;
+        }
+        /**
+         * 包含判断
+         *
+         * @param {Object} shape : 图形
+         * @param {Object} area ： 目标区域
+         * @param {number} x ： 横坐标
+         * @param {number} y ： 纵坐标
+         */
+        function isInside(shape, area, x, y) {
+            if (!area || !shape) {
+                // 无参数或不支持类型
+                return false;
+            }
+            var zoneType = shape.type;
+
+            _ctx = _ctx || util.getContext();
+
+            // 未实现或不可用时(excanvas不支持)则数学运算，主要是line，brokenLine，ring
+            var _mathReturn = _mathMethod(shape, area, x, y);
+            if (typeof _mathReturn != 'undefined') {
+                return _mathReturn;
+            }
+
+            if (shape.buildPath && _ctx.isPointInPath) {
+                return _buildPathMethod(shape, _ctx, area, x, y);
+            }
+
+            // 上面的方法都行不通时
+            switch (zoneType) {
+                case 'heart': // 心形---------10 // Todo，不精确
+                case 'droplet':// 水滴----------11 // Todo，不精确
+                case 'ellipse': // Todo，不精确
+                    return true;
+                // 旋轮曲线  不准确
+                case 'trochoid':
+                    var _r = area.location == 'out'
+                            ? area.r1 + area.r2 + area.d
+                            : area.r1 - area.r2 + area.d;
+                    return isInsideCircle(area, x, y, _r);
+                // 玫瑰线 不准确
+                case 'rose' :
+                    return isInsideCircle(area, x, y, area.maxr);
+                // 路径，椭圆，曲线等-----------------13
+                default:
+                    return false;   // Todo，暂不支持
+            }
+        }
+
+        /**
+         * 用数学方法判断，三个方法中最快，但是支持的shape少
+         *
+         * @param {Object} shape : 图形
+         * @param {Object} area ：目标区域
+         * @param {number} x ： 横坐标
+         * @param {number} y ： 纵坐标
+         * @return {boolean=} true表示坐标处在图形中
+         */
+        function _mathMethod(shape, area, x, y) {
+            var zoneType = shape.type;
+            // 在矩形内则部分图形需要进一步判断
+            switch (zoneType) {
+                // 贝塞尔曲线
+                case 'bezier-curve':
+                    if (typeof(area.cpX2) === 'undefined') {
+                        return isInsideQuadraticStroke(
+                            area.xStart, area.yStart,
+                            area.cpX1, area.cpY1, 
+                            area.xEnd, area.yEnd,
+                            area.lineWidth, x, y
+                        );
+                    }
+                    return isInsideCubicStroke(
+                        area.xStart, area.yStart,
+                        area.cpX1, area.cpY1, 
+                        area.cpX2, area.cpY2, 
+                        area.xEnd, area.yEnd,
+                        area.lineWidth, x, y
+                    );
+                // 线
+                case 'line':
+                    return isInsideLine(
+                        area.xStart, area.yStart,
+                        area.xEnd, area.yEnd,
+                        area.lineWidth, x, y
+                    );
+                // 折线
+                case 'broken-line':
+                    return isInsideBrokenLine(
+                        area.pointList, area.lineWidth, x, y
+                    );
+                // 圆环
+                case 'ring':
+                    return isInsideRing(
+                        area.x, area.y, area.r0, area.r, x, y
+                    );
+                // 圆形
+                case 'circle':
+                    return isInsideCircle(
+                        area.x, area.y, area.r, x, y
+                    );
+                // 扇形
+                case 'sector':
+                    return isInsideSector(area, x, y);
+                // 多边形
+                case 'path':
+                    return isInsidePath(
+                        area.pathArray, Math.max(area.lineWidth, 5),
+                        area.brushType, x, y
+                    );
+                case 'polygon':
+                case 'star':
+                case 'isogon':
+                    return isInsidePolygon(area.pointList, x, y);
+                // 文本
+                case 'text':
+                    var rect =  area.__rect || shape.getRect(area);
+                    return isInsideRect(
+                        rect.x, rect.y, rect.width, rect.height, x, y
+                    );
+                // 矩形
+                case 'rectangle':
+                // 图片
+                case 'image':
+                    return isInsideRect(
+                        area.x, area.y, area.width, area.height, x, y
+                    );
+            }
+        }
+
+        /**
+         * 通过buildPath方法来判断，三个方法中较快，但是不支持线条类型的shape，
+         * 而且excanvas不支持isPointInPath方法
+         *
+         * @param {Object} shape ： shape
+         * @param {Object} context : 上下文
+         * @param {Object} area ：目标区域
+         * @param {number} x ： 横坐标
+         * @param {number} y ： 纵坐标
+         * @return {boolean} true表示坐标处在图形中
+         */
+        function _buildPathMethod(shape, context, area, x, y) {
+            // 图形类实现路径创建了则用类的path
+            context.beginPath();
+            shape.buildPath(context, area);
+            context.closePath();
+            return context.isPointInPath(x, y);
+        }
+
+        /**
+         * !isInside
+         */
+        function isOutside(shape, area, x, y) {
+            return !isInside(shape, area, x, y);
+        }
+
+        /**
+         * 线段包含判断
+         * @param  {number}  x0
+         * @param  {number}  y0
+         * @param  {number}  x1
+         * @param  {number}  y1
+         * @param  {number}  lineWidth
+         * @param  {number}  x
+         * @param  {number}  y
+         * @return {boolean}
+         */
+        function isInsideLine(x0, y0, x1, y1, lineWidth, x, y) {
+            if (lineWidth === 0) {
+                return false;
+            }
+            var _l = Math.max(lineWidth, 5);
+            var _a = 0;
+            var _b = x0;
+            // Quick reject
+            if (
+                (y > y0 + _l && y > y1 + _l)
+                || (y < y0 - _l && y < y1 - _l)
+                || (x > x0 + _l && x > x1 + _l)
+                || (x < x0 - _l && x < x1 - _l)
+            ) {
+                return false;
+            }
+
+            if (x0 !== x1) {
+                _a = (y0 - y1) / (x0 - x1);
+                _b = (x0 * y1 - x1 * y0) / (x0 - x1) ;
+            }
+            else {
+                return Math.abs(x - x0) <= _l / 2;
+            }
+            var tmp = _a * x - y + _b;
+            var _s = tmp * tmp / (_a * _a + 1);
+            return _s <= _l / 2 * _l / 2;
+        }
+
+        /**
+         * 三次贝塞尔曲线描边包含判断
+         * @param  {number}  x0
+         * @param  {number}  y0
+         * @param  {number}  x1
+         * @param  {number}  y1
+         * @param  {number}  x2
+         * @param  {number}  y2
+         * @param  {number}  x3
+         * @param  {number}  y3
+         * @param  {number}  lineWidth
+         * @param  {number}  x
+         * @param  {number}  y
+         * @return {boolean}
+         */
+        function isInsideCubicStroke(
+            x0, y0, x1, y1, x2, y2, x3, y3,
+            lineWidth, x, y
+        ) {
+            if (lineWidth === 0) {
+                return false;
+            }
+            var _l = Math.max(lineWidth, 5);
+            // Quick reject
+            if (
+                (y > y0 + _l && y > y1 + _l && y > y2 + _l && y > y3 + _l)
+                || (y < y0 - _l && y < y1 - _l && y < y2 - _l && y < y3 - _l)
+                || (x > x0 + _l && x > x1 + _l && x > x2 + _l && x > x3 + _l)
+                || (x < x0 - _l && x < x1 - _l && x < x2 - _l && x < x3 - _l)
+            ) {
+                return false;
+            }
+            var d =  curve.cubicProjectPoint(
+                x0, y0, x1, y1, x2, y2, x3, y3,
+                x, y, null
+            );
+            return d <= _l / 2;
+        }
+
+        /**
+         * 二次贝塞尔曲线描边包含判断
+         * @param  {number}  x0
+         * @param  {number}  y0
+         * @param  {number}  x1
+         * @param  {number}  y1
+         * @param  {number}  x2
+         * @param  {number}  y2
+         * @param  {number}  lineWidth
+         * @param  {number}  x
+         * @param  {number}  y
+         * @return {boolean}
+         */
+        function isInsideQuadraticStroke(
+            x0, y0, x1, y1, x2, y2,
+            lineWidth, x, y
+        ) {
+            if (lineWidth === 0) {
+                return false;
+            }
+            var _l = Math.max(lineWidth, 5);
+            // Quick reject
+            if (
+                (y > y0 + _l && y > y1 + _l && y > y2 + _l)
+                || (y < y0 - _l && y < y1 - _l && y < y2 - _l)
+                || (x > x0 + _l && x > x1 + _l && x > x2 + _l)
+                || (x < x0 - _l && x < x1 - _l && x < x2 - _l)
+            ) {
+                return false;
+            }
+            var d =  curve.quadraticProjectPoint(
+                x0, y0, x1, y1, x2, y2,
+                x, y, null
+            );
+            return d <= _l / 2;
+        }
+
+        /**
+         * 圆弧描边包含判断
+         * @param  {number}  cx
+         * @param  {number}  cy
+         * @param  {number}  r
+         * @param  {number}  startAngle
+         * @param  {number}  endAngle
+         * @param  {boolean}  anticlockwise
+         * @param  {number} lineWidth
+         * @param  {number}  x
+         * @param  {number}  y
+         * @return {Boolean}
+         */
+        function isInsideArcStroke(
+            cx, cy, r, startAngle, endAngle, anticlockwise,
+            lineWidth, x, y
+        ) {
+            if (lineWidth === 0) {
+                return false;
+            }
+            var _l = Math.max(lineWidth, 5);
+
+            x -= cx;
+            y -= cy;
+            var d = Math.sqrt(x * x + y * y);
+            if ((d - _l > r) || (d + _l < r)) {
+                return false;
+            }
+            if (anticlockwise) {
+                startAngle = normalizeRadian(endAngle);
+                endAngle = normalizeRadian(startAngle);
+            } else {
+                startAngle = normalizeRadian(startAngle);
+                endAngle = normalizeRadian(endAngle);
+            }
+            if (startAngle > endAngle) {
+                endAngle += PI2;
+            }
+            
+            var angle = Math.atan2(y, x);
+            if (angle < 0) {
+                angle += PI2;
+            }
+            return (angle >= startAngle && angle <= endAngle)
+                || (angle + PI2 >= startAngle && angle + PI2 <= endAngle);
+        }
+
+        function isInsideBrokenLine(points, lineWidth, x, y) {
+            var lineWidth = Math.max(lineWidth, 10);
+            for (var i = 0, l = points.length - 1; i < l; i++) {
+                var x0 = points[i][0];
+                var y0 = points[i][1];
+                var x1 = points[i + 1][0];
+                var y1 = points[i + 1][1];
+
+                if (isInsideLine(x0, y0, x1, y1, lineWidth, x, y)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function isInsideRing(cx, cy, r0, r, x, y) {
+            var d = (x - cx) * (x - cx) + (y - cy) * (y - cy);
+            return (d < r * r) && (d > r0 * r0);
+        }
+
+        /**
+         * 矩形包含判断
+         */
+        function isInsideRect(x0, y0, width, height, x, y) {
+            return x >= x0 && x <= (x0 + width)
+                && y >= y0 && y <= (y0 + height);
+        }
+
+        /**
+         * 圆形包含判断
+         */
+        function isInsideCircle(x0, y0, r, x, y) {
+            return (x - x0) * (x - x0) + (y - y0) * (y - y0)
+                   < r * r;
+        }
+
+        /**
+         * 扇形包含判断
+         */
+        function isInsideSector(area, x, y) {
+            if (!isInsideRing(area.x, area.y, area.r0 || 0, area.r, x, y)) {
+                // 大圆外或者小圆内直接false
+                return false;
+            }
+
+            // 判断夹角
+            if (Math.abs(area.endAngle - area.startAngle) >= 360) {
+                // 大于360度的扇形，在环内就为true
+                return true;
+            }
+            
+            var angle = (360
+                         - Math.atan2(y - area.y, x - area.x) / Math.PI
+                         * 180)
+                         % 360;
+            var endA = (360 + area.endAngle) % 360;
+            var startA = (360 + area.startAngle) % 360;
+            if (endA > startA) {
+                return (angle >= startA && angle <= endA);
+            }
+
+            return !(angle >= endA && angle <= startA);
+        }
+
+        /**
+         * 多边形包含判断
+         * 与 canvas 一样采用 non-zero winding rule
+         */
+        function isInsidePolygon(points, x, y) {
+            var N = points.length;
+            var w = 0;
+
+            for (var i = 0, j = N - 1; i < N; i++) {
+                var x0 = points[j][0];
+                var y0 = points[j][1];
+                var x1 = points[i][0];
+                var y1 = points[i][1];
+                w += windingLine(x0, y0, x1, y1, x, y);
+                j = i;
+            }
+            return w !== 0;
+        }
+
+        function windingLine(x0, y0, x1, y1, x, y) {
+            if ((y > y0 && y > y1) || (y < y0 && y < y1)) {
+                return 0;
+            }
+            if (y1 == y0) {
+                return 0;
+            }
+            var dir = y1 < y0 ? 1 : -1;
+            var t = (y - y0) / (y1 - y0);
+            var x_ = t * (x1 - x0) + x0;
+
+            return x_ > x ? dir : 0;
+        }
+
+        // 临时数组
+        var roots = [-1, -1, -1];
+        var extrema = [-1, -1];
+
+        function swapExtrema() {
+            var tmp = extrema[0];
+            extrema[0] = extrema[1];
+            extrema[1] = tmp;
+        }
+        function windingCubic(x0, y0, x1, y1, x2, y2, x3, y3, x, y) {
+            // Quick reject
+            if (
+                (y > y0 && y > y1 && y > y2 && y > y3)
+                || (y < y0 && y < y1 && y < y2 && y < y3)
+            ) {
+                return 0;
+            }
+            var nRoots = curve.cubicRootAt(y0, y1, y2, y3, y, roots);
+            if (nRoots === 0) {
+                return 0;
+            }
+            else {
+                var w = 0;
+                var nExtrema = -1;
+                var y0_, y1_;
+                for (var i = 0; i < nRoots; i++) {
+                    var t = roots[i];
+                    var x_ = curve.cubicAt(x0, x1, x2, x3, t);
+                    if (x_ < x) { // Quick reject
+                        continue;
+                    }
+                    if (nExtrema < 0) {
+                        nExtrema = curve.cubicExtrema(y0, y1, y2, y3, extrema);
+                        if (extrema[1] < extrema[0] && nExtrema > 1) {
+                            swapExtrema();
+                        }
+                        y0_ = curve.cubicAt(y0, y1, y2, y3, extrema[0]);
+                        if (nExtrema > 1) {
+                            y1_ = curve.cubicAt(y0, y1, y2, y3, extrema[1]);
+                        }
+                    }
+                    if (nExtrema == 2) {
+                        // 分成三段单调函数
+                        if (t < extrema[0]) {
+                            w += y0_ < y0 ? 1 : -1;
+                        } 
+                        else if (t < extrema[1]) {
+                            w += y1_ < y0_ ? 1 : -1;
+                        } 
+                        else {
+                            w += y3 < y1_ ? 1 : -1;
+                        }
+                    } 
+                    else {
+                        // 分成两段单调函数
+                        if (t < extrema[0]) {
+                            w += y0_ < y0 ? 1 : -1;
+                        } 
+                        else {
+                            w += y3 < y0_ ? 1 : -1;
+                        }
+                    }
+                }
+                return w;
+            }
+        }
+
+        function windingQuadratic(x0, y0, x1, y1, x2, y2, x, y) {
+            // Quick reject
+            if (
+                (y > y0 && y > y1 && y > y2)
+                || (y < y0 && y < y1 && y < y2)
+            ) {
+                return 0;
+            }
+            var nRoots = curve.quadraticRootAt(y0, y1, y2, y, roots);
+            if (nRoots === 0) {
+                return 0;
+            } 
+            else {
+                var t = curve.quadraticExtremum(y0, y1, y2);
+                if (t >=0 && t <= 1) {
+                    var w = 0;
+                    var y_ = curve.quadraticAt(y0, y1, y2, t);
+                    for (var i = 0; i < nRoots; i++) {
+                        var x_ = curve.quadraticAt(x0, x1, x2, roots[i]);
+                        if (x_ > x) {
+                            continue;
+                        }
+                        if (roots[i] < t) {
+                            w += y_ < y0 ? 1 : -1;
+                        } 
+                        else {
+                            w += y2 < y_ ? 1 : -1;
+                        }
+                    }
+                    return w;
+                } 
+                else {
+                    var x_ = curve.quadraticAt(x0, x1, x2, roots[0]);
+                    if (x_ > x) {
+                        return 0;
+                    }
+                    return y2 < y0 ? 1 : -1;
+                }
+            }
+        }
+        
+        // TODO
+        // Arc 旋转
+        function windingArc(
+            cx, cy, r, startAngle, endAngle, anticlockwise, x, y
+        ) {
+            y -= cy;
+            if (y > r || y < -r) {
+                return 0;
+            }
+            var tmp = Math.sqrt(r * r - y * y);
+            roots[0] = -tmp;
+            roots[1] = tmp;
+
+            if (anticlockwise) {
+                startAngle = normalizeRadian(endAngle);
+                endAngle = normalizeRadian(startAngle);
+            } else {
+                startAngle = normalizeRadian(startAngle);
+                endAngle = normalizeRadian(endAngle);
+            }
+            if (startAngle > endAngle) {
+                endAngle += PI2;
+            }
+
+            var w = 0;
+            for (var i = 0; i < 2; i++) {
+                var x_ = roots[i];
+                if (x_ + cx > x) {
+                    var angle = Math.atan2(y, x_);
+                    var dir = anticlockwise ? 1 : -1;
+                    if (angle < 0) {
+                        angle = PI2 + angle;
+                    }
+                    if (
+                        (angle >= startAngle && angle <= endAngle)
+                        || (angle + PI2 >= startAngle && angle + PI2 <= endAngle)
+                    ) {
+                        if (angle > Math.PI / 2 && angle < Math.PI * 1.5) {
+                            dir = -dir;
+                        }
+                        w += dir;
+                    }
+                }
+            }
+            return w;
+        }
+
+        /**
+         * 路径包含判断
+         * 与 canvas 一样采用 non-zero winding rule
+         */
+        function isInsidePath(pathArray, lineWidth, brushType, x, y) {
+            var w = 0;
+            var xi = 0;
+            var yi = 0;
+            var x0 = 0;
+            var y0 = 0;
+            var beginSubpath = true;
+
+            var hasStroke = brushType === 'stroke' || brushType === 'both';
+            var hasFill = brushType === 'fill' || brushType === 'both';
+
+            // var roots = [-1, -1, -1];
+            for (var i = 0; i < pathArray.length; i++) {
+                var seg = pathArray[i];
+                var p = seg.points;
+                // Begin a new subpath
+                if (beginSubpath || seg.command === 'M') {
+                    if (i > 0) {
+                        // Close previous subpath
+                        if (hasFill) {
+                            w += windingLine(xi, yi, x0, y0, x, y);
+                        }
+                        if (w !== 0) {
+                            return true;
+                        }
+                    }
+                    x0 = p[p.length - 2];
+                    y0 = p[p.length - 1];
+                    beginSubpath = false;
+                }
+                switch (seg.command) {
+                    case 'M':
+                        xi = p[0];
+                        yi = p[1];
+                        break;
+                    case 'L':
+                        if (hasStroke) {
+                            if (isInsideLine(
+                                xi, yi, p[0], p[1], lineWidth, x, y
+                            )) {
+                                return true;
+                            }
+                        }
+                        if (hasFill) {
+                            w += windingLine(xi, yi, p[0], p[1], x, y);
+                        }
+                        xi = p[0];
+                        yi = p[1];
+                        break;
+                    case 'C':
+                        if (hasStroke) {
+                            if (isInsideCubicStroke(
+                                xi, yi, p[0], p[1], p[2], p[3], p[4], p[5],
+                                lineWidth, x, y
+                            )) {
+                                return true;
+                            }
+                        }
+                        if (hasFill) {
+                            w += windingCubic(
+                                xi, yi, p[0], p[1], p[2], p[3], p[4], p[5], x, y
+                            );
+                        }
+                        xi = p[4];
+                        yi = p[5];
+                        break;
+                    case 'Q':
+                        if (hasStroke) {
+                            if (isInsideQuadraticStroke(
+                                xi, yi, p[0], p[1], p[2], p[3],
+                                lineWidth, x, y
+                            )) {
+                                return true;
+                            }
+                        }
+                        if (hasFill) {
+                            w += windingQuadratic(
+                                xi, yi, p[0], p[1], p[2], p[3], x, y
+                            );
+                        }
+                        xi = p[2];
+                        yi = p[3];
+                        break;
+                    case 'A':
+                        // TODO Arc 旋转
+                        // TODO Arc 判断的开销比较大
+                        var cx = p[0];
+                        var cy = p[1];
+                        var rx = p[2];
+                        var ry = p[3];
+                        var theta = p[4];
+                        var dTheta = p[5];
+                        var x1 = Math.cos(theta) * rx + cx;
+                        var y1 = Math.sin(theta) * ry + cy;
+                        w += windingLine(xi, yi, x1, y1);
+                        // zr 使用scale来模拟椭圆, 这里也对x做一定的缩放
+                        var _x = (x - cx) * ry / rx + cx;
+                        if (hasStroke) {
+                            if (isInsideArcStroke(
+                                cx, cy, ry, theta, theta + dTheta, 1 - p[7],
+                                lineWidth, _x, y
+                            )) {
+                                return true;
+                            }
+                        }
+                        if (hasFill) {
+                            w += windingArc(
+                                cx, cy, ry, theta, theta + dTheta, 1 - p[7],
+                                _x, y
+                            );
+                        }
+                        xi = Math.cos(theta + dTheta) * rx + cx;
+                        yi = Math.sin(theta + dTheta) * ry + cy;
+                        break;
+                    case 'z':
+                        if (hasStroke) {
+                            if (isInsideLine(
+                                xi, yi, x0, y0, lineWidth, x, y
+                            )) {
+                                return true;
+                            }
+                        }
+                        beginSubpath = true;
+                        break;
+                }
+            }
+            if (hasFill) {
+                w += windingLine(xi, yi, x0, y0, x, y);
+            }
+            return w !== 0;
+        }
+
+        /**
+         * 测算多行文本宽度
+         * @param {Object} text
+         * @param {Object} textFont
+         */
+        function getTextWidth(text, textFont) {
+            var key = text + ':' + textFont;
+            if (_textWidthCache[key]) {
+                return _textWidthCache[key];
+            }
+            _ctx = _ctx || util.getContext();
+            _ctx.save();
+
+            if (textFont) {
+                _ctx.font = textFont;
+            }
+            
+            text = (text + '').split('\n');
+            var width = 0;
+            for (var i = 0, l = text.length; i < l; i++) {
+                width =  Math.max(
+                    _ctx.measureText(text[i]).width,
+                    width
+                );
+            }
+            _ctx.restore();
+
+            _textWidthCache[key] = width;
+            if (++_textWidthCacheCounter > TEXT_CACHE_MAX) {
+                // 内存释放
+                _textWidthCacheCounter = 0;
+                _textWidthCache = {};
+            }
+            
+            return width;
+        }
+        
+        /**
+         * 测算多行文本高度
+         * @param {Object} text
+         * @param {Object} textFont
+         */
+        function getTextHeight(text, textFont) {
+            var key = text + ':' + textFont;
+            if (_textHeightCache[key]) {
+                return _textHeightCache[key];
+            }
+            
+            _ctx = _ctx || util.getContext();
+
+            _ctx.save();
+            if (textFont) {
+                _ctx.font = textFont;
+            }
+            
+            text = (text + '').split('\n');
+            // 比较粗暴
+            var height = (_ctx.measureText('国').width + 2) * text.length;
+
+            _ctx.restore();
+
+            _textHeightCache[key] = height;
+            if (++_textHeightCacheCounter > TEXT_CACHE_MAX) {
+                // 内存释放
+                _textHeightCacheCounter = 0;
+                _textHeightCache = {};
+            }
+            return height;
+        }
+
+        return {
+            isInside : isInside,
+            isOutside : isOutside,
+            getTextWidth : getTextWidth,
+            getTextHeight : getTextHeight,
+
+            isInsidePath: isInsidePath,
+            isInsidePolygon: isInsidePolygon,
+            isInsideSector: isInsideSector,
+            isInsideCircle: isInsideCircle,
+            isInsideLine: isInsideLine,
+            isInsideRect: isInsideRect,
+            isInsideBrokenLine: isInsideBrokenLine
+        };
     }
 );
 
@@ -6823,9 +8204,6 @@ define(
 
             ctx.beginPath();
             this.buildPath(ctx, style);
-            if (this.brushTypeOnly != 'stroke') {
-                ctx.closePath();
-            }
 
             switch (style.brushType) {
                 /* jshint ignore:start */
@@ -7174,6 +8552,13 @@ define(
             }
         };
 
+        Base.prototype.modSelf = function() {
+            this.__dirty = true;
+            if (this.style) {
+                this.style.__rect = null;
+            }
+        };
+
         /**
          * 图形是否会触发事件
          * @return {boolean}
@@ -7193,1058 +8578,6 @@ define(
         util.merge(Base.prototype, Eventful.prototype, true);
 
         return Base;
-    }
-);
-
-/**
- * SVG Path
- * @module zrender/shape/Path
- * @see http://www.w3.org/TR/2011/REC-SVG11-20110816/paths.html#PathData
- * @author: CrossDo (chenhuaimu@baidu.com)
- */
-
-/**
- * @typedef {Object} IPathStyle
- * @property {string} path path描述数据, 详见 {@link http://www.w3.org/TR/2011/REC-SVG11-20110816/paths.html#PathData}
- * @property {number} x x轴位移
- * @property {number} y y轴位移
- * @property {string} [brushType='fill']
- * @property {string} [color='#000000'] 填充颜色
- * @property {string} [strokeColor='#000000'] 描边颜色
- * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
- * @property {number} [lineWidth=1] 描边宽度
- * @property {number} [opacity=1] 绘制透明度
- * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
- * @property {string} [shadowColor='#000000'] 阴影颜色
- * @property {number} [shadowOffsetX=0] 阴影横向偏移
- * @property {number} [shadowOffsetY=0] 阴影纵向偏移
- * @property {string} [text] 图形中的附加文本
- * @property {string} [textColor='#000000'] 文本颜色
- * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
- * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
- * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
- *                                可以是start, end, left, right, center
- * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
- *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
- */
-define('zrender/shape/Path',['require','./Base','../tool/util'],function (require) {
-    var Base = require('./Base');
-
-    var vMag = function(v) {
-        return Math.sqrt(v[0] * v[0] + v[1] * v[1]);
-    };
-    var vRatio = function(u, v) {
-        return (u[0] * v[0] + u[1] * v[1]) / (vMag(u) * vMag(v));
-    };
-    var vAngle = function(u, v) {
-        return (u[0] * v[1] < u[1] * v[0] ? -1 : 1)
-                * Math.acos(vRatio(u, v));
-    };
-    /**
-     * @alias module:zrender/shape/Path
-     * @constructor
-     * @extends module:zrender/shape/Base
-     * @param {Object} options
-     */
-    var Path = function (options) {
-        Base.call(this, options);
-        /**
-         * Path绘制样式
-         * @name module:zrender/shape/Path#style
-         * @type {module:zrender/shape/Path~IPathStyle}
-         */
-        /**
-         * Path高亮绘制样式
-         * @name module:zrender/shape/Path#highlightStyle
-         * @type {module:zrender/shape/Path~IPathStyle}
-         */
-    };
-
-    Path.prototype = {
-        type: 'path',
-
-        _parsePathData : function (data) {
-            if (!data) {
-                return [];
-            }
-
-            // command string
-            var cs = data;
-
-            // command chars
-            var cc = [
-                'm', 'M', 'l', 'L', 'v', 'V', 'h', 'H', 'z', 'Z',
-                'c', 'C', 'q', 'Q', 't', 'T', 's', 'S', 'a', 'A'
-            ];
-            
-            cs = cs.replace(/-/g, ' -');
-            cs = cs.replace(/  /g, ' ');
-            cs = cs.replace(/ /g, ',');
-            cs = cs.replace(/,,/g, ',');
-            
-
-            var n;
-            // create pipes so that we can split the data
-            for (n = 0; n < cc.length; n++) {
-                cs = cs.replace(new RegExp(cc[n], 'g'), '|' + cc[n]);
-            }
-
-            // create array
-            var arr = cs.split('|');
-            var ca = [];
-            // init context point
-            var cpx = 0;
-            var cpy = 0;
-            for (n = 1; n < arr.length; n++) {
-                var str = arr[n];
-                var c = str.charAt(0);
-                str = str.slice(1);
-                str = str.replace(new RegExp('e,-', 'g'), 'e-');
-
-                var p = str.split(',');
-                if (p.length > 0 && p[0] === '') {
-                    p.shift();
-                }
-
-                for (var i = 0; i < p.length; i++) {
-                    p[i] = parseFloat(p[i]);
-                }
-                while (p.length > 0) {
-                    if (isNaN(p[0])) {
-                        break;
-                    }
-                    var cmd = null;
-                    var points = [];
-
-                    var ctlPtx;
-                    var ctlPty;
-                    var prevCmd;
-
-                    var rx;
-                    var ry;
-                    var psi;
-                    var fa;
-                    var fs;
-
-                    var x1 = cpx;
-                    var y1 = cpy;
-
-                    // convert l, H, h, V, and v to L
-                    switch (c) {
-                    case 'l':
-                        cpx += p.shift();
-                        cpy += p.shift();
-                        cmd = 'L';
-                        points.push(cpx, cpy);
-                        break;
-                    case 'L':
-                        cpx = p.shift();
-                        cpy = p.shift();
-                        points.push(cpx, cpy);
-                        break;
-                    case 'm':
-                        cpx += p.shift();
-                        cpy += p.shift();
-                        cmd = 'M';
-                        points.push(cpx, cpy);
-                        c = 'l';
-                        break;
-                    case 'M':
-                        cpx = p.shift();
-                        cpy = p.shift();
-                        cmd = 'M';
-                        points.push(cpx, cpy);
-                        c = 'L';
-                        break;
-
-                    case 'h':
-                        cpx += p.shift();
-                        cmd = 'L';
-                        points.push(cpx, cpy);
-                        break;
-                    case 'H':
-                        cpx = p.shift();
-                        cmd = 'L';
-                        points.push(cpx, cpy);
-                        break;
-                    case 'v':
-                        cpy += p.shift();
-                        cmd = 'L';
-                        points.push(cpx, cpy);
-                        break;
-                    case 'V':
-                        cpy = p.shift();
-                        cmd = 'L';
-                        points.push(cpx, cpy);
-                        break;
-                    case 'C':
-                        points.push(p.shift(), p.shift(), p.shift(), p.shift());
-                        cpx = p.shift();
-                        cpy = p.shift();
-                        points.push(cpx, cpy);
-                        break;
-                    case 'c':
-                        points.push(
-                            cpx + p.shift(), cpy + p.shift(),
-                            cpx + p.shift(), cpy + p.shift()
-                        );
-                        cpx += p.shift();
-                        cpy += p.shift();
-                        cmd = 'C';
-                        points.push(cpx, cpy);
-                        break;
-                    case 'S':
-                        ctlPtx = cpx;
-                        ctlPty = cpy;
-                        prevCmd = ca[ca.length - 1];
-                        if (prevCmd.command === 'C') {
-                            ctlPtx = cpx + (cpx - prevCmd.points[2]);
-                            ctlPty = cpy + (cpy - prevCmd.points[3]);
-                        }
-                        points.push(ctlPtx, ctlPty, p.shift(), p.shift());
-                        cpx = p.shift();
-                        cpy = p.shift();
-                        cmd = 'C';
-                        points.push(cpx, cpy);
-                        break;
-                    case 's':
-                        ctlPtx = cpx, ctlPty = cpy;
-                        prevCmd = ca[ca.length - 1];
-                        if (prevCmd.command === 'C') {
-                            ctlPtx = cpx + (cpx - prevCmd.points[2]);
-                            ctlPty = cpy + (cpy - prevCmd.points[3]);
-                        }
-                        points.push(
-                            ctlPtx, ctlPty,
-                            cpx + p.shift(), cpy + p.shift()
-                        );
-                        cpx += p.shift();
-                        cpy += p.shift();
-                        cmd = 'C';
-                        points.push(cpx, cpy);
-                        break;
-                    case 'Q':
-                        points.push(p.shift(), p.shift());
-                        cpx = p.shift();
-                        cpy = p.shift();
-                        points.push(cpx, cpy);
-                        break;
-                    case 'q':
-                        points.push(cpx + p.shift(), cpy + p.shift());
-                        cpx += p.shift();
-                        cpy += p.shift();
-                        cmd = 'Q';
-                        points.push(cpx, cpy);
-                        break;
-                    case 'T':
-                        ctlPtx = cpx, ctlPty = cpy;
-                        prevCmd = ca[ca.length - 1];
-                        if (prevCmd.command === 'Q') {
-                            ctlPtx = cpx + (cpx - prevCmd.points[0]);
-                            ctlPty = cpy + (cpy - prevCmd.points[1]);
-                        }
-                        cpx = p.shift();
-                        cpy = p.shift();
-                        cmd = 'Q';
-                        points.push(ctlPtx, ctlPty, cpx, cpy);
-                        break;
-                    case 't':
-                        ctlPtx = cpx, ctlPty = cpy;
-                        prevCmd = ca[ca.length - 1];
-                        if (prevCmd.command === 'Q') {
-                            ctlPtx = cpx + (cpx - prevCmd.points[0]);
-                            ctlPty = cpy + (cpy - prevCmd.points[1]);
-                        }
-                        cpx += p.shift();
-                        cpy += p.shift();
-                        cmd = 'Q';
-                        points.push(ctlPtx, ctlPty, cpx, cpy);
-                        break;
-                    case 'A':
-                        rx = p.shift();
-                        ry = p.shift();
-                        psi = p.shift();
-                        fa = p.shift();
-                        fs = p.shift();
-
-                        x1 = cpx, y1 = cpy;
-                        cpx = p.shift(), cpy = p.shift();
-                        cmd = 'A';
-                        points = this._convertPoint(
-                            x1, y1, cpx, cpy, fa, fs, rx, ry, psi
-                        );
-                        break;
-                    case 'a':
-                        rx = p.shift();
-                        ry = p.shift();
-                        psi = p.shift();
-                        fa = p.shift();
-                        fs = p.shift();
-
-                        x1 = cpx, y1 = cpy;
-                        cpx += p.shift();
-                        cpy += p.shift();
-                        cmd = 'A';
-                        points = this._convertPoint(
-                            x1, y1, cpx, cpy, fa, fs, rx, ry, psi
-                        );
-                        break;
-
-                    }
-
-                    ca.push({
-                        command : cmd || c,
-                        points : points
-                    });
-                }
-
-                if (c === 'z' || c === 'Z') {
-                    ca.push({
-                        command : 'z',
-                        points : []
-                    });
-                }
-            }
-
-            return ca;
-
-        },
-
-        _convertPoint : function (x1, y1, x2, y2, fa, fs, rx, ry, psiDeg) {
-            var psi = psiDeg * (Math.PI / 180.0);
-            var xp = Math.cos(psi) * (x1 - x2) / 2.0
-                     + Math.sin(psi) * (y1 - y2) / 2.0;
-            var yp = -1 * Math.sin(psi) * (x1 - x2) / 2.0
-                     + Math.cos(psi) * (y1 - y2) / 2.0;
-
-            var lambda = (xp * xp) / (rx * rx) + (yp * yp) / (ry * ry);
-
-            if (lambda > 1) {
-                rx *= Math.sqrt(lambda);
-                ry *= Math.sqrt(lambda);
-            }
-
-            var f = Math.sqrt((((rx * rx) * (ry * ry))
-                    - ((rx * rx) * (yp * yp))
-                    - ((ry * ry) * (xp * xp))) / ((rx * rx) * (yp * yp)
-                    + (ry * ry) * (xp * xp))
-                );
-
-            if (fa === fs) {
-                f *= -1;
-            }
-            if (isNaN(f)) {
-                f = 0;
-            }
-
-            var cxp = f * rx * yp / ry;
-            var cyp = f * -ry * xp / rx;
-
-            var cx = (x1 + x2) / 2.0
-                     + Math.cos(psi) * cxp
-                     - Math.sin(psi) * cyp;
-            var cy = (y1 + y2) / 2.0
-                    + Math.sin(psi) * cxp
-                    + Math.cos(psi) * cyp;
-
-            var theta = vAngle([ 1, 0 ], [ (xp - cxp) / rx, (yp - cyp) / ry ]);
-            var u = [ (xp - cxp) / rx, (yp - cyp) / ry ];
-            var v = [ (-1 * xp - cxp) / rx, (-1 * yp - cyp) / ry ];
-            var dTheta = vAngle(u, v);
-
-            if (vRatio(u, v) <= -1) {
-                dTheta = Math.PI;
-            }
-            if (vRatio(u, v) >= 1) {
-                dTheta = 0;
-            }
-            if (fs === 0 && dTheta > 0) {
-                dTheta = dTheta - 2 * Math.PI;
-            }
-            if (fs === 1 && dTheta < 0) {
-                dTheta = dTheta + 2 * Math.PI;
-            }
-            return [ cx, cy, rx, ry, theta, dTheta, psi, fs ];
-        },
-
-        /**
-         * 创建路径
-         * @param {CanvasRenderingContext2D} ctx
-         * @param {module:zrender/shape/Path~IPathStyle} style
-         */
-        buildPath : function (ctx, style) {
-            var path = style.path;
-
-            var pathArray = this.pathArray || this._parsePathData(path);
-
-            // 平移坐标
-            var x = style.x || 0;
-            var y = style.y || 0;
-
-            var p;
-            // 记录边界点，用于判断inside
-            var pointList = style.pointList = [];
-            var singlePointList = [];
-            for (var i = 0, l = pathArray.length; i < l; i++) {
-                if (pathArray[i].command.toUpperCase() == 'M') {
-                    singlePointList.length > 0 
-                    && pointList.push(singlePointList);
-                    singlePointList = [];
-                }
-                p = pathArray[i].points;
-                for (var j = 0, k = p.length; j < k; j += 2) {
-                    singlePointList.push([ p[j] + x, p[j + 1] + y ]);
-                }
-            }
-            singlePointList.length > 0 && pointList.push(singlePointList);
-            
-            var c;
-            for (var i = 0, l = pathArray.length; i < l; i++) {
-                c = pathArray[i].command;
-                p = pathArray[i].points;
-                // 平移变换
-                for (var j = 0, k = p.length; j < k; j++) {
-                    if (j % 2 === 0) {
-                        p[j] += x;
-                    }
-                    else {
-                        p[j] += y;
-                    }
-                }
-                switch (c) {
-                    case 'L':
-                        ctx.lineTo(p[0], p[1]);
-                        break;
-                    case 'M':
-                        ctx.moveTo(p[0], p[1]);
-                        break;
-                    case 'C':
-                        ctx.bezierCurveTo(p[0], p[1], p[2], p[3], p[4], p[5]);
-                        break;
-                    case 'Q':
-                        ctx.quadraticCurveTo(p[0], p[1], p[2], p[3]);
-                        break;
-                    case 'A':
-                        var cx = p[0];
-                        var cy = p[1];
-                        var rx = p[2];
-                        var ry = p[3];
-                        var theta = p[4];
-                        var dTheta = p[5];
-                        var psi = p[6];
-                        var fs = p[7];
-                        var r = (rx > ry) ? rx : ry;
-                        var scaleX = (rx > ry) ? 1 : rx / ry;
-                        var scaleY = (rx > ry) ? ry / rx : 1;
-
-                        ctx.translate(cx, cy);
-                        ctx.rotate(psi);
-                        ctx.scale(scaleX, scaleY);
-                        ctx.arc(0, 0, r, theta, theta + dTheta, 1 - fs);
-                        ctx.scale(1 / scaleX, 1 / scaleY);
-                        ctx.rotate(-psi);
-                        ctx.translate(-cx, -cy);
-                        break;
-                    case 'z':
-                        ctx.closePath();
-                        break;
-                }
-            }
-
-            return;
-        },
-
-        /**
-         * 计算返回Path包围盒矩形。
-         * @param {module:zrender/shape/Path~IPathStyle} style
-         * @return {module:zrender/shape/Base~IBoundingRect}
-         */
-        getRect : function (style) {
-            if (style.__rect) {
-                return style.__rect;
-            }
-            
-            var lineWidth;
-            if (style.brushType == 'stroke' || style.brushType == 'fill') {
-                lineWidth = style.lineWidth || 1;
-            }
-            else {
-                lineWidth = 0;
-            }
-
-            var minX = Number.MAX_VALUE;
-            var maxX = Number.MIN_VALUE;
-
-            var minY = Number.MAX_VALUE;
-            var maxY = Number.MIN_VALUE;
-
-            // 平移坐标
-            var x = style.x || 0;
-            var y = style.y || 0;
-
-            var pathArray = this.pathArray || this._parsePathData(style.path);
-            for (var i = 0; i < pathArray.length; i++) {
-                var p = pathArray[i].points;
-
-                for (var j = 0; j < p.length; j++) {
-                    if (j % 2 === 0) {
-                        if (p[j] + x < minX) {
-                            minX = p[j] + x;
-                        }
-                        if (p[j] + x > maxX) {
-                            maxX = p[j] + x;
-                        }
-                    } 
-                    else {
-                        if (p[j] + y < minY) {
-                            minY = p[j] + y;
-                        }
-                        if (p[j] + y > maxY) {
-                            maxY = p[j] + y;
-                        }
-                    }
-                }
-            }
-
-            var rect;
-            if (minX === Number.MAX_VALUE
-                || maxX === Number.MIN_VALUE
-                || minY === Number.MAX_VALUE
-                || maxY === Number.MIN_VALUE
-            ) {
-                rect = {
-                    x : 0,
-                    y : 0,
-                    width : 0,
-                    height : 0
-                };
-            }
-            else {
-                rect = {
-                    x : Math.round(minX - lineWidth / 2),
-                    y : Math.round(minY - lineWidth / 2),
-                    width : maxX - minX + lineWidth,
-                    height : maxY - minY + lineWidth
-                };
-            }
-            style.__rect = rect;
-            return rect;
-        }
-    };
-
-    require('../tool/util').inherits(Path, Base);
-    return Path;
-});
-
-/**
- * zrender: 图形空间辅助类
- *
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
- *
- * isInside：是否在区域内部
- * isOutside：是否在区域外部
- * getTextWidth：测算单行文本宽度
- */
-define(
-    'zrender/tool/area',['require','../tool/util','../shape/Path'],function (require) {
-        var util = require('../tool/util');
-
-        var _ctx;
-        
-        var _textWidthCache = {};
-        var _textHeightCache = {};
-        var _textWidthCacheCounter = 0;
-        var _textHeightCacheCounter = 0;
-        var TEXT_CACHE_MAX = 5000;
-        
-        /**
-         * 包含判断
-         *
-         * @param {Object} shape : 图形
-         * @param {Object} area ： 目标区域
-         * @param {number} x ： 横坐标
-         * @param {number} y ： 纵坐标
-         */
-        function isInside(shape, area, x, y) {
-            if (!area || !shape) {
-                // 无参数或不支持类型
-                return false;
-            }
-            var zoneType = shape.type;
-
-            _ctx = _ctx || util.getContext();
-
-            if (!_isInsideRectangle(area.__rect || shape.getRect(area), x, y)) {
-                // 不在矩形区域内直接返回false
-                return false;
-            }
-
-            // 未实现或不可用时(excanvas不支持)则数学运算，主要是line，brokenLine，ring
-            var _mathReturn = _mathMethod(zoneType, area, x, y);
-            if (typeof _mathReturn != 'undefined') {
-                return _mathReturn;
-            }
-
-            if (zoneType != 'bezier-curve'
-                && shape.buildPath
-                && _ctx.isPointInPath
-            ) {
-                return _buildPathMethod(shape, _ctx, area, x, y);
-            }
-            else if (_ctx.getImageData) {
-                return _pixelMethod(shape, area, x, y);
-            }
-
-            // 上面的方法都行不通时
-            switch (zoneType) {
-                case 'heart': // 心形---------10 // Todo，不精确
-                case 'droplet':// 水滴----------11 // Todo，不精确
-                case 'ellipse': // Todo，不精确
-                    return true;
-                // 旋轮曲线  不准确
-                case 'trochoid':
-                    var _r = area.location == 'out'
-                            ? area.r1 + area.r2 + area.d
-                            : area.r1 - area.r2 + area.d;
-                    return _isInsideCircle(area, x, y, _r);
-                // 玫瑰线 不准确
-                case 'rose' :
-                    return _isInsideCircle(area, x, y, area.maxr);
-                // 路径，椭圆，曲线等-----------------13
-                default:
-                    return false;   // Todo，暂不支持
-            }
-        }
-
-        /**
-         * 用数学方法判断，三个方法中最快，但是支持的shape少
-         *
-         * @param {string} zoneType ： 图形类型
-         * @param {Object} area ：目标区域
-         * @param {number} x ： 横坐标
-         * @param {number} y ： 纵坐标
-         * @return {boolean=} true表示坐标处在图形中
-         */
-        function _mathMethod(zoneType, area, x, y) {
-            // 在矩形内则部分图形需要进一步判断
-            switch (zoneType) {
-                // 线-----------------------1
-                case 'line':
-                    return _isInsideLine(area, x, y);
-                // 折线----------------------2
-                case 'broken-line':
-                    return _isInsideBrokenLine(area, x, y);
-                // 文本----------------------3
-                case 'text':
-                    return true;
-                // 圆环----------------------4
-                case 'ring':
-                    return _isInsideRing(area, x, y);
-                // 矩形----------------------5
-                case 'rectangle':
-                    return true;
-                // 圆形----------------------6
-                case 'circle':
-                    return _isInsideCircle(area, x, y, area.r);
-                // 扇形----------------------7
-                case 'sector':
-                    return _isInsideSector(area, x, y);
-                // 多边形---------------------8
-                case 'path':
-                     return _isInsidePath(area, x, y);
-                case 'polygon':
-                case 'star':
-                case 'isogon':
-                    return _isInsidePolygon(area, x, y);
-                // 图片----------------------9
-                case 'image':
-                    return true;
-            }
-        }
-
-        /**
-         * 通过buildPath方法来判断，三个方法中较快，但是不支持线条类型的shape，
-         * 而且excanvas不支持isPointInPath方法
-         *
-         * @param {Object} shape ： shape
-         * @param {Object} context : 上下文
-         * @param {Object} area ：目标区域
-         * @param {number} x ： 横坐标
-         * @param {number} y ： 纵坐标
-         * @return {boolean} true表示坐标处在图形中
-         */
-        function _buildPathMethod(shape, context, area, x, y) {
-            // 图形类实现路径创建了则用类的path
-            context.beginPath();
-            shape.buildPath(context, area);
-            context.closePath();
-            return context.isPointInPath(x, y);
-        }
-
-        /**
-         * 通过像素值来判断，三个方法中最慢，但是支持广,不足之处是excanvas不支持像素处理
-         *
-         * @param {Object} shape  shape类
-         * @param {Object} area 目标区域
-         * @param {number} x  横坐标
-         * @param {number} y  纵坐标
-         * @return {boolean} true表示坐标处在图形中
-         */
-        function _pixelMethod(shape, area, x, y) {
-            var _rect = area.__rect || shape.getRect(area);
-            var _context = util.getPixelContext();
-            var _offset = util.getPixelOffset();
-
-            util.adjustCanvasSize(x, y);
-            _context.clearRect(_rect.x, _rect.y, _rect.width, _rect.height);
-            _context.beginPath();
-            shape.brush(_context, { style: area });
-            _context.closePath();
-
-            return _isPainted(_context, x + _offset.x, y + _offset.y);
-        }
-
-        /**
-         * 坐标像素值，判断坐标是否被作色
-         *
-         * @param {Object} context : 上下文
-         * @param {number} x : 横坐标
-         * @param {number} y : 纵坐标
-         * @param {number=} unit : 触发的精度，越大越容易触发，可选，缺省是为1
-         * @return {boolean} 已经被画过返回true
-         */
-        function _isPainted(context, x, y, unit) {
-            var pixelsData;
-
-            if (typeof unit != 'undefined') {
-                unit = (unit || 1) >> 1;
-                pixelsData = context.getImageData(
-                    x - unit,
-                    y - unit,
-                    unit + unit,
-                    unit + unit
-                ).data;
-            }
-            else {
-                pixelsData = context.getImageData(x, y, 1, 1).data;
-            }
-
-            var len = pixelsData.length;
-            while (len--) {
-                if (pixelsData[len] !== 0) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        /**
-         * !isInside
-         */
-        function isOutside(shape, area, x, y) {
-            return !isInside(shape, area, x, y);
-        }
-
-        /**
-         * 线段包含判断
-         */
-        function _isInsideLine(area, x, y) {
-            var _x1 = area.xStart;
-            var _y1 = area.yStart;
-            var _x2 = area.xEnd;
-            var _y2 = area.yEnd;
-            var _l = Math.max(area.lineWidth, 5);
-            var _a = 0;
-            var _b = _x1;
-
-            var minX;
-            var maxX;
-            if (_x1 < _x2) {
-                minX = _x1 - _l; maxX = _x2 + _l;
-            }
-            else {
-                minX = _x2 - _l; maxX = _x1 + _l;
-            }
-
-            var minY;
-            var maxY;
-            if (_y1 < _y2) {
-                minY = _y1 - _l; maxY = _y2 + _l;
-            }
-            else {
-                minY = _y2 - _l; maxY = _y1 + _l;
-            }
-
-            if (x < minX || x > maxX || y < minY || y > maxY) {
-                return false;
-            }
-
-            if (_x1 !== _x2) {
-                _a = (_y1 - _y2) / (_x1 - _x2);
-                _b = (_x1 * _y2 - _x2 * _y1) / (_x1 - _x2) ;
-            }
-            else {
-                return Math.abs(x - _x1) <= _l / 2;
-            }
-
-            var _s = (_a * x - y + _b) * (_a * x - y + _b) / (_a * _a + 1);
-            return _s <= _l / 2 * _l / 2;
-        }
-
-        function _isInsideBrokenLine(area, x, y) {
-            var pointList = area.pointList;
-            var lineArea = {
-                xStart : 0,
-                yStart : 0,
-                xEnd : 0,
-                yEnd : 0,
-                lineWidth : 0
-            };
-            for (var i = 0, l = pointList.length - 1; i < l; i++) {
-                lineArea.xStart = pointList[i][0];
-                lineArea.yStart = pointList[i][1];
-                lineArea.xEnd = pointList[i + 1][0];
-                lineArea.yEnd = pointList[i + 1][1];
-                lineArea.lineWidth = Math.max(area.lineWidth, 10);
-
-                if (_isInsideLine(lineArea, x, y)) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        function _isInsideRing(area, x, y) {
-            return _isInsideCircle(area, x, y, area.r)
-                && !_isInsideCircle({ x: area.x, y: area.y }, x, y, area.r0 || 0);
-        }
-
-        /**
-         * 矩形包含判断
-         */
-        function _isInsideRectangle(area, x, y) {
-            return x >= area.x
-                && x <= (area.x + area.width)
-                && y >= area.y
-                && y <= (area.y + area.height);
-        }
-
-        /**
-         * 圆形包含判断
-         */
-        function _isInsideCircle(area, x, y, r) {
-            return (x - area.x) * (x - area.x) + (y - area.y) * (y - area.y)
-                   < r * r;
-        }
-
-        /**
-         * 扇形包含判断
-         */
-        function _isInsideSector(area, x, y) {
-            if (!_isInsideCircle(area, x, y, area.r)
-                || (area.r0 > 0
-                    && _isInsideCircle(
-                            {
-                                x : area.x,
-                                y : area.y
-                            },
-                            x, y,
-                            area.r0
-                        )
-                    )
-            ) {
-                // 大圆外或者小圆内直接false
-                return false;
-            }
-
-            // 判断夹角
-            if (Math.abs(area.endAngle - area.startAngle) >= 360) {
-                // 大于360度的扇形，在环内就为true
-                return true;
-            }
-            
-            var angle = (360
-                         - Math.atan2(y - area.y, x - area.x) / Math.PI
-                         * 180)
-                         % 360;
-            var endA = (360 + area.endAngle) % 360;
-            var startA = (360 + area.startAngle) % 360;
-            if (endA > startA) {
-                return (angle >= startA && angle <= endA);
-            }
-
-            return !(angle >= endA && angle <= startA);
-        }
-
-        /**
-         * 多边形包含判断
-         * 警告：下面这段代码会很难看，建议跳过~
-         */
-        function _isInsidePolygon(area, x, y) {
-            /**
-             * 射线判别法
-             * 如果一个点在多边形内部，任意角度做射线肯定会与多边形要么有一个交点，要么有与多边形边界线重叠
-             * 如果一个点在多边形外部，任意角度做射线要么与多边形有一个交点，
-             * 要么有两个交点，要么没有交点，要么有与多边形边界线重叠。
-             */
-            var i;
-            var j;
-            var polygon = area.pointList;
-            var N = polygon.length;
-            var inside = false;
-            var redo = true;
-            var v;
-
-            for (i = 0; i < N; ++i) {
-                // 是否在顶点上
-                if (polygon[i][0] == x && polygon[i][1] == y) {
-                    redo = false;
-                    inside = true;
-                    break;
-                }
-            }
-
-            if (redo) {
-                redo = false;
-                inside = false;
-                for (i = 0, j = N - 1; i < N; j = i++) {
-                    if ((polygon[i][1] < y && y < polygon[j][1])
-                        || (polygon[j][1] < y && y < polygon[i][1])
-                    ) {
-                        if (x <= polygon[i][0] || x <= polygon[j][0]) {
-                            v = (y - polygon[i][1])
-                                * (polygon[j][0] - polygon[i][0])
-                                / (polygon[j][1] - polygon[i][1])
-                                + polygon[i][0];
-                            if (x < v) {          // 在线的左侧
-                                inside = !inside;
-                            }
-                            else if (x == v) {   // 在线上
-                                inside = true;
-                                break;
-                            }
-                        }
-                    }
-                    else if (y == polygon[i][1]) {
-                        if (x < polygon[i][0]) {    // 交点在顶点上
-                            polygon[i][1] > polygon[j][1] ? --y : ++y;
-                            // redo = true;
-                            break;
-                        }
-                    }
-                    else if (polygon[i][1] == polygon[j][1] // 在水平的边界线上
-                             && y == polygon[i][1]
-                             && ((polygon[i][0] < x && x < polygon[j][0])
-                                 || (polygon[j][0] < x && x < polygon[i][0]))
-                    ) {
-                        inside = true;
-                        break;
-                    }
-                }
-            }
-            return inside;
-        }
-        
-        /**
-         * 路径包含判断，依赖多边形判断
-         */
-        function _isInsidePath(area, x, y) {
-            if (!area.pointList) {
-                require('../shape/Path').prototype.buildPath(_ctx, area);
-            }
-            var pointList = area.pointList;
-            var insideCatch = false;
-            for (var i = 0, l = pointList.length; i < l; i++) {
-                insideCatch = _isInsidePolygon(
-                    { pointList : pointList[i] }, x, y
-                );
-
-                if (insideCatch) {
-                    break;
-                }
-            }
-
-            return insideCatch;
-        }
-        
-        /**
-         * 测算多行文本宽度
-         * @param {Object} text
-         * @param {Object} textFont
-         */
-        function getTextWidth(text, textFont) {
-            var key = text + ':' + textFont;
-            if (_textWidthCache[key]) {
-                return _textWidthCache[key];
-            }
-            _ctx = _ctx || util.getContext();
-            _ctx.save();
-
-            if (textFont) {
-                _ctx.font = textFont;
-            }
-            
-            text = (text + '').split('\n');
-            var width = 0;
-            for (var i = 0, l = text.length; i < l; i++) {
-                width =  Math.max(
-                    _ctx.measureText(text[i]).width,
-                    width
-                );
-            }
-            _ctx.restore();
-
-            _textWidthCache[key] = width;
-            if (++_textWidthCacheCounter > TEXT_CACHE_MAX) {
-                // 内存释放
-                _textWidthCacheCounter = 0;
-                _textWidthCache = {};
-            }
-            
-            return width;
-        }
-        
-        /**
-         * 测算多行文本高度
-         * @param {Object} text
-         * @param {Object} textFont
-         */
-        function getTextHeight(text, textFont) {
-            var key = text + ':' + textFont;
-            if (_textHeightCache[key]) {
-                return _textHeightCache[key];
-            }
-            
-            _ctx = _ctx || util.getContext();
-
-            _ctx.save();
-            if (textFont) {
-                _ctx.font = textFont;
-            }
-            
-            text = (text + '').split('\n');
-            // 比较粗暴
-            var height = (_ctx.measureText('国').width + 2) * text.length;
-
-            _ctx.restore();
-
-            _textHeightCache[key] = height;
-            if (++_textHeightCacheCounter > TEXT_CACHE_MAX) {
-                // 内存释放
-                _textHeightCacheCounter = 0;
-                _textHeightCache = {};
-            }
-            return height;
-        }
-
-        return {
-            isInside : isInside,
-            isOutside : isOutside,
-            getTextWidth : getTextWidth,
-            getTextHeight : getTextHeight
-        };
     }
 );
 
@@ -8629,6 +8962,7 @@ define(
                 else {
                     this._buildRadiusPath(ctx, style);
                 }
+                ctx.closePath();
                 return;
             },
 
@@ -8848,6 +9182,8 @@ define(
  * @property {number} y 左上角纵坐标
  * @property {number} [width] 绘制到画布上的宽度，默认为图片宽度
  * @property {number} [height] 绘制到画布上的高度，默认为图片高度
+ * @property {number} [sx=0] 从图片中裁剪的左上角横坐标
+ * @property {number} [sy=0] 从图片中裁剪的左上角纵坐标
  * @property {number} [sWidth] 从图片中裁剪的宽度，默认为图片高度
  * @property {number} [sHeight] 从图片中裁剪的高度，默认为图片高度
  * @property {number} [opacity=1] 绘制透明度
@@ -8880,6 +9216,8 @@ define(
          */
         var ZImage = function(options) {
             Base.call(this, options);
+
+            this._imageCache = {};
             /**
              * 图片绘制样式
              * @name module:zrender/shape/Image#style
@@ -8911,20 +9249,25 @@ define(
 
                 if (typeof(image) === 'string') {
                     var src = image;
-                    image = new Image();
-                    image.onload = function () {
-                        image.onload = null;
-                        clearTimeout(_refreshTimeout);
-                        _needsRefresh.push(me);
-                        // 防止因为缓存短时间内触发多次onload事件
-                        _refreshTimeout = setTimeout(function () {
-                            refresh && refresh(_needsRefresh);
-                            // 清空needsRefresh
-                            _needsRefresh = [];
-                        }, 10);
-                    };
+                    if (this._imageCache[src]) {
+                        image = this._imageCache[src];
+                    } else {
+                        image = new Image();
+                        image.onload = function () {
+                            image.onload = null;
+                            clearTimeout(_refreshTimeout);
+                            _needsRefresh.push(me);
+                            // 防止因为缓存短时间内触发多次onload事件
+                            _refreshTimeout = setTimeout(function () {
+                                refresh && refresh(_needsRefresh);
+                                // 清空needsRefresh
+                                _needsRefresh = [];
+                            }, 10);
+                        };
 
-                    image.src = src;
+                        image.src = src;
+                        this._imageCache[src] = image;
+                    }
                 }
                 if (image) {
                     // 图片已经加载完成
@@ -9005,13 +9348,17 @@ define(
              * @param {module:zrender/shape/Image~IImageStyle} style
              * @return {module:zrender/shape/Base~IBoundingRect}
              */
-            getRect : function(style) {
+            getRect: function(style) {
                 return {
                     x : style.x,
                     y : style.y,
                     width : style.width,
                     height : style.height
                 };
+            },
+
+            clearCache: function() {
+                this._imageCache = {};
             }
         };
 
@@ -10154,11 +10501,15 @@ define('zrender/Group',['require','./tool/guid','./tool/util','./mixin/Transform
     Group.prototype.delChildrenFromStorage = function(storage) {
         for (var i = 0; i < this._children.length; i++) {
             var child = this._children[i];
-            storage.delFromMap(child);
+            storage.delFromMap(child.id);
             if (child.type === 'group') {
                 child.delChildrenFromStorage(storage);
             }
         }
+    };
+
+    Group.prototype.modSelf = function() {
+        this.__dirty = true;
     };
 
     util.merge(Group.prototype, Transformable.prototype, true);
@@ -10373,10 +10724,8 @@ define(
         Storage.prototype.mod = function (elId, params) {
             var el = this._elements[elId];
             if (el) {
-                if (!(el instanceof Group)) {
-                    el.style.__rect = null;
-                }
-                el.__dirty = true;
+
+                el.modSelf();
 
                 if (params) {
                     // 如果第二个参数直接使用 shape
@@ -10518,9 +10867,7 @@ define(
             if (el instanceof Group) {
                 el._storage = this;
             }
-            else {
-                el.style.__rect = null;
-            }
+            el.modSelf();
 
             this._elements[el.id] = el;
 
@@ -11663,7 +12010,7 @@ define(
         /**
          * @type {string}
          */
-        zrender.version = '2.0.3';
+        zrender.version = '2.0.4';
 
         /**
          * 创建zrender实例
@@ -11725,12 +12072,12 @@ define(
 
         function getFrameCallback(zrInstance) {
             return function () {
-                var animatingShapes = zrInstance.animatingShapes;
-                for (var i = 0, l = animatingShapes.length; i < l; i++) {
-                    zrInstance.storage.mod(animatingShapes[i].id);
+                var animatingElements = zrInstance.animatingElements;
+                for (var i = 0, l = animatingElements.length; i < l; i++) {
+                    zrInstance.storage.mod(animatingElements[i].id);
                 }
 
-                if (animatingShapes.length || zrInstance._needsRefreshNextFrame) {
+                if (animatingElements.length || zrInstance._needsRefreshNextFrame) {
                     zrInstance.refresh();
                 }
             };
@@ -11759,13 +12106,13 @@ define(
             this.handler = new Handler(dom, this.storage, this.painter);
 
             // 动画控制
-            this.animatingShapes = [];
+            this.animatingElements = [];
             /**
              * @type {module:zrender/animation/Animation}
              */
             this.animation = new Animation({
-                stage : {
-                    update : getFrameCallback(this)
+                stage: {
+                    update: getFrameCallback(this)
                 }
             });
             this.animation.start();
@@ -11934,7 +12281,7 @@ define(
         /**
          * 动画
          * 
-         * @param {string} shapeId 形状对象唯一标识
+         * @param {string|module:zrender/Group|module:zrender/shape/Base} el 动画对象
          * @param {string} path 需要添加动画的属性获取路径，可以通过a.b.c来获取深层的属性
          * @param {boolean} [loop] 动画是否循环
          * @return {module:zrender/animation/Animation~Animator}
@@ -11944,13 +12291,15 @@ define(
          *         .done(function(){ // Animation done })
          *         .start()
          */
-        ZRender.prototype.animate = function (shapeId, path, loop) {
-            var shape = this.storage.get(shapeId);
-            if (shape) {
+        ZRender.prototype.animate = function (el, path, loop) {
+            if (typeof(el) === 'string') {
+                el = this.storage.get(el);
+            }
+            if (el) {
                 var target;
                 if (path) {
                     var pathSplitted = path.split('.');
-                    var prop = shape;
+                    var prop = el;
                     for (var i = 0, l = pathSplitted.length; i < l; i++) {
                         if (!prop) {
                             continue;
@@ -11962,41 +12311,41 @@ define(
                     }
                 }
                 else {
-                    target = shape;
+                    target = el;
                 }
 
                 if (!target) {
                     log(
                         'Property "'
                         + path
-                        + '" is not existed in shape '
-                        + shapeId
+                        + '" is not existed in element '
+                        + el.id
                     );
                     return;
                 }
 
-                var animatingShapes = this.animatingShapes;
-                if (typeof shape.__aniCount === 'undefined') {
+                var animatingElements = this.animatingElements;
+                if (typeof el.__aniCount === 'undefined') {
                     // 正在进行的动画记数
-                    shape.__aniCount = 0;
+                    el.__aniCount = 0;
                 }
-                if (shape.__aniCount === 0) {
-                    animatingShapes.push(shape);
+                if (el.__aniCount === 0) {
+                    animatingElements.push(el);
                 }
-                shape.__aniCount++;
+                el.__aniCount++;
 
                 return this.animation.animate(target, { loop: loop })
                     .done(function () {
-                        shape.__aniCount--;
-                        if (shape.__aniCount === 0) {
-                            // 从animatingShapes里移除
-                            var idx = util.indexOf(animatingShapes, shape);
-                            animatingShapes.splice(idx, 1);
+                        el.__aniCount--;
+                        if (el.__aniCount === 0) {
+                            // 从animatingElements里移除
+                            var idx = util.indexOf(animatingElements, el);
+                            animatingElements.splice(idx, 1);
                         }
                     });
             }
             else {
-                log('Shape "' + shapeId + '" not existed');
+                log('Element not existed');
             }
         };
 
@@ -12115,7 +12464,7 @@ define(
             this.handler.dispose();
 
             this.animation = 
-            this.animatingShapes = 
+            this.animatingElements = 
             this.storage = 
             this.painter = 
             this.handler = null;
@@ -12339,12 +12688,12 @@ define('echarts/component/base',['require','../config','../util/ecQuery','../uti
      * 基类方法
      */
     Base.prototype = {
-        canvasSupported : require('zrender/tool/env').canvasSupported,
+        canvasSupported: require('zrender/tool/env').canvasSupported,
         /**
          * 获取zlevel基数配置
          * @param {Object} contentType
          */
-        getZlevelBase : function (contentType) {
+        getZlevelBase: function (contentType) {
             contentType = contentType || this.type + '';
 
             switch (contentType) {
@@ -12396,7 +12745,7 @@ define('echarts/component/base',['require','../config','../util/ecQuery','../uti
          *
          * @return {Object} 修正后的参数
          */
-        reformOption : function (opt) {
+        reformOption: function (opt) {
             return zrUtil.merge(
                        opt || {},
                        zrUtil.clone(this.ecTheme[this.type] || {})
@@ -12406,7 +12755,7 @@ define('echarts/component/base',['require','../config','../util/ecQuery','../uti
         /**
          * css类属性数组补全，如padding，margin等~
          */
-        reformCssArray : function (p) {
+        reformCssArray: function (p) {
             if (p instanceof Array) {
                 switch (p.length + '') {
                     case '4':
@@ -12426,9 +12775,9 @@ define('echarts/component/base',['require','../config','../util/ecQuery','../uti
             }
         },
 
-        getShapeById : function(id) {
+        getShapeById: function(id) {
             for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                if (this.shapeList[i].id == id) {
+                if (this.shapeList[i].id === id) {
                     return this.shapeList[i];
                 }
             }
@@ -12438,7 +12787,7 @@ define('echarts/component/base',['require','../config','../util/ecQuery','../uti
         /**
          * 获取自定义和默认配置合并后的字体设置
          */
-        getFont : function (textStyle) {
+        getFont: function (textStyle) {
             var finalTextStyle = zrUtil.merge(
                 zrUtil.clone(textStyle) || {},
                 this.ecTheme.textStyle
@@ -12449,16 +12798,16 @@ define('echarts/component/base',['require','../config','../util/ecQuery','../uti
                    + finalTextStyle.fontFamily;
         },
         
-        getItemStyleColor : function (itemColor, seriesIndex, dataIndex, data) {
-            return typeof itemColor == 'function'
+        getItemStyleColor: function (itemColor, seriesIndex, dataIndex, data) {
+            return typeof itemColor === 'function'
                    ? itemColor(seriesIndex, dataIndex, data) : itemColor;
             
         },        
         
         // 亚像素优化
-        subPixelOptimize : function (position, lineWidth) {
-            if (lineWidth % 2 == 1) {
-                //position += position == Math.ceil(position) ? 0.5 : 0;
+        subPixelOptimize: function (position, lineWidth) {
+            if (lineWidth % 2 === 1) {
+                //position += position === Math.ceil(position) ? 0.5 : 0;
                 position = Math.floor(position) + 0.5;
             }
             else {
@@ -12468,7 +12817,7 @@ define('echarts/component/base',['require','../config','../util/ecQuery','../uti
         },
         
         
-        resize : function () {
+        resize: function () {
             this.refresh && this.refresh();
             this.clearEffectShape && this.clearEffectShape(true);
             var self = this;
@@ -12489,20 +12838,20 @@ define('echarts/component/base',['require','../config','../util/ecQuery','../uti
         /**
          * 释放后实例不可用
          */
-        dispose : function () {
+        dispose: function () {
             this.clear();
             this.shapeList = null;
             this.effectList = null;
         },
         
-        query : ecQuery.query,
-        deepQuery : ecQuery.deepQuery,
-        deepMerge : ecQuery.deepMerge,
+        query: ecQuery.query,
+        deepQuery: ecQuery.deepQuery,
+        deepMerge: ecQuery.deepMerge,
         
-        parsePercent : number.parsePercent,
-        parseCenter : number.parseCenter,
-        parseRadius : number.parseRadius,
-        numAddCommas : number.addCommas
+        parsePercent: number.parsePercent,
+        parseCenter: number.parseCenter,
+        parseRadius: number.parseRadius,
+        numAddCommas: number.addCommas
     };
     
     return Base;
@@ -12690,6 +13039,8 @@ define(
                 for (var i = 0; i < pointList.length; i++) {
                     ctx.lineTo(pointList[i][0], pointList[i][1]);
                 }
+                
+                ctx.closePath();
 
                 return;
             },
@@ -12825,6 +13176,7 @@ define(
                     style.x,
                     style.y
                 );
+                ctx.closePath();
                 return;
             },
 
@@ -12960,6 +13312,7 @@ define(
                     style.x,
                     style.y + style.a
                 );
+                ctx.closePath();
             },
 
             /**
@@ -13049,9 +13402,6 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
 
         ctx.moveTo(style.x + 13 * dx,       style.y + 10 * dy);
         ctx.lineTo(style.x + 13 * dx,       style.y + style.height);
-        
-        // 避免自动闭合路径
-        ctx.moveTo(style.x, style.y);
     }
 
     function _iconMarkUndo(ctx, style) {
@@ -13069,9 +13419,6 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
 
         ctx.moveTo(style.x + 10 * dx,       style.y + 13 * dy);
         ctx.lineTo(style.x + style.width,   style.y + 13 * dy);
-        
-        // 避免自动闭合路径
-        ctx.moveTo(style.x, style.y);
     }
 
     function _iconMarkClear(ctx, style) {
@@ -13096,9 +13443,6 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
         ctx.lineTo(style.x + 3 * dx,        style.y + style.height);
         ctx.lineTo(style.x + 13 * dx,        style.y + style.height);
         ctx.lineTo(style.x + style.width,        style.y + 5 * dy);
-        
-        // 避免自动闭合路径
-        ctx.moveTo(style.x, style.y);
     }
 
     function _iconDataZoom(ctx, style) {
@@ -13116,9 +13460,6 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
         ctx.lineTo(style.x + style.width, style.y + style.height);
         ctx.lineTo(style.x + style.width, style.y + 3 * dy);
         ctx.lineTo(style.x + 8 * dx,      style.y + 3 * dy);
-        
-        // 避免自动闭合路径
-        ctx.moveTo(style.x, style.y);
     }
     
     function _iconDataZoomReset(ctx, style) {
@@ -13140,9 +13481,6 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
         ctx.moveTo(style.x + 10 * dx,     style.y + 10 * dy);
         ctx.lineTo(style.x + 14 * dx,     style.y + 13 * dy);
         ctx.lineTo(style.x + 10 * dx,     style.y + style.height);
-        
-        // 避免自动闭合路径
-        ctx.moveTo(style.x, style.y);
     }
     
     function _iconRestore(ctx, style) {
@@ -13162,9 +13500,6 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
         ctx.moveTo(style.x + 13 * dx,       style.y);
         ctx.lineTo(style.x + style.width,   style.y + 4 * dy);
         ctx.lineTo(style.x + 11 * dx,       style.y + 5 * dy);
-        
-        // 避免自动闭合路径
-        ctx.moveTo(style.x, style.y);
     }
 
     function _iconLineChart(ctx, style) {
@@ -13179,9 +13514,6 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
         ctx.lineTo(style.x + 7 * dx,    style.y + 6 * dy);
         ctx.lineTo(style.x + 11 * dx,   style.y + 11 * dy);
         ctx.lineTo(style.x + 15 * dx,   style.y + 2 * dy);
-        
-        // 避免自动闭合路径
-        ctx.moveTo(style.x, style.y);
     }
 
     function _iconBarChart(ctx, style) {
@@ -13204,9 +13536,6 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
         ctx.lineTo(style.x + 11 * dx,       style.y + 9 * dy);
         ctx.lineTo(style.x + 12 * dx,       style.y + 9 * dy);
         ctx.lineTo(style.x + 12 * dx,       style.y + 14 * dy);
-        
-        // 避免自动闭合路径
-        ctx.moveTo(style.x, style.y);
     }
 
     function _iconStackChart(ctx, style) {
@@ -13219,9 +13548,6 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
         while (len--) {
             ctx.rect(x, y + dy * len + 2, width, 2);
         }
-        
-        // 避免自动闭合路径
-        ctx.moveTo(style.x, style.y);
     }
     
     function _iconTiledChart(ctx, style) {
@@ -13234,9 +13560,6 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
         while (len--) {
             ctx.rect(x + dx * len, y, 2, height);
         }
-        
-        // 避免自动闭合路径
-        ctx.moveTo(style.x, style.y);
     }
     
     function _iconDataView(ctx, style) {
@@ -13259,9 +13582,6 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
 
         ctx.moveTo(style.x + 3 * dx, style.y + 12 * dx);
         ctx.lineTo(style.x + 9 * dx, style.y + 12 * dx);
-        
-        // 避免自动闭合路径
-        ctx.moveTo(style.x, style.y);
     }
     
     function _iconSave(ctx, style) {
@@ -13284,9 +13604,6 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
         ctx.lineTo(style.x + 10 * dx,   style.y + 13 * dy);
         ctx.lineTo(style.x + 10 * dx,   style.y + 11 * dy);
         ctx.lineTo(style.x + 6 * dx,    style.y + 11 * dy);
-        
-        // 避免自动闭合路径
-        ctx.moveTo(style.x, style.y);
     }
     
     function _iconCross(ctx, style) {
@@ -13316,10 +13633,12 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
             0, 
             Math.PI * 2
         );
+        ctx.closePath();
     }
     
     function _iconRectangle(ctx, style) {
         ctx.rect(style.x, style.y, style.width, style.height);
+        ctx.closePath();
     }
     
     function _iconTriangle(ctx, style) {
@@ -13332,6 +13651,7 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
         ctx.lineTo(x + symbolSize, y + symbolSize);
         ctx.lineTo(x - symbolSize, y + symbolSize);
         ctx.lineTo(x, y - symbolSize);
+        ctx.closePath();
     }
     
     function _iconDiamond(ctx, style) {
@@ -13345,6 +13665,7 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
         ctx.lineTo(x, y + symbolSize);
         ctx.lineTo(x - symbolSize, y);
         ctx.lineTo(x, y - symbolSize);
+        ctx.closePath();
     }
     
     function _iconArrow(ctx, style) {
@@ -13356,6 +13677,7 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
         ctx.lineTo(x + 8 * dx,  y + style.height / 4 * 3);
         ctx.lineTo(x + 15 * dx, y + style.height);
         ctx.lineTo(x + 8 * dx,  y);
+        ctx.closePath();
     }
     
     function _iconStar(ctx, style) {
@@ -13404,6 +13726,7 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
             Math.PI / 5
         );
         ctx.lineTo(x + width, y + height + r * 1.5);
+        ctx.closePath();
     }
     
     function _iconImage(ctx, style) {
@@ -13465,6 +13788,7 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
                 ctx.lineTo(style.x + style.width, style.y + style.height);
                 ctx.lineTo(style.x, style.y + style.height);
                 ctx.lineTo(style.x, style.y);
+                ctx.closePath();
             }
 
             return;
@@ -13528,7 +13852,6 @@ define('echarts/util/shape/Icon',['require','zrender/tool/util','zrender/shape/S
  * author:  Kener (@Kener-林峰, linzhifeng@baidu.com)
  *          errorrik (errorrik@gmail.com)
  */
-
 define(
     'zrender/shape/util/dashedLineTo',[],function (/* require */) {
 
@@ -13701,13 +14024,12 @@ define(
 );
 
 /**
- * 多线段平滑曲线 Catmull-Rom spline
- *
- * author:  Kener (@Kener-林峰, linzhifeng@baidu.com)
- *          errorrik (errorrik@gmail.com)
+ * Catmull-Rom spline 插值折线
+ * @module zrender/shape/util/smoothSpline
+ * @author pissang (https://www.github.com/pissang) 
+ *         Kener (@Kener-林峰, linzhifeng@baidu.com)
+ *         errorrik (errorrik@gmail.com)
  */
-
-
 define(
     'zrender/shape/util/smoothSpline',['require','../../tool/vector'],function (require) {
         var vector = require('../../tool/vector');
@@ -13724,9 +14046,13 @@ define(
         }
 
         /**
-         * 多线段平滑曲线 Catmull-Rom spline
+         * @alias module:zrender/shape/util/smoothSpline
+         * @param {Array} points 线段顶点数组
+         * @param {boolean} isLoop
+         * @param {Array} constraint 
+         * @return {Array}
          */
-        return function (points, isLoop) {
+        return function (points, isLoop, constraint) {
             var len = points.length;
             var ret = [];
 
@@ -13773,19 +14099,27 @@ define(
 
 /**
  * 贝塞尔平滑曲线 
- *
- * author:  Kener (@Kener-林峰, linzhifeng@baidu.com)
- *          errorrik (errorrik@gmail.com)
+ * @module zrender/shape/util/smoothBezier
+ * @author pissang (https://www.github.com/pissang) 
+ *         Kener (@Kener-林峰, linzhifeng@baidu.com)
+ *         errorrik (errorrik@gmail.com)
  */
-
 define(
     'zrender/shape/util/smoothBezier',['require','../../tool/vector'],function (require) {
         var vector = require('../../tool/vector');
 
         /**
-         * 贝塞尔平滑曲线 
+         * 贝塞尔平滑曲线
+         * @alias module:zrender/shape/util/smoothBezier
+         * @param {Array} points 线段顶点数组
+         * @param {number} smooth 平滑等级, 0-1
+         * @param {boolean} isLoop
+         * @param {Array} constraint 将计算出来的控制点约束在一个包围盒内
+         *                           比如 [[0, 0], [100, 100]], 这个包围盒会与
+         *                           整个折线的包围盒做一个并集用来约束控制点。
+         * @param {Array} 计算出来的控制点数组
          */
-        return function (points, smooth, isLoop) {
+        return function (points, smooth, isLoop, constraint) {
             var cps = [];
 
             var v = [];
@@ -13793,6 +14127,20 @@ define(
             var v2 = [];
             var prevPoint;
             var nextPoint;
+
+            var hasConstraint = !!constraint;
+            var min, max;
+            if (hasConstraint) {
+                min = [Infinity, Infinity];
+                max = [-Infinity, -Infinity];
+                for (var i = 0, len = points.length; i < len; i++) {
+                    vector.min(min, min, points[i]);
+                    vector.max(max, max, points[i]);
+                }
+                // 与指定的包围盒做并集
+                vector.min(min, min, constraint[0]);
+                vector.max(max, max, constraint[1]);
+            }
 
             for (var i = 0, len = points.length; i < len; i++) {
                 var point = points[i];
@@ -13822,14 +14170,23 @@ define(
                 var d0 = vector.distance(point, prevPoint);
                 var d1 = vector.distance(point, nextPoint);
                 var sum = d0 + d1;
-                d0 /= sum;
-                d1 /= sum;
+                if (sum !== 0) {
+                    d0 /= sum;
+                    d1 /= sum;
+                }
 
                 vector.scale(v1, v, -d0);
                 vector.scale(v2, v, d1);
-
-                cps.push(vector.add([], point, v1));
-                cps.push(vector.add([], point, v2));
+                var cp0 = vector.add([], point, v1);
+                var cp1 = vector.add([], point, v2);
+                if (hasConstraint) {
+                    vector.max(cp0, cp0, min);
+                    vector.min(cp0, cp0, max);
+                    vector.max(cp1, cp1, min);
+                    vector.min(cp1, cp1, max);
+                }
+                cps.push(cp0);
+                cps.push(cp1);
             }
             
             if (isLoop) {
@@ -13860,6 +14217,8 @@ define(
 /**
  * @typedef {Object} IPolygonStyle
  * @property {string} pointList 多边形顶点数组
+ * @property {string} [smooth=''] 是否做平滑插值, 平滑算法可以选择 bezier, spline
+ * @property {number} [smoothConstraint] 平滑约束
  * @property {string} [brushType='fill']
  * @property {string} [color='#000000'] 填充颜色
  * @property {string} [strokeColor='#000000'] 描边颜色
@@ -14000,7 +14359,7 @@ define(
 
                 if (style.smooth && style.smooth !== 'spline') {
                     var controlPoints = smoothBezier(
-                        pointList, style.smooth, true
+                        pointList, style.smooth, true, style.smoothConstraint
                     );
 
                     ctx.moveTo(pointList[0][0], pointList[0][1]);
@@ -14135,6 +14494,7 @@ define(
  * @typedef {Object} IBrokenLineStyle
  * @property {Array.<number>} pointList 顶点坐标数组
  * @property {string} [smooth=''] 是否做平滑插值, 平滑算法可以选择 bezier, spline
+ * @property {number} [smoothConstraint] 平滑约束
  * @property {string} [strokeColor='#000000'] 描边颜色
  * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
  * @property {string} [lineJoin='miter'] 线段连接样式，可以是 miter, round, bevel
@@ -14204,7 +14564,7 @@ define(
                 
                 if (style.smooth && style.smooth !== 'spline') {
                     var controlPoints = smoothBezier(
-                        pointList, style.smooth
+                        pointList, style.smooth, false, style.smoothConstraint
                     );
 
                     ctx.moveTo(pointList[0][0], pointList[0][1]);
@@ -15913,7 +16273,11 @@ define('echarts/util/accMath',[],function() {
         var s2 = arg2.toString(); 
         var m = 0;
         try {
-            m = s2.split('.')[1].length - s1.split('.')[1].length;
+            m = s2.split('.')[1].length;
+        }
+        catch(e) {}
+        try {
+            m -= s1.split('.')[1].length;
         }
         catch(e) {}
         
@@ -15930,6 +16294,9 @@ define('echarts/util/accMath',[],function() {
         var m = 0;
         try {
             m += s1.split('.')[1].length;
+        }
+        catch(e) {}
+        try {
             m += s2.split('.')[1].length;
         }
         catch(e) {}
@@ -15946,6 +16313,9 @@ define('echarts/util/accMath',[],function() {
         var r2 = 0;
         try {
             r1 = arg1.toString().split('.')[1].length;
+        }
+        catch(e) {}
+        try {
             r2 = arg2.toString().split('.')[1].length;
         }
         catch(e) {}
@@ -15996,11 +16366,11 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         this.selectedMap = {};
         this.lastShapeList = [];
         this.shapeHandler = {
-            onclick : function () {
+            onclick: function () {
                 self.isClick = true;
             },
             
-            ondragover : function (param) {
+            ondragover: function (param) {
                 // 返回触发可计算特性的图形提示
                 var calculableShape = param.target;
                 calculableShape.highlightStyle = calculableShape.highlightStyle || {};
@@ -16013,7 +16383,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 
                 highlightStyle.brushType = 'stroke';
                 highlightStyle.strokeColor = self.ecTheme.calculableColor;
-                highlightStyle.lineWidth = calculableShape.type == 'icon' ? 30 : 10;
+                highlightStyle.lineWidth = calculableShape.type === 'icon' ? 30 : 10;
                 
                 self.zr.addHoverShape(calculableShape);
                 
@@ -16027,14 +16397,14 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 },20);
             },
             
-            ondrop : function (param) {
+            ondrop: function (param) {
                 // 排除一些非数据的拖拽进入
-                if (typeof ecData.get(param.dragged, 'data') != 'undefined') {
+                if (ecData.get(param.dragged, 'data') != null) {
                     self.isDrop = true;
                 }
             },
             
-            ondragend : function () {
+            ondragend: function () {
                 self.isDragend = true;
             }
         };
@@ -16047,7 +16417,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 图形拖拽特性 
          */
-        setCalculable : function (shape) {
+        setCalculable: function (shape) {
             shape.dragEnableTime = this.ecTheme.DRAG_ENABLE_TIME;
             shape.ondragover = this.shapeHandler.ondragover;
             shape.ondragend = this.shapeHandler.ondragend;
@@ -16058,7 +16428,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 数据项被拖拽进来
          */
-        ondrop : function (param, status) {
+        ondrop: function (param, status) {
             if (!this.isDrop || !param.target) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
@@ -16072,22 +16442,22 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             var series = this.series;
             var data;
             var legend = this.component.legend;
-            if (dataIndex == -1) {
+            if (dataIndex === -1) {
                 // 落到calculableCase上，数据被拖拽进某个饼图|雷达|漏斗，增加数据
                 data = {
-                    value : ecData.get(dragged, 'value'),
-                    name : ecData.get(dragged, 'name')
+                    value: ecData.get(dragged, 'value'),
+                    name: ecData.get(dragged, 'name')
                 };
 
                 // 修饼图数值不为负值
-                if (this.type == ecConfig.CHART_TYPE_PIE && data.value < 0) {
+                if (this.type === ecConfig.CHART_TYPE_PIE && data.value < 0) {
                     data.value = 0;
                 }
 
                 var hasFind = false;
                 var sData = series[seriesIndex].data;
                 for (var i = 0, l = sData.length; i < l; i++) {
-                    if (sData[i].name == data.name && sData[i].value == '-') {
+                    if (sData[i].name === data.name && sData[i].value === '-') {
                         series[seriesIndex].data[i].value = data.value;
                         hasFind = true;
                     }
@@ -16102,7 +16472,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             else {
                 // 落到数据item上，数据被拖拽到某个数据项上，数据修改
                 data = this.option.series[seriesIndex].data[dataIndex] || '-';
-                if (typeof data.value != 'undefined') {
+                if (data.value != null) {
                     if (data.value != '-') {
                         this.option.series[seriesIndex].data[dataIndex].value = 
                             accMath.accAdd(
@@ -16115,10 +16485,10 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                             ecData.get(dragged, 'value');
                     }
                     
-                    if (this.type == ecConfig.CHART_TYPE_FUNNEL
-                        || this.type == ecConfig.CHART_TYPE_PIE
+                    if (this.type === ecConfig.CHART_TYPE_FUNNEL
+                        || this.type === ecConfig.CHART_TYPE_PIE
                     ) {
-                        legend && legend.getRelatedAmount(data.name) == 1 
+                        legend && legend.getRelatedAmount(data.name) === 1 
                                && this.component.legend.del(data.name);
                         data.name += this.option.nameConnector + ecData.get(dragged, 'name');
                         legend && legend.add(
@@ -16159,7 +16529,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 数据项被拖拽出去
          */
-        ondragend : function (param, status) {
+        ondragend: function (param, status) {
             if (!this.isDragend || !param.target) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
@@ -16172,7 +16542,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             var series = this.series;
 
             // 删除被拖拽走的数据
-            if (typeof series[seriesIndex].data[dataIndex].value != 'undefined') {
+            if (series[seriesIndex].data[dataIndex].value != null) {
                 series[seriesIndex].data[dataIndex].value = '-';
                 // 清理可能有且唯一的legend data
                 var name = series[seriesIndex].data[dataIndex].name;
@@ -16199,7 +16569,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 图例选择
          */
-        onlegendSelected : function (param, status) {
+        onlegendSelected: function (param, status) {
             var legendSelected = param.selected;
             for (var itemName in this.selectedMap) {
                 if (this.selectedMap[itemName] != legendSelected[itemName]) {
@@ -16214,7 +16584,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 添加文本 
          */
-        addLabel : function (tarShape, serie, data, name, orient) {
+        addLabel: function (tarShape, serie, data, name, orient) {
             // 多级控制
             var queryTarget = [data, serie];
             var nLabel = this.deepMerge(queryTarget, 'itemStyle.normal.label');
@@ -16227,8 +16597,8 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 tarShape.style.text = this._getLabelText(
                     serie, data, name, 'normal'
                 );
-                tarShape.style.textPosition = typeof nLabel.position == 'undefined'
-                                              ? (orient == 'horizontal' ? 'right' : 'top')
+                tarShape.style.textPosition = nLabel.position == null
+                                              ? (orient === 'horizontal' ? 'right' : 'top')
                                               : nLabel.position;
                 tarShape.style.textColor = nTextStyle.color;
                 tarShape.style.textFont = this.getFont(nTextStyle);
@@ -16239,8 +16609,8 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 );
                 tarShape.highlightStyle.textPosition = nLabel.show
                     ? tarShape.style.textPosition
-                    : (typeof eLabel.position == 'undefined'
-                        ? (orient == 'horizontal' ? 'right' : 'top')
+                    : (eLabel.position == null
+                        ? (orient === 'horizontal' ? 'right' : 'top')
                         : eLabel.position);
                 tarShape.highlightStyle.textColor = eTextStyle.color;
                 tarShape.highlightStyle.textFont = this.getFont(eTextStyle);
@@ -16252,12 +16622,12 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 根据lable.format计算label text
          */
-        _getLabelText : function (serie, data, name, status) {
+        _getLabelText: function (serie, data, name, status) {
             var formatter = this.deepQuery(
                 [data, serie],
                 'itemStyle.' + status + '.label.formatter'
             );
-            if (!formatter && status == 'emphasis') {
+            if (!formatter && status === 'emphasis') {
                 // emphasis时需要看看normal下是否有formatter
                 formatter = this.deepQuery(
                     [data, serie],
@@ -16265,14 +16635,14 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 );
             }
             
-            var value = typeof data != 'undefined'
-                        ? (typeof data.value != 'undefined'
+            var value = data != null
+                        ? (data.value != null
                           ? data.value
                           : data)
                         : '-';
             
             if (formatter) {
-                if (typeof formatter == 'function') {
+                if (typeof formatter === 'function') {
                     return formatter.call(
                         this.myChart,
                         serie.name,
@@ -16280,7 +16650,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                         value
                     );
                 }
-                else if (typeof formatter == 'string') {
+                else if (typeof formatter === 'string') {
                     formatter = formatter.replace('{a}','{a0}')
                                          .replace('{b}','{b0}')
                                          .replace('{c}','{c0}');
@@ -16299,7 +16669,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 标线标注 
          */
-        buildMark : function (seriesIndex) {
+        buildMark: function (seriesIndex) {
             var serie = this.series[seriesIndex];
             if (this.selectedMap[serie.name]) {
                 serie.markPoint && this._buildMarkPoint(seriesIndex);
@@ -16310,7 +16680,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 标注逻辑
          */
-        _buildMarkPoint : function (seriesIndex) {
+        _buildMarkPoint: function (seriesIndex) {
             var attachStyle =  (this.markAttachStyle || {})[seriesIndex];
             var serie = this.series[seriesIndex];
             var _zlevelBase = this.getZlevelBase();
@@ -16320,12 +16690,10 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             for (var i = 0, l = markPoint.data.length; i < l; i++) {
                 mpData = markPoint.data[i];
                 pos = this.getMarkCoord(seriesIndex, mpData);
-                markPoint.data[i].x = typeof mpData.x != 'undefined'
-                                      ? mpData.x : pos[0];
-                markPoint.data[i].y = typeof mpData.y != 'undefined'
-                                      ? mpData.y : pos[1];
+                markPoint.data[i].x = mpData.x != null ? mpData.x : pos[0];
+                markPoint.data[i].y = mpData.y != null ? mpData.y : pos[1];
                 if (mpData.type
-                    && (mpData.type == 'max' || mpData.type == 'min')
+                    && (mpData.type === 'max' || mpData.type === 'min')
                 ) {
                     // 特殊值内置支持
                     markPoint.data[i].value = pos[3];
@@ -16345,8 +16713,8 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 this.shapeList.push(shapeList[i]);
             }
             // 个别特殊图表需要自己addShape
-            if (this.type == ecConfig.CHART_TYPE_FORCE
-                || this.type == ecConfig.CHART_TYPE_CHORD
+            if (this.type === ecConfig.CHART_TYPE_FORCE
+                || this.type === ecConfig.CHART_TYPE_CHORD
             ) {
                 for (var i = 0, l = shapeList.length; i < l; i++) {
                     this.zr.addShape(shapeList[i]);
@@ -16357,7 +16725,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 标线逻辑
          */
-        _buildMarkLine : function (seriesIndex) {
+        _buildMarkLine: function (seriesIndex) {
             var attachStyle =  (this.markAttachStyle || {})[seriesIndex];
             var serie = this.series[seriesIndex];
             var _zlevelBase = this.getZlevelBase();
@@ -16367,7 +16735,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             for (var i = 0, l = markLine.data.length; i < l; i++) {
                 mlData = markLine.data[i];
                 if (mlData.type
-                    && (mlData.type == 'max' || mlData.type == 'min' || mlData.type == 'average')
+                    && (mlData.type === 'max' || mlData.type === 'min' || mlData.type === 'average')
                 ) {
                     // 特殊值内置支持
                     pos = this.getMarkCoord(seriesIndex, mlData);
@@ -16384,14 +16752,10 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                     ];
                 }
                 
-                markLine.data[i][0].x = typeof mlData[0].x != 'undefined'
-                                      ? mlData[0].x : pos[0][0];
-                markLine.data[i][0].y = typeof mlData[0].y != 'undefined'
-                                      ? mlData[0].y : pos[0][1];
-                markLine.data[i][1].x = typeof mlData[1].x != 'undefined'
-                                      ? mlData[1].x : pos[1][0];
-                markLine.data[i][1].y = typeof mlData[1].y != 'undefined'
-                                      ? mlData[1].y : pos[1][1];
+                markLine.data[i][0].x = mlData[0].x != null ? mlData[0].x : pos[0][0];
+                markLine.data[i][0].y = mlData[0].y != null ? mlData[0].y : pos[0][1];
+                markLine.data[i][1].x = mlData[1].x != null ? mlData[1].x : pos[1][0];
+                markLine.data[i][1].y = mlData[1].y != null ? mlData[1].y : pos[1][1];
             }
             
             var shapeList = this._markLine(seriesIndex, markLine);
@@ -16404,8 +16768,8 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 this.shapeList.push(shapeList[i]);
             }
             // 个别特殊图表需要自己addShape
-            if (this.type == ecConfig.CHART_TYPE_FORCE
-                || this.type == ecConfig.CHART_TYPE_CHORD
+            if (this.type === ecConfig.CHART_TYPE_FORCE
+                || this.type === ecConfig.CHART_TYPE_CHORD
             ) {
                 for (var i = 0, l = shapeList.length; i < l; i++) {
                     this.zr.addShape(shapeList[i]);
@@ -16416,7 +16780,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 标注多级控制构造
          */
-        _markPoint : function (seriesIndex, mpOption) {
+        _markPoint: function (seriesIndex, mpOption) {
             var serie = this.series[seriesIndex];
             var component = this.component;
             zrUtil.merge(
@@ -16442,10 +16806,10 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             
             if (!mpOption.large) {
                 for (var i = 0, l = data.length; i < l; i++) {
-                    if (typeof data[i].x == 'undefined' || typeof data[i].y == 'undefined') {
+                    if (data[i].x == null || data[i].y == null) {
                         continue;
                     }
-                    value = typeof data[i] != 'undefined' && typeof data[i].value != 'undefined'
+                    value = data[i] != null && data[i].value != null
                             ? data[i].value
                             : '';
                     // 图例
@@ -16472,8 +16836,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                     // 标准化一些参数
                     data[i].tooltip = data[i].tooltip 
                                       || {trigger:'item'}; // tooltip.trigger指定为item
-                    data[i].name = typeof data[i].name != 'undefined'
-                                   ? data[i].name : '';
+                    data[i].name = data[i].name != null ? data[i].name : '';
                     data[i].value = value;
                     
                     // 复用getSymbolShape
@@ -16496,7 +16859,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                         itemShape.effect = effect;
                     }
                     
-                    if (serie.type == ecConfig.CHART_TYPE_MAP) {
+                    if (serie.type === ecConfig.CHART_TYPE_MAP) {
                         itemShape._geo = this.getMarkGeo(data[i]);
                     }
                     
@@ -16523,7 +16886,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 标线多级控制构造
          */
-        _markLine : function (seriesIndex, mlOption) {
+        _markLine: function (seriesIndex, mlOption) {
             var serie = this.series[seriesIndex];
             var component = this.component;
             zrUtil.merge(
@@ -16565,10 +16928,10 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             var zrHeight = this.zr.getHeight();
             var mergeData;
             for (var i = 0, l = data.length; i < l; i++) {
-                if (typeof data[i][0].x == 'undefined' 
-                    || typeof data[i][0].y == 'undefined'
-                    || typeof data[i][1].x == 'undefined' 
-                    || typeof data[i][1].y == 'undefined'
+                if (data[i][0].x == null
+                    || data[i][0].y == null
+                    || data[i][1].x == null
+                    || data[i][1].y == null
                 ) {
                     continue;
                 }
@@ -16579,7 +16942,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 }
                 // 组装一个mergeData
                 mergeData = this.deepMerge(data[i]);
-                value = typeof mergeData != 'undefined' && typeof mergeData.value != 'undefined'
+                value = mergeData != null && mergeData.value != null
                         ? mergeData.value
                         : '';
                 // 值域
@@ -16602,12 +16965,9 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 // 标准化一些参数
                 data[i][0].tooltip = mergeData.tooltip 
                                      || {trigger:'item'}; // tooltip.trigger指定为item
-                data[i][0].name = typeof data[i][0].name != 'undefined'
-                                  ? data[i][0].name : '';
-                data[i][1].name = typeof data[i][1].name != 'undefined'
-                                  ? data[i][1].name : '';
-                data[i][0].value = typeof data[i][0].value != 'undefined'
-                                   ? data[i][0].value : '';
+                data[i][0].name = data[i][0].name != null ? data[i][0].name : '';
+                data[i][1].name = data[i][1].name != null ? data[i][1].name : '';
+                data[i][0].value = data[i][0].value != null ? data[i][0].value : '';
                 
                 itemShape = this.getLineMarkShape(
                     mlOption,                   // markLine
@@ -16630,7 +16990,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                     itemShape.effect = effect;
                 }
                 
-                if (serie.type == ecConfig.CHART_TYPE_MAP) {
+                if (serie.type === ecConfig.CHART_TYPE_MAP) {
                     itemShape._geo = [
                         this.getMarkGeo(data[i][0]),
                         this.getMarkGeo(data[i][1])
@@ -16642,7 +17002,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                     itemShape,
                     serie, seriesIndex,
                     data[i][0], i,
-                    data[i][0].name + (data[i][1].name !== '' 
+                    data[i][0].name + (data[i][1].name !== ''          // 不要帮我代码规范
                                       ? (' > ' + data[i][1].name) 
                                       : ''),
                     value
@@ -16653,7 +17013,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             return pList;
         },
         
-        getMarkCoord : function () {
+        getMarkCoord: function () {
             // 无转换位置
             return [0, 0];
         },
@@ -16661,7 +17021,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * symbol构造器 
          */
-        getSymbolShape : function (
+        getSymbolShape: function (
             serie, seriesIndex,     // 系列 
             data, dataIndex, name,  // 数据
             x, y,                   // 坐标
@@ -16670,15 +17030,15 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             orient                  // 走向，用于默认文字定位
         ) {
             var queryTarget = [data, serie];
-            var value = typeof data != 'undefined'
-                        ? (typeof data.value != 'undefined'
+            var value = data != null
+                        ? (data.value != null
                           ? data.value
                           : data)
                         : '-';
             
             symbol = this.deepQuery(queryTarget, 'symbol') || symbol;
             var symbolSize = this.deepQuery(queryTarget, 'symbolSize');
-            symbolSize = typeof symbolSize == 'function'
+            symbolSize = typeof symbolSize === 'function'
                          ? symbolSize(value)
                          : symbolSize;
             var symbolRotate = this.deepQuery(queryTarget, 'symbolRotate');
@@ -16691,41 +17051,41 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 queryTarget,
                 'itemStyle.emphasis'
             );
-            var nBorderWidth = typeof normal.borderWidth != 'undefined'
+            var nBorderWidth = normal.borderWidth != null
                        ? normal.borderWidth
                        : (normal.lineStyle && normal.lineStyle.width);
-            if (typeof nBorderWidth == 'undefined') {
+            if (nBorderWidth == null) {
                 nBorderWidth = symbol.match('empty') ? 2 : 0;
             }
-            var eBorderWidth = typeof emphasis.borderWidth != 'undefined'
+            var eBorderWidth = emphasis.borderWidth != null
                        ? emphasis.borderWidth
                        : (emphasis.lineStyle && emphasis.lineStyle.width);
-            if (typeof eBorderWidth == 'undefined') {
+            if (eBorderWidth == null) {
                 eBorderWidth = nBorderWidth + 2;
             }
             
             var itemShape = new IconShape({
-                style : {
-                    iconType : symbol.replace('empty', '').toLowerCase(),
-                    x : x - symbolSize,
-                    y : y - symbolSize,
-                    width : symbolSize * 2,
-                    height : symbolSize * 2,
-                    brushType : 'both',
-                    color : symbol.match('empty') 
+                style: {
+                    iconType: symbol.replace('empty', '').toLowerCase(),
+                    x: x - symbolSize,
+                    y: y - symbolSize,
+                    width: symbolSize * 2,
+                    height: symbolSize * 2,
+                    brushType: 'both',
+                    color: symbol.match('empty') 
                             ? emptyColor 
                             : (this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
                                || color),
-                    strokeColor : normal.borderColor 
+                    strokeColor: normal.borderColor 
                               || this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
                               || color,
                     lineWidth: nBorderWidth
                 },
-                highlightStyle : {
-                    color : symbol.match('empty') 
+                highlightStyle: {
+                    color: symbol.match('empty') 
                             ? emptyColor 
                             : this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data),
-                    strokeColor : emphasis.borderColor 
+                    strokeColor: emphasis.borderColor 
                               || normal.borderColor
                               || this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
                               || color,
@@ -16738,13 +17098,13 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 itemShape.style.image = 
                     symbol.replace(new RegExp('^image:\\/\\/'), '');
                 itemShape = new ImageShape({
-                    style : itemShape.style,
-                    highlightStyle : itemShape.highlightStyle,
+                    style: itemShape.style,
+                    highlightStyle: itemShape.highlightStyle,
                     clickable: this.deepQuery(queryTarget, 'clickable')
                 });
             }
             
-            if (typeof symbolRotate != 'undefined') {
+            if (symbolRotate != null) {
                 itemShape.rotation = [
                     symbolRotate * Math.PI / 180, x, y
                 ];
@@ -16756,7 +17116,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                     (symbol.replace('empty', '').replace('star','') - 0) || 5;
             }
             
-            if (symbol == 'none') {
+            if (symbol === 'none') {
                 itemShape.invisible = true;
                 itemShape.hoverable = false;
             }
@@ -16775,10 +17135,10 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             );
             
             if (symbol.match('empty')) {
-                if (typeof itemShape.style.textColor == 'undefined') {
+                if (itemShape.style.textColor == null) {
                     itemShape.style.textColor = itemShape.style.strokeColor;
                 }
-                if (typeof itemShape.highlightStyle.textColor == 'undefined') {
+                if (itemShape.highlightStyle.textColor == null) {
                     itemShape.highlightStyle.textColor = 
                         itemShape.highlightStyle.strokeColor;
                 }
@@ -16803,7 +17163,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 标线构造器 
          */
-        getLineMarkShape : function (
+        getLineMarkShape: function (
             mlOption,               // 系列 
             seriesIndex,            // 系列索引
             data,                   // 数据
@@ -16812,13 +17172,13 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             xEnd, yEnd,             // 坐标
             color                   // 默认color，来自legend或dataRange全局分配
         ) {
-            var value0 = typeof data[0] != 'undefined'
-                        ? (typeof data[0].value != 'undefined'
+            var value0 = data[0] != null
+                        ? (data[0].value != null
                           ? data[0].value
                           : data[0])
                         : '-';
-            var value1 = typeof data[1] != 'undefined'
-                        ? (typeof data[1].value != 'undefined'
+            var value1 = data[1] != null
+                        ? (data[1].value != null
                           ? data[1].value
                           : data[1])
                         : '-';
@@ -16830,10 +17190,10 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 this.query(data[0], 'symbolSize') || mlOption.symbolSize[0],
                 this.query(data[1], 'symbolSize') || mlOption.symbolSize[1]
             ];
-            symbolSize[0] = typeof symbolSize[0] == 'function'
+            symbolSize[0] = typeof symbolSize[0] === 'function'
                             ? symbolSize[0](value0)
                             : symbolSize[0];
-            symbolSize[1] = typeof symbolSize[1] == 'function'
+            symbolSize[1] = typeof symbolSize[1] === 'function'
                             ? symbolSize[1](value1)
                             : symbolSize[1];
             var symbolRotate = [
@@ -16858,71 +17218,68 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             var elineStyle = emphasis.lineStyle;
             
             var nBorderWidth = nlineStyle.width;
-            if (typeof nBorderWidth == 'undefined') {
+            if (nBorderWidth == null) {
                 nBorderWidth = normal.borderWidth;
             }
             var eBorderWidth = elineStyle.width;
-            if (typeof eBorderWidth == 'undefined') {
-                if (typeof emphasis.borderWidth != 'undefined') {
-                    eBorderWidth = emphasis.borderWidth;
-                }
-                else {
-                    eBorderWidth = nBorderWidth + 2;
-                }
+            if (eBorderWidth == null) {
+                eBorderWidth = emphasis.borderWidth != null 
+                               ? emphasis.borderWidth
+                               : (nBorderWidth + 2);
             }
             
             var itemShape = new MarkLineShape({
-                style : {
-                    smooth : mlOption.smooth ? 'spline' : false,
-                    symbol : symbol, 
-                    symbolSize : symbolSize,
-                    symbolRotate : symbolRotate,
-                    //data : [data[0].name,data[1].name],
-                    xStart : xStart,
-                    yStart : yStart,         // 坐标
-                    xEnd : xEnd,
-                    yEnd : yEnd,             // 坐标
-                    brushType : 'both',
-                    lineType : nlineStyle.type,
-                    shadowColor : nlineStyle.shadowColor
-                                  || nlineStyle.color
-                                  || normal.borderColor
-                                  || normal.color
-                                  || color,
+                style: {
+                    smooth: mlOption.smooth ? 'spline' : false,
+                    symbol: symbol, 
+                    symbolSize: symbolSize,
+                    symbolRotate: symbolRotate,
+                    // data: [data[0].name,data[1].name],
+                    xStart: xStart,
+                    yStart: yStart,         // 坐标
+                    xEnd: xEnd,
+                    yEnd: yEnd,             // 坐标
+                    brushType: 'both',
+                    lineType: nlineStyle.type,
+                    shadowColor: nlineStyle.shadowColor
+                                 || nlineStyle.color
+                                 || normal.borderColor
+                                 || normal.color
+                                 || color,
                     shadowBlur: nlineStyle.shadowBlur,
                     shadowOffsetX: nlineStyle.shadowOffsetX,
                     shadowOffsetY: nlineStyle.shadowOffsetY,
-                    color : normal.color || color,
-                    strokeColor : nlineStyle.color
-                                  || normal.borderColor
-                                  || normal.color
-                                  || color,
+                    color: normal.color || color,
+                    strokeColor: nlineStyle.color
+                                 || normal.borderColor
+                                 || normal.color
+                                 || color,
                     lineWidth: nBorderWidth,
                     symbolBorderColor: normal.borderColor
                                        || normal.color
                                        || color,
                     symbolBorder: normal.borderWidth
                 },
-                highlightStyle : {
-                    shadowColor : elineStyle.shadowColor,
+                highlightStyle: {
+                    shadowColor: elineStyle.shadowColor,
                     shadowBlur: elineStyle.shadowBlur,
                     shadowOffsetX: elineStyle.shadowOffsetX,
                     shadowOffsetY: elineStyle.shadowOffsetY,
-                    color : emphasis.color|| normal.color || color,
-                    strokeColor : elineStyle.color
-                                  || nlineStyle.color
-                                  || emphasis.borderColor 
-                                  || normal.borderColor
-                                  || emphasis.color 
-                                  || normal.color
-                                  || color,
+                    color: emphasis.color|| normal.color || color,
+                    strokeColor: elineStyle.color
+                                 || nlineStyle.color
+                                 || emphasis.borderColor 
+                                 || normal.borderColor
+                                 || emphasis.color 
+                                 || normal.color
+                                 || color,
                     lineWidth: eBorderWidth,
                     symbolBorderColor: emphasis.borderColor
                                        || normal.borderColor
                                        || emphasis.color
                                        || normal.color
                                        || color,
-                    symbolBorder: typeof emphasis.borderWidth == 'undefined'
+                    symbolBorder: emphasis.borderWidth == null
                                   ? (normal.borderWidth + 2)
                                   : (emphasis.borderWidth)
                 },
@@ -16945,7 +17302,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 大规模标注构造器 
          */
-        getLargeMarkPoingShape : function(seriesIndex, mpOption) {
+        getLargeMarkPoingShape: function(seriesIndex, mpOption) {
             var serie = this.series[seriesIndex];
             var component = this.component;
             var data = mpOption.data;
@@ -16966,8 +17323,8 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             }
             // 值域
             if (dataRange) {
-                value = typeof data[0] != 'undefined'
-                        ? (typeof data[0].value != 'undefined'
+                value = data[0] != null
+                        ? (data[0].value != null
                           ? data[0].value
                           : data[0])
                         : '-';
@@ -16999,20 +17356,20 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             
             //console.log(data)
             itemShape = new SymbolShape({
-                style : {
-                    pointList : data,
-                    color : color,
+                style: {
+                    pointList: data,
+                    color: color,
                     strokeColor: color,
-                    shadowColor : effect.shadowColor || color,
-                    shadowBlur : (typeof effect.shadowBlur != 'undefined' ? effect.shadowBlur : 8)
+                    shadowColor: effect.shadowColor || color,
+                    shadowBlur: (effect.shadowBlur != null ? effect.shadowBlur : 8)
                                  * devicePixelRatio,
-                    size : this.deepQuery(queryTarget, 'symbolSize'),
-                    iconType : symbol,
+                    size: this.deepQuery(queryTarget, 'symbolSize'),
+                    iconType: symbol,
                     brushType: 'fill',
                     lineWidth:1
                 },
-                draggable : false,
-                hoverable : false
+                draggable: false,
+                hoverable: false
             });
             
             if (effect.show) {
@@ -17022,7 +17379,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             return itemShape;
         },
         
-        backupShapeList : function () {
+        backupShapeList: function () {
             if (this.shapeList && this.shapeList.length > 0) {
                 this.lastShapeList = this.shapeList;
                 this.shapeList = [];
@@ -17032,7 +17389,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             }
         },
         
-        addShapeList : function () {
+        addShapeList: function () {
             var maxLenth = this.option.animationThreshold / (this.canvasSupported ? 2 : 4);
             var lastShapeList = this.lastShapeList;
             var shapeList = this.shapeList;
@@ -17101,12 +17458,12 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             }
         },
         
-        _getAnimationKey : function(shape) {
+        _getAnimationKey: function(shape) {
             if (this.type != ecConfig.CHART_TYPE_MAP) {
                 return ecData.get(shape, 'seriesIndex') + '_'
                        + ecData.get(shape, 'dataIndex')
                        + (shape._mark ? shape._mark : '')
-                       + (this.type == ecConfig.CHART_TYPE_RADAR 
+                       + (this.type === ecConfig.CHART_TYPE_RADAR 
                           ? ecData.get(shape, 'special') : '');
             }
             else {
@@ -17119,7 +17476,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
         /**
          * 动画过渡 
          */
-        _animateMod : function (oldShape, newShape, duration, easing) {
+        _animateMod: function (oldShape, newShape, duration, easing) {
             switch (newShape.type) {
                 case 'broken-line' :
                 case 'half-smooth-polygon' :
@@ -17152,7 +17509,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                             easing
                         );
                     }
-                    else if (newShape.type == 'sector') {
+                    else if (newShape.type === 'sector') {
                         ecAnimation.sector(this.zr, oldShape, newShape, duration, easing);
                     }
                     else {
@@ -17194,7 +17551,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
          * @param {string=} easing 缓动效果
          * @param {Array=} addShapeList 指定特效对象，不知道默认使用this.shapeList
          */
-        animationMark : function (duration , easing, addShapeList) {
+        animationMark: function (duration , easing, addShapeList) {
             var shapeList = addShapeList || this.shapeList;
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 if (!shapeList[i]._mark) {
@@ -17209,7 +17566,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
          * 特效动画
          * @param {Array=} addShapeList 指定特效对象，不知道默认使用this.shapeList
          */
-        animationEffect : function (addShapeList) {
+        animationEffect: function (addShapeList) {
             !addShapeList && this.clearEffectShape();
             var shapeList = addShapeList || this.shapeList;
             var zlevel = ecConfig.EFFECT_ZLEVEL;
@@ -17217,8 +17574,8 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 this.zr.modLayer(
                     zlevel,
                     {
-                        motionBlur : true,
-                        lastFrameAlpha : 0.95
+                        motionBlur: true,
+                        lastFrameAlpha: 0.95
                     }
                 );
             }
@@ -17234,11 +17591,11 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
             }
         },
         
-        clearEffectShape : function (clearMotionBlur) {
+        clearEffectShape: function (clearMotionBlur) {
             if (this.zr && this.effectList && this.effectList.length > 0) {
                 clearMotionBlur && this.zr.modLayer(
                     ecConfig.EFFECT_ZLEVEL, 
-                    { motionBlur : false}
+                    { motionBlur: false }
                 );
                 this.zr.delShape(this.effectList);
             }
@@ -17251,7 +17608,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
          * @param {Object} markData 标线标注对象，支持多个
          * @param {string} markType 标线标注类型
          */
-        addMark : function (seriesIndex, markData, markType) {
+        addMark: function (seriesIndex, markData, markType) {
             var serie = this.series[seriesIndex];
             if (this.selectedMap[serie.name]) {
                 var duration = 500;
@@ -17283,7 +17640,7 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
          * @param {string} markName 标线标注名称
          * @param {string} markType 标线标注类型
          */
-        delMark : function (seriesIndex, markName, markType) {
+        delMark: function (seriesIndex, markName, markType) {
             markType = markType.replace('mark', '').replace('large', '').toLowerCase();
             var serie = this.series[seriesIndex];
             if (this.selectedMap[serie.name]) {
@@ -17292,9 +17649,9 @@ define('echarts/chart/base',['require','zrender/shape/Image','../util/shape/Icon
                 var len = 2;
                 while(len--) {
                     for (var i = 0, l = shapeList[len].length; i < l; i++) {
-                        if (shapeList[len][i]._mark == markType
-                            && ecData.get(shapeList[len][i], 'seriesIndex') == seriesIndex
-                            && ecData.get(shapeList[len][i], 'name') == markName
+                        if (shapeList[len][i]._mark === markType
+                            && ecData.get(shapeList[len][i], 'seriesIndex') === seriesIndex
+                            && ecData.get(shapeList[len][i], 'name') === markName
                         ) {
                             this.zr.delShape(shapeList[len][i].id);
                             shapeList[len].splice(i, 1);
@@ -17414,14 +17771,14 @@ define('echarts/chart/island',['require','../component/base','./base','zrender/s
     }
     
     Island.prototype = {
-        type : ecConfig.CHART_TYPE_ISLAND,
+        type: ecConfig.CHART_TYPE_ISLAND,
         /**
          * 孤岛合并
          *
          * @param {string} tarShapeIndex 目标索引
          * @param {Object} srcShape 源目标，合入目标后删除
          */
-        _combine : function (tarShape, srcShape) {
+        _combine: function (tarShape, srcShape) {
             var zrColor = require('zrender/tool/color');
             var accMath = require('../util/accMath');
             var value = accMath.accAdd(
@@ -17446,7 +17803,7 @@ define('echarts/chart/island',['require','../component/base','./base','zrender/s
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 newOption.island = this.reformOption(newOption.island);
                 this.option = newOption;
@@ -17456,16 +17813,16 @@ define('echarts/chart/island',['require','../component/base','./base','zrender/s
             }
         },
         
-        getOption : function () {
+        getOption: function () {
             return this.option;
         },
 
-        resize : function () {
+        resize: function () {
             var newWidth = this.zr.getWidth();
             var newHieght = this.zr.getHeight();
             var xScale = newWidth / (this._zrWidth || newWidth);
             var yScale = newHieght / (this._zrHeight || newHieght);
-            if (xScale == 1 && yScale == 1) {
+            if (xScale === 1 && yScale === 1) {
                 return;
             }
             this._zrWidth = newWidth;
@@ -17483,29 +17840,29 @@ define('echarts/chart/island',['require','../component/base','./base','zrender/s
             }
         },
 
-        add : function (shape) {
+        add: function (shape) {
             var name = ecData.get(shape, 'name');
             var value = ecData.get(shape, 'value');
-            var seriesName = typeof ecData.get(shape, 'series') != 'undefined'
+            var seriesName = ecData.get(shape, 'series') != null
                              ? ecData.get(shape, 'series').name
                              : '';
             var font = this.getFont(this.option.island.textStyle);
             var islandShape = {
-                zlevel : this._zlevelBase,
-                style : {
-                    x : shape.style.x,
-                    y : shape.style.y,
-                    r : this.option.island.r,
-                    color : shape.style.color || shape.style.strokeColor,
-                    text : name + this._valueConnector + value,
-                    textFont : font
+                zlevel: this._zlevelBase,
+                style: {
+                    x: shape.style.x,
+                    y: shape.style.y,
+                    r: this.option.island.r,
+                    color: shape.style.color || shape.style.strokeColor,
+                    text: name + this._valueConnector + value,
+                    textFont: font
                 },
-                draggable : true,
-                hoverable : true,
-                onmousewheel : this.shapeHandler.onmousewheel,
-                _type : 'island'
+                draggable: true,
+                hoverable: true,
+                onmousewheel: this.shapeHandler.onmousewheel,
+                _type: 'island'
             };
-            if (islandShape.style.color == '#fff') {
+            if (islandShape.style.color === '#fff') {
                 islandShape.style.color = shape.style.strokeColor;
             }
             this.setCalculable(islandShape);
@@ -17521,7 +17878,7 @@ define('echarts/chart/island',['require','../component/base','./base','zrender/s
             this.zr.addShape(islandShape);
         },
 
-        del : function (shape) {
+        del: function (shape) {
             this.zr.delShape(shape.id);
             var newShapeList = [];
             for (var i = 0, l = this.shapeList.length; i < l; i++) {
@@ -17535,7 +17892,7 @@ define('echarts/chart/island',['require','../component/base','./base','zrender/s
         /**
          * 数据项被拖拽进来， 重载基类方法
          */
-        ondrop : function (param, status) {
+        ondrop: function (param, status) {
             if (!this.isDrop || !param.target) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
@@ -17558,7 +17915,7 @@ define('echarts/chart/island',['require','../component/base','./base','zrender/s
         /**
          * 数据项被拖拽出去， 重载基类方法
          */
-        ondragend : function (param, status) {
+        ondragend: function (param, status) {
             var target = param.target;      // 拖拽安放目标
             if (!this.isDragend) {
                 // 拖拽的不是孤岛数据，如果没有图表接受孤岛数据，需要新增孤岛数据
@@ -18194,8 +18551,8 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
     }
 
     Toolbox.prototype = {
-        type : ecConfig.COMPONENT_TYPE_TOOLBOX,
-        _buildShape : function () {
+        type: ecConfig.COMPONENT_TYPE_TOOLBOX,
+        _buildShape: function () {
             this._iconList = [];
             var toolboxOption = this.option.toolbox;
             this._enableColor = toolboxOption.effectiveColor;
@@ -18206,28 +18563,28 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
                 if (feature[key].show) {
                     switch (key) {
                         case 'mark' :
-                            iconName.push({key : key, name : 'mark'});
-                            iconName.push({key : key, name : 'markUndo'});
-                            iconName.push({key : key, name : 'markClear'});
+                            iconName.push({ key: key, name: 'mark' });
+                            iconName.push({ key: key, name: 'markUndo' });
+                            iconName.push({ key: key, name: 'markClear' });
                             break;
                         case 'magicType' :
                             for (var i = 0, l = feature[key].type.length; i < l; i++) {
                                 feature[key].title[feature[key].type[i] + 'Chart']
                                     = feature[key].title[feature[key].type[i]];
-                                iconName.push({key : key, name : feature[key].type[i] + 'Chart'});
+                                iconName.push({ key: key, name: feature[key].type[i] + 'Chart' });
                             }
                             break;
                         case 'dataZoom' :
-                            iconName.push({key : key, name : 'dataZoom'});
-                            iconName.push({key : key, name : 'dataZoomReset'});
+                            iconName.push({ key: key, name: 'dataZoom' });
+                            iconName.push({ key: key, name: 'dataZoomReset' });
                             break;
                         case 'saveAsImage' :
                             if (this.canvasSupported) {
-                                iconName.push({key : key, name : 'saveAsImage'});
+                                iconName.push({ key: key, name: 'saveAsImage' });
                             }
                             break;
                         default :
-                            iconName.push({key : key, name : key});
+                            iconName.push({ key: key, name: key });
                             break;
                     }
                 }
@@ -18268,7 +18625,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
         /**
          * 构建所有图例元素
          */
-        _buildItem : function () {
+        _buildItem: function () {
             var toolboxOption = this.option.toolbox;
             var iconLength = this._iconList.length;
             var lastX = this._itemGroupLocation.x;
@@ -18284,7 +18641,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             var textPosition;
             var textAlign;
             var textBaseline;
-            if (toolboxOption.orient == 'horizontal') {
+            if (toolboxOption.orient === 'horizontal') {
                 textPosition = this._itemGroupLocation.y / this.zr.getHeight() < 0.5
                                ? 'bottom' : 'top';
                 textAlign = this._itemGroupLocation.x / this.zr.getWidth() < 0.5
@@ -18308,31 +18665,31 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             for (var i = 0; i < iconLength; i++) {
                 // 图形
                 itemShape = {
-                    type : 'icon',
-                    zlevel : this._zlevelBase,
-                    style : {
-                        x : lastX,
-                        y : lastY,
-                        width : itemSize,
-                        height : itemSize,
-                        iconType : this._iconList[i],
-                        lineWidth : 1,
-                        strokeColor : this._featureColor[this._iconList[i]] 
-                                      || color[i % color.length],
+                    type: 'icon',
+                    zlevel: this._zlevelBase,
+                    style: {
+                        x: lastX,
+                        y: lastY,
+                        width: itemSize,
+                        height: itemSize,
+                        iconType: this._iconList[i],
+                        lineWidth: 1,
+                        strokeColor: this._featureColor[this._iconList[i]] 
+                                     || color[i % color.length],
                         brushType: 'stroke'
                     },
-                    highlightStyle : {
-                        lineWidth : 1,
-                        text : toolboxOption.showTitle 
-                               ? this._featureTitle[this._iconList[i]]
-                               : undefined,
-                        textFont : textFont,
-                        textPosition : textPosition,
-                        strokeColor : this._featureColor[this._iconList[i]] 
-                                      || color[i % color.length]
+                    highlightStyle: {
+                        lineWidth: 1,
+                        text: toolboxOption.showTitle 
+                              ? this._featureTitle[this._iconList[i]]
+                              : undefined,
+                        textFont: textFont,
+                        textPosition: textPosition,
+                        strokeColor: this._featureColor[this._iconList[i]] 
+                                     || color[i % color.length]
                     },
-                    hoverable : true,
-                    clickable : true
+                    hoverable: true,
+                    clickable: true
                 };
                 
                 if (this._featureIcon[this._iconList[i]]) {
@@ -18344,23 +18701,23 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
                     itemShape.type = 'image';
                 }
                 
-                if (toolboxOption.orient == 'horizontal') {
+                if (toolboxOption.orient === 'horizontal') {
                     // 修正左对齐第一个或右对齐最后一个
-                    if (i === 0 && textAlign == 'left') {
+                    if (i === 0 && textAlign === 'left') {
                         itemShape.highlightStyle.textPosition = 'specific';
                         itemShape.highlightStyle.textAlign = textAlign;
                         itemShape.highlightStyle.textBaseline = textBaseline;
                         itemShape.highlightStyle.textX = lastX;
-                        itemShape.highlightStyle.textY = textBaseline == 'top' 
+                        itemShape.highlightStyle.textY = textBaseline === 'top' 
                                                      ? lastY + itemSize + 10
                                                      : lastY - 10;
                     }
-                    if (i == iconLength - 1 && textAlign == 'right') {
+                    if (i === iconLength - 1 && textAlign === 'right') {
                         itemShape.highlightStyle.textPosition = 'specific';
                         itemShape.highlightStyle.textAlign = textAlign;
                         itemShape.highlightStyle.textBaseline = textBaseline;
                         itemShape.highlightStyle.textX = lastX + itemSize;
-                        itemShape.highlightStyle.textY = textBaseline == 'top' 
+                        itemShape.highlightStyle.textY = textBaseline === 'top' 
                                                      ? lastY + itemSize + 10
                                                      : lastY - 10;
                     }
@@ -18413,16 +18770,16 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
                         break;
                 }
 
-                if (itemShape.type == 'icon') {
+                if (itemShape.type === 'icon') {
                     itemShape = new IconShape(itemShape);
                 }
-                else if (itemShape.type == 'image') {
+                else if (itemShape.type === 'image') {
                     itemShape = new ImageShape(itemShape);
                 }
                 this.shapeList.push(itemShape);
                 this._iconShapeMap[this._iconList[i]] = itemShape;
 
-                if (toolboxOption.orient == 'horizontal') {
+                if (toolboxOption.orient === 'horizontal') {
                     lastX += itemSize + itemGap;
                 }
                 else {
@@ -18431,7 +18788,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             }
         },
 
-        _buildBackground : function () {
+        _buildBackground: function () {
             var toolboxOption = this.option.toolbox;
             var pTop = toolboxOption.padding[0];
             var pRight = toolboxOption.padding[1];
@@ -18439,18 +18796,17 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             var pLeft = toolboxOption.padding[3];
 
             this.shapeList.push(new RectangleShape({
-                zlevel : this._zlevelBase,
+                zlevel: this._zlevelBase,
                 hoverable :false,
-                style : {
-                    x : this._itemGroupLocation.x - pLeft,
-                    y : this._itemGroupLocation.y - pTop,
-                    width : this._itemGroupLocation.width + pLeft + pRight,
-                    height : this._itemGroupLocation.height + pTop + pBottom,
-                    brushType : toolboxOption.borderWidth === 0
-                                ? 'fill' : 'both',
-                    color : toolboxOption.backgroundColor,
-                    strokeColor : toolboxOption.borderColor,
-                    lineWidth : toolboxOption.borderWidth
+                style: {
+                    x: this._itemGroupLocation.x - pLeft,
+                    y: this._itemGroupLocation.y - pTop,
+                    width: this._itemGroupLocation.width + pLeft + pRight,
+                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    brushType: toolboxOption.borderWidth === 0 ? 'fill' : 'both',
+                    color: toolboxOption.backgroundColor,
+                    strokeColor: toolboxOption.borderColor,
+                    lineWidth: toolboxOption.borderWidth
                 }
             }));
         },
@@ -18458,7 +18814,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
         /**
          * 根据选项计算图例实体的位置坐标
          */
-        _getItemGroupLocation : function () {
+        _getItemGroupLocation: function () {
             var toolboxOption = this.option.toolbox;
             var iconLength = this._iconList.length;
             var itemGap = toolboxOption.itemGap;
@@ -18466,7 +18822,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             var totalWidth = 0;
             var totalHeight = 0;
 
-            if (toolboxOption.orient == 'horizontal') {
+            if (toolboxOption.orient === 'horizontal') {
                 // 水平布局，计算总宽度，别忘减去最后一个的itemGap
                 totalWidth = (itemSize + itemGap) * iconLength - itemGap;
                 totalHeight = itemSize;
@@ -18520,14 +18876,14 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             }
 
             return {
-                x : x,
-                y : y,
-                width : totalWidth,
-                height : totalHeight
+                x: x,
+                y: y,
+                width: totalWidth,
+                height: totalHeight
             };
         },
 
-        __onmousemove : function (param) {
+        __onmousemove: function (param) {
             if (this._marking) {
                 this._markShape.style.xEnd = zrEvent.getX(param.event);
                 this._markShape.style.yEnd = zrEvent.getY(param.event);
@@ -18548,7 +18904,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             }
         },
 
-        __onmousedown : function (param) {
+        __onmousedown: function (param) {
             if (param.target) {
                 return;
             }
@@ -18557,19 +18913,19 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             var y = zrEvent.getY(param.event);
             var zoomOption = this.option.dataZoom || {};
             this._zoomShape = new RectangleShape({
-                zlevel : this._zlevelBase,
-                style : {
-                    x : x,
-                    y : y,
-                    width : 1,
-                    height : 1,
+                zlevel: this._zlevelBase,
+                style: {
+                    x: x,
+                    y: y,
+                    width: 1,
+                    height: 1,
                     brushType: 'both'
                 },
-                highlightStyle : {
-                    lineWidth : 2,
+                highlightStyle: {
+                    lineWidth: 2,
                     color: zoomOption.fillerColor 
                            || ecConfig.dataZoom.fillerColor,
-                    strokeColor : zoomOption.handleColor 
+                    strokeColor: zoomOption.handleColor 
                                   || ecConfig.dataZoom.handleColor,
                     brushType: 'both'
                 }
@@ -18578,7 +18934,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             return true; // 阻塞全局事件
         },
         
-        __onmouseup : function (/*param*/) {
+        __onmouseup: function (/*param*/) {
             if (!this._zoomShape 
                 || Math.abs(this._zoomShape.style.width) < 10 
                 || Math.abs(this._zoomShape.style.height) < 10
@@ -18592,10 +18948,10 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
                 var zoom = this.component.dataZoom.rectZoom(this._zoomShape.style);
                 if (zoom) {
                     this._zoomQueue.push({
-                        start : zoom.start,
-                        end : zoom.end,
-                        start2 : zoom.start2,
-                        end2 : zoom.end2
+                        start: zoom.start,
+                        end: zoom.end,
+                        start2: zoom.start2,
+                        end2: zoom.end2
                     });
                     this._iconEnable(this._iconShapeMap['dataZoomReset']);
                     this.zr.refresh();
@@ -18604,7 +18960,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             return true; // 阻塞全局事件
         },
         
-        __onclick : function (param) {
+        __onclick: function (param) {
             if (param.target) {
                 return;
             }
@@ -18621,31 +18977,31 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
                 var x = zrEvent.getX(param.event);
                 var y = zrEvent.getY(param.event);
                 this._markShape = new LineShape({
-                    zlevel : this._zlevelBase,
-                    style : {
-                        xStart : x,
-                        yStart : y,
-                        xEnd : x,
-                        yEnd : y,
-                        lineWidth : this.query(
-                                        this.option,
-                                        'toolbox.feature.mark.lineStyle.width'
-                                    ),
-                        strokeColor : this.query(
-                                          this.option,
-                                          'toolbox.feature.mark.lineStyle.color'
-                                      ),
-                        lineType : this.query(
+                    zlevel: this._zlevelBase,
+                    style: {
+                        xStart: x,
+                        yStart: y,
+                        xEnd: x,
+                        yEnd: y,
+                        lineWidth: this.query(
                                        this.option,
-                                       'toolbox.feature.mark.lineStyle.type'
-                                   )
+                                       'toolbox.feature.mark.lineStyle.width'
+                                   ),
+                        strokeColor: this.query(
+                                         this.option,
+                                         'toolbox.feature.mark.lineStyle.color'
+                                     ),
+                        lineType: this.query(
+                                      this.option,
+                                      'toolbox.feature.mark.lineStyle.type'
+                                  )
                     }
                 });
                 this.zr.addHoverShape(this._markShape);
             }
         },
         
-        __onMark : function (param) {
+        __onMark: function (param) {
             var target = param.target;
             if (this._marking || this._markStart) {
                 // 取消
@@ -18669,7 +19025,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             return true; // 阻塞全局事件
         },
         
-        __onMarkUndo : function () {
+        __onMarkUndo: function () {
             if (this._marking) {
                 this._marking = false;
             } else {
@@ -18679,7 +19035,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
                     this.zr.delShape(target.id);
                     this.zr.refresh();
                     this._markShapeList.pop();
-                    if (len == 1) {
+                    if (len === 1) {
                         this._iconDisable(this._iconShapeMap['markUndo']);
                         this._iconDisable(this._iconShapeMap['markClear']);
                     }
@@ -18688,7 +19044,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             return true;
         },
 
-        __onMarkClear : function () {
+        __onMarkClear: function () {
             if (this._marking) {
                 this._marking = false;
             }
@@ -18704,7 +19060,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             return true;
         },
         
-        __onDataZoom : function (param) {
+        __onDataZoom: function (param) {
             var target = param.target;
             if (this._zooming || this._zoomStart) {
                 // 取消
@@ -18732,7 +19088,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             return true; // 阻塞全局事件
         },
         
-        __onDataZoomReset : function () {
+        __onDataZoomReset: function () {
             if (this._zooming) {
                 this._zooming = false;
             }
@@ -18752,7 +19108,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             return true;
         },
 
-        _resetMark : function () {
+        _resetMark: function () {
             this._marking = false;
             if (this._markStart) {
                 this._markStart = false;
@@ -18775,7 +19131,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             }
         },
         
-        _resetZoom : function () {
+        _resetZoom: function () {
             this._zooming = false;
             if (this._zoomStart) {
                 this._zoomStart = false;
@@ -18799,61 +19155,61 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             }
         },
 
-        _iconDisable : function (target) {
+        _iconDisable: function (target) {
             if (target.type != 'image') {
                 this.zr.modShape(target.id, {
-                    hoverable : false,
-                    clickable : false,
-                    style : {
-                        strokeColor : this._disableColor
+                    hoverable: false,
+                    clickable: false,
+                    style: {
+                        strokeColor: this._disableColor
                     }
                 });
             }
             else {
                 this.zr.modShape(target.id, {
-                    hoverable : false,
-                    clickable : false,
-                    style : {
-                        opacity : 0.3
+                    hoverable: false,
+                    clickable: false,
+                    style: {
+                        opacity: 0.3
                     }
                 });
             }
         },
 
-        _iconEnable : function (target) {
+        _iconEnable: function (target) {
             if (target.type != 'image') {
                 this.zr.modShape(target.id, {
-                    hoverable : true,
-                    clickable : true,
-                    style : {
-                        strokeColor : target.highlightStyle.strokeColor
+                    hoverable: true,
+                    clickable: true,
+                    style: {
+                        strokeColor: target.highlightStyle.strokeColor
                     }
                 });
             }
             else {
                 this.zr.modShape(target.id, {
-                    hoverable : true,
-                    clickable : true,
-                    style : {
-                        opacity : 0.8
+                    hoverable: true,
+                    clickable: true,
+                    style: {
+                        opacity: 0.8
                     }
                 });
             }
         },
 
-        __onDataView : function () {
+        __onDataView: function () {
             this._dataView.show(this.option);
             return true;
         },
 
-        __onRestore : function (){
+        __onRestore: function (){
             this._resetMark();
             this._resetZoom();
             this.messageCenter.dispatch(ecConfig.EVENT.RESTORE, null, null, this.myChart);
             return true;
         },
         
-        __onSaveAsImage : function () {
+        __onSaveAsImage: function () {
             var saveOption = this.option.toolbox.feature.saveAsImage;
             var imgType = saveOption.type || 'png';
             if (imgType != 'png' && imgType != 'jpeg') {
@@ -18865,7 +19221,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
                 image = this.zr.toDataURL(
                     'image/' + imgType,
                     this.option.backgroundColor 
-                    && this.option.backgroundColor.replace(' ','') == 'rgba(0,0,0,0)'
+                    && this.option.backgroundColor.replace(' ','') === 'rgba(0,0,0,0)'
                         ? '#fff' : this.option.backgroundColor
                 );
             }
@@ -18937,30 +19293,30 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             return;
         },
 
-        __onMagicType : function (param) {
+        __onMagicType: function (param) {
             this._resetMark();
             var itemName = param.target._name;
             if (!this._magicType[itemName]) {
                 // 启用
                 this._magicType[itemName] = true;
                 // 折柱互斥
-                if (itemName == ecConfig.CHART_TYPE_LINE) {
+                if (itemName === ecConfig.CHART_TYPE_LINE) {
                     this._magicType[ecConfig.CHART_TYPE_BAR] = false;
                 }
-                else if (itemName == ecConfig.CHART_TYPE_BAR) {
+                else if (itemName === ecConfig.CHART_TYPE_BAR) {
                     this._magicType[ecConfig.CHART_TYPE_LINE] = false;
                 }
                 // 堆积平铺互斥
-                if (itemName == _MAGICTYPE_STACK) {
+                if (itemName === _MAGICTYPE_STACK) {
                     this._magicType[_MAGICTYPE_TILED] = false;
                 }
-                else if (itemName == _MAGICTYPE_TILED) {
+                else if (itemName === _MAGICTYPE_TILED) {
                     this._magicType[_MAGICTYPE_STACK] = false;
                 }
                 this.messageCenter.dispatch(
                     ecConfig.EVENT.MAGIC_TYPE_CHANGED,
                     param.event,
-                    {magicType : this._magicType},
+                    { magicType: this._magicType },
                     this.myChart
                 );
             }
@@ -18968,29 +19324,29 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             return true;
         },
         
-        setMagicType : function (magicType) {
+        setMagicType: function (magicType) {
             this._resetMark();
             this._magicType = magicType;
             
             !this._isSilence && this.messageCenter.dispatch(
                 ecConfig.EVENT.MAGIC_TYPE_CHANGED,
                 null,
-                {magicType : this._magicType},
+                { magicType: this._magicType },
                 this.myChart
             );
         },
         
         // 用户自定义扩展toolbox方法
-        __onCustomHandler : function (param) {
+        __onCustomHandler: function (param) {
             var target = param.target.style.iconType;
             var featureHandler = this.option.toolbox.feature[target].onclick;
             if (typeof featureHandler === 'function') {
-                featureHandler(this.option);
+                featureHandler.call(this, this.option);
             }
         },
 
         // 重置备份还原状态等
-        reset : function (newOption, isRestore) {
+        reset: function (newOption, isRestore) {
             isRestore && this.clear();
             
             if (this.query(newOption, 'toolbox.show')
@@ -19012,15 +19368,15 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
                         axis = newOption.xAxis instanceof Array
                                ? newOption.xAxis[newOption.series[len].xAxisIndex || 0]
                                : newOption.xAxis;
-                        if (axis && (axis.type || 'category') == 'category') {
-                            axis.__boundaryGap = typeof axis.boundaryGap != 'undefined'
+                        if (axis && (axis.type || 'category') === 'category') {
+                            axis.__boundaryGap = axis.boundaryGap != null
                                                  ? axis.boundaryGap : true;
                         }
                         axis = newOption.yAxis instanceof Array
                                ? newOption.yAxis[newOption.series[len].yAxisIndex || 0]
                                : newOption.yAxis;
-                        if (axis && axis.type == 'category') {
-                            axis.__boundaryGap = typeof axis.boundaryGap != 'undefined'
+                        if (axis && axis.type === 'category') {
+                            axis.__boundaryGap = axis.boundaryGap != null
                                                  ? axis.boundaryGap : true;
                         }
                         newOption.series[len].__type = oriType;
@@ -19048,11 +19404,11 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             // 框选缩放
             var zoomOption = newOption.dataZoom;
             if (zoomOption && zoomOption.show) {
-                var start = typeof zoomOption.start != 'undefined'
+                var start = zoomOption.start != null
                             && zoomOption.start >= 0
                             && zoomOption.start <= 100
                             ? zoomOption.start : 0;
-                var end = typeof zoomOption.end != 'undefined'
+                var end = zoomOption.end != null
                           && zoomOption.end >= 0
                           && zoomOption.end <= 100
                           ? zoomOption.end : 100;
@@ -19063,10 +19419,10 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
                     start = start - end;
                 }
                 this._zoomQueue = [{
-                    start : start,
-                    end : end,
-                    start2 : 0,
-                    end2 : 100
+                    start: start,
+                    end: end,
+                    start2: 0,
+                    end2: 100
                 }];
             }
             else {
@@ -19074,7 +19430,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             }
         },
         
-        getMagicOption : function (){
+        getMagicOption: function (){
             var axis;
             if (this._magicType[ecConfig.CHART_TYPE_LINE] 
                 || this._magicType[ecConfig.CHART_TYPE_BAR]
@@ -19094,13 +19450,13 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
                         axis = this.option.xAxis instanceof Array
                                ? this.option.xAxis[this.option.series[i].xAxisIndex || 0]
                                : this.option.xAxis;
-                        if (axis && (axis.type || 'category') == 'category') {
+                        if (axis && (axis.type || 'category') === 'category') {
                             axis.boundaryGap = boundaryGap ? true : axis.__boundaryGap;
                         }
                         axis = this.option.yAxis instanceof Array
                                ? this.option.yAxis[this.option.series[i].yAxisIndex || 0]
                                : this.option.yAxis;
-                        if (axis && axis.type == 'category') {
+                        if (axis && axis.type === 'category') {
                             axis.boundaryGap = boundaryGap ? true : axis.__boundaryGap;
                         }
                     }
@@ -19124,11 +19480,11 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             return this.option;
         },
 
-        silence : function (s) {
+        silence: function (s) {
             this._isSilence = s;
         },
         
-        resize : function () {
+        resize: function () {
             this._resetMark();
             this.clear();
             if (this.option && this.option.toolbox && this.option.toolbox.show) {
@@ -19139,13 +19495,13 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
             }
         },
 
-        hideDataView : function () {
+        hideDataView: function () {
             if (this._dataView) {
                 this._dataView.hide();
             }
         },
         
-        clear : function(notMark) {
+        clear: function(notMark) {
             if (this.zr) {
                 this.zr.delShape(this.shapeList);
                 this.shapeList = [];
@@ -19160,7 +19516,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
         /**
          * 释放后实例不可用
          */
-        dispose : function () {
+        dispose: function () {
             if (this._dataView) {
                 this._dataView.dispose();
                 this._dataView = null;
@@ -19173,7 +19529,7 @@ define('echarts/component/toolbox',['require','./base','zrender/shape/Line','zre
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this._resetMark();
                 this._resetZoom();
@@ -19235,8 +19591,8 @@ define('echarts/component/title',['require','./base','zrender/shape/Text','zrend
     }
     
     Title.prototype = {
-        type : ecConfig.COMPONENT_TYPE_TITLE,
-        _buildShape : function () {
+        type: ecConfig.COMPONENT_TYPE_TITLE,
+        _buildShape: function () {
             // 标题元素组的位置参数，通过计算所得x, y, width, height
             this._itemGroupLocation = this._getItemGroupLocation();
 
@@ -19251,7 +19607,7 @@ define('echarts/component/title',['require','./base','zrender/shape/Text','zrend
         /**
          * 构建所有标题元素
          */
-        _buildItem : function () {
+        _buildItem: function () {
             var text = this.titleOption.text;
             var link = this.titleOption.link;
             var target = this.titleOption.target;
@@ -19267,16 +19623,16 @@ define('echarts/component/title',['require','./base','zrender/shape/Text','zrend
             var height = this._itemGroupLocation.height;
             
             var textShape = {
-                zlevel : this._zlevelBase,
-                style : {
-                    y : y,
-                    color : this.titleOption.textStyle.color,
+                zlevel: this._zlevelBase,
+                style: {
+                    y: y,
+                    color: this.titleOption.textStyle.color,
                     text: text,
                     textFont: font,
                     textBaseline: 'top'
                 },
                 highlightStyle: {
-                    color : zrColor.lift(this.titleOption.textStyle.color, 1),
+                    color: zrColor.lift(this.titleOption.textStyle.color, 1),
                     brushType: 'fill'
                 },
                 hoverable: false
@@ -19295,16 +19651,16 @@ define('echarts/component/title',['require','./base','zrender/shape/Text','zrend
             }
             
             var subtextShape = {
-                zlevel : this._zlevelBase,
-                style : {
-                    y : y + height,
-                    color : this.titleOption.subtextStyle.color,
+                zlevel: this._zlevelBase,
+                style: {
+                    y: y + height,
+                    color: this.titleOption.subtextStyle.color,
                     text: subtext,
                     textFont: subfont,
                     textBaseline: 'bottom'
                 },
                 highlightStyle: {
-                    color : zrColor.lift(this.titleOption.subtextStyle.color, 1),
+                    color: zrColor.lift(this.titleOption.subtextStyle.color, 1),
                     brushType: 'fill'
                 },
                 hoverable: false
@@ -19354,25 +19710,24 @@ define('echarts/component/title',['require','./base','zrender/shape/Text','zrend
             subtext !== '' && this.shapeList.push(new TextShape(subtextShape));
         },
 
-        _buildBackground : function () {
+        _buildBackground: function () {
             var pTop = this.titleOption.padding[0];
             var pRight = this.titleOption.padding[1];
             var pBottom = this.titleOption.padding[2];
             var pLeft = this.titleOption.padding[3];
 
             this.shapeList.push(new RectangleShape({
-                zlevel : this._zlevelBase,
+                zlevel: this._zlevelBase,
                 hoverable :false,
-                style : {
-                    x : this._itemGroupLocation.x - pLeft,
-                    y : this._itemGroupLocation.y - pTop,
-                    width : this._itemGroupLocation.width + pLeft + pRight,
-                    height : this._itemGroupLocation.height + pTop + pBottom,
-                    brushType : this.titleOption.borderWidth === 0
-                                ? 'fill' : 'both',
-                    color : this.titleOption.backgroundColor,
-                    strokeColor : this.titleOption.borderColor,
-                    lineWidth : this.titleOption.borderWidth
+                style: {
+                    x: this._itemGroupLocation.x - pLeft,
+                    y: this._itemGroupLocation.y - pTop,
+                    width: this._itemGroupLocation.width + pLeft + pRight,
+                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    brushType: this.titleOption.borderWidth === 0 ? 'fill' : 'both',
+                    color: this.titleOption.backgroundColor,
+                    strokeColor: this.titleOption.borderColor,
+                    lineWidth: this.titleOption.borderWidth
                 }
             }));
         },
@@ -19380,7 +19735,7 @@ define('echarts/component/title',['require','./base','zrender/shape/Text','zrend
         /**
          * 根据选项计算标题实体的位置坐标
          */
-        _getItemGroupLocation : function () {
+        _getItemGroupLocation: function () {
             var text = this.titleOption.text;
             var subtext = this.titleOption.subtext;
             var font = this.getFont(this.titleOption.textStyle);
@@ -19440,17 +19795,17 @@ define('echarts/component/title',['require','./base','zrender/shape/Text','zrend
             }
 
             return {
-                x : x,
-                y : y,
-                width : totalWidth,
-                height : totalHeight
+                x: x,
+                y: y,
+                width: totalWidth,
+                height: totalHeight
             };
         },
         
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption;
 
@@ -19635,7 +19990,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         this._axisLineShape && this.zr.delShape(this._axisLineShape.id);
         this._axisLineShape = new LineShape({
             zlevel: this._zlevelBase,
-            invisible : true,
+            invisible: true,
             hoverable: false
         });
         this.shapeList.push(this._axisLineShape);
@@ -19644,7 +19999,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         this._axisShadowShape && this.zr.delShape(this._axisShadowShape.id);
         this._axisShadowShape = new LineShape({
             zlevel: 1,                      // grid上，chart下
-            invisible : true,
+            invisible: true,
             hoverable: false
         });
         this.shapeList.push(this._axisShadowShape);
@@ -19653,7 +20008,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         this._axisCrossShape && this.zr.delShape(this._axisCrossShape.id);
         this._axisCrossShape = new CrossShape({
             zlevel: this._zlevelBase,
-            invisible : true,
+            invisible: true,
             hoverable: false
         });
         this.shapeList.push(this._axisCrossShape);
@@ -19664,16 +20019,13 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
     }
     
     Tooltip.prototype = {
-        type : ecConfig.COMPONENT_TYPE_TOOLTIP,
+        type: ecConfig.COMPONENT_TYPE_TOOLTIP,
         // 通用样式
-        _gCssText : 'position:absolute;'
-                        + 'display:block;'
-                        + 'border-style:solid;'
-                        + 'white-space:nowrap;',
+        _gCssText: 'position:absolute;display:block;border-style:solid;white-space:nowrap;',
         /**
          * 根据配置设置dom样式
          */
-        _style : function (opt) {
+        _style: function (opt) {
             if (!opt) {
                 return '';
             }
@@ -19706,15 +20058,15 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                 cssText.push('background-Color:' + opt.backgroundColor);
             }
 
-            if (typeof opt.borderWidth != 'undefined') {
+            if (opt.borderWidth != null) {
                 cssText.push('border-width:' + opt.borderWidth + 'px');
             }
 
-            if (typeof opt.borderColor != 'undefined') {
+            if (opt.borderColor != null) {
                 cssText.push('border-color:' + opt.borderColor);
             }
 
-            if (typeof opt.borderRadius != 'undefined') {
+            if (opt.borderRadius != null) {
                 cssText.push(
                     'border-radius:' + opt.borderRadius + 'px'
                 );
@@ -19757,7 +20109,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
 
 
             var padding = opt.padding;
-            if (typeof padding != 'undefined') {
+            if (padding != null) {
                 padding = this.reformCssArray(padding);
                 cssText.push(
                     'padding:' + padding[0] + 'px '
@@ -19772,7 +20124,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             return cssText;
         },
         
-        __hide : function () {
+        __hide: function () {
             if (this._tDom) {
                 this._tDom.style.display = 'none';
             }
@@ -19801,11 +20153,11 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             this.showing = false;
         },
         
-        _show : function (position, x, y, specialCssText) {
+        _show: function (position, x, y, specialCssText) {
             var domHeight = this._tDom.offsetHeight;
             var domWidth = this._tDom.offsetWidth;
             if (position) {
-                if (typeof position == 'function') {
+                if (typeof position === 'function') {
                     position = position([x, y]);
                 }
                 if (position instanceof Array) {
@@ -19838,7 +20190,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             this.showing = true;
         },
         
-        __refixed : function () {
+        __refixed: function () {
             if (this._tDom) {
                 var cssText = '';
                 var domHeight = this._tDom.offsetHeight;
@@ -19855,7 +20207,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             }
         },
         
-        __tryShow : function () {
+        __tryShow: function () {
             var needShow;
             var trigger;
             if (!this._curTarget) {
@@ -19864,7 +20216,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             }
             else {
                 // 数据项事件
-                if (this._curTarget._type == 'island' && this.option.tooltip.show) {
+                if (this._curTarget._type === 'island' && this.option.tooltip.show) {
                     this._showItemTrigger();
                     return;
                 }
@@ -19874,10 +20226,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     [data, serie, this.option],
                     'tooltip.show'
                 );
-                if (typeof serie == 'undefined'
-                    || typeof data == 'undefined'
-                    || needShow === false
-                ) {
+                if (serie == null || data == null || !needShow) {
                     // 不响应tooltip的数据对象延时隐藏
                     clearTimeout(this._hidingTicket);
                     clearTimeout(this._showingTicket);
@@ -19889,7 +20238,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                         'tooltip.trigger'
                     );
                     
-                    trigger == 'axis'
+                    trigger === 'axis'
                                ? this._showAxisTrigger(
                                      serie.xAxisIndex, serie.yAxisIndex,
                                      ecData.get(this._curTarget, 'dataIndex')
@@ -19902,7 +20251,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         /**
          * 直角系 
          */
-        _findAxisTrigger : function () {
+        _findAxisTrigger: function () {
             if (!this.component.xAxis || !this.component.yAxis) {
                 this._hidingTicket = setTimeout(this._hide, this._hideDelay);
                 return;
@@ -19912,15 +20261,12 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             var yAxisIndex;
             for (var i = 0, l = series.length; i < l; i++) {
                 // 找到第一个axis触发tooltip的系列
-                if (this.deepQuery(
-                        [series[i], this.option], 'tooltip.trigger'
-                    ) == 'axis'
-                ) {
+                if (this.deepQuery([series[i], this.option], 'tooltip.trigger') === 'axis') {
                     xAxisIndex = series[i].xAxisIndex || 0;
                     yAxisIndex = series[i].yAxisIndex || 0;
                     if (this.component.xAxis.getAxis(xAxisIndex)
                         && this.component.xAxis.getAxis(xAxisIndex).type
-                           == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                           === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         // 横轴为类目轴
                         this._showAxisTrigger(xAxisIndex, yAxisIndex,
@@ -19932,7 +20278,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     } 
                     else if (this.component.yAxis.getAxis(yAxisIndex)
                              && this.component.yAxis.getAxis(yAxisIndex).type
-                                == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                                === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         // 纵轴为类目轴
                         this._showAxisTrigger(xAxisIndex, yAxisIndex,
@@ -19949,7 +20295,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     }
                 }
             }
-            if (this.option.tooltip.axisPointer.type == 'cross') {
+            if (this.option.tooltip.axisPointer.type === 'cross') {
                 this._showAxisTrigger(-1, -1, -1);
             }
         },
@@ -19957,7 +20303,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         /**
          * 极坐标 
          */
-        _findPolarTrigger : function () {
+        _findPolarTrigger: function () {
             if (!this.component.polar) {
                 return false;
             }
@@ -19983,11 +20329,11 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         /**
          * 根据坐标轴事件带的属性获取最近的axisDataIndex
          */
-        _getNearestDataIndex : function (direction, categoryAxis) {
+        _getNearestDataIndex: function (direction, categoryAxis) {
             var dataIndex = -1;
             var x = zrEvent.getX(this._event);
             var y = zrEvent.getY(this._event);
-            if (direction == 'x') {
+            if (direction === 'x') {
                 // 横轴为类目轴
                 var left;
                 var right;
@@ -20011,9 +20357,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                 }
                 else {
                     // 离右边近，看是否为最后一个
-                    if (typeof categoryAxis.getNameByIndex(dataIndex)
-                        == 'undefined'
-                    ) {
+                    if (categoryAxis.getNameByIndex(dataIndex) == null) {
                         dataIndex -= 1;
                     }
                 }
@@ -20039,14 +20383,12 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                 if (dataIndex <= 0) {
                     dataIndex = 0;
                 }
-                if (y - top >= bottom - y) {
+                else if (y - top >= bottom - y) {
                     dataIndex -= 1;
                 }
                 else {
                     // 离上方边近，看是否为最后一个
-                    if (typeof categoryAxis.getNameByIndex(dataIndex)
-                        == 'undefined'
-                    ) {
+                    if (categoryAxis.getNameByIndex(dataIndex) == null) {
                         dataIndex -= 1;
                     }
                 }
@@ -20058,17 +20400,17 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         /**
          * 直角系 
          */
-        _showAxisTrigger : function (xAxisIndex, yAxisIndex, dataIndex) {
+        _showAxisTrigger: function (xAxisIndex, yAxisIndex, dataIndex) {
             !this._event.connectTrigger && this.messageCenter.dispatch(
                 ecConfig.EVENT.TOOLTIP_IN_GRID,
                 this._event,
                 null,
                 this.myChart
             );
-            if (typeof this.component.xAxis == 'undefined'
-                || typeof this.component.yAxis == 'undefined'
-                || typeof xAxisIndex == 'undefined'
-                || typeof yAxisIndex == 'undefined'
+            if (this.component.xAxis == null
+                || this.component.yAxis == null
+                || xAxisIndex == null
+                || yAxisIndex == null
                 // || dataIndex < 0
             ) {
                 // 不响应tooltip的数据对象延时隐藏
@@ -20088,8 +20430,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             var position;
             var showContent;
             var specialCssText = '';
-            if (this.option.tooltip.trigger == 'axis') {
-                if (this.option.tooltip.show === false) {
+            if (this.option.tooltip.trigger === 'axis') {
+                if (!this.option.tooltip.show) {
                     return;
                 }
                 formatter = this.option.tooltip.formatter;
@@ -20098,7 +20440,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
 
             if (xAxisIndex != -1
                 && this.component.xAxis.getAxis(xAxisIndex).type
-                   == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                   === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
             ) {
                 // 横轴为类目轴，找到所有用这条横轴并且axis触发的系列数据
                 categoryAxis = this.component.xAxis.getAxis(xAxisIndex);
@@ -20106,8 +20448,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     if (!this._isSelected(series[i].name)) {
                         continue;
                     }
-                    if (series[i].xAxisIndex == xAxisIndex
-                        && this.deepQuery([series[i], this.option], 'tooltip.trigger') == 'axis'
+                    if (series[i].xAxisIndex === xAxisIndex
+                        && this.deepQuery([series[i], this.option], 'tooltip.trigger') === 'axis'
                     ) {
                         showContent = this.query(series[i], 'tooltip.showContent') 
                                       || showContent;
@@ -20117,17 +20459,24 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                                    || position;
                         
                         specialCssText += this._style(this.query(series[i], 'tooltip'));
-                        seriesArray.push(series[i]);
-                        seriesIndex.push(i);
+                        if (series[i].stack != null) {
+                            seriesArray.unshift(series[i]);
+                            seriesIndex.unshift(i);
+                        }
+                        else {
+                            seriesArray.push(series[i]);
+                            seriesIndex.push(i);
+                        }
                     }
                 }
+                
                 // 寻找高亮元素
                 this.messageCenter.dispatch(
                     ecConfig.EVENT.TOOLTIP_HOVER,
                     this._event,
                     {
-                        seriesIndex : seriesIndex,
-                        dataIndex : dataIndex
+                        seriesIndex: seriesIndex,
+                        dataIndex: dataIndex
                     },
                     this.myChart
                 );
@@ -20145,7 +20494,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             }
             else if (yAxisIndex != -1
                      && this.component.yAxis.getAxis(yAxisIndex).type
-                        == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                        === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
             ) {
                 // 纵轴为类目轴，找到所有用这条纵轴并且axis触发的系列数据
                 categoryAxis = this.component.yAxis.getAxis(yAxisIndex);
@@ -20153,8 +20502,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     if (!this._isSelected(series[i].name)) {
                         continue;
                     }
-                    if (series[i].yAxisIndex == yAxisIndex
-                        && this.deepQuery([series[i], this.option], 'tooltip.trigger') == 'axis'
+                    if (series[i].yAxisIndex === yAxisIndex
+                        && this.deepQuery([series[i], this.option], 'tooltip.trigger') === 'axis'
                     ) {
                         showContent = this.query(series[i], 'tooltip.showContent') 
                                       || showContent;
@@ -20172,8 +20521,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     ecConfig.EVENT.TOOLTIP_HOVER,
                     this._event,
                     {
-                        seriesIndex : seriesIndex,
-                        dataIndex : dataIndex
+                        seriesIndex: seriesIndex,
+                        dataIndex: dataIndex
                     },
                     this.myChart
                 );
@@ -20211,12 +20560,12 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
 
             if (seriesArray.length > 0) {
                 var data;
-                if (typeof formatter == 'function') {
+                if (typeof formatter === 'function') {
                     var params = [];
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
                         data = seriesArray[i].data[dataIndex];
-                        data = typeof data != 'undefined'
-                               ? (typeof data.value != 'undefined'
+                        data = data != null
+                               ? (data.value != null
                                    ? data.value
                                    : data)
                                : '-';
@@ -20232,7 +20581,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                         this.myChart, params, this._curTicket, this._setContent
                     );
                 }
-                else if (typeof formatter == 'string') {
+                else if (typeof formatter === 'string') {
                     this._curTicket = NaN;
                     formatter = formatter.replace('{a}','{a0}')
                                          .replace('{b}','{b0}')
@@ -20247,8 +20596,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                             this._encodeHTML(categoryAxis.getNameByIndex(dataIndex))
                         );
                         data = seriesArray[i].data[dataIndex];
-                        data = typeof data != 'undefined'
-                               ? (typeof data.value != 'undefined'
+                        data = data != null
+                               ? (data.value != null
                                    ? data.value
                                    : data)
                                : '-';
@@ -20271,8 +20620,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                                      + this._encodeHTML(seriesArray[i].name || '')
                                      + ' : ';
                         data = seriesArray[i].data[dataIndex];
-                        data = typeof data != 'undefined'
-                               ? (typeof data.value != 'undefined'
+                        data = data != null
+                               ? (data.value != null
                                    ? data.value
                                    : data)
                                : '-';
@@ -20282,6 +20631,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     this._tDom.innerHTML = formatter;
                 }
 
+                // don't modify, just false, showContent == undefined == true
                 if (showContent === false || !this.option.tooltip.showContent) {
                     // 只用tooltip的行为，不显示主体
                     return;
@@ -20300,10 +20650,10 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         /**
          * 极坐标 
          */
-        _showPolarTrigger : function (polarIndex, dataIndex) {
-            if (typeof this.component.polar == 'undefined'
-                || typeof polarIndex == 'undefined'
-                || typeof dataIndex == 'undefined'
+        _showPolarTrigger: function (polarIndex, dataIndex) {
+            if (this.component.polar == null
+                || polarIndex == null
+                || dataIndex == null
                 || dataIndex < 0
             ) {
                 return false;
@@ -20315,8 +20665,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             var position;
             var showContent;
             var specialCssText = '';
-            if (this.option.tooltip.trigger == 'axis') {
-                if (this.option.tooltip.show === false) {
+            if (this.option.tooltip.trigger === 'axis') {
+                if (!this.option.tooltip.show) {
                     return false;
                 }
                 formatter = this.option.tooltip.formatter;
@@ -20329,8 +20679,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                 if (!this._isSelected(series[i].name)) {
                     continue;
                 }
-                if (series[i].polarIndex == polarIndex
-                    && this.deepQuery([series[i], this.option], 'tooltip.trigger') == 'axis'
+                if (series[i].polarIndex === polarIndex
+                    && this.deepQuery([series[i], this.option], 'tooltip.trigger') === 'axis'
                 ) {
                     showContent = this.query(series[i], 'tooltip.showContent') 
                                   || showContent;
@@ -20354,14 +20704,14 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                         if (!this._isSelected(data.name)) {
                             continue;
                         }
-                        data = typeof data != 'undefined'
+                        data = data != null
                                ? data
                                : {name:'', value: {dataIndex:'-'}};
                                
                         params.push([
                             seriesArray[i].name || '',
                             data.name,
-                            typeof data.value[dataIndex].value != 'undefined'
+                            data.value[dataIndex].value != null
                                 ? data.value[dataIndex].value : data.value[dataIndex],
                             indicatorName
                         ]);
@@ -20370,13 +20720,13 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                 if (params.length <= 0) {
                     return;
                 }
-                if (typeof formatter == 'function') {
+                if (typeof formatter === 'function') {
                     this._curTicket = 'axis:' + dataIndex;
                     this._tDom.innerHTML = formatter.call(
                         this.myChart, params, this._curTicket, this._setContent
                     );
                 }
-                else if (typeof formatter == 'string') {
+                else if (typeof formatter === 'string') {
                     formatter = formatter.replace('{a}','{a0}')
                                          .replace('{b}','{b0}')
                                          .replace('{c}','{c0}')
@@ -20414,6 +20764,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     this._tDom.innerHTML = formatter;
                 }
 
+                // don't modify, just false, showContent == undefined == true
                 if (showContent === false || !this.option.tooltip.showContent) {
                     // 只用tooltip的行为，不显示主体
                     return;
@@ -20435,7 +20786,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             }
         },
         
-        _showItemTrigger : function () {
+        _showItemTrigger: function () {
             if (!this._curTarget) {
                 return;
             }
@@ -20454,12 +20805,12 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             var html = '';
             if (this._curTarget._type != 'island') {
                 // 全局
-                if (this.option.tooltip.trigger == 'item') {
+                if (this.option.tooltip.trigger === 'item') {
                     formatter = this.option.tooltip.formatter;
                     position = this.option.tooltip.position;
                 }
                 // 系列
-                if (this.query(serie, 'tooltip.trigger') == 'item') {
+                if (this.query(serie, 'tooltip.trigger') === 'item') {
                     showContent = this.query(serie, 'tooltip.showContent') 
                                   || showContent;
                     formatter = this.query(serie, 'tooltip.formatter') 
@@ -20483,7 +20834,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                 position = this.deepQuery([data, serie, this.option], 'tooltip.islandPosition');
             }
 
-            if (typeof formatter == 'function') {
+            if (typeof formatter === 'function') {
                 this._curTicket = (serie.name || '')
                                   + ':'
                                   + ecData.get(this._curTarget, 'dataIndex');
@@ -20501,7 +20852,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     this._setContent
                 );
             }
-            else if (typeof formatter == 'string') {
+            else if (typeof formatter === 'string') {
                 this._curTicket = NaN;
                 formatter = formatter.replace('{a}','{a0}')
                                      .replace('{b}','{b0}')
@@ -20522,18 +20873,14 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             }
             else {
                 this._curTicket = NaN;
-                if (serie.type == ecConfig.CHART_TYPE_SCATTER) {
-                    this._tDom.innerHTML = (typeof serie.name != 'undefined'
-                                          ? (this._encodeHTML(serie.name) + '<br/>')
-                                          : ''
-                                      ) 
-                                      + (name === '' ? '' : (this._encodeHTML(name) + ' : ')) 
-                                      + value 
-                                      + (typeof special == 'undefined'
-                                             ? '' : (' (' + special + ')')
-                                        );
+                if (serie.type === ecConfig.CHART_TYPE_SCATTER) {
+                    this._tDom.innerHTML = ''
+                        + (serie.name != null ? (this._encodeHTML(serie.name) + '<br/>') : '') 
+                        + (name === '' ? '' : (this._encodeHTML(name) + ' : ')) 
+                        + value 
+                        + (special == null ? '' : (' (' + special + ')'));
                 }
-                else if (serie.type == ecConfig.CHART_TYPE_RADAR && special) {
+                else if (serie.type === ecConfig.CHART_TYPE_RADAR && special) {
                     indicator = special;
                     html += this._encodeHTML(name === '' ? (serie.name || '') : name);
                     html += html === '' ? '' : '<br />';
@@ -20543,8 +20890,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     }
                     this._tDom.innerHTML = html;
                 }
-                else if (serie.type == ecConfig.CHART_TYPE_CHORD) {
-                    if (typeof special2 == 'undefined') {
+                else if (serie.type === ecConfig.CHART_TYPE_CHORD) {
+                    if (special2 == null) {
                         // 外环上
                         this._tDom.innerHTML = this._encodeHTML(name) + ' (' 
                                                + this.numAddCommas(value) + ')';
@@ -20553,25 +20900,21 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                         var name1 = this._encodeHTML(name);
                         var name2 = this._encodeHTML(special);
                         // 内部弦上
-                        this._tDom.innerHTML = (typeof serie.name != 'undefined'
-                                                ? (this._encodeHTML(serie.name) + '<br/>') : ''
-                                               )
-                                               + name1 + ' -> ' + name2 
-                                               + ' (' + this.numAddCommas(value) + ')'
-                                               + '<br />'
-                                               + name2 + ' -> ' + name1
-                                               + ' (' + this.numAddCommas(special2) + ')';
+                        this._tDom.innerHTML = ''
+                            + (serie.name != null ? (this._encodeHTML(serie.name) + '<br/>') : '')
+                            + name1 + ' -> ' + name2 
+                            + ' (' + this.numAddCommas(value) + ')'
+                            + '<br />'
+                            + name2 + ' -> ' + name1
+                            + ' (' + this.numAddCommas(special2) + ')';
                     }
                 }
                 else {
-                    this._tDom.innerHTML = (typeof serie.name != 'undefined'
-                                                ? (this._encodeHTML(serie.name) + '<br/>') : ''
-                                           )
-                                           + this._encodeHTML(name) + ' : ' 
-                                           + this.numAddCommas(value) +
-                                           (typeof special == 'undefined'
-                                               ? '' : (' ('+ this.numAddCommas(special) +')')
-                                           );
+                    this._tDom.innerHTML = ''
+                        + (serie.name != null ? (this._encodeHTML(serie.name) + '<br/>') : '')
+                        + this._encodeHTML(name) + ' : ' 
+                        + this.numAddCommas(value) 
+                        + (special == null ? '' : (' ('+ this.numAddCommas(special) +')'));
                 }
             }
 
@@ -20585,6 +20928,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                 this.zr.refresh();
             }
             
+            // don't modify, just false, showContent == undefined == true
             if (showContent === false || !this.option.tooltip.showContent) {
                 // 只用tooltip的行为，不显示主体
                 return;
@@ -20608,16 +20952,16 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         /**
          * 设置坐标轴指示器样式 
          */
-        _styleAxisPointer : function (seriesArray, xStart, yStart, xEnd, yEnd, gap, x, y) {
+        _styleAxisPointer: function (seriesArray, xStart, yStart, xEnd, yEnd, gap, x, y) {
             if (seriesArray.length > 0) {
                 var queryTarget;
                 var curType;
                 var axisPointer = this.option.tooltip.axisPointer;
                 var pointType = axisPointer.type;
                 var style = {
-                    line : {},
-                    cross : {},
-                    shadow : {}
+                    line: { },
+                    cross: { },
+                    shadow: { }
                 };
                 for (var pType in style) {
                     style[pType].color = axisPointer[pType + 'Style'].color;
@@ -20627,7 +20971,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                 for (var i = 0, l = seriesArray.length; i < l; i++) {
                     if (this.deepQuery(
                            [seriesArray[i], this.option], 'tooltip.trigger'
-                       ) == 'axis'
+                       ) === 'axis'
                     ) {
                         queryTarget = seriesArray[i];
                         curType = this.query(queryTarget, 'tooltip.axisPointer.type');
@@ -20649,35 +20993,35 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     }
                 }
                 
-                if (pointType == 'line') {
+                if (pointType === 'line') {
                     this._axisLineShape.style = {
-                        xStart : xStart,
-                        yStart : yStart,
-                        xEnd : xEnd,
-                        yEnd : yEnd,
-                        strokeColor : style.line.color,
-                        lineWidth : style.line.width,
-                        lineType : style.line.type
+                        xStart: xStart,
+                        yStart: yStart,
+                        xEnd: xEnd,
+                        yEnd: yEnd,
+                        strokeColor: style.line.color,
+                        lineWidth: style.line.width,
+                        lineType: style.line.type
                     };
                     this._axisLineShape.invisible = false;
                     this.zr.modShape(this._axisLineShape.id);
                 }
-                else if (pointType == 'cross') {
+                else if (pointType === 'cross') {
                     this._axisCrossShape.style = {
                         brushType: 'stroke',
-                        rect : this.component.grid.getArea(),
-                        x : x,
-                        y : y,
-                        text : ('( ' 
+                        rect: this.component.grid.getArea(),
+                        x: x,
+                        y: y,
+                        text: ('( ' 
                                + this.component.xAxis.getAxis(0).getValueFromCoord(x)
                                + ' , '
                                + this.component.yAxis.getAxis(0).getValueFromCoord(y) 
                                + ' )'
-                               ).replace('  , ', ' ').replace(' ,  ', ' '),
-                        textPosition : 'specific',
-                        strokeColor : style.cross.color,
-                        lineWidth : style.cross.width,
-                        lineType : style.cross.type
+                              ).replace('  , ', ' ').replace(' ,  ', ' '),
+                        textPosition: 'specific',
+                        strokeColor: style.cross.color,
+                        lineWidth: style.cross.width,
+                        lineType: style.cross.type
                     };
                     if (this.component.grid.getXend() - x > 100) {          // 右侧有空间
                         this._axisCrossShape.style.textAlign = 'left';
@@ -20698,14 +21042,14 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     this._axisCrossShape.invisible = false;
                     this.zr.modShape(this._axisCrossShape.id);
                 }
-                else if (pointType == 'shadow') {
-                    if (typeof style.shadow.width == 'undefined' 
-                        || style.shadow.width == 'auto'
+                else if (pointType === 'shadow') {
+                    if (style.shadow.width == null 
+                        || style.shadow.width === 'auto'
                         || isNaN(style.shadow.width)
                     ) {
                         style.shadow.width = gap;
                     }
-                    if (xStart == xEnd) {
+                    if (xStart === xEnd) {
                         // 纵向
                         if (Math.abs(this.component.grid.getX() - xStart) < 2) {
                             // 最左边
@@ -20718,7 +21062,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                             xStart = xEnd = xEnd - style.shadow.width / 2;
                         }
                     }
-                    else if (yStart == yEnd) {
+                    else if (yStart === yEnd) {
                         // 横向
                         if (Math.abs(this.component.grid.getY() - yStart) < 2) {
                             // 最上边
@@ -20732,12 +21076,12 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                         }
                     }
                     this._axisShadowShape.style = {
-                        xStart : xStart,
-                        yStart : yStart,
-                        xEnd : xEnd,
-                        yEnd : yEnd,
-                        strokeColor : style.shadow.color,
-                        lineWidth : style.shadow.width
+                        xStart: xStart,
+                        yStart: yStart,
+                        xEnd: xEnd,
+                        yEnd: yEnd,
+                        strokeColor: style.shadow.color,
+                        lineWidth: style.shadow.width
                     };
                     this._axisShadowShape.invisible = false;
                     this.zr.modShape(this._axisShadowShape.id);
@@ -20746,7 +21090,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             }
         },
 
-        __onmousemove : function (param) {
+        __onmousemove: function (param) {
             clearTimeout(this._hidingTicket);
             clearTimeout(this._showingTicket);
             var target = param.target;
@@ -20795,10 +21139,10 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     // 看用这个polar的系列数据是否是axis触发，如果是设置_curTarget为nul
                     var series = this.option.series;
                     for (var i = 0, l = series.length; i < l; i++) {
-                        if (series[i].polarIndex == polarIndex
+                        if (series[i].polarIndex === polarIndex
                             && this.deepQuery(
                                    [series[i], this.option], 'tooltip.trigger'
-                               ) == 'axis'
+                               ) === 'axis'
                         ) {
                             this._curTarget = null;
                             break;
@@ -20813,7 +21157,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         /**
          * zrender事件响应：鼠标离开绘图区域
          */
-        __onglobalout : function () {
+        __onglobalout: function () {
             clearTimeout(this._hidingTicket);
             clearTimeout(this._showingTicket);
             this._hidingTicket = setTimeout(this._hide, this._hideDelay);
@@ -20822,18 +21166,18 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         /**
          * 异步回调填充内容
          */
-        __setContent : function (ticket, content) {
+        __setContent: function (ticket, content) {
             if (!this._tDom) {
                 return;
             }
-            if (ticket == this._curTicket) {
+            if (ticket === this._curTicket) {
                 this._tDom.innerHTML = content;
             }
             
             setTimeout(this._refixed, 20);
         },
 
-        ontooltipHover : function (param, tipShape) {
+        ontooltipHover: function (param, tipShape) {
             if (!this._lastTipShape // 不存在或者存在但dataIndex发生变化才需要重绘
                 || (this._lastTipShape && this._lastTipShape.dataIndex != param.dataIndex)
             ) {
@@ -20857,24 +21201,24 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     this.zr.addShape(tipShape[i]);
                 }
                 this._lastTipShape = {
-                    dataIndex : param.dataIndex,
-                    tipShape : tipShape
+                    dataIndex: param.dataIndex,
+                    tipShape: tipShape
                 };
             }
         },
         
-        ondragend : function () {
+        ondragend: function () {
             this._hide();
         },
         
         /**
          * 图例选择
          */
-        onlegendSelected : function (param) {
+        onlegendSelected: function (param) {
             this._selectedMap = param.selected;
         },
         
-        _setSelectedMap : function () {
+        _setSelectedMap: function () {
             if (this.component.legend) {
                 this._selectedMap = zrUtil.clone(this.component.legend.getSelectedMap());
             }
@@ -20883,8 +21227,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             }
         },
         
-        _isSelected : function (itemName) {
-            if (typeof this._selectedMap[itemName] != 'undefined') {
+        _isSelected: function (itemName) {
+            if (this._selectedMap[itemName] != null) {
                 return this._selectedMap[itemName];
             }
             else {
@@ -20898,20 +21242,20 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
          *          {seriesIndex: 0, seriesName:'', dataInex:0} line、bar、scatter、k、radar
          *          {seriesIndex: 0, seriesName:'', name:''} map、pie、chord
          */
-        showTip : function (params) {
+        showTip: function (params) {
             if (!params) {
                 return;
             }
             
             var seriesIndex;
             var series = this.option.series;
-            if (typeof params.seriesIndex != 'undefined') {
+            if (params.seriesIndex != null) {
                 seriesIndex = params.seriesIndex;
             }
             else {
                 var seriesName = params.seriesName;
                 for (var i = 0, l = series.length; i < l; i++) {
-                    if (series[i].name == seriesName) {
+                    if (series[i].name === seriesName) {
                         seriesIndex = i;
                         break;
                     }
@@ -20919,13 +21263,13 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
             }
             
             var serie = series[seriesIndex];
-            if (typeof serie == 'undefined') {
+            if (serie == null) {
                 return;
             }
             var chart = this.myChart.chart[serie.type];
             var isAxisTrigger = this.deepQuery(
                                     [serie, this.option], 'tooltip.trigger'
-                                ) == 'axis';
+                                ) === 'axis';
             
             if (!chart) {
                 return;
@@ -20938,8 +21282,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     case ecConfig.CHART_TYPE_LINE :
                     case ecConfig.CHART_TYPE_BAR :
                     case ecConfig.CHART_TYPE_K :
-                        if (typeof this.component.xAxis == 'undefined' 
-                            || typeof this.component.yAxis == 'undefined'
+                        if (this.component.xAxis == null 
+                            || this.component.yAxis == null
                             || serie.data.length <= dataIndex
                         ) {
                             return;
@@ -20947,26 +21291,26 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                         var xAxisIndex = serie.xAxisIndex || 0;
                         var yAxisIndex = serie.yAxisIndex || 0;
                         if (this.component.xAxis.getAxis(xAxisIndex).type 
-                            == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                            === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                         ) {
                             // 横轴是类目
                             this._event = {
-                                zrenderX : this.component.xAxis.getAxis(xAxisIndex)
-                                           .getCoordByIndex(dataIndex),
-                                zrenderY : this.component.grid.getY() 
-                                           + (this.component.grid.getYend() 
-                                              - this.component.grid.getY()
-                                             ) / 4
+                                zrenderX: this.component.xAxis.getAxis(xAxisIndex)
+                                          .getCoordByIndex(dataIndex),
+                                zrenderY: this.component.grid.getY() 
+                                          + (this.component.grid.getYend() 
+                                             - this.component.grid.getY()
+                                            ) / 4
                             };
                         }
                         else {
                             // 纵轴是类目
                             this._event = {
-                                zrenderX : this.component.grid.getX() 
-                                           + (this.component.grid.getXend() 
+                                zrenderX: this.component.grid.getX() 
+                                          + (this.component.grid.getXend() 
                                               - this.component.grid.getX()
-                                             ) / 4,
-                                zrenderY : this.component.yAxis.getAxis(yAxisIndex)
+                                            ) / 4,
+                                zrenderY: this.component.yAxis.getAxis(yAxisIndex)
                                            .getCoordByIndex(dataIndex)
                             };
                         }
@@ -20977,7 +21321,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                         );
                         break;
                     case ecConfig.CHART_TYPE_RADAR :
-                        if (typeof this.component.polar == 'undefined' 
+                        if (this.component.polar == null 
                             || serie.data[0].value.length <= dataIndex
                         ) {
                             return;
@@ -20987,8 +21331,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                             polarIndex, dataIndex, 'max'
                         );
                         this._event = {
-                            zrenderX : vector[0],
-                            zrenderY : vector[1]
+                            zrenderX: vector[0],
+                            zrenderY: vector[1]
                         };
                         this._showPolarTrigger(
                             polarIndex, 
@@ -21009,8 +21353,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     case ecConfig.CHART_TYPE_SCATTER :
                         var dataIndex = params.dataIndex;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
-                            if (ecData.get(shapeList[i], 'seriesIndex') == seriesIndex
-                                && ecData.get(shapeList[i], 'dataIndex') == dataIndex
+                            if (ecData.get(shapeList[i], 'seriesIndex') === seriesIndex
+                                && ecData.get(shapeList[i], 'dataIndex') === dataIndex
                             ) {
                                 this._curTarget = shapeList[i];
                                 x = shapeList[i].style.x;
@@ -21023,9 +21367,9 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     case ecConfig.CHART_TYPE_RADAR :
                         var dataIndex = params.dataIndex;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
-                            if (shapeList[i].type == 'polygon'
-                                && ecData.get(shapeList[i], 'seriesIndex') == seriesIndex
-                                && ecData.get(shapeList[i], 'dataIndex') == dataIndex
+                            if (shapeList[i].type === 'polygon'
+                                && ecData.get(shapeList[i], 'seriesIndex') === seriesIndex
+                                && ecData.get(shapeList[i], 'dataIndex') === dataIndex
                             ) {
                                 this._curTarget = shapeList[i];
                                 var vector = this.component.polar.getCenter(
@@ -21040,9 +21384,9 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     case ecConfig.CHART_TYPE_PIE :
                         var name = params.name;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
-                            if (shapeList[i].type == 'sector'
-                                && ecData.get(shapeList[i], 'seriesIndex') == seriesIndex
-                                && ecData.get(shapeList[i], 'name') == name
+                            if (shapeList[i].type === 'sector'
+                                && ecData.get(shapeList[i], 'seriesIndex') === seriesIndex
+                                && ecData.get(shapeList[i], 'name') === name
                             ) {
                                 this._curTarget = shapeList[i];
                                 var style = this._curTarget.style;
@@ -21058,9 +21402,9 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                         var name = params.name;
                         var mapType = serie.mapType;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
-                            if (shapeList[i].type == 'text'
-                                && shapeList[i]._mapType == mapType
-                                && shapeList[i].style._name == name
+                            if (shapeList[i].type === 'text'
+                                && shapeList[i]._mapType === mapType
+                                && shapeList[i].style._name === name
                             ) {
                                 this._curTarget = shapeList[i];
                                 x = this._curTarget.style.x + this._curTarget.position[0];
@@ -21072,8 +21416,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     case ecConfig.CHART_TYPE_CHORD:
                         var name = params.name;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
-                            if (shapeList[i].type == 'sector'
-                                && ecData.get(shapeList[i], 'name') == name
+                            if (shapeList[i].type === 'sector'
+                                && ecData.get(shapeList[i], 'name') === name
                             ) {
                                 this._curTarget = shapeList[i];
                                 var style = this._curTarget.style;
@@ -21084,8 +21428,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                                 this.zr.trigger(
                                     zrConfig.EVENT.MOUSEMOVE,
                                     {
-                                        zrenderX : x,
-                                        zrenderY : y
+                                        zrenderX: x,
+                                        zrenderY: y
                                     }
                                 );
                                 return;
@@ -21095,8 +21439,8 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                     case ecConfig.CHART_TYPE_FORCE:
                         var name = params.name;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
-                            if (shapeList[i].type == 'circle'
-                                && ecData.get(shapeList[i], 'name') == name
+                            if (shapeList[i].type === 'circle'
+                                && ecData.get(shapeList[i], 'name') === name
                             ) {
                                 this._curTarget = shapeList[i];
                                 x = this._curTarget.position[0];
@@ -21106,10 +21450,10 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                         }
                         break;
                 }
-                if (typeof x != 'undefined' && typeof y != 'undefined') {
+                if (x != null && y != null) {
                     this._event = {
-                        zrenderX : x,
-                        zrenderY : y
+                        zrenderX: x,
+                        zrenderY: y
                     };
                     this.zr.addHoverShape(this._curTarget);
                     this.zr.refreshHover();
@@ -21121,14 +21465,14 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         /**
          * 关闭，公开接口 
          */
-        hideTip : function () {
+        hideTip: function () {
             this._hide();
         },
         
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             // this._selectedMap;
             // this._defaultCssText;    // css样式缓存
             // this._needAxisTrigger;   // 坐标轴触发
@@ -21159,13 +21503,13 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
                 );
     
                 this._needAxisTrigger = false;
-                if (this.option.tooltip.trigger == 'axis') {
+                if (this.option.tooltip.trigger === 'axis') {
                     this._needAxisTrigger = true;
                 }
     
                 var series = this.option.series;
                 for (var i = 0, l = series.length; i < l; i++) {
-                    if (this.query(series[i], 'tooltip.trigger') == 'axis') {
+                    if (this.query(series[i], 'tooltip.trigger') === 'axis') {
                         this._needAxisTrigger = true;
                         break;
                     }
@@ -21190,7 +21534,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         /**
          * 释放后实例不可用，重载基类方法
          */
-        dispose : function () {
+        dispose: function () {
             if (this._lastTipShape && this._lastTipShape.tipShape.length > 0) {
                 this.zr.delShape(this._lastTipShape.tipShape);
             }
@@ -21211,7 +21555,7 @@ define('echarts/component/tooltip',['require','./base','../util/shape/Cross','zr
         /**
          * html转码的方法
          */
-        _encodeHTML : function (source) {
+        _encodeHTML: function (source) {
             return String(source)
                         .replace(/&/g, '&amp;')
                         .replace(/</g, '&lt;')
@@ -21467,6 +21811,8 @@ define(
                 if (r0 !== 0) {
                     ctx.arc(x, y, r0, PI2 - endAngle, PI2 - startAngle, false);
                 }
+
+                ctx.closePath();
 
                 return;
             },
@@ -21727,8 +22073,8 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
     }
     
     Legend.prototype = {
-        type : ecConfig.COMPONENT_TYPE_LEGEND,
-        _buildShape : function () {
+        type: ecConfig.COMPONENT_TYPE_LEGEND,
+        _buildShape: function () {
             // 图例元素组的位置参数，通过计算所得x, y, width, height
             this._itemGroupLocation = this._getItemGroupLocation();
 
@@ -21743,7 +22089,7 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
         /**
          * 构建所有图例元素
          */
-        _buildItem : function () {
+        _buildItem: function () {
             var data = this.legendOption.data;
             var dataLength = data.length;
             var itemName;
@@ -21764,7 +22110,7 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             var itemGap = this.legendOption.itemGap;
             var color;
 
-            if (this.legendOption.orient == 'vertical' && this.legendOption.x == 'right') {
+            if (this.legendOption.orient === 'vertical' && this.legendOption.x === 'right') {
                 lastX = this._itemGroupLocation.x
                         + this._itemGroupLocation.width
                         - itemWidth;
@@ -21779,13 +22125,13 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
                 
                 itemName = this._getName(data[i]);
                 formattedName = this._getFormatterName(itemName);
-                if (itemName === '') {
-                    if (this.legendOption.orient == 'horizontal') {
+                if (itemName === '') { // 别帮我代码优化
+                    if (this.legendOption.orient === 'horizontal') {
                         lastX = this._itemGroupLocation.x;
                         lastY += itemHeight + itemGap;
                     }
                     else {
-                        this.legendOption.x == 'right'
+                        this.legendOption.x === 'right'
                             ? lastX -= this._itemGroupLocation.maxWidth + itemGap
                             : lastX += this._itemGroupLocation.maxWidth + itemGap;
                         lastY = this._itemGroupLocation.y;
@@ -21796,11 +22142,11 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
                 
                 color = this.getColor(itemName);
 
-                if (this.legendOption.orient == 'horizontal') {
+                if (this.legendOption.orient === 'horizontal') {
                     if (zrWidth - lastX < 200   // 最后200px做分行预判
                         && (itemWidth + 5 + zrArea.getTextWidth(formattedName, dataFont)
                             // 分行的最后一个不用算itemGap
-                            + (i == dataLength - 1 || data[i+1] === '' ? 0 : itemGap)
+                            + (i === dataLength - 1 || data[i + 1] === '' ? 0 : itemGap)
                            ) >= zrWidth - lastX
                     ) {
                         lastX = this._itemGroupLocation.x;
@@ -21811,10 +22157,11 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
                     if (zrHeight - lastY < 200   // 最后200px做分行预判
                         && (itemHeight
                             // 分行的最后一个不用算itemGap
-                            + (i == dataLength - 1 || data[i+1] === '' ? 0 : itemGap)
-                           ) >= zrHeight - lastY
+                            + (i === dataLength - 1 || data[i + 1] === '' ? 0 : itemGap)
+                           ) 
+                           >= zrHeight - lastY
                     ) {
-                        this.legendOption.x == 'right'
+                        this.legendOption.x === 'right'
                         ? lastX -= this._itemGroupLocation.maxWidth + itemGap
                         : lastX += this._itemGroupLocation.maxWidth + itemGap;
                         lastY = this._itemGroupLocation.y;
@@ -21834,28 +22181,28 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
 
                 // 文字
                 textShape = {
-                    // shape : 'text',
-                    zlevel : this._zlevelBase,
-                    style : {
-                        x : lastX + itemWidth + 5,
-                        y : lastY + itemHeight / 2,
-                        color : this._selectedMap[itemName]
+                    // shape: 'text',
+                    zlevel: this._zlevelBase,
+                    style: {
+                        x: lastX + itemWidth + 5,
+                        y: lastY + itemHeight / 2,
+                        color: this._selectedMap[itemName]
                                 ? (dataTextStyle.color === 'auto' ? color : dataTextStyle.color)
                                 : '#ccc',
                         text: formattedName,
                         textFont: dataFont,
                         textBaseline: 'middle'
                     },
-                    highlightStyle : {
-                        color : color,
+                    highlightStyle: {
+                        color: color,
                         brushType: 'fill'
                     },
-                    hoverable : !!this.legendOption.selectedMode,
-                    clickable : !!this.legendOption.selectedMode
+                    hoverable: !!this.legendOption.selectedMode,
+                    clickable: !!this.legendOption.selectedMode
                 };
 
-                if (this.legendOption.orient == 'vertical'
-                    && this.legendOption.x == 'right'
+                if (this.legendOption.orient === 'vertical'
+                    && this.legendOption.x === 'right'
                 ) {
                     textShape.style.x -= (itemWidth + 10);
                     textShape.style.textAlign = 'right';
@@ -21873,7 +22220,7 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
                 this.shapeList.push(itemShape);
                 this.shapeList.push(textShape);
 
-                if (this.legendOption.orient == 'horizontal') {
+                if (this.legendOption.orient === 'horizontal') {
                     lastX += itemWidth + 5
                              + zrArea.getTextWidth(formattedName, dataFont)
                              + itemGap;
@@ -21883,8 +22230,8 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
                 }
             }
         
-            if (this.legendOption.orient == 'horizontal'
-                && this.legendOption.x == 'center'
+            if (this.legendOption.orient === 'horizontal'
+                && this.legendOption.x === 'center'
                 && lastY != this._itemGroupLocation.y
             ) {
                 // 多行橫排居中优化
@@ -21892,17 +22239,17 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             }
         },
         
-        _getName : function(data) {
+        _getName: function(data) {
             return typeof data.name != 'undefined' ? data.name : data;
         },
 
         _getFormatterName: function(itemName) {
             var formatter = this.legendOption.formatter;
             var formattedName;
-            if (typeof formatter == 'function') {
+            if (typeof formatter === 'function') {
                 formattedName = formatter.call(this.myChart, itemName);
             }
-            else if (typeof formatter == 'string') {
+            else if (typeof formatter === 'string') {
                 formattedName = formatter.replace('{name}', itemName);
             }
             else {
@@ -21917,11 +22264,11 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
         },
         
         // 多行橫排居中优化
-        _mLineOptimize : function () {
+        _mLineOptimize: function () {
             var lineOffsetArray = []; // 每行宽度
             var lastX = this._itemGroupLocation.x;
             for (var i = 2, l = this.shapeList.length; i < l; i++) {
-                if (this.shapeList[i].style.x == lastX) {
+                if (this.shapeList[i].style.x === lastX) {
                     lineOffsetArray.push(
                         (
                             this._itemGroupLocation.width 
@@ -21936,7 +22283,7 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
                         ) / 2
                     );
                 }
-                else if (i == l - 1) {
+                else if (i === l - 1) {
                     lineOffsetArray.push(
                         (
                             this._itemGroupLocation.width 
@@ -21954,7 +22301,7 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             }
             var curLineIndex = -1;
             for (var i = 1, l = this.shapeList.length; i < l; i++) {
-                if (this.shapeList[i].style.x == lastX) {
+                if (this.shapeList[i].style.x === lastX) {
                     curLineIndex++;
                 }
                 if (lineOffsetArray[curLineIndex] === 0) {
@@ -21966,24 +22313,24 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             }
         },
 
-        _buildBackground : function () {
+        _buildBackground: function () {
             var pTop = this.legendOption.padding[0];
             var pRight = this.legendOption.padding[1];
             var pBottom = this.legendOption.padding[2];
             var pLeft = this.legendOption.padding[3];
 
             this.shapeList.push(new RectangleShape({
-                zlevel : this._zlevelBase,
+                zlevel: this._zlevelBase,
                 hoverable :false,
-                style : {
-                    x : this._itemGroupLocation.x - pLeft,
-                    y : this._itemGroupLocation.y - pTop,
-                    width : this._itemGroupLocation.width + pLeft + pRight,
-                    height : this._itemGroupLocation.height + pTop + pBottom,
-                    brushType : this.legendOption.borderWidth === 0 ? 'fill' : 'both',
-                    color : this.legendOption.backgroundColor,
-                    strokeColor : this.legendOption.borderColor,
-                    lineWidth : this.legendOption.borderWidth
+                style: {
+                    x: this._itemGroupLocation.x - pLeft,
+                    y: this._itemGroupLocation.y - pTop,
+                    width: this._itemGroupLocation.width + pLeft + pRight,
+                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    brushType: this.legendOption.borderWidth === 0 ? 'fill' : 'both',
+                    color: this.legendOption.backgroundColor,
+                    strokeColor: this.legendOption.borderColor,
+                    lineWidth: this.legendOption.borderWidth
                 }
             }));
         },
@@ -21991,7 +22338,7 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
         /**
          * 根据选项计算图例实体的位置坐标
          */
-        _getItemGroupLocation : function () {
+        _getItemGroupLocation: function () {
             var data = this.legendOption.data;
             var dataLength = data.length;
             var itemGap = this.legendOption.itemGap;
@@ -22007,7 +22354,7 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             
             var temp = 0; // 宽高计算，用于多行判断
             var maxWidth = 0; // 垂直布局有用
-            if (this.legendOption.orient == 'horizontal') {
+            if (this.legendOption.orient === 'horizontal') {
                 // 水平布局，计算总宽度
                 totalHeight = itemHeight;
                 for (var i = 0; i < dataLength; i++) {
@@ -22132,85 +22479,85 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             }
 
             return {
-                x : x,
-                y : y,
-                width : totalWidth,
-                height : totalHeight,
-                maxWidth : maxWidth
+                x: x,
+                y: y,
+                width: totalWidth,
+                height: totalHeight,
+                maxWidth: maxWidth
             };
         },
 
         /**
          * 根据名称返回series数据或data
          */
-        _getSomethingByName : function (name) {
+        _getSomethingByName: function (name) {
             var series = this.option.series;
             var data;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].name == name) {
+                if (series[i].name === name) {
                     // 系列名称优先
                     return {
-                        type : series[i].type,
-                        series : series[i],
-                        seriesIndex : i,
-                        data : null,
-                        dataIndex : -1
+                        type: series[i].type,
+                        series: series[i],
+                        seriesIndex: i,
+                        data: null,
+                        dataIndex: -1
                     };
                 }
 
                 if (
-                    series[i].type == ecConfig.CHART_TYPE_PIE 
-                    || series[i].type == ecConfig.CHART_TYPE_RADAR
-                    || series[i].type == ecConfig.CHART_TYPE_CHORD
-                    || series[i].type == ecConfig.CHART_TYPE_FORCE
-                    || series[i].type == ecConfig.CHART_TYPE_FUNNEL
+                    series[i].type === ecConfig.CHART_TYPE_PIE 
+                    || series[i].type === ecConfig.CHART_TYPE_RADAR
+                    || series[i].type === ecConfig.CHART_TYPE_CHORD
+                    || series[i].type === ecConfig.CHART_TYPE_FORCE
+                    || series[i].type === ecConfig.CHART_TYPE_FUNNEL
                 ) {
                     data = series[i].type != ecConfig.CHART_TYPE_FORCE
                            ? series[i].data         // 饼图、雷达图、和弦图得查找里面的数据名字
                            : series[i].categories;  // 力导布局查找categories配置
                     for (var j = 0, k = data.length; j < k; j++) {
-                        if (data[j].name == name) {
+                        if (data[j].name === name) {
                             return {
-                                type : series[i].type,
-                                series : series[i],
-                                seriesIndex : i,
-                                data : data[j],
-                                dataIndex : j
+                                type: series[i].type,
+                                series: series[i],
+                                seriesIndex: i,
+                                data: data[j],
+                                dataIndex: j
                             };
                         }
                     }
                 }
             }
             return {
-                type : 'bar',
-                series : null,
-                seriesIndex : -1,
-                data : null,
-                dataIndex : -1
+                type: 'bar',
+                series: null,
+                seriesIndex: -1,
+                data: null,
+                dataIndex: -1
             };
         },
         
-        _getItemShapeByType : function (x, y, width, height, color, itemType, defaultColor) {
+        _getItemShapeByType: function (x, y, width, height, color, itemType, defaultColor) {
             var highlightColor = color === '#ccc' ? defaultColor : color;
             var itemShape = {
-                zlevel : this._zlevelBase,
-                style : {
-                    iconType : 'legendicon' + itemType,
-                    x : x,
-                    y : y,
-                    width : width,
-                    height : height,
-                    color : color,
-                    strokeColor : color,
-                    lineWidth : 2
+                zlevel: this._zlevelBase,
+                style: {
+                    iconType: 'legendicon' + itemType,
+                    x: x,
+                    y: y,
+                    width: width,
+                    height: height,
+                    color: color,
+                    strokeColor: color,
+                    lineWidth: 2
                 },
                 highlightStyle: {
-                    color : highlightColor,
-                    strokeColor : highlightColor,
-                    lineWidth : 1
+                    color: highlightColor,
+                    strokeColor: highlightColor,
+                    lineWidth: 1
                 },
-                hoverable : this.legendOption.selectedMode,
-                clickable : this.legendOption.selectedMode
+                hoverable: this.legendOption.selectedMode,
+                clickable: this.legendOption.selectedMode
             };
             
             var imageLocation;
@@ -22222,15 +22569,15 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             }
             // 特殊设置
             switch (itemType) {
-                case 'line' :
+                case 'line':
                     itemShape.style.brushType = 'stroke';
                     itemShape.highlightStyle.lineWidth = 3;
                     break;
-                case 'radar' :
-                case 'scatter' :   
+                case 'radar':
+                case 'scatter':
                     itemShape.highlightStyle.lineWidth = 3;
                     break;
-                case 'k' :
+                case 'k':
                     itemShape.style.brushType = 'both';
                     itemShape.highlightStyle.lineWidth = 3;
                     itemShape.highlightStyle.color =
@@ -22241,7 +22588,7 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
                            || '#ff3200')
                         : color;
                     break;
-                case 'image' :
+                case 'image':
                     itemShape.style.iconType = 'image';
                     itemShape.style.image = imageLocation;
                     if (color === '#ccc') {
@@ -22252,7 +22599,7 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             return itemShape;
         },
 
-        __legendSelected : function (param) {
+        __legendSelected: function (param) {
             var itemName = param.target._name;
             if (this.legendOption.selectedMode === 'single') {
                 for (var k in this._selectedMap) {
@@ -22264,8 +22611,8 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
                 ecConfig.EVENT.LEGEND_SELECTED,
                 param.event,
                 {
-                    selected : this._selectedMap,
-                    target : itemName
+                    selected: this._selectedMap,
+                    target: itemName
                 },
                 this.myChart
             );
@@ -22274,7 +22621,7 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption || this.option;
                 this.option.legend = this.reformOption(this.option.legend);
@@ -22307,9 +22654,9 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
                     } 
                     else {
                         if (something.data
-                            && (something.type == ecConfig.CHART_TYPE_PIE
-                                || something.type == ecConfig.CHART_TYPE_FORCE
-                                || something.type == ecConfig.CHART_TYPE_FUNNEL)
+                            && (something.type === ecConfig.CHART_TYPE_PIE
+                                || something.type === ecConfig.CHART_TYPE_FORCE
+                                || something.type === ecConfig.CHART_TYPE_FUNNEL)
                         ) {
                             queryTarget = [something.data, something.series];
                         }
@@ -22336,28 +22683,28 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             this._buildShape();
         },
         
-        getRelatedAmount : function(name) {
+        getRelatedAmount: function(name) {
             var amount = 0;
             var series = this.option.series;
             var data;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].name == name) {
+                if (series[i].name === name) {
                     // 系列名称优先
                     amount++;
                 }
 
                 if (
-                    series[i].type == ecConfig.CHART_TYPE_PIE 
-                    || series[i].type == ecConfig.CHART_TYPE_RADAR
-                    || series[i].type == ecConfig.CHART_TYPE_CHORD
-                    || series[i].type == ecConfig.CHART_TYPE_FORCE
-                    || series[i].type == ecConfig.CHART_TYPE_FUNNEL
+                    series[i].type === ecConfig.CHART_TYPE_PIE 
+                    || series[i].type === ecConfig.CHART_TYPE_RADAR
+                    || series[i].type === ecConfig.CHART_TYPE_CHORD
+                    || series[i].type === ecConfig.CHART_TYPE_FORCE
+                    || series[i].type === ecConfig.CHART_TYPE_FUNNEL
                 ) {
                     data = series[i].type != ecConfig.CHART_TYPE_FORCE
                            ? series[i].data         // 饼图、雷达图、和弦图得查找里面的数据名字
                            : series[i].categories;  // 力导布局查找categories配置
                     for (var j = 0, k = data.length; j < k; j++) {
-                        if (data[j].name == name && data[j].value != '-') {
+                        if (data[j].name === name && data[j].value != '-') {
                             amount++;
                         }
                     }
@@ -22366,25 +22713,25 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             return amount;
         },
 
-        setColor : function (legendName, color) {
+        setColor: function (legendName, color) {
             this._colorMap[legendName] = color;
         },
 
-        getColor : function (legendName) {
+        getColor: function (legendName) {
             if (!this._colorMap[legendName]) {
                 this._colorMap[legendName] = this.zr.getColor(this._colorIndex++);
             }
             return this._colorMap[legendName];
         },
         
-        hasColor : function (legendName) {
+        hasColor: function (legendName) {
             return this._colorMap[legendName] ? this._colorMap[legendName] : false;
         },
 
-        add : function (name, color){
+        add: function (name, color){
             var data = this.legendOption.data;
             for (var i = 0, dataLength = data.length; i < dataLength; i++) {
-                if (this._getName(data[i]) == name) {
+                if (this._getName(data[i]) === name) {
                     // 已有就不重复加了
                     return;
                 }
@@ -22394,10 +22741,10 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             this._selectedMap[name] = true;
         },
 
-        del : function (name){
+        del: function (name){
             var data = this.legendOption.data;
             for (var i = 0, dataLength = data.length; i < dataLength; i++) {
-                if (this._getName(data[i]) == name) {
+                if (this._getName(data[i]) === name) {
                     return this.legendOption.data.splice(i, 1);
                 }
             }
@@ -22408,14 +22755,14 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
          * @param {Object} name
          * @param {Object} itemShape
          */
-        getItemShape : function (name) {
-            if (typeof name == 'undefined') {
+        getItemShape: function (name) {
+            if (name == null) {
                 return;
             }
             var shape;
             for (var i = 0, l = this.shapeList.length; i < l; i++) {
                 shape = this.shapeList[i];
-                if (shape._name == name && shape.type != 'text') {
+                if (shape._name === name && shape.type != 'text') {
                     return shape;
                 }
             }
@@ -22426,11 +22773,11 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
          * @param {Object} name
          * @param {Object} itemShape
          */
-        setItemShape : function (name, itemShape) {
+        setItemShape: function (name, itemShape) {
             var shape;
             for (var i = 0, l = this.shapeList.length; i < l; i++) {
                 shape = this.shapeList[i];
-                if (shape._name == name && shape.type != 'text') {
+                if (shape._name === name && shape.type != 'text') {
                     if (!this._selectedMap[name]) {
                         itemShape.style.color = '#ccc';
                         itemShape.style.strokeColor = '#ccc';
@@ -22440,7 +22787,7 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             }
         },
 
-        isSelected : function (itemName) {
+        isSelected: function (itemName) {
             if (typeof this._selectedMap[itemName] != 'undefined') {
                 return this._selectedMap[itemName];
             }
@@ -22450,11 +22797,11 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             }
         },
         
-        getSelectedMap : function () {
+        getSelectedMap: function () {
             return this._selectedMap;
         },
         
-        setSelected : function(itemName, selectStatus) {
+        setSelected: function(itemName, selectStatus) {
             if (this.legendOption.selectedMode === 'single') {
                 for (var k in this._selectedMap) {
                     this._selectedMap[k] = false;
@@ -22465,8 +22812,8 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
                 ecConfig.EVENT.LEGEND_SELECTED,
                 null,
                 {
-                    selected : this._selectedMap,
-                    target : itemName
+                    selected: this._selectedMap,
+                    target: itemName
                 },
                 this.myChart
             );
@@ -22475,7 +22822,7 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
         /**
          * 图例选择
          */
-        onlegendSelected : function (param, status) {
+        onlegendSelected: function (param, status) {
             var legendSelected = param.selected;
             for (var itemName in legendSelected) {
                 if (this._selectedMap[itemName] != legendSelected[itemName]) {
@@ -22489,70 +22836,70 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
     };
     
     var legendIcon = {
-        line : function (ctx, style) {
+        line: function (ctx, style) {
             var dy = style.height / 2;
             ctx.moveTo(style.x,     style.y + dy);
             ctx.lineTo(style.x + style.width,style.y + dy);
         },
         
-        pie : function (ctx, style) {
+        pie: function (ctx, style) {
             var x = style.x;
             var y = style.y;
             var width = style.width;
             var height = style.height;
             SectorShape.prototype.buildPath(ctx, {
-                x : x + width / 2,
-                y : y + height + 2,
-                r : height + 2,
-                r0 : 6,
-                startAngle : 45,
-                endAngle : 135
+                x: x + width / 2,
+                y: y + height + 2,
+                r: height + 2,
+                r0: 6,
+                startAngle: 45,
+                endAngle: 135
             });
         },
         /*
-        chord : function (ctx, style) {
+        chord: function (ctx, style) {
             var x = style.x;
             var y = style.y;
             var width = style.width;
             var height = style.height;
             ctx.moveTo(x, y + height);
             BeziercurveShape.prototype.buildPath(ctx, {
-                xStart : x,
-                yStart : y + height,
-                cpX1 : x + width,
-                cpY1 : y + height,
-                cpX2 : x,
-                cpY2 : y + 4,
-                xEnd : x + width,
-                yEnd : y + 4
+                xStart: x,
+                yStart: y + height,
+                cpX1: x + width,
+                cpY1: y + height,
+                cpX2: x,
+                cpY2: y + 4,
+                xEnd: x + width,
+                yEnd: y + 4
             });
             ctx.lineTo(x + width, y);
             BeziercurveShape.prototype.buildPath(ctx, {
-                xStart : x + width,
-                yStart : y,
-                cpX1 : x,
-                cpY1 : y,
-                cpX2 : x + width,
-                cpY2 : y + height - 4,
-                xEnd : x,
-                yEnd : y + height - 4
+                xStart: x + width,
+                yStart: y,
+                cpX1: x,
+                cpY1: y,
+                cpX2: x + width,
+                cpY2: y + height - 4,
+                xEnd: x,
+                yEnd: y + height - 4
             });
             ctx.lineTo(x, y + height);
         },
         */
-        k : function (ctx, style) {
+        k: function (ctx, style) {
             var x = style.x;
             var y = style.y;
             var width = style.width;
             var height = style.height;
             CandleShape.prototype.buildPath(ctx, {
-                x : x + width / 2,
-                y : [y + 1, y + 1, y + height - 6, y + height],
-                width : width - 6
+                x: x + width / 2,
+                y: [y + 1, y + 1, y + height - 6, y + height],
+                width: width - 6
             });
         },
         
-        bar : function (ctx, style) {
+        bar: function (ctx, style) {
             var x = style.x;
             var y = style.y +1;
             var width = style.width;
@@ -22576,7 +22923,7 @@ define('echarts/component/legend',['require','./base','zrender/shape/Text','zren
             ctx.quadraticCurveTo(x, y, x + r, y);
         },
         
-        force : function (ctx, style) {
+        force: function (ctx, style) {
             IconShape.prototype.iconLibrary.circle(ctx, style);
         },
         
@@ -22849,9 +23196,9 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
                 null,
                 {
                     currentIndex: self.currentIndex,
-                    data : typeof timelineOption.data[self.currentIndex].name != 'undefined'
-                           ? timelineOption.data[self.currentIndex].name
-                           : timelineOption.data[self.currentIndex]
+                    data: timelineOption.data[self.currentIndex].name != null
+                          ? timelineOption.data[self.currentIndex].name
+                          : timelineOption.data[self.currentIndex]
                 },
                 self.myChart
             );
@@ -22914,8 +23261,8 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
     }
     
     Timeline.prototype = {
-        type : ecConfig.COMPONENT_TYPE_TIMELINE,
-        _buildShape : function () {
+        type: ecConfig.COMPONENT_TYPE_TIMELINE,
+        _buildShape: function () {
             // 位置参数，通过计算所得x, y, width, height
             this._location = this._getLocation();
             this._buildBackground();
@@ -22939,7 +23286,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
         /**
          * 根据选项计算实体的位置坐标
          */
-        _getLocation : function () {
+        _getLocation: function () {
             var timelineOption = this.timelineOption;
             var padding = timelineOption.padding;
             
@@ -22948,7 +23295,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             var x = this.parsePercent(timelineOption.x, zrWidth);
             var x2 = this.parsePercent(timelineOption.x2, zrWidth);
             var width;
-            if (typeof timelineOption.width == 'undefined') {
+            if (timelineOption.width == null) {
                 width = zrWidth - x - x2;
                 x2 = zrWidth - x2;
             }
@@ -22961,7 +23308,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             var height = this.parsePercent(timelineOption.height, zrHeight);
             var y;
             var y2;
-            if (typeof timelineOption.y != 'undefined') {
+            if (timelineOption.y != null) {
                 y = this.parsePercent(timelineOption.y, zrHeight);
                 y2 = y + height;
             }
@@ -22971,27 +23318,27 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             }
 
             return {
-                x : x + padding[3],
-                y : y + padding[0],
-                x2 : x2 - padding[1],
-                y2 : y2 - padding[2],
-                width : width - padding[1] - padding[3],
-                height : height - padding[0] - padding[2]
+                x: x + padding[3],
+                y: y + padding[0],
+                x2: x2 - padding[1],
+                y2: y2 - padding[2],
+                width: width - padding[1] - padding[3],
+                height: height - padding[0] - padding[2]
             };
         },
 
-        _getReformedLabel : function (idx) {
+        _getReformedLabel: function (idx) {
             var timelineOption = this.timelineOption;
-            var data = typeof timelineOption.data[idx].name != 'undefined'
+            var data = timelineOption.data[idx].name != null
                        ? timelineOption.data[idx].name
                        : timelineOption.data[idx];
             var formatter = timelineOption.data[idx].formatter 
                             || timelineOption.label.formatter;
             if (formatter) {
-                if (typeof formatter == 'function') {
+                if (typeof formatter === 'function') {
                     data = formatter.call(this.myChart, data);
                 }
-                else if (typeof formatter == 'string') {
+                else if (typeof formatter === 'string') {
                     data = formatter.replace('{value}', data);
                 }
             }
@@ -23001,11 +23348,11 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
         /**
          * 计算标签显示挑选间隔
          */
-        _getInterval : function () {
+        _getInterval: function () {
             var chainPoint = this._chainPoint;
             var timelineOption = this.timelineOption;
             var interval   = timelineOption.label.interval;
-            if (interval == 'auto') {
+            if (interval === 'auto') {
                 // 麻烦的自适应计算
                 var fontSize = timelineOption.label.textStyle.fontSize;
                 var data = timelineOption.data;
@@ -23064,7 +23411,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
         /**
          * 根据选项计算时间链条上的坐标及symbolList
          */
-        _getChainPoint : function() {
+        _getChainPoint: function() {
             var timelineOption = this.timelineOption;
             var symbol = timelineOption.symbol.toLowerCase();
             var symbolSize = timelineOption.symbolSize;
@@ -23079,14 +23426,14 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             var len = data.length;
             
             function _getName(i) {
-                return typeof data[i].name != 'undefined' ? data[i].name : data[i];
+                return data[i].name != null ? data[i].name : data[i];
             }
             var xList = [];
             if (len > 1) {
                 var boundaryGap = width / len;
                 boundaryGap = boundaryGap > 50 ? 50 : (boundaryGap < 20 ? 5 : boundaryGap);
                 width -= boundaryGap * 2;
-                if (timelineOption.type == 'number') {
+                if (timelineOption.type === 'number') {
                     // 平均分布
                     for (var i = 0; i < len; i++) {
                         xList.push(x + boundaryGap + width / (len - 1) * i);
@@ -23145,30 +23492,30 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
                 }
                 
                 list.push({
-                    x : x,
-                    n : n,
-                    isEmpty : isEmpty,
-                    symbol : curSymbol,
-                    symbolSize : data[i].symbolSize || symbolSize,
-                    color : data[i].color,
-                    borderColor : data[i].borderColor,
-                    borderWidth : data[i].borderWidth,
-                    name : this._getReformedLabel(i),
-                    textColor : dataTextStyle.color,
-                    textAlign : textAlign,
-                    textBaseline : dataTextStyle.baseline || 'middle',
-                    textX : x,
-                    textY : y - (rotate ? 5 : 0),
-                    textFont : data[i].textStyle ? this.getFont(dataTextStyle) : textFont,
-                    rotation : rotation,
-                    showLabel : false
+                    x: x,
+                    n: n,
+                    isEmpty: isEmpty,
+                    symbol: curSymbol,
+                    symbolSize: data[i].symbolSize || symbolSize,
+                    color: data[i].color,
+                    borderColor: data[i].borderColor,
+                    borderWidth: data[i].borderWidth,
+                    name: this._getReformedLabel(i),
+                    textColor: dataTextStyle.color,
+                    textAlign: textAlign,
+                    textBaseline: dataTextStyle.baseline || 'middle',
+                    textX: x,
+                    textY: y - (rotate ? 5 : 0),
+                    textFont: data[i].textStyle ? this.getFont(dataTextStyle) : textFont,
+                    rotation: rotation,
+                    showLabel: false
                 });
             }
             
             return list;
         },
         
-        _buildBackground : function () {
+        _buildBackground: function () {
             var timelineOption = this.timelineOption;
             var padding = timelineOption.padding;
             var width = this._location.width;
@@ -23179,35 +23526,34 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             ) {
                 // 背景
                 this.shapeList.push(new RectangleShape({
-                    zlevel : this._zlevelBase,
+                    zlevel: this._zlevelBase,
                     hoverable :false,
-                    style : {
-                        x : this._location.x - padding[3],
-                        y : this._location.y - padding[0],
-                        width : width + padding[1] + padding[3],
-                        height : height + padding[0] + padding[2],
-                        brushType : timelineOption.borderWidth === 0
-                                    ? 'fill' : 'both',
-                        color : timelineOption.backgroundColor,
-                        strokeColor : timelineOption.borderColor,
-                        lineWidth : timelineOption.borderWidth
+                    style: {
+                        x: this._location.x - padding[3],
+                        y: this._location.y - padding[0],
+                        width: width + padding[1] + padding[3],
+                        height: height + padding[0] + padding[2],
+                        brushType: timelineOption.borderWidth === 0 ? 'fill' : 'both',
+                        color: timelineOption.backgroundColor,
+                        strokeColor: timelineOption.borderColor,
+                        lineWidth: timelineOption.borderWidth
                     }
                 }));
             }
         },
 
-        _buildControl : function() {
+        _buildControl: function() {
             var self = this;
             var timelineOption = this.timelineOption;
             var lineStyle = timelineOption.lineStyle;
             var controlStyle = timelineOption.controlStyle;
-            if (timelineOption.controlPosition == 'none') {
+            if (timelineOption.controlPosition === 'none') {
                 return;
             }
             var iconSize = 15;
             var iconGap = 5;
             var x;
-            if (timelineOption.controlPosition == 'left') {
+            if (timelineOption.controlPosition === 'left') {
                 x = this._location.x;
                 this._location.x += (iconSize + iconGap) * 3;
             }
@@ -23218,25 +23564,25 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             
             var y = this._location.y;
             var iconStyle = {
-                zlevel : this._zlevelBase + 1,
-                style : {
-                    iconType : 'timelineControl',
-                    symbol : 'last',
-                    x : x,
-                    y : y,
-                    width : iconSize,
-                    height : iconSize,
-                    brushType : 'stroke',
+                zlevel: this._zlevelBase + 1,
+                style: {
+                    iconType: 'timelineControl',
+                    symbol: 'last',
+                    x: x,
+                    y: y,
+                    width: iconSize,
+                    height: iconSize,
+                    brushType: 'stroke',
                     color: controlStyle.normal.color,
-                    strokeColor : controlStyle.normal.color,
-                    lineWidth : lineStyle.width
+                    strokeColor: controlStyle.normal.color,
+                    lineWidth: lineStyle.width
                 },
-                highlightStyle : {
-                    color : controlStyle.emphasis.color,
-                    strokeColor : controlStyle.emphasis.color,
-                    lineWidth : lineStyle.width + 1
+                highlightStyle: {
+                    color: controlStyle.emphasis.color,
+                    strokeColor: controlStyle.emphasis.color,
+                    lineWidth: lineStyle.width + 1
                 },
-                clickable : true
+                clickable: true
             };
             
             this._ctrLastShape = new IconShape(iconStyle);
@@ -23252,7 +23598,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             this._ctrPlayShape.style.status = this.timelineOption.autoPlay ? 'playing' : 'stop';
             this._ctrPlayShape.style.x = x;
             this._ctrPlayShape.onclick = function() {
-                if (self._ctrPlayShape.style.status == 'stop') {
+                if (self._ctrPlayShape.style.status === 'stop') {
                     self.play();
                 }
                 else {
@@ -23274,25 +23620,25 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
         /**
          * 构建时间轴
          */
-        _buildChain : function () {
+        _buildChain: function () {
             var timelineOption = this.timelineOption;
             var lineStyle = timelineOption.lineStyle;
             this._timelineShae = {
-                zlevel : this._zlevelBase,
-                style : {
-                    x : this._location.x,
-                    y : this.subPixelOptimize(this._location.y, lineStyle.width),
-                    width : this._location.x2 - this._location.x,
-                    height : this._location.height,
-                    chainPoint : this._chainPoint,
+                zlevel: this._zlevelBase,
+                style: {
+                    x: this._location.x,
+                    y: this.subPixelOptimize(this._location.y, lineStyle.width),
+                    width: this._location.x2 - this._location.x,
+                    height: this._location.height,
+                    chainPoint: this._chainPoint,
                     brushType:'both',
-                    strokeColor : lineStyle.color,
-                    lineWidth : lineStyle.width,
-                    lineType : lineStyle.type
+                    strokeColor: lineStyle.color,
+                    lineWidth: lineStyle.width,
+                    lineType: lineStyle.type
                 },
-                hoverable : false,
-                clickable : true,
-                onclick : this._onclick
+                hoverable: false,
+                clickable: true,
+                onclick: this._onclick
             };
 
             this._timelineShae = new ChainShape(this._timelineShae);
@@ -23302,32 +23648,32 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
         /**
          * 构建拖拽手柄
          */
-        _buildHandle : function () {
+        _buildHandle: function () {
             var curPoint = this._chainPoint[this.currentIndex];
             var symbolSize = curPoint.symbolSize + 1;
             symbolSize = symbolSize < 5 ? 5 : symbolSize;
             
             this._handleShape = {
-                zlevel : this._zlevelBase + 1,
-                hoverable : false,
-                draggable : true,
-                style : {
-                    iconType : 'diamond',
-                    n : curPoint.n,
-                    x : curPoint.x - symbolSize,
-                    y : this._location.y + this._location.height / 4 - symbolSize,
-                    width : symbolSize * 2,
-                    height : symbolSize * 2,
+                zlevel: this._zlevelBase + 1,
+                hoverable: false,
+                draggable: true,
+                style: {
+                    iconType: 'diamond',
+                    n: curPoint.n,
+                    x: curPoint.x - symbolSize,
+                    y: this._location.y + this._location.height / 4 - symbolSize,
+                    width: symbolSize * 2,
+                    height: symbolSize * 2,
                     brushType:'both',
-                    textPosition : 'specific',
-                    textX : curPoint.x,
-                    textY : this._location.y - this._location.height / 4,
-                    textAlign : 'center',
-                    textBaseline : 'middle'
+                    textPosition: 'specific',
+                    textX: curPoint.x,
+                    textY: this._location.y - this._location.height / 4,
+                    textAlign: 'center',
+                    textBaseline: 'middle'
                 },
-                highlightStyle : {},
-                ondrift : this._ondrift,
-                ondragend : this._ondragend
+                highlightStyle: {},
+                ondrift: this._ondrift,
+                ondragend: this._ondragend
             };
             
             this._handleShape = new IconShape(this._handleShape);
@@ -23337,7 +23683,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
         /**
          * 同步拖拽图形样式 
          */
-        _syncHandleShape : function() {
+        _syncHandleShape: function() {
             if (!this.timelineOption.show) {
                 return;
             }
@@ -23350,7 +23696,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             this._handleShape.style.textFont = curPoint.textFont;
             
             this._handleShape.style.n = curPoint.n;
-            if (cpStyle.symbol == 'auto') {
+            if (cpStyle.symbol === 'auto') {
                 this._handleShape.style.iconType = curPoint.symbol != 'none' 
                                                    ? curPoint.symbol : 'diamond';
             }
@@ -23363,7 +23709,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             }
             
             var symbolSize;
-            if (cpStyle.symbolSize == 'auto') {
+            if (cpStyle.symbolSize === 'auto') {
                 symbolSize = curPoint.symbolSize + 2;
                 symbolSize = symbolSize < 5 ? 5 : symbolSize;
             }
@@ -23371,20 +23717,20 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
                 symbolSize = cpStyle.symbolSize - 0;
             }
             
-            this._handleShape.style.color = cpStyle.color == 'auto'
+            this._handleShape.style.color = cpStyle.color === 'auto'
                                             ? (curPoint.color 
                                                ? curPoint.color 
                                                : timelineOption.controlStyle.emphasis.color
                                               )
                                             : cpStyle.color;
-            this._handleShape.style.textColor = cpStyle.label.textStyle.color == 'auto'
+            this._handleShape.style.textColor = cpStyle.label.textStyle.color === 'auto'
                                                 ? this._handleShape.style.color
                                                 : cpStyle.label.textStyle.color;
             this._handleShape.highlightStyle.strokeColor = 
-            this._handleShape.style.strokeColor = cpStyle.borderColor == 'auto'
+            this._handleShape.style.strokeColor = cpStyle.borderColor === 'auto'
                                 ? (curPoint.borderColor ? curPoint.borderColor : '#fff')
                                 : cpStyle.borderColor;
-            this._handleShape.style.lineWidth = cpStyle.borderWidth == 'auto'
+            this._handleShape.style.lineWidth = cpStyle.borderWidth === 'auto'
                                 ? (curPoint.borderWidth ? curPoint.borderWidth : 0)
                                 : (cpStyle.borderWidth - 0);
             this._handleShape.highlightStyle.lineWidth = this._handleShape.style.lineWidth + 1;
@@ -23393,17 +23739,17 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
                 .when(
                     500,
                     {
-                        x : curPoint.x - symbolSize,
-                        textX : curPoint.x,
-                        y : this._location.y + this._location.height / 4 - symbolSize,
-                        width : symbolSize * 2,
-                        height : symbolSize * 2
+                        x: curPoint.x - symbolSize,
+                        textX: curPoint.x,
+                        y: this._location.y + this._location.height / 4 - symbolSize,
+                        width: symbolSize * 2,
+                        height: symbolSize * 2
                     }
                 )
                 .start('ExponentialOut');
         },
 
-        _findChainIndex : function(x) {
+        _findChainIndex: function(x) {
             var chainPoint = this._chainPoint;
             var len = chainPoint.length;
             if (x <= chainPoint[0].x) {
@@ -23421,10 +23767,10 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             }
         },
         
-        __onclick : function(param) {
+        __onclick: function(param) {
             var x = zrEvent.getX(param.event);
             var newIndex =  this._findChainIndex(x);
-            if (newIndex == this.currentIndex) {
+            if (newIndex === this.currentIndex) {
                 return true; // 啥事都没发生
             }
             
@@ -23437,7 +23783,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
         /**
          * 拖拽范围控制
          */
-        __ondrift : function (shape, dx) {
+        __ondrift: function (shape, dx) {
             this.timelineOption.autoPlay && this.stop(); // 停止自动播放
             
             var chainPoint = this._chainPoint;
@@ -23466,7 +23812,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             shape.style.text = curPoint.name;
             
             //console.log(newIndex)
-            if (newIndex == this.currentIndex) {
+            if (newIndex === this.currentIndex) {
                 return true; // 啥事都没发生
             }
             
@@ -23482,14 +23828,14 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             return true;
         },
         
-        __ondragend : function () {
+        __ondragend: function () {
             this.isDragend = true;
         },
         
         /**
          * 数据项被拖拽出去
          */
-        ondragend : function (param, status) {
+        ondragend: function (param, status) {
             if (!this.isDragend || !param.target) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
@@ -23506,7 +23852,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             return;
         },
         
-        last : function () {
+        last: function () {
             this.timelineOption.autoPlay && this.stop(); // 停止自动播放
             
             this.currentIndex -= 1;
@@ -23518,7 +23864,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             return this.currentIndex;
         },
         
-        next : function () {
+        next: function () {
             this.timelineOption.autoPlay && this.stop(); // 停止自动播放
             
             this.currentIndex += 1;
@@ -23530,7 +23876,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             return this.currentIndex;
         },
         
-        play : function (targetIndex, autoPlay) {
+        play: function (targetIndex, autoPlay) {
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'playing') {
                 this._ctrPlayShape.style.status = 'playing';
                 this.zr.modShape(this._ctrPlayShape.id);
@@ -23538,15 +23884,13 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             }
             
             
-            this.timelineOption.autoPlay = typeof autoPlay != 'undefined'
-                                           ? autoPlay : true;
+            this.timelineOption.autoPlay = autoPlay != null ? autoPlay : true;
             
             if (!this.timelineOption.autoPlay) {
                 clearTimeout(this.playTicket);
             }
             
-            this.currentIndex = typeof targetIndex != 'undefined' 
-                                ? targetIndex : (this.currentIndex + 1);
+            this.currentIndex = targetIndex != null ? targetIndex : (this.currentIndex + 1);
             if (this.currentIndex >= this.timelineOption.data.length) {
                 this.currentIndex = 0;
             }
@@ -23555,7 +23899,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             return this.currentIndex;
         },
         
-        stop : function () {
+        stop: function () {
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'stop') {
                 this._ctrPlayShape.style.status = 'stop';
                 this.zr.modShape(this._ctrPlayShape.id);
@@ -23572,7 +23916,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
         /**
          * 避免dataZoom带来两次refresh，不设refresh接口，resize重复一下buildshape逻辑 
          */
-        resize : function () {
+        resize: function () {
             if (this.timelineOption.show) {
                 this.clear();
                 this._buildShape();
@@ -23580,7 +23924,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             }
         },
         
-        setTheme : function(needRefresh) {
+        setTheme: function(needRefresh) {
             this.timelineOption = this.reformOption(zrUtil.clone(this.option.timeline));
             // 补全padding属性
             this.timelineOption.padding = this.reformCssArray(
@@ -23606,7 +23950,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
         /**
          * 释放后实例不可用，重载基类方法
          */
-        dispose : function () {
+        dispose: function () {
             this.clear();
             this.shapeList = null;
             
@@ -23623,7 +23967,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
         
         
         var symbol = style.symbol;
-        if (symbol == 'last') {
+        if (symbol === 'last') {
             ctx.moveTo(x + width - 2, y + height / 3);
             ctx.lineTo(x + width - 2, y);
             ctx.lineTo(x + 2, y + height / 2);
@@ -23632,7 +23976,7 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             ctx.moveTo(x, y);
             ctx.lineTo(x, y);
         } 
-        else if (symbol == 'next') {
+        else if (symbol === 'next') {
             ctx.moveTo(x + 2, y + height / 3);
             ctx.lineTo(x + 2, y);
             ctx.lineTo(x + width - 2, y + height / 2);
@@ -23641,15 +23985,15 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
             ctx.moveTo(x, y);
             ctx.lineTo(x, y);
         }
-        else if (symbol == 'play') {
-            if (style.status == 'stop') {
+        else if (symbol === 'play') {
+            if (style.status === 'stop') {
                 ctx.moveTo(x + 2, y);
                 ctx.lineTo(x + width - 2, y + height / 2);
                 ctx.lineTo(x + 2, y + height);
                 ctx.lineTo(x + 2, y);
             }
             else {
-                var delta = style.brushType == 'both' ? 2 : 3;
+                var delta = style.brushType === 'both' ? 2 : 3;
                 ctx.rect(x + 2, y, delta, height);
                 ctx.rect(x + width - delta - 2, y, delta, height);
             }
@@ -23661,11 +24005,11 @@ define('echarts/component/timeline',['require','./base','zrender/shape/Rectangle
                 );
             symbol = IconShape.prototype.iconLibrary.image;
             symbol(ctx, {
-                x : x,
-                y : y,
-                width : width,
-                height : height,
-                image : imageLocation
+                x: x,
+                y: y,
+                width: width,
+                height: height,
+                image: imageLocation
             });
         }
     }
@@ -24425,16 +24769,16 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
     var zrUtil = require('zrender/tool/util');
     var zrEvent = require('zrender/tool/event');
     
-    var self = {};
+    var self = { };
     
     var _canvasSupported = require('zrender/tool/env').canvasSupported;
     var _idBase = new Date() - 0;
-    var _instances = {};    // ECharts实例map索引
+    var _instances = { };    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
-    self.version = '2.0.3';
+    self.version = '2.0.4';
     self.dependencies = {
-        zrender : '2.0.3'
+        zrender: '2.0.4'
     };
     /**
      * 入口方法 
@@ -24505,12 +24849,12 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         
         this._connected = false;
         this._status = {                    // 用于图表间通信
-            dragIn : false,
-            dragOut : false,
-            needRefresh : false
+            dragIn: false,
+            dragOut: false,
+            needRefresh: false
         };
         this._curEventType = false;         // 破循环信号灯
-        this._chartList = [];               // 图表实例
+        this._chartList = [ ];               // 图表实例
 
         this._messageCenter = new MessageCenter();
 
@@ -24572,14 +24916,14 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 初始化::构造函数
          */ 
-        _init : function () {
+        _init: function () {
             var self = this;
             var _zr = require('zrender').init(this.dom);
             this._zr = _zr;
             
             // wrap: n,e,d,t for name event data this
             this._messageCenter.dispatch = function(type, event, eventPackage, that) {
-                eventPackage = eventPackage || {};
+                eventPackage = eventPackage || { };
                 eventPackage.type = type;
                 eventPackage.event = event;
 
@@ -24610,7 +24954,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
             }
 
 
-            var eventBehaviors = {};
+            var eventBehaviors = { };
             this._onzrevent = function (param) {
                 return self[eventBehaviors[ param.type ]](param);
             };
@@ -24623,19 +24967,19 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                 _zr.on(eventValue, this._onzrevent);
             }
 
-            this.chart = {};            // 图表索引
-            this.component = {};        // 组件索引
+            this.chart = { };            // 图表索引
+            this.component = { };        // 组件索引
             
             // 内置图表
             // 孤岛
             var Island = require('./chart/island');
-            this._island = new Island(this._themeConfig, this._messageCenter, _zr, {}, this);
+            this._island = new Island(this._themeConfig, this._messageCenter, _zr, { }, this);
             this.chart.island = this._island;
             
             // 内置通用组件
             // 工具箱
             var Toolbox = require('./component/toolbox');
-            this._toolbox = new Toolbox(this._themeConfig, this._messageCenter, _zr, {}, this);
+            this._toolbox = new Toolbox(this._themeConfig, this._messageCenter, _zr, { }, this);
             this.component.toolbox = this._toolbox;
             
             var componentLibrary = require('./component');
@@ -24651,11 +24995,11 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * ECharts事件处理中心 
          */
-        __onevent : function (param){
+        __onevent: function (param){
             param.__echartsId = param.__echartsId || this.id;
 
             // 来自其他联动图表的事件
-            var fromMyself = (param.__echartsId == this.id);
+            var fromMyself = (param.__echartsId === this.id);
             
             if (!this._curEventType) {
                 this._curEventType = param.type;
@@ -24712,9 +25056,9 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                             this._zr.trigger(
                                 'mousemove',
                                 {
-                                    connectTrigger : true,
-                                    zrenderX : grid.getX() + param.x * grid.getWidth(),
-                                    zrenderY : grid.getY() + param.y * grid.getHeight()
+                                    connectTrigger: true,
+                                    zrenderX: grid.getX() + param.x * grid.getWidth(),
+                                    zrenderY: grid.getY() + param.y * grid.getHeight()
                                 }
                             );
                         }
@@ -24738,7 +25082,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
             }
             
             // 多图联动，只做自己的一级事件分发，避免级联事件循环
-            if (this._connected && fromMyself && this._curEventType == param.type) { 
+            if (this._connected && fromMyself && this._curEventType === param.type) { 
                 for (var c in this._connected) {
                     this._connected[c].connectedEventHandler(param);
                 }
@@ -24754,7 +25098,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 点击事件，响应zrender事件，包装后分发到Echarts层
          */
-        _onclick : function (param) {
+        _onclick: function (param) {
             callChartListMethodReverse(this, 'onclick', param);
 
             if (param.target) {
@@ -24773,7 +25117,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 双击事件，响应zrender事件，包装后分发到Echarts层
          */
-        _ondblclick : function (param) {
+        _ondblclick: function (param) {
             callChartListMethodReverse(this, 'ondblclick', param);
 
             if (param.target) {
@@ -24792,7 +25136,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 鼠标移入事件，响应zrender事件，包装后分发到Echarts层
          */
-        _onmouseover : function (param) {
+        _onmouseover: function (param) {
             if (param.target) {
                 var ecData = this._eventPackage(param.target);
                 if (ecData && ecData.seriesIndex != null) {
@@ -24809,7 +25153,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 鼠标移出事件，响应zrender事件，包装后分发到Echarts层
          */
-        _onmouseout : function (param) {
+        _onmouseout: function (param) {
             if (param.target) {
                 var ecData = this._eventPackage(param.target);
                 if (ecData && ecData.seriesIndex != null) {
@@ -24826,12 +25170,12 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * dragstart回调，可计算特性实现
          */
-        _ondragstart : function (param) {
+        _ondragstart: function (param) {
             // 复位用于图表间通信拖拽标识
             this._status = {
-                dragIn : false,
-                dragOut : false,
-                needRefresh : false
+                dragIn: false,
+                dragOut: false,
+                needRefresh: false
             };
 
             callChartListMethodReverse(this, 'ondragstart', param);
@@ -24840,28 +25184,28 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * dragging回调，可计算特性实现
          */
-        _ondragenter : function (param) {
+        _ondragenter: function (param) {
             callChartListMethodReverse(this, 'ondragenter', param);
         },
 
         /**
          * dragstart回调，可计算特性实现
          */
-        _ondragover : function (param) {
+        _ondragover: function (param) {
             callChartListMethodReverse(this, 'ondragover', param);
         },
         
         /**
          * dragstart回调，可计算特性实现
          */
-        _ondragleave : function (param) {
+        _ondragleave: function (param) {
             callChartListMethodReverse(this, 'ondragleave', param);
         },
 
         /**
          * dragstart回调，可计算特性实现
          */
-        _ondrop : function (param) {
+        _ondrop: function (param) {
             callChartListMethodReverse(this, 'ondrop', param, this._status);
             this._island.ondrop(param, this._status);
         },
@@ -24869,7 +25213,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * dragdone回调 ，可计算特性实现
          */
-        _ondragend : function (param) {
+        _ondragend: function (param) {
             callChartListMethodReverse(this, 'ondragend', param, this._status);
 
             this._timeline && this._timeline.ondragend(param, this._status);
@@ -24893,7 +25237,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 图例选择响应
          */
-        _onlegendSelected : function (param) {
+        _onlegendSelected: function (param) {
             // 用于图表间通信
             this._status.needRefresh = false;
             callChartListMethodReverse(this, 'onlegendSelected', param, this._status);
@@ -24906,7 +25250,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 数据区域缩放响应 
          */
-        _ondataZoom : function (param) {
+        _ondataZoom: function (param) {
             // 用于图表间通信
             this._status.needRefresh = false;
             callChartListMethodReverse(this, 'ondataZoom', param, this._status);
@@ -24919,7 +25263,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 值域漫游响应 
          */
-        _ondataRange : function (param) {
+        _ondataRange: function (param) {
             this._clearEffect();
             // 用于图表间通信
             this._status.needRefresh = false;
@@ -24934,7 +25278,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 动态类型切换响应 
          */
-        _onmagicTypeChanged : function () {
+        _onmagicTypeChanged: function () {
             this._clearEffect();
             this._render(this._toolbox.getMagicOption());
         },
@@ -24942,7 +25286,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 数据视图修改响应 
          */
-        _ondataViewChanged : function (param) {
+        _ondataViewChanged: function (param) {
             this._syncBackupData(param.option);
             this._messageCenter.dispatch(
                 ecConfig.EVENT.DATA_CHANGED,
@@ -24956,22 +25300,22 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * tooltip与图表间通信 
          */
-        _tooltipHover : function (param) {
-            var tipShape = [];
+        _tooltipHover: function (param) {
+            var tipShape = [ ];
             callChartListMethodReverse(this, 'ontooltipHover', param, tipShape);
         },
 
         /**
          * 还原 
          */
-        _onrestore : function () {
+        _onrestore: function () {
             this.restore();
         },
 
         /**
          * 刷新 
          */
-        _onrefresh : function (param) {
+        _onrefresh: function (param) {
             this._refreshInside = true;
             this.refresh(param);
             this._refreshInside = false;
@@ -24980,14 +25324,14 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 数据修改后的反向同步dataZoom持有的备份数据 
          */
-        _syncBackupData : function (curOption) {
+        _syncBackupData: function (curOption) {
             this.component.dataZoom && this.component.dataZoom.syncBackupData(curOption);
         },
 
         /**
          * 打包Echarts层的事件附件
          */
-        _eventPackage : function (target) {
+        _eventPackage: function (target) {
             if (target) {
                 var ecData = require('./util/ecData');
                 
@@ -25001,13 +25345,13 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                               )
                             : dataIndex;
                 return {
-                    seriesIndex : seriesIndex,
-                    seriesName : (ecData.get(target, 'series') || {}).name,
-                    dataIndex : dataIndex,
-                    data : ecData.get(target, 'data'),
-                    name : ecData.get(target, 'name'),
-                    value : ecData.get(target, 'value'),
-                    special : ecData.get(target, 'special')
+                    seriesIndex: seriesIndex,
+                    seriesName: (ecData.get(target, 'series') || { }).name,
+                    dataIndex: dataIndex,
+                    data: ecData.get(target, 'data'),
+                    name: ecData.get(target, 'name'),
+                    value: ecData.get(target, 'value'),
+                    special: ecData.get(target, 'special')
                 };
             }
             return;
@@ -25016,7 +25360,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 图表渲染 
          */
-        _render : function (magicOption) {
+        _render: function (magicOption) {
             this._mergeGlobalConifg(magicOption);
 
             var bgColor = magicOption.backgroundColor;
@@ -25039,14 +25383,14 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
             }
             
             this._zr.clearAnimation();
-            this._chartList = [];
+            this._chartList = [ ];
 
             var chartLibrary = require('./chart');
             var componentLibrary = require('./component');
             
             if (magicOption.xAxis || magicOption.yAxis) {
-                magicOption.grid = magicOption.grid || {};
-                magicOption.dataZoom = magicOption.dataZoom || {};
+                magicOption.grid = magicOption.grid || { };
+                magicOption.dataZoom = magicOption.dataZoom || { };
             }
             
             var componentList = [
@@ -25087,7 +25431,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
             var ChartClass;
             var chartType;
             var chart;
-            var chartMap = {};      // 记录已经初始化的图表
+            var chartMap = { };      // 记录已经初始化的图表
             for (var i = 0, l = magicOption.series.length; i < l; i++) {
                 chartType = magicOption.series[i].type;
                 if (!chartType) {
@@ -25170,7 +25514,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 还原 
          */
-        restore : function () {
+        restore: function () {
             this._clearEffect();
             this._option = zrUtil.clone(this._optionRestore);
             this._disposeChartList();
@@ -25183,9 +25527,9 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * 刷新 
          * @param {Object=} param，可选参数，用于附带option，内部同步用，外部不建议带入数据修改，无法同步 
          */
-        refresh : function (param) {
+        refresh: function (param) {
             this._clearEffect();
-            param = param || {};
+            param = param || { };
             var magicOption = param.option;
             
             // 外部调用的refresh且有option带入
@@ -25215,7 +25559,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 释放图表实例
          */
-        _disposeChartList : function () {
+        _disposeChartList: function () {
             this._clearEffect();
 
             // 停止动画
@@ -25233,13 +25577,13 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                 }
             }
 
-            this._chartList = [];
+            this._chartList = [ ];
         },
 
         /**
          * 非图表全局属性merge~~ 
          */
-        _mergeGlobalConifg : function (magicOption) {
+        _mergeGlobalConifg: function (magicOption) {
             var mergeList = [
                 // 背景颜色
                 'backgroundColor',
@@ -25287,7 +25631,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
          *                   如果不需求，可以通过notMerger参数为true阻止与上次option的合并
          */
-        setOption : function (option, notMerge) {
+        setOption: function (option, notMerge) {
             if (!option.timeline) {
                 return this._setOption(option, notMerge);
             }
@@ -25302,7 +25646,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
          *                   如果不需求，可以通过notMerger参数为true阻止与上次option的合并
          */
-        _setOption : function (option, notMerge) {
+        _setOption: function (option, notMerge) {
             if (!notMerge && this._option) {
                 this._option = zrUtil.merge(
                     this.getOption(),
@@ -25341,7 +25685,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 返回内部持有的当前显示option克隆 
          */
-        getOption : function () {
+        getOption: function () {
             var magicOption = zrUtil.clone(this._option);
             
             var self = this;
@@ -25381,7 +25725,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
          *                   如果不需求，可以通过notMerger参数为true阻止与上次option的合并。
          */
-        setSeries : function (series, notMerge) {
+        setSeries: function (series, notMerge) {
             if (!notMerge) {
                 this.setOption({series: series});
             }
@@ -25395,7 +25739,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 返回内部持有的当前显示series克隆 
          */
-        getSeries : function () {
+        getSeries: function () {
             return this.getOption().series;
         },
         
@@ -25403,7 +25747,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * timelineOption接口，配置图表实例任何可配置选项
          * @param {Object} option
          */
-        _setTimelineOption : function(option) {
+        _setTimelineOption: function(option) {
             this._timeline && this._timeline.dispose();
             var Timeline = require('./component/timeline');
             var timeline = new Timeline(
@@ -25424,7 +25768,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * @param {boolean=} dataGrow 是否增长数据队列长度，默认，不指定或false时移出目标数组对位数据
          * @param {string=} additionData 是否增加类目轴(饼图为图例)数据，附加操作同isHead和dataGrow
          */
-        addData : function (seriesIdx, data, isHead, dataGrow, additionData) {
+        addData: function (seriesIdx, data, isHead, dataGrow, additionData) {
             var params = seriesIdx instanceof Array
                 ? seriesIdx
                 : [[seriesIdx, data, isHead, dataGrow, additionData]];
@@ -25459,7 +25803,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                         var legend;
                         var legendData;
 
-                        if (seriesItem.type == ecConfig.CHART_TYPE_PIE
+                        if (seriesItem.type === ecConfig.CHART_TYPE_PIE
                             && (legend = optionRestore.legend) 
                             && (legendData = legend.data)
                         ) {
@@ -25481,8 +25825,8 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                             var mAxisData;
                             var axisIdx = seriesItem.xAxisIndex || 0;
 
-                            if (typeof optionRestore.xAxis[axisIdx].type == 'undefined'
-                                || optionRestore.xAxis[axisIdx].type == 'category'
+                            if (optionRestore.xAxis[axisIdx].type == null
+                                || optionRestore.xAxis[axisIdx].type === 'category'
                             ) {
                                 axisData = optionRestore.xAxis[axisIdx].data;
                                 mAxisData = magicOption.xAxis[axisIdx].data;
@@ -25497,7 +25841,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                             
                             // y轴类目
                             axisIdx = seriesItem.yAxisIndex || 0;
-                            if (optionRestore.yAxis[axisIdx].type == 'category') {
+                            if (optionRestore.yAxis[axisIdx].type === 'category') {
                                 axisData = optionRestore.yAxis[axisIdx].data;
                                 mAxisData = magicOption.yAxis[axisIdx].data;
 
@@ -25554,15 +25898,15 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * @param {number} seriesIdx 系列索引
          * @param {Object} markData [标注 | 标线]对象，支持多个
          */
-        addMarkPoint : function (seriesIdx, markData) {
+        addMarkPoint: function (seriesIdx, markData) {
             return this._addMark(seriesIdx, markData, 'markPoint');
         },
         
-        addMarkLine : function (seriesIdx, markData) {
+        addMarkLine: function (seriesIdx, markData) {
             return this._addMark(seriesIdx, markData, 'markLine');
         },
         
-        _addMark : function (seriesIdx, markData, markType) {
+        _addMark: function (seriesIdx, markData, markType) {
             var series = this._option.series;
             var seriesItem;
 
@@ -25572,18 +25916,16 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                 var markOpt = seriesItem[markType];
                 var markOptR = seriesRItem[markType];
 
-                markOpt = seriesItem[markType] = markOpt || {data: []};
-                markOptR = seriesRItem[markType] = markOptR || {data: []};
+                markOpt = seriesItem[markType] = markOpt || {data: [ ]};
+                markOptR = seriesRItem[markType] = markOptR || {data: [ ]};
 
                 for (var key in markData) {
-                    if (key == 'data') {
+                    if (key === 'data') {
                         // 数据concat
                         markOpt.data = markOpt.data.concat(markData.data);
                         markOptR.data = markOptR.data.concat(markData.data);
                     }
-                    else if (typeof markData[key] != 'object'
-                          || typeof markOpt[key] == 'undefined'
-                    ) {
+                    else if (typeof markData[key] != 'object' || markOpt[key] == null) {
                         // 简单类型或新值直接赋值
                         markOpt[key] = markOptR[key] = markData[key];
                     }
@@ -25606,15 +25948,15 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * @param {number} seriesIdx 系列索引
          * @param {string} markName [标注 | 标线]名称
          */
-        delMarkPoint : function (seriesIdx, markName) {
+        delMarkPoint: function (seriesIdx, markName) {
             return this._delMark(seriesIdx, markName, 'markPoint');
         },
         
-        delMarkLine : function (seriesIdx, markName) {
+        delMarkLine: function (seriesIdx, markName) {
             return this._delMark(seriesIdx, markName, 'markLine');
         },
         
-        _delMark : function (seriesIdx, markName, markType) {
+        _delMark: function (seriesIdx, markName, markType) {
             var series = this._option.series;
             var seriesItem;
             var mark;
@@ -25636,14 +25978,14 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
             for (var i = 0, l = dataArray.length; i < l; i++) {
                 var dataItem = dataArray[i];
                 if (dataItem instanceof Array) {
-                    if (dataItem[0].name == markName[0]
-                        && dataItem[1].name == markName[1]
+                    if (dataItem[0].name === markName[0]
+                        && dataItem[1].name === markName[1]
                     ) {
                         targetIndex = i;
                         break;
                     }
                 }
-                else if (dataItem.name == markName[0]) {
+                else if (dataItem.name === markName[0]) {
                     targetIndex = i;
                     break;
                 }
@@ -25663,14 +26005,14 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 获取当前dom 
          */
-        getDom : function () {
+        getDom: function () {
             return this.dom;
         },
         
         /**
          * 获取当前zrender实例，可用于添加额为的shape和深度控制 
          */
-        getZrender : function () {
+        getZrender: function () {
             return this._zr;
         },
 
@@ -25679,7 +26021,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * @param {string} imgType 图片类型，支持png|jpeg，默认为png
          * @return imgDataURL
          */
-        getDataURL : function (imgType) {
+        getDataURL: function (imgType) {
             if (!_canvasSupported) {
                 return '';
             }
@@ -25705,7 +26047,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
             }
 
             var bgColor = this._option.backgroundColor;
-            if (bgColor && bgColor.replace(' ','') == 'rgba(0,0,0,0)') {
+            if (bgColor && bgColor.replace(' ','') === 'rgba(0,0,0,0)') {
                 bgColor = '#fff';
             }
 
@@ -25717,7 +26059,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * @param {string} imgType 图片类型，支持png|jpeg，默认为png
          * @return img dom
          */
-        getImage : function (imgType) {
+        getImage: function (imgType) {
             var title = this._optionRestore.title;
             var imgDom = document.createElement('img');
             imgDom.src = this.getDataURL(imgType);
@@ -25730,19 +26072,19 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * @param {string} imgType 图片类型，支持png|jpeg，默认为png
          * @return imgDataURL
          */
-        getConnectedDataURL : function (imgType) {
+        getConnectedDataURL: function (imgType) {
             if (!this.isConnected()) {
                 return this.getDataURL(imgType);
             }
             
             var tempDom = this.dom;
             var imgList = {
-                'self' : {
-                    img : this.getDataURL(imgType),
-                    left : tempDom.offsetLeft,
-                    top : tempDom.offsetTop,
-                    right : tempDom.offsetLeft + tempDom.offsetWidth,
-                    bottom : tempDom.offsetTop + tempDom.offsetHeight
+                'self': {
+                    img: this.getDataURL(imgType),
+                    left: tempDom.offsetLeft,
+                    top: tempDom.offsetTop,
+                    right: tempDom.offsetLeft + tempDom.offsetWidth,
+                    bottom: tempDom.offsetTop + tempDom.offsetHeight
                 }
             };
 
@@ -25754,11 +26096,11 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
             for (var c in this._connected) {
                 tempDom = this._connected[c].getDom();
                 imgList[c] = {
-                    img : this._connected[c].getDataURL(imgType),
-                    left : tempDom.offsetLeft,
-                    top : tempDom.offsetTop,
-                    right : tempDom.offsetLeft + tempDom.offsetWidth,
-                    bottom : tempDom.offsetTop + tempDom.offsetHeight
+                    img: this._connected[c].getDataURL(imgType),
+                    left: tempDom.offsetLeft,
+                    top: tempDom.offsetTop,
+                    right: tempDom.offsetLeft + tempDom.offsetWidth,
+                    bottom: tempDom.offsetTop + tempDom.offsetHeight
                 };
 
                 minLeft = Math.min(minLeft, imgList[c].left);
@@ -25779,17 +26121,17 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
             var ImageShape = require('zrender/shape/Image');
             for (var c in imgList) {
                 zrImg.addShape(new ImageShape({
-                    style : {
-                        x : imgList[c].left - minLeft,
-                        y : imgList[c].top - minTop,
-                        image : imgList[c].img
+                    style: {
+                        x: imgList[c].left - minLeft,
+                        y: imgList[c].top - minTop,
+                        image: imgList[c].img
                     }
                 }));
             }
             
             zrImg.render();
             var bgColor = this._option.backgroundColor;
-            if (bgColor && bgColor.replace(/ /g, '') == 'rgba(0,0,0,0)') {
+            if (bgColor && bgColor.replace(/ /g, '') === 'rgba(0,0,0,0)') {
                 bgColor = '#fff';
             }
             
@@ -25809,7 +26151,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * @param {string} imgType 图片类型，支持png|jpeg，默认为png
          * @return img dom
          */
-        getConnectedImage : function (imgType) {
+        getConnectedImage: function (imgType) {
             var title = this._optionRestore.title;
             var imgDom = document.createElement('img');
             imgDom.src = this.getConnectedDataURL(imgType);
@@ -25822,7 +26164,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * @param {Object} eventName 事件名称
          * @param {Object} eventListener 事件响应函数
          */
-        on : function (eventName, eventListener) {
+        on: function (eventName, eventListener) {
             this._messageCenterOutSide.bind(eventName, eventListener, this);
             return this;
         },
@@ -25832,7 +26174,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * @param {Object} eventName 事件名称
          * @param {Object} eventListener 事件响应函数
          */
-        un : function (eventName, eventListener) {
+        un: function (eventName, eventListener) {
             this._messageCenterOutSide.unbind(eventName, eventListener);
             return this;
         },
@@ -25841,13 +26183,13 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * 多图联动 
          * @param connectTarget{ECharts | Array <ECharts>} connectTarget 联动目标
          */
-        connect : function (connectTarget) {
+        connect: function (connectTarget) {
             if (!connectTarget) {
                 return this;
             }
             
             if (!this._connected) {
-                this._connected = {};
+                this._connected = { };
             }
             
             if (connectTarget instanceof Array) {
@@ -25866,7 +26208,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * 解除多图联动 
          * @param connectTarget{ECharts | Array <ECharts>} connectTarget 解除联动目标
          */
-        disConnect : function (connectTarget) {
+        disConnect: function (connectTarget) {
             if (!connectTarget || !this._connected) {
                 return this;
             }
@@ -25892,7 +26234,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 联动事件响应 
          */
-        connectedEventHandler : function (param) {
+        connectedEventHandler: function (param) {
             if (param.__echartsId != this.id) {
                 // 来自其他联动图表的事件
                 this._onevent(param);
@@ -25902,7 +26244,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 是否存在多图联动 
          */
-        isConnected : function () {
+        isConnected: function () {
             return !!this._connected;
         },
         
@@ -25910,20 +26252,20 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
          * 显示loading过渡 
          * @param {Object} loadingOption
          */
-        showLoading : function (loadingOption) {
+        showLoading: function (loadingOption) {
             var effectList = {
-                bar : require('zrender/loadingEffect/Bar'),
-                bubble : require('zrender/loadingEffect/Bubble'),
-                dynamicLine : require('zrender/loadingEffect/DynamicLine'),
-                ring : require('zrender/loadingEffect/Ring'),
-                spin : require('zrender/loadingEffect/Spin'),
-                whirling : require('zrender/loadingEffect/Whirling')
+                bar: require('zrender/loadingEffect/Bar'),
+                bubble: require('zrender/loadingEffect/Bubble'),
+                dynamicLine: require('zrender/loadingEffect/DynamicLine'),
+                ring: require('zrender/loadingEffect/Ring'),
+                spin: require('zrender/loadingEffect/Spin'),
+                whirling: require('zrender/loadingEffect/Whirling')
             };
             this._toolbox.hideDataView();
 
-            loadingOption = loadingOption || {};
+            loadingOption = loadingOption || { };
 
-            var textStyle = loadingOption.textStyle || {};
+            var textStyle = loadingOption.textStyle || { };
             loadingOption.textStyle = textStyle;
 
             var finalTextStyle = zrUtil.merge(
@@ -25944,11 +26286,11 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                 textStyle.y = loadingOption.y;
             }
             
-            loadingOption.effectOption = loadingOption.effectOption || {};
+            loadingOption.effectOption = loadingOption.effectOption || { };
             loadingOption.effectOption.textStyle = textStyle;
             
             var Effect = loadingOption.effect;
-            if (typeof Effect == 'string' || Effect == null) {
+            if (typeof Effect === 'string' || Effect == null) {
                 Effect =  effectList[loadingOption.effect || 'spin'];
             }
             this._zr.showLoading(new Effect(loadingOption.effectOption));
@@ -25958,7 +26300,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 隐藏loading过渡 
          */
-        hideLoading : function () {
+        hideLoading: function () {
             this._zr.hideLoading();
             return this;
         },
@@ -25966,7 +26308,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 主题设置 
          */
-        setTheme : function (theme) {
+        setTheme: function (theme) {
             if (theme) {
                if (typeof theme === 'string') {
                     // 默认主题
@@ -25978,12 +26320,12 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                     }
                 }
                 else {
-                    theme = theme || {};
+                    theme = theme || { };
                 }
                 
                 // 复位默认配置
                 // this._themeConfig会被别的对象引用持有
-                // 所以不能改成this._themeConfig = {};
+                // 所以不能改成this._themeConfig = { };
                 for (var key in this._themeConfig) {
                     delete this._themeConfig[key];
                 }
@@ -25992,10 +26334,10 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
                 }
                 
                 // 颜色数组随theme，不merge
-                theme.color && (this._themeConfig.color = []);
+                theme.color && (this._themeConfig.color = [ ]);
                 
                 // 默认标志图形类型列表，不merge
-                theme.symbolList && (this._themeConfig.symbolList = []);
+                theme.symbolList && (this._themeConfig.symbolList = [ ]);
                 
                 // 应用新主题
                 zrUtil.merge(this._themeConfig, zrUtil.clone(theme), true);
@@ -26012,7 +26354,7 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
         /**
          * 视图区域大小变化更新，不默认绑定，供使用方按需调用 
          */
-        resize : function () {
+        resize: function () {
             var self = this;
             return function(){
                 self._clearEffect();
@@ -26039,26 +26381,26 @@ define('echarts/echarts',['require','./config','zrender/tool/util','zrender/tool
             };
         },
         
-        _clearEffect : function() {
-            this._zr.modLayer(ecConfig.EFFECT_ZLEVEL, {motionBlur : false});
+        _clearEffect: function() {
+            this._zr.modLayer(ecConfig.EFFECT_ZLEVEL, { motionBlur: false });
             this._zr.painter.clearLayer(ecConfig.EFFECT_ZLEVEL);
         },
         
         /**
          * 清除已渲染内容 ，clear后echarts实例可用
          */
-        clear : function () {
+        clear: function () {
             this._disposeChartList();
             this._zr.clear();
-            this._option = {};
-            this._optionRestore = {};
+            this._option = { };
+            this._optionRestore = { };
             return this;
         },
 
         /**
          * 释放，dispose后echarts实例不可用
          */
-        dispose : function () {
+        dispose: function () {
             var key = this.dom.getAttribute(DOM_ATTRIBUTE_KEY);
             key && delete _instances[key];
         
@@ -26217,16 +26559,16 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
     }
     
     Gauge.prototype = {
-        type : ecConfig.CHART_TYPE_GAUGE,
+        type: ecConfig.CHART_TYPE_GAUGE,
         /**
          * 绘制图形
          */
-        _buildShape : function () {
+        _buildShape: function () {
             var series = this.series;
             // 复用参数索引
             this._paramsMap = {};
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].type == ecConfig.CHART_TYPE_GAUGE) {
+                if (series[i].type === ecConfig.CHART_TYPE_GAUGE) {
                     series[i] = this.reformOption(series[i]);
                     this._buildSingleGauge(i);
                     this.buildMark(i);
@@ -26241,14 +26583,14 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
          *
          * @param {number} seriesIndex 系列索引
          */
-        _buildSingleGauge : function (seriesIndex) {
+        _buildSingleGauge: function (seriesIndex) {
             var serie = this.series[seriesIndex];
 
             this._paramsMap[seriesIndex] = {
-                center : this.parseCenter(this.zr, serie.center),
-                radius : this.parseRadius(this.zr, serie.radius),
-                startAngle : serie.startAngle.toFixed(2) - 0,
-                endAngle : serie.endAngle.toFixed(2) - 0
+                center: this.parseCenter(this.zr, serie.center),
+                radius: this.parseRadius(this.zr, serie.radius),
+                startAngle: serie.startAngle.toFixed(2) - 0,
+                endAngle: serie.endAngle.toFixed(2) - 0
             };
             this._paramsMap[seriesIndex].totalAngle = this._paramsMap[seriesIndex].startAngle
                                                     - this._paramsMap[seriesIndex].endAngle;
@@ -26271,7 +26613,7 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
         },
         
         // 轴线
-        _buildAxisLine : function (seriesIndex) {
+        _buildAxisLine: function (seriesIndex) {
             var serie = this.series[seriesIndex];
             if (!serie.axisLine.show) {
                 return;
@@ -26309,7 +26651,7 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
         },
         
         // 坐标轴分割线
-        _buildSplitLine : function (seriesIndex) {
+        _buildSplitLine: function (seriesIndex) {
             var serie = this.series[seriesIndex];
             if (!serie.splitLine.show) {
                 return;
@@ -26339,19 +26681,19 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel : this._zlevelBase + 1,
-                    hoverable : false,
-                    style : {
-                        xStart : center[0] + cosAngle * r,
-                        yStart : center[1] - sinAngle * r,
-                        xEnd : center[0] + cosAngle * r0,
-                        yEnd : center[1] - sinAngle * r0,
-                        strokeColor : color == 'auto' 
-                                      ? this._getColor(seriesIndex, min + total / splitNumber * i)
-                                      : color,
-                        lineType : lineStyle.type,
-                        lineWidth : lineStyle.width,
-                        shadowColor : lineStyle.shadowColor,
+                    zlevel: this._zlevelBase + 1,
+                    hoverable: false,
+                    style: {
+                        xStart: center[0] + cosAngle * r,
+                        yStart: center[1] - sinAngle * r,
+                        xEnd: center[0] + cosAngle * r0,
+                        yEnd: center[1] - sinAngle * r0,
+                        strokeColor: color === 'auto' 
+                                     ? this._getColor(seriesIndex, min + total / splitNumber * i)
+                                     : color,
+                        lineType: lineStyle.type,
+                        lineWidth: lineStyle.width,
+                        shadowColor: lineStyle.shadowColor,
                         shadowBlur: lineStyle.shadowBlur,
                         shadowOffsetX: lineStyle.shadowOffsetX,
                         shadowOffsetY: lineStyle.shadowOffsetY
@@ -26361,7 +26703,7 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
         },
         
         // 小标记
-        _buildAxisTick : function (seriesIndex) {
+        _buildAxisTick: function (seriesIndex) {
             var serie = this.series[seriesIndex];
             if (!serie.axisTick.show) {
                 return;
@@ -26396,19 +26738,19 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel : this._zlevelBase + 1,
-                    hoverable : false,
-                    style : {
-                        xStart : center[0] + cosAngle * r,
-                        yStart : center[1] - sinAngle * r,
-                        xEnd : center[0] + cosAngle * r0,
-                        yEnd : center[1] - sinAngle * r0,
-                        strokeColor : color == 'auto' 
-                                      ? this._getColor(seriesIndex, min + total / l * i)
-                                      : color,
-                        lineType : lineStyle.type,
-                        lineWidth : lineStyle.width,
-                        shadowColor : lineStyle.shadowColor,
+                    zlevel: this._zlevelBase + 1,
+                    hoverable: false,
+                    style: {
+                        xStart: center[0] + cosAngle * r,
+                        yStart: center[1] - sinAngle * r,
+                        xEnd: center[0] + cosAngle * r0,
+                        yEnd: center[1] - sinAngle * r0,
+                        strokeColor: color === 'auto' 
+                                     ? this._getColor(seriesIndex, min + total / l * i)
+                                     : color,
+                        lineType: lineStyle.type,
+                        lineWidth: lineStyle.width,
+                        shadowColor: lineStyle.shadowColor,
                         shadowBlur: lineStyle.shadowBlur,
                         shadowOffsetX: lineStyle.shadowOffsetX,
                         shadowOffsetY: lineStyle.shadowOffsetY
@@ -26418,7 +26760,7 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
         },
         
         // 坐标轴文本
-        _buildAxisLabel : function (seriesIndex) {
+        _buildAxisLabel: function (seriesIndex) {
             var serie = this.series[seriesIndex];
             if (!serie.axisLabel.show) {
                 return;
@@ -26453,25 +26795,25 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
                 cosAngle = Math.cos(angle * Math.PI / 180);
                 angle = (angle + 360) % 360;
                 this.shapeList.push(new TextShape({
-                    zlevel : this._zlevelBase + 1,
-                    hoverable : false,
-                    style : {
-                        x : center[0] + cosAngle * r0,
-                        y : center[1] - sinAngle * r0,
-                        color : color == 'auto' ? this._getColor(seriesIndex, value) : color,
-                        text : this._getLabelText(serie.axisLabel.formatter, value),
-                        textAlign : (angle >= 110 && angle <= 250)
-                                    ? 'left' 
-                                    : (angle <= 70 || angle >= 290)
-                                        ? 'right'
-                                        : 'center',
-                        textBaseline : (angle >= 10 && angle <= 170)
-                                       ? 'top' 
-                                       : (angle >= 190 && angle <= 350)
-                                            ? 'bottom'
-                                            : 'middle',
-                        textFont : textFont,
-                        shadowColor : textStyle.shadowColor,
+                    zlevel: this._zlevelBase + 1,
+                    hoverable: false,
+                    style: {
+                        x: center[0] + cosAngle * r0,
+                        y: center[1] - sinAngle * r0,
+                        color: color === 'auto' ? this._getColor(seriesIndex, value) : color,
+                        text: this._getLabelText(serie.axisLabel.formatter, value),
+                        textAlign: (angle >= 110 && angle <= 250)
+                                   ? 'left' 
+                                   : (angle <= 70 || angle >= 290)
+                                       ? 'right'
+                                       : 'center',
+                        textBaseline: (angle >= 10 && angle <= 170)
+                                      ? 'top' 
+                                      : (angle >= 190 && angle <= 350)
+                                          ? 'bottom'
+                                          : 'middle',
+                        textFont: textFont,
+                        shadowColor: textStyle.shadowColor,
                         shadowBlur: textStyle.shadowBlur,
                         shadowOffsetX: textStyle.shadowOffsetX,
                         shadowOffsetY: textStyle.shadowOffsetY
@@ -26480,13 +26822,13 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
             }
         },
         
-        _buildPointer : function (seriesIndex) {
-            var serie       = this.series[seriesIndex];
+        _buildPointer: function (seriesIndex) {
+            var serie = this.series[seriesIndex];
             if (!serie.pointer.show) {
                 return;
             }
-            var total       = serie.max - serie.min;
-            var pointer     = serie.pointer;
+            var total = serie.max - serie.min;
+            var pointer = serie.pointer;
             
             var params = this._paramsMap[seriesIndex];
             var length = this.parsePercent(pointer.length, params.radius[1]);
@@ -26496,28 +26838,28 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
             value = value < serie.max ? value : serie.max;
             
             var angle  = (params.startAngle - params.totalAngle / total * (value - serie.min)) * Math.PI / 180;
-            var color = pointer.color == 'auto' 
+            var color = pointer.color === 'auto' 
                         ? this._getColor(seriesIndex, value) : pointer.color;
             
             var pointShape = new GaugePointerShape({
-                zlevel : this._zlevelBase + 1,
-                style : {
-                    x : center[0],
-                    y : center[1],
-                    r : length,
-                    startAngle : params.startAngle * Math.PI / 180,
-                    angle : angle,
-                    color : color,
-                    width : width,
-                    shadowColor : pointer.shadowColor,
+                zlevel: this._zlevelBase + 1,
+                style: {
+                    x: center[0],
+                    y: center[1],
+                    r: length,
+                    startAngle: params.startAngle * Math.PI / 180,
+                    angle: angle,
+                    color: color,
+                    width: width,
+                    shadowColor: pointer.shadowColor,
                     shadowBlur: pointer.shadowBlur,
                     shadowOffsetX: pointer.shadowOffsetX,
                     shadowOffsetY: pointer.shadowOffsetY
                 },
-                highlightStyle : {
-                    brushType : 'fill',
-                    width : width > 2 ? 2 : (width / 2),
-                    color : '#fff'
+                highlightStyle: {
+                    brushType: 'fill',
+                    width: width > 2 ? 2 : (width / 2),
+                    color: '#fff'
                 }
             });
             ecData.pack(
@@ -26530,26 +26872,26 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
             this.shapeList.push(pointShape);
             
             this.shapeList.push(new CircleShape({
-                zlevel : this._zlevelBase + 2,
-                hoverable : false,
-                style : {
-                    x : center[0],
-                    y : center[1],
-                    r : pointer.width / 2.5,
-                    color : '#fff'
+                zlevel: this._zlevelBase + 2,
+                hoverable: false,
+                style: {
+                    x: center[0],
+                    y: center[1],
+                    r: pointer.width / 2.5,
+                    color: '#fff'
                 }
             }));
         },
         
-        _buildTitle : function(seriesIndex) {
+        _buildTitle: function(seriesIndex) {
             var serie = this.series[seriesIndex];
             if (!serie.title.show) {
                 return;
             }
             
             var data = serie.data[0];
-            var name = typeof data.name != 'undefined' ? data.name : '';
-            if (name !== '') {
+            var name = data.name != null ? data.name : '';
+            if (name !== '') { // 不要帮我代码规范
                 var title           = serie.title;
                 var offsetCenter    = title.offsetCenter;
                 var textStyle       = title.textStyle;
@@ -26558,18 +26900,18 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
                 var x = params.center[0] + this.parsePercent(offsetCenter[0], params.radius[1]);
                 var y = params.center[1] + this.parsePercent(offsetCenter[1], params.radius[1]);
                 this.shapeList.push(new TextShape({
-                    zlevel : this._zlevelBase
+                    zlevel: this._zlevelBase
                              + (Math.abs(x - params.center[0]) + Math.abs(y - params.center[1])) 
                                < textStyle.fontSize * 2 ? 2 : 1,
-                    hoverable : false,
-                    style : {
-                        x : x,
-                        y : y,
-                        color: textColor == 'auto' ? this._getColor(seriesIndex) : textColor,
+                    hoverable: false,
+                    style: {
+                        x: x,
+                        y: y,
+                        color: textColor === 'auto' ? this._getColor(seriesIndex) : textColor,
                         text: name,
                         textAlign: 'center',
-                        textFont : this.getFont(textStyle),
-                        shadowColor : textStyle.shadowColor,
+                        textFont: this.getFont(textStyle),
+                        shadowColor: textStyle.shadowColor,
                         shadowBlur: textStyle.shadowBlur,
                         shadowOffsetX: textStyle.shadowOffsetX,
                         shadowOffsetY: textStyle.shadowOffsetY
@@ -26578,7 +26920,7 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
             }
         },
         
-        _buildDetail : function(seriesIndex) {
+        _buildDetail: function(seriesIndex) {
             var serie = this.series[seriesIndex];
             if (!serie.detail.show) {
                 return;
@@ -26597,22 +26939,22 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
             var y = params.center[1] 
                     + this.parsePercent(offsetCenter[1], params.radius[1]);
             this.shapeList.push(new RectangleShape({
-                zlevel : this._zlevelBase 
-                         + (Math.abs(x+detail.width/2 - params.center[0]) 
-                            + Math.abs(y+detail.height/2 - params.center[1]))
-                           < textStyle.fontSize ? 2 : 1,
-                hoverable : false,
-                style : {
-                    x : x,
-                    y : y,
-                    width : detail.width,
-                    height : detail.height,
+                zlevel: this._zlevelBase 
+                        + (Math.abs(x+detail.width/2 - params.center[0]) 
+                        + Math.abs(y+detail.height/2 - params.center[1])) < textStyle.fontSize 
+                          ? 2 : 1,
+                hoverable: false,
+                style: {
+                    x: x,
+                    y: y,
+                    width: detail.width,
+                    height: detail.height,
                     brushType: 'both',
-                    color: color == 'auto' ? this._getColor(seriesIndex, value) : color,
-                    lineWidth : detail.borderWidth,
-                    strokeColor : detail.borderColor,
+                    color: color === 'auto' ? this._getColor(seriesIndex, value) : color,
+                    lineWidth: detail.borderWidth,
+                    strokeColor: detail.borderColor,
                     
-                    shadowColor : detail.shadowColor,
+                    shadowColor: detail.shadowColor,
                     shadowBlur: detail.shadowBlur,
                     shadowOffsetX: detail.shadowOffsetX,
                     shadowOffsetY: detail.shadowOffsetY,
@@ -26620,20 +26962,20 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
                     text: this._getLabelText(detail.formatter, value),
                     textFont: this.getFont(textStyle),
                     textPosition: 'inside',
-                    textColor : textColor == 'auto' ? this._getColor(seriesIndex, value) : textColor
+                    textColor: textColor === 'auto' ? this._getColor(seriesIndex, value) : textColor
                 }
             }));
         },
         
-        _getValue : function(seriesIndex) {
+        _getValue: function(seriesIndex) {
             var data = this.series[seriesIndex].data[0];
-            return typeof data.value != 'undefined' ? data.value : data;
+            return data.value != null ? data.value : data;
         },
         
         /**
          * 颜色索引 
          */
-        _colorMap : function (seriesIndex) {
+        _colorMap: function (seriesIndex) {
             var serie = this.series[seriesIndex];
             var min = serie.min;
             var total = serie.max - min;
@@ -26651,8 +26993,8 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
         /**
          * 自动颜色 
          */
-        _getColor : function (seriesIndex, value) {
-            if (typeof value == 'undefined') {
+        _getColor: function (seriesIndex, value) {
+            if (value == null) {
                 value = this._getValue(seriesIndex);
             }
             
@@ -26668,20 +27010,20 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
         /**
          * 构建扇形
          */
-        _getSector : function (center, r0, r, startAngle, endAngle, color, lineStyle) {
+        _getSector: function (center, r0, r, startAngle, endAngle, color, lineStyle) {
             return new SectorShape ({
-                zlevel : this._zlevelBase,
-                hoverable : false,
-                style : {
-                    x : center[0],      // 圆心横坐标
-                    y : center[1],      // 圆心纵坐标
-                    r0 : r0,            // 圆环内半径
-                    r : r,              // 圆环外半径
-                    startAngle : startAngle,
-                    endAngle : endAngle,
-                    brushType : 'fill',
-                    color : color,
-                    shadowColor : lineStyle.shadowColor,
+                zlevel: this._zlevelBase,
+                hoverable: false,
+                style: {
+                    x: center[0],      // 圆心横坐标
+                    y: center[1],      // 圆心纵坐标
+                    r0: r0,            // 圆环内半径
+                    r: r,              // 圆环外半径
+                    startAngle: startAngle,
+                    endAngle: endAngle,
+                    brushType: 'fill',
+                    color: color,
+                    shadowColor: lineStyle.shadowColor,
                     shadowBlur: lineStyle.shadowBlur,
                     shadowOffsetX: lineStyle.shadowOffsetX,
                     shadowOffsetY: lineStyle.shadowOffsetY
@@ -26692,12 +27034,12 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
         /**
          * 根据lable.format计算label text
          */
-        _getLabelText : function (formatter, value) {
+        _getLabelText: function (formatter, value) {
             if (formatter) {
-                if (typeof formatter == 'function') {
+                if (typeof formatter === 'function') {
                     return formatter.call(this.myChart, value);
                 }
-                else if (typeof formatter == 'string') {
+                else if (typeof formatter === 'string') {
                     return formatter.replace('{value}', value);
                 }
             }
@@ -26707,7 +27049,7 @@ define('echarts/chart/gauge',['require','../component/base','./base','../util/sh
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption;
                 this.series = newOption.series;
@@ -26765,11 +27107,11 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
     }
     
     Funnel.prototype = {
-        type : ecConfig.CHART_TYPE_FUNNEL,
+        type: ecConfig.CHART_TYPE_FUNNEL,
         /**
          * 绘制图形
          */
-        _buildShape : function () {
+        _buildShape: function () {
             var series = this.series;
             var legend = this.component.legend;
             // 复用参数索引
@@ -26779,12 +27121,11 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
             
             var serieName;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].type == ecConfig.CHART_TYPE_FUNNEL) {
+                if (series[i].type === ecConfig.CHART_TYPE_FUNNEL) {
                     series[i] = this.reformOption(series[i]);
                     serieName = series[i].name || '';
                     // 系列图例开关
-                    this.selectedMap[serieName] = 
-                        legend ? legend.isSelected(serieName) : true;
+                    this.selectedMap[serieName] = legend ? legend.isSelected(serieName) : true;
                     if (!this.selectedMap[serieName]) {
                         continue;
                     }
@@ -26801,14 +27142,14 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
          *
          * @param {number} seriesIndex 系列索引
          */
-        _buildSingleFunnel : function (seriesIndex) {
+        _buildSingleFunnel: function (seriesIndex) {
             var legend = this.component.legend;
             var serie = this.series[seriesIndex];
             var data = this._mapData(seriesIndex);
             var location = this._getLocation(seriesIndex);
             this._paramsMap[seriesIndex] = {
-                location : location,
-                data : data
+                location: location,
+                data: data
             };
             
             var itemName;
@@ -26837,10 +27178,10 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
                          ? (location.height - (total - 1) * gap) / total : location.height;
             var width;
             var lastY = location.y;
-            var lastWidth = serie.sort == 'descending'
+            var lastWidth = serie.sort === 'descending'
                             ? this._getItemWidth(seriesIndex, selectedData[0].value)
                             : number.parsePercent(serie.minSize, location.width);
-            var next = serie.sort == 'descending' ? 1 : 0;
+            var next = serie.sort === 'descending' ? 1 : 0;
             var centerX = location.centerX;
             var pointList = [
                 [
@@ -26857,7 +27198,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
                 if (this.selectedMap[itemName] && !isNaN(selectedData[i].value)) {
                     width = i <= l - 2
                             ? this._getItemWidth(seriesIndex, selectedData[i + next].value)
-                            : serie.sort == 'descending'
+                            : serie.sort === 'descending'
                               ? number.parsePercent(serie.minSize, location.width)
                               : number.parsePercent(serie.maxSize, location.width);
                     this._buildItem(
@@ -26887,24 +27228,24 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
             }
         },
         
-        _buildFunnelCase : function(seriesIndex) {
+        _buildFunnelCase: function(seriesIndex) {
             var serie = this.series[seriesIndex];
             if (this.deepQuery([serie, this.option], 'calculable')) {
                 var location = this._paramsMap[seriesIndex].location;
                 var gap = 10;
                 var funnelCase = {
-                    hoverable : false,
-                    style : {
-                        pointListd : [
+                    hoverable: false,
+                    style: {
+                        pointListd: [
                             [location.x - gap, location.y - gap],
                             [location.x + location.width + gap, location.y - gap],
                             [location.x + location.width + gap, location.y + location.height + gap],
                             [location.x - gap, location.y + location.height + gap]
                         ],
-                        brushType : 'stroke',
-                        lineWidth : 1,
-                        strokeColor : serie.calculableHolderColor
-                                      || this.ecTheme.calculableHolderColor
+                        brushType: 'stroke',
+                        lineWidth: 1,
+                        strokeColor: serie.calculableHolderColor
+                                     || this.ecTheme.calculableHolderColor
                     }
                 };
                 ecData.pack(funnelCase, serie, seriesIndex, undefined, -1);
@@ -26923,7 +27264,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
             var y = this.parsePercent(gridOption.y, zrHeight);
             
             var width;
-            if (typeof gridOption.width == 'undefined') {
+            if (gridOption.width == null) {
                 width = zrWidth - x - this.parsePercent(gridOption.x2, zrWidth);
             }
             else {
@@ -26931,7 +27272,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
             }
             
             var height;
-            if (typeof gridOption.height == 'undefined') {
+            if (gridOption.height == null) {
                 height = zrHeight - y - this.parsePercent(gridOption.y2, zrHeight);
             }
             else {
@@ -26939,25 +27280,25 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
             }
             
             return {
-                x : x,
-                y : y,
-                width : width,
-                height : height,
-                centerX : x + width / 2
+                x: x,
+                y: y,
+                width: width,
+                height: height,
+                centerX: x + width / 2
             };
         },
         
-        _mapData : function(seriesIndex) {
+        _mapData: function(seriesIndex) {
             var serie = this.series[seriesIndex];
             var funnelData = zrUtil.clone(serie.data);
             for (var i = 0, l = funnelData.length; i < l; i++) {
                 funnelData[i]._index = i;
             }
             function numDescending (a, b) {
-                if (a.value == '-') {
+                if (a.value === '-') {
                     return 1;
                 }
-                else if (b.value == '-') {
+                else if (b.value === '-') {
                     return -1;
                 }
                 return b.value - a.value;
@@ -26966,7 +27307,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
                 return -numDescending(a, b);
             }
             if (serie.sort != 'none') {
-                funnelData.sort(serie.sort == 'descending' ? numDescending : numAscending);
+                funnelData.sort(serie.sort === 'descending' ? numDescending : numAscending);
             }
             
             return funnelData;
@@ -26975,7 +27316,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
         /**
          * 构建单个扇形及指标
          */
-        _buildItem : function (
+        _buildItem: function (
             seriesIndex, dataIndex, defaultColor,
             x, y, topWidth, bottomWidth, height
         ) {
@@ -27041,7 +27382,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
         /**
          * 根据值计算宽度 
          */
-        _getItemWidth : function (seriesIndex, value) {
+        _getItemWidth: function (seriesIndex, value) {
             var serie = this.series[seriesIndex];
             var location = this._paramsMap[seriesIndex].location;
             var min = serie.min;
@@ -27054,7 +27395,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
         /**
          * 构建扇形
          */
-        getPolygon : function (
+        getPolygon: function (
             seriesIndex, dataIndex, defaultColor,
             x, y, topWidth, bottomWidth, height
         ) {
@@ -27075,30 +27416,30 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
                               || defaultColor;
             
             var emphasisColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data)
-                || (typeof normalColor == 'string'
+                || (typeof normalColor === 'string'
                     ? zrColor.lift(normalColor, -0.2)
                     : normalColor
                 );
 
             var polygon = {
-                zlevel : this._zlevelBase,
+                zlevel: this._zlevelBase,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
-                style : {
-                    pointList : [
+                style: {
+                    pointList: [
                         [x, y],
                         [x + topWidth, y],
                         [x + topWidth - (topWidth - bottomWidth) / 2, y + height],
                         [x + (topWidth - bottomWidth) / 2, y + height]
                     ],
-                    brushType : 'both',
-                    color : normalColor,
-                    lineWidth : normal.borderWidth,
-                    strokeColor : normal.borderColor
+                    brushType: 'both',
+                    color: normalColor,
+                    lineWidth: normal.borderWidth,
+                    strokeColor: normal.borderColor
                 },
-                highlightStyle : {
-                    color : emphasisColor,
-                    lineWidth : emphasis.borderWidth,
-                    strokeColor : emphasis.borderColor
+                highlightStyle: {
+                    color: emphasisColor,
+                    lineWidth: emphasis.borderWidth,
+                    strokeColor: emphasis.borderColor
                 }
             };
             
@@ -27113,7 +27454,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
         /**
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
-        getLabel : function (
+        getLabel: function (
             seriesIndex, dataIndex, defaultColor,
             x, y, topWidth, bottomWidth, height
         ) {
@@ -27138,7 +27479,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
             var textColor = defaultColor;
             labelControl.position = labelControl.position 
                                     || itemStyle.normal.label.position;
-            if (labelControl.position == 'inner' || labelControl.position == 'inside') {
+            if (labelControl.position === 'inner' || labelControl.position === 'inside') {
                 // 内部
                 textAlign = 'center';
                 textX = x + topWidth / 2;
@@ -27149,31 +27490,31 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
                     textColor = zrColor.reverse(defaultColor);
                 }
             }
-            else if (labelControl.position == 'left'){
+            else if (labelControl.position === 'left'){
                 // 左侧显示
                 textAlign = 'right';
-                textX = lineLength == 'auto' 
+                textX = lineLength === 'auto' 
                         ? (location.x - 10) 
                         : (location.centerX - Math.max(topWidth, bottomWidth) / 2 - lineLength);
             }
             else {
-                // 右侧显示，默认 labelControl.position == 'outer' || 'right)
+                // 右侧显示，默认 labelControl.position === 'outer' || 'right)
                 textAlign = 'left';
-                textX = lineLength == 'auto' 
+                textX = lineLength === 'auto' 
                         ? (location.x + location.width + 10) 
                         : (location.centerX + Math.max(topWidth, bottomWidth) / 2 + lineLength);
             }
             
             var textShape = {
-                zlevel : this._zlevelBase + 1,
-                style : {
-                    x : textX,
-                    y : y + height / 2,
-                    color : textStyle.color || textColor,
-                    text : text,
-                    textAlign : textStyle.align || textAlign,
-                    textBaseline : textStyle.baseline || 'middle',
-                    textFont : textFont
+                zlevel: this._zlevelBase + 1,
+                style: {
+                    x: textX,
+                    y: y + height / 2,
+                    color: textStyle.color || textColor,
+                    text: text,
+                    textAlign: textStyle.align || textAlign,
+                    textBaseline: textStyle.baseline || 'middle',
+                    textFont: textFont
                 }
             };
             
@@ -27187,7 +27528,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
             text = this.getLabelText(seriesIndex, dataIndex, status);
             textFont = this.getFont(textStyle);
             textColor = defaultColor;
-            if (labelControl.position == 'inner' || labelControl.position == 'inside') {
+            if (labelControl.position === 'inner' || labelControl.position === 'inside') {
                 // 内部
                 textAlign = 'center';
                 textX = x + topWidth / 2;
@@ -27198,27 +27539,27 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
                     textColor = zrColor.reverse(defaultColor);
                 }
             }
-            else if (labelControl.position == 'left'){
+            else if (labelControl.position === 'left'){
                 // 左侧显示
                 textAlign = 'right';
-                textX = lineLength == 'auto' 
+                textX = lineLength === 'auto' 
                         ? (location.x - 10) 
                         : (location.centerX - Math.max(topWidth, bottomWidth) / 2 - lineLength);
             }
             else {
-                // 右侧显示，默认 labelControl.position == 'outer' || 'right)
+                // 右侧显示，默认 labelControl.position === 'outer' || 'right)
                 textAlign = 'left';
-                textX = lineLength == 'auto' 
+                textX = lineLength === 'auto' 
                         ? (location.x + location.width + 10) 
                         : (location.centerX + Math.max(topWidth, bottomWidth) / 2 + lineLength);
             }
             textShape.highlightStyle = {
-                x : textX,
-                color : textStyle.color || textColor,
-                text : text,
-                textAlign : textStyle.align || textAlign,
-                textFont : textFont,
-                brushType : 'fill'
+                x: textX,
+                color: textStyle.color || textColor,
+                text: text,
+                textAlign: textStyle.align || textAlign,
+                textFont: textFont,
+                brushType: 'fill'
             };
             
             return new TextShape(textShape);
@@ -27227,7 +27568,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
         /**
          * 根据lable.format计算label text
          */
-        getLabelText : function (seriesIndex, dataIndex, status) {
+        getLabelText: function (seriesIndex, dataIndex, status) {
             var series = this.series;
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
@@ -27237,7 +27578,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
             );
             
             if (formatter) {
-                if (typeof formatter == 'function') {
+                if (typeof formatter === 'function') {
                     return formatter.call(
                         this.myChart,
                         serie.name,
@@ -27245,7 +27586,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
                         data.value
                     );
                 }
-                else if (typeof formatter == 'string') {
+                else if (typeof formatter === 'string') {
                     formatter = formatter.replace('{a}','{a0}')
                                          .replace('{b}','{b0}')
                                          .replace('{c}','{c0}');
@@ -27264,7 +27605,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
         /**
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
-        getLabelLine : function (
+        getLabelLine: function (
             seriesIndex, dataIndex, defaultColor,
             x, y, topWidth, bottomWidth, height
         ) {
@@ -27287,33 +27628,33 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
             labelControl.position = labelControl.position 
                                     || itemStyle.normal.label.position;
             var xEnd;
-            if (labelControl.position == 'inner' || labelControl.position == 'inside') {
+            if (labelControl.position === 'inner' || labelControl.position === 'inside') {
                 // 内部
                 xEnd = x + topWidth / 2;
             }
-            else if (labelControl.position == 'left'){
+            else if (labelControl.position === 'left'){
                 // 左侧显示
-                xEnd = lineLength == 'auto' 
+                xEnd = lineLength === 'auto' 
                        ? (location.x - 10)
                        : (location.centerX - Math.max(topWidth, bottomWidth) / 2 - lineLength);
             }
             else {
-                // 右侧显示，默认 labelControl.position == 'outer' || 'right)
-                xEnd = lineLength == 'auto' 
+                // 右侧显示，默认 labelControl.position === 'outer' || 'right)
+                xEnd = lineLength === 'auto' 
                        ? (location.x + location.width + 10) 
                        : (location.centerX + Math.max(topWidth, bottomWidth) / 2 + lineLength);
             }
             var lineShape = {
-                zlevel : this._zlevelBase + 1,
-                hoverable : false,
-                style : {
-                    xStart : location.centerX,
-                    yStart : y + height / 2,
-                    xEnd : xEnd,
-                    yEnd : y + height / 2,
-                    strokeColor : lineStyle.color || defaultColor,
-                    lineType : lineStyle.type,
-                    lineWidth : lineStyle.width
+                zlevel: this._zlevelBase + 1,
+                hoverable: false,
+                style: {
+                    xStart: location.centerX,
+                    yStart: y + height / 2,
+                    xEnd: xEnd,
+                    yEnd: y + height / 2,
+                    strokeColor: lineStyle.color || defaultColor,
+                    lineType: lineStyle.type,
+                    lineWidth: lineStyle.width
                 }
             };
             
@@ -27325,27 +27666,27 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
 
             labelControl = itemStyle[status].label || labelControl;
             labelControl.position = labelControl.position;
-            if (labelControl.position == 'inner' || labelControl.position == 'inside') {
+            if (labelControl.position === 'inner' || labelControl.position === 'inside') {
                 // 内部
                 xEnd = x + topWidth / 2;
             }
-            else if (labelControl.position == 'left'){
+            else if (labelControl.position === 'left'){
                 // 左侧显示
-                xEnd = lineLength == 'auto' 
+                xEnd = lineLength === 'auto' 
                        ? (location.x - 10) 
                        : (location.centerX - Math.max(topWidth, bottomWidth) / 2 - lineLength);
             }
             else {
-                // 右侧显示，默认 labelControl.position == 'outer' || 'right)
-                xEnd = lineLength == 'auto' 
+                // 右侧显示，默认 labelControl.position === 'outer' || 'right)
+                xEnd = lineLength === 'auto' 
                        ? (location.x + location.width + 10) 
                        : (location.centerX + Math.max(topWidth, bottomWidth) / 2 + lineLength);
             }
             lineShape.highlightStyle = {
-                xEnd : xEnd,
-                strokeColor : lineStyle.color || defaultColor,
-                lineType : lineStyle.type,
-                lineWidth : lineStyle.width
+                xEnd: xEnd,
+                strokeColor: lineStyle.color || defaultColor,
+                lineType: lineStyle.type,
+                lineWidth: lineStyle.width
             };
             
             return new LineShape(lineShape);
@@ -27357,7 +27698,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
          * @param {Object} data
          * @param {boolean} isEmphasis true is 'emphasis' and false is 'normal'
          */
-        _needLabel : function (serie, data, isEmphasis) {
+        _needLabel: function (serie, data, isEmphasis) {
             return this.deepQuery(
                 [data, serie],
                 'itemStyle.'
@@ -27372,7 +27713,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
          * @param {Object} data
          * @param {boolean} isEmphasis true is 'emphasis' and false is 'normal'
          */
-        _needLabelLine : function (serie, data, isEmphasis) {
+        _needLabelLine: function (serie, data, isEmphasis) {
             return this.deepQuery(
                 [data, serie],
                 'itemStyle.'
@@ -27384,7 +27725,7 @@ define('echarts/chart/funnel',['require','../component/base','./base','zrender/s
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption;
                 this.series = newOption.series;
@@ -28149,8 +28490,8 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
     }
     
     ValueAxis.prototype = {
-        type : ecConfig.COMPONENT_TYPE_AXIS_VALUE,
-        _buildShape : function () {
+        type: ecConfig.COMPONENT_TYPE_AXIS_VALUE,
+        _buildShape: function () {
             this._hasData = false;
             this._calculateValue();
             if (!this._hasData) {
@@ -28168,7 +28509,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
         },
 
         // 小标记
-        _buildAxisTick : function () {
+        _buildAxisTick: function () {
             var axShape;
             var data       = this._valueList;
             var dataLength = this._valueList.length;
@@ -28179,7 +28520,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
 
             if (this.isHorizontal()) {
                 // 横向
-                var yPosition = this.option.position == 'bottom'
+                var yPosition = this.option.position === 'bottom'
                         ? (tickOption.inside 
                            ? (this.grid.getYend() - length - 1) : (this.grid.getYend()) + 1)
                         : (tickOption.inside 
@@ -28189,16 +28530,16 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                     // 亚像素优化
                     x = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        _axisShape : 'axisTick',
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            xStart : x,
-                            yStart : yPosition,
-                            xEnd : x,
-                            yEnd : yPosition + length,
-                            strokeColor : color,
-                            lineWidth : lineWidth
+                        _axisShape: 'axisTick',
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            xStart: x,
+                            yStart: yPosition,
+                            xEnd: x,
+                            yEnd: yPosition + length,
+                            strokeColor: color,
+                            lineWidth: lineWidth
                         }
                     };
                     this.shapeList.push(new LineShape(axShape));
@@ -28206,7 +28547,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
             }
             else {
                 // 纵向
-                var xPosition = this.option.position == 'left'
+                var xPosition = this.option.position === 'left'
                     ? (tickOption.inside 
                        ? (this.grid.getX() + 1) : (this.grid.getX() - length - 1))
                     : (tickOption.inside 
@@ -28217,16 +28558,16 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                     // 亚像素优化
                     y = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        _axisShape : 'axisTick',
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            xStart : xPosition,
-                            yStart : y,
-                            xEnd : xPosition + length,
-                            yEnd : y,
-                            strokeColor : color,
-                            lineWidth : lineWidth
+                        _axisShape: 'axisTick',
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            xStart: xPosition,
+                            yStart: y,
+                            xEnd: xPosition + length,
+                            yEnd: y,
+                            strokeColor: color,
+                            lineWidth: lineWidth
                         }
                     };
                     this.shapeList.push(new LineShape(axShape));
@@ -28235,7 +28576,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
         },
 
         // 坐标轴文本
-        _buildAxisLabel : function () {
+        _buildAxisLabel: function () {
             var axShape;
             var data       = this._valueList;
             var dataLength = this._valueList.length;
@@ -28248,7 +28589,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                 // 横向
                 var yPosition;
                 var baseLine;
-                if (this.option.position == 'bottom') {
+                if (this.option.position === 'bottom') {
                     yPosition = this.grid.getYend() + margin;
                     baseLine = 'top';
                 }
@@ -28259,24 +28600,24 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
 
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            x : this.getCoord(data[i]),
-                            y : yPosition,
-                            color : typeof textStyle.color == 'function'
-                                    ? textStyle.color(data[i]) : textStyle.color,
-                            text : this._valueLabel[i],
-                            textFont : this.getFont(textStyle),
-                            textAlign : textStyle.align || 'center',
-                            textBaseline : textStyle.baseline || baseLine
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            x: this.getCoord(data[i]),
+                            y: yPosition,
+                            color: typeof textStyle.color === 'function'
+                                   ? textStyle.color(data[i]) : textStyle.color,
+                            text: this._valueLabel[i],
+                            textFont: this.getFont(textStyle),
+                            textAlign: textStyle.align || 'center',
+                            textBaseline: textStyle.baseline || baseLine
                         }
                     };
                     if (rotate) {
                         axShape.style.textAlign = rotate > 0
-                                                  ? (this.option.position == 'bottom'
+                                                  ? (this.option.position === 'bottom'
                                                     ? 'right' : 'left')
-                                                  : (this.option.position == 'bottom'
+                                                  : (this.option.position === 'bottom'
                                                     ? 'left' : 'right');
                         axShape.rotation = [
                             rotate * Math.PI / 180,
@@ -28293,7 +28634,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                 // 纵向
                 var xPosition;
                 var align;
-                if (this.option.position == 'left') {
+                if (this.option.position === 'left') {
                     xPosition = this.grid.getX() - margin;
                     align = 'right';
                 }
@@ -28304,23 +28645,23 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
 
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            x : xPosition,
-                            y : this.getCoord(data[i]),
-                            color : typeof textStyle.color == 'function'
-                                    ? textStyle.color(data[i]) : textStyle.color,
-                            text : this._valueLabel[i],
-                            textFont : this.getFont(textStyle),
-                            textAlign : textStyle.align || align,
-                            textBaseline : textStyle.baseline 
-                                           || (i === 0 && this.option.name !== '')
-                                               ? 'bottom'
-                                               : (i == (dataLength - 1) 
-                                                  && this.option.name !== '')
-                                                 ? 'top'
-                                                 : 'middle'
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            x: xPosition,
+                            y: this.getCoord(data[i]),
+                            color: typeof textStyle.color === 'function'
+                                   ? textStyle.color(data[i]) : textStyle.color,
+                            text: this._valueLabel[i],
+                            textFont: this.getFont(textStyle),
+                            textAlign: textStyle.align || align,
+                            textBaseline: textStyle.baseline 
+                                          || (i === 0 && this.option.name !== '')
+                                              ? 'bottom'
+                                              : (i === (dataLength - 1) 
+                                                 && this.option.name !== '')
+                                                ? 'top'
+                                                : 'middle'
                         }
                     };
                     
@@ -28338,7 +28679,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
             }
         },
 
-        _buildSplitLine : function () {
+        _buildSplitLine: function () {
             var axShape;
             var data        = this._valueList;
             var dataLength  = this._valueList.length;
@@ -28359,16 +28700,16 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                     // 亚像素优化
                     x = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            xStart : x,
-                            yStart : sy,
-                            xEnd : x,
-                            yEnd : ey,
-                            strokeColor : color[i % colorLength],
-                            lineType : lineType,
-                            lineWidth : lineWidth
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            xStart: x,
+                            yStart: sy,
+                            xEnd: x,
+                            yEnd: ey,
+                            strokeColor: color[i % colorLength],
+                            lineType: lineType,
+                            lineWidth: lineWidth
                         }
                     };
                     this.shapeList.push(new LineShape(axShape));
@@ -28385,16 +28726,16 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                     // 亚像素优化
                     y = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        zlevel : this._zlevelBase,
-                        hoverable : false,
-                        style : {
-                            xStart : sx,
-                            yStart : y,
-                            xEnd : ex,
-                            yEnd : y,
-                            strokeColor : color[i % colorLength],
-                            lineType : lineType,
-                            lineWidth : lineWidth
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            xStart: sx,
+                            yStart: y,
+                            xEnd: ex,
+                            yEnd: y,
+                            strokeColor: color[i % colorLength],
+                            lineType: lineType,
+                            lineWidth: lineWidth
                         }
                     };
                     this.shapeList.push(new LineShape(axShape));
@@ -28402,22 +28743,22 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
             }
         },
 
-        _buildSplitArea : function () {
+        _buildSplitArea: function () {
             var axShape;
             var color = this.option.splitArea.areaStyle.color;
 
             if (!(color instanceof Array)) {
                 // 非数组一律认为是单一颜色的字符串，单一颜色则用一个背景，颜色错误不负责啊！！！
                 axShape = {
-                    zlevel : this._zlevelBase,
-                    hoverable : false,
-                    style : {
-                        x : this.grid.getX(),
-                        y : this.grid.getY(),
-                        width : this.grid.getWidth(),
-                        height : this.grid.getHeight(),
-                        color : color
-                        // type : this.option.splitArea.areaStyle.type,
+                    zlevel: this._zlevelBase,
+                    hoverable: false,
+                    style: {
+                        x: this.grid.getX(),
+                        y: this.grid.getY(),
+                        width: this.grid.getWidth(),
+                        height: this.grid.getHeight(),
+                        color: color
+                        // type: this.option.splitArea.areaStyle.type,
                     }
                 };
                 this.shapeList.push(new RectangleShape(axShape));
@@ -28440,15 +28781,15 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                                ? this.getCoord(data[i])
                                : this.grid.getXend();
                         axShape = {
-                            zlevel : this._zlevelBase,
-                            hoverable : false,
-                            style : {
-                                x : lastX,
-                                y : y,
-                                width : curX - lastX,
-                                height : height,
-                                color : color[i % colorLength]
-                                // type : this.option.splitArea.areaStyle.type,
+                            zlevel: this._zlevelBase,
+                            hoverable: false,
+                            style: {
+                                x: lastX,
+                                y: y,
+                                width: curX - lastX,
+                                height: height,
+                                color: color[i % colorLength]
+                                // type: this.option.splitArea.areaStyle.type,
                             }
                         };
                         this.shapeList.push(new RectangleShape(axShape));
@@ -28467,15 +28808,15 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                                ? this.getCoord(data[i])
                                : this.grid.getY();
                         axShape = {
-                            zlevel : this._zlevelBase,
-                            hoverable : false,
-                            style : {
-                                x : x,
-                                y : curY,
-                                width : width,
-                                height : lastYend - curY,
-                                color : color[i % colorLength]
-                                // type : this.option.splitArea.areaStyle.type
+                            zlevel: this._zlevelBase,
+                            hoverable: false,
+                            style: {
+                                x: x,
+                                y: curY,
+                                width: width,
+                                height: lastYend - curY,
+                                color: color[i % colorLength]
+                                // type: this.option.splitArea.areaStyle.type
                             }
                         };
                         this.shapeList.push(new RectangleShape(axShape));
@@ -28488,7 +28829,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
         /**
          * 极值计算
          */
-        _calculateValue : function () {
+        _calculateValue: function () {
             if (isNaN(this.option.min - 0) || isNaN(this.option.max - 0)) {
                 // 有一个没指定都得算
                 // 数据整形
@@ -28527,10 +28868,10 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                         data[key] = data[key] || [];
                         oriData = this.series[i].data;
                         for (var j = 0, k = oriData.length; j < k; j++) {
-                            value = typeof oriData[j].value != 'undefined'
+                            value = oriData[j].value != null
                                     ? oriData[j].value
                                     : oriData[j];
-                            if (this.series[i].type == ecConfig.CHART_TYPE_SCATTER) {
+                            if (this.series[i].type === ecConfig.CHART_TYPE_SCATTER) {
                                 if (this.option.xAxisIndex != -1) {
                                     data[key].push(value[0]);
                                 }
@@ -28538,7 +28879,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                                     data[key].push(value[1]);
                                 }
                             }
-                            else if (this.series[i].type == ecConfig.CHART_TYPE_K) {
+                            else if (this.series[i].type === ecConfig.CHART_TYPE_K) {
                                 data[key].push(value[0]);
                                 data[key].push(value[1]);
                                 data[key].push(value[2]);
@@ -28558,15 +28899,15 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                         data[key] = data[key] || [];  // scale下还需要记录每一个量
                         oriData = this.series[i].data;
                         for (var j = 0, k = oriData.length; j < k; j++) {
-                            value = typeof oriData[j].value != 'undefined'
+                            value = oriData[j].value != null
                                     ? oriData[j].value
                                     : oriData[j];
-                            if (value == '-') {
+                            if (value === '-') {
                                 continue;
                             }
                             value = value - 0;
                             if (value >= 0) {
-                                if (typeof data[keyP][j] != 'undefined') {
+                                if (data[keyP][j] != null) {
                                     data[keyP][j] += value;
                                 }
                                 else {
@@ -28574,7 +28915,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                                 }
                             }
                             else {
-                                if (typeof data[keyN][j] != 'undefined') {
+                                if (data[keyN][j] != null) {
                                     data[keyN][j] += value;
                                 }
                                 else {
@@ -28621,7 +28962,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                 this._max = isNaN(this.option.max - 0)
                        ? (this._max + Math.abs(gap * this.option.boundaryGap[1]))
                        : (this.option.max - 0);    // 指定max忽略boundaryGay[1]
-                if (this._min == this._max) {
+                if (this._min === this._max) {
                     if (this._max === 0) {
                         // 修复全0数据
                         this._max = this.option.power > 0 ? this.option.power : 1;
@@ -28720,7 +29061,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
             (this._min == -2.4 && this._max == 0.6) ? 'success' : 'failed');
          * --------
          */
-        _reformValue : function (scale) {
+        _reformValue: function (scale) {
             var splitNumber = this.option.splitNumber;
             var precision = this.option.precision;
             var splitGap;
@@ -28798,7 +29139,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
                 // 正数部分的分隔数
                 var partSplitNumber = Math.round(this._max / total * splitNumber);
                 // 修正数据范围极度偏正向，留给负数一个
-                partSplitNumber -= (partSplitNumber == splitNumber ? 1 : 0);
+                partSplitNumber -= (partSplitNumber === splitNumber ? 1 : 0);
                 // 修正数据范围极度偏负向，留给正数一个
                 partSplitNumber += partSplitNumber === 0 ? 1 : 0;
                 splitGap = (Math.ceil(Math.max(
@@ -28830,7 +29171,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
             this._reformLabelData();
         },
         
-        _customerValue : function () {
+        _customerValue: function () {
             var splitNumber = this.option.splitNumber;
             var precision = this.option.precision;
             var splitGap = (this._max - this._min) / splitNumber;
@@ -28842,15 +29183,15 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
             this._reformLabelData();
         },
 
-        _reformLabelData : function () {
+        _reformLabelData: function () {
             this._valueLabel = [];
             var formatter = this.option.axisLabel.formatter;
             if (formatter) {
                 for (var i = 0, l = this._valueList.length; i < l; i++) {
-                    if (typeof formatter == 'function') {
+                    if (typeof formatter === 'function') {
                         this._valueLabel.push(formatter.call(this.myChart, this._valueList[i]));
                     }
-                    else if (typeof formatter == 'string') {
+                    else if (typeof formatter === 'string') {
                         this._valueLabel.push(
                             formatter.replace('{value}',this._valueList[i])
                         );
@@ -28866,7 +29207,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
 
         },
         
-        getExtremum : function () {
+        getExtremum: function () {
             this._calculateValue();
             return {
                 min: this._min,
@@ -28877,7 +29218,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
         /**
          * 刷新
          */
-        refresh : function (newOption, newSeries) {
+        refresh: function (newOption, newSeries) {
             if (newOption) {
                 this.option = this.reformOption(newOption);
                 // 通用字体设置
@@ -28894,7 +29235,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
         },
 
         // 根据值换算位置
-        getCoord : function (value) {
+        getCoord: function (value) {
             value = value < this._min ? this._min : value;
             value = value > this._max ? this._max : value;
 
@@ -28917,14 +29258,14 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
             return result;
             // Math.floor可能引起一些偏差，但性能会更好
             /* 准确更重要
-            return (value == this._min || value == this._max)
+            return (value === this._min || value === this._max)
                    ? result
                    : Math.floor(result);
             */
         },
         
         // 根据值换算绝对大小
-        getCoordSize : function (value) {
+        getCoordSize: function (value) {
             if (!this.isHorizontal()) {
                 // 纵向
                 return Math.abs(value / (this._max - this._min) * this.grid.getHeight());
@@ -28936,7 +29277,7 @@ define('echarts/component/valueAxis',['require','./base','zrender/shape/Text','z
         },
         
         // 根据位置换算值
-        getValueFromCoord : function(coord) {
+        getValueFromCoord: function(coord) {
             var result;
             if (!this.isHorizontal()) {
                 // 纵向
@@ -29014,56 +29355,56 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
     }
     
     Axis.prototype = {
-        type : ecConfig.COMPONENT_TYPE_AXIS,
-        axisBase : {
+        type: ecConfig.COMPONENT_TYPE_AXIS,
+        axisBase: {
             // 轴线
-            _buildAxisLine : function () {
+            _buildAxisLine: function () {
                 var lineWidth = this.option.axisLine.lineStyle.width;
                 var halfLineWidth = lineWidth / 2;
                 var axShape = {
-                    _axisShape : 'axisLine',
-                    zlevel : this._zlevelBase + 1,
-                    hoverable : false
+                    _axisShape: 'axisLine',
+                    zlevel: this._zlevelBase + 1,
+                    hoverable: false
                 };
                 switch (this.option.position) {
                     case 'left' :
                         axShape.style = {
-                            xStart : this.grid.getX() - halfLineWidth,
-                            yStart : this.grid.getYend(),
-                            xEnd : this.grid.getX() - halfLineWidth,
-                            yEnd : this.grid.getY(),
-                            lineCap : 'round'
+                            xStart: this.grid.getX() - halfLineWidth,
+                            yStart: this.grid.getYend(),
+                            xEnd: this.grid.getX() - halfLineWidth,
+                            yEnd: this.grid.getY(),
+                            lineCap: 'round'
                         };
                         break;
                     case 'right' :
                         axShape.style = {
-                            xStart : this.grid.getXend() + halfLineWidth,
-                            yStart : this.grid.getYend(),
-                            xEnd : this.grid.getXend() + halfLineWidth,
-                            yEnd : this.grid.getY(),
-                            lineCap : 'round'
+                            xStart: this.grid.getXend() + halfLineWidth,
+                            yStart: this.grid.getYend(),
+                            xEnd: this.grid.getXend() + halfLineWidth,
+                            yEnd: this.grid.getY(),
+                            lineCap: 'round'
                         };
                         break;
                     case 'bottom' :
                         axShape.style = {
-                            xStart : this.grid.getX(),
-                            yStart : this.grid.getYend() + halfLineWidth,
-                            xEnd : this.grid.getXend(),
-                            yEnd : this.grid.getYend() + halfLineWidth,
-                            lineCap : 'round'
+                            xStart: this.grid.getX(),
+                            yStart: this.grid.getYend() + halfLineWidth,
+                            xEnd: this.grid.getXend(),
+                            yEnd: this.grid.getYend() + halfLineWidth,
+                            lineCap: 'round'
                         };
                         break;
                     case 'top' :
                         axShape.style = {
-                            xStart : this.grid.getX(),
-                            yStart : this.grid.getY() - halfLineWidth,
-                            xEnd : this.grid.getXend(),
-                            yEnd : this.grid.getY() - halfLineWidth,
-                            lineCap : 'round'
+                            xStart: this.grid.getX(),
+                            yStart: this.grid.getY() - halfLineWidth,
+                            xEnd: this.grid.getXend(),
+                            yEnd: this.grid.getY() - halfLineWidth,
+                            lineCap: 'round'
                         };
                         break;
                 }
-                if (this.option.name !== '') {
+                if (this.option.name !== '') { // 别帮我代码规范
                     axShape.style.text = this.option.name;
                     axShape.style.textPosition = this.option.nameLocation;
                     axShape.style.textFont = this.getFont(this.option.nameTextStyle);
@@ -29100,7 +29441,7 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
                 this.shapeList.push(axShape);
             },
             
-            _axisLabelClickable : function(clickable, axShape) {
+            _axisLabelClickable: function(clickable, axShape) {
                 if (clickable) {
                     ecData.pack(
                         axShape, undefined, -1, undefined, -1, axShape.style.text
@@ -29108,7 +29449,7 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
                     axShape.hoverable = true;
                     axShape.clickable = true;
                     axShape.highlightStyle = {
-                        color : zrColor.lift(axShape.style.color, 1),
+                        color: zrColor.lift(axShape.style.color, 1),
                         brushType: 'fill'
                     };
                     return axShape;
@@ -29118,15 +29459,15 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
                 }
             },
             
-            refixAxisShape : function(zeroX, zeroY) {
+            refixAxisShape: function(zeroX, zeroY) {
                 if (!this.option.axisLine.onZero) {
                     return;
                 }
                 var tickLength;
-                if (this.isHorizontal() && typeof zeroY != 'undefined') {
+                if (this.isHorizontal() && zeroY != null) {
                     // 横向布局调整纵向y
                     for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                        if (this.shapeList[i]._axisShape == 'axisLine') {
+                        if (this.shapeList[i]._axisShape === 'axisLine') {
                             this.shapeList[i].style.yStart 
                                 = this.shapeList[i].style.yEnd 
                                 = this.subPixelOptimize(
@@ -29134,7 +29475,7 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
                                 );
                             this.zr.modShape(this.shapeList[i].id);
                         }
-                        else if (this.shapeList[i]._axisShape == 'axisTick') {
+                        else if (this.shapeList[i]._axisShape === 'axisTick') {
                             tickLength = this.shapeList[i].style.yEnd 
                                          - this.shapeList[i].style.yStart;
                             this.shapeList[i].style.yStart = zeroY - tickLength;
@@ -29143,10 +29484,10 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
                         }
                     }
                 }
-                if (!this.isHorizontal() && typeof zeroX != 'undefined') {
+                if (!this.isHorizontal() && zeroX != null) {
                     // 纵向布局调整横向x
                     for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                        if (this.shapeList[i]._axisShape == 'axisLine') {
+                        if (this.shapeList[i]._axisShape === 'axisLine') {
                             this.shapeList[i].style.xStart 
                                 = this.shapeList[i].style.xEnd 
                                 = this.subPixelOptimize(
@@ -29154,7 +29495,7 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
                                 );
                             this.zr.modShape(this.shapeList[i].id);
                         }
-                        else if (this.shapeList[i]._axisShape == 'axisTick') {
+                        else if (this.shapeList[i]._axisShape === 'axisTick') {
                             tickLength = this.shapeList[i].style.xEnd 
                                          - this.shapeList[i].style.xStart;
                             this.shapeList[i].style.xStart = zeroX;
@@ -29165,22 +29506,22 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
                 }
             },
             
-            getPosition : function () {
+            getPosition: function () {
                 return this.option.position;
             },
             
-            isHorizontal : function() {
-                return this.option.position == 'bottom' || this.option.position == 'top';
+            isHorizontal: function() {
+                return this.option.position === 'bottom' || this.option.position === 'top';
             }
         },
         /**
          * 参数修正&默认值赋值，重载基类方法
          * @param {Object} opt 参数
          */
-        reformOption : function (opt) {
+        reformOption: function (opt) {
             // 不写或传了个空数值默认为数值轴
             if (!opt || (opt instanceof Array && opt.length === 0)) {
-                opt = [{type : ecConfig.COMPONENT_TYPE_AXIS_VALUE}];
+                opt = [ { type: ecConfig.COMPONENT_TYPE_AXIS_VALUE } ];
             }
             else if (!(opt instanceof Array)){
                 opt = [opt];
@@ -29191,7 +29532,7 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
                 opt = [opt[0],opt[1]];
             }
 
-            if (this.axisType == 'xAxis') {
+            if (this.axisType === 'xAxis') {
                 // 横轴位置默认配置
                 if (!opt[0].position            // 没配置或配置错
                     || (opt[0].position != 'bottom'
@@ -29200,8 +29541,7 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
                     opt[0].position = 'bottom';
                 }
                 if (opt.length > 1) {
-                    opt[1].position = opt[0].position == 'bottom'
-                                      ? 'top' : 'bottom';
+                    opt[1].position = opt[0].position === 'bottom' ? 'top' : 'bottom';
                 }
 
                 for (var i = 0, l = opt.length; i < l; i++) {
@@ -29222,8 +29562,7 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
                 }
 
                 if (opt.length > 1) {
-                    opt[1].position = opt[0].position == 'left'
-                                      ? 'right' : 'left';
+                    opt[1].position = opt[0].position === 'left' ? 'right' : 'left';
                 }
 
                 for (var i = 0, l = opt.length; i < l; i++) {
@@ -29241,11 +29580,11 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             var axisOption;
             if (newOption) {
                 this.option = newOption;
-                if (this.axisType == 'xAxis') {
+                if (this.axisType === 'xAxis') {
                     this.option.xAxis = this.reformOption(newOption.xAxis);
                     axisOption = this.option.xAxis;
                 }
@@ -29275,7 +29614,7 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
                     );
                 }
                 else if (axisOption && axisOption[i]) {
-                    this._axisList[i] =  axisOption[i].type == 'category'
+                    this._axisList[i] =  axisOption[i].type === 'category'
                                          ? new CategoryAxis(
                                                this.ecTheme, this.messageCenter, this.zr,
                                                axisOption[i], this.myChart, this.axisBase
@@ -29294,11 +29633,11 @@ define('echarts/component/axis',['require','./base','zrender/shape/Line','../con
          * 根据值换算位置
          * @param {number} idx 坐标轴索引0~1
          */
-        getAxis : function (idx) {
+        getAxis: function (idx) {
             return this._axisList[idx];
         },
 
-        clear : function () {
+        clear: function () {
             for (var i = 0, l = this._axisList.length; i < l; i++) {
                 this._axisList[i].dispose && this._axisList[i].dispose();
             }
@@ -29345,45 +29684,52 @@ define('echarts/component/grid',['require','./base','zrender/shape/Rectangle','.
     }
     
     Grid.prototype = {
-        type : ecConfig.COMPONENT_TYPE_GRID,
+        type: ecConfig.COMPONENT_TYPE_GRID,
 
-        getX : function () {
+        getX: function () {
             return this._x;
         },
 
-        getY : function () {
+        getY: function () {
             return this._y;
         },
 
-        getWidth : function () {
+        getWidth: function () {
             return this._width;
         },
 
-        getHeight : function () {
+        getHeight: function () {
             return this._height;
         },
 
-        getXend : function () {
+        getXend: function () {
             return this._x + this._width;
         },
 
-        getYend : function () {
+        getYend: function () {
             return this._y + this._height;
         },
 
-        getArea : function () {
+        getArea: function () {
             return {
-                x : this._x,
-                y : this._y,
-                width : this._width,
-                height : this._height
+                x: this._x,
+                y: this._y,
+                width: this._width,
+                height: this._height
             };
+        },
+        
+        getBbox: function() {
+            return [
+                [ this._x, this._y ],
+                [ this.getXend(), this.getYend() ]
+            ];
         },
         
         /**
          * 实在找不到合适的地方做了，各种粗暴的写法~ -_-
          */
-        refixAxisShape : function(component) {
+        refixAxisShape: function(component) {
             var zeroX;
             var zeroY;
             var axisList = component.xAxis._axisList.concat(component.yAxis._axisList);
@@ -29408,7 +29754,7 @@ define('echarts/component/grid',['require','./base','zrender/shape/Rectangle','.
             }
         },
         
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption
                 || this._zrWidth != this.zr.getWidth() 
                 || this._zrHeight != this.zr.getHeight()
@@ -29446,18 +29792,18 @@ define('echarts/component/grid',['require','./base','zrender/shape/Rectangle','.
                 this._y = this.subPixelOptimize(this._y, gridOption.borderWidth);
     
                 this.shapeList.push(new RectangleShape({
-                    zlevel : this._zlevelBase,
-                    hoverable : false,
-                    style : {
-                        x : this._x,
-                        y : this._y,
-                        width : this._width,
-                        height : this._height,
-                        brushType : gridOption.borderWidth > 0 ? 'both' : 'fill',
-                        color : gridOption.backgroundColor,
+                    zlevel: this._zlevelBase,
+                    hoverable: false,
+                    style: {
+                        x: this._x,
+                        y: this._y,
+                        width: this._width,
+                        height: this._height,
+                        brushType: gridOption.borderWidth > 0 ? 'both' : 'fill',
+                        color: gridOption.backgroundColor,
                         strokeColor: gridOption.borderColor,
-                        lineWidth : gridOption.borderWidth
-                        // type : this.option.splitArea.areaStyle.type,
+                        lineWidth: gridOption.borderWidth
+                        // type: this.option.splitArea.areaStyle.type,
                     }
                 }));
                 this.zr.addShape(this.shapeList[0]);
@@ -31931,11 +32277,11 @@ define('echarts/chart/scatter',['require','../component/base','./base','../util/
     }
     
     Scatter.prototype = {
-        type : ecConfig.CHART_TYPE_SCATTER,
+        type: ecConfig.CHART_TYPE_SCATTER,
         /**
          * 绘制图形
          */
-        _buildShape : function () {
+        _buildShape: function () {
             var series = this.series;
             this._sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
             this._symbol = this.option.symbolList;
@@ -31953,7 +32299,7 @@ define('echarts/chart/scatter',['require','../component/base','./base','../util/
             for (var i = 0, l = series.length; i < l; i++) {
                 serie = series[i];
                 serieName = serie.name;
-                if (serie.type == ecConfig.CHART_TYPE_SCATTER) {
+                if (serie.type === ecConfig.CHART_TYPE_SCATTER) {
                     series[i] = this.reformOption(series[i]);
                     this._sIndex2ShapeMap[i] = this.query(serie, 'symbol')
                                           || this._symbol[i % this._symbol.length];
@@ -32015,7 +32361,7 @@ define('echarts/chart/scatter',['require','../component/base','./base','../util/
         /**
          * 构建类目轴为水平方向的散点图系列
          */
-        _buildSeries : function (seriesArray) {
+        _buildSeries: function (seriesArray) {
             if (seriesArray.length === 0) {
                 return;
             }
@@ -32043,12 +32389,12 @@ define('echarts/chart/scatter',['require','../component/base','./base','../util/
                 pointList[seriesIndex] = [];
                 for (var i = 0, l = serie.data.length; i < l; i++) {
                     data = serie.data[i];
-                    value = typeof data != 'undefined'
-                            ? (typeof data.value != 'undefined'
+                    value = data != null
+                            ? (data.value != null
                               ? data.value
                               : data)
                             : '-';
-                    if (value == '-' || value.length < 2) {
+                    if (value === '-' || value.length < 2) {
                         // 数据格式不符
                         continue;
                     }
@@ -32072,18 +32418,18 @@ define('echarts/chart/scatter',['require','../component/base','./base','../util/
             this._buildPointList(pointList);
         },
         
-        _markMap : function (xAxis, yAxis, data, pointList) {
+        _markMap: function (xAxis, yAxis, data, pointList) {
             var xMarkMap = {
-                min0 : Number.POSITIVE_INFINITY,
-                max0 : Number.NEGATIVE_INFINITY,
-                sum0 : 0,
-                counter0 : 0,
-                average0 : 0,
-                min1 : Number.POSITIVE_INFINITY,
-                max1 : Number.NEGATIVE_INFINITY,
-                sum1 : 0,
-                counter1 : 0,
-                average1 : 0
+                min0: Number.POSITIVE_INFINITY,
+                max0: Number.NEGATIVE_INFINITY,
+                sum0: 0,
+                counter0: 0,
+                average0: 0,
+                min1: Number.POSITIVE_INFINITY,
+                max1: Number.NEGATIVE_INFINITY,
+                sum1: 0,
+                counter1: 0,
+                average1: 0
             };
             var value;
             for (var i = 0, l = pointList.length; i < l; i++) {
@@ -32166,7 +32512,7 @@ define('echarts/chart/scatter',['require','../component/base','./base','../util/
         /**
          * 生成折线和折线上的拐点
          */
-        _buildPointList : function (pointList) {
+        _buildPointList: function (pointList) {
             var series = this.series;
             var serie;
             var seriesPL;
@@ -32216,7 +32562,7 @@ define('echarts/chart/scatter',['require','../component/base','./base','../util/
         /**
          * 生成折线图上的拐点图形
          */
-        _getSymbol : function (seriesIndex, dataIndex, name, x, y) {
+        _getSymbol: function (seriesIndex, dataIndex, name, x, y) {
             var series = this.series;
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
@@ -32248,24 +32594,24 @@ define('echarts/chart/scatter',['require','../component/base','./base','../util/
             return itemShape;
         },
         
-        _getLargeSymbol : function (pointList, nColor) {
+        _getLargeSymbol: function (pointList, nColor) {
             return new SymbolShape({
-                zlevel : this._zlevelBase,
-                _main : true,
+                zlevel: this._zlevelBase,
+                _main: true,
                 hoverable: false,
-                style : {
-                    pointList : pointList,
-                    color : nColor,
-                    strokeColor : nColor
+                style: {
+                    pointList: pointList,
+                    color: nColor,
+                    strokeColor: nColor
                 },
-                highlightStyle : {
-                    pointList : []
+                highlightStyle: {
+                    pointList: [ ]
                 }
             });
         },
         
         // 位置转换
-        getMarkCoord : function (seriesIndex, mpData) {
+        getMarkCoord: function (seriesIndex, mpData) {
             var serie = this.series[seriesIndex];
             var xMarkMap = this.xMarkMap[seriesIndex];
             var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex);
@@ -32273,12 +32619,11 @@ define('echarts/chart/scatter',['require','../component/base','./base','../util/
             var pos;
             
             if (mpData.type
-                && (mpData.type == 'max' || mpData.type == 'min' || mpData.type == 'average')
+                && (mpData.type === 'max' || mpData.type === 'min' || mpData.type === 'average')
             ) {
                 // 特殊值内置支持
                 // 默认取纵值
-                var valueIndex = typeof mpData.valueIndex != 'undefined'
-                                 ? mpData.valueIndex : 1;
+                var valueIndex = mpData.valueIndex != null ? mpData.valueIndex : 1;
                 pos = [
                     xMarkMap[mpData.type + 'X' + valueIndex],
                     xMarkMap[mpData.type + 'Y' + valueIndex],
@@ -32304,7 +32649,7 @@ define('echarts/chart/scatter',['require','../component/base','./base','../util/
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption;
                 this.series = newOption.series;
@@ -32319,7 +32664,7 @@ define('echarts/chart/scatter',['require','../component/base','./base','../util/
          * @param {Object} param
          * @param {Object} status
          */
-        ondataRange : function (param, status) {
+        ondataRange: function (param, status) {
             if (this.component.dataRange) {
                 this.refresh();
                 status.needRefresh = true;
@@ -32375,25 +32720,25 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
     }
     
     K.prototype = {
-        type : ecConfig.CHART_TYPE_K,
+        type: ecConfig.CHART_TYPE_K,
         /**
          * 绘制图形
          */
-        _buildShape : function () {
+        _buildShape: function () {
             var series = this.series;
             this.selectedMap = {};
 
             // 水平垂直双向series索引 ，position索引到seriesIndex
             var _position2sIndexMap = {
-                top : [],
-                bottom : []
+                top: [ ],
+                bottom: [ ]
             };
             var xAxis;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].type == ecConfig.CHART_TYPE_K) {
+                if (series[i].type === ecConfig.CHART_TYPE_K) {
                     series[i] = this.reformOption(series[i]);
                     xAxis = this.component.xAxis.getAxis(series[i].xAxisIndex);
-                    if (xAxis.type == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                    if (xAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         _position2sIndexMap[xAxis.getPosition()].push(i);
                     }
@@ -32416,7 +32761,7 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
          *
          * @param {number} seriesIndex 系列索引
          */
-        _buildSinglePosition : function (position, seriesArray) {
+        _buildSinglePosition: function (position, seriesArray) {
             var mapData = this._mapData(seriesArray);
             var locationMap = mapData.locationMap;
             var maxDataLength = mapData.maxDataLength;
@@ -32435,7 +32780,7 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
          * 数据整形
          * 数组位置映射到系列索引
          */
-        _mapData : function (seriesArray) {
+        _mapData: function (seriesArray) {
             var series = this.series;
             var serie;                              // 临时映射变量
             var serieName;                          // 临时映射变量
@@ -32459,15 +32804,15 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
                 maxDataLength = Math.max(maxDataLength, serie.data.length);
             }
             return {
-                locationMap : locationMap,
-                maxDataLength : maxDataLength
+                locationMap: locationMap,
+                maxDataLength: maxDataLength
             };
         },
 
         /**
          * 构建类目轴为水平方向的K线图系列
          */
-        _buildHorizontal : function (seriesArray, maxDataLength, locationMap) {
+        _buildHorizontal: function (seriesArray, maxDataLength, locationMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex;
@@ -32499,18 +32844,18 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
                 
                 pointList[seriesIndex] = [];
                 for (var i = 0, l = maxDataLength; i < l; i++) {
-                    if (typeof categoryAxis.getNameByIndex(i) == 'undefined') {
+                    if (categoryAxis.getNameByIndex(i) == null) {
                         // 系列数据超出类目轴长度
                         break;
                     }
                     
                     data = serie.data[i];
-                    value = typeof data != 'undefined'
-                            ? (typeof data.value != 'undefined'
+                    value = data != null
+                            ? (data.value != null
                               ? data.value
                               : data)
                             : '-';
-                    if (value == '-' || value.length != 4) {
+                    if (value === '-' || value.length != 4) {
                         // 数据格式不符
                         continue;
                     }
@@ -32533,7 +32878,7 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
         /**
          * 生成K线
          */
-        _buildKLine : function (seriesArray, pointList) {
+        _buildKLine: function (seriesArray, pointList) {
             var series = this.series;
             // normal:
             var nLineWidth;
@@ -32566,9 +32911,7 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
                     seriesPL = this._getLargePointList(seriesPL);
                 }
                 
-                if (serie.type == ecConfig.CHART_TYPE_K
-                    && typeof seriesPL != 'undefined'
-                ) {
+                if (serie.type === ecConfig.CHART_TYPE_K && seriesPL != null) {
                     // 多级控制
                     queryTarget = serie;
                     nLineWidth = this.query(
@@ -32690,14 +33033,14 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
             // console.log(this.shapeList)
         },
 
-        _isLarge : function(singlePL) {
+        _isLarge: function(singlePL) {
             return singlePL[0][1] < 0.5;
         },
         
         /**
          * 大规模pointList优化 
          */
-        _getLargePointList : function(singlePL) {
+        _getLargePointList: function(singlePL) {
             var total = this.component.grid.getWidth();
             var len = singlePL.length;
             var newList = [];
@@ -32710,7 +33053,7 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
         /**
          * 生成K线图上的图形
          */
-        _getCandle : function (
+        _getCandle: function (
             seriesIndex, dataIndex, name, 
             x, width, y0, y1, y2, y3, 
             nColor, nLinewidth, nLineColor, 
@@ -32718,23 +33061,23 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
         ) {
             var series = this.series;
             var itemShape = {
-                zlevel : this._zlevelBase,
+                zlevel: this._zlevelBase,
                 clickable: this.deepQuery(
                     [series[seriesIndex].data[dataIndex], series[seriesIndex]], 'clickable'
                 ),
-                style : {
-                    x : x,
-                    y : [y0, y1, y2, y3],
-                    width : width,
-                    color : nColor,
-                    strokeColor : nLineColor,
-                    lineWidth : nLinewidth,
-                    brushType : 'both'
+                style: {
+                    x: x,
+                    y: [y0, y1, y2, y3],
+                    width: width,
+                    color: nColor,
+                    strokeColor: nLineColor,
+                    lineWidth: nLinewidth,
+                    brushType: 'both'
                 },
-                highlightStyle : {
-                    color : eColor,
-                    strokeColor : eLineColor,
-                    lineWidth : eLinewidth
+                highlightStyle: {
+                    color: eColor,
+                    strokeColor: eLineColor,
+                    lineWidth: eLinewidth
                 },
                 _seriesIndex: seriesIndex
             };
@@ -32750,7 +33093,7 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
         },
 
         // 位置转换
-        getMarkCoord : function (seriesIndex, mpData) {
+        getMarkCoord: function (seriesIndex, mpData) {
             var serie = this.series[seriesIndex];
             var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex);
             var yAxis = this.component.yAxis.getAxis(serie.yAxisIndex);
@@ -32769,7 +33112,7 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption;
                 this.series = newOption.series;
@@ -32782,7 +33125,7 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
         /**
          * 动画设定
          */
-        addDataAnimation : function (params) {
+        addDataAnimation: function (params) {
             var series = this.series;
             var aniMap = {}; // seriesIndex索引参数
             for (var i = 0, l = params.length; i < l; i++) {
@@ -32798,11 +33141,11 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
                 seriesIndex = this.shapeList[i]._seriesIndex;
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
                     // 有数据删除才有移动的动画
-                    if (this.shapeList[i].type == 'candle') {
+                    if (this.shapeList[i].type === 'candle') {
                         dataIndex = ecData.get(this.shapeList[i], 'dataIndex');
                         serie = series[seriesIndex];
                         if (aniMap[seriesIndex][2] 
-                            && dataIndex == serie.data.length - 1
+                            && dataIndex === serie.data.length - 1
                         ) {
                             // 队头加入删除末尾
                             this.zr.delShape(this.shapeList[i].id);
@@ -32821,7 +33164,7 @@ define('echarts/chart/k',['require','../component/base','./base','../util/shape/
                         this.zr.animate(this.shapeList[i].id, '')
                             .when(
                                 500,
-                                {position : [x, y]}
+                                { position: [ x, y ] }
                             )
                             .start();
                     }
@@ -33901,7 +34244,6 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
  * @author Neil (杨骥, yangji01@baidu.com)
- *
  */
 
  define('echarts/chart/radar',['require','../component/base','./base','zrender/shape/Polygon','../component/polar','../config','../util/ecData','zrender/tool/util','zrender/tool/color','../util/accMath','../chart'],function (require) {
@@ -33924,6 +34266,8 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
      * @param {ZRender} zr zrender实例
      * @param {Object} series 数据
      * @param {Object} component 组件
+     * @constructor
+     * @exports Radar
      */
     function Radar(ecTheme, messageCenter, zr, option, myChart) {
         // 基类
@@ -33949,8 +34293,8 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
             var series = this.series;
             var legend = this.component.legend;
             var serieName;
-            for (var i = 0, l = series.length; i < l ; i ++) {
-                if (series[i].type == ecConfig.CHART_TYPE_RADAR) {
+            for (var i = 0, l = series.length; i < l ; i++) {
+                if (series[i].type === ecConfig.CHART_TYPE_RADAR) {
                     this.serie = this.reformOption(series[i]);
                     serieName = this.serie.name || '';
                     // 系列图例开关
@@ -33986,13 +34330,12 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
             var pointList;
             var calculable = this.deepQuery(this._queryTarget, 'calculable');
            
-            for (var i = 0; i < data.length; i ++) {
+            for (var i = 0; i < data.length; i++) {
                 name = data[i].name || '';
                 
                 // 图例开关
                 this.selectedMap[name] = legend 
-                                         ? legend.isSelected(name) 
-                                         : true;
+                    ? legend.isSelected(name) : true;
                 if (!this.selectedMap[name]) {
                     continue;
                 }
@@ -34017,7 +34360,8 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
 
                 pointList = this._getPointList(this.serie.polarIndex, data[i]);
                 // 添加拐点形状
-                this._addSymbol(pointList, defaultColor, i, index, this.serie.polarIndex);
+                this._addSymbol(
+                    pointList, defaultColor, i, index, this.serie.polarIndex);
                 // 添加数据形状
                 this._addDataShape(
                     pointList, defaultColor, data[i],
@@ -34059,7 +34403,7 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
          * @param {object} data 数据
          * @param {number} serieIndex
          */
-        _addSymbol : function (pointList, defaultColor, dataIndex, seriesIndex, polarIndex) {
+        _addSymbol :function (pointList, defaultColor, dataIndex, seriesIndex, polarIndex) {
             var series = this.series;
             var itemShape;
             var polar = this.component.polar;
@@ -34131,7 +34475,8 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
                     brushType   : nIsAreaFill ? 'both' : 'stroke',
                     color       : nAreaColor 
                                   || nColor 
-                                  || zrColor.alpha(defaultColor,0.5),
+                                  || (typeof defaultColor === 'string' 
+                                      ? zrColor.alpha(defaultColor,0.5) : defaultColor),
                     strokeColor : nColor || defaultColor,
                     lineWidth   : nLineWidth,
                     lineType    : nLineType
@@ -34148,7 +34493,8 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
                                   ) 
                                   || nAreaColor 
                                   || nColor 
-                                  || zrColor.alpha(defaultColor,0.5),
+                                  || (typeof defaultColor === 'string' 
+                                      ? zrColor.alpha(defaultColor,0.5) : defaultColor),
                     strokeColor : this.getItemStyleColor(
                                        this.deepQuery(
                                            queryTarget, 'itemStyle.emphasis.color'
@@ -34216,7 +34562,8 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
                 return;
             }
 
-            var target = param.target;      // 被拖拽图形元素
+            // 被拖拽图形元素
+            var target = param.target;
 
             var seriesIndex = ecData.get(target, 'seriesIndex');
             var dataIndex = ecData.get(target, 'dataIndex');
@@ -34258,7 +34605,7 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
             var legend = this.component.legend;
             var value;
 
-            if (dataIndex == -1) {
+            if (dataIndex === -1) {
                 data = {
                     value : ecData.get(dragged, 'value'),
                     name : ecData.get(dragged, 'name')
@@ -34279,7 +34626,7 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
                 data.name += this.option.nameConnector
                              + ecData.get(dragged, 'name');
                 value = ecData.get(dragged, 'value');
-                for (var i = 0 ; i < value.length; i ++) {
+                for (var i = 0 ; i < value.length; i++) {
                     data.value[i] = accMath.accAdd(data.value[i], value[i]);
                 }
                 
@@ -34321,56 +34668,316 @@ define('echarts/component/polar',['require','./base','zrender/shape/Text','zrend
     return Radar;
 });
 /**
- * zrender
- *
- * @author pissang (https://github.com/pissang)
- *
- * shape类：chord
- * 可配图形属性：
-   {
-       // 基础属性
-       shape  : 'chord',       // 必须，shape类标识，需要显式指定
-       id     : {string},       // 必须，图形唯一标识，可通过'zrender/tool/guid'方法生成
-       zlevel : {number},       // 默认为0，z层level，决定绘画在哪层canvas中
-       invisible : {boolean},   // 默认为false，是否可见
-
-       // 样式属性，默认状态样式样式属性
-       style  : {
-           center        : {array},
-           source0       : {number},
-           source1       : {number},
-           target0       : {number},
-           target1       : {number},
-           r             : {number},
-       },
-
-       // 样式属性，高亮样式属性，当不存在highlightStyle时使用基于默认样式扩展显示
-       highlightStyle : {
-           // 同style
-       }
-
-       // 交互属性，详见shape.Base
-
-       // 事件属性，详见shape.Base
-   }
+ * Path 代理，可以在`buildPath`中用于替代`ctx`, 会保存每个path操作的命令到pathCommands属性中
+ * 可以用于 isInsidePath 判断以及获取boundingRect
+ * 
+ * @module zrender/shape/util/PathProxy
+ * @author pissang (http://www.github.com/pissang)
+ * 
+ * @example
+ *     var SomeShape = function() {
+ *         this._pathProxy = new PathProxy();
+ *         ...
+ *     }
+ *     SomeShape.prototype.buildPath = function(ctx, style) {
+ *         this._pathProxy.begin(ctx);
+ *             .moveTo(style.x, style.y);
+ *             .lineTo(style.x1, style.y1);
+ *         ...
+ *             .closePath();
+ *     },
+ *     SomeShape.prototype.getRect = function(style) {
+ *         if (!style._rect) {
+ *             // 这里必须要在 buildPath 之后才能调用
+ *             style._rect = this._pathProxy.fastBoundingRect();
+ *         }
+ *         return this.style._rect;
+ *     },
+ *     SomeShape.prototype.isCover = function(x, y) {
+ *         var rect = this.getRect(this.style);
+ *         if (x >= rect.x
+ *             && x <= (rect.x + rect.width)
+ *             && y >= rect.y
+ *             && y <= (rect.y + rect.height)
+ *         ) {
+ *             return area.isInsidePath(
+ *                 this._pathProxy.pathCommands, 0, 'fill', x, y
+ *             );
+ *         }
+ *     }
  */
-define('echarts/util/shape/Chord',['require','zrender/shape/Base','zrender/tool/util'],function (require) {
-    var Base = require('zrender/shape/Base');
-    var zrUtil = require('zrender/tool/util');
-    var _ctx = zrUtil.getContext();
+define('zrender/shape/util/PathProxy',['require','../../tool/vector'],function (require) {
     
-    function ChordShape(options) {
+    var vector = require('../../tool/vector');
+    // var computeBoundingBox = require('../../tool/computeBoundingBox');
+
+    var PathSegment = function(command, points) {
+        this.command = command;
+        this.points = points || null;
+    };
+
+    /**
+     * @alias module:zrender/shape/tool/PathProxy
+     * @constructor
+     */
+    var PathProxy = function () {
+
+        /**
+         * Path描述的数组，用于`isInsidePath`的判断
+         * @type {Array.<Object>}
+         */
+        this.pathCommands = [];
+
+        this._ctx = null;
+
+        this._min = [];
+        this._max = [];
+    };
+
+    /**
+     * 快速计算Path包围盒（并不是最小包围盒）
+     * @return {Object}
+     */
+    PathProxy.prototype.fastBoundingRect = function () {
+        var min = this._min;
+        var max = this._max;
+        min[0] = min[1] = Infinity;
+        max[0] = max[1] = -Infinity;
+        for (var i = 0; i < this.pathCommands.length; i++) {
+            var seg = this.pathCommands[i];
+            var p = seg.points;
+            switch (seg.command) {
+                case 'M':
+                    vector.min(min, min, p);
+                    vector.max(max, max, p);
+                    break;
+                case 'L':
+                    vector.min(min, min, p);
+                    vector.max(max, max, p);
+                    break;
+                case 'C':
+                    for (var j = 0; j < 6; j += 2) {
+                        min[0] = Math.min(min[0], min[0], p[j]);
+                        min[1] = Math.min(min[1], min[1], p[j + 1]);
+                        max[0] = Math.max(max[0], max[0], p[j]);
+                        max[1] = Math.max(max[1], max[1], p[j + 1]);
+                    }
+                    break;
+                case 'Q':
+                    for (var j = 0; j < 4; j += 2) {
+                        min[0] = Math.min(min[0], min[0], p[j]);
+                        min[1] = Math.min(min[1], min[1], p[j + 1]);
+                        max[0] = Math.max(max[0], max[0], p[j]);
+                        max[1] = Math.max(max[1], max[1], p[j + 1]);
+                    }
+                    break;
+                case 'A':
+                    var cx = p[0];
+                    var cy = p[1];
+                    var rx = p[2];
+                    var ry = p[3];
+                    min[0] = Math.min(min[0], min[0], cx - rx);
+                    min[1] = Math.min(min[1], min[1], cy - ry);
+                    max[0] = Math.max(max[0], max[0], cx + rx);
+                    max[1] = Math.max(max[1], max[1], cy + ry);
+                    break;
+            }
+        }
+
+        return {
+            x: min[0],
+            y: min[1],
+            width: max[0] - min[0],
+            height: max[1] - min[1]
+        };
+    };
+
+    /**
+     * @param  {CanvasRenderingContext2D} ctx
+     * @return {PathProxy}
+     */
+    PathProxy.prototype.begin = function (ctx) {
+        this._ctx = ctx || null;
+        // 清空pathCommands
+        this.pathCommands.length = 0;
+
+        return this;
+    };
+
+    /**
+     * @param  {number} x
+     * @param  {number} y
+     * @return {PathProxy}
+     */
+    PathProxy.prototype.moveTo = function (x, y) {
+        this.pathCommands.push(new PathSegment('M', [x, y]));
+        if (this._ctx) {
+            this._ctx.moveTo(x, y);
+        }
+        return this;
+    };
+
+    /**
+     * @param  {number} x
+     * @param  {number} y
+     * @return {PathProxy}
+     */
+    PathProxy.prototype.lineTo = function (x, y) {
+        this.pathCommands.push(new PathSegment('L', [x, y]));
+        if (this._ctx) {
+            this._ctx.lineTo(x, y);
+        }
+        return this;
+    };
+
+    /**
+     * @param  {number} x1
+     * @param  {number} y1
+     * @param  {number} x2
+     * @param  {number} y2
+     * @param  {number} x3
+     * @param  {number} y3
+     * @return {PathProxy}
+     */
+    PathProxy.prototype.bezierCurveTo = function (x1, y1, x2, y2, x3, y3) {
+        this.pathCommands.push(new PathSegment('C', [x1, y1, x2, y2, x3, y3]));
+        if (this._ctx) {
+            this._ctx.bezierCurveTo(x1, y1, x2, y2, x3, y3);
+        }
+        return this;
+    };
+
+    /**
+     * @param  {number} x1
+     * @param  {number} y1
+     * @param  {number} x2
+     * @param  {number} y2
+     * @return {PathProxy}
+     */
+    PathProxy.prototype.quadraticCurveTo = function (x1, y1, x2, y2) {
+        this.pathCommands.push(new PathSegment('A', [x1, y1, x2, y2]));
+        if (this._ctx) {
+            this._ctx.quadraticCurveTo(x1, y1, x2, y2);
+        }
+        return this;
+    };
+
+    /**
+     * @param  {number} cx
+     * @param  {number} cy
+     * @param  {number} r
+     * @param  {number} startAngle
+     * @param  {number} endAngle
+     * @param  {boolean} anticlockwise
+     * @return {PathProxy}
+     */
+    PathProxy.prototype.arc = function (cx, cy, r, startAngle, endAngle, anticlockwise) {
+        this.pathCommands.push(new PathSegment(
+            'A', [cx, cy, r, r, startAngle, endAngle - startAngle, 0, anticlockwise ? 0 : 1]
+        ));
+        if (this._ctx) {
+            this._ctx.arc(cx, cy, r, startAngle, endAngle, anticlockwise);
+        }
+        return this;
+    };
+
+    // TODO
+    PathProxy.prototype.arcTo = function (x1, y1, x2, y2, radius) {
+        if (this._ctx) {
+            this._ctx.arcTo(x1, y1, x2, y2, radius);
+        }
+        return this;
+    };
+
+    // TODO
+    PathProxy.prototype.rect = function (x, y, w, h) {
+        if (this._ctx) {
+            this._ctx.rect(x, y, w, h);
+        }
+        return this;
+    };
+
+    /**
+     * @return {PathProxy}
+     */
+    PathProxy.prototype.closePath = function () {
+        this.pathCommands.push(new PathSegment('z'));
+        if (this._ctx) {
+            this._ctx.closePath();
+        }
+        return this;
+    };
+
+    /**
+     * 是否没有Path命令
+     * @return {boolean}
+     */
+    PathProxy.prototype.isEmpty = function() {
+        return this.pathCommands.length === 0;
+    };
+
+    PathProxy.PathSegment = PathSegment;
+
+    return PathProxy;
+});
+/**
+ * @module echarts/util/shape/Ribbon
+ * @author pissang (https://github.com/pissang)
+ */
+/**
+ * @typedef {Object} IRibbonStyle
+ * @property {number} x
+ * @property {number} y
+ * @property {number} source0
+ * @property {number} source1
+ * @property {number} target0
+ * @property {number} target1
+ * @property {number} r
+ * @property {string} [brushType='fill']
+ * @property {string} [color='#000000'] 填充颜色
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
+ */
+define('echarts/util/shape/Ribbon',['require','zrender/shape/Base','zrender/shape/util/PathProxy','zrender/tool/util','zrender/tool/area'],function (require) {
+    var Base = require('zrender/shape/Base');
+    var PathProxy = require('zrender/shape/util/PathProxy');
+    var zrUtil = require('zrender/tool/util');
+    var area = require('zrender/tool/area');
+
+    // var _ctx = zrUtil.getContext();
+    
+    function RibbonShape(options) {
         Base.call(this, options);
+
+        this._pathProxy = new PathProxy();
     }
 
-    ChordShape.prototype = {
+    RibbonShape.prototype = {
         type : 'chord',
         
         // center, source0, source1, target0, target1, r
         buildPath : function (ctx, style) {
+
+            var path = this._pathProxy;
+            path.begin(ctx);
+
             var PI2 = Math.PI * 2;
-            var cx = style.center[0];
-            var cy = style.center[1];
+            var cx = style.x;
+            var cy = style.y;
             var r = style.r;
             var s0 = style.source0 / 180 * Math.PI;
             var s1 = style.source1 / 180 * Math.PI;
@@ -34385,9 +34992,9 @@ define('echarts/util/shape/Chord',['require','zrender/shape/Base','zrender/tool/
             var tx1 = cx + Math.cos(PI2 - t1) * r;
             var ty1 = cy - Math.sin(PI2 - t1) * r;
 
-            ctx.moveTo(sx0, sy0);
-            ctx.arc(cx, cy, style.r, s0, s1, false);
-            ctx.bezierCurveTo(
+            path.moveTo(sx0, sy0);
+            path.arc(cx, cy, style.r, s0, s1, false);
+            path.bezierCurveTo(
                 (cx - sx1) * 0.70 + sx1, 
                 (cy - sy1) * 0.70 + sy1,
                 (cx - tx0) * 0.70 + tx0, 
@@ -34395,12 +35002,13 @@ define('echarts/util/shape/Chord',['require','zrender/shape/Base','zrender/tool/
                 tx0, ty0
             );
             // Chord to self
-            if (style.source0 === style.target0 &&
-                style.source1 === style.target1) {
+            if (style.source0 === style.target0
+                && style.source1 === style.target1
+            ) {
                 return;
             }
-            ctx.arc(cx, cy, style.r, t0, t1, false);
-            ctx.bezierCurveTo(
+            path.arc(cx, cy, style.r, t0, t1, false);
+            path.bezierCurveTo(
                 (cx - tx1) * 0.70 + tx1, 
                 (cy - ty1) * 0.70 + ty1,
                 (cx - sx0) * 0.70 + sx0, 
@@ -34409,34 +35017,33 @@ define('echarts/util/shape/Chord',['require','zrender/shape/Base','zrender/tool/
             );
         },
         
-        getRect : function (){
-            return {
-                x : 0,
-                y : 0,
-                width : 0,
-                height : 0
-            };
+        getRect : function (style) {
+            if (style.__rect) {
+                return style.__rect;
+            }
+            if (!this._pathProxy.isEmpty()) {
+                this.buildPath(null, style);
+            }
+            return this._pathProxy.fastBoundingRect();
         },
                 
         isCover : function (x, y) {
-            if (!_ctx.isPointInPath) {  // In ie
-                return false;
+            var rect = this.getRect(this.style);
+            if (x >= rect.x
+                && x <= (rect.x + rect.width)
+                && y >= rect.y
+                && y <= (rect.y + rect.height)
+            ) {
+                return area.isInsidePath(
+                    this._pathProxy.pathCommands, 0, 'fill', x, y
+                );
             }
-            var originPos = this.getTansform(x, y);
-            x = originPos[0];
-            y = originPos[1];
-            
-            _ctx.beginPath();
-            ChordShape.prototype.buildPath.call(null, _ctx, this.style);
-            _ctx.closePath();
-            
-            return _ctx.isPointInPath(x, y);
         }
     };
 
-    zrUtil.inherits(ChordShape, Base);
+    zrUtil.inherits(RibbonShape, Base);
     
-    return ChordShape;
+    return RibbonShape;
 });
 define('echarts/util/kwargs',[],function (){
     function kwargs(func, defaults) {
@@ -36800,7 +37407,7 @@ return NDArray;
  *
  */
 
-define('echarts/chart/chord',['require','../component/base','./base','zrender/shape/Text','zrender/shape/Line','zrender/shape/Sector','../util/shape/Chord','../config','../util/ecData','zrender/tool/util','zrender/tool/vector','../util/ndarray','../chart'],function (require) {
+define('echarts/chart/chord',['require','../component/base','./base','zrender/shape/Text','zrender/shape/Line','zrender/shape/Sector','../util/shape/Ribbon','../config','../util/ecData','zrender/tool/util','zrender/tool/vector','../util/ndarray','../chart'],function (require) {
     
     
     var ComponentBase = require('../component/base');
@@ -36810,7 +37417,7 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
     var TextShape = require('zrender/shape/Text');
     var LineShape = require('zrender/shape/Line');
     var SectorShape = require('zrender/shape/Sector');
-    var ChordShape = require('../util/shape/Chord');
+    var RibbonShape = require('../util/shape/Ribbon');
     
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
@@ -36830,11 +37437,11 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
     }
     
     Chord.prototype = {
-        type : ecConfig.CHART_TYPE_CHORD,
+        type: ecConfig.CHART_TYPE_CHORD,
         /**
          * 绘制图形
          */
-        _buildShape : function () {
+        _buildShape: function () {
             var series = this.series;
             this.selectedMap = {};
             this.chordSeries = [];
@@ -37028,7 +37635,7 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
             this.addShapeList();
         },
 
-        _filterData : function  (dataMat, groups) {
+        _filterData: function  (dataMat, groups) {
             var indices = [];
             var groupsFilted = [];
             // Filter by selected group
@@ -37070,7 +37677,7 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
             return [dataMat, groupsFilted2];
         },
 
-        _buildSectors : function (angles, data) {
+        _buildSectors: function (angles, data) {
             var len = this.groups.length;
             var len2 = this.chordSeries.length;
 
@@ -37150,21 +37757,21 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
                 var _end = (this.clockWise ? (360 - angle[0]) : angle[1]) + this.startAngle;
 
                 var sector = {
-                    zlevel : this._zlevelBase,
-                    style : {
-                        x : this.center[0],
-                        y : this.center[1],
-                        r0 : this.innerRadius,
-                        r : this.outerRadius,
-                        startAngle : _start,
-                        endAngle : _end,
-                        brushType : 'fill',
+                    zlevel: this._zlevelBase,
+                    style: {
+                        x: this.center[0],
+                        y: this.center[1],
+                        r0: this.innerRadius,
+                        r: this.outerRadius,
+                        startAngle: _start,
+                        endAngle: _end,
+                        brushType: 'fill',
                         opacity: 1,
-                        color : this.getColor(group.name)
+                        color: this.getColor(group.name)
                     },
                     clickable: this.chordSerieSample.clickable,
-                    highlightStyle : {
-                        brushType : 'fill'
+                    highlightStyle: {
+                        brushType: 'fill'
                     }
                 };
                 sector.style.lineWidth = this.deepQuery(
@@ -37209,12 +37816,12 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
                     vec2.add(start, start, this.center);
 
                     var labelShape = {
-                        zlevel : this._zlevelBase - 1,
-                        hoverable : false,
-                        style : {
-                            text : group.name,
-                            textAlign : isRightSide ? 'left' : 'right',
-                            color : labelColor
+                        zlevel: this._zlevelBase - 1,
+                        hoverable: false,
+                        style: {
+                            text: group.name,
+                            textAlign: isRightSide ? 'left' : 'right',
+                            color: labelColor
                         }
                     };
                     if (rotateLabel) {
@@ -37258,9 +37865,9 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
             }
             var len2 = angles[0][0].length;
 
-            var chordLineStyle 
+            var ribbonLineStyle 
                 = this.chordSerieSample.itemStyle.normal.chordStyle.lineStyle;
-            var chordLineStyleEmphsis
+            var ribbonLineStyleEmphsis
                 = this.chordSerieSample.itemStyle.emphasis.chordStyle.lineStyle;
 
             for (var i = 0; i < len; i++) {
@@ -37276,8 +37883,10 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
                         var angleIJ1 = angles[i][j][k][1];
                         var angleJI1 = angles[j][i][k][1];
 
-                        if (angleIJ0 - angleJI1 === 0 ||
-                            angleJI0 - angleJI1 === 0) {
+                        if (
+                            angleIJ0 - angleJI1 === 0
+                            || angleJI0 - angleJI1 === 0
+                        ) {
                             this.chordShapes[i][j][k] = null;
                             continue;
                         }
@@ -37297,25 +37906,26 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
                         var t0 = !this.clockWise ? (360 - angleJI1) : angleJI0;
                         var t1 = !this.clockWise ? (360 - angleJI0) : angleJI1;
                         var chord = {
-                            zlevel : this._zlevelBase,
-                            style : {
-                                center : this.center,
-                                r : this.innerRadius,
-                                source0 : s0 - this.startAngle,
-                                source1 : s1 - this.startAngle,
-                                target0 : t0 - this.startAngle,
-                                target1 : t1 - this.startAngle,
-                                brushType : 'both',
-                                opacity : 0.5,
-                                color : color,
-                                lineWidth : chordLineStyle.width,
-                                strokeColor : chordLineStyle.color
+                            zlevel: this._zlevelBase,
+                            style: {
+                                x: this.center[0],
+                                y: this.center[1],
+                                r: this.innerRadius,
+                                source0: s0 - this.startAngle,
+                                source1: s1 - this.startAngle,
+                                target0: t0 - this.startAngle,
+                                target1: t1 - this.startAngle,
+                                brushType: 'both',
+                                opacity: 0.5,
+                                color: color,
+                                lineWidth: ribbonLineStyle.width,
+                                strokeColor: ribbonLineStyle.color
                             },
                             clickable: this.chordSerieSample.clickable,
-                            highlightStyle : {
-                                brushType : 'both',
-                                lineWidth : chordLineStyleEmphsis.width,
-                                strokeColor : chordLineStyleEmphsis.color
+                            highlightStyle: {
+                                brushType: 'both',
+                                lineWidth: ribbonLineStyleEmphsis.width,
+                                strokeColor: ribbonLineStyleEmphsis.color
                             }
                         };
 
@@ -37329,7 +37939,7 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
                             dataArr[j][i][k]
                         );
 
-                        chord = new ChordShape(chord);
+                        chord = new RibbonShape(chord);
                         this.chordShapes[i][j][k] = chord;
                         this.shapeList.push(chord);
                     }
@@ -37360,16 +37970,16 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
                     var end = vec2.scale([], v, this.outerRadius + this.scaleLineLength);
                     vec2.add(end, end, this.center);
                     var scaleShape = {
-                        zlevel : this._zlevelBase - 1,
-                        hoverable : false,
-                        style : {
-                            xStart : start[0],
-                            yStart : start[1],
-                            xEnd : end[0],
-                            yEnd : end[1],
-                            lineCap : 'round',
-                            brushType : 'stroke',
-                            strokeColor : '#666',
+                        zlevel: this._zlevelBase - 1,
+                        hoverable: false,
+                        style: {
+                            xStart: start[0],
+                            yStart: start[1],
+                            xEnd: end[0],
+                            yEnd: end[1],
+                            lineCap: 'round',
+                            brushType: 'stroke',
+                            strokeColor: '#666',
                             lineWidth: 1
                         }
                     };
@@ -37393,19 +38003,19 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
                     var isRightSide = thelta <= 90
                                      || thelta >= 270;
                     var textShape = {
-                        zlevel : this._zlevelBase - 1,
-                        hoverable : false,
-                        style : {
-                            x : isRightSide 
+                        zlevel: this._zlevelBase - 1,
+                        hoverable: false,
+                        style: {
+                            x: isRightSide 
                                     ? this.outerRadius + this.scaleLineLength + 4 
                                     : -this.outerRadius - this.scaleLineLength - 4,
-                            y : 0,
-                            text : Math.round(scaleValues.shift()*10)/10 
+                            y: 0,
+                            text: Math.round(scaleValues.shift()*10)/10 
                                     + unitPostfix,
-                            textAlign : isRightSide ? 'left' : 'right'
+                            textAlign: isRightSide ? 'left' : 'right'
                         },
-                        position : this.center.slice(),
-                        rotation : isRightSide
+                        position: this.center.slice(),
+                        rotation: isRightSide
                             ? [thelta / 180 * Math.PI, 0, 0]
                             : [
                                 (thelta + 180) / 180 * Math.PI,
@@ -37450,28 +38060,9 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
                 this.series = newOption.series;
             }
             
-            /*
-            this.legend;
-            this.getColor;
-            this.isSelected;
-            this.chordSerieSample;
-            */
             // Config
             this.chordSeries = [];
-            /*
-            this.groups;
-            this.startAngle;
-            this.clockWise;
-            this.innerRadius;
-            this.outerRadius;
-            this.padding;
-            this.sortGroups;
-            this.sortSubGroups;
-            this.center;
-            this.showScale;
-            this.showScaleText;
-            this.dataMat;
-            */
+
             this.strokeFix = 0;
             // Adjacency matrix
             this.sectorShapes = [];
@@ -37558,9 +38149,356 @@ define('echarts/chart/chord',['require','../component/base','./base','zrender/sh
 
     return Chord;
 });
+/**
+ * 图数据结构
+ * @module echarts/data/Graph
+ * @author pissang(http://www.github.com/pissang)
+ */
+define('echarts/data/Graph',['require','zrender/tool/util'],function(require) {
+
+    var util = require('zrender/tool/util');
+
+    
+
+    /**
+     * @alias module:echarts/data/Graph
+     * @constructor
+     * @param {boolean} directed
+     */
+    var Graph = function(directed) {
+        /**
+         * 是否是有向图
+         * @type {boolean}
+         * @private
+         */
+        this._directed = directed || false;
+
+        /**
+         * [nodes description]
+         * @type {Array}
+         */
+        this.nodes = [];
+        this.edges = [];
+
+        this._nodesMap = {};
+        this._edgesMap = {};
+    };
+
+    /**
+     * 添加一个新的节点
+     * @param {string} name 节点名称
+     * @param {*} [data] 存储的数据
+     */
+    Graph.prototype.addNode = function(name, data) {
+        if (this._nodesMap[name]) {
+            return this._nodesMap[name];
+        }
+
+        var node = new Graph.Node(name, data);
+
+        this.nodes.push(node);
+
+        this._nodesMap[name] = node;
+        return node;
+    };
+    
+    /**
+     * 获取节点
+     * @param  {string} name
+     * @return {module:echarts/data/Graph~Node}
+     */
+    Graph.prototype.getNodeByName = function(name) {
+        return this._nodesMap[name];
+    };
+
+    /**
+     * 添加边
+     * @param {string|module:echarts/data/Graph~Node} n1
+     * @param {string|module:echarts/data/Graph~Node} n2
+     * @param {*} data
+     * @return {module:echarts/data/Graph~Edge}
+     */
+    Graph.prototype.addEdge = function(n1, n2, data) {
+        if (typeof(n1) == 'string') {
+            n1 = this._nodesMap[n1];
+        }
+        if (typeof(n2) == 'string') {
+            n2 = this._nodesMap[n2];
+        }
+        if (!n1 || !n2) {
+            return;
+        }
+
+        var key = n1.name + '-' + n2.name;
+        if (this._edgesMap[key]) {
+            return this._edgesMap[key];
+        }
+
+        var edge = new Graph.Edge(n1, n2, data);
+
+        if (this._directed) {
+            n1.outEdges.push(edge);
+            n2.inEdges.push(edge);   
+        }
+        n1.edges.push(edge);
+        n2.edges.push(edge);
+
+        this.edges.push(edge);
+        this._edgesMap[key] = edge;
+
+        return edge;
+    };
+
+    /**
+     * 移除边
+     * @param  {module:echarts/data/Graph~Edge} edge
+     */
+    Graph.prototype.removeEdge = function(edge) {
+        var n1 = edge.node1;
+        var n2 = edge.node2;
+        var key = n1.name + '-' + n2.name;
+        if (this._directed) {
+            n1.outEdges.splice(util.indexOf(n1.outEdges, edge), 1);
+            n2.inEdges.splice(util.indexOf(n2.inEdges, edge), 1);   
+        }
+        n1.edges.splice(util.indexOf(n1.edges, edge), 1);
+        n2.edges.splice(util.indexOf(n2.edges, edge), 1);
+
+        delete this._edgesMap[key];
+        this.edges.splice(util.indexOf(this.edges, edge), 1);
+    };
+
+    /**
+     * 移除节点（及其邻接边）
+     * @param  {module:echarts/data/Graph~Node|string} node
+     */
+    Graph.prototype.removeNode = function(node) {
+        if (typeof(node) === 'string') {
+            node = this._nodesMap[node];
+            if (!node) {
+                return;
+            }
+        }
+
+        delete this._nodesMap[node.name];
+        this.nodes.splice(util.indexOf(this.nodes, node), 1);
+
+        for (var i = 0; i < this.edges.length;) {
+            var edge = this.edges[i];
+            if (edge.node1 == node || edge.node2 == node) {
+                this.removeEdge(edge);
+            } else {
+                i++;
+            }
+        }
+    };
+
+    /**
+     * 线性遍历所有节点
+     * @param  {Function} cb
+     * @param  {*}   context
+     */
+    Graph.prototype.eachNode = function(cb, context) {
+        for (var i = 0; i < this.nodes.length; i++) {
+            cb.call(context, this.nodes[i]);
+        }
+    };
+    
+    /**
+     * 线性遍历所有边
+     * @param  {Function} cb
+     * @param  {*}   context
+     */
+    Graph.prototype.eachEdge = function(cb, context) {
+        for (var i = 0; i < this.edges.length; i++) {
+            cb.call(context, this.edges[i]);
+        }
+    };
+    
+    /**
+     * 清空图
+     */
+    Graph.prototype.clear = function() {
+        this.nodes.length = 0;
+        this.edges.length = 0;
+
+        this._nodesMap = {};
+        this._edgesMap = {};
+    };
+    
+    /**
+     * 图节点
+     * @alias module:echarts/data/Graph~Node
+     * @param {string} name
+     * @param {*} [data]
+     */
+    var Node = function(name, data) {
+        /**
+         * 节点名称
+         * @type {string}
+         */
+        this.name = name;
+        /**
+         * 节点存储的数据
+         * @type {*}
+         */
+        this.data = data || null;
+        /**
+         * 入边，只在有向图上有效
+         * @type {Array.<module:echarts/data/Graph~Edge>}
+         */
+        this.inEdges = [];
+        /**
+         * 出边，只在有向图上有效
+         * @type {Array.<module:echarts/data/Graph~Edge>}
+         */
+        this.outEdges = [];
+        /**
+         * 邻接边
+         * @type {Array.<module:echarts/data/Graph~Edge>}
+         */
+        this.edges = [];
+    };
+    
+    /**
+     * 度
+     * @return {number}
+     */
+    Node.prototype.degree = function() {
+        return this.edges.length; 
+    };
+    
+    /**
+     * 入度，只在有向图上有效
+     * @return {number}
+     */
+    Node.prototype.inDegree = function() {
+        return this.inEdges.length;
+    };
+    
+    /**
+     * 出度，只在有向图上有效
+     * @return {number}
+     */
+    Node.prototype.outDegree = function() {
+        return this.outEdges.length;
+    };
+
+    /**
+     * 图边
+     * @alias module:echarts/data/Graph~Edge
+     * @param {module:echarts/data/Graph~Node} node1
+     * @param {module:echarts/data/Graph~Node} node2
+     * @param {extra} data
+     */
+    var Edge = function(node1, node2, data) {
+        /**
+         * 节点1，如果是有向图则为源节点
+         * @type {module:echarts/data/Graph~Node}
+         */
+        this.node1 = node1;
+        /**
+         * 节点2，如果是有向图则为目标节点
+         * @type {module:echarts/data/Graph~Node}
+         */
+        this.node2 = node2;
+
+        /**
+         * 边存储的数据
+         * @type {*}
+         */
+        this.data = data || null;
+    };
+
+    Graph.Node = Node;
+    Graph.Edge = Edge;
+
+    /**
+     * 从邻接矩阵生成
+     * ```
+     *        TARGET
+     *    -1--2--3--4--5-
+     *  1| x  x  x  x  x
+     *  2| x  x  x  x  x
+     *  3| x  x  x  x  x  SOURCE
+     *  4| x  x  x  x  x
+     *  5| x  x  x  x  x
+     * ```
+     * 节点的行列总和会被写到`node.data.value`
+     * 对于有向图会计算每一行的和写到`node.data.outValue`,
+     * 计算每一列的和写到`node.data.inValue`。
+     * 边的权重会被然后写到`edge.data.weight`。
+     * 如果是有向图被写到`edge.data.sourceWeight`和`edge.data.targetWeight`
+     * 
+     * @method module:echarts/data/Graph.fromMatrix
+     * @param {Array.<Object>} nodesData 节点信息，必须有`name`属性
+     * @param {Array} matrix 邻接矩阵
+     * @param {boolean} directed 是否是有向图
+     * @return {module:echarts/data/Graph}
+     */
+    Graph.fromMatrix = function(nodesData, matrix, directed) {
+        if (
+            !matrix || !matrix.length
+            || (matrix[0].length !== matrix.length)
+            || (nodesData.length !== matrix.length)
+        ) {
+            // Not a valid data
+            return;
+        }
+
+        var size = matrix.length;
+        var graph = new Graph(directed);
+
+        for (var i = 0; i < size; i++) {
+            var node = graph.addNode(nodesData[i].name, {});
+            node.data.value = 0;
+            if (directed) {
+                node.data.outValue = node.data.inValue = 0;
+            }
+        }
+        for (var i = 0; i < size; i++) {
+            for (var j = 0; j < size; j++) {
+                var item = matrix[i][j];
+                if (directed) {
+                    graph.nodes[i].outValue += item;
+                    graph.nodes[j].inValue += item;
+                }
+                graph.nodes[i].value += item;
+                graph.nodes[j].value += item;
+            }
+        }
+
+        for (var i = 0; i < size; i++) {
+            for (var j = i; j < size; j++) {
+                var item = matrix[i][j];
+                if (item === 0) {
+                    continue;
+                }
+                var n1 = graph.nodes[i];
+                var n2 = graph.nodes[j];
+                var edge = graph.addEdge(n1, n2, {});
+                if (directed) {
+                    edge.data.sourceWeight = item;
+                    edge.data.targetWeight = matrix[j][i];
+                }
+                edge.data.weight = item;
+                if (i !== j) {
+                    if (directed) {
+                        var inEdge = graph.addEdge(n2, n1, {});
+                        inEdge.sourceWeight = matrix[j][i];
+                        inEdge.targetWeight = item;
+                    }
+                    edge.data.weight += matrix[j][i];
+                }
+            }
+        }
+    };
+
+    return Graph;
+});
 // 1. Graph Drawing by Force-directed Placement
 // 2. http://webatlas.fr/tempshare/ForceAtlas2_Paper.pdf
-define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],function __echartsForceLayoutWorker(require) {
+define('echarts/layout/forceLayoutWorker',['require','zrender/tool/vector'],function __echartsForceLayoutWorker(require) {
 
     
 
@@ -37633,7 +38571,8 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
                 return out;
             }
         };
-    } else {
+    }
+    else {
         vec2 = require('zrender/tool/vector');
     }
     var ArrayCtor = typeof(Float32Array) == 'undefined' ? Array : Float32Array;
@@ -37685,7 +38624,8 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
             if (this.node == null) {
                 this.node = node;
                 return;
-            } else {
+            }
+            else {
                 this._addNodeToSubRegion(this.node);
                 this.node = null;
             }
@@ -37798,9 +38738,9 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
     /****************************
      * Class: Graph Edge
      ***************************/
-    function GraphEdge(source, target) {
-        this.source = source;
-        this.target = target;
+    function GraphEdge(node1, node2) {
+        this.node1 = node1;
+        this.node2 = node2;
 
         this.weight = 1;
     }
@@ -37911,7 +38851,8 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
                 this._rootRegion.addNode(this.nodes[i]);
             }
             this._rootRegion.afterUpdate();
-        } else {
+        }
+        else {
             // Update center of mass of whole graph
             var mass = 0;
             var centerOfMass = this._rootRegion.centerOfMass;
@@ -37938,7 +38879,8 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
             var na = this.nodes[i];
             if (this.barnesHutOptimize) {
                 this.applyRegionToNodeRepulsion(this._rootRegion, na);
-            } else {
+            }
+            else {
                 for (var j = i + 1; j < nNodes; j++) {
                     var nb = this.nodes[j];
                     this.applyNodeToNodeRepulsion(na, nb, false);
@@ -38005,13 +38947,15 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
         return function applyRegionToNodeRepulsion(region, node) {
             if (region.node) { // Region is a leaf 
                 this.applyNodeToNodeRepulsion(region.node, node, true);
-            } else {
+            }
+            else {
                 vec2.sub(v, node.position, region.centerOfMass);
                 var d2 = v[0] * v[0] + v[1] * v[1];
                 if (d2 > this.barnesHutTheta * region.size * region.size) {
                     var factor = this._k * this._k * (node.mass + region.mass) / (d2 + 1);
                     vec2.scaleAndAdd(node.force, node.force, v, factor * 2);
-                } else {
+                }
+                else {
                     for (var i = 0; i < region.nSubRegions; i++) {
                         this.applyRegionToNodeRepulsion(region.subRegions[i], node);
                     }
@@ -38043,11 +38987,13 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
                 d = d - na.size - nb.size;
                 if (d > 0) {
                     factor = k2 * mass / (d * d);
-                } else if (d <= 0) {
+                }
+                else if (d <= 0) {
                     // A stronger repulsion if overlap
                     factor = k2 * 10 * mass;
                 }
-            } else {
+            }
+            else {
                 // Divide factor by an extra `d` to normalize the `v`
                 factor = k2 * mass / d2;
             }
@@ -38062,8 +39008,8 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
     ForceLayout.prototype.applyEdgeAttraction = (function() {
         var v = vec2.create();
         return function applyEdgeAttraction(edge) {
-            var na = edge.source;
-            var nb = edge.target;
+            var na = edge.node1;
+            var nb = edge.node2;
 
             vec2.sub(v, na.position, nb.position);
             var d = vec2.len(v);
@@ -38071,9 +39017,11 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
             var w;
             if (this.edgeWeightInfluence === 0) {
                 w = 1;
-            } else if (this.edgeWeightInfluence == 1) {
+            }
+            else if (this.edgeWeightInfluence == 1) {
                 w = edge.weight;
-            } else {
+            }
+            else {
                 w = Math.pow(edge.weight, this.edgeWeightInfluence);
             }
 
@@ -38104,7 +39052,8 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
             if (this.width > this.height) {
                 // Stronger gravity on y axis
                 v[1] *= this.width / this.height;
-            } else {
+            }
+            else {
                 // Stronger gravity on x axis
                 v[0] *= this.height / this.width;
             }
@@ -38112,7 +39061,8 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
             
             if (this.strongGravity) {
                 vec2.scaleAndAdd(node.force, node.force, v, d * this.gravity * node.mass);
-            } else {
+            }
+            else {
                 vec2.scaleAndAdd(node.force, node.force, v, this.gravity * node.mass / (d + 1));
             }
         };
@@ -38139,6 +39089,14 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
     ForceLayout.getWorkerCode = function() {
         var str = __echartsForceLayoutWorker.toString();
         return str.slice(str.indexOf('{') + 1, str.lastIndexOf('return'));
+    };
+
+    ForceLayout.prototype.setToken = function(token) {
+        this._token = token;
+    };
+
+    ForceLayout.prototype.tokenMatch = function(token) {
+        return token === this._token;
     };
 
     /****************************
@@ -38190,23 +39148,22 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
 
                         forceLayout.temperature = e.data.temperature;
 
-                        if (e.data.temperature > 0.01) {
-                            for (var i = 0; i < steps; i++) {
-                                forceLayout.update();
-                                forceLayout.temperature *= e.data.coolDown;
-                            }
-                            // Callback
-                            for (var i = 0; i < nNodes; i++) {
-                                var node = forceLayout.nodes[i];
-                                positionArr[i * 2 + 1] = node.position[0];
-                                positionArr[i * 2 + 2] = node.position[1];
-                            }
-
-                            positionArr[0] = forceLayout._token;
+                        for (var i = 0; i < steps; i++) {
+                            forceLayout.update();
+                            forceLayout.temperature *= e.data.coolDown;
+                        }
+                        // Callback
+                        for (var i = 0; i < nNodes; i++) {
+                            var node = forceLayout.nodes[i];
+                            positionArr[i * 2 + 1] = node.position[0];
+                            positionArr[i * 2 + 2] = node.position[1];
                         }
 
+                        positionArr[0] = forceLayout._token;
+
                         self.postMessage(positionArr.buffer, [positionArr.buffer]);
-                    } else {
+                    }
+                    else {
                         // Not initialzied yet
                         var emptyArr = new Float32Array();
                         // Post transfer object
@@ -38221,22 +39178,276 @@ define('echarts/chart/forceLayoutWorker',['require','zrender/tool/vector'],funct
     return ForceLayout;
 });
 /**
+ * 力导向布局
+ * @module echarts/layout/Force
+ * @author pissang(http://github.com/pissang)
+ */
+define('echarts/layout/Force',['require','./forceLayoutWorker','zrender/tool/vector'],function(require) {
+
+    var ForceLayoutWorker = require('./forceLayoutWorker');
+    var vec2 = require('zrender/tool/vector');
+
+    var requestAnimationFrame = window.requestAnimationFrame
+                                || window.msRequestAnimationFrame
+                                || window.mozRequestAnimationFrame
+                                || window.webkitRequestAnimationFrame
+                                || function (func) {setTimeout(func, 16);};
+    var ArrayCtor = typeof(Float32Array) == 'undefined' ? Array : Float32Array;
+
+    var workerUrl;
+
+    function getToken() {
+        return Math.round(Date.now() / 100) % 10000000;
+    }
+
+    function createWorkerUrl() {
+        if (
+            typeof(Worker) !== 'undefined' &&
+            typeof(Blob) !== 'undefined'
+        ) {
+            try {
+                var blob = new Blob([ForceLayoutWorker.getWorkerCode()]);
+                workerUrl = window.URL.createObjectURL(blob);   
+            }
+            catch (e) {
+                workerUrl = '';
+            }
+        }
+
+        return workerUrl;
+    }
+
+    var ForceLayout = function(opts) {
+
+        if (typeof(workerUrl) === 'undefined') {
+            createWorkerUrl();
+        }
+        opts = opts || {};
+        // 配置项
+        this.width = opts.width || 500;
+        this.height = opts.height || 500;
+        this.center = opts.center || [this.width / 2, this.height / 2];
+        this.ratioScaling = opts.ratioScaling || false;
+        this.scaling = opts.scaling || 1;
+        this.gravity = typeof(opts.gravity) !== 'undefined'
+                        ? opts.gravity : 1;
+        this.large = opts.large || false;
+
+        this.onupdate = opts.onupdate || function () {};
+        this.temperature = opts.temperature || 1;
+        this.coolDown = opts.coolDown || 0.99;
+
+        this._layout = null;
+        this._layoutWorker = null;
+
+        this._token = 0;
+
+        var self = this;
+        var _$onupdate = this._$onupdate;
+        this._$onupdate = function(e) {
+            _$onupdate.call(self, e);
+        };
+    };
+
+    ForceLayout.prototype.updateConfig = function () {
+        var width = this.width;
+        var height = this.height;
+        var size = Math.min(width, height);
+
+        var config = {
+            center: this.center,
+            width: this.ratioScaling ? width : size,
+            height: this.ratioScaling ? height : size,
+            scaling: this.scaling || 1.0,
+            gravity: this.gravity || 1.0,
+            barnesHutOptimize: this.large
+        };
+
+        if (this._layoutWorker) {
+            this._layoutWorker.postMessage({
+                cmd: 'updateConfig',
+                config: config
+            });
+        }
+        else {
+            for (var name in config) {
+                this._layout[name] = config[name];
+            }
+        }
+    };
+
+    ForceLayout.prototype.init = function(graph, useWorker) {
+        if (workerUrl && useWorker) {
+            try {
+                if (!this._layoutWorker) {
+                    this._layoutWorker = new Worker(workerUrl);
+                    this._layoutWorker.onmessage = this._$onupdate;
+                }
+                this._layout = null;
+            }
+            catch (e) {    // IE10-11 will throw security error when using blog url
+                this._layoutWorker = null;
+                if (!this._layout) {
+                    this._layout = new ForceLayoutWorker();
+                }
+            }
+        }
+        else {
+            if (!this._layout) {
+                this._layout = new ForceLayoutWorker();
+            }
+            if (this._layoutWorker) {
+                this._layoutWorker.terminate();
+                this._layoutWorker = null;
+            }
+        }
+
+        this.temperature = 1;
+
+        this.graph = graph;
+
+        // 节点数据
+        var len = graph.nodes.length;
+        var positionArr = new ArrayCtor(len * 2);
+        var massArr = new ArrayCtor(len);
+        var radiusArr = new ArrayCtor(len);
+
+        for (var i = 0; i < len; i++) {
+            var n = graph.nodes[i];
+            positionArr[i * 2] = n.layout.position[0];
+            positionArr[i * 2 + 1] = n.layout.position[1];
+            massArr[i] = n.layout.mass;
+            radiusArr[i] = n.layout.radius;
+
+            n.layout.__index = i;
+        }
+        // 边数据
+        len = graph.edges.length;
+        var edgeArr = new ArrayCtor(len * 2);
+        var edgeWeightArr = new ArrayCtor(len);
+        for (var i = 0; i < len; i++) {
+            var edge = graph.edges[i];
+            edgeArr[i * 2] = edge.node1.layout.__index;
+            edgeArr[i * 2 + 1] = edge.node2.layout.__index;
+            edgeWeightArr[i] = edge.layout.weight || 1;
+        }
+
+        this._token = getToken();
+
+        if (this._layoutWorker) {
+
+            this._layoutWorker.postMessage({
+                cmd: 'init',
+                nodesPosition: positionArr,
+                nodesMass: massArr,
+                nodesSize: radiusArr,
+                edges: edgeArr,
+                edgesWeight: edgeWeightArr,
+                token: this._token
+            });
+        }
+        else {
+            this._layout.setToken(this._token);
+            this._layout.initNodes(positionArr, massArr, radiusArr);
+            this._layout.initEdges(edgeArr, edgeWeightArr);   
+        }
+
+        this.updateConfig();
+    };
+
+    ForceLayout.prototype.step = function (steps) {
+        var nodes = this.graph.nodes;
+        if (this._layoutWorker) {
+            // Sync back
+            var positionArr = new ArrayCtor(nodes.length * 2 + 1);
+            for (var i = 0; i < nodes.length; i++) {
+                var n = nodes[i];
+                positionArr[i * 2 + 1] = n.layout.position[0];
+                positionArr[i * 2 + 2] = n.layout.position[1];
+            }
+            this._layoutWorker.postMessage(positionArr.buffer, [positionArr.buffer]);
+
+            this._layoutWorker.postMessage({
+                cmd: 'update',
+                steps: steps,
+                temperature: this.temperature,
+                coolDown: this.coolDown
+            });
+            for (var i = 0; i < steps; i++) {
+                this.temperature *= this.coolDown;
+            }
+        }
+        else {
+            
+            requestAnimationFrame(this._$onupdate);
+
+            for (var i = 0; i < nodes.length; i++) {
+                var n = nodes[i];
+                vec2.copy(this._layout.nodes[i].position, n.layout.position);
+            }
+            for (var i = 0; i < steps; i++) {
+                this._layout.temperature = this.temperature;
+                this._layout.update();
+                this.temperature *= this.coolDown;
+            }
+        }
+    };
+
+    ForceLayout.prototype._$onupdate = function (e) {
+        if (this._layoutWorker) {
+            var positionArr = new Float32Array(e.data);
+            var token = positionArr[0];
+            // If token is from current layout instance
+            if (token === this._token) {
+                for (var i = 0; i < this.graph.nodes.length; i++) {
+                    var n = this.graph.nodes[i];
+                    n.layout.position[0] = positionArr[i * 2 + 1];
+                    n.layout.position[1] = positionArr[i * 2 + 2];
+                }
+                this.onupdate && this.onupdate();
+            }
+        }
+        else if (this._layout) {
+            if (this._layout.tokenMatch(this._token)) {
+                for (var i = 0; i < this.graph.nodes.length; i++) {
+                    var n = this.graph.nodes[i];
+                    vec2.copy(n.layout.position, this._layout.nodes[i].position);
+                }
+                this.onupdate && this.onupdate();
+            }
+        }
+    };
+
+    ForceLayout.prototype.dispose = function() {
+        if (this._layoutWorker) {
+            this._layoutWorker.terminate();
+        }
+        this._layoutWorker = null;
+        this._layout = null;
+        this._token = 0;
+    };
+
+    return ForceLayout;
+});
+/**
  * echarts图表类：力导向图
  *
  * @author pissang (https://github.com/pissang/)
  *
  */
 
-define('echarts/chart/force',['require','../component/base','./base','./forceLayoutWorker','zrender/shape/Line','../util/shape/Icon','../config','../util/ecData','zrender/tool/util','zrender/config','zrender/tool/vector','../util/ndarray','../chart'],function (require) {
+define('echarts/chart/force',['require','../component/base','./base','../data/Graph','../layout/Force','zrender/shape/Line','zrender/shape/Image','../util/shape/Icon','../config','../util/ecData','zrender/tool/util','zrender/config','zrender/tool/vector','../chart'],function (require) {
     
     
     var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
 
-    var ForceLayout = require('./forceLayoutWorker');
+    var Graph = require('../data/Graph');
+    var ForceLayout = require('../layout/Force');
     
     // 图形依赖
     var LineShape = require('zrender/shape/Line');
+    var ImageShape = require('zrender/shape/Image');
     var IconShape = require('../util/shape/Icon');
 
     var ecConfig = require('../config');
@@ -38244,33 +39455,6 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
     var zrUtil = require('zrender/tool/util');
     var zrConfig = require('zrender/config');
     var vec2 = require('zrender/tool/vector');
-
-    var NDArray = require('../util/ndarray');
-    var ArrayCtor = typeof(Float32Array) == 'undefined' ? Array : Float32Array;
-
-    var requestAnimationFrame = window.requestAnimationFrame
-                                || window.msRequestAnimationFrame
-                                || window.mozRequestAnimationFrame
-                                || window.webkitRequestAnimationFrame
-                                || function (func){setTimeout(func, 16);};
-
-    // Use inline web worker
-    var workerUrl;
-    if (
-        typeof(Worker) !== 'undefined' &&
-        typeof(Blob) !== 'undefined'
-    ) {
-        try {
-            var blob = new Blob([ForceLayout.getWorkerCode()]);
-            workerUrl = window.URL.createObjectURL(blob);   
-        } catch(e) {
-            workerUrl = '';
-        }
-    }
-
-    function getToken() {
-        return Math.round(new Date().getTime() / 100) % 10000000;
-    }
 
     /**
      * 构造函数
@@ -38287,21 +39471,16 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
         ChartBase.call(this);
 
         // 保存节点的位置，改变数据时能够有更好的动画效果
-        // TODO
         this.__nodePositionMap = {};
 
-        this._nodeShapes = [];
-        this._linkShapes = [];
+        this._graph = new Graph(true);
+        this._layout = new ForceLayout();
 
-        this._updating = true;
-
-        this._filteredNodes = null;
-        this._filteredLinks = null;
-        this._rawNodes = null;
-        this._rawLinks = null;
+        this._layout.onupdate = function() {
+            self._step();
+        };
 
         this._steps = 1;
-        this._coolDown = 0.99;
 
         // 关闭可拖拽属性
         this.ondragstart = function() {
@@ -38330,52 +39509,12 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
         type : ecConfig.CHART_TYPE_FORCE,
 
         _init: function() {
-            var self = this;
-
-            this.clear();
-
-            this._updating = true;
-        
-            this._buildShape();
-
-            if (this._layoutWorker) {
-                this._layoutWorker.onmessage = function(e) {
-                    if (self._temperature < 0.01) {
-                        requestAnimationFrame(function() {
-                            self._step.call(self, e);
-                        });   
-                    } else {
-                        self._step.call(self, e);
-                    }
-                };
-
-                this._layoutWorker.postMessage({
-                    cmd: 'update',
-                    steps: this._steps,
-                    temperature: this._temperature,
-                    coolDown: this._coolDown
-                });
-            }
-            else {
-                var cb = function() {
-                    if (self._updating) {
-                        self._step();
-                        requestAnimationFrame(cb);
-                    }
-                };
-
-                requestAnimationFrame(cb);
-            }
-        },
-
-        _buildShape: function() {
+            // var self = this;
             var legend = this.component.legend;
             var series = this.series;
             var serieName;
 
-            this._temperature = 1;
-
-            this.shapeList.length = 0;
+            this.clear();
 
             for (var i = 0, l = series.length; i < l; i++) {
                 var serie = series[i];
@@ -38383,28 +39522,6 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
                     series[i] = this.reformOption(series[i]);
                     serieName = series[i].name || '';
                     
-                    if (workerUrl && serie.useWorker) {
-                        try {
-                            if (!this._layoutWorker) {
-                                this._layoutWorker = new Worker(workerUrl);
-                            }
-                            this._layout = null;   
-                        } catch(e) {    // IE10-11 will throw security error when using blog url
-                            this._layoutWorker = null;
-                            if (!this._layout) {
-                                this._layout = new ForceLayout();
-                            }
-                        }
-                    } else {
-                        if (!this._layout) {
-                            this._layout = new ForceLayout();
-                        }
-                        if (this._layoutWorker) {
-                            this._layoutWorker.terminate();
-                            this._layoutWorker = null;
-                        }
-                    }
-
                     // 系列图例开关
                     this.selectedMap[serieName] = 
                         legend ? legend.isSelected(serieName) : true;
@@ -38427,210 +39544,166 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
                         }
                     }
 
-                    this._preProcessData(serie);
-
-                    this._nodeShapes.length = 0;
-                    this._linkShapes.length = 0;
-
-                    this._buildLinkShapes(serie);
-                    this._buildNodeShapes(serie);
-
-                    this._initLayout(serie);
-
-                    this._updateLinkShapes();
-
                     // TODO 多个 force 
                     this._forceSerie = serie;
+
+                    this._initSerie(serie);
                     break;
                 }
             }
         },
 
-        _preProcessData: function(serie) {
-            this._rawNodes = this.query(serie, 'nodes');
-            this._rawLinks = zrUtil.clone(this.query(serie, 'links'));
+        _initSerie: function(serie) {
+            this._temperature = 1;
 
-            var filteredNodeList = [];
-            var filteredNodeMap = {};
-            var cursor = 0;
-            var self = this;
-            this._filteredNodes = _filter(this._rawNodes, function (node, i) {
-                if (!node) {
-                    return;
-                }
-                if (node.ignore) {
-                    return;
-                }
-                var idx = -1;
+            var graph = this._graph;
+            graph.clear();
+
+            for (var i = 0, len = serie.nodes.length; i < len; i++) {
+                var n = serie.nodes[i];
                 if (
-                    typeof(node.category) == 'undefined'
-                    || self.selectedMap[node.category]
+                    !n || n.ignore
+                    || (n.category && !this.selectedMap[n.category])
                 ) {
-                    idx = cursor++;
+                    continue;
                 }
-                if (node.name) {
-                    filteredNodeMap[node.name] = idx;
+                var node = graph.addNode(n.name, n);
+                node.rawIndex = i;
+            }
+            for (var i = 0, len = serie.links.length; i < len; i++) {
+                var e = serie.links[i];
+                var n1 = e.source;
+                var n2 = e.target;
+                if (typeof(n1) === 'number') {
+                    n1 = serie.nodes[n1];
+                    if (n1) {
+                        n1 = n1.name;
+                    }
                 }
-                filteredNodeList[i] = idx;
+                if (typeof(n2) === 'number') {
+                    n2 = serie.nodes[n2];
+                    if (n2) {
+                        n2 = n2.name;
+                    }
+                }
+                var edge = graph.addEdge(n1, n2, e);
+                if (edge) {
+                    edge.rawIndex = i;
+                }
+            }
 
-                return idx >= 0;
-            });
-            var source;
-            var target;
-            this._filteredLinks = _filter(this._rawLinks, function (link, i){
-                source = link.source;
-                target = link.target;
-                var ret = true;
-                var idx = typeof(source) === 'string'
-                    ? filteredNodeMap[source]    // source 用 node id 表示
-                    : filteredNodeList[source];  // source 用 node index 表示
-                if (typeof(idx) == 'undefined') {
-                    idx = -1;
-                }
+            this._buildLinkShapes(serie);
+            this._buildNodeShapes(serie);
 
-                if (idx >= 0) {
-                    link.source = idx;
-                } else {
-                    ret = false;
-                }
+            this._initLayout(serie);
 
-                var idx = typeof(target) === 'string'
-                    ? filteredNodeMap[target]    // target 用 node id 表示
-                    : filteredNodeList[target];  // target 用 node index 表示
-                if (typeof(idx) == 'undefined') {
-                    idx = -1;
-                }
-
-                if (idx >= 0) {
-                    link.target = idx;
-                } else {
-                    ret = false;
-                }
-                // 保存原始链接中的index
-                link.rawIndex = i;
-
-                return ret;
-            });
+            this._step();
         },
 
         _initLayout: function(serie) {
-
-            var nodes = this._filteredNodes;
-            var links = this._filteredLinks;
-            var shapes = this._nodeShapes;
-            var len = nodes.length;
+            var graph = this._graph;
+            var len = graph.nodes.length;
 
             var minRadius = this.query(serie, 'minRadius');
             var maxRadius = this.query(serie, 'maxRadius');
-            this._steps = serie.steps || 1;
-            this._coolDown = serie.coolDown || 0.99;
 
-            var center = this.parseCenter(this.zr, serie.center);
-            var width = this.parsePercent(serie.size, this.zr.getWidth());
-            var height = this.parsePercent(serie.size, this.zr.getHeight());
-            var size = Math.min(width, height);
+            this._steps = serie.steps || 1;
+
+            this._layout.center = this.parseCenter(this.zr, serie.center);
+            this._layout.width = this.parsePercent(serie.size, this.zr.getWidth());
+            this._layout.height = this.parsePercent(serie.size, this.zr.getHeight());
+
+            this._layout.large = serie.large;
+            this._layout.scaling = serie.scaling;
+            this._layout.ratioScaling = serie.ratioScaling;
+            this._layout.gravity = serie.gravity;
+            this._layout.temperature = 1;
+            this._layout.coolDown = serie.coolDown;
 
             // 将值映射到minRadius-maxRadius的范围上
-            var radius = [];
+            var min = Infinity; var max = -Infinity;
             for (var i = 0; i < len; i++) {
-                var node = nodes[i];
-                radius.push(node.value || 1);
+                var gNode = graph.nodes[i];
+                gNode.layout = {
+                    radius: gNode.data.value || 1,
+                    mass: 0
+                };
+                max = Math.max(gNode.data.value, max);
+                min = Math.min(gNode.data.value, min);
             }
-
-            var arr = new NDArray(radius);
-            radius = arr.map(minRadius, maxRadius).toArray();
-            var max = arr.max();
-            if (max === 0) {
-                return;
-            }
-            var massArr = arr.mul(1/max, arr).toArray();
-            var positionArr = new ArrayCtor(len * 2);
-
+            var divider = max - min;
             for (var i = 0; i < len; i++) {
-                var initPos;
-                var node = nodes[i];
-                if (typeof(this.__nodePositionMap[node.name]) !== 'undefined') {
-                    initPos = vec2.create();
-                    vec2.copy(initPos, this.__nodePositionMap[node.name]);
-                } else if (typeof(node.initial) !== 'undefined') {
-                    initPos = Array.prototype.slice.call(node.initial);
+                var gNode = graph.nodes[i];
+                if (divider > 0) {
+                    gNode.layout.radius = 
+                        (gNode.layout.radius - min) * (maxRadius - minRadius) / divider
+                        + minRadius;
+                    // 节点质量是归一的
+                    gNode.layout.mass = gNode.layout.radius / maxRadius;
                 } else {
-                    initPos = _randomInSquare(
+                    gNode.layout.radius = (maxRadius - minRadius) / 2;
+                    gNode.layout.mass = 0.5;
+                }
+            }
+
+            for (var i = 0; i < len; i++) {
+                // var initPos;
+                var gNode = graph.nodes[i];
+                if (typeof(this.__nodePositionMap[gNode.name]) !== 'undefined') {
+                    gNode.layout.position = vec2.create();
+                    vec2.copy(gNode.layout.position, this.__nodePositionMap[gNode.name]);
+                }
+                else if (typeof(gNode.data.initial) !== 'undefined') {
+                    gNode.layout.position = vec2.create();
+                    vec2.copy(gNode.layout.position, gNode.data.initial);
+                }
+                else {
+                    var center = this._layout.center;
+                    var size = Math.min(this._layout.width, this._layout.height);
+                    gNode.layout.position = _randomInSquare(
                         center[0], center[1], size * 0.8
                     );
                 }
-                var style = shapes[i].style;
-                style.width = style.width || (radius[i] * 2);
-                style.height = style.height || (radius[i] * 2);
+                var style = gNode.shape.style;
+                var radius = gNode.layout.radius;
+                style.width = style.width || (radius * 2);
+                style.height = style.height || (radius * 2);
                 style.x = -style.width / 2;
                 style.y = -style.height / 2;
-                shapes[i].position = initPos;
-
-                positionArr[i * 2] = initPos[0];
-                positionArr[i * 2 + 1] = initPos[1];
+                vec2.copy(gNode.shape.position, gNode.layout.position);
             }
 
-            len = links.length;
-            var edgeArr = new ArrayCtor(len * 2);
-            var edgeWeightArr = new ArrayCtor(len);
+            // 边
+            len = graph.edges.length;
+            max = -Infinity;
             for (var i = 0; i < len; i++) {
-                var link = links[i];
-                edgeArr[i * 2] = link.source;
-                edgeArr[i * 2 + 1] = link.target;
-                edgeWeightArr[i] = link.weight || 1;
+                var e = graph.edges[i];
+                e.layout = {
+                    weight: e.data.weight || 1
+                };
+                if (e.layout.weight > max) {
+                    max = e.layout.weight;
+                }
+            }
+            // 权重归一
+            for (var i = 0; i < len; i++) {
+                var e = graph.edges[i];
+                e.layout.weight /= max;
             }
 
-            arr = new NDArray(edgeWeightArr);
-            var max = arr.max();
-            if (max === 0) {
-                return;
-            }
-            var edgeWeightArr = arr.mul(1 / max, arr)._array;
-
-            var config = {
-                center: center,
-                width: serie.ratioScaling ? width : size,
-                height: serie.ratioScaling ? height : size,
-                scaling: serie.scaling || 1.0,
-                gravity: serie.gravity || 1.0,
-                barnesHutOptimize: serie.large
-            };
-
-            if (this._layoutWorker) {
-
-                this._token = getToken();
-
-                this._layoutWorker.postMessage({
-                    cmd: 'init',
-                    nodesPosition: positionArr,
-                    nodesMass: massArr,
-                    nodesSize: radius,
-                    edges: edgeArr,
-                    edgesWeight: edgeWeightArr,
-                    token: this._token
-                });
-
-                this._layoutWorker.postMessage({
-                    cmd: 'updateConfig',
-                    config: config
-                });
-
-            } else {
-
-                zrUtil.merge(this._layout, config, true);
-                this._layout.initNodes(positionArr, massArr, radius);
-                this._layout.initEdges(edgeArr, edgeWeightArr);   
-            }
+            this._layout.init(graph, serie.useWorker);
         },
 
         _buildNodeShapes: function(serie) {
+            var graph = this._graph;
+
             var categories = this.query(serie, 'categories');
-            var nodes = this._filteredNodes;
-            var len = nodes.length;
+            var len = graph.nodes.length;
             var legend = this.component.legend;
 
             for (var i = 0; i < len; i++) {
-                var node = nodes[i];
+                var gNode = graph.nodes[i];
+                var node = gNode.data;
 
                 var shape = new IconShape({
                     style : {
@@ -38673,6 +39746,17 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
                 shape.style.width = shape.style.height
                     = (this.deepQuery(queryTarget, 'symbolSize') || 0) * 2;
 
+                if (shape.style.iconType.match('image')) {
+                    shape.style.image = shape.style.iconType.replace(
+                        new RegExp('^image:\\/\\/'), ''
+                    );
+                    shape = new ImageShape({
+                        style: shape.style,
+                        highlightStyle: shape.highlightStyle,
+                        clickable: shape.clickable
+                    });
+                }
+
                 // 节点样式
                 for (var k = 0; k < shapeNormalStyle.length; k++) {
                     if (shapeNormalStyle[k]) {
@@ -38684,7 +39768,7 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
                     if (shapeEmphasisStyle[k]) {
                         zrUtil.merge(shape.highlightStyle, shapeEmphasisStyle[k], true);
                     }
-                } 
+                }
                 
                 // 节点标签样式
                 if (this.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {
@@ -38737,29 +39821,29 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
                     // data
                     node,
                     // data index
-                    zrUtil.indexOf(this._rawNodes, node),
+                    gNode.rawIndex,
                     // name
                     node.name || '',
                     // value
                     node.value
                 );
                 
-                this._nodeShapes.push(shape);
                 this.shapeList.push(shape);
                 this.zr.addShape(shape);
+
+                gNode.shape = shape;
             }
         },
 
         _buildLinkShapes: function(serie) {
-
-            var nodes = this._filteredNodes;
-            var links = this._filteredLinks;
-            var len = links.length;
+            var graph = this._graph;
+            var len = graph.edges.length;
 
             for (var i = 0; i < len; i++) {
-                var link = links[i];
-                var source = nodes[link.source];
-                var target = nodes[link.target];
+                var gEdge = graph.edges[i];
+                var link = gEdge.data;
+                var source = gEdge.node1;
+                var target = gEdge.node2;
 
                 var linkShape = new LineShape({
                     style : {
@@ -38796,7 +39880,6 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
                     }
                 }
 
-                var link = this._rawLinks[link.rawIndex];
                 ecData.pack(
                     linkShape,
                     // serie
@@ -38805,24 +39888,24 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
                     0,
                     // link data
                     {
-                        source : link.source,
-                        target : link.target,
-                        weight : link.weight || 0
+                        source : source.data,
+                        target : target.data,
+                        weight : gEdge.data.weight || 0
                     },
                     // link data index
-                    link.rawIndex,
+                    gEdge.rawIndex,
                     // source name - target name
                     source.name + ' - ' + target.name,
                     // link weight
-                    link.weight || 0,
+                    gEdge.data.weight || 0,
                     // special
                     // 这一项只是为了表明这是条边
                     true
                 );
 
-                this._linkShapes.push(linkShape);
                 this.shapeList.push(linkShape);
                 this.zr.addShape(linkShape);
+                gEdge.shape = linkShape;
 
                 // Arrow shape
                 if (serie.linkSymbol && serie.linkSymbol !== 'none') {
@@ -38857,22 +39940,21 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
 
         _updateLinkShapes: function() {
             var v = vec2.create();
-            var links = this._filteredLinks;
-            for (var i = 0, len = links.length; i < len; i++) {
-                var link = links[i];
-                var linkShape = this._linkShapes[i];
-                var sourceShape = this._nodeShapes[link.source];
-                var targetShape = this._nodeShapes[link.target];
+            var edges = this._graph.edges;
+            for (var i = 0, len = edges.length; i < len; i++) {
+                var edge = edges[i];
+                var sourceShape = edge.node1.shape;
+                var targetShape = edge.node2.shape;
 
-                linkShape.style.xStart = sourceShape.position[0];
-                linkShape.style.yStart = sourceShape.position[1];
-                linkShape.style.xEnd = targetShape.position[0];
-                linkShape.style.yEnd = targetShape.position[1];
+                edge.shape.style.xStart = sourceShape.position[0];
+                edge.shape.style.yStart = sourceShape.position[1];
+                edge.shape.style.xEnd = targetShape.position[0];
+                edge.shape.style.yEnd = targetShape.position[1];
 
-                this.zr.modShape(linkShape.id);
+                this.zr.modShape(edge.shape.id);
 
-                if (linkShape._symbolShape) {
-                    var symbolShape = linkShape._symbolShape;
+                if (edge.shape._symbolShape) {
+                    var symbolShape = edge.shape._symbolShape;
                     vec2.copy(symbolShape.position, targetShape.position);
 
                     vec2.sub(v, sourceShape.position, targetShape.position);
@@ -38886,34 +39968,36 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
                     var angle;
                     if (v[1] < 0) {
                         angle = 2 * Math.PI - Math.acos(-v[0]);
-                    } else {
+                    }
+                    else {
                         angle = Math.acos(-v[0]);
                     }
-                    symbolShape.rotation = angle  - Math.PI / 2;
+                    symbolShape.rotation = angle - Math.PI / 2;
 
                     this.zr.modShape(symbolShape.id);
                 }
             }
         },
 
-        _update: function(e) {
-
-            this._layout.temperature = this._temperature;
-            this._layout.update();
-
-            for (var i = 0; i < this._layout.nodes.length; i++) {
-                var position = this._layout.nodes[i].position;
-                var shape = this._nodeShapes[i];
-                var node = this._filteredNodes[i];
+        _syncNodePositions: function() {
+            var graph = this._graph;
+            for (var i = 0; i < graph.nodes.length; i++) {
+                var gNode = graph.nodes[i];
+                var position = gNode.layout.position;
+                var node = gNode.data;
+                var shape = gNode.shape;
                 if (shape.fixed || (node.fixX && node.fixY)) {
                     vec2.copy(position, shape.position);
-                } else if (node.fixX) {
+                }
+                else if (node.fixX) {
                     position[0] = shape.position[0];
                     shape.position[1] = position[1];
-                } else if (node.fixY) {
+                }
+                else if (node.fixY) {
                     position[1] = shape.position[1];
                     shape.position[0] = position[0];
-                } else  {
+                }
+                else  {
                     vec2.copy(shape.position, position);
                 }
 
@@ -38925,92 +40009,21 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
                     }
                     vec2.copy(gPos, position);
                 }
-            }
 
-            this._temperature *= this._coolDown;
+                this.zr.modShape(shape.id);
+            }
         },
 
-        _updateWorker: function(e) {
-            if (!this._updating) {
-                return;
-            }
-
-            var positionArr = new Float32Array(e.data);
-            var token = positionArr[0];
-            var ret = token === this._token;
-            // If token is from current layout instance
-            if (ret) {
-                var nNodes = (positionArr.length - 1) / 2;
-
-                for (var i = 0; i < nNodes; i++) {
-                    var shape = this._nodeShapes[i];
-                    var node = this._filteredNodes[i];
-                    
-                    var x = positionArr[i * 2 + 1];
-                    var y = positionArr[i * 2 + 2];
-
-                    if (shape.fixed || (node.fixX && node.fixY)) {
-                        positionArr[i * 2 + 1] = shape.position[0];
-                        positionArr[i * 2 + 2] = shape.position[1];
-                    } else if (node.fixX) {
-                        positionArr[i * 2 + 1] = shape.position[0];
-                        shape.position[1] = y;
-                    } else if (node.fixY) {
-                        positionArr[i * 2 + 2] = shape.position[1];
-                        shape.position[0] = x;
-                    } else  {
-                        shape.position[0] = x;
-                        shape.position[1] = y;
-                    }
-
-                    var nodeName = node.name;
-                    if (nodeName) {
-                        var gPos = this.__nodePositionMap[nodeName];
-                        if (!gPos) {
-                            gPos = this.__nodePositionMap[nodeName] = vec2.create();
-                        }
-                        vec2.copy(gPos, shape.position);
-                    }
-                }
-
-                this._layoutWorker.postMessage(positionArr.buffer, [positionArr.buffer]);
-            }
-
-            var self = this;
-            self._layoutWorker.postMessage({
-                cmd: 'update',
-                steps: this._steps,
-                temperature: this._temperature,
-                coolDown: this._coolDown
-            });  
-
-            for (var i = 0; i < this._steps; i++) {
-                this._temperature *= this._coolDown;
-            }
-
-            return ret;
-        },
-
-        _step: function(e){
-            if (this._layoutWorker) {
-                var res = this._updateWorker(e);
-                if (!res) {
-                    return;
-                }
-            } else {
-                if (this._temperature < 0.01) {
-                    return;
-                }
-                this._update();
-            }
+        _step: function(e) {
+            this._syncNodePositions();
 
             this._updateLinkShapes();
 
-            for (var i = 0; i < this._nodeShapes.length; i++) {
-                this.zr.modShape(this._nodeShapes[i].id);
-            }
+            this.zr.refreshNextFrame();
 
-            this.zr.refresh();
+            if (this._layout.temperature > 0.01) {
+                this._layout.step(this._steps);
+            }
         },
 
         refresh: function(newOption) {
@@ -39018,20 +40031,16 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
                 this.option = newOption;
                 this.series = this.option.series;
             }
-            this.clear();
-            this._buildShape();
+            this._init();
         },
 
         dispose: function(){
-            this._updating = false;
             this.clear();
             this.shapeList = null;
             this.effectList = null;
 
-            if (this._layoutWorker) {
-                this._layoutWorker.terminate();
-            }
-            this._layoutWorker = null;
+            this._layout.dispose();
+            this._layout = null;
 
             this.__nodePositionMap = {};
         }
@@ -39056,7 +40065,8 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
     }
 
     function onmousemove() {
-        this._temperature = 0.8;
+        this._layout.temperature = 0.8;
+        this._step();
     }
     
     /**
@@ -39082,12 +40092,13 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
     }
    
     function _randomInSquare(x, y, size) {
-        return [
-            (Math.random() - 0.5) * size + x,
-            (Math.random() - 0.5) * size + y
-        ];
+        var v = vec2.create();
+        v[0] = (Math.random() - 0.5) * size + x;
+        v[1] = (Math.random() - 0.5) * size + y;
+        return v;
     }
 
+    /*
     function _filter(array, callback){
         var len = array.length;
         var result = [];
@@ -39098,6 +40109,7 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
         }
         return result;
     }
+    */
     
     zrUtil.inherits(Force, ChartBase);
     zrUtil.inherits(Force, ComponentBase);
@@ -39106,6 +40118,540 @@ define('echarts/chart/force',['require','../component/base','./base','./forceLay
     require('../chart').define('force', Force);
 
     return Force;
+});
+
+/**
+ * SVG Path
+ * @module zrender/shape/Path
+ * @see http://www.w3.org/TR/2011/REC-SVG11-20110816/paths.html#PathData
+ * @author: CrossDo (chenhuaimu@baidu.com)
+ */
+
+/**
+ * @typedef {Object} IPathStyle
+ * @property {string} path path描述数据, 详见 {@link http://www.w3.org/TR/2011/REC-SVG11-20110816/paths.html#PathData}
+ * @property {number} x x轴位移
+ * @property {number} y y轴位移
+ * @property {string} [brushType='fill']
+ * @property {string} [color='#000000'] 填充颜色
+ * @property {string} [strokeColor='#000000'] 描边颜色
+ * @property {string} [lineCape='butt'] 线帽样式，可以是 butt, round, square
+ * @property {number} [lineWidth=1] 描边宽度
+ * @property {number} [opacity=1] 绘制透明度
+ * @property {number} [shadowBlur=0] 阴影模糊度，大于0有效
+ * @property {string} [shadowColor='#000000'] 阴影颜色
+ * @property {number} [shadowOffsetX=0] 阴影横向偏移
+ * @property {number} [shadowOffsetY=0] 阴影纵向偏移
+ * @property {string} [text] 图形中的附加文本
+ * @property {string} [textColor='#000000'] 文本颜色
+ * @property {string} [textFont] 附加文本样式，eg:'bold 18px verdana'
+ * @property {string} [textPosition='end'] 附加文本位置, 可以是 inside, left, right, top, bottom
+ * @property {string} [textAlign] 默认根据textPosition自动设置，附加文本水平对齐。
+ *                                可以是start, end, left, right, center
+ * @property {string} [textBaseline] 默认根据textPosition自动设置，附加文本垂直对齐。
+ *                                可以是top, bottom, middle, alphabetic, hanging, ideographic
+ */
+define('zrender/shape/Path',['require','./Base','./util/PathProxy','../tool/util'],function (require) {
+
+    var Base = require('./Base');
+    var PathProxy = require('./util/PathProxy');
+    var PathSegment = PathProxy.PathSegment;
+
+    var vMag = function(v) {
+        return Math.sqrt(v[0] * v[0] + v[1] * v[1]);
+    };
+    var vRatio = function(u, v) {
+        return (u[0] * v[0] + u[1] * v[1]) / (vMag(u) * vMag(v));
+    };
+    var vAngle = function(u, v) {
+        return (u[0] * v[1] < u[1] * v[0] ? -1 : 1)
+                * Math.acos(vRatio(u, v));
+    };
+    /**
+     * @alias module:zrender/shape/Path
+     * @constructor
+     * @extends module:zrender/shape/Base
+     * @param {Object} options
+     */
+    var Path = function (options) {
+        Base.call(this, options);
+        /**
+         * Path绘制样式
+         * @name module:zrender/shape/Path#style
+         * @type {module:zrender/shape/Path~IPathStyle}
+         */
+        /**
+         * Path高亮绘制样式
+         * @name module:zrender/shape/Path#highlightStyle
+         * @type {module:zrender/shape/Path~IPathStyle}
+         */
+    };
+
+    Path.prototype = {
+        type: 'path',
+
+        buildPathArray : function (data, x, y) {
+            if (!data) {
+                return [];
+            }
+
+            // 平移
+            x = x || 0;
+            y = y || 0;
+            // command string
+            var cs = data;
+
+            // command chars
+            var cc = [
+                'm', 'M', 'l', 'L', 'v', 'V', 'h', 'H', 'z', 'Z',
+                'c', 'C', 'q', 'Q', 't', 'T', 's', 'S', 'a', 'A'
+            ];
+            
+            cs = cs.replace(/-/g, ' -');
+            cs = cs.replace(/  /g, ' ');
+            cs = cs.replace(/ /g, ',');
+            cs = cs.replace(/,,/g, ',');
+            
+            var n;
+            // create pipes so that we can split the data
+            for (n = 0; n < cc.length; n++) {
+                cs = cs.replace(new RegExp(cc[n], 'g'), '|' + cc[n]);
+            }
+
+            // create array
+            var arr = cs.split('|');
+            var ca = [];
+            // init context point
+            var cpx = 0;
+            var cpy = 0;
+            for (n = 1; n < arr.length; n++) {
+                var str = arr[n];
+                var c = str.charAt(0);
+                str = str.slice(1);
+                str = str.replace(new RegExp('e,-', 'g'), 'e-');
+
+                var p = str.split(',');
+                if (p.length > 0 && p[0] === '') {
+                    p.shift();
+                }
+
+                for (var i = 0; i < p.length; i++) {
+                    p[i] = parseFloat(p[i]);
+                }
+                while (p.length > 0) {
+                    if (isNaN(p[0])) {
+                        break;
+                    }
+                    var cmd = null;
+                    var points = [];
+
+                    var ctlPtx;
+                    var ctlPty;
+                    var prevCmd;
+
+                    var rx;
+                    var ry;
+                    var psi;
+                    var fa;
+                    var fs;
+
+                    var x1 = cpx;
+                    var y1 = cpy;
+
+                    // convert l, H, h, V, and v to L
+                    switch (c) {
+                        case 'l':
+                            cpx += p.shift();
+                            cpy += p.shift();
+                            cmd = 'L';
+                            points.push(cpx, cpy);
+                            break;
+                        case 'L':
+                            cpx = p.shift();
+                            cpy = p.shift();
+                            points.push(cpx, cpy);
+                            break;
+                        case 'm':
+                            cpx += p.shift();
+                            cpy += p.shift();
+                            cmd = 'M';
+                            points.push(cpx, cpy);
+                            c = 'l';
+                            break;
+                        case 'M':
+                            cpx = p.shift();
+                            cpy = p.shift();
+                            cmd = 'M';
+                            points.push(cpx, cpy);
+                            c = 'L';
+                            break;
+
+                        case 'h':
+                            cpx += p.shift();
+                            cmd = 'L';
+                            points.push(cpx, cpy);
+                            break;
+                        case 'H':
+                            cpx = p.shift();
+                            cmd = 'L';
+                            points.push(cpx, cpy);
+                            break;
+                        case 'v':
+                            cpy += p.shift();
+                            cmd = 'L';
+                            points.push(cpx, cpy);
+                            break;
+                        case 'V':
+                            cpy = p.shift();
+                            cmd = 'L';
+                            points.push(cpx, cpy);
+                            break;
+                        case 'C':
+                            points.push(p.shift(), p.shift(), p.shift(), p.shift());
+                            cpx = p.shift();
+                            cpy = p.shift();
+                            points.push(cpx, cpy);
+                            break;
+                        case 'c':
+                            points.push(
+                                cpx + p.shift(), cpy + p.shift(),
+                                cpx + p.shift(), cpy + p.shift()
+                            );
+                            cpx += p.shift();
+                            cpy += p.shift();
+                            cmd = 'C';
+                            points.push(cpx, cpy);
+                            break;
+                        case 'S':
+                            ctlPtx = cpx;
+                            ctlPty = cpy;
+                            prevCmd = ca[ca.length - 1];
+                            if (prevCmd.command === 'C') {
+                                ctlPtx = cpx + (cpx - prevCmd.points[2]);
+                                ctlPty = cpy + (cpy - prevCmd.points[3]);
+                            }
+                            points.push(ctlPtx, ctlPty, p.shift(), p.shift());
+                            cpx = p.shift();
+                            cpy = p.shift();
+                            cmd = 'C';
+                            points.push(cpx, cpy);
+                            break;
+                        case 's':
+                            ctlPtx = cpx, ctlPty = cpy;
+                            prevCmd = ca[ca.length - 1];
+                            if (prevCmd.command === 'C') {
+                                ctlPtx = cpx + (cpx - prevCmd.points[2]);
+                                ctlPty = cpy + (cpy - prevCmd.points[3]);
+                            }
+                            points.push(
+                                ctlPtx, ctlPty,
+                                cpx + p.shift(), cpy + p.shift()
+                            );
+                            cpx += p.shift();
+                            cpy += p.shift();
+                            cmd = 'C';
+                            points.push(cpx, cpy);
+                            break;
+                        case 'Q':
+                            points.push(p.shift(), p.shift());
+                            cpx = p.shift();
+                            cpy = p.shift();
+                            points.push(cpx, cpy);
+                            break;
+                        case 'q':
+                            points.push(cpx + p.shift(), cpy + p.shift());
+                            cpx += p.shift();
+                            cpy += p.shift();
+                            cmd = 'Q';
+                            points.push(cpx, cpy);
+                            break;
+                        case 'T':
+                            ctlPtx = cpx, ctlPty = cpy;
+                            prevCmd = ca[ca.length - 1];
+                            if (prevCmd.command === 'Q') {
+                                ctlPtx = cpx + (cpx - prevCmd.points[0]);
+                                ctlPty = cpy + (cpy - prevCmd.points[1]);
+                            }
+                            cpx = p.shift();
+                            cpy = p.shift();
+                            cmd = 'Q';
+                            points.push(ctlPtx, ctlPty, cpx, cpy);
+                            break;
+                        case 't':
+                            ctlPtx = cpx, ctlPty = cpy;
+                            prevCmd = ca[ca.length - 1];
+                            if (prevCmd.command === 'Q') {
+                                ctlPtx = cpx + (cpx - prevCmd.points[0]);
+                                ctlPty = cpy + (cpy - prevCmd.points[1]);
+                            }
+                            cpx += p.shift();
+                            cpy += p.shift();
+                            cmd = 'Q';
+                            points.push(ctlPtx, ctlPty, cpx, cpy);
+                            break;
+                        case 'A':
+                            rx = p.shift();
+                            ry = p.shift();
+                            psi = p.shift();
+                            fa = p.shift();
+                            fs = p.shift();
+
+                            x1 = cpx, y1 = cpy;
+                            cpx = p.shift(), cpy = p.shift();
+                            cmd = 'A';
+                            points = this._convertPoint(
+                                x1, y1, cpx, cpy, fa, fs, rx, ry, psi
+                            );
+                            break;
+                        case 'a':
+                            rx = p.shift();
+                            ry = p.shift();
+                            psi = p.shift();
+                            fa = p.shift();
+                            fs = p.shift();
+
+                            x1 = cpx, y1 = cpy;
+                            cpx += p.shift();
+                            cpy += p.shift();
+                            cmd = 'A';
+                            points = this._convertPoint(
+                                x1, y1, cpx, cpy, fa, fs, rx, ry, psi
+                            );
+                            break;
+                    }
+
+                    // 平移变换
+                    for (var j = 0, l = points.length; j < l; j += 2) {
+                        points[j] += x;
+                        points[j + 1] += y;
+                    }
+                    ca.push(new PathSegment(
+                        cmd || c, points
+                    ));
+                }
+
+                if (c === 'z' || c === 'Z') {
+                    ca.push(new PathSegment('z', []));
+                }
+            }
+
+            return ca;
+        },
+
+        _convertPoint : function (x1, y1, x2, y2, fa, fs, rx, ry, psiDeg) {
+            var psi = psiDeg * (Math.PI / 180.0);
+            var xp = Math.cos(psi) * (x1 - x2) / 2.0
+                     + Math.sin(psi) * (y1 - y2) / 2.0;
+            var yp = -1 * Math.sin(psi) * (x1 - x2) / 2.0
+                     + Math.cos(psi) * (y1 - y2) / 2.0;
+
+            var lambda = (xp * xp) / (rx * rx) + (yp * yp) / (ry * ry);
+
+            if (lambda > 1) {
+                rx *= Math.sqrt(lambda);
+                ry *= Math.sqrt(lambda);
+            }
+
+            var f = Math.sqrt((((rx * rx) * (ry * ry))
+                    - ((rx * rx) * (yp * yp))
+                    - ((ry * ry) * (xp * xp))) / ((rx * rx) * (yp * yp)
+                    + (ry * ry) * (xp * xp))
+                );
+
+            if (fa === fs) {
+                f *= -1;
+            }
+            if (isNaN(f)) {
+                f = 0;
+            }
+
+            var cxp = f * rx * yp / ry;
+            var cyp = f * -ry * xp / rx;
+
+            var cx = (x1 + x2) / 2.0
+                     + Math.cos(psi) * cxp
+                     - Math.sin(psi) * cyp;
+            var cy = (y1 + y2) / 2.0
+                    + Math.sin(psi) * cxp
+                    + Math.cos(psi) * cyp;
+
+            var theta = vAngle([ 1, 0 ], [ (xp - cxp) / rx, (yp - cyp) / ry ]);
+            var u = [ (xp - cxp) / rx, (yp - cyp) / ry ];
+            var v = [ (-1 * xp - cxp) / rx, (-1 * yp - cyp) / ry ];
+            var dTheta = vAngle(u, v);
+
+            if (vRatio(u, v) <= -1) {
+                dTheta = Math.PI;
+            }
+            if (vRatio(u, v) >= 1) {
+                dTheta = 0;
+            }
+            if (fs === 0 && dTheta > 0) {
+                dTheta = dTheta - 2 * Math.PI;
+            }
+            if (fs === 1 && dTheta < 0) {
+                dTheta = dTheta + 2 * Math.PI;
+            }
+            return [ cx, cy, rx, ry, theta, dTheta, psi, fs ];
+        },
+
+        /**
+         * 创建路径
+         * @param {CanvasRenderingContext2D} ctx
+         * @param {module:zrender/shape/Path~IPathStyle} style
+         */
+        buildPath : function (ctx, style) {
+            var path = style.path;
+
+            // 平移坐标
+            var x = style.x || 0;
+            var y = style.y || 0;
+
+            style.pathArray = style.pathArray || this.buildPathArray(path, x, y);
+            var pathArray = style.pathArray;
+
+            // 记录边界点，用于判断inside
+            var pointList = style.pointList = [];
+            var singlePointList = [];
+            for (var i = 0, l = pathArray.length; i < l; i++) {
+                if (pathArray[i].command.toUpperCase() == 'M') {
+                    singlePointList.length > 0 
+                    && pointList.push(singlePointList);
+                    singlePointList = [];
+                }
+                var p = pathArray[i].points;
+                for (var j = 0, k = p.length; j < k; j += 2) {
+                    singlePointList.push([p[j], p[j + 1]]);
+                }
+            }
+            singlePointList.length > 0 && pointList.push(singlePointList);
+            
+            for (var i = 0, l = pathArray.length; i < l; i++) {
+                var c = pathArray[i].command;
+                var p = pathArray[i].points;
+                switch (c) {
+                    case 'L':
+                        ctx.lineTo(p[0], p[1]);
+                        break;
+                    case 'M':
+                        ctx.moveTo(p[0], p[1]);
+                        break;
+                    case 'C':
+                        ctx.bezierCurveTo(p[0], p[1], p[2], p[3], p[4], p[5]);
+                        break;
+                    case 'Q':
+                        ctx.quadraticCurveTo(p[0], p[1], p[2], p[3]);
+                        break;
+                    case 'A':
+                        var cx = p[0];
+                        var cy = p[1];
+                        var rx = p[2];
+                        var ry = p[3];
+                        var theta = p[4];
+                        var dTheta = p[5];
+                        var psi = p[6];
+                        var fs = p[7];
+                        var r = (rx > ry) ? rx : ry;
+                        var scaleX = (rx > ry) ? 1 : rx / ry;
+                        var scaleY = (rx > ry) ? ry / rx : 1;
+
+                        ctx.translate(cx, cy);
+                        ctx.rotate(psi);
+                        ctx.scale(scaleX, scaleY);
+                        ctx.arc(0, 0, r, theta, theta + dTheta, 1 - fs);
+                        ctx.scale(1 / scaleX, 1 / scaleY);
+                        ctx.rotate(-psi);
+                        ctx.translate(-cx, -cy);
+                        break;
+                    case 'z':
+                        ctx.closePath();
+                        break;
+                }
+            }
+
+            return;
+        },
+
+        /**
+         * 计算返回Path包围盒矩形。
+         * @param {module:zrender/shape/Path~IPathStyle} style
+         * @return {module:zrender/shape/Base~IBoundingRect}
+         */
+        getRect : function (style) {
+            if (style.__rect) {
+                return style.__rect;
+            }
+            
+            var lineWidth;
+            if (style.brushType == 'stroke' || style.brushType == 'fill') {
+                lineWidth = style.lineWidth || 1;
+            }
+            else {
+                lineWidth = 0;
+            }
+
+            var minX = Number.MAX_VALUE;
+            var maxX = Number.MIN_VALUE;
+
+            var minY = Number.MAX_VALUE;
+            var maxY = Number.MIN_VALUE;
+
+            // 平移坐标
+            var x = style.x || 0;
+            var y = style.y || 0;
+
+            var pathArray = style.pathArray || this.buildPathArray(style.path);
+            for (var i = 0; i < pathArray.length; i++) {
+                var p = pathArray[i].points;
+
+                for (var j = 0; j < p.length; j++) {
+                    if (j % 2 === 0) {
+                        if (p[j] + x < minX) {
+                            minX = p[j];
+                        }
+                        if (p[j] + x > maxX) {
+                            maxX = p[j];
+                        }
+                    } 
+                    else {
+                        if (p[j] + y < minY) {
+                            minY = p[j];
+                        }
+                        if (p[j] + y > maxY) {
+                            maxY = p[j];
+                        }
+                    }
+                }
+            }
+
+            var rect;
+            if (minX === Number.MAX_VALUE
+                || maxX === Number.MIN_VALUE
+                || minY === Number.MAX_VALUE
+                || maxY === Number.MIN_VALUE
+            ) {
+                rect = {
+                    x : 0,
+                    y : 0,
+                    width : 0,
+                    height : 0
+                };
+            }
+            else {
+                rect = {
+                    x : Math.round(minX - lineWidth / 2),
+                    y : Math.round(minY - lineWidth / 2),
+                    width : maxX - minX + lineWidth,
+                    height : maxY - minY + lineWidth
+                };
+            }
+            style.__rect = rect;
+            return rect;
+        }
+    };
+
+    require('../tool/util').inherits(Path, Base);
+    return Path;
 });
 
 /**
@@ -39201,6 +40747,7 @@ define(
                 ctx.bezierCurveTo(x + ox, y - b, x + a, y - oy, x + a, y);
                 ctx.bezierCurveTo(x + a, y + oy, x + ox, y + b, x, y + b);
                 ctx.bezierCurveTo(x - ox, y + b, x - a, y + oy, x - a, y);
+                ctx.closePath();
             },
 
             /**
@@ -39379,7 +40926,7 @@ define('echarts/component/roamController',['require','./base','zrender/shape/Rec
             
             var r = Math.min(width / 2 - 5, height) / 2;
             var x = this._itemGroupLocation.x 
-                    + (text == 'scaleDown' ? (width - r) : r);
+                    + (text === 'scaleDown' ? (width - r) : r);
             var y = this._itemGroupLocation.y + this._itemGroupLocation.height - r;
 
             var scaleShape = {
@@ -39389,7 +40936,7 @@ define('echarts/component/roamController',['require','./base','zrender/shape/Rec
                     y: y,
                     r: r,
                     color: this.rcOption.handlerColor,
-                    text: text == 'scaleDown' ? '-' : '+',
+                    text: text === 'scaleDown' ? '-' : '+',
                     textX: x,
                     textY: y - 2,
                     textAlign: 'center',
@@ -39520,6 +41067,7 @@ define('echarts/component/roamController',['require','./base','zrender/shape/Rec
             this.dircetionTimer = setInterval(function() {
                 self._dispatchEvent(params.event, params.target._roamType);
             }, 100);
+            zrEvent.stop(params.event);
         },
         
         _drictionHandlerOff: function(params) {
@@ -39528,9 +41076,10 @@ define('echarts/component/roamController',['require','./base','zrender/shape/Rec
         
         __scaleHandler: function(params) {
             this._dispatchEvent(params.event, params.target._roamType);
+            zrEvent.stop(params.event);
         },
         
-        _dispatchEvent : function(event, roamType){
+        _dispatchEvent: function(event, roamType){
             this.messageCenter.dispatch(
                 ecConfig.EVENT.ROAMCONTROLLER,
                 event, 
@@ -39541,7 +41090,6 @@ define('echarts/component/roamController',['require','./base','zrender/shape/Rec
                 },
                 this.myChart
             );
-            zrEvent.stop(event);
         },
         /**
          * 刷新
@@ -39638,7 +41186,7 @@ define('echarts/util/mapData/params',['require'],function (require) {
     }
 
     var mapParams = {
-        'none' : {
+        'none': {
             getGeoJson: function(callback) {
                 callback({
                     type: 'FeatureCollection',
@@ -39670,10 +41218,10 @@ define('echarts/util/mapData/params',['require'],function (require) {
                 });
             }
         },
-        '南海诸岛' : {
-            textCoord : [126, 25],
-            getPath : function (leftTop, scale) {
-                // scale.x : width  = 10.51 : 64
+        '南海诸岛': {
+            textCoord: [126, 25],
+            getPath: function (leftTop, scale) {
+                // scale.x: width  = 10.51 : 64
                 var pList = [
                     [
                         [0,3.5],[7,11.2],[15,11.9],[30,7],[42,0.7],[52,0.7],
@@ -39975,8 +41523,8 @@ define('echarts/util/mapData/params',['require'],function (require) {
     };
     
     return {
-        decode : decode,
-        params : mapParams
+        decode: decode,
+        params: mapParams
     };
 });
 /**
@@ -40017,8 +41565,8 @@ define('echarts/util/mapData/textFixed',[],function() {
  */
 define('echarts/util/mapData/geoCoord',[],function() {
     return {
-        'Russia' : [100, 60],
-        'United States of America' : [-99, 38]
+        'Russia': [ 100, 60 ],
+        'United States of America': [ -99, 38 ]
     };
 });
 /**
@@ -40048,10 +41596,10 @@ define('echarts/util/projection/svg',['require','zrender/shape/Path'],function(r
         var width = toFloat(svgNode.getAttribute('width'));
         var height = toFloat(svgNode.getAttribute('height'));
         return {
-            left : x,
-            top : y,
-            width : width,
-            height : height
+            left: x,
+            top: y,
+            width: width,
+            height: height
         };
     }
     
@@ -40067,7 +41615,7 @@ define('echarts/util/projection/svg',['require','zrender/shape/Path'],function(r
                     // Common attributes
                     obj.scale = scale;
                     obj.properties = {
-                        name : root.getAttribute('name') || ''
+                        name: root.getAttribute('name') || ''
                     };
                     obj.id = root.id;
                     extendCommonAttributes(obj, root);
@@ -40149,11 +41697,11 @@ define('echarts/util/projection/svg',['require','zrender/shape/Path'],function(r
     var shapeBuilders = {
         path: function(xmlNode, scale) {
             var path = xmlNode.getAttribute('d');
-            var rect = PathShape.prototype.getRect({path : path});
+            var rect = PathShape.prototype.getRect({ path : path });
             return {
                 shapeType: 'path',
-                path : path,
-                cp : [
+                path: path,
+                cp: [
                     (rect.x + rect.width / 2) * scale[0], 
                     (rect.y + rect.height / 2) * scale[1]
                 ]
@@ -40172,7 +41720,7 @@ define('echarts/util/projection/svg',['require','zrender/shape/Path'],function(r
                 y: y,
                 width: width,
                 height: height,
-                cp : [
+                cp: [
                     (x + width / 2) * scale[0], 
                     (y + height / 2) * scale[1]
                 ]
@@ -40191,7 +41739,7 @@ define('echarts/util/projection/svg',['require','zrender/shape/Path'],function(r
                 yStart: y1,
                 xEnd: x2,
                 yEnd: y2,
-                cp : [
+                cp: [
                     (x1 + x2) * 0.5 * scale[0], 
                     (y1 + y2) * 0.5 * scale[1]
                 ]
@@ -40254,7 +41802,7 @@ define('echarts/util/projection/svg',['require','zrender/shape/Path'],function(r
                 return {
                     shapeType: 'polygon',
                     pointList: points,
-                    cp : [
+                    cp: [
                         (min[0] + max[0]) / 2 * scale[0],
                         (min[1] + max[1]) / 2 * scale[0]
                     ]
@@ -40269,10 +41817,10 @@ define('echarts/util/projection/svg',['require','zrender/shape/Path'],function(r
     };
     
     return {
-        getBbox : getBbox,
-        geoJson2Path : geoJson2Path,
-        pos2geo : pos2geo,
-        geo2pos : geo2pos
+        getBbox: getBbox,
+        geoJson2Path: geoJson2Path,
+        pos2geo: pos2geo,
+        geo2pos: geo2pos
     };
 }); 
 /**
@@ -40325,10 +41873,10 @@ define('echarts/util/projection/normal',[],function() {
         }
 
         json.srcSize = {
-            left : convertorParse.xmin.toFixed(4)*1,
-            top : convertorParse.ymin.toFixed(4)*1,
-            width : (convertorParse.xmax - convertorParse.xmin).toFixed(4)*1,
-            height : (convertorParse.ymax - convertorParse.ymin).toFixed(4)*1
+            left: convertorParse.xmin.toFixed(4)*1,
+            top: convertorParse.ymin.toFixed(4)*1,
+            width: (convertorParse.xmax - convertorParse.xmin).toFixed(4)*1,
+            height: (convertorParse.ymax - convertorParse.ymin).toFixed(4)*1
         };
 
         return json;
@@ -40336,13 +41884,13 @@ define('echarts/util/projection/normal',[],function() {
 
     var convertor = {
         //调整俄罗斯东部到地图右侧与俄罗斯相连
-        formatPoint : function (p) {
+        formatPoint: function (p) {
             return [
                 ((p[0] < -168.5 && p[1] > 63.8) ? p[0] + 360 : p[0]) + 168.5, 
                 90 - p[1]
             ];
         },
-        makePoint : function (p) {
+        makePoint: function (p) {
             var self = this;
             var point = self.formatPoint(p);
             // for cp
@@ -40356,11 +41904,11 @@ define('echarts/util/projection/normal',[],function() {
                     + convertor.offset.top;
             return [x, y];
         },
-        Point : function (coordinates) {
+        Point: function (coordinates) {
             coordinates = this.makePoint(coordinates);
             return coordinates.join(',');
         },
-        LineString : function (coordinates) {
+        LineString: function (coordinates) {
             var str = '';
             var point;
             for (var i = 0, len = coordinates.length; i < len; i++) {
@@ -40373,28 +41921,28 @@ define('echarts/util/projection/normal',[],function() {
             }
             return str;
         },
-        Polygon : function (coordinates) {
+        Polygon: function (coordinates) {
             var str = '';
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 str = str + convertor.LineString(coordinates[i]) + 'z';
             }
             return str;
         },
-        MultiPoint : function (coordinates) {
+        MultiPoint: function (coordinates) {
             var arr = [];
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 arr.push(convertor.Point(coordinates[i]));
             }
             return arr;
         },
-        MultiLineString : function (coordinates) {
+        MultiLineString: function (coordinates) {
             var str = '';
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 str += convertor.LineString(coordinates[i]);
             }
             return str;
         },
-        MultiPolygon : function (coordinates) {
+        MultiPolygon: function (coordinates) {
             var str = '';
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 str += convertor.Polygon(coordinates[i]);
@@ -40404,9 +41952,9 @@ define('echarts/util/projection/normal',[],function() {
     };
     
     var convertorParse = {
-        formatPoint : convertor.formatPoint,
+        formatPoint: convertor.formatPoint,
 
-        makePoint : function (p) {
+        makePoint: function (p) {
             var self = this;
             var point = self.formatPoint(p);
             var x = point[0];
@@ -40416,30 +41964,30 @@ define('echarts/util/projection/normal',[],function() {
             if (self.ymin > y) { self.ymin = y; }
             if (self.ymax < y) { self.ymax = y; }
         },
-        Point : function (coordinates) {
+        Point: function (coordinates) {
             this.makePoint(coordinates);
         },
-        LineString : function (coordinates) {
+        LineString: function (coordinates) {
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 this.makePoint(coordinates[i]);
             }
         },
-        Polygon : function (coordinates) {
+        Polygon: function (coordinates) {
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 this.LineString(coordinates[i]);
             }
         },
-        MultiPoint : function (coordinates) {
+        MultiPoint: function (coordinates) {
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 this.Point(coordinates[i]);
             }
         },
-        MultiLineString : function (coordinates) {
+        MultiLineString: function (coordinates) {
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 this.LineString(coordinates[i]);
             }
         },
-        MultiPolygon : function (coordinates) {
+        MultiPolygon: function (coordinates) {
             for (var i = 0, len = coordinates.length; i < len; i++) {
                 this.Polygon(coordinates[i]);
             }
@@ -40456,10 +42004,10 @@ define('echarts/util/projection/normal',[],function() {
         }
         
         transform.offset = {
-            x : json.srcSize.left,
-            y : json.srcSize.top,
-            left : transform.OffsetLeft || 0,
-            top : transform.OffsetTop || 0
+            x: json.srcSize.left,
+            y: json.srcSize.top,
+            left: transform.OffsetLeft || 0,
+            top: transform.OffsetTop || 0
         };
 
         convertor.scale = transform.scale;
@@ -40495,23 +42043,23 @@ define('echarts/util/projection/normal',[],function() {
             shapeType = gm.type;
             shapeCoordinates = gm.coordinates;
             convertor._bbox = {
-                xmin : 360,
-                xmax : -360,
-                ymin : 180,
-                ymax : -180
+                xmin: 360,
+                xmax: -360,
+                ymin: 180,
+                ymax: -180
             };
             str = convertor[shapeType](shapeCoordinates);
             pathArray.push({
-                //type : shapeType,
-                path : str,
-                cp : shape.properties.cp
-                     ? convertor.makePoint(shape.properties.cp)
-                     : convertor.makePoint([
-                            (convertor._bbox.xmin + convertor._bbox.xmax) / 2,
-                            (convertor._bbox.ymin + convertor._bbox.ymax) / 2
-                       ]),
-                properties : shape.properties,
-                id : shape.id
+                // type: shapeType,
+                path: str,
+                cp: shape.properties.cp
+                    ? convertor.makePoint(shape.properties.cp)
+                    : convertor.makePoint([
+                           (convertor._bbox.xmin + convertor._bbox.xmax) / 2,
+                           (convertor._bbox.ymin + convertor._bbox.ymax) / 2
+                      ]),
+                properties: shape.properties,
+                id: shape.id
             });
         }
 
@@ -40553,10 +42101,10 @@ define('echarts/util/projection/normal',[],function() {
     }
     
     return {
-        getBbox : getBbox,
-        geoJson2Path : geoJson2Path,
-        pos2geo : pos2geo,
-        geo2pos : geo2pos
+        getBbox: getBbox,
+        geoJson2Path: geoJson2Path,
+        pos2geo: pos2geo,
+        geo2pos: geo2pos
     };
 }); 
 /**
@@ -40704,19 +42252,18 @@ define('echarts/chart/map',['require','../component/base','./base','zrender/shap
                     
                     this._selectedMode[mapType] = this._selectedMode[mapType] 
                                                   || series[i].selectedMode;
-                    if (typeof this._hoverable[mapType] == 'undefined'
-                        || this._hoverable[mapType]                  // false 1票否决
-                    ) {
+                    if (this._hoverable[mapType] == null || this._hoverable[mapType]) {
+                        // false 1票否决
                         this._hoverable[mapType] = series[i].hoverable; 
                     }
-                    if (typeof this._clickable[mapType] == 'undefined'
-                        || this._clickable[mapType]                  // false 1票否决
-                    ) {
+                    if (this._clickable[mapType] == null || this._clickable[mapType]) {
+                        // false 1票否决
                         this._clickable[mapType] = series[i].clickable; 
                     }
-                    if (typeof this._showLegendSymbol[mapType] == 'undefined'
-                        || this._showLegendSymbol[mapType]           // false 1票否决
+                    if (this._showLegendSymbol[mapType] == null 
+                        || this._showLegendSymbol[mapType]
                     ) {
+                        // false 1票否决
                         this._showLegendSymbol[mapType] = series[i].showLegendSymbol;
                     }
                     
@@ -40740,12 +42287,10 @@ define('echarts/chart/map',['require','../component/base','./base','zrender/shap
                                         data[j][key];
                                 }
                                 else if (!isNaN(data[j].value)) {
-                                    typeof valueData[mapType][name].value
-                                        == 'undefined'
+                                    valueData[mapType][name].value == null
                                     && (valueData[mapType][name].value = 0);
                                     
-                                    valueData[mapType][name].value += 
-                                        data[j].value;
+                                    valueData[mapType][name].value +=  data[j].value;
                                 }
                             }
                             //索引有该区域的系列样式
@@ -41122,19 +42667,13 @@ define('echarts/chart/map',['require','../component/base','./base','zrender/shap
             //y = isNaN(cusY) ? padding : cusY;
             y = this.parsePercent(cusY, zrHeight);
             y = isNaN(y) ? padding : y;
-            if (typeof width == 'undefined') {
-                width = zrWidth - x - 2 * padding;
-            }
-            else {
-                width = this.parsePercent(width, zrWidth);
-            }
-            
-            if (typeof height == 'undefined') {
-                height = zrHeight - y - 2 * padding;
-            }
-            else {
-                height = this.parsePercent(height, zrHeight);
-            }
+
+            width = width == null
+                    ? (zrWidth - x - 2 * padding)
+                    : (this.parsePercent(width, zrWidth));
+            height = height == null
+                     ? (zrHeight - y - 2 * padding)
+                     : (this.parsePercent(height, zrHeight));
             
             var mapWidth = bbox.width;
             var mapHeight = bbox.height;
@@ -41377,7 +42916,7 @@ define('echarts/chart/map',['require','../component/base','./base','zrender/shap
                     _style: zrUtil.clone(style),
                     _mapType: mapType
                 };
-                if (typeof style.scale != 'undefined') {
+                if (style.scale != null) {
                     shape.scale = zrUtil.clone(style.scale);
                 }
                 
@@ -41400,7 +42939,9 @@ define('echarts/chart/map',['require','../component/base','./base','zrender/shap
                         break;
                     default :
                         shape = new PathShape(shape);
-                        shape.pathArray = shape._parsePathData(shape.style.path);
+                        if (shape.buildPathArray) {
+                            shape.style.pathArray = shape.buildPathArray(shape.style.path);
+                        }
                         break;
                 }
                 
@@ -41414,22 +42955,22 @@ define('echarts/chart/map',['require','../component/base','./base','zrender/shap
                 
                 textShape.clickable = shape.clickable =
                     this._clickable[mapType]
-                    && (typeof data.clickable == 'undefined' || data.clickable);
+                    && (data.clickable == null || data.clickable);
                 
                 if (this._selectedMode[mapType]) {
-                    this._selected[name] = typeof this._selected[name] != 'undefined'
+                    this._selected[name] = this._selected[name] != null
                                            ? this._selected[name]
                                            : data.selected;
                     this._mapTypeMap[name] = mapType;
                     
-                    if (typeof data.selectable == 'undefined' || data.selectable) {
+                    if (data.selectable == null || data.selectable) {
                         shape.clickable = textShape.clickable = true;
                         shape.onclick = textShape.onclick = this.shapeHandler.onclick;
                     }
                 }
                 
                 if (this._hoverable[mapType]
-                    && (typeof data.hoverable == 'undefined' || data.hoverable)
+                    && (data.hoverable == null || data.hoverable)
                 ) {
                     textShape.hoverable = shape.hoverable = true;
                     shape.hoverConnect = textShape.id;
@@ -41476,6 +43017,9 @@ define('echarts/chart/map',['require','../component/base','./base','zrender/shap
                 this._mapDataMap[mapType].transform.left,
                 this._mapDataMap[mapType].transform.top
             ];
+            if (mapType == 'none') {
+                position = [0, 0];
+            }
             for (var sIdx in mapSeries) {
                 this._seriesIndexToMapType[sIdx] = mapType;
                 this.markAttachStyle[sIdx] = {
@@ -41596,7 +43140,7 @@ define('echarts/chart/map',['require','../component/base','./base','zrender/shap
                     var geoAndPos = this.pos2geo(mapType, [mx - left, my - top]);
                     if (delta > 0) {
                         delta = 1.2;        // 放大
-                        if (typeof this._scaleLimitMap[mapType].max != 'undefined'
+                        if (this._scaleLimitMap[mapType].max != null
                             && transform.baseScale >= this._scaleLimitMap[mapType].max
                         ) {
                             return;     // 缩放限制
@@ -41604,7 +43148,7 @@ define('echarts/chart/map',['require','../component/base','./base','zrender/shap
                     }
                     else {
                         delta = 1 / 1.2;    // 缩小
-                        if (typeof this._scaleLimitMap[mapType].min != 'undefined'
+                        if (this._scaleLimitMap[mapType].min != null
                             && transform.baseScale <= this._scaleLimitMap[mapType].min
                         ) {
                             return;     // 缩放限制
@@ -42245,7 +43789,7 @@ define('echarts/util/shape/HalfSmoothPolygon',['require','zrender/shape/Base','z
             }
             if (style.smooth) {
                 var controlPoints = smoothBezier(
-                    pointList.slice(0, -2), style.smooth
+                    pointList.slice(0, -2), style.smooth, false, style.smoothConstraint
                 );
 
                 ctx.moveTo(pointList[0][0], pointList[0][1]);
@@ -42320,11 +43864,11 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
     }
     
     Line.prototype = {
-        type : ecConfig.CHART_TYPE_LINE,
+        type: ecConfig.CHART_TYPE_LINE,
         /**
          * 绘制图形
          */
-        _buildShape : function () {
+        _buildShape: function () {
             var series = this.series;
             this.finalPLMap = {}; // 完成的point list(PL)
             this._sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
@@ -42336,27 +43880,27 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
 
             // 水平垂直双向series索引 ，position索引到seriesIndex
             var _position2sIndexMap = {
-                top : [],
-                bottom : [],
-                left : [],
-                right : []
+                top: [ ],
+                bottom: [ ],
+                left: [ ],
+                right: [ ]
             };
             var xAxisIndex;
             var yAxisIndex;
             var xAxis;
             var yAxis;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].type == this.type) {
+                if (series[i].type === this.type) {
                     series[i] = this.reformOption(series[i]);
                     xAxisIndex = series[i].xAxisIndex;
                     yAxisIndex = series[i].yAxisIndex;
                     xAxis = this.component.xAxis.getAxis(xAxisIndex);
                     yAxis = this.component.yAxis.getAxis(yAxisIndex);
-                    if (xAxis.type == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                    if (xAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         _position2sIndexMap[xAxis.getPosition()].push(i);
                     }
-                    else if (yAxis.type == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                    else if (yAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         _position2sIndexMap[yAxis.getPosition()].push(i);
                     }
@@ -42378,7 +43922,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
          *
          * @param {number} seriesIndex 系列索引
          */
-        _buildSinglePosition : function (position, seriesArray) {
+        _buildSinglePosition: function (position, seriesArray) {
             var mapData = this._mapData(seriesArray);
             var locationMap = mapData.locationMap;
             var maxDataLength = mapData.maxDataLength;
@@ -42406,7 +43950,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
          * 数据整形
          * 数组位置映射到系列索引
          */
-        _mapData : function (seriesArray) {
+        _mapData: function (seriesArray) {
             var series = this.series;
             var serie;                              // 临时映射变量
             var dataIndex = 0;                      // 堆积数据所在位置映射
@@ -42451,7 +43995,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
 
                 if (this.selectedMap[serieName]) {
                     stackKey = serie.stack || (magicStackKey + seriesArray[i]);
-                    if (typeof stackMap[stackKey] == 'undefined') {
+                    if (stackMap[stackKey] == null) {
                         stackMap[stackKey] = dataIndex;
                         locationMap[dataIndex] = [seriesArray[i]];
                         dataIndex++;
@@ -42484,15 +44028,15 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
             */
 
             return {
-                locationMap : locationMap,
-                maxDataLength : maxDataLength
+                locationMap: locationMap,
+                maxDataLength: maxDataLength
             };
         },
 
         /**
          * 构建类目轴为水平方向的折线图系列
          */
-        _buildHorizontal : function (seriesArray, maxDataLength, locationMap, xMarkMap) {
+        _buildHorizontal: function (seriesArray, maxDataLength, locationMap, xMarkMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
@@ -42513,7 +44057,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
             var data;
             var value;
             for (var i = 0, l = maxDataLength; i < l; i++) {
-                if (typeof categoryAxis.getNameByIndex(i) == 'undefined') {
+                if (categoryAxis.getNameByIndex(i) == null) {
                     // 系列数据超出类目轴长度
                     break;
                 }
@@ -42527,21 +44071,21 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
                         curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
                                                 || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
+                                                    min: Number.POSITIVE_INFINITY,
+                                                    max: Number.NEGATIVE_INFINITY,
+                                                    sum: 0,
+                                                    counter: 0,
+                                                    average: 0
                                                 };
-                        if (value == '-') {
+                        if (value === '-') {
                             // 空数据则把正在记录的curPLMap添加到finalPLMap中
                             if (curPLMap[seriesIndex].length > 0) {
                                 this.finalPLMap[seriesIndex] =
@@ -42596,8 +44140,8 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
@@ -42665,7 +44209,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
         /**
          * 构建类目轴为垂直方向的折线图系列
          */
-        _buildVertical : function (seriesArray, maxDataLength, locationMap, xMarkMap) {
+        _buildVertical: function (seriesArray, maxDataLength, locationMap, xMarkMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
@@ -42686,7 +44230,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
             var data;
             var value;
             for (var i = 0, l = maxDataLength; i < l; i++) {
-                if (typeof categoryAxis.getNameByIndex(i) == 'undefined') {
+                if (categoryAxis.getNameByIndex(i) == null) {
                     // 系列数据超出类目轴长度
                     break;
                 }
@@ -42700,21 +44244,21 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
                         curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
                                                 || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
+                                                    min: Number.POSITIVE_INFINITY,
+                                                    max: Number.NEGATIVE_INFINITY,
+                                                    sum: 0,
+                                                    counter: 0,
+                                                    average: 0
                                                 };
-                        if (value == '-') {
+                        if (value === '-') {
                             // 空数据则把正在记录的curPLMap添加到finalPLMap中
                             if (curPLMap[seriesIndex].length > 0) {
                                 this.finalPLMap[seriesIndex] =
@@ -42769,8 +44313,8 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
@@ -42839,62 +44383,42 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
         /**
          * 生成折线和折线上的拐点
          */
-        _buildBorkenLine : function (seriesArray, pointList, categoryAxis, orient) {
+        _buildBorkenLine: function (seriesArray, pointList, categoryAxis, orient) {
             var series = this.series;
-            var defaultColor;
 
-            // 折线相关
-            var lineWidth;
-            var lineType;
-            var lineColor;
-            var normalColor;
-
-            // 填充相关
-            var isFill;
-            var fillNormalColor;
-
-            var serie;
             var data;
-            var seriesPL;
-            var singlePL;
-            var brokenLineShape;
-            var halfSmoothPolygonShape;
-            
-            var isLarge;
             
             // 堆积层叠需求，反顺序构建
-            var seriesIndex;
             for (var sIdx = seriesArray.length - 1; sIdx >= 0; sIdx--) {
-                seriesIndex = seriesArray[sIdx];
-                serie = series[seriesIndex];
-                seriesPL = pointList[seriesIndex];
-                if (serie.type == this.type && typeof seriesPL != 'undefined') {
-                    defaultColor = this._sIndex2ColorMap[seriesIndex];
-                    // 多级控制
-                    lineWidth = this.query(
+                var seriesIndex = seriesArray[sIdx];
+                var serie = series[seriesIndex];
+                var seriesPL = pointList[seriesIndex];
+                if (serie.type === this.type && seriesPL != null) {
+                    var bbox = this._getBbox(seriesIndex, orient);
+                    var defaultColor = this._sIndex2ColorMap[seriesIndex];
+                    // 折线相关，多级控制
+                    var lineWidth = this.query(
                         serie, 'itemStyle.normal.lineStyle.width'
                     );
-                    lineType = this.query(
+                    var lineType = this.query(
                         serie, 'itemStyle.normal.lineStyle.type'
                     );
-                    lineColor = this.query(
+                    var lineColor = this.query(
                         serie, 'itemStyle.normal.lineStyle.color'
                     );
-                    normalColor = this.getItemStyleColor(
+                    var normalColor = this.getItemStyleColor(
                         this.query(serie, 'itemStyle.normal.color'), seriesIndex, -1
                     );
 
-                    isFill = typeof this.query(
-                        serie, 'itemStyle.normal.areaStyle'
-                    ) != 'undefined';
-
-                    fillNormalColor = this.query(
+                    // 填充相关
+                    var isFill = this.query(serie, 'itemStyle.normal.areaStyle') != null;
+                    var fillNormalColor = this.query(
                         serie, 'itemStyle.normal.areaStyle.color'
                     );
 
                     for (var i = 0, l = seriesPL.length; i < l; i++) {
-                        singlePL = seriesPL[i];
-                        isLarge = this._isLarge(orient, singlePL);
+                        var singlePL = seriesPL[i];
+                        var isLarge = this._isLarge(orient, singlePL);
                         if (!isLarge) { // 非大数据模式才显示拐点symbol
                             for (var j = 0, k = singlePL.length; j < k; j++) {
                                 data = serie.data[singlePL[j][2]];
@@ -42928,18 +44452,19 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                         }
                         
                         // 折线图
-                        brokenLineShape = new BrokenLineShape({
-                            zlevel : this._zlevelBase,
-                            style : {
+                        var brokenLineShape = new BrokenLineShape({
+                            zlevel: this._zlevelBase,
+                            style: {
                                 miterLimit: lineWidth,
-                                pointList : singlePL,
-                                strokeColor : lineColor
-                                              || normalColor 
-                                              || defaultColor,
-                                lineWidth : lineWidth,
-                                lineType : lineType,
-                                smooth : this._getSmooth(serie.smooth),
-                                shadowColor : this.query(
+                                pointList: singlePL,
+                                strokeColor: lineColor
+                                             || normalColor 
+                                             || defaultColor,
+                                lineWidth: lineWidth,
+                                lineType: lineType,
+                                smooth: this._getSmooth(serie.smooth),
+                                smoothConstraint: bbox,
+                                shadowColor: this.query(
                                   serie,
                                   'itemStyle.normal.lineStyle.shadowColor'
                                 ),
@@ -42956,10 +44481,10 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                                   'itemStyle.normal.lineStyle.shadowOffsetY'
                                 )
                             },
-                            hoverable : false,
-                            _main : true,
-                            _seriesIndex : seriesIndex,
-                            _orient : orient
+                            hoverable: false,
+                            _main: true,
+                            _seriesIndex: seriesIndex,
+                            _orient: orient
                         });
                         
                         ecData.pack(
@@ -42971,11 +44496,11 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                         this.shapeList.push(brokenLineShape);
                         
                         if (isFill) {
-                            halfSmoothPolygonShape = new HalfSmoothPolygonShape({
-                                zlevel : this._zlevelBase,
-                                style : {
+                            var halfSmoothPolygonShape = new HalfSmoothPolygonShape({
+                                zlevel: this._zlevelBase,
+                                style: {
                                     miterLimit: lineWidth,
-                                    pointList : zrUtil.clone(singlePL).concat([
+                                    pointList: zrUtil.clone(singlePL).concat([
                                         [
                                             singlePL[singlePL.length - 1][4],
                                             singlePL[singlePL.length - 1][5]
@@ -42985,16 +44510,17 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                                             singlePL[0][5]
                                         ]
                                     ]),
-                                    brushType : 'fill',
-                                    smooth : this._getSmooth(serie.smooth),
-                                    color : fillNormalColor
-                                            ? fillNormalColor
-                                            : zrColor.alpha(defaultColor,0.5)
+                                    brushType: 'fill',
+                                    smooth: this._getSmooth(serie.smooth),
+                                    smoothConstraint: bbox,
+                                    color: fillNormalColor
+                                           ? fillNormalColor
+                                           : zrColor.alpha(defaultColor,0.5)
                                 },
-                                hoverable : false,
-                                _main : true,
-                                _seriesIndex : seriesIndex,
-                                _orient : orient
+                                hoverable: false,
+                                _main: true,
+                                _seriesIndex: seriesIndex,
+                                _orient: orient
                             });
                             ecData.pack(
                                 halfSmoothPolygonShape,
@@ -43008,12 +44534,26 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
             }
         },
         
-        _isLarge : function(orient, singlePL) {
+        _getBbox: function(seriesIndex, orient) {
+            var bbox = this.component.grid.getBbox();
+            var xMarkMap = this.xMarkMap[seriesIndex];
+            if (orient === 'horizontal') {
+                bbox[0][1] = Math.min(xMarkMap.minY, xMarkMap.maxY);
+                bbox[1][1] = Math.max(xMarkMap.minY, xMarkMap.maxY);
+            }
+            else {
+                bbox[0][0] = Math.min(xMarkMap.minX, xMarkMap.maxX);
+                bbox[1][0] = Math.max(xMarkMap.minX, xMarkMap.maxX);
+            }
+            return bbox;
+        },
+        
+        _isLarge: function(orient, singlePL) {
             if (singlePL.length < 2) {
                 return false;
             }
             else {
-                return orient == 'horizontal'
+                return orient === 'horizontal'
                        ? (Math.abs(singlePL[0][0] - singlePL[1][0]) < 0.5)
                        : (Math.abs(singlePL[0][1] - singlePL[1][1]) < 0.5);
             }
@@ -43022,9 +44562,9 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
         /**
          * 大规模pointList优化 
          */
-        _getLargePointList : function(orient, singlePL) {
+        _getLargePointList: function(orient, singlePL) {
             var total;
-            if (orient == 'horizontal') {
+            if (orient === 'horizontal') {
                 total = this.component.grid.getWidth();
             }
             else {
@@ -43039,11 +44579,11 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
             return newList;
         },
         
-        _getSmooth : function (isSmooth/*, pointList, orient*/) {
+        _getSmooth: function (isSmooth/*, pointList, orient*/) {
             if (isSmooth) {
                 /* 不科学啊，发现0.3通用了
                 var delta;
-                if (orient == 'horizontal') {
+                if (orient === 'horizontal') {
                     delta = Math.abs(pointList[0][0] - pointList[1][0]);
                 }
                 else {
@@ -43060,7 +44600,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
         /**
          * 生成空数据所需的可计算提示图形
          */
-        _getCalculableItem : function (seriesIndex, dataIndex, name, x, y, orient) {
+        _getCalculableItem: function (seriesIndex, dataIndex, name, x, y, orient) {
             var series = this.series;
             var color = series[seriesIndex].calculableHolderColor
                         || this.ecTheme.calculableHolderColor;
@@ -43082,7 +44622,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
         /**
          * 生成折线图上的拐点图形
          */
-        _getSymbol : function (seriesIndex, dataIndex, name, x, y, orient) {
+        _getSymbol: function (seriesIndex, dataIndex, name, x, y, orient) {
             var series = this.series;
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
@@ -43093,7 +44633,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                 this._sIndex2ShapeMap[seriesIndex], 
                 this._sIndex2ColorMap[seriesIndex],
                 '#fff',
-                orient == 'vertical' ? 'horizontal' : 'vertical' // 翻转
+                orient === 'vertical' ? 'horizontal' : 'vertical' // 翻转
             );
             itemShape.zlevel = this._zlevelBase + 1;
             
@@ -43106,14 +44646,14 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
         },
 
         // 位置转换
-        getMarkCoord : function (seriesIndex, mpData) {
+        getMarkCoord: function (seriesIndex, mpData) {
             var serie = this.series[seriesIndex];
             var xMarkMap = this.xMarkMap[seriesIndex];
             var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex);
             var yAxis = this.component.yAxis.getAxis(serie.yAxisIndex);
             
             if (mpData.type
-                && (mpData.type == 'max' || mpData.type == 'min' || mpData.type == 'average')
+                && (mpData.type === 'max' || mpData.type === 'min' || mpData.type === 'average')
             ) {
                 // 特殊值内置支持
                 return [
@@ -43138,7 +44678,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption;
                 this.series = newOption.series;
@@ -43148,7 +44688,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
             this._buildShape();
         },
         
-        ontooltipHover : function (param, tipShape) {
+        ontooltipHover: function (param, tipShape) {
             var seriesIndex = param.seriesIndex;
             var dataIndex = param.dataIndex;
             var seriesPL;
@@ -43160,7 +44700,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                     for (var i = 0, l = seriesPL.length; i < l; i++) {
                         singlePL = seriesPL[i];
                         for (var j = 0, k = singlePL.length; j < k; j++) {
-                            if (dataIndex == singlePL[j][2]) {
+                            if (dataIndex === singlePL[j][2]) {
                                 tipShape.push(this._getSymbol(
                                     seriesIndex[len],   // seriesIndex
                                     singlePL[j][2],     // dataIndex
@@ -43179,7 +44719,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
         /**
          * 动态数据增加动画 
          */
-        addDataAnimation : function (params) {
+        addDataAnimation: function (params) {
             var series = this.series;
             var aniMap = {}; // seriesIndex索引参数
             for (var i = 0, l = params.length; i < l; i++) {
@@ -43202,11 +44742,11 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                         dx = Math.abs(pointList[0][0] - pointList[1][0]);
                         dy = Math.abs(pointList[0][1] - pointList[1][1]);
                         isHorizontal = 
-                            this.shapeList[i]._orient == 'horizontal';
+                            this.shapeList[i]._orient === 'horizontal';
                             
                         if (aniMap[seriesIndex][2]) {
                             // 队头加入删除末尾
-                            if (this.shapeList[i].type == 'polygon') {
+                            if (this.shapeList[i].type === 'polygon') {
                                 //区域图
                                 var len = pointList.length;
                                 this.shapeList[i].style.pointList[len - 3]
@@ -43228,7 +44768,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                         else {
                             // 队尾加入删除头部
                             this.shapeList[i].style.pointList.shift();
-                            if (this.shapeList[i].type == 'polygon') {
+                            if (this.shapeList[i].type === 'polygon') {
                                 //区域图
                                 var targetPoint = 
                                     this.shapeList[i].style.pointList.pop();
@@ -43245,7 +44785,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                         this.zr.modShape(
                             this.shapeList[i].id, 
                             {
-                                style : {
+                                style: {
                                     pointList: this.shapeList[i].style.pointList
                                 }
                             },
@@ -43256,7 +44796,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                         // 拐点动画
                         if (aniMap[seriesIndex][2] 
                             && this.shapeList[i]._dataIndex 
-                                == series[seriesIndex].data.length - 1
+                                === series[seriesIndex].data.length - 1
                         ) {
                             // 队头加入删除末尾
                             this.zr.delShape(this.shapeList[i].id);
@@ -43274,7 +44814,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
                     this.zr.animate(this.shapeList[i].id, '')
                         .when(
                             500,
-                            {position : [x, y]}
+                            { position: [ x, y ] }
                         )
                         .start();
                 }
@@ -43301,7 +44841,7 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
             y -= 1;
             symbol = 'star';
         } 
-        else if (symbol == 'rectangle' || symbol == 'arrow') {
+        else if (symbol === 'rectangle' || symbol === 'arrow') {
             x += (width - height) / 2;
             width = height;
         }
@@ -43326,12 +44866,12 @@ define('echarts/chart/line',['require','../component/base','./base','zrender/sha
             ctx.lineTo(x2 + style.width, y2 + dy);
             
             symbol(ctx, {
-                x : x + 4,
-                y : y + 4,
-                width : width - 8,
-                height : height - 8,
-                n : dy,
-                image : imageLocation
+                x: x + 4,
+                y: y + 4,
+                width: width - 8,
+                height: height - 8,
+                n: dy,
+                image: imageLocation
             });
             
         }
@@ -43390,11 +44930,11 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
     }
     
     Bar.prototype = {
-        type : ecConfig.CHART_TYPE_BAR,
+        type: ecConfig.CHART_TYPE_BAR,
         /**
          * 绘制图形
          */
-        _buildShape : function () {
+        _buildShape: function () {
             var series = this.series;
             this.selectedMap = {};
             this.xMarkMap = {};
@@ -43404,27 +44944,27 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
             
             // 水平垂直双向series索引 ，position索引到seriesIndex
             var _position2sIndexMap = {
-                top : [],
-                bottom : [],
-                left : [],
-                right : []
+                top: [ ],
+                bottom: [ ],
+                left: [ ],
+                right: [ ]
             };
             var xAxisIndex;
             var yAxisIndex;
             var xAxis;
             var yAxis;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].type == ecConfig.CHART_TYPE_BAR) {
+                if (series[i].type === ecConfig.CHART_TYPE_BAR) {
                     series[i] = this.reformOption(series[i]);
                     xAxisIndex = series[i].xAxisIndex;
                     yAxisIndex = series[i].yAxisIndex;
                     xAxis = this.component.xAxis.getAxis(xAxisIndex);
                     yAxis = this.component.yAxis.getAxis(yAxisIndex);
-                    if (xAxis.type == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                    if (xAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         _position2sIndexMap[xAxis.getPosition()].push(i);
                     }
-                    else if (yAxis.type == ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
+                    else if (yAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                     ) {
                         _position2sIndexMap[yAxis.getPosition()].push(i);
                     }
@@ -43447,7 +44987,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
          *
          * @param {number} seriesIndex 系列索引
          */
-        _buildSinglePosition : function (position, seriesArray, xMarkMap) {
+        _buildSinglePosition: function (position, seriesArray, xMarkMap) {
             var mapData = this._mapData(seriesArray);
             var locationMap = mapData.locationMap;
             var maxDataLength = mapData.maxDataLength;
@@ -43472,7 +45012,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
          * 数据整形
          * 数组位置映射到系列索引
          */
-        _mapData : function (seriesArray) {
+        _mapData: function (seriesArray) {
             var series = this.series;
             var serie;                              // 临时映射变量
             var dataIndex = 0;                      // 堆积数据所在位置映射
@@ -43481,7 +45021,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
             var stackKey;                           // 临时映射变量
             var serieName;                          // 临时映射变量
             var legend = this.component.legend;
-            var locationMap = [];                   // 需要返回的东西：数组位置映射到系列索引
+            var locationMap = [ ];                   // 需要返回的东西：数组位置映射到系列索引
             var maxDataLength = 0;                  // 需要返回的东西：最大数据长度
             var iconShape;
             // 计算需要显示的个数和分配位置并记在下面这个结构里
@@ -43517,7 +45057,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
 
                 if (this.selectedMap[serieName]) {
                     stackKey = serie.stack || (magicStackKey + seriesArray[i]);
-                    if (typeof stackMap[stackKey] == 'undefined') {
+                    if (stackMap[stackKey] == null) {
                         stackMap[stackKey] = dataIndex;
                         locationMap[dataIndex] = [seriesArray[i]];
                         dataIndex++;
@@ -43551,15 +45091,15 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
             */
 
             return {
-                locationMap : locationMap,
-                maxDataLength : maxDataLength
+                locationMap: locationMap,
+                maxDataLength: maxDataLength
             };
         },
 
         /**
          * 构建类目轴为水平方向的柱形图系列
          */
-        _buildHorizontal : function (maxDataLength, locationMap, seriesArray, xMarkMap) {
+        _buildHorizontal: function (maxDataLength, locationMap, seriesArray, xMarkMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
@@ -43588,7 +45128,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
             var data;
             var value;
             for (var i = 0, l = maxDataLength; i < l; i++) {
-                if (typeof categoryAxis.getNameByIndex(i) == 'undefined') {
+                if (categoryAxis.getNameByIndex(i) == null) {
                     // 系列数据超出类目轴长度
                     break;
                 }
@@ -43602,20 +45142,20 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
                                                 || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
+                                                    min: Number.POSITIVE_INFINITY,
+                                                    max: Number.NEGATIVE_INFINITY,
+                                                    sum: 0,
+                                                    counter: 0,
+                                                    average: 0
                                                 };
-                        if (value == '-') {
+                        if (value === '-') {
                             // 空数据在做完后补充拖拽提示框
                             continue;
                         }
@@ -43627,7 +45167,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                                         ? valueAxis.getCoordSize(value)
                                         : (baseYP - valueAxis.getCoord(value));
                             // 非堆积数据最小高度有效
-                            if (n == 1
+                            if (n === 1
                                 && barMinHeightMap[seriesIndex] > barHeight
                             ) {
                                 barHeight = barMinHeightMap[seriesIndex];
@@ -43642,7 +45182,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                                         ? valueAxis.getCoordSize(value)
                                         : (valueAxis.getCoord(value) - baseYN);
                             // 非堆积数据最小高度有效
-                            if (n == 1
+                            if (n === 1
                                 && barMinHeightMap[seriesIndex] > barHeight
                             ) {
                                 barHeight = barMinHeightMap[seriesIndex];
@@ -43690,8 +45230,8 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
@@ -43765,7 +45305,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
         /**
          * 构建类目轴为垂直方向的柱形图系列
          */
-        _buildVertical : function (maxDataLength, locationMap, seriesArray, xMarkMap) {
+        _buildVertical: function (maxDataLength, locationMap, seriesArray, xMarkMap) {
             var series = this.series;
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
@@ -43794,7 +45334,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
             var data;
             var value;
             for (var i = 0, l = maxDataLength; i < l; i++) {
-                if (typeof categoryAxis.getNameByIndex(i) == 'undefined') {
+                if (categoryAxis.getNameByIndex(i) == null) {
                     // 系列数据超出类目轴长度
                     break;
                 }
@@ -43808,20 +45348,20 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
                                                 || {
-                                                    min : Number.POSITIVE_INFINITY,
-                                                    max : Number.NEGATIVE_INFINITY,
-                                                    sum : 0,
-                                                    counter : 0,
-                                                    average : 0
+                                                    min: Number.POSITIVE_INFINITY,
+                                                    max: Number.NEGATIVE_INFINITY,
+                                                    sum: 0,
+                                                    counter: 0,
+                                                    average: 0
                                                 };
-                        if (value == '-') {
+                        if (value === '-') {
                             // 空数据在做完后补充拖拽提示框
                             continue;
                         }
@@ -43833,7 +45373,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                                         ? valueAxis.getCoordSize(value)
                                         : (valueAxis.getCoord(value) - baseXP);
                             // 非堆积数据最小高度有效
-                            if (n == 1
+                            if (n === 1
                                 && barMinHeightMap[seriesIndex] > barHeight
                             ) {
                                 barHeight = barMinHeightMap[seriesIndex];
@@ -43848,7 +45388,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                                         ? valueAxis.getCoordSize(value)
                                         : (baseXN - valueAxis.getCoord(value));
                             // 非堆积数据最小高度有效
-                            if (n == 1
+                            if (n === 1
                                 && barMinHeightMap[seriesIndex] > barHeight
                             ) {
                                 barHeight = barMinHeightMap[seriesIndex];
@@ -43897,8 +45437,8 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = typeof data != 'undefined'
-                                ? (typeof data.value != 'undefined'
+                        value = data != null
+                                ? (data.value != null
                                   ? data.value
                                   : data)
                                 : '-';
@@ -43975,7 +45515,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
          * @param {CategoryAxis} categoryAxis 类目坐标轴，需要知道类目间隔大小
          * @param {Array} locationMap 整形数据的系列索引
          */
-        _mapSize : function (categoryAxis, locationMap, ignoreUserDefined) {
+        _mapSize: function (categoryAxis, locationMap, ignoreUserDefined) {
             var series = this.series;
             var seriesIndex;
             var barWidthMap = {};
@@ -44000,7 +45540,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                                 queryTarget,
                                 'barWidth'
                             );
-                            if (typeof sBarWidth != 'undefined') {
+                            if (sBarWidth != null) {
                                 // 同一堆积第一个生效barWidth
                                 barWidthMap[seriesIndex] = sBarWidth;
                                 sBarWidthTotal += sBarWidth;
@@ -44017,22 +45557,10 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                         }
                     }
 
-                    barMinHeightMap[seriesIndex] = this.query(
-                        queryTarget,
-                        'barMinHeight'
-                    );
-                    barGap = typeof barGap != 'undefined' 
-                             ? barGap
-                             : this.query(
-                                   queryTarget,
-                                   'barGap'
-                               );
-                    barCategoryGap = typeof barCategoryGap != 'undefined' 
-                                     ? barCategoryGap
-                                     : this.query(
-                                           queryTarget,
-                                           'barCategoryGap'
-                                       );
+                    barMinHeightMap[seriesIndex] = this.query(queryTarget, 'barMinHeight');
+                    barGap = barGap != null ? barGap : this.query(queryTarget, 'barGap');
+                    barCategoryGap = barCategoryGap != null 
+                                     ? barCategoryGap : this.query(queryTarget, 'barCategoryGap');
                 }
             }
 
@@ -44041,7 +45569,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
             if (locationMap.length != sBarWidthCounter) {
                 // 至少存在一个自适应宽度的柱形图
                 if (!ignoreUserDefined) {
-                    gap = typeof barCategoryGap == 'string' 
+                    gap = typeof barCategoryGap === 'string' 
                           && barCategoryGap.match(/%$/)
                               // 百分比
                               ? Math.floor(
@@ -44051,7 +45579,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                                 )
                               // 数值
                               : (categoryAxis.getGap() - barCategoryGap);
-                    if (typeof barGap == 'string' && barGap.match(/%$/)) {
+                    if (typeof barGap === 'string' && barGap.match(/%$/)) {
                         barGap = parseFloat(barGap) / 100;
                         barWidth = Math.floor(
                             (gap - sBarWidthTotal)
@@ -44089,7 +45617,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
             else {
                 // 全是自定义宽度，barGap无效，系列间隔决定barGap
                 gap = sBarWidthCounter > 1
-                      ? (typeof barCategoryGap == 'string' 
+                      ? (typeof barCategoryGap === 'string' 
                          && barCategoryGap.match(/%$/)
                         )
                           // 百分比
@@ -44115,19 +45643,19 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
             }
 
             return {
-                barWidthMap : barWidthMap,
-                barMinHeightMap : barMinHeightMap ,
-                gap : gap,
-                barWidth : barWidth,
-                barGap : barGap,
-                interval : interval
+                barWidthMap: barWidthMap,
+                barMinHeightMap: barMinHeightMap ,
+                gap: gap,
+                barWidth: barWidth,
+                barGap: barGap,
+                interval: interval
             };
         },
 
         /**
          * 生成最终图形数据
          */
-        _getBarItem : function (seriesIndex, dataIndex, name, x, y, width, height, orient) {
+        _getBarItem: function (seriesIndex, dataIndex, name, x, y, width, height, orient) {
             var series = this.series;
             var barShape;
             var serie = series[seriesIndex];
@@ -44153,29 +45681,29 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                 'itemStyle.emphasis'
             );
             barShape = {
-                zlevel : this._zlevelBase,
+                zlevel: this._zlevelBase,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
-                style : {
-                    x : x,
-                    y : y,
-                    width : width,
-                    height : height,
-                    brushType : 'both',
-                    color : this.getItemStyleColor(normalColor, seriesIndex, dataIndex, data),
-                    radius : normal.barBorderRadius,
-                    lineWidth : normalBorderWidth,
-                    strokeColor : normal.barBorderColor
+                style: {
+                    x: x,
+                    y: y,
+                    width: width,
+                    height: height,
+                    brushType: 'both',
+                    color: this.getItemStyleColor(normalColor, seriesIndex, dataIndex, data),
+                    radius: normal.barBorderRadius,
+                    lineWidth: normalBorderWidth,
+                    strokeColor: normal.barBorderColor
                 },
-                highlightStyle : {
-                    color : this.getItemStyleColor(emphasisColor, seriesIndex, dataIndex, data),
-                    radius : emphasis.barBorderRadius,
-                    lineWidth : emphasis.barBorderWidth,
-                    strokeColor : emphasis.barBorderColor
+                highlightStyle: {
+                    color: this.getItemStyleColor(emphasisColor, seriesIndex, dataIndex, data),
+                    radius: emphasis.barBorderRadius,
+                    lineWidth: emphasis.barBorderWidth,
+                    strokeColor: emphasis.barBorderColor
                 },
-                _orient : orient
+                _orient: orient
             };
             barShape.highlightStyle.color = barShape.highlightStyle.color
-                            || (typeof barShape.style.color == 'string'
+                            || (typeof barShape.style.color === 'string'
                                 ? zrColor.lift(barShape.style.color, -0.3)
                                 : barShape.style.color
                                );
@@ -44197,32 +45725,32 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
             barShape.highlightStyle.textColor = barShape.highlightStyle.color;
             
             barShape = this.addLabel(barShape, serie, data, name, orient);
-            if (barShape.style.textPosition == 'insideLeft'
-                || barShape.style.textPosition == 'insideRight'
-                || barShape.style.textPosition == 'insideTop'
-                || barShape.style.textPosition == 'insideBottom'
+            if (barShape.style.textPosition === 'insideLeft'
+                || barShape.style.textPosition === 'insideRight'
+                || barShape.style.textPosition === 'insideTop'
+                || barShape.style.textPosition === 'insideBottom'
             ) {
                 var gap = 5;
                 switch (barShape.style.textPosition) {
-                    case 'insideLeft' : 
+                    case 'insideLeft':
                         barShape.style.textX = barShape.style.x + gap;
                         barShape.style.textY = barShape.style.y + barShape.style.height / 2;
                         barShape.style.textAlign = 'left';
                         barShape.style.textBaseline = 'middle';
                         break;
-                    case 'insideRight' : 
+                    case 'insideRight':
                         barShape.style.textX = barShape.style.x + barShape.style.width - gap;
                         barShape.style.textY = barShape.style.y + barShape.style.height / 2;
                         barShape.style.textAlign = 'right';
                         barShape.style.textBaseline = 'middle';
                         break;
-                    case 'insideTop' : 
+                    case 'insideTop':
                         barShape.style.textX = barShape.style.x + barShape.style.width / 2;
                         barShape.style.textY = barShape.style.y + gap / 2;
                         barShape.style.textAlign = 'center';
                         barShape.style.textBaseline = 'top';
                         break;
-                    case 'insideBottom' : 
+                    case 'insideBottom':
                         barShape.style.textX = barShape.style.x + barShape.style.width / 2;
                         barShape.style.textY = barShape.style.y + barShape.style.height - gap / 2;
                         barShape.style.textAlign = 'center';
@@ -44251,7 +45779,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
         },
 
         // 位置转换
-        getMarkCoord : function (seriesIndex, mpData) {
+        getMarkCoord: function (seriesIndex, mpData) {
             var serie = this.series[seriesIndex];
             var xMarkMap = this.xMarkMap[seriesIndex];
             var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex);
@@ -44259,7 +45787,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
             var dataIndex;
             var pos;
             if (mpData.type
-                && (mpData.type == 'max' || mpData.type == 'min' || mpData.type == 'average')
+                && (mpData.type === 'max' || mpData.type === 'min' || mpData.type === 'average')
             ) {
                 // 特殊值内置支持
                 pos = [
@@ -44271,12 +45799,12 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
             }
             else if (xMarkMap.isHorizontal) {
                 // 横向
-                dataIndex = typeof mpData.xAxis == 'string' && xAxis.getIndexByName
+                dataIndex = typeof mpData.xAxis === 'string' && xAxis.getIndexByName
                             ? xAxis.getIndexByName(mpData.xAxis)
                             : (mpData.xAxis || 0);
                 
                 var x = xMarkMap[dataIndex];
-                x = typeof x != 'undefined'
+                x = x != null
                     ? x 
                     : typeof mpData.xAxis != 'string' && xAxis.getCoordByIndex
                       ? xAxis.getCoordByIndex(mpData.xAxis || 0)
@@ -44286,12 +45814,12 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
             }
             else {
                 // 纵向
-                dataIndex = typeof mpData.yAxis == 'string' && yAxis.getIndexByName
+                dataIndex = typeof mpData.yAxis === 'string' && yAxis.getIndexByName
                             ? yAxis.getIndexByName(mpData.yAxis)
                             : (mpData.yAxis || 0);
                 
                 var y = xMarkMap[dataIndex];
-                y = typeof y != 'undefined'
+                y = y != null
                     ? y
                     : typeof mpData.yAxis != 'string' && yAxis.getCoordByIndex
                       ? yAxis.getCoordByIndex(mpData.yAxis || 0)
@@ -44306,7 +45834,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption;
                 this.series = newOption.series;
@@ -44319,7 +45847,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
         /**
          * 动态数据增加动画 
          */
-        addDataAnimation : function (params) {
+        addDataAnimation: function (params) {
             var series = this.series;
             var aniMap = {}; // seriesIndex索引参数
             for (var i = 0, l = params.length; i < l; i++) {
@@ -44336,12 +45864,12 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                 seriesIndex = ecData.get(this.shapeList[i], 'seriesIndex');
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
                     // 有数据删除才有移动的动画
-                    if (this.shapeList[i].type == 'rectangle') {
+                    if (this.shapeList[i].type === 'rectangle') {
                         // 主动画
                         dataIndex = ecData.get(this.shapeList[i], 'dataIndex');
                         serie = series[seriesIndex];
                         if (aniMap[seriesIndex][2] 
-                            && dataIndex == serie.data.length - 1
+                            && dataIndex === serie.data.length - 1
                         ) {
                             // 队头加入删除末尾
                             this.zr.delShape(this.shapeList[i].id);
@@ -44352,7 +45880,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                             this.zr.delShape(this.shapeList[i].id);
                             continue;
                         }
-                        if (this.shapeList[i]._orient == 'horizontal') {
+                        if (this.shapeList[i]._orient === 'horizontal') {
                             // 条形图
                             dy = this.component.yAxis.getAxis(
                                     serie.yAxisIndex || 0
@@ -44372,7 +45900,7 @@ define('echarts/chart/bar',['require','../component/base','./base','zrender/shap
                         this.zr.animate(this.shapeList[i].id, '')
                             .when(
                                 500,
-                                {position : [x, y]}
+                                { position: [x, y] }
                             )
                             .start();
                     }
@@ -44467,11 +45995,11 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
     }
     
     Pie.prototype = {
-        type : ecConfig.CHART_TYPE_PIE,
+        type: ecConfig.CHART_TYPE_PIE,
         /**
          * 绘制图形
          */
-        _buildShape : function () {
+        _buildShape: function () {
             var series = this.series;
             var legend = this.component.legend;
             this.selectedMap = {};
@@ -44483,7 +46011,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
             this._selectedMode = false;
             var serieName;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].type == ecConfig.CHART_TYPE_PIE) {
+                if (series[i].type === ecConfig.CHART_TYPE_PIE) {
                     series[i] = this.reformOption(series[i]);
                     serieName = series[i].name || '';
                     // 系列图例开关
@@ -44499,18 +46027,18 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                     this._selected[i] = [];
                     if (this.deepQuery([series[i], this.option], 'calculable')) {
                         pieCase = {
-                            zlevel : this._zlevelBase,
-                            hoverable : false,
-                            style : {
-                                x : center[0],          // 圆心横坐标
-                                y : center[1],          // 圆心纵坐标
+                            zlevel: this._zlevelBase,
+                            hoverable: false,
+                            style: {
+                                x: center[0],          // 圆心横坐标
+                                y: center[1],          // 圆心纵坐标
                                 // 圆环内外半径
-                                r0 : radius[0] <= 10 ? 0 : radius[0] - 10,
-                                r : radius[1] + 10,
-                                brushType : 'stroke',
+                                r0: radius[0] <= 10 ? 0 : radius[0] - 10,
+                                r: radius[1] + 10,
+                                brushType: 'stroke',
                                 lineWidth: 1,
-                                strokeColor : series[i].calculableHolderColor
-                                              || this.ecTheme.calculableHolderColor
+                                strokeColor: series[i].calculableHolderColor
+                                             || this.ecTheme.calculableHolderColor
                             }
                         };
                         ecData.pack(pieCase, series[i], i, undefined, -1);
@@ -44534,7 +46062,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
          *
          * @param {number} seriesIndex 系列索引
          */
-        _buildSinglePie : function (seriesIndex) {
+        _buildSinglePie: function (seriesIndex) {
             var series = this.series;
             var serie = series[seriesIndex];
             var data = serie.data;
@@ -44563,6 +46091,10 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                     totalValue += +data[i].value;
                     maxValue = Math.max(maxValue, +data[i].value);
                 }
+            }
+            
+            if (totalValue === 0) {
+                return;
             }
 
             var percent = 100;
@@ -44614,12 +46146,12 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                 r0 = +radius[0];
                 r1 = +radius[1];
                 
-                if (roseType == 'radius') {
+                if (roseType === 'radius') {
                     r1 = data[i].value / maxValue * (r1 - r0) * 0.8 
                          + (r1 - r0) * 0.2
                          + r0;
                 }
-                else if (roseType == 'area') {
+                else if (roseType === 'area') {
                     r1 = Math.sqrt(data[i].value / maxValue) * (r1 - r0) + r0;
                 }
                 
@@ -44661,7 +46193,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
         /**
          * 构建单个扇形及指标
          */
-        _buildItem : function (
+        _buildItem: function (
             seriesIndex, dataIndex, percent, lastAddRadius,
             isSelected,
             r0, r1,
@@ -44726,7 +46258,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
         /**
          * 构建扇形
          */
-        getSector : function (
+        getSector: function (
             seriesIndex, dataIndex, percent, isSelected,
             r0, r1,
             startAngle, endAngle, defaultColor
@@ -44750,35 +46282,35 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                               || defaultColor;
             
             var emphasisColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data)
-                || (typeof normalColor == 'string'
+                || (typeof normalColor === 'string'
                     ? zrColor.lift(normalColor, -0.2)
                     : normalColor
                 );
 
             var sector = {
-                zlevel : this._zlevelBase,
+                zlevel: this._zlevelBase,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
-                style : {
-                    x : center[0],          // 圆心横坐标
-                    y : center[1],          // 圆心纵坐标
-                    r0 : r0,         // 圆环内半径
-                    r : r1,          // 圆环外半径
-                    startAngle : startAngle,
-                    endAngle : endAngle,
-                    brushType : 'both',
-                    color : normalColor,
-                    lineWidth : normal.borderWidth,
-                    strokeColor : normal.borderColor,
+                style: {
+                    x: center[0],          // 圆心横坐标
+                    y: center[1],          // 圆心纵坐标
+                    r0: r0,         // 圆环内半径
+                    r: r1,          // 圆环外半径
+                    startAngle: startAngle,
+                    endAngle: endAngle,
+                    brushType: 'both',
+                    color: normalColor,
+                    lineWidth: normal.borderWidth,
+                    strokeColor: normal.borderColor,
                     lineJoin: 'round'
                 },
-                highlightStyle : {
-                    color : emphasisColor,
-                    lineWidth : emphasis.borderWidth,
-                    strokeColor : emphasis.borderColor,
+                highlightStyle: {
+                    color: emphasisColor,
+                    lineWidth: emphasis.borderWidth,
+                    strokeColor: emphasis.borderColor,
                     lineJoin: 'round'
                 },
-                _seriesIndex : seriesIndex, 
-                _dataIndex : dataIndex
+                _seriesIndex: seriesIndex, 
+                _dataIndex: dataIndex
             };
             
             if (isSelected) {
@@ -44822,7 +46354,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
         /**
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
-        getLabel : function (
+        getLabel: function (
             seriesIndex, dataIndex, percent, lastAddRadius,
             startAngle, endAngle, defaultColor,
             isEmphasis
@@ -44858,14 +46390,14 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
             var textBaseline = 'middle';
             labelControl.position = labelControl.position 
                                     || itemStyle.normal.label.position;
-            if (labelControl.position == 'center') {
+            if (labelControl.position === 'center') {
                 // center显示
                 radius = radius[1];
                 x = centerX;
                 y = centerY;
                 textAlign = 'center';
             }
-            else if (labelControl.position == 'inner'){
+            else if (labelControl.position === 'inner'){
                 // 内部显示
                 radius = (radius[0] + radius[1]) / 2 + lastAddRadius;
                 x = Math.round(
@@ -44879,51 +46411,48 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                 
             }
             else {
-                // 外部显示，默认 labelControl.position == 'outer')
+                // 外部显示，默认 labelControl.position === 'outer')
                 radius = radius[1]
                          - (-itemStyle[status].labelLine.length)
                          //- (-textStyle.fontSize)
                          + lastAddRadius;
                 x = centerX + radius * zrMath.cos(midAngle, true);
                 y = centerY - radius * zrMath.sin(midAngle, true);
-                textAlign = (midAngle >= 90 && midAngle <= 270)
-                            ? 'right' : 'left';
+                textAlign = (midAngle >= 90 && midAngle <= 270) ? 'right' : 'left';
             }
             
             if (labelControl.position != 'center'
                 && labelControl.position != 'inner'
             ) {
-                x += textAlign == 'left' ? 20 : -20;
+                x += textAlign === 'left' ? 20 : -20;
             }
-            data.__labelX = x - (textAlign == 'left' ? 5 : -5);
+            data.__labelX = x - (textAlign === 'left' ? 5 : -5);
             data.__labelY = y;
             
             return new TextShape({
-                zlevel : this._zlevelBase + 1,
-                hoverable : false,
-                style : {
-                    x : x,
-                    y : y,
-                    color : textStyle.color || defaultColor,
-                    text : this.getLabelText(
-                        seriesIndex, dataIndex, percent, status
-                    ),
-                    textAlign : textStyle.align || textAlign,
-                    textBaseline : textStyle.baseline || textBaseline,
-                    textFont : this.getFont(textStyle)
+                zlevel: this._zlevelBase + 1,
+                hoverable: false,
+                style: {
+                    x: x,
+                    y: y,
+                    color: textStyle.color || defaultColor,
+                    text: this.getLabelText(seriesIndex, dataIndex, percent, status),
+                    textAlign: textStyle.align || textAlign,
+                    textBaseline: textStyle.baseline || textBaseline,
+                    textFont: this.getFont(textStyle)
                 },
-                highlightStyle : {
-                    brushType : 'fill'
+                highlightStyle: {
+                    brushType: 'fill'
                 },
-                _seriesIndex : seriesIndex, 
-                _dataIndex : dataIndex
+                _seriesIndex: seriesIndex, 
+                _dataIndex: dataIndex
             });
         },
 
         /**
          * 根据lable.format计算label text
          */
-        getLabelText : function (seriesIndex, dataIndex, percent, status) {
+        getLabelText: function (seriesIndex, dataIndex, percent, status) {
             var series = this.series;
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
@@ -44933,7 +46462,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
             );
             
             if (formatter) {
-                if (typeof formatter == 'function') {
+                if (typeof formatter === 'function') {
                     return formatter.call(
                         this.myChart,
                         serie.name,
@@ -44942,7 +46471,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                         percent
                     );
                 }
-                else if (typeof formatter == 'string') {
+                else if (typeof formatter === 'string') {
                     formatter = formatter.replace('{a}','{a0}')
                                          .replace('{b}','{b0}')
                                          .replace('{c}','{c0}')
@@ -44963,7 +46492,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
         /**
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
-        getLabelLine : function (
+        getLabelLine: function (
             seriesIndex, dataIndex, lastAddRadius,
             r0, r1,
             startAngle, endAngle, defaultColor,
@@ -45000,11 +46529,11 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                 var sinValue = zrMath.sin(midAngle, true);
                 // 三角函数缓存已在zrender/tool/math中做了
                 return new BrokenLineShape({
-                    // shape : 'brokenLine',
-                    zlevel : this._zlevelBase + 1,
-                    hoverable : false,
-                    style : {
-                        pointList : [
+                    // shape: 'brokenLine',
+                    zlevel: this._zlevelBase + 1,
+                    hoverable: false,
+                    style: {
+                        pointList: [
                             [
                                 centerX + midRadius * cosValue,
                                 centerY - midRadius * sinValue
@@ -45018,16 +46547,16 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                                 data.__labelY
                             ]
                         ],
-                        //xStart : centerX + midRadius * cosValue,
-                        //yStart : centerY - midRadius * sinValue,
-                        //xEnd : centerX + maxRadius * cosValue,
-                        //yEnd : centerY - maxRadius * sinValue,
-                        strokeColor : lineStyle.color || defaultColor,
-                        lineType : lineStyle.type,
-                        lineWidth : lineStyle.width
+                        //xStart: centerX + midRadius * cosValue,
+                        //yStart: centerY - midRadius * sinValue,
+                        //xEnd: centerX + maxRadius * cosValue,
+                        //yEnd: centerY - maxRadius * sinValue,
+                        strokeColor: lineStyle.color || defaultColor,
+                        lineType: lineStyle.type,
+                        lineWidth: lineStyle.width
                     },
-                    _seriesIndex : seriesIndex, 
-                    _dataIndex : dataIndex
+                    _seriesIndex: seriesIndex, 
+                    _dataIndex: dataIndex
                 });
             }
             else {
@@ -45041,7 +46570,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
          * @param {Object} data
          * @param {boolean} isEmphasis true is 'emphasis' and false is 'normal'
          */
-        _needLabel : function (serie, data, isEmphasis) {
+        _needLabel: function (serie, data, isEmphasis) {
             return this.deepQuery(
                 [data, serie],
                 'itemStyle.'
@@ -45056,7 +46585,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
          * @param {Object} data
          * @param {boolean} isEmphasis true is 'emphasis' and false is 'normal'
          */
-        _needLabelLine : function (serie, data, isEmphasis) {
+        _needLabelLine: function (serie, data, isEmphasis) {
             return this.deepQuery(
                 [data, serie],
                 'itemStyle.'
@@ -45069,7 +46598,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
          * 参数修正&默认值赋值，重载基类方法
          * @param {Object} opt 参数
          */
-        reformOption : function (opt) {
+        reformOption: function (opt) {
             // 常用方法快捷方式
             var _merge = zrUtil.merge;
             opt = _merge(
@@ -45093,7 +46622,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
         /**
          * 刷新
          */
-        refresh : function (newOption) {
+        refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption;
                 this.series = newOption.series;
@@ -45106,7 +46635,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
         /**
          * 动态数据增加动画 
          */
-        addDataAnimation : function (params) {
+        addDataAnimation: function (params) {
             var series = this.series;
             var aniMap = {}; // seriesIndex索引参数
             for (var i = 0, l = params.length; i < l; i++) {
@@ -45129,7 +46658,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                 isHead = params[i][2];
                 dataGrow = params[i][3];
                 if (series[seriesIndex]
-                    && series[seriesIndex].type == ecConfig.CHART_TYPE_PIE
+                    && series[seriesIndex].type === ecConfig.CHART_TYPE_PIE
                 ) {
                     if (isHead) {
                         if (!dataGrow) {
@@ -45184,17 +46713,15 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                     if (!targeSector) {
                         continue;
                     }
-                    if (backupShapeList[i].type == 'sector') {
+                    if (backupShapeList[i].type === 'sector') {
                         if (targeSector != 'delete') {
                             // 原有扇形
                             this.zr.animate(backupShapeList[i].id, 'style')
                                 .when(
                                     400,
                                     {
-                                        startAngle : 
-                                            targeSector.style.startAngle,
-                                        endAngle : 
-                                            targeSector.style.endAngle
+                                        startAngle: targeSector.style.startAngle,
+                                        endAngle: targeSector.style.endAngle
                                     }
                                 )
                                 .start();
@@ -45205,22 +46732,16 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                                 .when(
                                     400,
                                     deltaIdxMap[seriesIndex] < 0
-                                    ? {
-                                        startAngle : 
-                                            backupShapeList[i].style.startAngle
-                                      }
-                                    : {
-                                        endAngle :
-                                            backupShapeList[i].style.endAngle
-                                      }
+                                    ? { startAngle: backupShapeList[i].style.startAngle }
+                                    : { endAngle: backupShapeList[i].style.endAngle }
                                 )
                                 .start();
                         }
                     }
-                    else if (backupShapeList[i].type == 'text'
-                             || backupShapeList[i].type == 'broken-line'
+                    else if (backupShapeList[i].type === 'text'
+                             || backupShapeList[i].type === 'broken-line'
                     ) {
-                        if (targeSector == 'delete') {
+                        if (targeSector === 'delete') {
                             // 删除逻辑一样
                             this.zr.delShape(backupShapeList[i].id);
                         }
@@ -45259,7 +46780,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
             this.shapeList = backupShapeList;
         },
 
-        onclick : function (param) {
+        onclick: function (param) {
             var series = this.series;
             if (!this.isClick || !param.target) {
                 // 没有在当前实例上发生点击直接返回
@@ -45273,7 +46794,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
             var dataIndex = ecData.get(target, 'dataIndex');
 
             for (var i = 0, len = this.shapeList.length; i < len; i++) {
-                if (this.shapeList[i].id == target.id) {
+                if (this.shapeList[i].id === target.id) {
                     seriesIndex = ecData.get(target, 'seriesIndex');
                     dataIndex = ecData.get(target, 'dataIndex');
                     // 当前点击的
@@ -45305,7 +46826,7 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                     this.zr.modShape(target.id, target);
                 }
                 else if (this.shapeList[i].style._hasSelected
-                         && this._selectedMode == 'single'
+                         && this._selectedMode === 'single'
                 ) {
                     seriesIndex = ecData.get(this.shapeList[i], 'seriesIndex');
                     dataIndex = ecData.get(this.shapeList[i], 'dataIndex');
@@ -45324,8 +46845,8 @@ define('echarts/chart/pie',['require','../component/base','./base','zrender/shap
                 ecConfig.EVENT.PIE_SELECTED,
                 param.event,
                 {
-                    selected : this._selected,
-                    target :  ecData.get(target, 'name')
+                    selected: this._selected,
+                    target:  ecData.get(target, 'name')
                 },
                 this.myChart
             );

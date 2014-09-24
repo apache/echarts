@@ -1,4 +1,4 @@
-var version = '2.0.3';
+var version = '2.0.4';
 var curPage = location.href.match(/(\w*).html/) ? location.href.match(/(\w*).html/)[1] : 'index';
 
 var activeClass = {};
