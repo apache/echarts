@@ -283,10 +283,12 @@ define(function (require) {
             0, 
             Math.PI * 2
         );
+        ctx.closePath();
     }
     
     function _iconRectangle(ctx, style) {
         ctx.rect(style.x, style.y, style.width, style.height);
+        ctx.closePath();
     }
     
     function _iconTriangle(ctx, style) {
@@ -299,6 +301,7 @@ define(function (require) {
         ctx.lineTo(x + symbolSize, y + symbolSize);
         ctx.lineTo(x - symbolSize, y + symbolSize);
         ctx.lineTo(x, y - symbolSize);
+        ctx.closePath();
     }
     
     function _iconDiamond(ctx, style) {
@@ -312,6 +315,7 @@ define(function (require) {
         ctx.lineTo(x, y + symbolSize);
         ctx.lineTo(x - symbolSize, y);
         ctx.lineTo(x, y - symbolSize);
+        ctx.closePath();
     }
     
     function _iconArrow(ctx, style) {
@@ -323,6 +327,7 @@ define(function (require) {
         ctx.lineTo(x + 8 * dx,  y + style.height / 4 * 3);
         ctx.lineTo(x + 15 * dx, y + style.height);
         ctx.lineTo(x + 8 * dx,  y);
+        ctx.closePath();
     }
     
     function _iconStar(ctx, style) {
@@ -433,6 +438,7 @@ define(function (require) {
                 ctx.lineTo(style.x + style.width, style.y + style.height);
                 ctx.lineTo(style.x, style.y + style.height);
                 ctx.lineTo(style.x, style.y);
+                ctx.closePath();
             }
 
             return;
