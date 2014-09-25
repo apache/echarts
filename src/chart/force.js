@@ -132,7 +132,9 @@ define(function (require) {
                 var n = serie.nodes[i];
                 if (
                     !n || n.ignore
-                    || (n.category && !this.selectedMap[n.category])
+                    || (typeof(n.category) !== 'undefined' 
+                        && !this.selectedMap[n.category]
+                    )
                 ) {
                     continue;
                 }
