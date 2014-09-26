@@ -34,8 +34,8 @@ define(function (require) {
                 x : shadowBlur + 1, // 线宽
                 y : shadowBlur + 1,
                 n : shape.style.n,
-                width : shape.style.width * size,
-                height : shape.style.height * size,
+                width : shape.style._width * size,
+                height : shape.style._height * size,
                 lineWidth : 1,
                 strokeColor : color,
                 shadowColor : shadowColor,
@@ -68,7 +68,7 @@ define(function (require) {
         zr.addShape(effectShape);
         
         var devicePixelRatio = window.devicePixelRatio || 1;
-        var offset = (effectShape.style.width / devicePixelRatio - shape.style.width) / 2;
+        var offset = (effectShape.style.width / devicePixelRatio - shape.style._width) / 2;
         effectShape.style.x = shape.style._x - offset;
         effectShape.style.y = shape.style._y - offset;
         var duration = (effect.period + Math.random() * 10) * 100;
