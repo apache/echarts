@@ -220,9 +220,9 @@ define(function (require) {
             for (var i = 0; i < len; i++) {
                 // var initPos;
                 var gNode = graph.nodes[i];
-                if (typeof(this.__nodePositionMap[gNode.name]) !== 'undefined') {
+                if (typeof(this.__nodePositionMap[gNode.id]) !== 'undefined') {
                     gNode.layout.position = vec2.create();
-                    vec2.copy(gNode.layout.position, this.__nodePositionMap[gNode.name]);
+                    vec2.copy(gNode.layout.position, this.__nodePositionMap[gNode.id]);
                 }
                 else if (typeof(gNode.data.initial) !== 'undefined') {
                     gNode.layout.position = vec2.create();
@@ -459,14 +459,14 @@ define(function (require) {
                     0,
                     // link data
                     {
-                        source : source.data,
-                        target : target.data,
+                        source : source.rawIndex,
+                        target : target.rawIndex,
                         weight : gEdge.data.weight || 0
                     },
                     // link data index
                     gEdge.rawIndex,
                     // source name - target name
-                    source.name + ' - ' + target.name,
+                    source.id + ' - ' + target.id,
                     // link weight
                     gEdge.data.weight || 0,
                     // special
@@ -668,19 +668,6 @@ define(function (require) {
         v[1] = (Math.random() - 0.5) * size + y;
         return v;
     }
-
-    /*
-    function _filter(array, callback){
-        var len = array.length;
-        var result = [];
-        for(var i = 0; i < len; i++){
-            if(callback(array[i], i)){
-                result.push(array[i]);
-            }
-        }
-        return result;
-    }
-    */
     
     zrUtil.inherits(Force, ChartBase);
     zrUtil.inherits(Force, ComponentBase);

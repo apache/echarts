@@ -23,7 +23,6 @@ define(function(require) {
         this._directed = directed || false;
 
         /**
-         * [nodes description]
          * @type {Array}
          */
         this.nodes = [];
@@ -35,29 +34,29 @@ define(function(require) {
 
     /**
      * 添加一个新的节点
-     * @param {string} name 节点名称
+     * @param {string} id 节点名称
      * @param {*} [data] 存储的数据
      */
-    Graph.prototype.addNode = function(name, data) {
-        if (this._nodesMap[name]) {
-            return this._nodesMap[name];
+    Graph.prototype.addNode = function (id, data) {
+        if (this._nodesMap[id]) {
+            return this._nodesMap[id];
         }
 
-        var node = new Graph.Node(name, data);
+        var node = new Graph.Node(id, data);
 
         this.nodes.push(node);
 
-        this._nodesMap[name] = node;
+        this._nodesMap[id] = node;
         return node;
     };
     
     /**
      * 获取节点
-     * @param  {string} name
+     * @param  {string} id
      * @return {module:echarts/data/Graph~Node}
      */
-    Graph.prototype.getNodeByName = function(name) {
-        return this._nodesMap[name];
+    Graph.prototype.getNodeById = function (id) {
+        return this._nodesMap[id];
     };
 
     /**
@@ -67,7 +66,7 @@ define(function(require) {
      * @param {*} data
      * @return {module:echarts/data/Graph~Edge}
      */
-    Graph.prototype.addEdge = function(n1, n2, data) {
+    Graph.prototype.addEdge = function (n1, n2, data) {
         if (typeof(n1) == 'string') {
             n1 = this._nodesMap[n1];
         }
@@ -78,7 +77,7 @@ define(function(require) {
             return;
         }
 
-        var key = n1.name + '-' + n2.name;
+        var key = n1.id + '-' + n2.id;
         if (this._edgesMap[key]) {
             return this._edgesMap[key];
         }
@@ -102,10 +101,10 @@ define(function(require) {
      * 移除边
      * @param  {module:echarts/data/Graph~Edge} edge
      */
-    Graph.prototype.removeEdge = function(edge) {
+    Graph.prototype.removeEdge = function (edge) {
         var n1 = edge.node1;
         var n2 = edge.node2;
-        var key = n1.name + '-' + n2.name;
+        var key = n1.id + '-' + n2.id;
         if (this._directed) {
             n1.outEdges.splice(util.indexOf(n1.outEdges, edge), 1);
             n2.inEdges.splice(util.indexOf(n2.inEdges, edge), 1);   
@@ -118,10 +117,32 @@ define(function(require) {
     };
 
     /**
+     * 获取边
+     * @param  {module:echarts/data/Graph~Node|string} n1
+     * @param  {module:echarts/data/Graph~Node|string} n2
+     * @return {module:echarts/data/Graph~Edge}
+     */
+    Graph.prototype.getEdge = function (n1, n2) {
+        if (typeof(n1) !== 'string') {
+            n1 = n1.id;
+        }
+        if (typeof(n2) !== 'string') {
+            n2 = n2.id;
+        }
+
+        if (this._directed) {
+            return this._edgesMap[n1 + '-' + n2]
+                || this._edgesMap[n2 + '-' + n1];
+        } else {
+            return this._edgesMap[n1 + '-' + n2];
+        }
+    }
+
+    /**
      * 移除节点（及其邻接边）
      * @param  {module:echarts/data/Graph~Node|string} node
      */
-    Graph.prototype.removeNode = function(node) {
+    Graph.prototype.removeNode = function (node) {
         if (typeof(node) === 'string') {
             node = this._nodesMap[node];
             if (!node) {
@@ -129,7 +150,7 @@ define(function(require) {
             }
         }
 
-        delete this._nodesMap[node.name];
+        delete this._nodesMap[node.id];
         this.nodes.splice(util.indexOf(this.nodes, node), 1);
 
         for (var i = 0; i < this.edges.length;) {
@@ -147,7 +168,7 @@ define(function(require) {
      * @param  {Function} cb
      * @param  {*}   context
      */
-    Graph.prototype.eachNode = function(cb, context) {
+    Graph.prototype.eachNode = function (cb, context) {
         for (var i = 0; i < this.nodes.length; i++) {
             cb.call(context, this.nodes[i]);
         }
@@ -158,7 +179,7 @@ define(function(require) {
      * @param  {Function} cb
      * @param  {*}   context
      */
-    Graph.prototype.eachEdge = function(cb, context) {
+    Graph.prototype.eachEdge = function (cb, context) {
         for (var i = 0; i < this.edges.length; i++) {
             cb.call(context, this.edges[i]);
         }
@@ -176,17 +197,81 @@ define(function(require) {
     };
     
     /**
+     * 广度优先遍历
+     */
+    Graph.prototype.breadthFirstTraverse = function (
+        cb, startNode, direction, context
+    ) {
+        if (typeof(startNode) === 'string') {
+            startNode = this._nodesMap[startNode];
+        }
+        if (!startNode) {
+            return;
+        }
+
+        var edgeType = 'edges';
+        if (direction === 'out') {
+            edgeType = 'outEdges';
+        } else if (direction === 'in') {
+            edgeType = 'inEdges';
+        }
+        
+        for (var i = 0; i < this.nodes.length; i++) {
+            this.nodes[i].__visited = false;
+        }
+
+        if (cb.call(context, startNode, null)) {
+            return;
+        }
+
+        var queue = [startNode];
+        while (queue.length) {
+            var currentNode = queue.shift();
+            var edges = currentNode[edgeType];
+
+            for (var i = 0; i < edges.length; i++) {
+                var e = edges[i];
+                var otherNode = e.node1 === currentNode 
+                    ? e.node2 : e.node1;
+                if (!otherNode.__visited) {
+                    if (cb.call(otherNode, otherNode, currentNode)) {
+                        // Stop traversing
+                        return;
+                    }
+                    queue.push(otherNode);
+                    otherNode.__visited = true;
+                }
+            }
+        }
+    };
+
+    /**
+     * 复制图
+     */
+    Graph.prototype.clone = function () {
+        var graph = new Graph(this._directed);
+        for (var i = 0; i < this.nodes.length; i++) {
+            graph.addNode(this.nodes[i].id, this.nodes[i].data);
+        }
+        for (var i = 0; i < this.edges.length; i++) {
+            var e = this.edges[i];
+            graph.addEdge(e.node1.id, e.node2.id, e.data);
+        }
+        return graph;
+    }
+
+    /**
      * 图节点
      * @alias module:echarts/data/Graph~Node
-     * @param {string} name
+     * @param {string} id
      * @param {*} [data]
      */
-    var Node = function(name, data) {
+    var Node = function(id, data) {
         /**
          * 节点名称
          * @type {string}
          */
-        this.name = name;
+        this.id = id;
         /**
          * 节点存储的数据
          * @type {*}
@@ -280,7 +365,7 @@ define(function(require) {
      * 如果是有向图被写到`edge.data.sourceWeight`和`edge.data.targetWeight`
      * 
      * @method module:echarts/data/Graph.fromMatrix
-     * @param {Array.<Object>} nodesData 节点信息，必须有`name`属性
+     * @param {Array.<Object>} nodesData 节点信息，必须有`id`属性
      * @param {Array} matrix 邻接矩阵
      * @param {boolean} directed 是否是有向图
      * @return {module:echarts/data/Graph}
@@ -299,7 +384,7 @@ define(function(require) {
         var graph = new Graph(directed);
 
         for (var i = 0; i < size; i++) {
-            var node = graph.addNode(nodesData[i].name, {});
+            var node = graph.addNode(nodesData[i].id, {});
             node.data.value = 0;
             if (directed) {
                 node.data.outValue = node.data.inValue = 0;

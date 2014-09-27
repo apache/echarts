@@ -269,7 +269,8 @@ define(function __echartsForceLayoutWorker(require) {
         this.width = 500;
         this.height = 500;
 
-        this.maxSpeedIncrease = 1.0;
+        this.maxSpeedIncrease = 1;
+        this.enableAcceleration = true;
 
         this.nodes = [];
         this.edges = [];
@@ -364,7 +365,9 @@ define(function __echartsForceLayoutWorker(require) {
                 mass += node.mass;
                 vec2.scaleAndAdd(centerOfMass, centerOfMass, node.position, node.mass);
             }
-            vec2.scale(centerOfMass, centerOfMass, 1 / mass);
+            if (mass > 0) {
+                vec2.scale(centerOfMass, centerOfMass, 1 / mass);
+            }
         }
 
         // Reset forces
@@ -417,9 +420,12 @@ define(function __echartsForceLayoutWorker(require) {
             var scale = Math.min(df, 500.0) / df;
             vec2.scale(node.force, node.force, scale);
 
-            vec2.add(speed, speed, node.force);
-
-            vec2.scale(speed, speed, this.temperature);
+            if (this.enableAcceleration) {
+                vec2.add(speed, speed, node.force);
+                vec2.scale(speed, speed, this.temperature);
+            } else {
+                vec2.copy(speed, node.force);
+            }
 
             // Prevent swinging
             // Limited the increase of speed up to 100% each step
@@ -451,6 +457,10 @@ define(function __echartsForceLayoutWorker(require) {
                 this.applyNodeToNodeRepulsion(region.node, node, true);
             }
             else {
+                // Static region and node
+                if (region.mass === 0 && node.mass === 0) {
+                    return;
+                }
                 vec2.sub(v, node.position, region.centerOfMass);
                 var d2 = v[0] * v[0] + v[1] * v[1];
                 if (d2 > this.barnesHutTheta * region.size * region.size) {
@@ -469,9 +479,14 @@ define(function __echartsForceLayoutWorker(require) {
     ForceLayout.prototype.applyNodeToNodeRepulsion = (function() {
         var v = vec2.create();
         return function applyNodeToNodeRepulsion(na, nb, oneWay) {
-            if (na == nb) {
+            if (na === nb) {
                 return;
             }
+            // Two static node
+            if (na.mass === 0 && nb.mass === 0) {
+                return;
+            }
+            
             vec2.sub(v, na.position, nb.position);
             var d2 = v[0] * v[0] + v[1] * v[1];
 

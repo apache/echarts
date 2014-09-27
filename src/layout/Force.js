@@ -53,6 +53,10 @@ define(function(require) {
         this.gravity = typeof(opts.gravity) !== 'undefined'
                         ? opts.gravity : 1;
         this.large = opts.large || false;
+        this.preventOverlap = opts.preventOverlap || false;
+        this.maxSpeedIncrease = opts.maxSpeedIncrease || 1;
+        this.enableAcceleration = typeof(opts.enableAcceleration) === 'undefined'
+            ? true : opts.enableAcceleration;
 
         this.onupdate = opts.onupdate || function () {};
         this.temperature = opts.temperature || 1;
@@ -81,7 +85,11 @@ define(function(require) {
             height: this.ratioScaling ? height : size,
             scaling: this.scaling || 1.0,
             gravity: this.gravity || 1.0,
-            barnesHutOptimize: this.large
+            barnesHutOptimize: this.large,
+            preventOverlap: this.preventOverlap,
+
+            enableAcceleration: this.enableAcceleration,
+            maxSpeedIncrease: this.maxSpeedIncrease
         };
 
         if (this._layoutWorker) {
@@ -97,7 +105,7 @@ define(function(require) {
         }
     };
 
-    ForceLayout.prototype.init = function(graph, useWorker) {
+    ForceLayout.prototype.init = function (graph, useWorker) {
         if (workerUrl && useWorker) {
             try {
                 if (!this._layoutWorker) {
@@ -137,8 +145,10 @@ define(function(require) {
             var n = graph.nodes[i];
             positionArr[i * 2] = n.layout.position[0];
             positionArr[i * 2 + 1] = n.layout.position[1];
-            massArr[i] = n.layout.mass;
-            radiusArr[i] = n.layout.radius;
+            massArr[i] = typeof(n.layout.mass) === 'undefined'
+                ? 1 : n.layout.mass;
+            radiusArr[i] = typeof(n.layout.radius) === 'undefined'
+                ? 1 : n.layout.radius;
 
             n.layout.__index = i;
         }
