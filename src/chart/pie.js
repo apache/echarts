@@ -46,27 +46,31 @@ define(function (require) {
             var percent = ecData.get(shape, 'special');
             var lastAddRadius = shape._lastAddRadius;
 
+            var center = [shape.style.x, shape.style.y];
             var startAngle = shape.style.startAngle;
             var endAngle = shape.style.endAngle;
+            var midAngle = ((endAngle + startAngle) / 2 + 360) % 360; // 中值
             var defaultColor = shape.highlightStyle.color;
             
             // 文本标签，需要显示则会有返回
             var label = self.getLabel(
-                    seriesIndex, dataIndex, percent, lastAddRadius,
-                    startAngle, endAngle, defaultColor,
+                    seriesIndex, dataIndex, percent,
+                    center, midAngle, defaultColor,
                     true
                 );
+                    
             if (label) {
                 self.zr.addHoverShape(label);
             }
             
             // 文本标签视觉引导线，需要显示则会有返回
             var labelLine = self.getLabelLine(
-                    seriesIndex, dataIndex, lastAddRadius,
-                    shape.style.r0, shape.style.r,
-                    startAngle, endAngle, defaultColor,
+                    seriesIndex, dataIndex,
+                    center, shape.style.r0, shape.style.r,
+                    midAngle, defaultColor,
                     true
                 );
+
             if (labelLine) {
                 self.zr.addHoverShape(labelLine);
             }
@@ -154,14 +158,12 @@ define(function (require) {
             var totalValue = 0;                  // 迭代累计
             var maxValue = Number.NEGATIVE_INFINITY;
 
+            var singleShapeList = [];
             // 计算需要显示的个数和总值
             for (var i = 0, l = data.length; i < l; i++) {
                 itemName = data[i].name;
-                if (legend){
-                    this.selectedMap[itemName] = legend.isSelected(itemName);
-                } else {
-                    this.selectedMap[itemName] = true;
-                }
+                this.selectedMap[itemName] = legend ? legend.isSelected(itemName) : true;
+                
                 if (this.selectedMap[itemName] && !isNaN(data[i].value)) {
                     if (+data[i].value !== 0) {
                         totalSelected++;
@@ -179,16 +181,14 @@ define(function (require) {
             }
 
             var percent = 100;
-            var lastPercent;    // 相邻细角度优化
-            var lastAddRadius = 0;
             var clockWise = serie.clockWise;
-            var startAngle = serie.startAngle.toFixed(2) - 0;
+            var startAngle = (serie.startAngle.toFixed(2) - 0 + 360) % 360;
             var endAngle;
             var minAngle = serie.minAngle || 0.01; // #bugfixed
-            var totalAngle = 360 - (minAngle * totalSelected) 
-                                 - 0.01 * totalSelectedValue0;
+            var totalAngle = 360 - (minAngle * totalSelected) - 0.01 * totalSelectedValue0;
             var defaultColor;
             var roseType = serie.roseType;
+            var center;
             var radius;
             var r0;     // 扇形内半径
             var r1;     // 扇形外半径
@@ -198,17 +198,9 @@ define(function (require) {
                 if (!this.selectedMap[itemName] || isNaN(data[i].value)) {
                     continue;
                 }
-                // 默认颜色策略
-                if (legend) {
-                    // 有图例则从图例中获取颜色定义
-                    defaultColor = legend.getColor(itemName);
-                }
-                else {
-                    // 全局颜色定义
-                    defaultColor = this.zr.getColor(i);
-                }
+                // 默认颜色策略，有图例则从图例中获取颜色定义，没有就全局颜色定义
+                defaultColor = legend ? legend.getColor(itemName) : this.zr.getColor(i);
 
-                lastPercent = percent;
                 percent = data[i].value / totalValue;
                 if (roseType != 'area') {
                     endAngle = clockWise
@@ -223,14 +215,13 @@ define(function (require) {
                 endAngle = endAngle.toFixed(2) - 0;
                 percent = (percent * 100).toFixed(2);
                 
+                center = this.parseCenter(this.zr, serie.center);
                 radius = this.parseRadius(this.zr, serie.radius);
                 r0 = +radius[0];
                 r1 = +radius[1];
                 
                 if (roseType === 'radius') {
-                    r1 = data[i].value / maxValue * (r1 - r0) * 0.8 
-                         + (r1 - r0) * 0.2
-                         + r0;
+                    r1 = data[i].value / maxValue * (r1 - r0) * 0.8 + (r1 - r0) * 0.2 + r0;
                 }
                 else if (roseType === 'area') {
                     r1 = Math.sqrt(data[i].value / maxValue) * (r1 - r0) + r0;
@@ -243,48 +234,41 @@ define(function (require) {
                     endAngle = temp; 
                 }
                 
-                // 当前小角度需要检查前一个是否也是小角度，如果是得调整长度，不能完全避免，但能大大降低覆盖概率
-                if (i > 0 
-                    && Math.abs(startAngle - endAngle) < 15       // 约15度
-                    && lastPercent < 4
-                    && this._needLabel(serie, data[i], false)
-                    && this.deepQuery(
-                           [data[i], serie], 'itemStyle.normal.label.position'
-                       ) != 'center'
-                ) {
-                    // 都小就延长，前小后大就缩短
-                    lastAddRadius += (percent < 4 ? 20 : -20);
-                }
-                else {
-                    lastAddRadius = 0;
-                }
-                
                 this._buildItem(
-                    seriesIndex, i, percent, lastAddRadius, // 相邻最小角度优化
+                    singleShapeList,
+                    seriesIndex, i, percent,
                     data[i].selected,
-                    r0, r1,
+                    center, r0, r1,
                     startAngle, endAngle, defaultColor
                 );
                 if (!clockWise) {
                     startAngle = endAngle;
                 }
             }
+            this._autoLabelLayout(singleShapeList, center, r1);
+            for (var i = 0, l = singleShapeList.length; i < l; i++) {
+                this.shapeList.push(singleShapeList[i]);
+            }
+            singleShapeList = null;
         },
 
         /**
          * 构建单个扇形及指标
          */
         _buildItem: function (
-            seriesIndex, dataIndex, percent, lastAddRadius,
+            singleShapeList,
+            seriesIndex, dataIndex, percent,
             isSelected,
-            r0, r1,
+            center, r0, r1,
             startAngle, endAngle, defaultColor
         ) {
             var series = this.series;
+            var midAngle = ((endAngle + startAngle) / 2 + 360) % 360; // 中值
+            
             // 扇形
             var sector = this.getSector(
                     seriesIndex, dataIndex, percent, isSelected,
-                    r0, r1,
+                    center, r0, r1,
                     startAngle, endAngle, defaultColor
                 );
             // 图形需要附加的私有数据
@@ -295,34 +279,22 @@ define(function (require) {
                 series[seriesIndex].data[dataIndex].name,
                 percent
             );
-            sector._lastAddRadius = lastAddRadius;
-            this.shapeList.push(sector);
+            singleShapeList.push(sector);
 
             // 文本标签，需要显示则会有返回
             var label = this.getLabel(
-                    seriesIndex, dataIndex, percent, lastAddRadius,
-                    startAngle, endAngle, defaultColor,
+                    seriesIndex, dataIndex, percent,
+                    center, midAngle, defaultColor,
                     false
                 );
-            if (label) {
-                ecData.pack(
-                    label,
-                    series[seriesIndex], seriesIndex,
-                    series[seriesIndex].data[dataIndex], dataIndex,
-                    series[seriesIndex].data[dataIndex].name,
-                    percent
-                );
-                label._dataIndex = dataIndex;
-                this.shapeList.push(label);
-            }
-
             // 文本标签视觉引导线，需要显示则会有返回
             var labelLine = this.getLabelLine(
-                    seriesIndex, dataIndex, lastAddRadius,
-                    r0, r1,
-                    startAngle, endAngle, defaultColor,
+                    seriesIndex, dataIndex,
+                    center, r0, r1,
+                    midAngle, defaultColor,
                     false
                 );
+            
             if (labelLine) {
                 ecData.pack(
                     labelLine,
@@ -331,8 +303,18 @@ define(function (require) {
                     series[seriesIndex].data[dataIndex].name,
                     percent
                 );
-                labelLine._dataIndex = dataIndex;
-                this.shapeList.push(labelLine);
+                singleShapeList.push(labelLine);
+            }
+            if (label) {
+                ecData.pack(
+                    label,
+                    series[seriesIndex], seriesIndex,
+                    series[seriesIndex].data[dataIndex], dataIndex,
+                    series[seriesIndex].data[dataIndex].name,
+                    percent
+                );
+                label._labelLine = labelLine;
+                singleShapeList.push(label);
             }
         },
 
@@ -341,14 +323,13 @@ define(function (require) {
          */
         getSector: function (
             seriesIndex, dataIndex, percent, isSelected,
-            r0, r1,
+            center, r0, r1,
             startAngle, endAngle, defaultColor
         ) {
             var series = this.series;
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
             var queryTarget = [data, serie];
-            var center = this.parseCenter(this.zr, serie.center);
 
             // 多级控制
             var normal = this.deepMerge(
@@ -421,7 +402,7 @@ define(function (require) {
                 sector.draggable = true;
             }
 
-            // “normal下不显示，emphasis显示”添加事件响应
+            // “emphasis显示”添加事件响应
             if (this._needLabel(serie, data, true)          // emphasis下显示文本
                 || this._needLabelLine(serie, data, true)   // emphasis下显示引导线
             ) {
@@ -436,8 +417,8 @@ define(function (require) {
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
         getLabel: function (
-            seriesIndex, dataIndex, percent, lastAddRadius,
-            startAngle, endAngle, defaultColor,
+            seriesIndex, dataIndex, percent,
+            center, midAngle, defaultColor,
             isEmphasis
         ) {
             var series = this.series;
@@ -460,12 +441,10 @@ define(function (require) {
             var labelControl = itemStyle[status].label;
             var textStyle = labelControl.textStyle || {};
 
-            var center = this.parseCenter(this.zr, serie.center);
             var centerX = center[0];                      // 圆心横坐标
             var centerY = center[1];                      // 圆心纵坐标
             var x;
             var y;
-            var midAngle = ((endAngle + startAngle) / 2 + 360) % 360; // 中值
             var radius = this.parseRadius(this.zr, serie.radius);  // 标签位置半径
             var textAlign;
             var textBaseline = 'middle';
@@ -473,44 +452,33 @@ define(function (require) {
                                     || itemStyle.normal.label.position;
             if (labelControl.position === 'center') {
                 // center显示
-                radius = radius[1];
                 x = centerX;
                 y = centerY;
                 textAlign = 'center';
             }
             else if (labelControl.position === 'inner'){
                 // 内部显示
-                radius = (radius[0] + radius[1]) / 2 + lastAddRadius;
-                x = Math.round(
-                    centerX + radius * zrMath.cos(midAngle, true)
-                );
-                y = Math.round(
-                    centerY - radius * zrMath.sin(midAngle, true)
-                );
+                radius = (radius[0] + radius[1]) / 2;
+                x = Math.round(centerX + radius * zrMath.cos(midAngle, true));
+                y = Math.round(centerY - radius * zrMath.sin(midAngle, true));
                 defaultColor = '#fff';
                 textAlign = 'center';
-                
             }
             else {
                 // 外部显示，默认 labelControl.position === 'outer')
-                radius = radius[1]
-                         - (-itemStyle[status].labelLine.length)
-                         //- (-textStyle.fontSize)
-                         + lastAddRadius;
-                x = centerX + radius * zrMath.cos(midAngle, true);
-                y = centerY - radius * zrMath.sin(midAngle, true);
+                radius = radius[1] - (-itemStyle[status].labelLine.length);
+                x = Math.round(centerX + radius * zrMath.cos(midAngle, true));
+                y = Math.round(centerY - radius * zrMath.sin(midAngle, true));
                 textAlign = (midAngle >= 90 && midAngle <= 270) ? 'right' : 'left';
             }
             
-            if (labelControl.position != 'center'
-                && labelControl.position != 'inner'
-            ) {
+            if (labelControl.position != 'center' && labelControl.position != 'inner') {
                 x += textAlign === 'left' ? 20 : -20;
             }
             data.__labelX = x - (textAlign === 'left' ? 5 : -5);
             data.__labelY = y;
             
-            return new TextShape({
+            var ts = new TextShape({
                 zlevel: this._zlevelBase + 1,
                 hoverable: false,
                 style: {
@@ -524,10 +492,15 @@ define(function (require) {
                 },
                 highlightStyle: {
                     brushType: 'fill'
-                },
-                _seriesIndex: seriesIndex, 
-                _dataIndex: dataIndex
+                }
             });
+            ts._radius = radius;
+            ts._labelPosition = labelControl.position || 'outer';
+            ts._rect = ts.getRect(ts.style);
+            ts._seriesIndex = seriesIndex;
+            ts._dataIndex = dataIndex;
+            return ts;
+            
         },
 
         /**
@@ -574,9 +547,9 @@ define(function (require) {
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
         getLabelLine: function (
-            seriesIndex, dataIndex, lastAddRadius,
-            r0, r1,
-            startAngle, endAngle, defaultColor,
+            seriesIndex, dataIndex,
+            center, r0, r1,
+            midAngle, defaultColor,
             isEmphasis
         ) {
             var series = this.series;
@@ -596,19 +569,16 @@ define(function (require) {
                 var labelLineControl = itemStyle[status].labelLine;
                 var lineStyle = labelLineControl.lineStyle || {};
 
-                var center = this.parseCenter(this.zr, serie.center);
                 var centerX = center[0];                    // 圆心横坐标
                 var centerY = center[1];                    // 圆心纵坐标
                 // 视觉引导线起点半径
-                var midRadius = r1;
+                var minRadius = r1;
                 // 视觉引导线终点半径
                 var maxRadius = this.parseRadius(this.zr, serie.radius)[1] 
-                                - (-labelLineControl.length)
-                                + lastAddRadius;
-                var midAngle = ((endAngle + startAngle) / 2) % 360; // 角度中值
+                                - (-labelLineControl.length);
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
-                // 三角函数缓存已在zrender/tool/math中做了
+
                 return new BrokenLineShape({
                     // shape: 'brokenLine',
                     zlevel: this._zlevelBase + 1,
@@ -616,8 +586,8 @@ define(function (require) {
                     style: {
                         pointList: [
                             [
-                                centerX + midRadius * cosValue,
-                                centerY - midRadius * sinValue
+                                centerX + minRadius * cosValue,
+                                centerY - minRadius * sinValue
                             ],
                             [
                                 centerX + maxRadius * cosValue,
@@ -628,8 +598,8 @@ define(function (require) {
                                 data.__labelY
                             ]
                         ],
-                        //xStart: centerX + midRadius * cosValue,
-                        //yStart: centerY - midRadius * sinValue,
+                        //xStart: centerX + minRadius * cosValue,
+                        //yStart: centerY - minRadius * sinValue,
                         //xEnd: centerX + maxRadius * cosValue,
                         //yEnd: centerY - maxRadius * sinValue,
                         strokeColor: lineStyle.color || defaultColor,
@@ -673,6 +643,143 @@ define(function (require) {
                 + (isEmphasis ? 'emphasis' : 'normal')
                 +'.labelLine.show'
             );
+        },
+        
+        /**
+         * @param {Array.<Object>} sList 单系列图形集合
+         */
+        _autoLabelLayout : function (sList, center, r) {
+            var leftList = [];
+            var rightList = [];
+            
+            for (var i = 0, l = sList.length; i < l; i++) {
+                if (sList[i]._labelPosition === 'outer') {
+                    sList[i]._rect._y = sList[i]._rect.y;
+                    if (sList[i]._rect.x < center[0]) {
+                        leftList.push(sList[i]);
+                    }
+                    else {
+                        rightList.push(sList[i]);
+                    }
+                }
+            }
+            this._layoutCalculate(leftList, center, r, -1);
+            this._layoutCalculate(rightList, center, r, 1);
+        },
+        
+        /**
+         * @param {Array.<Object>} tList 单系列文本图形集合
+         * @param {number} direction 水平方向参数，left为-1，right为1
+         */
+        _layoutCalculate : function(tList, center, r, direction) {
+            tList.sort(function(a, b){
+                return a._rect.y - b._rect.y;
+            });
+            
+            // 压
+            function _changeDown(start, end, delta, direction) {
+                for (var j = start; j < end; j++) {
+                    tList[j]._rect.y += delta;
+                    tList[j].style.y += delta;
+                    if (tList[j]._labelLine) {
+                        tList[j]._labelLine.style.pointList[1][1] += delta;
+                        tList[j]._labelLine.style.pointList[2][1] += delta;
+                    }
+                    if (j > start 
+                        && j + 1 < end 
+                        && tList[j + 1]._rect.y > tList[j]._rect.y + tList[j]._rect.height
+                    ) {
+                        _changeUp(j, delta / 2);
+                        return;
+                    }
+                }
+                
+                _changeUp(end - 1, delta / 2)
+            }
+            
+            // 弹
+            function _changeUp(end, delta) {
+                for (var j = end; j >= 0; j--) {
+                    tList[j]._rect.y -= delta;
+                    tList[j].style.y -= delta;
+                    if (tList[j]._labelLine) {
+                        tList[j]._labelLine.style.pointList[1][1] -= delta;
+                        tList[j]._labelLine.style.pointList[2][1] -= delta;
+                    }
+                    if (j > 0 
+                        && tList[j]._rect.y > tList[j - 1]._rect.y + tList[j - 1]._rect.height
+                    ) {
+                        break;
+                    }
+                }
+            }
+            
+            function _changeX(sList, isDownList, center, r, direction) {
+                var x = center[0];
+                var y = center[1];
+                var deltaX;
+                var deltaY;
+                var length;
+                var lastDeltaX = direction > 0
+                    ? isDownList                // 右侧
+                        ? Number.MAX_VALUE      // 下
+                        : 0                     // 上
+                    : isDownList                // 左侧
+                        ? Number.MAX_VALUE      // 下
+                        : 0;                    // 上
+
+                for (var i = 0, l = sList.length; i < l; i++) {
+                    deltaY = Math.abs(sList[i]._rect.y - y);
+                    length = sList[i]._radius - r;
+                    deltaX = (deltaY < r + length)
+                        ? Math.sqrt(
+                              (r + length + 20) * (r + length + 20)
+                              - Math.pow(sList[i]._rect.y - y, 2)
+                          )
+                        : Math.abs(
+                              sList[i]._rect.x + (direction > 0 ? 0 : sList[i]._rect.width) - x
+                          );
+                    if (isDownList && deltaX >= lastDeltaX) {
+                        // 右下，左下
+                        deltaX = lastDeltaX - 10;
+                    }
+                    if (!isDownList && deltaX <= lastDeltaX) {
+                        // 右上，左上
+                        deltaX = lastDeltaX + 10;
+                    }
+                    
+                    sList[i]._rect.x = sList[i].style.x = x + deltaX * direction;
+                    sList[i]._labelLine.style.pointList[2][0] = x + (deltaX - 5) * direction;
+                    sList[i]._labelLine.style.pointList[1][0] = x + (deltaX - 20) *direction;
+                    lastDeltaX = deltaX;
+                }
+            }
+            
+            var lastY = 0;
+            var delta;
+            var len = tList.length;
+            var upList = [];
+            var downList = [];
+            for (var i = 0; i < len; i++) {
+                delta = tList[i]._rect.y - lastY;
+                if (delta < 0) {
+                    _changeDown(i, len, -delta, direction)
+                }
+                lastY = tList[i]._rect.y + tList[i]._rect.height;
+            }
+            if (this.zr.getHeight() - lastY < 0) {
+                _changeUp(len - 1, lastY - this.zr.getHeight());
+            }
+            for (var i = 0; i < len; i++) {
+                if (tList[i]._rect.y >= center[1]) {
+                    downList.push(tList[i]);
+                }
+                else {
+                    upList.push(tList[i]);
+                }
+            }
+            _changeX(downList, true, center, r, direction);
+            _changeX(upList, false, center, r, direction);
         },
         
         /**
