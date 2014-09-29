@@ -917,43 +917,31 @@ define(function (require) {
                         // 主线动画
                         dx = Math.abs(pointList[0][0] - pointList[1][0]);
                         dy = Math.abs(pointList[0][1] - pointList[1][1]);
-                        isHorizontal = 
-                            this.shapeList[i]._orient === 'horizontal';
+                        isHorizontal = this.shapeList[i]._orient === 'horizontal';
                             
                         if (aniMap[seriesIndex][2]) {
                             // 队头加入删除末尾
-                            if (this.shapeList[i].type === 'polygon') {
+                            if (this.shapeList[i].type === 'half-smooth-polygon') {
                                 //区域图
                                 var len = pointList.length;
-                                this.shapeList[i].style.pointList[len - 3]
-                                    = pointList[len - 2];
-                                isHorizontal
-                                ? (this.shapeList[i].style.pointList[len - 3][0]
-                                       = pointList[len - 4][0]
-                                  )
-                                : (this.shapeList[i].style.pointList[len - 3][1]
-                                       = pointList[len - 4][1]
-                                  );
-                                this.shapeList[i].style.pointList[len - 2]
-                                    = pointList[len - 1];
+                                this.shapeList[i].style.pointList[len - 3] = pointList[len - 2];
+                                this.shapeList[i].style.pointList[len - 3][isHorizontal ? 0 : 1]
+                                    = pointList[len - 4][isHorizontal ? 0 : 1]
+                                this.shapeList[i].style.pointList[len - 2] = pointList[len - 1];
                             }
                             this.shapeList[i].style.pointList.pop();
-                            
                             isHorizontal ? (x = dx, y = 0) : (x = 0, y = -dy);
                         }
                         else {
                             // 队尾加入删除头部
                             this.shapeList[i].style.pointList.shift();
-                            if (this.shapeList[i].type === 'polygon') {
+                            if (this.shapeList[i].type === 'half-smooth-polygon') {
                                 //区域图
-                                var targetPoint = 
-                                    this.shapeList[i].style.pointList.pop();
+                                var targetPoint =this.shapeList[i].style.pointList.pop();
                                 isHorizontal
                                 ? (targetPoint[0] = pointList[0][0])
                                 : (targetPoint[1] = pointList[0][1]);
-                                this.shapeList[i].style.pointList.push(
-                                    targetPoint
-                                );
+                                this.shapeList[i].style.pointList.push(targetPoint);
                             }
                             isHorizontal ? (x = -dx, y = 0) : (x = 0, y = dy);
                         }
@@ -1049,7 +1037,6 @@ define(function (require) {
                 n: dy,
                 image: imageLocation
             });
-            
         }
         else {
             ctx.moveTo(x, y + dy);
