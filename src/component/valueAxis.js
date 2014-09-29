@@ -424,19 +424,20 @@ define(function (require) {
                             value = oriData[j].value != null
                                     ? oriData[j].value
                                     : oriData[j];
-                            if (this.series[i].type === ecConfig.CHART_TYPE_SCATTER) {
+                            if (this.series[i].type === ecConfig.CHART_TYPE_K) {
+                                data[key].push(value[0]);
+                                data[key].push(value[1]);
+                                data[key].push(value[2]);
+                                data[key].push(value[3]);
+                            }
+                            else if (value instanceof Array) {
+                                // scatter 、 不等距 line bar
                                 if (this.option.xAxisIndex != -1) {
                                     data[key].push(value[0]);
                                 }
                                 if (this.option.yAxisIndex != -1) {
                                     data[key].push(value[1]);
                                 }
-                            }
-                            else if (this.series[i].type === ecConfig.CHART_TYPE_K) {
-                                data[key].push(value[0]);
-                                data[key].push(value[1]);
-                                data[key].push(value[2]);
-                                data[key].push(value[3]);
                             }
                             else {
                                 data[key].push(value);
@@ -852,6 +853,15 @@ define(function (require) {
             }
             
             return result.toFixed(2) - 0;
+        },
+        
+        isMaindAxis : function (value) {
+            for (var i = 0, l = this._valueList.length; i < l; i++) {
+                if (this._valueList[i] === value) {
+                    return true;
+                }
+            }
+            return false;
         }
     };
 
