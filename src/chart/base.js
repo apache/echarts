@@ -1308,9 +1308,9 @@ define(function (require) {
                 var len = 2;
                 while(len--) {
                     for (var i = 0, l = shapeList[len].length; i < l; i++) {
-                        if (shapeList[len][i]._mark === markType
-                            && ecData.get(shapeList[len][i], 'seriesIndex') === seriesIndex
-                            && ecData.get(shapeList[len][i], 'name') === markName
+                        if (shapeList[len][i]._mark == markType
+                            && ecData.get(shapeList[len][i], 'seriesIndex') == seriesIndex
+                            && ecData.get(shapeList[len][i], 'name') == markName
                         ) {
                             this.zr.delShape(shapeList[len][i].id);
                             shapeList[len].splice(i, 1);
