@@ -162,7 +162,7 @@ define(function() {
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
             itemSize: 16,              // 工具箱图形宽度
             showTitle: true,
-            // textStyle: { },
+            // textStyle: {},
             feature: {
                 mark: {
                     show: false,
@@ -198,7 +198,7 @@ define(function() {
                         stack: '堆积',
                         tiled: '平铺'
                     },
-                    type: [ ] // 'line', 'bar', 'stack', 'tiled'
+                    type: [] // 'line', 'bar', 'stack', 'tiled'
                 },
                 restore: {
                     show: false,
@@ -443,7 +443,7 @@ define(function() {
                 }
             },
             type: 'polygon'
-            // indicator: [ ]
+            // indicator: []
         },
 
         timeline: {
@@ -969,7 +969,7 @@ define(function() {
              *  
              *  Row based
              */
-            matrix: [ ]
+            matrix: []
         },
 
         gauge: {

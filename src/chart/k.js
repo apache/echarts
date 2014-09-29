@@ -47,8 +47,8 @@ define(function (require) {
 
             // 水平垂直双向series索引 ，position索引到seriesIndex
             var _position2sIndexMap = {
-                top: [ ],
-                bottom: [ ]
+                top: [],
+                bottom: []
             };
             var xAxis;
             for (var i = 0, l = series.length; i < l; i++) {

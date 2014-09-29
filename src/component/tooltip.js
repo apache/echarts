@@ -1041,9 +1041,9 @@ define(function (require) {
                 var axisPointer = this.option.tooltip.axisPointer;
                 var pointType = axisPointer.type;
                 var style = {
-                    line: { },
-                    cross: { },
-                    shadow: { }
+                    line: {},
+                    cross: {},
+                    shadow: {}
                 };
                 for (var pType in style) {
                     style[pType].color = axisPointer[pType + 'Style'].color;

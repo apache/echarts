@@ -52,10 +52,10 @@ define(function (require) {
             
             // 水平垂直双向series索引 ，position索引到seriesIndex
             var _position2sIndexMap = {
-                top: [ ],
-                bottom: [ ],
-                left: [ ],
-                right: [ ]
+                top: [],
+                bottom: [],
+                left: [],
+                right: []
             };
             var xAxisIndex;
             var yAxisIndex;
@@ -129,7 +129,7 @@ define(function (require) {
             var stackKey;                           // 临时映射变量
             var serieName;                          // 临时映射变量
             var legend = this.component.legend;
-            var locationMap = [ ];                   // 需要返回的东西：数组位置映射到系列索引
+            var locationMap = [];                   // 需要返回的东西：数组位置映射到系列索引
             var maxDataLength = 0;                  // 需要返回的东西：最大数据长度
             var iconShape;
             // 计算需要显示的个数和分配位置并记在下面这个结构里

@@ -20,11 +20,11 @@ define(function (require) {
     var zrUtil = require('zrender/tool/util');
     var zrEvent = require('zrender/tool/event');
     
-    var self = { };
+    var self = {};
     
     var _canvasSupported = require('zrender/tool/env').canvasSupported;
     var _idBase = new Date() - 0;
-    var _instances = { };    // ECharts实例map索引
+    var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
     self.version = '2.0.4';
@@ -105,7 +105,7 @@ define(function (require) {
             needRefresh: false
         };
         this._curEventType = false;         // 破循环信号灯
-        this._chartList = [ ];               // 图表实例
+        this._chartList = [];               // 图表实例
 
         this._messageCenter = new MessageCenter();
 
@@ -174,7 +174,7 @@ define(function (require) {
             
             // wrap: n,e,d,t for name event data this
             this._messageCenter.dispatch = function(type, event, eventPackage, that) {
-                eventPackage = eventPackage || { };
+                eventPackage = eventPackage || {};
                 eventPackage.type = type;
                 eventPackage.event = event;
 
@@ -205,7 +205,7 @@ define(function (require) {
             }
 
 
-            var eventBehaviors = { };
+            var eventBehaviors = {};
             this._onzrevent = function (param) {
                 return self[eventBehaviors[ param.type ]](param);
             };
@@ -218,19 +218,19 @@ define(function (require) {
                 _zr.on(eventValue, this._onzrevent);
             }
 
-            this.chart = { };            // 图表索引
-            this.component = { };        // 组件索引
+            this.chart = {};            // 图表索引
+            this.component = {};        // 组件索引
             
             // 内置图表
             // 孤岛
             var Island = require('./chart/island');
-            this._island = new Island(this._themeConfig, this._messageCenter, _zr, { }, this);
+            this._island = new Island(this._themeConfig, this._messageCenter, _zr, {}, this);
             this.chart.island = this._island;
             
             // 内置通用组件
             // 工具箱
             var Toolbox = require('./component/toolbox');
-            this._toolbox = new Toolbox(this._themeConfig, this._messageCenter, _zr, { }, this);
+            this._toolbox = new Toolbox(this._themeConfig, this._messageCenter, _zr, {}, this);
             this.component.toolbox = this._toolbox;
             
             var componentLibrary = require('./component');
@@ -552,7 +552,7 @@ define(function (require) {
          * tooltip与图表间通信 
          */
         _tooltipHover: function (param) {
-            var tipShape = [ ];
+            var tipShape = [];
             callChartListMethodReverse(this, 'ontooltipHover', param, tipShape);
         },
 
@@ -597,7 +597,7 @@ define(function (require) {
                             : dataIndex;
                 return {
                     seriesIndex: seriesIndex,
-                    seriesName: (ecData.get(target, 'series') || { }).name,
+                    seriesName: (ecData.get(target, 'series') || {}).name,
                     dataIndex: dataIndex,
                     data: ecData.get(target, 'data'),
                     name: ecData.get(target, 'name'),
@@ -634,14 +634,14 @@ define(function (require) {
             }
             
             this._zr.clearAnimation();
-            this._chartList = [ ];
+            this._chartList = [];
 
             var chartLibrary = require('./chart');
             var componentLibrary = require('./component');
             
             if (magicOption.xAxis || magicOption.yAxis) {
-                magicOption.grid = magicOption.grid || { };
-                magicOption.dataZoom = magicOption.dataZoom || { };
+                magicOption.grid = magicOption.grid || {};
+                magicOption.dataZoom = magicOption.dataZoom || {};
             }
             
             var componentList = [
@@ -682,7 +682,7 @@ define(function (require) {
             var ChartClass;
             var chartType;
             var chart;
-            var chartMap = { };      // 记录已经初始化的图表
+            var chartMap = {};      // 记录已经初始化的图表
             for (var i = 0, l = magicOption.series.length; i < l; i++) {
                 chartType = magicOption.series[i].type;
                 if (!chartType) {
@@ -780,7 +780,7 @@ define(function (require) {
          */
         refresh: function (param) {
             this._clearEffect();
-            param = param || { };
+            param = param || {};
             var magicOption = param.option;
             
             // 外部调用的refresh且有option带入
@@ -828,7 +828,7 @@ define(function (require) {
                 }
             }
 
-            this._chartList = [ ];
+            this._chartList = [];
         },
 
         /**
@@ -1167,8 +1167,8 @@ define(function (require) {
                 var markOpt = seriesItem[markType];
                 var markOptR = seriesRItem[markType];
 
-                markOpt = seriesItem[markType] = markOpt || {data: [ ]};
-                markOptR = seriesRItem[markType] = markOptR || {data: [ ]};
+                markOpt = seriesItem[markType] = markOpt || {data: []};
+                markOptR = seriesRItem[markType] = markOptR || {data: []};
 
                 for (var key in markData) {
                     if (key === 'data') {
@@ -1440,7 +1440,7 @@ define(function (require) {
             }
             
             if (!this._connected) {
-                this._connected = { };
+                this._connected = {};
             }
             
             if (connectTarget instanceof Array) {
@@ -1514,9 +1514,9 @@ define(function (require) {
             };
             this._toolbox.hideDataView();
 
-            loadingOption = loadingOption || { };
+            loadingOption = loadingOption || {};
 
-            var textStyle = loadingOption.textStyle || { };
+            var textStyle = loadingOption.textStyle || {};
             loadingOption.textStyle = textStyle;
 
             var finalTextStyle = zrUtil.merge(
@@ -1537,7 +1537,7 @@ define(function (require) {
                 textStyle.y = loadingOption.y;
             }
             
-            loadingOption.effectOption = loadingOption.effectOption || { };
+            loadingOption.effectOption = loadingOption.effectOption || {};
             loadingOption.effectOption.textStyle = textStyle;
             
             var Effect = loadingOption.effect;
@@ -1571,12 +1571,12 @@ define(function (require) {
                     }
                 }
                 else {
-                    theme = theme || { };
+                    theme = theme || {};
                 }
                 
                 // 复位默认配置
                 // this._themeConfig会被别的对象引用持有
-                // 所以不能改成this._themeConfig = { };
+                // 所以不能改成this._themeConfig = {};
                 for (var key in this._themeConfig) {
                     delete this._themeConfig[key];
                 }
@@ -1585,10 +1585,10 @@ define(function (require) {
                 }
                 
                 // 颜色数组随theme，不merge
-                theme.color && (this._themeConfig.color = [ ]);
+                theme.color && (this._themeConfig.color = []);
                 
                 // 默认标志图形类型列表，不merge
-                theme.symbolList && (this._themeConfig.symbolList = [ ]);
+                theme.symbolList && (this._themeConfig.symbolList = []);
                 
                 // 应用新主题
                 zrUtil.merge(this._themeConfig, zrUtil.clone(theme), true);
@@ -1643,8 +1643,8 @@ define(function (require) {
         clear: function () {
             this._disposeChartList();
             this._zr.clear();
-            this._option = { };
-            this._optionRestore = { };
+            this._option = {};
+            this._optionRestore = {};
             return this;
         },
 

@@ -366,7 +366,7 @@ define(function (require) {
                     strokeColor: nColor
                 },
                 highlightStyle: {
-                    pointList: [ ]
+                    pointList: []
                 }
             });
         },
