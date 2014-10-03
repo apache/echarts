@@ -139,7 +139,7 @@ define(function(require) {
         var len = graph.nodes.length;
         var positionArr = new ArrayCtor(len * 2);
         var massArr = new ArrayCtor(len);
-        var radiusArr = new ArrayCtor(len);
+        var sizeArr = new ArrayCtor(len);
 
         for (var i = 0; i < len; i++) {
             var n = graph.nodes[i];
@@ -147,8 +147,8 @@ define(function(require) {
             positionArr[i * 2 + 1] = n.layout.position[1];
             massArr[i] = typeof(n.layout.mass) === 'undefined'
                 ? 1 : n.layout.mass;
-            radiusArr[i] = typeof(n.layout.radius) === 'undefined'
-                ? 1 : n.layout.radius;
+            sizeArr[i] = typeof(n.layout.size) === 'undefined'
+                ? 1 : n.layout.size;
 
             n.layout.__index = i;
         }
@@ -171,7 +171,7 @@ define(function(require) {
                 cmd: 'init',
                 nodesPosition: positionArr,
                 nodesMass: massArr,
-                nodesSize: radiusArr,
+                nodesSize: sizeArr,
                 edges: edgeArr,
                 edgesWeight: edgeWeightArr,
                 token: this._token
@@ -179,7 +179,7 @@ define(function(require) {
         }
         else {
             this._layout.setToken(this._token);
-            this._layout.initNodes(positionArr, massArr, radiusArr);
+            this._layout.initNodes(positionArr, massArr, sizeArr);
             this._layout.initEdges(edgeArr, edgeWeightArr);   
         }
 

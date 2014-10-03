@@ -430,6 +430,7 @@ define(function __echartsForceLayoutWorker(require) {
             // Prevent swinging
             // Limited the increase of speed up to 100% each step
             // TODO adjust by nodes number
+            // TODO First iterate speed control
             vec2.sub(v, speed, node.speedPrev);
             var swing = vec2.len(v);
             if (swing > 0) {

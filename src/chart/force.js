@@ -196,7 +196,7 @@ define(function (require) {
             for (var i = 0; i < len; i++) {
                 var gNode = graph.nodes[i];
                 gNode.layout = {
-                    radius: gNode.data.value || 1,
+                    size: gNode.data.value || 1,
                     mass: 0
                 };
                 max = Math.max(gNode.data.value, max);
@@ -206,13 +206,13 @@ define(function (require) {
             for (var i = 0; i < len; i++) {
                 var gNode = graph.nodes[i];
                 if (divider > 0) {
-                    gNode.layout.radius = 
-                        (gNode.layout.radius - min) * (maxRadius - minRadius) / divider
+                    gNode.layout.size = 
+                        (gNode.layout.size - min) * (maxRadius - minRadius) / divider
                         + minRadius;
                     // 节点质量是归一的
-                    gNode.layout.mass = gNode.layout.radius / maxRadius;
+                    gNode.layout.mass = gNode.layout.size / maxRadius;
                 } else {
-                    gNode.layout.radius = (maxRadius - minRadius) / 2;
+                    gNode.layout.size = (maxRadius - minRadius) / 2;
                     gNode.layout.mass = 0.5;
                 }
             }
@@ -236,7 +236,7 @@ define(function (require) {
                     );
                 }
                 var style = gNode.shape.style;
-                var radius = gNode.layout.radius;
+                var radius = gNode.layout.size;
                 style.width = style.width || (radius * 2);
                 style.height = style.height || (radius * 2);
                 style.x = -style.width / 2;
