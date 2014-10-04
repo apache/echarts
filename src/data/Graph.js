@@ -33,6 +33,14 @@ define(function(require) {
     };
 
     /**
+     * 是否是有向图
+     * @return {boolean}
+     */
+    Graph.prototype.isDirected = function () {
+        return this._directed;
+    }
+
+    /**
      * 添加一个新的节点
      * @param {string} id 节点名称
      * @param {*} [data] 存储的数据
@@ -155,7 +163,7 @@ define(function(require) {
 
         for (var i = 0; i < this.edges.length;) {
             var edge = this.edges[i];
-            if (edge.node1 == node || edge.node2 == node) {
+            if (edge.node1 === node || edge.node2 === node) {
                 this.removeEdge(edge);
             } else {
                 i++;
@@ -166,7 +174,7 @@ define(function(require) {
     /**
      * 线性遍历所有节点
      * @param  {Function} cb
-     * @param  {*}   context
+     * @param  {*}   [context]
      */
     Graph.prototype.eachNode = function (cb, context) {
         for (var i = 0; i < this.nodes.length; i++) {
@@ -177,7 +185,7 @@ define(function(require) {
     /**
      * 线性遍历所有边
      * @param  {Function} cb
-     * @param  {*}   context
+     * @param  {*}   [context]
      */
     Graph.prototype.eachEdge = function (cb, context) {
         for (var i = 0; i < this.edges.length; i++) {
@@ -198,6 +206,10 @@ define(function(require) {
     
     /**
      * 广度优先遍历
+     * @param {Function} cb
+     * @param {module:echarts/data/Graph~Node} startNode 遍历起始节点
+     * @param {string} [direction=none] none, in, out 指定遍历边
+     * @param {*} [context] 回调函数调用context
      */
     Graph.prototype.breadthFirstTraverse = function (
         cb, startNode, direction, context
@@ -394,11 +406,11 @@ define(function(require) {
             for (var j = 0; j < size; j++) {
                 var item = matrix[i][j];
                 if (directed) {
-                    graph.nodes[i].outValue += item;
-                    graph.nodes[j].inValue += item;
+                    graph.nodes[i].data.outValue += item;
+                    graph.nodes[j].data.inValue += item;
                 }
-                graph.nodes[i].value += item;
-                graph.nodes[j].value += item;
+                graph.nodes[i].data.value += item;
+                graph.nodes[j].data.value += item;
             }
         }
 
@@ -419,8 +431,8 @@ define(function(require) {
                 if (i !== j) {
                     if (directed) {
                         var inEdge = graph.addEdge(n2, n1, {});
-                        inEdge.sourceWeight = matrix[j][i];
-                        inEdge.targetWeight = item;
+                        inEdge.data.sourceWeight = matrix[j][i];
+                        inEdge.data.targetWeight = item;
                     }
                     edge.data.weight += matrix[j][i];
                 }
