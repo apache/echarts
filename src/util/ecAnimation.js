@@ -330,7 +330,7 @@ define(function (require) {
      * @param {number} duration
      * @param {tring} easing
      */
-    function chord(zr, oldShape, newShape, duration, easing) {
+    function ribbon(zr, oldShape, newShape, duration, easing) {
         if (!oldShape) {        // add
             oldShape = {
                 style : {
@@ -535,7 +535,7 @@ define(function (require) {
         sector : sector,
         text : text,
         polygon : polygon,
-        chord : chord,
+        ribbon : ribbon,
         gaugePointer : gaugePointer,
         icon : icon,
         line : line,

@@ -1186,8 +1186,8 @@ define(function (require) {
                         ecAnimation.pointList(this.zr, oldShape, newShape, duration, easing);
                     }
                     break;
-                case 'chord' :
-                    ecAnimation.chord(this.zr, oldShape, newShape, duration, easing);
+                case 'ribbon' :
+                    ecAnimation.ribbon(this.zr, oldShape, newShape, duration, easing);
                     break;
                 case 'gauge-pointer' :
                     ecAnimation.gaugePointer(this.zr, oldShape, newShape, duration, easing);

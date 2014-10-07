@@ -922,6 +922,7 @@ define(function() {
             clockWise: true,
             showScale: false,
             showScaleText: false,
+            ribbonType: true,
             itemStyle: {
                 normal: {
                     label: {

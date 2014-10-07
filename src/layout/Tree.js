@@ -1,28 +1,33 @@
+/**
+ * Tree layout
+ * @module echarts/layout/Tree
+ * @author pissang(http://github.com/pissang)
+ */
 define(function (require) {
 
     var vec2 = require('zrender/tool/vector');
 
-    function TreeLayout(tree) {
-        
-        this.tree = tree;
-        
-        this.nodePadding = 30;
+    function TreeLayout(opts) {
 
-        this.layerPadding = 100;
+        opts = opts || {};
+
+        this.nodePadding = opts.nodePadding || 30;
+
+        this.layerPadding = opts.layerPadding || 100;
 
         this._layerOffsets = [];
 
         this._layers = [];
     };
 
-    TreeLayout.prototype.run = function () {
+    TreeLayout.prototype.run = function (tree) {
         this._layerOffsets.length = 0;
-        for (var i = 0; i < this.tree.root.height + 1; i++) {
+        for (var i = 0; i < tree.root.height + 1; i++) {
             this._layerOffsets[i] = 0;
             this._layers[i] = [];
         }
-        this._updateNodeXPosition(this.tree.root);
-        var root = this.tree.root;
+        this._updateNodeXPosition(tree.root);
+        var root = tree.root;
         this._updateNodeYPosition(root, 0, root.layout.height);
     };
 

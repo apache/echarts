@@ -97,7 +97,9 @@ define(function(require) {
             n2.inEdges.push(edge);   
         }
         n1.edges.push(edge);
-        n2.edges.push(edge);
+        if (n1 !== n2) {
+            n2.edges.push(edge);
+        }
 
         this.edges.push(edge);
         this._edgesMap[key] = edge;
@@ -118,7 +120,9 @@ define(function(require) {
             n2.inEdges.splice(util.indexOf(n2.inEdges, edge), 1);   
         }
         n1.edges.splice(util.indexOf(n1.edges, edge), 1);
-        n2.edges.splice(util.indexOf(n2.edges, edge), 1);
+        if (n1 !== n2) {
+            n2.edges.splice(util.indexOf(n2.edges, edge), 1);
+        }
 
         delete this._edgesMap[key];
         this.edges.splice(util.indexOf(this.edges, edge), 1);
@@ -178,7 +182,7 @@ define(function(require) {
      */
     Graph.prototype.eachNode = function (cb, context) {
         for (var i = 0; i < this.nodes.length; i++) {
-            cb.call(context, this.nodes[i]);
+            cb.call(context, this.nodes[i], i);
         }
     };
     
@@ -189,7 +193,7 @@ define(function(require) {
      */
     Graph.prototype.eachEdge = function (cb, context) {
         for (var i = 0; i < this.edges.length; i++) {
-            cb.call(context, this.edges[i]);
+            cb.call(context, this.edges[i], i);
         }
     };
     
@@ -377,7 +381,7 @@ define(function(require) {
      * 如果是有向图被写到`edge.data.sourceWeight`和`edge.data.targetWeight`
      * 
      * @method module:echarts/data/Graph.fromMatrix
-     * @param {Array.<Object>} nodesData 节点信息，必须有`id`属性
+     * @param {Array.<Object>} nodesData 节点信息，必须有`id`属性, 会保存到`node.data`中
      * @param {Array} matrix 邻接矩阵
      * @param {boolean} directed 是否是有向图
      * @return {module:echarts/data/Graph}
@@ -396,7 +400,9 @@ define(function(require) {
         var graph = new Graph(directed);
 
         for (var i = 0; i < size; i++) {
-            var node = graph.addNode(nodesData[i].id, {});
+            var node = graph.addNode(nodesData[i].id, nodesData[i]);
+            // TODO
+            // node.data已经有value的情况
             node.data.value = 0;
             if (directed) {
                 node.data.outValue = node.data.inValue = 0;
@@ -438,6 +444,8 @@ define(function(require) {
                 }
             }
         }
+
+        return graph;
     };
 
     return Graph;
