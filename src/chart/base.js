@@ -241,6 +241,277 @@ define(function (require) {
         },
         
         /**
+         * 折线图、柱形图公用方法
+         */
+        _bulidPosition: function() {
+            this._symbol = this.option.symbolList;
+            this._sIndex2ShapeMap = {};  // series拐点图形类型，seriesIndex索引到shape type
+            this._sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
+
+            this.selectedMap = {};
+            this.xMarkMap = {};
+            
+            var series = this.series;
+            // 水平垂直双向series索引 ，position索引到seriesIndex
+            var _position2sIndexMap = {
+                top: [],
+                bottom: [],
+                left: [],
+                right: [],
+                other: []
+            };
+            var xAxisIndex;
+            var yAxisIndex;
+            var xAxis;
+            var yAxis;
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (series[i].type === this.type) {
+                    series[i] = this.reformOption(series[i]);
+                    xAxisIndex = series[i].xAxisIndex;
+                    yAxisIndex = series[i].yAxisIndex;
+                    xAxis = this.component.xAxis.getAxis(xAxisIndex);
+                    yAxis = this.component.yAxis.getAxis(yAxisIndex);
+                    if (xAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY) {
+                        _position2sIndexMap[xAxis.getPosition()].push(i);
+                    }
+                    else if (yAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY) {
+                        _position2sIndexMap[yAxis.getPosition()].push(i);
+                    }
+                    else {
+                        _position2sIndexMap.other.push(i);
+                    }
+                }
+            }
+            // console.log(_position2sIndexMap);
+            for (var position in _position2sIndexMap) {
+                if (_position2sIndexMap[position].length > 0) {
+                    this._buildSinglePosition(
+                        position, _position2sIndexMap[position]
+                    );
+                }
+            }
+
+            this.addShapeList();
+        },
+        
+        /**
+         * 构建单个方向上的折线图、柱形图公用方法
+         *
+         * @param {number} seriesIndex 系列索引
+         */
+        _buildSinglePosition: function (position, seriesArray) {
+            var mapData = this._mapData(seriesArray);
+            var locationMap = mapData.locationMap;
+            var maxDataLength = mapData.maxDataLength;
+
+            if (maxDataLength === 0 || locationMap.length === 0) {
+                return;
+            }
+            switch (position) {
+                case 'bottom' :
+                case 'top' :
+                    this._buildHorizontal(seriesArray, maxDataLength, locationMap, this.xMarkMap);
+                    break;
+                case 'left' :
+                case 'right' :
+                    this._buildVertical(seriesArray, maxDataLength, locationMap, this.xMarkMap);
+                    break;
+                case 'other' :
+                    this._buildOther(seriesArray, maxDataLength, locationMap, this.xMarkMap);
+                    break;
+            }
+            
+            for (var i = 0, l = seriesArray.length; i < l; i++) {
+                this.buildMark(seriesArray[i]);
+            }
+        },
+        
+        /**
+         * 数据整形，折线图、柱形图公用方法
+         * 数组位置映射到系列索引
+         */
+        _mapData: function (seriesArray) {
+            var series = this.series;
+            var serie;                              // 临时映射变量
+            var dataIndex = 0;                      // 堆积数据所在位置映射
+            var stackMap = {};                      // 堆积数据位置映射，堆积组在二维中的第几项
+            var magicStackKey = '__kener__stack__'; // 堆积命名，非堆积数据安单一堆积处理
+            var stackKey;                           // 临时映射变量
+            var serieName;                          // 临时映射变量
+            var legend = this.component.legend;
+            var locationMap = [];                   // 需要返回的东西：数组位置映射到系列索引
+            var maxDataLength = 0;                  // 需要返回的东西：最大数据长度
+            var iconShape;
+            // 计算需要显示的个数和分配位置并记在下面这个结构里
+            for (var i = 0, l = seriesArray.length; i < l; i++) {
+                serie = series[seriesArray[i]];
+                serieName = serie.name;
+                
+                this._sIndex2ShapeMap[seriesArray[i]] = this._sIndex2ShapeMap[seriesArray[i]]
+                                                        || this.query(serie,'symbol')
+                                                        || this._symbol[i % this._symbol.length];
+                      
+                if (legend){
+                    this.selectedMap[serieName] = legend.isSelected(serieName);
+                    
+                    this._sIndex2ColorMap[seriesArray[i]] = legend.getColor(serieName);
+                        
+                    iconShape = legend.getItemShape(serieName);
+                    if (iconShape) {
+                        // 回调legend，换一个更形象的icon
+                        if (this.type == ecConfig.CHART_TYPE_LINE) {
+                            iconShape.style.iconType = 'legendLineIcon';
+                            iconShape.style.symbol =  this._sIndex2ShapeMap[seriesArray[i]];
+                        }
+                        else if (serie.itemStyle.normal.barBorderWidth > 0) {
+                            iconShape.style.x += 1;
+                            iconShape.style.y += 1;
+                            iconShape.style.width -= 2;
+                            iconShape.style.height -= 2;
+                            iconShape.style.strokeColor = 
+                            iconShape.highlightStyle.strokeColor =
+                                serie.itemStyle.normal.barBorderColor;
+                            iconShape.highlightStyle.lineWidth = 3;
+                            iconShape.style.brushType = 'both';
+                        }
+                        
+                        legend.setItemShape(serieName, iconShape);
+                    }
+                }
+                else {
+                    this.selectedMap[serieName] = true;
+                    this._sIndex2ColorMap[seriesArray[i]] = this.zr.getColor(seriesArray[i]);
+                }
+
+                if (this.selectedMap[serieName]) {
+                    stackKey = serie.stack || (magicStackKey + seriesArray[i]);
+                    if (stackMap[stackKey] == null) {
+                        stackMap[stackKey] = dataIndex;
+                        locationMap[dataIndex] = [seriesArray[i]];
+                        dataIndex++;
+                    }
+                    else {
+                        // 已经分配了位置就推进去就行
+                        locationMap[stackMap[stackKey]].push(seriesArray[i]);
+                    }
+                }
+                // 兼职帮算一下最大长度
+                maxDataLength = Math.max(maxDataLength, serie.data.length);
+            }
+            /* 调试输出
+            var s = '';
+            for (var i = 0, l = maxDataLength; i < l; i++) {
+                s = '[';
+                for (var j = 0, k = locationMap.length; j < k; j++) {
+                    s +='['
+                    for (var m = 0, n = locationMap[j].length - 1; m < n; m++) {
+                        s += series[locationMap[j][m]].data[i] + ','
+                    }
+                    s += series[locationMap[j][locationMap[j].length - 1]]
+                         .data[i];
+                    s += ']'
+                }
+                s += ']';
+                console.log(s);
+            }
+            console.log(locationMap)
+            */
+
+            return {
+                locationMap: locationMap,
+                maxDataLength: maxDataLength
+            };
+        },
+        
+        _calculMarkMapXY : function(xMarkMap, locationMap, xy) {
+            var series = this.series;
+            for (var j = 0, k = locationMap.length; j < k; j++) {
+                for (var m = 0, n = locationMap[j].length; m < n; m++) {
+                    var seriesIndex = locationMap[j][m];
+                    var valueIndex = xy == 'xy' ? 0 : '';
+                    if (xy.indexOf('x') != '-1') {
+                        if (xMarkMap[seriesIndex]['counter' + valueIndex] > 0) {
+                            xMarkMap[seriesIndex]['average' + valueIndex] =
+                                (xMarkMap[seriesIndex]['sum' + valueIndex]
+                                 / xMarkMap[seriesIndex]['counter' + valueIndex]
+                                ).toFixed(2)
+                                - 0;
+                        }
+                        
+                        var x = this.component.xAxis.getAxis(series[seriesIndex].xAxisIndex || 0)
+                                .getCoord(xMarkMap[seriesIndex]['average' + valueIndex]);
+                        xMarkMap[seriesIndex]['averageLine' + valueIndex] = [
+                            [x, this.component.grid.getYend()],
+                            [x, this.component.grid.getY()]
+                        ];
+                        xMarkMap[seriesIndex]['minLine' + valueIndex] = [
+                            [
+                                xMarkMap[seriesIndex]['minX' + valueIndex],
+                                this.component.grid.getYend()
+                            ],
+                            [
+                                xMarkMap[seriesIndex]['minX' + valueIndex],
+                                this.component.grid.getY()
+                            ]
+                        ];
+                        xMarkMap[seriesIndex]['maxLine' + valueIndex] = [
+                            [
+                                xMarkMap[seriesIndex]['maxX' + valueIndex],
+                                this.component.grid.getYend()
+                            ],
+                            [
+                                xMarkMap[seriesIndex]['maxX' + valueIndex],
+                                this.component.grid.getY()
+                            ]
+                        ];
+                        
+                        xMarkMap[seriesIndex].isHorizontal = false;
+                    }
+                    
+                    valueIndex = xy == 'xy' ? 1 : '';
+                    if (xy.indexOf('y') != '-1') {
+                        if (xMarkMap[seriesIndex]['counter' + valueIndex] > 0) {
+                            xMarkMap[seriesIndex]['average' + valueIndex] = 
+                                (xMarkMap[seriesIndex]['sum' + valueIndex]
+                                 / xMarkMap[seriesIndex]['counter' + valueIndex]
+                                ).toFixed(2)
+                                - 0;
+                        }
+                        var y = this.component.yAxis.getAxis(series[seriesIndex].yAxisIndex || 0)
+                                .getCoord(xMarkMap[seriesIndex]['average' + valueIndex]);
+                        xMarkMap[seriesIndex]['averageLine' + valueIndex] = [
+                            [this.component.grid.getX(), y],
+                            [this.component.grid.getXend(), y]
+                        ];
+                        
+                        xMarkMap[seriesIndex]['minLine' + valueIndex] = [
+                            [
+                                this.component.grid.getX(),
+                                xMarkMap[seriesIndex]['minY' + valueIndex]
+                            ],
+                            [
+                                this.component.grid.getXend(),
+                                xMarkMap[seriesIndex]['minY' + valueIndex]
+                            ]
+                        ];
+                        xMarkMap[seriesIndex]['maxLine' + valueIndex] = [
+                            [
+                                this.component.grid.getX(),
+                                xMarkMap[seriesIndex]['maxY' + valueIndex]
+                            ],
+                            [
+                                this.component.grid.getXend(),
+                                xMarkMap[seriesIndex]['maxY' + valueIndex]
+                            ]
+                        ];
+                        
+                        xMarkMap[seriesIndex].isHorizontal = true;
+                    }
+                }
+            }
+        },
+        
+        /**
          * 添加文本 
          */
         addLabel: function (tarShape, serie, data, name, orient) {
