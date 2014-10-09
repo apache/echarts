@@ -681,7 +681,10 @@ define(function (require) {
                         this.getMarkCoord(seriesIndex, mlData[1])
                     ];
                 }
-                
+                if (pos == null || pos[0] == null || pos[1] == null) {
+                    // 不在显示区域内
+                    continue;
+                }
                 markLine.data[i][0].x = mlData[0].x != null ? mlData[0].x : pos[0][0];
                 markLine.data[i][0].y = mlData[0].y != null ? mlData[0].y : pos[0][1];
                 markLine.data[i][1].x = mlData[1].x != null ? mlData[1].x : pos[1][0];

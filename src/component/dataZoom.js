@@ -90,19 +90,17 @@ define(function (require) {
                 // 水平布局
                 width = this.zoomOption.width || grid.getWidth();
                 height = this.zoomOption.height || this._fillerSize;
-                x = typeof this.zoomOption.x != 'undefined'
+                x = this.zoomOption.x != null 
                     ? this.zoomOption.x : grid.getX();
-                y = typeof this.zoomOption.y != 'undefined'
+                y = this.zoomOption.y != null 
                     ? this.zoomOption.y : (this.zr.getHeight() - height - 2);
             }
             else {
                 // 垂直布局
                 width = this.zoomOption.width || this._fillerSize;
                 height = this.zoomOption.height || grid.getHeight();
-                x = typeof this.zoomOption.x != 'undefined'
-                    ? this.zoomOption.x : 2;
-                y = typeof this.zoomOption.y != 'undefined'
-                    ? this.zoomOption.y : grid.getY();
+                x = this.zoomOption.x != null ? this.zoomOption.x : 2;
+                y = this.zoomOption.y != null ? this.zoomOption.y : grid.getY();
             }
 
             return {
@@ -135,13 +133,11 @@ define(function (require) {
             var yAxisIndex;
 
             var zOptIdx = this.zoomOption.xAxisIndex;
-            if (xAxis && typeof zOptIdx == 'undefined') {
+            if (xAxis && zOptIdx == null) {
                 xAxisIndex = [];
                 for (var i = 0, l = xAxis.length; i < l; i++) {
                     // 横纵默认为类目轴
-                    if (xAxis[i].type == 'category'
-                        || typeof xAxis[i].type == 'undefined'
-                    ) {
+                    if (xAxis[i].type == 'category' || xAxis[i].type == null) {
                         xAxisIndex.push(i);
                     }
                 }
@@ -150,7 +146,7 @@ define(function (require) {
                 if (zOptIdx instanceof Array) {
                     xAxisIndex = zOptIdx;
                 }
-                else if (typeof zOptIdx != 'undefined') {
+                else if (zOptIdx != null) {
                     xAxisIndex = [zOptIdx];
                 }
                 else {
@@ -159,7 +155,7 @@ define(function (require) {
             }
 
             zOptIdx = this.zoomOption.yAxisIndex;
-            if (yAxis && typeof zOptIdx == 'undefined') {
+            if (yAxis && zOptIdx == null) {
                 yAxisIndex = [];
                 for (var i = 0, l = yAxis.length; i < l; i++) {
                     if (yAxis[i].type == 'category') {
@@ -171,7 +167,7 @@ define(function (require) {
                 if (zOptIdx instanceof Array) {
                     yAxisIndex = zOptIdx;
                 }
-                else if (typeof zOptIdx != 'undefined') {
+                else if (zOptIdx != null) {
                     yAxisIndex = [zOptIdx];
                 }
                 else {
@@ -180,51 +176,49 @@ define(function (require) {
             }
 
             // 找到缩放控制的所有series
+            var serie;
             for (var i = 0, l = series.length; i < l; i++) {
-                if (series[i].type != ecConfig.CHART_TYPE_LINE
-                    && series[i].type != ecConfig.CHART_TYPE_BAR
-                    && series[i].type != ecConfig.CHART_TYPE_SCATTER
-                    && series[i].type != ecConfig.CHART_TYPE_K
+                serie = series[i];
+                if (serie.type != ecConfig.CHART_TYPE_LINE
+                    && serie.type != ecConfig.CHART_TYPE_BAR
+                    && serie.type != ecConfig.CHART_TYPE_SCATTER
+                    && serie.type != ecConfig.CHART_TYPE_K
                 ) {
                     continue;
                 }
                 for (var j = 0, k = xAxisIndex.length; j < k; j++) {
-                    if (xAxisIndex[j] == (series[i].xAxisIndex || 0)) {
+                    if (xAxisIndex[j] == (serie.xAxisIndex || 0)) {
                         zoomSeriesIndex.push(i);
                         break;
                     }
                 }
                 for (var j = 0, k = yAxisIndex.length; j < k; j++) {
-                    if (yAxisIndex[j] == (series[i].yAxisIndex || 0)) {
+                    if (yAxisIndex[j] == (serie.yAxisIndex || 0)) {
                         zoomSeriesIndex.push(i);
                         break;
                     }
                 }
-                // 不指定接管坐标轴，则散点图被纳入接管范围
-                if (series[i].type == ecConfig.CHART_TYPE_SCATTER
-                    && typeof this.zoomOption.xAxisIndex == 'undefined'
-                    && typeof this.zoomOption.yAxisIndex == 'undefined'
+                // 不指定接管坐标轴，则散点图、双数值轴折线图柱形图都被纳入接管范围
+                if (this.zoomOption.xAxisIndex == null
+                    && this.zoomOption.yAxisIndex == null
+                    && serie.data 
+                    && serie.data[0] 
+                    && serie.data[0] instanceof Array
+                    && (serie.type == ecConfig.CHART_TYPE_SCATTER
+                        || serie.type == ecConfig.CHART_TYPE_LINE
+                        || serie.type == ecConfig.CHART_TYPE_BAR)
                 ) {
                     zoomSeriesIndex.push(i);
                 }
             }
 
-            var start = typeof this._zoom.start != 'undefined'
+            var start = this._zoom.start != null
                         ? this._zoom.start
-                        : (typeof this.zoomOption.start != 'undefined' ? this.zoomOption.start : 0);
-            var end = typeof this._zoom.end != 'undefined'
+                        : (this.zoomOption.start != null ? this.zoomOption.start : 0);
+            var end = this._zoom.end != null
                       ? this._zoom.end
-                      : (typeof this.zoomOption.end != 'undefined' ? this.zoomOption.end : 100);
-            /*
-            var start = typeof this.zoomOption.start != 'undefined'
-                        && this.zoomOption.start >= 0
-                        && this.zoomOption.start <= 100
-                        ? this.zoomOption.start : 0;
-            var end = typeof this.zoomOption.end != 'undefined'
-                      && this.zoomOption.end >= 0
-                      && this.zoomOption.end <= 100
-                      ? this.zoomOption.end : 100;
-            */
+                      : (this.zoomOption.end != null ? this.zoomOption.end : 100);
+            
             if (start > end) {
                 // 大小颠倒自动翻转
                 start = start + end;
@@ -232,10 +226,12 @@ define(function (require) {
                 start = start - end;
             }
             var size = Math.round(
-                           (end - start) / 100
-                           * (this.zoomOption.orient == 'horizontal'
-                             ? this._location.width : this._location.height)
-                       );
+                (end - start) / 100 
+                * (
+                    this.zoomOption.orient == 'horizontal' 
+                    ? this._location.width : this._location.height
+                )
+            );
             return {
                 start : start,
                 end : end,
@@ -273,7 +269,14 @@ define(function (require) {
             for (var i = 0, l = seriesIndex.length; i < l; i++) {
                 serie = series[seriesIndex[i]];
                 this._originalData.series[seriesIndex[i]] = serie.data;
-                if (serie.type == ecConfig.CHART_TYPE_SCATTER) {
+                if (serie.data 
+                    && serie.data[0] 
+                    && serie.data[0] instanceof Array
+                    && (serie.type == ecConfig.CHART_TYPE_SCATTER
+                        || serie.type == ecConfig.CHART_TYPE_LINE
+                        || serie.type == ecConfig.CHART_TYPE_BAR)
+                ) {
+                    this._backupScale();
                     this._calculScatterMap(seriesIndex[i]);
                 }
             }
@@ -286,17 +289,11 @@ define(function (require) {
             // x轴极值
             var Axis = componentLibrary.get('axis');
             var axisOption = zrUtil.clone(this.option.xAxis);
-            if (axisOption instanceof Array) {
-                axisOption[0].type = 'value';
-                axisOption[0].scale = true;
-                axisOption[0].boundary = [0, 0];
-                axisOption[1] && (axisOption[1].type = 'value', axisOption[1].boundary = [0, 0]);
-            }
-            else {
-                axisOption.type = 'value';
-                axisOption.scale = true;
-                axisOption.boundary = [0, 0];
-            }
+            axisOption[0].type = 'value';
+            // axisOption[0].scale = true;
+            // axisOption[0].boundary = [0, 0];
+            axisOption[1] && (axisOption[1].type = 'value');
+            
             var vAxis = new Axis(
                 this.ecTheme,
                 null,   // messageCenter
@@ -314,16 +311,10 @@ define(function (require) {
             
             // y轴极值
             axisOption = zrUtil.clone(this.option.yAxis);
-            if (axisOption instanceof Array) {
-                axisOption[0].type = 'value';
-                axisOption[0].scale = true;
-                axisOption[1] && (axisOption[1].type = 'value', axisOption[1].boundary = [0, 0]);
-            }
-            else {
-                axisOption.type = 'value';
-                axisOption.scale = true;
-                axisOption.boundary = [0, 0];
-            }
+            axisOption[0].type = 'value';
+            // axisOption[0].scale = true;
+            // axisOption[1].boundary = [0, 0];
+            axisOption[1] && (axisOption[1].type = 'value');
             vAxis = new Axis(
                 this.ecTheme,
                 null,   // messageCenter
@@ -381,8 +372,8 @@ define(function (require) {
             var minValue = Number.MAX_VALUE;
             var value;
             for (var i = 0, l = data.length; i < l; i++) {
-                value = typeof data[i] != 'undefined'
-                        ? (typeof data[i].value != 'undefined' ? data[i].value : data[i])
+                value = data[i] != null
+                        ? (data[i].value != null ? data[i].value : data[i])
                         : 0;
                 if (this.option.series[seriesIndex].type == ecConfig.CHART_TYPE_K) {
                     value = value[1];   // 收盘价
@@ -407,9 +398,8 @@ define(function (require) {
             }
             
             for (var i = 0, l = maxLength; i < l; i += step) {
-                value = typeof data[i] != 'undefined'
-                        ? (typeof data[i].value != 'undefined'
-                          ? data[i].value : data[i])
+                value = data[i] != null
+                        ? (data[i].value != null ? data[i].value : data[i])
                         : 0;
                 if (this.option.series[seriesIndex].type == ecConfig.CHART_TYPE_K) {
                     value = value[1];   // 收盘价
@@ -435,7 +425,7 @@ define(function (require) {
                 }
             }
             if (this.zoomOption.orient == 'horizontal') {
-                 pointList.push([
+                pointList.push([
                     this._location.x + width,
                     this._location.y + height
                 ]);
@@ -702,27 +692,27 @@ define(function (require) {
             }
             if (this.zoomOption.orient == 'horizontal') {
                 this._startShape.style.x = this._location.x 
-                                      + this._zoom.start / 100 * this._location.width;
-                this._endShape.style.x = this._location.x 
-                                    + this._zoom.end / 100 * this._location.width
-                                    - this._handleSize;
+                                           + this._zoom.start / 100 * this._location.width;
+                this._endShape.style.x   = this._location.x 
+                                           + this._zoom.end / 100 * this._location.width
+                                           - this._handleSize;
                     
-                this._fillerShae.style.x = this._startShape.style.x + this._handleSize;
-                this._fillerShae.style.width = this._endShape.style.x 
-                                          - this._startShape.style.x
-                                          - this._handleSize;
+                this._fillerShae.style.x     = this._startShape.style.x + this._handleSize;
+                this._fillerShae.style.width = this._endShape.style.x
+                                               - this._startShape.style.x
+                                               - this._handleSize;
             }
             else {
-                this._startShape.style.y = this._location.y 
-                                      + this._zoom.start / 100 * this._location.height;
-                this._endShape.style.y = this._location.y 
-                                    + this._zoom.end / 100 * this._location.height
-                                    - this._handleSize;
+                this._startShape.style.y = this._location.y
+                                           + this._zoom.start / 100 * this._location.height;
+                this._endShape.style.y   = this._location.y 
+                                           + this._zoom.end / 100 * this._location.height
+                                           - this._handleSize;
                     
-                this._fillerShae.style.y = this._startShape.style.y + this._handleSize;
+                this._fillerShae.style.y      = this._startShape.style.y + this._handleSize;
                 this._fillerShae.style.height = this._endShape.style.y 
-                                          - this._startShape.style.y
-                                          - this._handleSize;
+                                                - this._startShape.style.y
+                                                - this._handleSize;
             }
             
             this.zr.modShape(this._startShape.id);
@@ -744,17 +734,18 @@ define(function (require) {
                 target = this._originalData[key];
                 for (var idx in target) {
                     data = target[idx];
-                    if (typeof data == 'undefined') {
+                    if (data == null) {
                         continue;
                     }
                     length = data.length;
                     start = Math.floor(this._zoom.start / 100 * length);
                     end = Math.ceil(this._zoom.end / 100 * length);
-                    if (this.option[key][idx].type != ecConfig.CHART_TYPE_SCATTER) {
+                    if (!(this.option[key][idx].data[0] instanceof Array)) {
                         this.option[key][idx].data = data.slice(start, end);
                     }
                     else {
-                        // 散点图特殊处理
+                        // 散点图，双数值轴折线图柱形图特殊处理
+                        this._setScale();
                         this.option[key][idx].data = this._synScatterData(idx, data);
                     }
                 }
@@ -820,9 +811,43 @@ define(function (require) {
                     newData.push(data[i]);
                 }
             }
-            
             return newData;
         },
+        
+        /**
+         * 发生缩放后修改axis的scale 
+         */
+        _setScale: function() {
+            var needScale = this._zoom.start !== 0
+                            || this._zoom.end !== 100
+                            || this._zoom.start2 !== 0
+                            || this._zoom.end2 !== 100;
+            var axis = {
+                xAxis : this.option.xAxis,
+                yAxis : this.option.yAxis
+            };
+            for (var key in axis) {
+                for (var i = 0, l = axis[key].length; i < l; i++) {
+                    axis[key][i].scale = needScale || axis[key][i]._scale;
+                }
+            }
+        },
+        
+        /**
+         * 备份可能存在的scale设置
+         */
+        _backupScale: function() {
+            var axis = {
+                xAxis : this.option.xAxis,
+                yAxis : this.option.yAxis
+            };
+            for (var key in axis) {
+                for (var i = 0, l = axis[key].length; i < l; i++) {
+                    axis[key][i]._scale = axis[key][i].scale;
+                }
+            }
+        },
+        
         /**
          * 拖拽范围控制
          */
@@ -915,13 +940,9 @@ define(function (require) {
         },
         
         absoluteZoom : function (param) {
-            //this.zoomOption.start = 
             this._zoom.start = param.start;
-            //this.zoomOption.end = 
             this._zoom.end = param.end;
-            //this.zoomOption.start2 = 
             this._zoom.start2 = param.start2;
-            //this.zoomOption.end2 = 
             this._zoom.end2 = param.end2;
             this._syncShape();
             this._syncData(true);
@@ -933,13 +954,11 @@ define(function (require) {
                 // 重置拖拽
                 //this.zoomOption.start = 
                 //this.zoomOption.start2 = 
-                this._zoom.start = 
-                this._zoom.start2 = 0;
+                this._zoom.start = this._zoom.start2 = 0;
                     
                 //this.zoomOption.end =
                 //this.zoomOption.end2 = 
-                this._zoom.end = 
-                this._zoom.end2 = 100;
+                this._zoom.end = this._zoom.end2 = 100;
                 
                 this._syncShape();
                 this._syncData(true);
@@ -964,9 +983,7 @@ define(function (require) {
             // console.log(rect,this._zoom);
             
             // 剔除无效缩放
-            if (rect.x > gridArea.x + gridArea.width
-                || rect.y > gridArea.y + gridArea.height
-            ) {
+            if (rect.x > gridArea.x + gridArea.width || rect.y > gridArea.y + gridArea.height) {
                 return false; // 无效缩放
             }
             
@@ -986,7 +1003,7 @@ define(function (require) {
             var edx = 1 - (rect.x + rect.width - gridArea.x) / gridArea.width;
             var sdy = 1 - (rect.y + rect.height - gridArea.y) / gridArea.height;
             var edy = (rect.y - gridArea.y) / gridArea.height;
-            //console.log('this',sdy,edy,this._zoom.start,this._zoom.end)
+            // console.log('this',sdy,edy,this._zoom.start,this._zoom.end)
             if (this.zoomOption.orient == 'horizontal') {
                 total = this._zoom.end - this._zoom.start;
                 this._zoom.start += total * sdx;
