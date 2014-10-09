@@ -763,6 +763,8 @@ define(function (require) {
                         }
                     }
                     
+                    color = color == null ? this.zr.getColor(seriesIndex) : color;
+                    
                     // 标准化一些参数
                     data[i].tooltip = data[i].tooltip 
                                       || {trigger:'item'}; // tooltip.trigger指定为item
@@ -866,10 +868,8 @@ define(function (require) {
                     continue;
                 }
                     
-                // 图例
-                if (legend) {
-                    color = legend.getColor(serie.name);
-                }
+                color = legend ? legend.getColor(serie.name) : this.zr.getColor(seriesIndex);
+                
                 // 组装一个mergeData
                 mergeData = this.deepMerge(data[i]);
                 value = mergeData != null && mergeData.value != null
