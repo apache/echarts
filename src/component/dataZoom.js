@@ -519,19 +519,21 @@ define(function (require) {
                 draggable : true,
                 style : {
                     iconType: 'rectangle',
-                    x : this._location.x,
-                    y : this._location.y,
-                    width : this._handleSize,
-                    height : this._handleSize,
-                    color : this.zoomOption.handleColor,
-                    text : '=',
-                    textPosition : 'inside'
+                    x: this._location.x,
+                    y: this._location.y,
+                    width: this._handleSize,
+                    height: this._handleSize,
+                    color: this.zoomOption.handleColor,
+                    text: '=',
+                    textPosition: 'inside'
                 },
-                highlightStyle : {
-                    brushType: 'fill'
+                highlightStyle: {
+                    text: '',
+                    brushType: 'fill',
+                    textPosition: 'left'
                 },
-                ondrift : this._ondrift,
-                ondragend : this._ondragend
+                ondrift: this._ondrift,
+                ondragend: this._ondragend
             };
             
             if (this.zoomOption.orient == 'horizontal') {
@@ -539,16 +541,17 @@ define(function (require) {
                 this._endShape = zrUtil.clone(this._startShape);
                 
                 this._startShape.style.x = this._fillerShae.style.x - this._handleSize,
-                this._endShape.style.x = this._fillerShae.style.x  
-                                    + this._fillerShae.style.width;
+                this._endShape.style.x = this._fillerShae.style.x + this._fillerShae.style.width;
+                this._endShape.highlightStyle.textPosition = 'right';
             }
             else {
                 this._startShape.style.width = this._location.width;
                 this._endShape = zrUtil.clone(this._startShape);
                 
                 this._startShape.style.y = this._fillerShae.style.y - this._handleSize;
-                this._endShape.style.y = this._fillerShae.style.y 
-                                    + this._fillerShae.style.height;
+                this._startShape.highlightStyle.textPosition = 'top';
+                this._endShape.style.y = this._fillerShae.style.y + this._fillerShae.style.height;
+                this._endShape.highlightStyle.textPosition = 'bottom';
             }
             this._startShape = new IconShape(this._startShape);
             this._endShape = new IconShape(this._endShape);
@@ -588,8 +591,7 @@ define(function (require) {
         _syncHandleShape : function () {
             if (this.zoomOption.orient == 'horizontal') {
                 this._startShape.style.x = this._fillerShae.style.x - this._handleSize;
-                this._endShape.style.x = this._fillerShae.style.x
-                                    + this._fillerShae.style.width;
+                this._endShape.style.x = this._fillerShae.style.x + this._fillerShae.style.width;
                 
                 this._zoom.start = Math.floor(
                     (this._startShape.style.x - this._location.x)
@@ -602,8 +604,7 @@ define(function (require) {
             }
             else {
                 this._startShape.style.y = this._fillerShae.style.y - this._handleSize;
-                this._endShape.style.y = this._fillerShae.style.y
-                                    + this._fillerShae.style.height;
+                this._endShape.style.y = this._fillerShae.style.y + this._fillerShae.style.height;
                 this._zoom.start = Math.floor(
                     (this._startShape.style.y - this._location.y)
                     / this._location.height * 100
@@ -613,7 +614,6 @@ define(function (require) {
                     / this._location.height * 100
                 );
             }
-
             this.zr.modShape(this._startShape.id);
             this.zr.modShape(this._endShape.id);
             
@@ -849,6 +849,32 @@ define(function (require) {
         },
         
         /**
+         * 获取当前定位 
+         */
+        _getDetail : function () {
+            var key = this.zoomOption.orient == 'horizontal' ? 'xAxis' : 'yAxis';
+            var target = this._originalData[key];
+            for (var idx in target) {
+                var data = target[idx];
+                if (data == null) {
+                    continue;
+                }
+                var length = data.length;
+                var start = Math.floor(this._zoom.start / 100 * length);
+                var end = Math.ceil(this._zoom.end / 100 * length);
+                return {
+                    start : data[start],
+                    end : data[end]
+                }
+            }
+            
+            return {
+                start : '',
+                end : ''
+            }
+        },
+        
+        /**
          * 拖拽范围控制
          */
         __ondrift : function (shape, dx, dy) {
@@ -886,7 +912,7 @@ define(function (require) {
                     shape.style.y += dy;
                 }
             }
-
+            
             if (shape._type == 'filler') {
                 this._syncHandleShape();
             }
@@ -898,10 +924,23 @@ define(function (require) {
                 this._syncData();
             }
 
+            if (this.zoomOption.showDetail) {
+                var deltail = this._getDetail();
+                this._startShape.style.text = this._startShape.highlightStyle.text = deltail.start;
+                this._endShape.style.text = this._endShape.highlightStyle.text = deltail.end;
+                this._startShape.style.textPosition = this._startShape.highlightStyle.textPosition;
+                this._endShape.style.textPosition = this._endShape.highlightStyle.textPosition;
+            }
             return true;
         },
         
         __ondragend : function () {
+            if (this.zoomOption.showDetail) {
+                this._startShape.style.text = this._endShape.style.text = '=';
+                this._startShape.style.textPosition = this._endShape.style.textPosition = 'inside';
+                this.zr.modShape(this._startShape.id);
+                this.zr.modShape(this._endShape.id);
+            }
             this.isDragend = true;
         },
         
