@@ -66,6 +66,7 @@ option = {
         show : true,
         feature : {
             mark : {show: true},
+            dataZoom : {show: true},
             dataView : {show: true, readOnly: false},
             magicType : {show: true, type: ['line', 'bar']},
             restore : {show: true},
@@ -75,12 +76,14 @@ option = {
     calculable : true,
     xAxis : [
         {
-            type : 'value'
+            type: 'value',
+            precision: 2
         }
     ],
     yAxis : [
         {
-            type : 'value',
+            type: 'value',
+            precision: 2,
             axisLine: {
                 lineStyle: {
                     color: '#dc143c'
