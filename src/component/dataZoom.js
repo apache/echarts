@@ -740,7 +740,9 @@ define(function (require) {
                     length = data.length;
                     start = Math.floor(this._zoom.start / 100 * length);
                     end = Math.ceil(this._zoom.end / 100 * length);
-                    if (!(this.option[key][idx].data[0] instanceof Array)) {
+                    if (!(this.option[key][idx].data[0] instanceof Array)
+                        || this.option[key][idx].type == ecConfig.CHART_TYPE_K
+                    ) {
                         this.option[key][idx].data = data.slice(start, end);
                     }
                     else {
