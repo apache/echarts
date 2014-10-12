@@ -486,7 +486,7 @@ define(function (require) {
      */
     function markline(zr, oldShape, newShape, duration, easing) {
         if (!newShape.style.smooth) {
-            newShape.style.pointList = !oldShape 
+            newShape.style.pointList = !oldShape
                 ? [
                     [newShape.style.xStart, newShape.style.yStart],
                     [newShape.style.xStart, newShape.style.yStart]
@@ -512,18 +512,25 @@ define(function (require) {
         }
         else {
             // 曲线动画
-            newShape.style.pointListLength = 1;
-            zr.addShape(newShape);
-            newShape.style.pointList = newShape.style.pointList 
-                                       || newShape.getPointList(newShape.style);
-            zr.animate(newShape.id, 'style')
-                .when(
-                    duration,
-                    {
-                        pointListLength : newShape.style.pointList.length
-                    }
-                )
-                .start(easing || 'QuinticOut');
+            if (!oldShape) {
+                // 新增
+                newShape.style.pointListLength = 1;
+                zr.addShape(newShape);
+                newShape.style.pointList = newShape.style.pointList 
+                                           || newShape.getPointList(newShape.style);
+                zr.animate(newShape.id, 'style')
+                    .when(
+                        duration,
+                        {
+                            pointListLength : newShape.style.pointList.length
+                        }
+                    )
+                    .start(easing || 'QuinticOut');
+            }
+            else {
+                // 过渡
+                zr.addShape(newShape);
+            }
         }
     }
 
