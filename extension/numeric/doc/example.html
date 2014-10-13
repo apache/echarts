@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+    <title>ECharts · Example</title>
+
+    <link rel="shortcut icon" href="../../../doc/asset/ico/favicon.png">
+
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../../../doc/asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../../../doc/asset/css/carousel.css" rel="stylesheet">
+    <link href="../../../doc/asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="../../../doc/asset/js/esl/esl.js"></script>
+    <script src="../../../doc/asset/js/codemirror.js"></script>
+    <script src="../../../doc/asset/js/javascript.js"></script>
+
+    <link href="../../../doc/asset/css/codemirror.css" rel="stylesheet">
+    <link href="../../../doc/asset/css/monokai.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
+
+
+    <div class="container-fluid">
+        <div class="row-fluid example">
+            <div id="sidebar-code" class="col-md-4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+option = {
+	"series" : [
+		{
+			"numericStyle" :
+			{
+				"textStyle" :
+				{
+					"fontFamily" : "abelregular,微软雅黑",
+					"fontWeight" : 100,
+					"fontSize" : 32,
+					"color" : "#29ceca"
+				},
+				"format" : "#,###."
+			},
+			"layout" :
+			{
+				"type" : "form",
+				"data" :
+				{
+					"right" :
+					{
+						"numerator" : 50
+					},
+					"bottom" :
+					{
+						"numerator" : 50
+					}
+				}
+			},
+			"type" : "numeric",
+			"name" : "人数",
+			"data" : [158],
+			"stack" : "人数"
+		},
+		{
+			"numericStyle" :
+			{
+				"textStyle" :
+				{
+					"fontFamily" : "abelregular,微软雅黑",
+					"fontWeight" : 100,
+					"fontSize" : 20,
+					"color" : "#29ceca"
+				},
+				"format" : "+#.##%;-#.##%"
+			},
+			"layout" :
+			{
+				"type" : "form",
+				"data" :
+				{
+					"right" :
+					{
+						"numerator" : 50
+					},
+					"top" :
+					{
+						"numerator" : 50
+					}
+				}
+			},
+			"type" : "numeric",
+			"name" : "环比",
+			"data" : [-0.1319],
+			"stack" : "环比"
+		},
+		{
+			"numericStyle" :
+			{
+				"textStyle" :
+				{
+					"fontFamily" : "abelregular,微软雅黑",
+					"fontWeight" : 100,
+					"fontSize" : 24,
+					"color" : "#a0a0a0"
+				},
+				"format" : "#,###."
+			},
+			"layout" :
+			{
+				"type" : "form",
+				"data" :
+				{
+					"left" :
+					{
+						"numerator" : 50,
+						"offset" : 20
+					},
+					"bottom" :
+					{
+						"numerator" : 50,
+						"offset" : 5
+					}
+				}
+			},
+			"markText" : [
+				{
+					"text" : "[",
+					"textStyle" :
+					{
+						"fontSize" : 24,
+						"color" : "#a0a0a0"
+					},
+					"layout" :
+					{
+						"type" : "form",
+						"data" :
+						{
+							"right" :
+							{
+								"alignment" : "left"
+							},
+							"bottom" :
+							{
+								"offset" : 3
+							}
+						}
+					}
+				},
+				{
+					"text" : "]",
+					"textStyle" :
+					{
+						"fontSize" : 24,
+						"color" : "#a0a0a0"
+					},
+					"layout" :
+					{
+						"type" : "form",
+						"data" :
+						{
+							"left" :
+							{
+								"alignment" : "right"
+							},
+							"bottom" :
+							{
+								"offset" : 3
+							}
+						}
+					}
+				}
+			],
+			"type" : "numeric",
+			"name" : "人数参照",
+			"data" : [152.6667],
+			"stack" : "人数参照"
+		},
+		{
+			"numericStyle" :
+			{
+				"textStyle" :
+				{
+					"fontFamily" : "abelregular,微软雅黑",
+					"fontWeight" : 100,
+					"fontSize" : 20,
+					"color" : "#a0a0a0"
+				},
+				"format" : "+#.##%;-#.##%"
+			},
+			"layout" :
+			{
+				"type" : "form",
+				"data" :
+				{
+					"left" :
+					{
+						"numerator" : 50,
+						"offset" : 20
+					},
+					"top" :
+					{
+						"numerator" : 50
+					}
+				}
+			},
+			"markText" : [
+				{
+					"text" : "[",
+					"textStyle" :
+					{
+						"fontSize" : 20,
+						"color" : "#a0a0a0"
+					},
+					"layout" :
+					{
+						"type" : "form",
+						"data" :
+						{
+							"right" :
+							{
+								"alignment" : "left"
+							},
+							"bottom" :
+							{
+								"offset" : 3
+							}
+						}
+					}
+				},
+				{
+					"text" : "]",
+					"textStyle" :
+					{
+						"fontSize" : 20,
+						"color" : "#a0a0a0"
+					},
+					"layout" :
+					{
+						"type" : "form",
+						"data" :
+						{
+							"left" :
+							{
+								"alignment" : "right"
+							},
+							"bottom" :
+							{
+								"offset" : 3
+							}
+						}
+					}
+				}
+			],
+			"type" : "numeric",
+			"name" : "环比参照",
+			"data" : [-0.0561],
+			"stack" : "环比参照"
+		}
+	]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="col-md-8">
+                <div id="main" class="main"></div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
+
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        
+        </div><!--/.fluid-container-->
+
+    <footer id="footer"></footer>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../../../doc/asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="asset/js/echartsHome.js"></script>
+    <script src="../../../doc/asset/js/bootstrap.min.js"></script>
+    <script src="asset/js/echartsExample.js"></script>
+</body>
+</html>
