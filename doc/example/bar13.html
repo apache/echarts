@@ -41,7 +41,7 @@
                     <textarea id="code" name="code">
 option = {
     title : {
-        text: '双数值轴折线',
+        text: '双数值柱形图',
         subtext: '纯属虚构'
     },
     tooltip : {
@@ -66,7 +66,6 @@ option = {
         show : true,
         feature : {
             mark : {show: true},
-            dataZoom : {show: true},
             dataView : {show: true, readOnly: false},
             magicType : {show: true, type: ['line', 'bar']},
             restore : {show: true},
@@ -76,14 +75,12 @@ option = {
     calculable : true,
     xAxis : [
         {
-            type: 'value',
-            precision: 2
+            type : 'value'
         }
     ],
     yAxis : [
         {
-            type: 'value',
-            precision: 2,
+            type : 'value',
             axisLine: {
                 lineStyle: {
                     color: '#dc143c'
@@ -94,7 +91,7 @@ option = {
     series : [
         {
             name:'数据1',
-            type:'line',
+            type:'bar',
             data:[
                 [1.5, 10], [5, 7], [8, 8], [12, 6], [11, 12], [16, 9], [14, 6], [17, 4], [19, 9]
             ],
@@ -123,9 +120,10 @@ option = {
         },
         {
             name:'数据2',
-            type:'line',
+            type:'bar',
+            barHeight:10,
             data:[
-                [1, 2], [2, 3], [4, 2], [7, 5], [11, 2], [18, 3]
+                [1, 2], [2, 3], [4, 4], [7, 5], [11, 11], [18, 15]
             ]
         }
     ]

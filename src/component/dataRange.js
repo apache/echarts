@@ -915,7 +915,7 @@ define(function (require) {
             status.dragOut = true;
             status.dragIn = true;
             
-            if (!this.dataRangeOption.realtime && false) {
+            if (!this.dataRangeOption.realtime) {
                 this.messageCenter.dispatch(
                     ecConfig.EVENT.DATA_RANGE,
                     null,
