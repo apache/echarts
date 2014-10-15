@@ -53,7 +53,7 @@ define(function (require) {
 		return data.toString();
 	}
 	function _formatNumber(data, format) {
-		var r = /(\[.*\])?([^.]*[^.%,`])?(\.[^%,`]*)?(%?)([,`]*)(.*)/;
+		var r = /(\[.*\])?([^.]*[^.%,`])?(\.[#0\?]*)?(%?)([,`]*)(.*)/;
 		var f = r.exec(format);
 		// f[1] <-- 特殊格式
 		// f[2] <-- 整数格式
