@@ -122,7 +122,7 @@ function needMap() {
 }
 
 var echarts;
-var developMode = false;
+var developMode = true;
 
 if (developMode) {
     // for develop

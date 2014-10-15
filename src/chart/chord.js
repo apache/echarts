@@ -126,7 +126,10 @@ define(function (require) {
             if (serie.ribbonType) {
                 this._buildSectors(serie, serieIdx, graph);
                 this._buildRibbons(serie, serieIdx, graph);
-                this._buildScales(serie, serieIdx, graph);
+
+                if (serie.showScale) {
+                    this._buildScales(serie, serieIdx, graph);
+                }
             }
         },
 
@@ -205,7 +208,10 @@ define(function (require) {
                 );
                 if (showLabel) {
                     var halfAngle = [startAngle * -sign + endAngle * -sign] / 2;
-                    halfAngle %= 360;  // Constrain to [0,360]
+                    halfAngle %= 360;
+                    if (halfAngle < 0) { // Constrain to [0,360]
+                        halfAngle += 360;
+                    }
                     var isRightSide = halfAngle <= 90
                                      || halfAngle >= 270;
                     halfAngle = halfAngle * Math.PI / 180;

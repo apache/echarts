@@ -51,17 +51,17 @@ define(function (require) {
         } else {
             node.layout.position[0] = 0;
         }
-        var off = this._layerOffsets[node.level] || 0;
+        var off = this._layerOffsets[node.depth] || 0;
         if (off > node.layout.position[0]) {
             var shift = off - node.layout.position[0];
             this._shiftSubtree(node, shift);
-            for (var i = node.level + 1; i < node.height + node.level; i++) {
+            for (var i = node.depth + 1; i < node.height + node.depth; i++) {
                 this._layerOffsets[i] += shift;
             }
         }
-        this._layerOffsets[node.level] = node.layout.position[0] + node.layout.width + this.nodePadding;
+        this._layerOffsets[node.depth] = node.layout.position[0] + node.layout.width + this.nodePadding;
 
-        this._layers[node.level].push(node);
+        this._layers[node.depth].push(node);
     };
 
     TreeLayout.prototype._shiftSubtree = function (root, offset) {
@@ -79,7 +79,7 @@ define(function (require) {
         }
         var layerPadding = this.layerPadding;
         if (typeof(layerPadding) === 'function') {
-            layerPadding = layerPadding(node.level);
+            layerPadding = layerPadding(node.depth);
         }
         for (var i = 0; i < node.children.length; i++) {
             this._updateNodeYPosition(node.children[i], y + layerPadding + prevLayerHeight, layerHeight);

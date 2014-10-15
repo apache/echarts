@@ -106,7 +106,7 @@ define(function (require) {
             }
             return this._pathProxy.fastBoundingRect();
         },
-                
+
         isCover : function (x, y) {
             var rect = this.getRect(this.style);
             if (x >= rect.x

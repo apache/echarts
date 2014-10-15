@@ -2,7 +2,7 @@ define(function(require) {
 
     function TreeNode(id) {
         this.id = id;
-        this.level = 0;
+        this.depth = 0;
         this.height = 0;
         this.children = [];
 
@@ -18,12 +18,12 @@ define(function(require) {
         }
     };
 
-    TreeNode.prototype.updateLevelAndHeight = function (level) {
+    TreeNode.prototype.updateDepthAndHeight = function (depth) {
         var height = 0;
-        this.level = level;
+        this.depth = depth;
         for (var i = 0; i < this.children.length; i++) {
             var child = this.children[i];
-            child.updateLevelAndHeight(level + 1);
+            child.updateDepthAndHeight(depth + 1);
             if (child.height > height) {
                 height = child.height;
             }
@@ -96,7 +96,7 @@ define(function(require) {
         var treeList = [];
         for (var id in treeMap) {
             buildHierarch(treeMap[id].root);
-            treeMap[id].root.updateLevelAndHeight(0);
+            treeMap[id].root.updateDepthAndHeight(0);
             treeList.push(treeMap[id]);
         }
         return treeList;
