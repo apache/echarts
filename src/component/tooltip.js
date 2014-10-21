@@ -620,19 +620,19 @@ define(function (require) {
 
             if (seriesArray.length > 0) {
                 var data;
+                var value;
                 if (typeof formatter === 'function') {
                     var params = [];
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
                         data = seriesArray[i].data[dataIndex];
-                        data = data != null
-                               ? (data.value != null
-                                   ? data.value
-                                   : data)
-                               : '-';
-                               
+                        value = data != null
+                                ? (data.value != null ? data.value : data)
+                                : '-';
+                        
                         params.push([
                             seriesArray[i].name || '',
                             categoryAxis.getNameByIndex(dataIndex),
+                            value,
                             data
                         ]);
                     }
