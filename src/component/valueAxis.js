@@ -14,6 +14,7 @@ define(function (require) {
     var RectangleShape = require('zrender/shape/Rectangle');
     
     var ecConfig = require('../config');
+    var ecDate = require('../util/date');
     var zrUtil = require('zrender/tool/util');
 
     /**
@@ -44,6 +45,7 @@ define(function (require) {
     
     ValueAxis.prototype = {
         type: ecConfig.COMPONENT_TYPE_AXIS_VALUE,
+        
         _buildShape: function () {
             this._hasData = false;
             this._calculateValue();
@@ -507,7 +509,7 @@ define(function (require) {
                     }
                 }
                 
-                //console.log(this._min,this._max,'vvvvv111111')
+                // console.log(this._min,this._max,'vvvvv111111',this.option.type)
                 var gap = Math.abs(this._max - this._min);
                 this._min = isNaN(this.option.min - 0)
                        ? (this._min - Math.abs(gap * this.option.boundaryGap[0]))
@@ -529,14 +531,18 @@ define(function (require) {
                         this._max = this._max / this.option.splitNumber;
                     }
                 }
-                this._reformValue(this.option.scale);
+                this.option.type != 'time' 
+                    ? this._reformValue(this.option.scale)
+                    : this._reformTimeValue();
             }
             else {
                 this._hasData = true;
                 // 用户指定min max就不多管闲事了
                 this._min = this.option.min - 0;    // 指定min忽略boundaryGay[0]
                 this._max = this.option.max - 0;    // 指定max忽略boundaryGay[1]
-                this._customerValue();
+                this.option.type != 'time' 
+                    ? this._customerValue()
+                    : this._reformTimeValue();
             }
         },
 
@@ -725,6 +731,76 @@ define(function (require) {
             this._reformLabelData();
         },
         
+        /**
+         * 格式化时间值 
+         */
+        _reformTimeValue : function() {
+            var splitNumber = this.option.splitNumber;
+            
+            // 最优解
+            var curValue = ecDate.getAutoFormatter(this._min, this._max, splitNumber);
+            // 目标
+            var formatter = curValue.formatter;
+            var gapValue = curValue.gapValue;
+            
+            this._valueList = [new Date(this._min)];
+            var startGap;
+            switch (formatter) {
+                case 'week' :
+                    startGap = ecDate.nextMonday(this._min);
+                    break;
+                case 'month' :
+                    startGap = ecDate.nextNthOnMonth(this._min, 1);
+                    break;
+                case 'quarter' :
+                    startGap = ecDate.nextNthOnQuarterYear(this._min, 1);
+                    break;
+                case 'half-year' :
+                    startGap = ecDate.nextNthOnHalfYear(this._min, 1);
+                    break;
+                case 'year' :
+                    startGap = ecDate.nextNthOnYear(this._min, 1);
+                    break;
+                default :
+                    // 大于2小时需要考虑时区不能直接取整
+                    if (gapValue <= 3600000 * 2) {
+                        startGap = (Math.floor(this._min / gapValue) + 1) * gapValue;
+                    }
+                    else {
+                        startGap = new Date(this._min - (-gapValue));
+                        startGap.setHours(Math.round(startGap.getHours() / 6) * 6);
+                        startGap.setMinutes(0);
+                        startGap.setSeconds(0);
+                    }
+                    break;
+            }
+            
+            if (startGap - this._min < gapValue / 2) {
+                startGap -= -gapValue;
+            }
+            
+            // console.log(startGap,gapValue,this._min, this._max,formatter)
+            curValue = new Date(startGap);
+            splitNumber *= 1.5;
+            while (splitNumber--) {
+                if (formatter == 'month' 
+                    || formatter == 'quarter' 
+                    || formatter == 'half-year'
+                    || formatter == 'year'
+                ) {
+                    curValue.setDate(1);
+                }
+                if (this._max - curValue < gapValue / 2) {
+                    break;
+                }
+                this._valueList.push(curValue);
+                curValue = new Date(curValue - (-gapValue));
+            }
+            this._valueList.push(new Date(this._max));
+
+            this._reformLabelData(formatter);
+        },
+        
         _customerValue: function () {
             var splitNumber = this.option.splitNumber;
             var precision = this.option.precision;
@@ -737,19 +813,30 @@ define(function (require) {
             this._reformLabelData();
         },
 
-        _reformLabelData: function () {
+        _reformLabelData: function (timeFormatter) {
             this._valueLabel = [];
             var formatter = this.option.axisLabel.formatter;
             if (formatter) {
                 for (var i = 0, l = this._valueList.length; i < l; i++) {
                     if (typeof formatter === 'function') {
-                        this._valueLabel.push(formatter.call(this.myChart, this._valueList[i]));
+                        this._valueLabel.push(
+                            timeFormatter
+                                ? formatter.call(this.myChart, this._valueList[i], timeFormatter)
+                                : formatter.call(this.myChart, this._valueList[i])
+                        );
                     }
                     else if (typeof formatter === 'string') {
                         this._valueLabel.push(
-                            formatter.replace('{value}',this._valueList[i])
+                            timeFormatter 
+                                ? ecDate.format(formatter, this._valueList[i])
+                                : formatter.replace('{value}',this._valueList[i])
                         );
                     }
+                }
+            }
+            else if (timeFormatter) {
+                for (var i = 0, l = this._valueList.length; i < l; i++) {
+                    this._valueLabel.push(ecDate.format(timeFormatter, this._valueList[i]));
                 }
             }
             else {
@@ -758,7 +845,6 @@ define(function (require) {
                     this._valueLabel.push(this.numAddCommas(this._valueList[i]));
                 }
             }
-
         },
         
         getExtremum: function () {

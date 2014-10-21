@@ -14,6 +14,7 @@ define(function (require) {
     var IconShape = require('../util/shape/Icon');
     
     var ecConfig = require('../config');
+    var ecDate = require('../util/date');
     var zrUtil = require('zrender/tool/util');
 
     /**
@@ -289,10 +290,14 @@ define(function (require) {
             // x轴极值
             var Axis = componentLibrary.get('axis');
             var axisOption = zrUtil.clone(this.option.xAxis);
-            axisOption[0].type = 'value';
+            if (axisOption[0].type == 'category') {
+                axisOption[0].type = 'value';
+            }
             // axisOption[0].scale = true;
             // axisOption[0].boundary = [0, 0];
-            axisOption[1] && (axisOption[1].type = 'value');
+            if (axisOption[1] && axisOption[1].type == 'category') {
+                axisOption[1].type = 'value';
+            }
             
             var vAxis = new Axis(
                 this.ecTheme,
@@ -311,10 +316,14 @@ define(function (require) {
             
             // y轴极值
             axisOption = zrUtil.clone(this.option.yAxis);
-            axisOption[0].type = 'value';
+            if (axisOption[0].type == 'category') {
+                axisOption[0].type = 'value';
+            }
             // axisOption[0].scale = true;
             // axisOption[1].boundary = [0, 0];
-            axisOption[1] && (axisOption[1].type = 'value');
+            if (axisOption[1] && axisOption[1].type == 'category') {
+                axisOption[1].type = 'value';
+            }
             vAxis = new Axis(
                 this.ecTheme,
                 null,   // messageCenter
@@ -867,13 +876,37 @@ define(function (require) {
                 return {
                     start : data[start],
                     end : data[end]
-                }
+                };
+            }
+            
+            var seriesIndex = this._zoom.seriesIndex[0];
+            var axisIndex = this.option.series[seriesIndex][key + 'Index'] || 0;
+            var axisType = this.option[key][axisIndex].type;
+            var min = this._zoom.scatterMap[seriesIndex][key.charAt(0)].min;
+            var max = this._zoom.scatterMap[seriesIndex][key.charAt(0)].max;
+            var gap = max - min;
+            
+            if (axisType == 'value') {
+                return {
+                    start : min + gap * this._zoom.start / 100,
+                    end : min + gap * this._zoom.end / 100
+                };
+            }
+            else if (axisType == 'time') {
+                // 最优解
+                max = min + gap * this._zoom.end / 100;
+                min = min + gap * this._zoom.start / 100;
+                var formatter = ecDate.getAutoFormatter(min, max).formatter;
+                return {
+                    start : ecDate.format(formatter, min),
+                    end : ecDate.format(formatter, max)
+                };
             }
             
             return {
                 start : '',
                 end : ''
-            }
+            };
         },
         
         /**
@@ -942,6 +975,7 @@ define(function (require) {
                 this._startShape.style.textPosition = this._endShape.style.textPosition = 'inside';
                 this.zr.modShape(this._startShape.id);
                 this.zr.modShape(this._endShape.id);
+                this.zr.refreshNextFrame();
             }
             this.isDragend = true;
         },
