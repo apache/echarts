@@ -79,7 +79,9 @@ define(function (require) {
         refixAxisShape: function(component) {
             var zeroX;
             var zeroY;
-            var axisList = component.xAxis._axisList.concat(component.yAxis._axisList);
+            var axisList = component.xAxis._axisList.concat(
+                component.yAxis ? component.yAxis._axisList : []
+            );
             var len = axisList.length;
             var axis;
             while (len--) {

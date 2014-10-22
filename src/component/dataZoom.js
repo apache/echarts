@@ -1114,7 +1114,7 @@ define(function (require) {
             var curSeries = curOption.series;
             var curData;
             for (var i = 0, l = curSeries.length; i < l; i++) {
-                curData = curSeries[i].data;
+                curData = curSeries[i].data || curSeries[i].eventList;
                 if (target[i]) {
                     // dataZoom接管的
                     start = Math.floor(this._zoom.start / 100 * target[i].length);

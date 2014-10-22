@@ -1097,7 +1097,28 @@ define(function() {
         },
         
         eventRiver: {
-            
+            clickable: true,
+            itemStyle: {
+                normal: {
+                    // color: 各异,
+                    borderColor: 'rgba(0,0,0,0)',
+                    borderWidth: 1,
+                    label: {
+                        show: true,
+                        position: 'inside',     // 可选为'left'|'right'|'top'|'bottom'
+                        formatter: '{b}'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                },
+                emphasis: {
+                    // color: 各异,
+                    borderColor: 'rgba(0,0,0,0)',
+                    borderWidth: 1,
+                    label: {
+                        show: true
+                    }
+                }
+            }
         },
         
         island: {

@@ -830,37 +830,23 @@ define(function (require) {
                 endAngle: 135
             });
         },
-        /*
-        chord: function (ctx, style) {
+        
+        eventRiver: function (ctx, style) {
             var x = style.x;
             var y = style.y;
             var width = style.width;
             var height = style.height;
             ctx.moveTo(x, y + height);
-            BeziercurveShape.prototype.buildPath(ctx, {
-                xStart: x,
-                yStart: y + height,
-                cpX1: x + width,
-                cpY1: y + height,
-                cpX2: x,
-                cpY2: y + 4,
-                xEnd: x + width,
-                yEnd: y + 4
-            });
+            ctx.bezierCurveTo(
+                x + width, y + height, x, y + 4, x + width, y + 4
+            );
             ctx.lineTo(x + width, y);
-            BeziercurveShape.prototype.buildPath(ctx, {
-                xStart: x + width,
-                yStart: y,
-                cpX1: x,
-                cpY1: y,
-                cpX2: x + width,
-                cpY2: y + height - 4,
-                xEnd: x,
-                yEnd: y + height - 4
-            });
+            ctx.bezierCurveTo(
+                x, y, x + width, y + height - 4, x, y + height - 4
+            );
             ctx.lineTo(x, y + height);
         },
-        */
+        
         k: function (ctx, style) {
             var x = style.x;
             var y = style.y;

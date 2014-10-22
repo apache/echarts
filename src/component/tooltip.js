@@ -66,6 +66,12 @@ define(function (require) {
         this._tDom.onselectstart = function() {
             return false;
         };
+        this._tDom.onmouseover = function() {
+            self._mousein = true;
+        };
+        this._tDom.onmouseout = function() {
+            self._mousein = false;
+        }
         this._tDom.style.position = 'absolute';  // 不是多余的，别删！
         this.hasAppend = false;
         
@@ -527,6 +533,8 @@ define(function (require) {
                                   === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                                ? 'yAxis'    // 纵轴为类目轴，找到所有用这条纵轴并且axis触发的系列数据
                                : false;
+            var x;
+            var y;
             if (axisLayout) {
                 var axisIndex = axisLayout == 'xAxis' ? xAxisIndex : yAxisIndex;
                 categoryAxis = this.component[axisLayout].getAxis(axisIndex);
@@ -567,8 +575,6 @@ define(function (require) {
                     this.myChart
                 );
                 
-                var x;
-                var y;
                 var rect;
                 if (axisLayout == 'xAxis') {
                     x = this.subPixelOptimize(
@@ -864,11 +870,10 @@ define(function (require) {
             var position;
             var showContent;
             var specialCssText = '';
-            var indicator;
             var html = '';
             if (this._curTarget._type != 'island') {
                 // 全局
-                var trigger = axisTrigger ? 'axis' : 'item'
+                var trigger = axisTrigger ? 'axis' : 'item';
                 if (this.option.tooltip.trigger === trigger) {
                     formatter = this.option.tooltip.formatter;
                     position = this.option.tooltip.position;
@@ -935,33 +940,19 @@ define(function (require) {
             else {
                 this._curTicket = NaN;
                 if (serie.type === ecConfig.CHART_TYPE_RADAR && special) {
-                    indicator = special;
-                    html += this._encodeHTML(name === '' ? (serie.name || '') : name);
-                    html += html === '' ? '' : '<br />';
-                    for (var i = 0 ; i < indicator.length; i ++) {
-                        html += this._encodeHTML(indicator[i].text) + ' : ' 
-                                + this.numAddCommas(value[i]) + '<br />';
-                    }
-                    this._tDom.innerHTML = html;
+                    this._tDom.innerHTML = this._itemFormatter.radar.call(
+                        this, serie, name, value, special
+                    );
                 }
                 else if (serie.type === ecConfig.CHART_TYPE_CHORD) {
-                    if (special2 == null) {
-                        // 外环上
-                        this._tDom.innerHTML = ''
-                            + this._encodeHTML(name) + ' (' + this.numAddCommas(value) + ')';
-                    }
-                    else {
-                        var name1 = this._encodeHTML(name);
-                        var name2 = this._encodeHTML(special);
-                        // 内部弦上
-                        this._tDom.innerHTML = ''
-                            + (serie.name != null ? (this._encodeHTML(serie.name) + '<br/>') : '')
-                            + name1 + ' -> ' + name2 
-                            + ' (' + this.numAddCommas(value) + ')'
-                            + '<br />'
-                            + name2 + ' -> ' + name1
-                            + ' (' + this.numAddCommas(special2) + ')';
-                    }
+                    this._tDom.innerHTML = this._itemFormatter.chord.call(
+                        this, serie, name, value, special, special2
+                    );
+                }
+                else if (serie.type === ecConfig.CHART_TYPE_EVENTRIVER) {
+                    this._tDom.innerHTML = this._itemFormatter.eventRiver.call(
+                        this, serie, name, value, data
+                    );
                 }
                 else {
                     this._tDom.innerHTML = ''
@@ -1001,6 +992,59 @@ define(function (require) {
             );
         },
 
+        _itemFormatter: {
+            radar: function(serie, name, value, indicator){
+                var html = '';
+                html += this._encodeHTML(name === '' ? (serie.name || '') : name);
+                html += html === '' ? '' : '<br />';
+                for (var i = 0 ; i < indicator.length; i ++) {
+                    html += this._encodeHTML(indicator[i].text) + ' : ' 
+                            + this.numAddCommas(value[i]) + '<br />';
+                }
+                return html;
+            },
+            chord: function(serie, name, value, special, special2) {
+                if (special2 == null) {
+                    // 外环上
+                    return this._encodeHTML(name) + ' (' + this.numAddCommas(value) + ')';
+                }
+                else {
+                    var name1 = this._encodeHTML(name);
+                    var name2 = this._encodeHTML(special);
+                    // 内部弦上
+                    return ''
+                        + (serie.name != null ? (this._encodeHTML(serie.name) + '<br/>') : '')
+                        + name1 + ' -> ' + name2 
+                        + ' (' + this.numAddCommas(value) + ')'
+                        + '<br />'
+                        + name2 + ' -> ' + name1
+                        + ' (' + this.numAddCommas(special2) + ')';
+                }
+            },
+            eventRiver: function(serie, name, value, data) {
+                var html = '';
+                html += this._encodeHTML(serie.name === '' ? '' : (serie.name + ' : ') );
+                html += this._encodeHTML(name);
+                html += html === '' ? '' : '<br />';
+                data = data.evolution;
+                for (var i = 0, l = data.length; i < l; i++) {
+                    html += '<div style="padding-top:5px;">';
+                    if (!data[i].detail) {
+                        continue;
+                    }
+                    if (data[i].detail.img) {
+                        html += '<img src="' + data[i].detail.img 
+                                + '" style="float:left;width:40px;height:40px;">';
+                    }
+                    html += '<div style="margin-left:45px;">' + data[i].time + '<br/>';
+                    html += '<a href="' + data[i].detail.link + '" target="_blank">'
+                    html += data[i].detail.text + '</a></div>';
+                    html += '</div>';
+                }
+                return html;
+            }
+        },
+        
         /**
          * 设置坐标轴指示器样式 
          */
@@ -1145,6 +1189,9 @@ define(function (require) {
         __onmousemove: function (param) {
             clearTimeout(this._hidingTicket);
             clearTimeout(this._showingTicket);
+            if (this._mousein) {
+                return;
+            }
             var target = param.target;
             var mx = zrEvent.getX(param.event);
             var my = zrEvent.getY(param.event);

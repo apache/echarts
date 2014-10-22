@@ -178,6 +178,7 @@ require(
         'echarts/chart/chord',
         'echarts/chart/gauge',
         'echarts/chart/funnel',
+        'echarts/chart/eventRiver',
         needMap() ? 'echarts/chart/map' : 'echarts'
     ],
     requireCallback

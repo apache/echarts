@@ -399,6 +399,7 @@ define(function (require) {
                         && this.series[i].type != ecConfig.CHART_TYPE_BAR
                         && this.series[i].type != ecConfig.CHART_TYPE_SCATTER
                         && this.series[i].type != ecConfig.CHART_TYPE_K
+                        && this.series[i].type != ecConfig.CHART_TYPE_EVENTRIVER
                     ) {
                         // 非坐标轴支持的不算极值
                         continue;
@@ -418,72 +419,9 @@ define(function (require) {
                         continue;
                     }
                     
-                    var key = this.series[i].name || 'kener';
-                    if (!this.series[i].stack) {
-                        data[key] = data[key] || [];
-                        oriData = this.series[i].data;
-                        for (var j = 0, k = oriData.length; j < k; j++) {
-                            value = oriData[j].value != null
-                                    ? oriData[j].value
-                                    : oriData[j];
-                            if (this.series[i].type === ecConfig.CHART_TYPE_K) {
-                                data[key].push(value[0]);
-                                data[key].push(value[1]);
-                                data[key].push(value[2]);
-                                data[key].push(value[3]);
-                            }
-                            else if (value instanceof Array) {
-                                // scatter 、 不等距 line bar
-                                if (this.option.xAxisIndex != -1) {
-                                    data[key].push(value[0]);
-                                }
-                                if (this.option.yAxisIndex != -1) {
-                                    data[key].push(value[1]);
-                                }
-                            }
-                            else {
-                                data[key].push(value);
-                            }
-                        }
-                    }
-                    else {
-                        // 堆积数据，需要区分正负向堆积
-                        var keyP = '__Magic_Key_Positive__' + this.series[i].stack;
-                        var keyN = '__Magic_Key_Negative__' + this.series[i].stack;
-                        data[keyP] = data[keyP] || [];
-                        data[keyN] = data[keyN] || [];
-                        data[key] = data[key] || [];  // scale下还需要记录每一个量
-                        oriData = this.series[i].data;
-                        for (var j = 0, k = oriData.length; j < k; j++) {
-                            value = oriData[j].value != null
-                                    ? oriData[j].value
-                                    : oriData[j];
-                            if (value === '-') {
-                                continue;
-                            }
-                            value = value - 0;
-                            if (value >= 0) {
-                                if (data[keyP][j] != null) {
-                                    data[keyP][j] += value;
-                                }
-                                else {
-                                    data[keyP][j] = value;
-                                }
-                            }
-                            else {
-                                if (data[keyN][j] != null) {
-                                    data[keyN][j] += value;
-                                }
-                                else {
-                                    data[keyN][j] = value;
-                                }
-                            }
-                            if (this.option.scale) {
-                                data[key].push(value);
-                            }
-                        }
-                    }
+                    this._calculSum(data, i);
                 }
+                
                 // 找极值
                 for (var i in data){
                     oriData = data[i];
@@ -546,6 +484,93 @@ define(function (require) {
             }
         },
 
+        /**
+         * 内部使用，计算某系列下的堆叠和
+         */
+        _calculSum: function (data, i) {
+            var key = this.series[i].name || 'kener';
+            if (!this.series[i].stack) {
+                data[key] = data[key] || [];
+                if (this.series[i].type != ecConfig.CHART_TYPE_EVENTRIVER) {
+                    oriData = this.series[i].data;
+                    for (var j = 0, k = oriData.length; j < k; j++) {
+                        value = oriData[j].value != null
+                                ? oriData[j].value
+                                : oriData[j];
+                        if (this.series[i].type === ecConfig.CHART_TYPE_K) {
+                            data[key].push(value[0]);
+                            data[key].push(value[1]);
+                            data[key].push(value[2]);
+                            data[key].push(value[3]);
+                        }
+                        else if (value instanceof Array) {
+                            // scatter 、 不等距 line bar
+                            if (this.option.xAxisIndex != -1) {
+                                data[key].push(
+                                    this.option.type != 'time' ? value[0] : new Date(value[0])
+                                );
+                            }
+                            if (this.option.yAxisIndex != -1) {
+                                data[key].push(
+                                    this.option.type != 'time' ? value[1] : new Date(value[1])
+                                );
+                            }
+                        }
+                        else {
+                            data[key].push(value);
+                        }
+                    }
+                }
+                else {
+                    // eventRiver
+                    oriData = this.series[i].eventList;
+                    for (var j = 0, k = oriData.length; j < k; j++) {
+                        var evolution = oriData[j].evolution;
+                        for (var m = 0, n = evolution.length; m < n; m++) {
+                            data[key].push(new Date(evolution[m].time));
+                        }
+                    }
+                }
+            }
+            else {
+                // 堆积数据，需要区分正负向堆积
+                var keyP = '__Magic_Key_Positive__' + this.series[i].stack;
+                var keyN = '__Magic_Key_Negative__' + this.series[i].stack;
+                data[keyP] = data[keyP] || [];
+                data[keyN] = data[keyN] || [];
+                data[key] = data[key] || [];  // scale下还需要记录每一个量
+                oriData = this.series[i].data;
+                for (var j = 0, k = oriData.length; j < k; j++) {
+                    value = oriData[j].value != null
+                            ? oriData[j].value
+                            : oriData[j];
+                    if (value === '-') {
+                        continue;
+                    }
+                    value = value - 0;
+                    if (value >= 0) {
+                        if (data[keyP][j] != null) {
+                            data[keyP][j] += value;
+                        }
+                        else {
+                            data[keyP][j] = value;
+                        }
+                    }
+                    else {
+                        if (data[keyN][j] != null) {
+                            data[keyN][j] += value;
+                        }
+                        else {
+                            data[keyN][j] = value;
+                        }
+                    }
+                    if (this.option.scale) {
+                        data[key].push(value);
+                    }
+                }
+            }
+        },
+        
         /**
          * 找到原始数据的极值后根据选项整形最终 this._min / this._max / this._valueList
          * 如果你不知道这个“整形”的用义，请不要试图去理解和修改这个方法！找我也没用，我相信我已经记不起来！

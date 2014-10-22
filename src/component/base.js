@@ -80,6 +80,7 @@ define(function (require) {
                 case ecConfig.CHART_TYPE_CHORD:
                 case ecConfig.CHART_TYPE_GUAGE:
                 case ecConfig.CHART_TYPE_FUNNEL:
+                case ecConfig.CHART_TYPE_EVENTRIVER:
                     return 2;
 
                 case ecConfig.COMPONENT_TYPE_LEGEND :
