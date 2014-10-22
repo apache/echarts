@@ -1225,7 +1225,7 @@ define(function (require) {
             }
             
             if (this.dataRangeOption.min == this.dataRangeOption.max) {
-                return 'rgba(0, 0, 0, 0)';
+                return this._colorList[0];
             }
             
             if (value < this.dataRangeOption.min) {
