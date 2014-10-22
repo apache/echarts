@@ -21,6 +21,7 @@ define(function() {
         CHART_TYPE_CHORD: 'chord',
         CHART_TYPE_GAUGE: 'gauge',
         CHART_TYPE_FUNNEL: 'funnel',
+        CHART_TYPE_EVENTRIVER: 'eventRiver',
 
         // 组件类型
         COMPONENT_TYPE_TITLE: 'title',
@@ -518,7 +519,7 @@ define(function() {
             borderWidth: 0,            // 图例边框线宽，单位px，默认为0（无边框）
             padding: 5,                // 图例内边距，单位px，默认各方向内边距为5，
                                        // 接受数组分别设定上右下左边距，同css
-            handlerColor: '#6495ed',
+            handleColor: '#6495ed',
             fillerColor: '#fff',
             step: 15,                  // 移动幅度
             mapTypeControl: null
@@ -1093,6 +1094,10 @@ define(function() {
                     }
                 }
             }
+        },
+        
+        eventRiver: {
+            
         },
         
         island: {
