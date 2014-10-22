@@ -126,7 +126,7 @@ define(function (require) {
 
             for (var i = 0; i < dataLength; i++) {
                 itemName = data[i];
-                color = this.getColor((dataLength - i) * this._gap + this.dataRangeOption.min);
+                color = this.getColorByIndex(i);
                 // 图形
                 itemShape = this._getItemShape(
                     lastX, lastY,
@@ -1224,6 +1224,10 @@ define(function (require) {
                 return null;
             }
             
+            if (this.dataRangeOption.min == this.dataRangeOption.max) {
+                return 'rgba(0, 0, 0, 0)';
+            }
+            
             if (value < this.dataRangeOption.min) {
                 value = this.dataRangeOption.min;
             }
@@ -1246,13 +1250,27 @@ define(function (require) {
             if (idx == this._colorList.length) {
                 idx--;
             }
+            
+            return this.getColorByIndex(idx);
             //console.log(value, idx,this._colorList[idx])
+            /*
             if (this._selectedMap[idx]) {
                 return this._colorList[idx];
             }
             else {
                 return null;
             }
+            */
+        },
+        
+        getColorByIndex : function (idx) {
+            if (idx >= this._colorList.length) {
+                idx = this._colorList.length - 1;
+            }
+            else if (idx < 0) {
+                idx = 0;
+            }
+            return this._colorList[idx];
         }
     };
     
