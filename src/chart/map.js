@@ -1521,6 +1521,9 @@ define(function (require) {
             this.messageCenter.unbind(
                 ecConfig.EVENT.ROAMCONTROLLER, this._onroamcontroller
             );
+            this.messageCenter.unbind(
+                ecConfig.EVENT.DATA_RANGE_HOVERLINK, this._ondrhoverlink
+            );
         }
     };
     
