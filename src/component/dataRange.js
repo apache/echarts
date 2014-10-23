@@ -15,6 +15,7 @@ define(function (require) {
 
     var ecConfig = require('../config');
     var zrUtil = require('zrender/tool/util');
+    var zrEvent = require('zrender/tool/event');
     var zrArea = require('zrender/tool/area');
     var zrColor = require('zrender/tool/color');
 
@@ -44,6 +45,9 @@ define(function (require) {
         };
         self._dataRangeSelected = function(param) {
             return self.__dataRangeSelected(param);
+        };
+        self._hoverlink = function(param) {
+            return self.__hoverlink(param);
         };
         this._selectedMap = {};
         this._range = {};
@@ -134,6 +138,7 @@ define(function (require) {
                     (this._selectedMap[i] ? color : '#ccc')
                 );
                 itemShape._idx = i;
+                itemShape.onmousemove = this._hoverlink;
                 itemShape.onclick = this._dataRangeSelected;
                 this.shapeList.push(new RectangleShape(itemShape));
                 
@@ -319,6 +324,7 @@ define(function (require) {
                 draggable : true,
                 ondrift : this._ondrift,
                 ondragend : this._ondragend,
+                onmousemove : this._hoverlink,
                 _type : 'filler'
             };
             this._fillerShae = new RectangleShape(this._fillerShae);
@@ -1129,6 +1135,45 @@ define(function (require) {
             this._selectedMap[idx] = !this._selectedMap[idx];
             this.messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this.myChart);
         },
+        
+        __hoverlink : function(param) {
+            var valueMin;
+            var valueMax;
+            if (this.dataRangeOption.calculable) {
+                var totalValue = this.dataRangeOption.max - this.dataRangeOption.min;
+                var curValue;
+                if (this.dataRangeOption.orient == 'horizontal') {
+                    curValue = (1 - (zrEvent.getX(param.event) - this._calculableLocation.x)
+                               / this._calculableLocation.width)
+                               * totalValue;
+                }
+                else {
+                    curValue = (1 - (zrEvent.getY(param.event) - this._calculableLocation.y)
+                               / this._calculableLocation.height) 
+                               * totalValue;
+                }
+                valueMin = curValue - totalValue * 0.05;
+                valueMax = curValue + totalValue * 0.05
+            }
+            else {
+                var idx = param.target._idx;
+                valueMax = (this._colorList.length - idx) * this._gap + this.dataRangeOption.min
+                valueMin = valueMax - this._gap;
+            }
+            
+            this.messageCenter.dispatch(
+                ecConfig.EVENT.DATA_RANGE_HOVERLINK, 
+                param.event,
+                {
+                    valueMin : valueMin,
+                    valueMax : valueMax
+                },
+                this.myChart
+            );
+            
+            // console.log(param,curValue);
+            return;
+        },
 
         _textFormat : function(valueStart, valueEnd) {
             valueStart = valueStart.toFixed(this.dataRangeOption.precision);
@@ -1251,16 +1296,14 @@ define(function (require) {
                 idx--;
             }
             
-            return this.getColorByIndex(idx);
             //console.log(value, idx,this._colorList[idx])
-            /*
             if (this._selectedMap[idx]) {
                 return this._colorList[idx];
             }
             else {
                 return null;
             }
-            */
+            
         },
         
         getColorByIndex : function (idx) {

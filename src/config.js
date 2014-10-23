@@ -777,6 +777,7 @@ define(function() {
             mapValuePrecision: 0,           // 地图数值计算结果小数精度
             showLegendSymbol: true,         // 显示图例颜色标识（系列标识的小圆点），存在legend时生效
             // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
+            dataRangeHoverLink: true,
             hoverable: true,
             clickable: true,
             // roam: false,                 // 是否开启缩放及漫游模式
@@ -1247,6 +1248,7 @@ define(function() {
             DATA_CHANGED: 'dataChanged',
             DATA_ZOOM: 'dataZoom',
             DATA_RANGE: 'dataRange',
+            DATA_RANGE_HOVERLINK: 'dataRangeHoverLink',
             LEGEND_SELECTED: 'legendSelected',
             MAP_SELECTED: 'mapSelected',
             PIE_SELECTED: 'pieSelected',
