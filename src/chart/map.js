@@ -1014,8 +1014,9 @@ define(function (require) {
             var event = params.event;
             var mx = zrEvent.getX(event);
             var my = zrEvent.getY(event);
-            var delta = zrEvent.getDelta(event);
-            //delta = delta > 0 ? (-1) : 1;
+            var delta;
+            var eventDelta = zrEvent.getDelta(event);
+            //eventDelta = eventDelta > 0 ? (-1) : 1;
             var mapType;
             var mapTypeControl = params.mapTypeControl;
             if (!mapTypeControl) {
@@ -1037,12 +1038,12 @@ define(function (require) {
                     var height = transform.height;
                     // 位置转经纬度
                     var geoAndPos = this.pos2geo(mapType, [mx - left, my - top]);
-                    if (delta > 0) {
+                    if (eventDelta > 0) {
                         delta = 1.2;        // 放大
                         if (this._scaleLimitMap[mapType].max != null
                             && transform.baseScale >= this._scaleLimitMap[mapType].max
                         ) {
-                            return;     // 缩放限制
+                            continue;     // 缩放限制
                         }
                     }
                     else {
@@ -1050,7 +1051,7 @@ define(function (require) {
                         if (this._scaleLimitMap[mapType].min != null
                             && transform.baseScale <= this._scaleLimitMap[mapType].min
                         ) {
-                            return;     // 缩放限制
+                            continue;     // 缩放限制
                         }
                     }
                     
