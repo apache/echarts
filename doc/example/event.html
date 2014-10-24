@@ -122,24 +122,30 @@ function eConsole(param) {
     console.log(param);
 }
 /*
+// -------全局通用
 REFRESH: 'refresh',
 RESTORE: 'restore',
 RESIZE: 'resize',
 CLICK: 'click',
+DBLCLICK: 'dblclick',
 HOVER: 'hover',
-MOUSEWHEEL: 'mousewheel',
+MOUSEOUT: 'mouseout',
 // -------业务交互逻辑
 DATA_CHANGED: 'dataChanged',
 DATA_ZOOM: 'dataZoom',
 DATA_RANGE: 'dataRange',
+DATA_RANGE_HOVERLINK: 'dataRangeHoverLink',
 LEGEND_SELECTED: 'legendSelected',
+LEGEND_HOVERLINK: 'legendHoverLink',
 MAP_SELECTED: 'mapSelected',
 PIE_SELECTED: 'pieSelected',
 MAGIC_TYPE_CHANGED: 'magicTypeChanged',
 DATA_VIEW_CHANGED: 'dataViewChanged',
-MAP_ROAM : 'mapRoam',
+TIMELINE_CHANGED: 'timelineChanged',
+MAP_ROAM: 'mapRoam',
 */
 myChart.on(ecConfig.EVENT.CLICK, eConsole);
+myChart.on(ecConfig.EVENT.DBLCLICK, eConsole);
 //myChart.on(ecConfig.EVENT.HOVER, eConsole);
 myChart.on(ecConfig.EVENT.DATA_ZOOM, eConsole);
 myChart.on(ecConfig.EVENT.LEGEND_SELECTED, eConsole);

@@ -232,7 +232,7 @@ define(function (require) {
             this.clear();
             this.shapeList = null;
             this.effectList = null;
-            this.messageCenter.unbind(
+            this.messageCenter && this.messageCenter.unbind(
                 ecConfig.EVENT.LEGEND_HOVERLINK, this._onlegendhoverlink
             );
             this.onafterDispose && this.onafterDispose();
