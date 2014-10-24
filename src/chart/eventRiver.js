@@ -61,6 +61,7 @@ define(function (require) {
              for (var i = 0; i < series.length; i++) {
                   if (series[i].type === this.type) {
                       series[i] = this.reformOption(series[i]);
+                      this.legendHoverLink = series[i].legendHoverLink || this.legendHoverLink;
                       var serieName = series[i].name || '';
                       // 系列图例开关
                       this.selectedMap[serieName] = legend ? legend.isSelected(serieName) : true;

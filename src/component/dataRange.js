@@ -1442,9 +1442,7 @@ define(function (require) {
         /**
          * 释放后实例不可用
          */
-        dispose : function () {
-            this.clear();
-            this.shapeList = null;
+        onbeforDispose : function () {
             this.messageCenter.unbind(ecConfig.EVENT.HOVER, this._onhoverlink);
         }
     };

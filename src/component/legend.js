@@ -38,6 +38,9 @@ define(function (require) {
         self._legendSelected = function (param) {
             self.__legendSelected(param);
         };
+        self._dispatchHoverLink = function(param) {
+            return self.__dispatchHoverLink(param);
+        };
         
         this._colorIndex = 0;
         this._colorMap = {};
@@ -187,7 +190,7 @@ define(function (require) {
                 
                 if (this.legendOption.selectedMode) {
                     itemShape.onclick = textShape.onclick = this._legendSelected;
-                    itemShape.onmouseover =  textShape.onmouseover = this.hoverConnect;
+                    itemShape.onmouseover =  textShape.onmouseover = this._dispatchHoverLink;
                     itemShape.hoverConnect = textShape.id;
                     textShape.hoverConnect = itemShape.id;
                 }
@@ -591,7 +594,23 @@ define(function (require) {
                 this.myChart
             );
         },
-
+        
+        /**
+         * 产生hover link事件 
+         */
+        __dispatchHoverLink : function(param) {
+            var itemName = param.target._name;
+            this.messageCenter.dispatch(
+                ecConfig.EVENT.LEGEND_HOVERLINK,
+                param.event,
+                {
+                    target: param.target._name
+                },
+                this.myChart
+            );
+            return;
+        },
+        
         /**
          * 刷新
          */

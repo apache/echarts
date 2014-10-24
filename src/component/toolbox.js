@@ -1069,13 +1069,11 @@ define(function (require) {
         /**
          * 释放后实例不可用
          */
-        dispose: function () {
+        onbeforDispose: function () {
             if (this._dataView) {
                 this._dataView.dispose();
                 this._dataView = null;
             }
-            this.clear();
-            this.shapeList = null;
             this._markShapeList = null;
         },
         

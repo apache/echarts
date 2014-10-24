@@ -62,6 +62,7 @@ define(function (require) {
                 serieName = serie.name;
                 if (serie.type === ecConfig.CHART_TYPE_SCATTER) {
                     series[i] = this.reformOption(series[i]);
+                    this.legendHoverLink = series[i].legendHoverLink || this.legendHoverLink;
                     this._sIndex2ShapeMap[i] = this.query(serie, 'symbol')
                                           || this._symbol[i % this._symbol.length];
                     if (legend){

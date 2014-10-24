@@ -874,7 +874,6 @@ define(function (require) {
                     textShape.hoverable = shape.hoverable = true;
                     shape.hoverConnect = textShape.id;
                     textShape.hoverConnect = shape.id;
-                    shape.onmouseover = textShape.onmouseover = this.hoverConnect;
                 }
                 else {
                     textShape.hoverable = shape.hoverable = false;
@@ -1511,10 +1510,7 @@ define(function (require) {
         /**
          * 释放后实例不可用
          */
-        dispose : function () {
-            this.clear();
-            this.shapeList = null;
-            this.effectList = null;
+        onbeforDispose : function () {
             this._isAlive = false;
             this.zr.un(zrConfig.EVENT.MOUSEWHEEL, this._onmousewheel);
             this.zr.un(zrConfig.EVENT.MOUSEDOWN, this._onmousedown);

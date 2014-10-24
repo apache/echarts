@@ -803,10 +803,7 @@ define(function (require) {
         /**
          * 释放后实例不可用，重载基类方法
          */
-        dispose: function () {
-            this.clear();
-            this.shapeList = null;
-            
+        onbeforDispose: function () {
             clearTimeout(this.playTicket);
         }
     };

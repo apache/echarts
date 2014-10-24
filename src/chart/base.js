@@ -267,6 +267,7 @@ define(function (require) {
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type === this.type) {
                     series[i] = this.reformOption(series[i]);
+                    this.legendHoverLink = series[i].legendHoverLink || this.legendHoverLink;
                     xAxisIndex = series[i].xAxisIndex;
                     yAxisIndex = series[i].yAxisIndex;
                     xAxis = this.component.xAxis.getAxis(xAxisIndex);

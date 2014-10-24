@@ -529,6 +529,7 @@ define(function() {
         // 柱形图默认参数
         bar: {
             clickable: true,
+            legendHoverLink: true,
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
@@ -569,6 +570,7 @@ define(function() {
         // 折线图默认参数
         line: {
             clickable: true,
+            legendHoverLink: true,
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
@@ -612,6 +614,7 @@ define(function() {
         // K线图默认参数
         k: {
             clickable: true,
+            legendHoverLink: false,
             xAxisIndex: 0,
             yAxisIndex: 0,
             // barWidth: null               // 默认自适应
@@ -636,6 +639,7 @@ define(function() {
         // 散点图默认参数
         scatter: {
             clickable: true,
+            legendHoverLink: true,
             xAxisIndex: 0,
             yAxisIndex: 0,
             // symbol: null,        // 图形类型
@@ -686,6 +690,7 @@ define(function() {
         // 雷达图默认参数
         radar: {
             clickable: true,
+            legendHoverLink: true,
             polarIndex: 0,
             itemStyle: {
                 normal: {
@@ -713,6 +718,7 @@ define(function() {
         // 饼图默认参数
         pie: {
             clickable: true,
+            legendHoverLink: true,
             center: ['50%', '50%'],     // 默认全局居中
             radius: [0, '75%'],
             clockWise: true,            // 默认顺时针
@@ -979,6 +985,7 @@ define(function() {
 
         gauge: {
             center: ['50%', '50%'],    // 默认全局居中
+            legendHoverLink: true,
             radius: '75%',
             startAngle: 225,
             endAngle: -45,
@@ -1051,6 +1058,7 @@ define(function() {
         
         funnel: {
             clickable: true,
+            legendHoverLink: true,
             x: 80,
             y: 60,
             x2: 80,
@@ -1100,6 +1108,7 @@ define(function() {
         
         eventRiver: {
             clickable: true,
+            legendHoverLink: true,
             itemStyle: {
                 normal: {
                     // color: 各异,
@@ -1251,6 +1260,7 @@ define(function() {
             DATA_RANGE: 'dataRange',
             DATA_RANGE_HOVERLINK: 'dataRangeHoverLink',
             LEGEND_SELECTED: 'legendSelected',
+            LEGEND_HOVERLINK: 'legendHoverLink',
             MAP_SELECTED: 'mapSelected',
             PIE_SELECTED: 'pieSelected',
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',

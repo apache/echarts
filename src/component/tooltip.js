@@ -1633,13 +1633,10 @@ define(function (require) {
         /**
          * 释放后实例不可用，重载基类方法
          */
-        dispose: function () {
+        onbeforDispose: function () {
             if (this._lastTipShape && this._lastTipShape.tipShape.length > 0) {
                 this.zr.delShape(this._lastTipShape.tipShape);
             }
-            this.clear();
-            this.shapeList = null;
-            
             clearTimeout(this._hidingTicket);
             clearTimeout(this._showingTicket);
             this.zr.un(zrConfig.EVENT.MOUSEMOVE, this._onmousemove);

@@ -7,6 +7,7 @@
  */
 define(function (require) {
     var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
     var ecQuery = require('../util/ecQuery');
     var number = require('../util/number');
     var zrUtil = require('zrender/tool/util');
@@ -25,6 +26,7 @@ define(function (require) {
         this.effectList = [];
         
         var self = this;
+        /*
         self.hoverConnect = function (param) {
             var target = (param.target || {}).hoverConnect;
             if (target) {
@@ -49,6 +51,25 @@ define(function (require) {
                 }
             }
         };
+        */
+        self._onlegendhoverlink = function(param) {
+            if (self.legendHoverLink) {
+                var targetName = param.target;
+                var name;
+                for (var i = self.shapeList.length - 1; i >= 0; i--) {
+                    name = self.type == ecConfig.CHART_TYPE_PIE
+                           || self.type == ecConfig.CHART_TYPE_FUNNEL
+                           ? ecData.get(self.shapeList[i], 'name')
+                           : (ecData.get(self.shapeList[i], 'series') || {}).name;
+                    if (name == targetName && !self.shapeList[i].invisible) {
+                        self.zr.addHoverShape(self.shapeList[i]);
+                    }
+                }
+            }
+        }
+        messageCenter && messageCenter.bind(
+            ecConfig.EVENT.LEGEND_HOVERLINK, this._onlegendhoverlink
+        );
     }
 
     /**
@@ -207,9 +228,14 @@ define(function (require) {
          * 释放后实例不可用
          */
         dispose: function () {
+            this.onbeforDispose && this.onbeforDispose();
             this.clear();
             this.shapeList = null;
             this.effectList = null;
+            this.messageCenter.unbind(
+                ecConfig.EVENT.LEGEND_HOVERLINK, this._onlegendhoverlink
+            );
+            this.onafterDispose && this.onafterDispose();
         },
         
         query: ecQuery.query,
