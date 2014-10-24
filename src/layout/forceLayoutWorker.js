@@ -370,6 +370,13 @@ define(function __echartsForceLayoutWorker(require) {
             }
         }
 
+        this.updateForce();
+
+        this.updatePosition();
+    };
+
+    ForceLayout.prototype.updateForce = function () {
+        var nNodes = this.nodes.length;
         // Reset forces
         for (var i = 0; i < nNodes; i++) {
             var node = this.nodes[i];
@@ -378,31 +385,17 @@ define(function __echartsForceLayoutWorker(require) {
             vec2.set(node.force, 0, 0);
         }
 
-        // Compute forces
-        // Repulsion
-        for (var i = 0; i < nNodes; i++) {
-            var na = this.nodes[i];
-            if (this.barnesHutOptimize) {
-                this.applyRegionToNodeRepulsion(this._rootRegion, na);
-            }
-            else {
-                for (var j = i + 1; j < nNodes; j++) {
-                    var nb = this.nodes[j];
-                    this.applyNodeToNodeRepulsion(na, nb, false);
-                }
-            }
+        this.updateNodeNodeForce();
 
-            // Gravity
-            if (this.gravity > 0) {
-                this.applyNodeGravity(na);
-            }
+        if (this.gravity > 0) {
+            this.updateGravityForce();
         }
 
-        // Attraction
-        for (var i = 0; i < this.edges.length; i++) {
-            this.applyEdgeAttraction(this.edges[i]);
-        }
+        this.updateEdgeForce();
+    };
 
+    ForceLayout.prototype.updatePosition = function () {
+        var nNodes = this.nodes.length;
         // Apply forces
         // var speed = vec2.create();
         var v = vec2.create();
@@ -448,6 +441,38 @@ define(function __echartsForceLayoutWorker(require) {
             vec2.scale(speed, speed, scale);
 
             vec2.add(node.position, node.position, speed);
+        }
+    }
+
+    ForceLayout.prototype.updateNodeNodeForce = function () {
+        var nNodes = this.nodes.length;
+        // Compute forces
+        // Repulsion
+        for (var i = 0; i < nNodes; i++) {
+            var na = this.nodes[i];
+            if (this.barnesHutOptimize) {
+                this.applyRegionToNodeRepulsion(this._rootRegion, na);
+            }
+            else {
+                for (var j = i + 1; j < nNodes; j++) {
+                    var nb = this.nodes[j];
+                    this.applyNodeToNodeRepulsion(na, nb, false);
+                }
+            }
+        }
+    };
+
+    ForceLayout.prototype.updateGravityForce = function () {
+        var nNodes = this.nodes.length;
+        for (var i = 0; i < nNodes; i++) {
+            this.applyNodeGravity(this.nodes[i]);
+        }
+    };
+
+    ForceLayout.prototype.updateEdgeForce = function () {
+        // Attraction
+        for (var i = 0; i < this.edges.length; i++) {
+            this.applyEdgeAttraction(this.edges[i]);
         }
     };
 
