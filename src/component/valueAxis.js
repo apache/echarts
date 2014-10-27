@@ -507,12 +507,14 @@ define(function (require) {
                             // scatter 、 不等距 line bar
                             if (this.option.xAxisIndex != -1) {
                                 data[key].push(
-                                    this.option.type != 'time' ? value[0] : new Date(value[0])
+                                    this.option.type != 'time'
+                                    ? value[0] : ecDate.getNewDate(value[0])
                                 );
                             }
                             if (this.option.yAxisIndex != -1) {
                                 data[key].push(
-                                    this.option.type != 'time' ? value[1] : new Date(value[1])
+                                    this.option.type != 'time'
+                                    ? value[1] : ecDate.getNewDate(value[1])
                                 );
                             }
                         }
@@ -527,7 +529,7 @@ define(function (require) {
                     for (var j = 0, k = oriData.length; j < k; j++) {
                         var evolution = oriData[j].evolution;
                         for (var m = 0, n = evolution.length; m < n; m++) {
-                            data[key].push(new Date(evolution[m].time));
+                            data[key].push(ecDate.getNewDate(evolution[m].time));
                         }
                     }
                 }
@@ -768,7 +770,7 @@ define(function (require) {
             var formatter = curValue.formatter;
             var gapValue = curValue.gapValue;
             
-            this._valueList = [new Date(this._min)];
+            this._valueList = [ecDate.getNewDate(this._min)];
             var startGap;
             switch (formatter) {
                 case 'week' :
@@ -792,7 +794,7 @@ define(function (require) {
                         startGap = (Math.floor(this._min / gapValue) + 1) * gapValue;
                     }
                     else {
-                        startGap = new Date(this._min - (-gapValue));
+                        startGap = ecDate.getNewDate(this._min - (-gapValue));
                         startGap.setHours(Math.round(startGap.getHours() / 6) * 6);
                         startGap.setMinutes(0);
                         startGap.setSeconds(0);
@@ -805,9 +807,9 @@ define(function (require) {
             }
             
             // console.log(startGap,gapValue,this._min, this._max,formatter)
-            curValue = new Date(startGap);
+            curValue = ecDate.getNewDate(startGap);
             splitNumber *= 1.5;
-            while (splitNumber--) {
+            while (splitNumber-- >= 0) {
                 if (formatter == 'month' 
                     || formatter == 'quarter' 
                     || formatter == 'half-year'
@@ -819,9 +821,9 @@ define(function (require) {
                     break;
                 }
                 this._valueList.push(curValue);
-                curValue = new Date(curValue - (-gapValue));
+                curValue = ecDate.getNewDate(curValue - (-gapValue));
             }
-            this._valueList.push(new Date(this._max));
+            this._valueList.push(ecDate.getNewDate(this._max));
 
             this._reformLabelData(formatter);
         },

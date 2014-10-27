@@ -89,7 +89,7 @@ define(function() {
             formatter = 'MM - dd\nyyyy';
         }
             
-        var date = new Date(value);
+        var date = getNewDate(value);
         var y = date.getFullYear();
         var M = date.getMonth() + 1;
         var d = date.getDate();
@@ -114,13 +114,13 @@ define(function() {
     }
     
     function nextMonday(value) {
-        value = new Date(value);
+        value = getNewDate(value);
         value.setDate(value.getDate() + 8 - value.getDay());
         return value;
     }
     
     function nextNthPerNmonth(value, nth, nmon) {
-        value = new Date(value);
+        value = getNewDate(value);
         value.setMonth(Math.ceil((value.getMonth() + 1) / nmon) * nmon);
         value.setDate(nth);
         return value;
@@ -142,8 +142,15 @@ define(function() {
         return nextNthPerNmonth(value, nth, 12);
     }
     
+    function getNewDate(value) {
+        return value instanceof Date
+               ? value
+               : new Date(typeof value == 'string' ? value.replace(/-/g, '/') : value);
+    }
+    
     return {
         getAutoFormatter: getAutoFormatter,
+        getNewDate: getNewDate,
         format: format,
         nextMonday: nextMonday,
         nextNthPerNmonth: nextNthPerNmonth,
