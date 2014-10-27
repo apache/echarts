@@ -594,13 +594,13 @@ define(function (require) {
                                          .replace('{c}','{c0}');
                     formatter = formatter.replace('{a0}', serie.name)
                                          .replace('{b0}', name)
-                                         .replace('{c0}', value);
+                                         .replace('{c0}', this.numAddCommas(value));
     
                     return formatter;
                 }
             }
             else {
-                return value;
+                return this.numAddCommas(value);
             }
         },
         
