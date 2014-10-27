@@ -249,7 +249,7 @@ define(function (require) {
         _mapDataCallback : function (mt, vd, ms) {
             var self = this;
             return function (md) {
-                if (!self._isAlive) {
+                if (!self._isAlive || self._activeMapType[mt] == null) {
                     // 异步地图数据回调时有可能实例已经被释放
                     return;
                 }
