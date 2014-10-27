@@ -9,7 +9,7 @@ define(function (require) {
     var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
 
-    var EventRiverLayout = require('../layout/eventRiver');
+    var eventRiverLayout = require('../layout/eventRiver');
 
     // 图形依赖
     var PolygonShape = require('zrender/shape/Polygon');
@@ -73,7 +73,7 @@ define(function (require) {
                  }
              }
              
-             var layout = new EventRiverLayout(
+             eventRiverLayout(
                  eventRiverSeries,
                  this.component.grid.getArea()
              );

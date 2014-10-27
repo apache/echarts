@@ -436,7 +436,7 @@ define(function (require) {
                         var barWidth = this.deepQuery(queryTarget, 'barWidth') || 10; // 默认柱形
                         var barHeight = this.deepQuery(queryTarget, 'barHeight');
                         var orient;
-                        var barShape
+                        var barShape;
                         
                         if (barHeight != null) {
                             // 条形图
