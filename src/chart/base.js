@@ -88,8 +88,8 @@ define(function (require) {
          * 数据项被拖拽进来
          */
         ondrop: function (param, status) {
-            if (!this.isDrop || !param.target) {
-                // 没有在当前实例上发生拖拽行为则直接返回
+            if (!this.isDrop || !param.target || status.dragIn) {
+                // 没有在当前实例上发生拖拽行为或者已经被认领了则直接返回
                 return;
             }
             var target = param.target;      // 拖拽安放目标
@@ -103,6 +103,13 @@ define(function (require) {
             var legend = this.component.legend;
             if (dataIndex === -1) {
                 // 落到calculableCase上，数据被拖拽进某个饼图|雷达|漏斗，增加数据
+                if (ecData.get(dragged, 'seriesIndex') == seriesIndex) {
+                    // 自己拖拽到自己
+                    status.dragOut = status.dragIn = status.needRefresh = true;
+                    this.isDrop = false;
+                    return;
+                }
+                
                 data = {
                     value: ecData.get(dragged, 'value'),
                     name: ecData.get(dragged, 'name')
@@ -189,8 +196,8 @@ define(function (require) {
          * 数据项被拖拽出去
          */
         ondragend: function (param, status) {
-            if (!this.isDragend || !param.target) {
-                // 没有在当前实例上发生拖拽行为则直接返回
+            if (!this.isDragend || !param.target || status.dragOut) {
+                // 没有在当前实例上发生拖拽行为或者已经被认领了则直接返回
                 return;
             }
             var target = param.target;      // 被拖拽图形元素
