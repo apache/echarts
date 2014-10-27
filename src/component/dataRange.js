@@ -1237,11 +1237,11 @@ define(function (require) {
                                * totalValue;
                 }
                 valueMin = curValue - totalValue * 0.05;
-                valueMax = curValue + totalValue * 0.05
+                valueMax = curValue + totalValue * 0.05;
             }
             else {
                 var idx = param.target._idx;
-                valueMax = (this._colorList.length - idx) * this._gap + this.dataRangeOption.min
+                valueMax = (this._colorList.length - idx) * this._gap + this.dataRangeOption.min;
                 valueMin = valueMax - this._gap;
             }
             
@@ -1293,7 +1293,7 @@ define(function (require) {
                     ];
                 }
                 this._indicatorShape.style.text = param.value;
-                this._indicatorShape.style.color = this.getColor(curValue)
+                this._indicatorShape.style.color = this.getColor(curValue);
                 this.zr.addHoverShape(this._indicatorShape);
             }
         },

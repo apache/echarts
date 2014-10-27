@@ -388,9 +388,7 @@ define(function (require) {
             if (isNaN(this.option.min - 0) || isNaN(this.option.max - 0)) {
                 // 有一个没指定都得算
                 // 数据整形
-                var oriData;            // 原始数据
                 var data = {};          // 整形后数据抽取
-                var value;
                 var xIdx;
                 var yIdx;
                 var legend = this.component.legend;
@@ -423,6 +421,7 @@ define(function (require) {
                 }
                 
                 // 找极值
+                var oriData;            // 原始数据
                 for (var i in data){
                     oriData = data[i];
                     for (var j = 0, k = oriData.length; j < k; j++) {
@@ -489,6 +488,8 @@ define(function (require) {
          */
         _calculSum: function (data, i) {
             var key = this.series[i].name || 'kener';
+            var value;
+            var oriData;
             if (!this.series[i].stack) {
                 data[key] = data[key] || [];
                 if (this.series[i].type != ecConfig.CHART_TYPE_EVENTRIVER) {

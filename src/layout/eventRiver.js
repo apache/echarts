@@ -4,7 +4,7 @@
  * @author clmtulip  (车丽美, chelimei@baidu.com)
  */
 define(function(require) {
-    function EventRiverLayout(series, area) {
+    function eventRiverLayout(series, area) {
         var space = 15;
         var scale = 10;
 
@@ -117,7 +117,7 @@ define(function(require) {
         
         // 映射到显示区域内
         scaleY(series, area, totalMaxY, space);
-    };
+    }
     
     /**
      * 映射到显示区域内 
@@ -207,5 +207,5 @@ define(function(require) {
         }
     }
     
-    return EventRiverLayout;
+    return eventRiverLayout;
 });
