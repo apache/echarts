@@ -1757,6 +1757,211 @@ option = {
             </div><!--/row-->
         </div><!--/.fluid-container-->
         
+        <!--------11:eventRiver--------->
+        <div class="container-fluid" idx='11'>
+            <div class="row-fluid">
+                <div md="sidebar-code" class="span4">
+                    <div class="well sidebar-nav">
+                        <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" md ="icon-resize" ></a>option</div>
+                        <textarea md="code" name="code">
+option = {
+    title : {
+        text: 'Event River',
+        subtext: '纯属虚构'
+    },
+    tooltip : {
+        trigger: 'item'
+    },
+    legend: {
+        data:['财经事件']
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : {show: true},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    xAxis : [
+        {
+            type : 'time',
+            boundaryGap: [0.05,0.1]
+        }
+    ],
+    series : [
+        {
+            "name": "财经事件", 
+            "type": "eventRiver", 
+            "weight": 123, 
+            "eventList": [
+                {
+                    "name": "阿里巴巴上市", 
+                    "weight": 123, 
+                    "evolution": [
+                        {
+                            "time": "2014-05-01", 
+                            "value": 14, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-02", 
+                            "value": 34, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-03", 
+                            "value": 60, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-04", 
+                            "value": 40, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-05", 
+                            "value": 10, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }
+                    ]
+                }, 
+                {
+                    "name": "阿里巴巴上市2", 
+                    "weight": 123, 
+                    "evolution": [
+                        {
+                            "time": "2014-05-02", 
+                            "value": 10, 
+                            "detail": {
+                                "link": "www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-03", 
+                            "value": 34, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-04", 
+                            "value": 40, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-05", 
+                            "value": 10, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }
+                    ]
+                }, 
+                {
+                    "name": "三星业绩暴跌", 
+                    "weight": 123, 
+                    "evolution": [
+                        {
+                            "time": "2014-05-03", 
+                            "value": 24, 
+                            "detail": {
+                                "link": "www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-04", 
+                            "value": 34, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-05", 
+                            "value": 50, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-06", 
+                            "value": 30, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-07", 
+                            "value": 20, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }
+                    ]
+                }
+            ],
+            markPoint : {
+                symbol: 'emptyCircle',
+                data : [
+                    {name : '打酱油的标注', value : 100, x:'5%', y:'50%', symbolSize:32},
+                    {name : '打酱油的标注', value : 100, x:'95%', y:'50%', symbolSize:32}
+                ]
+            }
+        }
+    ]
+};
+                    </textarea>
+                    </div><!--/.well -->
+                </div><!--/span-->
+                <div md="graphic" class="span8">
+                    <div md="main" class="main"></div>
+                    <div>
+                        <button onclick="refresh(true, 11)">Refresh ~</button>
+                        <span md='wrong-message' style="color:red"></span>
+                    </div>
+                </div><!--/span-->
+            </div><!--/row-->
+        </div><!--/.fluid-container-->
         <hr>
         <!-- FOOTER -->
         <footer>
