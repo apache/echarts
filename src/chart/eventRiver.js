@@ -9,7 +9,7 @@ define(function (require) {
     var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
 
-    var EventRiverLayout = require('../layout/eventRiver');
+    var eventRiverLayout = require('../layout/eventRiver');
 
     // 图形依赖
     var PolygonShape = require('zrender/shape/Polygon');
@@ -21,6 +21,7 @@ define(function (require) {
 
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
+    var ecDate = require('../util/date');
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
 
@@ -41,7 +42,6 @@ define(function (require) {
          self._ondragend = function () {
              self.isDragend = true;
          };
-        
          this.refresh(option);
      }
 
@@ -51,7 +51,7 @@ define(function (require) {
          _buildShape: function() {
              var series = this.series;
              this.selectedMap = {};
-            
+             
              // 数据预处理
              this._dataPreprocessing();
             
@@ -59,24 +59,25 @@ define(function (require) {
              // 调用布局算法计算事件在Y轴上的位置
              var eventRiverSeries = [];
              for (var i = 0; i < series.length; i++) {
-                  if (series[i].type === this.type) {
-                      series[i] = this.reformOption(series[i]);
-                      this.legendHoverLink = series[i].legendHoverLink || this.legendHoverLink;
-                      var serieName = series[i].name || '';
-                      // 系列图例开关
-                      this.selectedMap[serieName] = legend ? legend.isSelected(serieName) : true;
-                      if (!this.selectedMap[serieName]) {
-                          continue;
-                      }
-                      this.buildMark(i);
-                      eventRiverSeries.push(this.series[i]);
-                  }
-              }
-             var layout = new EventRiverLayout(
+                 if (series[i].type === this.type) {
+                     series[i] = this.reformOption(series[i]);
+                     this.legendHoverLink = series[i].legendHoverLink || this.legendHoverLink;
+                     var serieName = series[i].name || '';
+                     // 系列图例开关
+                     this.selectedMap[serieName] = legend ? legend.isSelected(serieName) : true;
+                     if (!this.selectedMap[serieName]) {
+                         continue;
+                     }
+                     this.buildMark(i);
+                     eventRiverSeries.push(this.series[i]);
+                 }
+             }
+             
+             eventRiverLayout(
                  eventRiverSeries,
                  this.component.grid.getArea()
              );
-            
+             
              // 绘制事件河
              this._drawEventRiver();
              
@@ -98,7 +99,7 @@ define(function (require) {
                          evolutionList = series[i].eventList[j].evolution;
                          for (var k = 0, kLen = evolutionList.length; k < kLen; k++) {
                              evolutionList[k].timeScale = xAxis.getCoord(
-                                 new Date(evolutionList[k].time) - 0
+                                 ecDate.getNewDate(evolutionList[k].time) - 0
                              );
                              evolutionList[k].valueScale = evolutionList[k].value;
                          }
@@ -152,6 +153,7 @@ define(function (require) {
                                  );
             
              var pts = this._calculateControlPoints(oneEvent);
+             
              var eventBubbleShape = {
                  zlevel: this._zlevelBase,
                  clickable: this.deepQuery(queryTarget, 'clickable'),
@@ -206,7 +208,7 @@ define(function (require) {
              }
              
              var pts = [];
- 
+             
              // 从左向右绘制气泡的上半部分控制点
              // 第一个矩形的左端点
              pts.push([time[0], posY]);

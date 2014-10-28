@@ -348,15 +348,16 @@ define(function (require) {
             var series = this.series;
             var curPLMap = {};   // 正在记录的point list(PL)
             
+            var xAxis;
+            var yAxis;
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     var seriesIndex = locationMap[j][m];
                     var serie = series[seriesIndex];
                     var xAxisIndex = serie.xAxisIndex || 0;
-                    var xAxis = this.component.xAxis.getAxis(xAxisIndex);
-                    var baseX = xAxis.getCoord(0);
+                    xAxis = this.component.xAxis.getAxis(xAxisIndex);
                     var yAxisIndex = serie.yAxisIndex || 0;
-                    var yAxis = this.component.yAxis.getAxis(yAxisIndex);
+                    yAxis = this.component.yAxis.getAxis(yAxisIndex);
                     var baseY = yAxis.getCoord(0);
                     
                     curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
@@ -564,6 +565,9 @@ define(function (require) {
                                     color: fillNormalColor
                                            ? fillNormalColor
                                            : zrColor.alpha(defaultColor,0.5)
+                                },
+                                highlightStyle: {
+                                    brushType: 'fill'
                                 },
                                 hoverable: false,
                                 _main: true,
@@ -814,7 +818,7 @@ define(function (require) {
                                 var len = pointList.length;
                                 this.shapeList[i].style.pointList[len - 3] = pointList[len - 2];
                                 this.shapeList[i].style.pointList[len - 3][isHorizontal ? 0 : 1]
-                                    = pointList[len - 4][isHorizontal ? 0 : 1]
+                                    = pointList[len - 4][isHorizontal ? 0 : 1];
                                 this.shapeList[i].style.pointList[len - 2] = pointList[len - 1];
                             }
                             this.shapeList[i].style.pointList.pop();

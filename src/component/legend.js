@@ -599,7 +599,6 @@ define(function (require) {
          * 产生hover link事件 
          */
         __dispatchHoverLink : function(param) {
-            var itemName = param.target._name;
             this.messageCenter.dispatch(
                 ecConfig.EVENT.LEGEND_HOVERLINK,
                 param.event,

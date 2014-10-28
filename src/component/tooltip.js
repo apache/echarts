@@ -71,7 +71,7 @@ define(function (require) {
         };
         this._tDom.onmouseout = function() {
             self._mousein = false;
-        }
+        };
         this._tDom.style.position = 'absolute';  // 不是多余的，别删！
         this.hasAppend = false;
         
@@ -870,7 +870,6 @@ define(function (require) {
             var position;
             var showContent;
             var specialCssText = '';
-            var html = '';
             if (this._curTarget._type != 'island') {
                 // 全局
                 var trigger = axisTrigger ? 'axis' : 'item';
@@ -1037,7 +1036,7 @@ define(function (require) {
                                 + '" style="float:left;width:40px;height:40px;">';
                     }
                     html += '<div style="margin-left:45px;">' + data[i].time + '<br/>';
-                    html += '<a href="' + data[i].detail.link + '" target="_blank">'
+                    html += '<a href="' + data[i].detail.link + '" target="_blank">';
                     html += data[i].detail.text + '</a></div>';
                     html += '</div>';
                 }

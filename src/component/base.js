@@ -66,7 +66,7 @@ define(function (require) {
                     }
                 }
             }
-        }
+        };
         messageCenter && messageCenter.bind(
             ecConfig.EVENT.LEGEND_HOVERLINK, this._onlegendhoverlink
         );

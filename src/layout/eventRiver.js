@@ -4,7 +4,7 @@
  * @author clmtulip  (车丽美, chelimei@baidu.com)
  */
 define(function(require) {
-    function EventRiverLayout(series, area) {
+    function eventRiverLayout(series, area) {
         var space = 15;
         var scale = 10;
 
@@ -12,6 +12,21 @@ define(function(require) {
             var x = a.importance;
             var y = b.importance;
             return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+        }
+        
+        /**
+         * 查询数组中元素的index
+         */
+        function indexOf(array, value) {
+            if (array.indexOf) {
+                return array.indexOf(value);
+            }
+            for (var i = 0, len = array.length; i < len; i++) {
+                if (array[i] === value) {
+                    return i;
+                }
+            }
+            return -1;
         }
         
         // step 0. calculate event importance and sort descending
@@ -73,7 +88,7 @@ define(function(require) {
                     e.value.push(series[i].eventList[j].evolution[k].valueScale);
                 }
 
-                var mxIndex = e.value.indexOf(Math.max.apply(Math, e.value));
+                var mxIndex = indexOf(e.value, Math.max.apply(Math, e.value));
                 var maxY = segmentTreeQuery(root, e.time[mxIndex], e.time[mxIndex + 1]);
                 var k = 0;
                 e.y = maxY + e.value[mxIndex] / 2 + space;
@@ -102,7 +117,7 @@ define(function(require) {
         
         // 映射到显示区域内
         scaleY(series, area, totalMaxY, space);
-    };
+    }
     
     /**
      * 映射到显示区域内 
@@ -192,5 +207,5 @@ define(function(require) {
         }
     }
     
-    return EventRiverLayout;
+    return eventRiverLayout;
 });

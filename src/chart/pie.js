@@ -44,7 +44,6 @@ define(function (require) {
             var seriesIndex = ecData.get(shape, 'seriesIndex');
             var dataIndex = ecData.get(shape, 'dataIndex');
             var percent = ecData.get(shape, 'special');
-            var lastAddRadius = shape._lastAddRadius;
 
             var center = [shape.style.x, shape.style.y];
             var startAngle = shape.style.startAngle;
@@ -695,7 +694,7 @@ define(function (require) {
                     }
                 }
                 
-                _changeUp(end - 1, delta / 2)
+                _changeUp(end - 1, delta / 2);
             }
             
             // 弹
@@ -764,7 +763,7 @@ define(function (require) {
             for (var i = 0; i < len; i++) {
                 delta = tList[i]._rect.y - lastY;
                 if (delta < 0) {
-                    _changeDown(i, len, -delta, direction)
+                    _changeDown(i, len, -delta, direction);
                 }
                 lastY = tList[i]._rect.y + tList[i]._rect.height;
             }
