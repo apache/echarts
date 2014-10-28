@@ -1645,6 +1645,7 @@ define(function (require) {
             this._zr.clear();
             this._option = {};
             this._optionRestore = {};
+            this.dom.style.backgroundColor = null;
             return this;
         },
 
