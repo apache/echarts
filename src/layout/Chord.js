@@ -33,35 +33,63 @@ define(function (require) {
         this.center = opts.center || [0, 0];
     }
 
-    ChordLayout.prototype.run = function (graph) {
-        var len = graph.nodes.length;
+    /**
+     * 对指定的一个或多个 Graph 运行 chord 布局
+     * 如果有多个 Graph, 后面几个 Graph 的节点必须与第一个 Graph 的节点一致(ID一一对应）
+     *
+     * 布局结果保存在第一个 Graph 的每个节点的 layout.startAngle 和 layout.endAngle.
+     * 以及每个图的边的 layout.startAngle 和 layout.endAngle
+     * 
+     * @param {Array.<module:echarts/data/Graph>|module:echarts/data/Graph} graphs
+     */
+    ChordLayout.prototype.run = function (graphs) {
+        if (!(graphs instanceof Array)) {
+            graphs = [graphs];
+        }
+
+        var gl = graphs.length;
+        if (!gl) {
+            return;
+        }
+        var graph0 = graphs[0];
+        var nl = graph0.nodes.length;
 
         var groups = [];
         var sumSize = 0;
 
-        for (var i = 0; i < len; i++) {
-            var node = graph.nodes[i];
+        // 使用第一个 graph 的节点
+        for (var i = 0; i < nl; i++) {
+            var g0node = graph0.nodes[i];
             var group = {
-                size: node.layout.size,
+                size: 0,
                 subGroups: [],
-                node: node
+                node: g0node
             };
-            sumSize += node.layout.size;
             groups.push(group);
 
             var sumWeight = 0;
-            // PENDGING outEdges还是edges
-            for (var j = 0; j < node.outEdges.length; j++) {
-                var e = node.outEdges[j];
-                var w = e.layout.sourceWeight;
-                group.subGroups.push({
-                    weight: w,
-                    edge: e
-                });
-                sumWeight += w;
+
+            // 合并所有 Graph 的 边
+            for (var k = 0; k < graphs.length; k++) {
+                var graph = graphs[k];
+                var node = graph.getNodeById(g0node.id);
+                group.size += node.layout.size;
+                // 包含所有出边
+                for (var j = 0; j < node.outEdges.length; j++) {
+                    var e = node.outEdges[j];
+                    var w = e.layout.sourceWeight;
+                    group.subGroups.push({
+                        weight: w,
+                        edge: e,
+                        graph: graph
+                    });
+                    sumWeight += w;
+                }
             }
+            sumSize += group.size;
+
             // Sum sub group weights to group size
-            var multiplier = node.layout.size / sumWeight;
+            var multiplier = group.size / sumWeight;
             for (var j = 0; j < group.subGroups.length; j++) {
                 group.subGroups[j].weight *= multiplier;
             }
@@ -83,11 +111,11 @@ define(function (require) {
             groups.reverse();
         }
 
-        var multiplier = (Math.PI * 2 - this.padding * len) / sumSize;
+        var multiplier = (Math.PI * 2 - this.padding * nl) / sumSize;
         var angle = this.startAngle;
         var sign = this.clockWise ? 1 : -1;
         // Calculate angles
-        for (var i = 0; i < len; i++) {
+        for (var i = 0; i < nl; i++) {
             var group = groups[i];
             group.node.layout.startAngle = angle;
             group.node.layout.endAngle = angle + sign * group.size * multiplier;

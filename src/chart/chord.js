@@ -51,24 +51,54 @@ define(function (require) {
             var series = this.series;
             this.selectedMap = {};
 
+            var chordSeriesMap = {};
+
+            var chordSeriesGroups = {};
+
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type === this.type) {
-                    // Use the config of first chord serie
-                    if (!this.chordSerieSample) {
-                        this.chordSerieSample = series[i];
-                        this.reformOption(this.chordSerieSample);
-                    }
-
                     var _isSelected = this.isSelected(series[i].name);
                     // Filter by selected serie
                     this.selectedMap[series[i].name] = _isSelected;
-                    if (!_isSelected) {
-                        continue;
+                    if (_isSelected) {
+                        this.buildMark(i);
                     }
-                    this.buildMark(i);
 
-                    this._buildSingleChord(series[i], i);
+                    chordSeriesMap[series[i].name] = series[i];
                 }
+            }
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (series[i].type === this.type) {
+                    if (series[i].insertToSerie) {
+                        var referenceSerie = chordSeriesMap[series[i].insertToSerie];
+                        series[i]._referenceSerie = referenceSerie;
+                    } else {
+                        chordSeriesGroups[series[i].name] = [series[i]];
+
+                        this.reformOption(series[i]);
+                    }
+                }
+            }
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (series[i].type === this.type) {
+                    if (series[i].insertToSerie) {
+                        // insertToSerie 可能会存在链式的使用，找到最原始的系列，分到一个 Group 里
+                        var mainSerie = series[i]._referenceSerie;
+                        while (mainSerie && mainSerie._referenceSerie) {
+                            mainSerie = mainSerie._referenceSerie;
+                        }
+                        if (
+                            chordSeriesGroups[mainSerie.name]
+                            && this.selectedMap[series[i].name]
+                        ) {
+                            chordSeriesGroups[mainSerie.name].push(series[i]);
+                        }
+                    }
+                }
+            }
+
+            for (var name in chordSeriesGroups) {
+                this._buildChords(chordSeriesGroups[name]);
             }
             
             this.addShapeList();
@@ -78,8 +108,46 @@ define(function (require) {
 
         },
 
-        _buildSingleChord: function (serie, serieIdx) {
+        _buildChords: function (series) {
+            if (!series.length) {
+                return;
+            }
 
+            var graphs = [];
+            for (var i = 0; i < series.length; i++) {
+                var serie = series[i];
+                var graph = this._getSerieGraph(serie);
+                graphs.push(graph);
+            }
+
+            var mainSerie = series[0];
+
+            // Do layout
+            var layout = new ChordLayout();
+            layout.clockWise = mainSerie.clockWise;
+            layout.startAngle = mainSerie.startAngle * Math.PI / 180;
+            if (!layout.clockWise) {
+                layout.startAngle = -layout.startAngle;
+            }
+            layout.padding = mainSerie.padding * Math.PI / 180;
+            layout.sort = mainSerie.sort;
+            layout.sortSub = mainSerie.sortSub;
+            layout.run(graphs);
+
+            if (mainSerie.ribbonType) {
+                this._buildSectors(mainSerie, 0, graphs[0], mainSerie);
+
+                for (var i = 0; i < graphs.length; i++) {
+                    this._buildRibbons(series[i], i, graphs[i], mainSerie);
+                }
+
+                if (serie.showScale) {
+                    this._buildScales(mainSerie, 0, graph);
+                }
+            }
+        },
+
+        _getSerieGraph: function (serie) {
             var nodesData = [];
             for (var i = 0; i < serie.data.length; i++) {
                 var node = {};
@@ -101,7 +169,7 @@ define(function (require) {
             // Prepare layout parameters
             graph.eachNode(function (n, idx) {
                 n.layout = {
-                    size: n.data.value
+                    size: n.data.outValue
                 };
                 n.rawIndex = idx;
             });
@@ -111,29 +179,11 @@ define(function (require) {
                     targetWeight: e.data.targetWeight
                 };
             });
-            // Do layout
-            var layout = new ChordLayout();
-            layout.clockWise = serie.clockWise;
-            layout.startAngle = serie.startAngle * Math.PI / 180;
-            if (!layout.clockWise) {
-                layout.startAngle = -layout.startAngle;
-            }
-            layout.padding = serie.padding * Math.PI / 180;
-            layout.sort = serie.sort;
-            layout.sortSub = serie.sortSub;
-            layout.run(graph);
 
-            if (serie.ribbonType) {
-                this._buildSectors(serie, serieIdx, graph);
-                this._buildRibbons(serie, serieIdx, graph);
-
-                if (serie.showScale) {
-                    this._buildScales(serie, serieIdx, graph);
-                }
-            }
+            return graph;
         },
 
-        _buildSectors: function (serie, serieIdx, graph) {
+        _buildSectors: function (serie, serieIdx, graph, mainSerie) {
             var timeout;
 
             var showLabel = this.query(
@@ -246,11 +296,11 @@ define(function (require) {
                         labelShape.style.y = start[1];
                     }
                     labelShape.style.textColor = this.deepQuery(
-                        [node.data, this.chordSerieSample],
+                        [node.data, mainSerie],
                         'itemStyle.normal.label.textStyle.color'
                     ) || '#fff';
                     labelShape.style.textFont = this.getFont(this.deepQuery(
-                        [node.data, this.chordSerieSample],
+                        [node.data, mainSerie],
                         'itemStyle.normal.label.textStyle'
                     ));
                     labelShape = new TextShape(labelShape);
@@ -264,20 +314,26 @@ define(function (require) {
             }, this);
         },
 
-        _buildRibbons : function (serie, serieIdx, graph) {
-            var ribbonLineStyle 
-                = this.chordSerieSample.itemStyle.normal.chordStyle.lineStyle;
-            var ribbonLineStyleEmphsis
-                = this.chordSerieSample.itemStyle.emphasis.chordStyle.lineStyle;
+        _buildIcons: function (serie, serieIdx, graph) {
 
-            var center = this.parseCenter(this.zr, serie.center);
-            var radius = this.parseRadius(this.zr, serie.radius);
+        },
+
+        _buildRibbons : function (serie, serieIdx, graph, mainSerie) {
+            var ribbonLineStyle 
+                = mainSerie.itemStyle.normal.chordStyle.lineStyle;
+            var ribbonLineStyleEmphsis
+                = mainSerie.itemStyle.emphasis.chordStyle.lineStyle;
+
+            var center = this.parseCenter(this.zr, mainSerie.center);
+            var radius = this.parseRadius(this.zr, mainSerie.radius);
 
             // graph.edges.length = 1;
             graph.eachEdge(function (edge) {
                 var color;
                 var other = graph.getEdge(edge.node2, edge.node1);
-                if (edge.shape || other.shape) {
+                if (!other  // 只有单边
+                    || edge.shape || other.shape // 已经创建过Ribbon
+                ) {
                     return;
                 }
                 var s0 = edge.layout.startAngle / Math.PI * 180;
@@ -308,9 +364,9 @@ define(function (require) {
                         color: color,
                         lineWidth: ribbonLineStyle.width,
                         strokeColor: ribbonLineStyle.color,
-                        clockWise: serie.clockWise
+                        clockWise: mainSerie.clockWise
                     },
-                    clickable: serie.clickable,
+                    clickable: mainSerie.clickable,
                     highlightStyle: {
                         brushType: 'both',
                         lineWidth: ribbonLineStyleEmphsis.width,
