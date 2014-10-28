@@ -113,7 +113,7 @@ define(function (require) {
                 var serie = series[i];
 
                 if (this.selectedMap[serie.name]) {
-                    var graph = this._getSerieGraph(serie);
+                    var graph = this._getSerieGraphFromDataMatrix(serie);
                     graphs.push(graph);   
                 }
             }
@@ -145,8 +145,14 @@ define(function (require) {
             }
         },
 
-        _getSerieGraph: function (serie) {
+        _getSerieGraphFromDataMatrix: function (serie) {
             var nodesData = [];
+            var count = 0;
+            var matrix = [];
+            // 复制一份新的matrix
+            for (var i = 0; i < serie.matrix.length; i++) {
+                matrix[i] = serie.matrix[i].slice();
+            }
             for (var i = 0; i < serie.data.length; i++) {
                 var node = {};
                 var group = serie.data[i];
@@ -159,10 +165,20 @@ define(function (require) {
                         node[key] = group[key];
                     }
                 }
-                nodesData.push(node);
+                this.selectedMap[group.name] = this.isSelected(group.name);
+                if (this.selectedMap[group.name]) {
+                    nodesData.push(node);
+                    count++;
+                } else {
+                    // 过滤legend未选中的数据
+                    matrix.splice(count, 1);
+                    for (var j = 0; j < matrix.length; j++) {
+                        matrix[j].splice(count, 1);
+                    }
+                }
             }
 
-            var graph = Graph.fromMatrix(nodesData, serie.matrix, true);
+            var graph = Graph.fromMatrix(nodesData, matrix, true);
 
             // Prepare layout parameters
             graph.eachNode(function (n, idx) {
@@ -178,10 +194,9 @@ define(function (require) {
                 };
             });
 
-            // 过滤legend中未选中的节点以及输出为0的节点
+            // 过滤输出为0的节点
             graph.filterNode(function (n) {
-                this.selectedMap[n.id] = this.isSelected(n.id);
-                return this.selectedMap[n.id] && n.data.outValue > 0;
+                return n.data.outValue > 0;
             }, this);
 
             return graph;
