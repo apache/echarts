@@ -176,13 +176,50 @@ define(function(require) {
     };
 
     /**
+     * 遍历并且过滤指定的节点
+     * @param  {Function} cb
+     * @param  {*}   [context]
+     */
+     Graph.prototype.filterNode = function (cb, context) {
+        var len = this.nodes.length;
+        for (var i = 0; i < len;) {
+            if (cb.call(context, this.nodes[i], i)) {
+                i++;
+            } else {
+                this.removeNode(this.nodes[i]);
+                len--;
+            }
+        }
+     };
+
+    /**
+     * 遍历并且过滤指定的边
+     * @param  {Function} cb
+     * @param  {*}   [context]
+     */
+     Graph.prototype.filterEdge = function (cb, context) {
+        var len = this.edges.length;
+        for (var i = 0; i < len;) {
+            if (cb.call(context, this.edges[i], i)) {
+                i++;
+            } else {
+                this.removeEdge(this.edges[i]);
+                len--;
+            }
+        }
+     };
+
+    /**
      * 线性遍历所有节点
      * @param  {Function} cb
      * @param  {*}   [context]
      */
     Graph.prototype.eachNode = function (cb, context) {
-        for (var i = 0; i < this.nodes.length; i++) {
-            cb.call(context, this.nodes[i], i);
+        var len = this.nodes.length;
+        for (var i = 0; i < len; i++) {
+            if (this.nodes[i]) {    // 可能在遍历过程中存在节点删除
+                cb.call(context, this.nodes[i], i);
+            }
         }
     };
     
@@ -192,8 +229,11 @@ define(function(require) {
      * @param  {*}   [context]
      */
     Graph.prototype.eachEdge = function (cb, context) {
-        for (var i = 0; i < this.edges.length; i++) {
-            cb.call(context, this.edges[i], i);
+        var len = this.edges.length;
+        for (var i = 0; i < len; i++) {
+            if (this.edges[i]) {    // 可能在遍历过程中存在边删除
+                cb.call(context, this.edges[i], i);
+            }
         }
     };
     

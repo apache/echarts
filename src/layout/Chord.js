@@ -35,7 +35,7 @@ define(function (require) {
 
     /**
      * 对指定的一个或多个 Graph 运行 chord 布局
-     * 如果有多个 Graph, 后面几个 Graph 的节点必须与第一个 Graph 的节点一致(ID一一对应）
+     * 可以有多个 Graph, 后面几个 Graph 的节点是第一个 Graph 的节点的子集(ID一一对应）
      *
      * 布局结果保存在第一个 Graph 的每个节点的 layout.startAngle 和 layout.endAngle.
      * 以及每个图的边的 layout.startAngle 和 layout.endAngle
@@ -73,6 +73,10 @@ define(function (require) {
             for (var k = 0; k < graphs.length; k++) {
                 var graph = graphs[k];
                 var node = graph.getNodeById(g0node.id);
+                // 节点可能没有值被过滤掉了
+                if (!node) {
+                    continue;
+                }
                 group.size += node.layout.size;
                 // 包含所有出边
                 for (var j = 0; j < node.outEdges.length; j++) {

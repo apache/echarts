@@ -74,7 +74,6 @@ define(function (require) {
                         series[i]._referenceSerie = referenceSerie;
                     } else {
                         chordSeriesGroups[series[i].name] = [series[i]];
-
                         this.reformOption(series[i]);
                     }
                 }
@@ -104,10 +103,6 @@ define(function (require) {
             this.addShapeList();
         },
 
-        _filterData: function () {
-
-        },
-
         _buildChords: function (series) {
             if (!series.length) {
                 return;
@@ -116,8 +111,11 @@ define(function (require) {
             var graphs = [];
             for (var i = 0; i < series.length; i++) {
                 var serie = series[i];
-                var graph = this._getSerieGraph(serie);
-                graphs.push(graph);
+
+                if (this.selectedMap[serie.name]) {
+                    var graph = this._getSerieGraph(serie);
+                    graphs.push(graph);   
+                }
             }
 
             var mainSerie = series[0];
@@ -179,6 +177,12 @@ define(function (require) {
                     targetWeight: e.data.targetWeight
                 };
             });
+
+            // 过滤legend中未选中的节点以及输出为0的节点
+            graph.filterNode(function (n) {
+                this.selectedMap[n.id] = this.isSelected(n.id);
+                return this.selectedMap[n.id] && n.data.outValue > 0;
+            }, this);
 
             return graph;
         },
@@ -382,7 +386,8 @@ define(function (require) {
                     edge.node1.rawIndex + '-' + edge.node2.rawIndex,
                     edge.node1.id,
                     edge.node2.id,
-                    edge.data.value
+                    edge.data.sourceWeight,
+                    edge.data.targetWeight
                 );
 
                 this.shapeList.push(ribbon);
