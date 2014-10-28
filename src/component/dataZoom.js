@@ -1136,6 +1136,8 @@ define(function (require) {
         syncOption : function(magicOption) {
             this.silence(true);
             this.option = magicOption;
+            this.option.dataZoom = this.reformOption(this.option.dataZoom);
+            this.zoomOption = this.option.dataZoom;
             
             this.clear();
             // 位置参数，通过计算所得x, y, width, height
