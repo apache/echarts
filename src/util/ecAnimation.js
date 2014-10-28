@@ -334,10 +334,10 @@ define(function (require) {
         if (!oldShape) {        // add
             oldShape = {
                 style : {
-                    source0 : newShape.style.source0,
-                    source1 : newShape.style.source1 - 180,
-                    target0 : newShape.style.target0,
-                    target1 : newShape.style.target1 - 180
+                    source0 : 0,
+                    source1 : newShape.style.source1 > 0 ? 360 : -360,
+                    target0 : 0,
+                    target1 : newShape.style.target1 > 0 ? 360 : -360
                 }
             };
         }
