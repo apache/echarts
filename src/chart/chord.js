@@ -73,7 +73,8 @@ define(function (require) {
                     if (series[i].insertToSerie) {
                         var referenceSerie = chordSeriesMap[series[i].insertToSerie];
                         series[i]._referenceSerie = referenceSerie;
-                    } else {
+                    }
+                    else {
                         chordSeriesGroups[series[i].name] = [series[i]];
                         this.reformOption(series[i]);
                     }
@@ -146,12 +147,13 @@ define(function (require) {
                 var multiplier = (maxRadius - minRadius) / (max - min);
                 mainGraph.eachNode(function (node) {
                     var queryTarget = [node, mainSerie];
-                    var symbolSize = 
+                    var symbolSize = this.query(queryTarget, 'symbolSize');
                     if (max === min) {
-                        node.layout.size = min;
-                    } else {
-                        node.layout.size = 
-                            (node.layout.size - min) * multiplier + minRadius;
+                        node.layout.size = symbolSize || min;
+                    }
+                    else {
+                        node.layout.size = symbolSize
+                            || (node.layout.size - min) * multiplier + minRadius;
                     }
                 }, this);
             }
@@ -186,7 +188,8 @@ define(function (require) {
                 if (serie.showScale) {
                     this._buildScales(mainSerie, 0, graph);
                 }
-            } else {
+            }
+            else {
                 this._buildNodeIcons(mainSerie, 0, mainGraph, mainSerie, graphs);
                 if (showLabel) {
                     this._buildLabels(mainSerie, 0, mainGraph, mainSerie, graphs);
@@ -223,7 +226,8 @@ define(function (require) {
                 if (this.selectedMap[group.name]) {
                     nodesData.push(node);
                     count++;
-                } else {
+                }
+                else {
                     // 过滤legend未选中的数据
                     matrix.splice(count, 1);
                     for (var j = 0; j < matrix.length; j++) {
@@ -296,7 +300,8 @@ define(function (require) {
                         for (var i = 0; i < n.outEdges.length; i++) {
                             value += n.outEdges[i].data.weight || 0;
                         }
-                    } else {
+                    }
+                    else {
                         // 默认使用所有边值的和作为节点的大小, 不修改 data 里的数值
                         for (var i = 0; i < n.edges.length; i++) {
                             value += n.edges[i].data.weight || 0;
