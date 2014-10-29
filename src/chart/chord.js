@@ -3,7 +3,7 @@
  *
  * @author pissang (https://github.com/pissang/)
  * 
- * TODO undirected graph ?
+ * TODO 非Ribbon Type 支持 undirected graph ?
  */
 
 define(function (require) {
@@ -145,13 +145,15 @@ define(function (require) {
                 });
                 var multiplier = (maxRadius - minRadius) / (max - min);
                 mainGraph.eachNode(function (node) {
+                    var queryTarget = [node, mainSerie];
+                    var symbolSize = 
                     if (max === min) {
                         node.layout.size = min;
                     } else {
                         node.layout.size = 
                             (node.layout.size - min) * multiplier + minRadius;
                     }
-                });
+                }, this);
             }
 
             // Do layout
@@ -194,7 +196,7 @@ define(function (require) {
                 }
             }
 
-            this._initHoverHandler(graphs);
+            this._initHoverHandler(series, graphs);
         },
 
         _getSerieGraphFromDataMatrix: function (serie, ribbonType) {
@@ -314,7 +316,8 @@ define(function (require) {
             return graph;
         },
 
-        _initHoverHandler: function (graphs) {
+        _initHoverHandler: function (series, graphs) {
+            var mainSerie = series[0];
             var mainGraph = graphs[0];
             var self = this;
             mainGraph.eachNode(function (node) {
@@ -329,7 +332,7 @@ define(function (require) {
                     });
                     for (var i = 0; i < graphs.length; i++) {
                         graphs[i].eachEdge(function (e) {
-                            e.shape.style.opacity = 0.1;
+                            e.shape.style.opacity = 0.05;
                             e.shape.modSelf();
                         });
                     }
@@ -342,7 +345,10 @@ define(function (require) {
                         if (n) {    //  节点有可能没数据被过滤掉了
                             for (var j = 0; j < n.outEdges.length; j++) {
                                 var e = n.outEdges[j];
-                                e.shape.style.opacity = 0.7;
+                                var queryTarget = [e.data, mainSerie];
+                                e.shape.style.opacity = self.deepQuery(
+                                    queryTarget, 'itemStyle.normal.chordStyle.opacity'
+                                );
                                 var other = graphs[0].getNodeById(e.node2.id);
                                 if (other) {
                                     if (other.shape) {
@@ -368,7 +374,10 @@ define(function (require) {
                     });
                     for (var i = 0; i < graphs.length; i++) {
                         graphs[i].eachEdge(function (e) {
-                            e.shape.style.opacity = 0.7;
+                            var queryTarget = [e.data, mainSerie];
+                            e.shape.style.opacity = self.deepQuery(
+                                queryTarget, 'itemStyle.normal.chordStyle.opacity'
+                            );
                             e.shape.modSelf();
                         });
                     }
@@ -600,6 +609,7 @@ define(function (require) {
                 else {
                     color = this.getColor(edge.node2.id);
                 }
+                var queryTarget = [edge.data, mainSerie];
                 var ribbon = new RibbonShape({
                     zlevel: this.getZlevelBase(),
                     style: {
@@ -611,7 +621,9 @@ define(function (require) {
                         target0: t0,
                         target1: t1,
                         brushType: 'both',
-                        opacity: 0.5,
+                        opacity: this.deepQuery(
+                            queryTarget, 'itemStyle.normal.chordStyle.opacity'
+                        ),
                         color: color,
                         lineWidth: ribbonStyle.borderWidth,
                         strokeColor: ribbonStyle.borderColor,
@@ -660,8 +672,15 @@ define(function (require) {
                         yEnd: shape2.position[1],
                         cpX1: center[0],
                         cpY1: center[1],
-                        lineWidth: this.deepQuery(queryTarget, 'itemStyle.normal.chordStyle.width'),
-                        strokeColor: this.deepQuery(queryTarget, 'itemStyle.normal.chordStyle.color')
+                        lineWidth: this.deepQuery(
+                            queryTarget, 'itemStyle.normal.chordStyle.width'
+                        ),
+                        strokeColor: this.deepQuery(
+                            queryTarget, 'itemStyle.normal.chordStyle.color'
+                        ),
+                        opacity: this.deepQuery(
+                            queryTarget, 'itemStyle.normal.chordStyle.opacity'
+                        )
                     }
                 });
 

@@ -960,7 +960,8 @@ define(function() {
                         color: 'black',
                         /** ribbonType = true 时有效 */
                         borderWidth: 1,
-                        borderColor: '#999'
+                        borderColor: '#999',
+                        opacity: 0.5
                     }
                 },
                 emphasis: {
