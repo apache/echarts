@@ -106,24 +106,53 @@ define(function (require) {
 
         _buildChords: function (series) {
             var graphs = [];
+            var mainSerie = series[0];
             for (var i = 0; i < series.length; i++) {
                 var serie = series[i];
 
                 if (this.selectedMap[serie.name]) {
+                    var graph;
                     if (serie.data && serie.matrix) {
-                        var graph = this._getSerieGraphFromDataMatrix(serie);
-                        graphs.push(graph);
+                        graph = this._getSerieGraphFromDataMatrix(
+                            serie, mainSerie.ribbonType
+                        );
                     } else if (serie.nodes && serie.links) {
-                        var graph = this._getSerieGraphFromNodeLinks(serie);
-                        graphs.push(graph);
+                        graph = this._getSerieGraphFromNodeLinks(
+                            serie, mainSerie.ribbonType
+                        );
                     }
+                    // 过滤输出为0的节点
+                    graph.filterNode(function (n) {
+                        return n.layout.size > 0;
+                    }, this);
+                    graphs.push(graph);
                 }
             }
             if (!graphs.length) {
                 return;
             }
 
-            var mainSerie = series[0];
+            var mainGraph = graphs[0];
+
+            if (!mainSerie.ribbonType) {
+                var minRadius = mainSerie.minRadius;
+                var maxRadius = mainSerie.maxRadius;
+                // Map size to [minRadius, maxRadius]
+                var min = Infinity, max = -Infinity;
+                mainGraph.eachNode(function (node) {
+                    max = Math.max(node.layout.size, max);
+                    min = Math.min(node.layout.size, min);
+                });
+                var multiplier = (maxRadius - minRadius) / (max - min);
+                mainGraph.eachNode(function (node) {
+                    if (max === min) {
+                        node.layout.size = min;
+                    } else {
+                        node.layout.size = 
+                            (node.layout.size - min) * multiplier + minRadius;
+                    }
+                });
+            }
 
             // Do layout
             var layout = new ChordLayout();
@@ -135,6 +164,7 @@ define(function (require) {
             layout.padding = mainSerie.padding * Math.PI / 180;
             layout.sort = mainSerie.sort;
             layout.sortSub = mainSerie.sortSub;
+            layout.directed = mainSerie.ribbonType;
             layout.run(graphs);
 
             var showLabel = this.query(
@@ -142,9 +172,9 @@ define(function (require) {
             );
 
             if (mainSerie.ribbonType) {
-                this._buildSectors(mainSerie, 0, graphs[0], mainSerie, graphs);
+                this._buildSectors(mainSerie, 0, mainGraph, mainSerie, graphs);
                 if (showLabel) {
-                    this._buildLabels(mainSerie, 0, graphs[0], mainSerie, graphs);
+                    this._buildLabels(mainSerie, 0, mainGraph, mainSerie, graphs);
                 }
 
                 for (var i = 0; i < graphs.length; i++) {
@@ -154,10 +184,20 @@ define(function (require) {
                 if (serie.showScale) {
                     this._buildScales(mainSerie, 0, graph);
                 }
+            } else {
+                this._buildNodeIcons(mainSerie, 0, mainGraph, mainSerie, graphs);
+                if (showLabel) {
+                    this._buildLabels(mainSerie, 0, mainGraph, mainSerie, graphs);
+                }
+                for (var i = 0; i < graphs.length; i++) {
+                    this._buildEdgeCurves(series[i], i, graphs[i], mainSerie);
+                }
             }
+
+            this._initHoverHandler(graphs);
         },
 
-        _getSerieGraphFromDataMatrix: function (serie) {
+        _getSerieGraphFromDataMatrix: function (serie, ribbonType) {
             var nodesData = [];
             var count = 0;
             var matrix = [];
@@ -205,15 +245,10 @@ define(function (require) {
                 };
             });
 
-            // 过滤输出为0的节点
-            graph.filterNode(function (n) {
-                return n.layout.size > 0;
-            }, this);
-
             return graph;
         },
 
-        _getSerieGraphFromNodeLinks: function (serie) {
+        _getSerieGraphFromNodeLinks: function (serie, ribbonType) {
             var graph = new Graph(true);
 
             for (var i = 0, len = serie.nodes.length; i < len; i++) {
@@ -254,9 +289,16 @@ define(function (require) {
                 var value = n.data.value;
                 if (!value) {
                     value = 0;
-                    // 默认使用所有出边值的和作为节点的大小, 不修改 data 里的数值
-                    for (var i = 0; i < n.outEdges.length; i++) {
-                        value += n.outEdges[i].data.weight || 0;
+                    if (ribbonType) {
+                        // 默认使用所有出边值的和作为节点的大小, 不修改 data 里的数值
+                        for (var i = 0; i < n.outEdges.length; i++) {
+                            value += n.outEdges[i].data.weight || 0;
+                        }
+                    } else {
+                        // 默认使用所有边值的和作为节点的大小, 不修改 data 里的数值
+                        for (var i = 0; i < n.edges.length; i++) {
+                            value += n.edges[i].data.weight || 0;
+                        }
                     }
                 }
                 n.layout = {
@@ -269,12 +311,70 @@ define(function (require) {
                 };
             });
 
-            // 过滤输出为0的节点
-            graph.filterNode(function (n) {
-                return n.layout.size > 0;
-            }, this);
-
             return graph;
+        },
+
+        _initHoverHandler: function (graphs) {
+            var mainGraph = graphs[0];
+            var self = this;
+            mainGraph.eachNode(function (node) {
+                node.shape.onmouseover = function () {
+                    mainGraph.eachNode(function (n) {
+                        n.shape.style.opacity = 0.1;
+                        if (n.labelShape) {
+                            n.labelShape.style.opacity = 0.1;
+                            n.labelShape.modSelf();
+                        }
+                        n.shape.modSelf();
+                    });
+                    for (var i = 0; i < graphs.length; i++) {
+                        graphs[i].eachEdge(function (e) {
+                            e.shape.style.opacity = 0.1;
+                            e.shape.modSelf();
+                        });
+                    }
+                    node.shape.style.opacity = 1;
+                    if (node.labelShape) {
+                        node.labelShape.style.opacity = 1;
+                    }
+                    for (var i = 0; i < graphs.length; i++) {
+                        var n = graphs[i].getNodeById(node.id);
+                        if (n) {    //  节点有可能没数据被过滤掉了
+                            for (var j = 0; j < n.outEdges.length; j++) {
+                                var e = n.outEdges[j];
+                                e.shape.style.opacity = 0.7;
+                                var other = graphs[0].getNodeById(e.node2.id);
+                                if (other) {
+                                    if (other.shape) {
+                                        other.shape.style.opacity = 1;
+                                    }
+                                    if (other.labelShape) {
+                                        other.labelShape.style.opacity = 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    self.zr.refreshNextFrame();
+                };
+                node.shape.onmouseout = function () {
+                    mainGraph.eachNode(function (n) {
+                        n.shape.style.opacity = 1;
+                        if (n.labelShape) {
+                            n.labelShape.style.opacity = 1;
+                            n.labelShape.modSelf();
+                        }
+                        n.shape.modSelf();
+                    });
+                    for (var i = 0; i < graphs.length; i++) {
+                        graphs[i].eachEdge(function (e) {
+                            e.shape.style.opacity = 0.7;
+                            e.shape.modSelf();
+                        });
+                    }
+                    self.zr.refreshNextFrame();
+                };
+            });
         },
 
         _buildSectors: function (serie, serieIdx, graph, mainSerie, graphs) {
@@ -306,79 +406,23 @@ define(function (require) {
                     clickable: mainSerie.clickable,
                     highlightStyle: {
                         brushType: 'fill'
-                    },
-                    onmouseover: function () {
-                        graph.eachNode(function (n) {
-                            n.shape.style.opacity = 0.1;
-                            if (n.labelShape) {
-                                n.labelShape.style.opacity = 0.1;
-                                n.labelShape.modSelf();
-                            }
-                            n.shape.modSelf();
-                        });
-                        for (var i = 0; i < graphs.length; i++) {
-                            graphs[i].eachEdge(function (e) {
-                                e.shape.style.opacity = 0.1;
-                                e.shape.modSelf();
-                            });
-                        }
-                        node.shape.style.opacity = 1;
-                        if (node.labelShape) {
-                            node.labelShape.style.opacity = 1;
-                        }
-                        for (var i = 0; i < graphs.length; i++) {
-                            var n = graphs[i].getNodeById(node.id);
-                            if (n) {    //  节点有可能没数据被过滤掉了
-                                for (var j = 0; j < n.outEdges.length; j++) {
-                                    var e = n.outEdges[j];
-                                    e.shape.style.opacity = 0.7;
-                                    var other = graphs[0].getNodeById(e.node2.id);
-                                    if (other) {
-                                        if (other.shape) {
-                                            other.shape.style.opacity = 1;
-                                        }
-                                        if (other.labelShape) {
-                                            other.labelShape.style.opacity = 1;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        self.zr.refreshNextFrame();
-                    },
-                    onmouseout: function () {
-                        graph.eachNode(function (n) {
-                            n.shape.style.opacity = 1;
-                            if (n.labelShape) {
-                                n.labelShape.style.opacity = 1;
-                                n.labelShape.modSelf();
-                            }
-                            n.shape.modSelf();
-                        });
-                        for (var i = 0; i < graphs.length; i++) {
-                            graphs[i].eachEdge(function (e) {
-                                e.shape.style.opacity = 0.7;
-                                e.shape.modSelf();
-                            });
-                        }
-                        self.zr.refreshNextFrame();
                     }
                 });
                 sector.style.lineWidth = this.deepQuery(
                     [node.data, mainSerie],
-                    'itemStyle.normal.lineStyle.width'
+                    'itemStyle.normal.borderWidth'
                 );
                 sector.highlightStyle.lineWidth = this.deepQuery(
                     [node.data, mainSerie],
-                    'itemStyle.emphasis.lineStyle.width'
+                    'itemStyle.emphasis.borderWidth'
                 );
                 sector.style.strokeColor = this.deepQuery(
                     [node.data, mainSerie],
-                    'itemStyle.normal.lineStyle.color'
+                    'itemStyle.normal.borderColor'
                 );
                 sector.highlightStyle.strokeColor = this.deepQuery(
                     [node.data, mainSerie],
-                    'itemStyle.emphasis.lineStyle.color'
+                    'itemStyle.emphasis.borderColor'
                 );
                 if (sector.style.lineWidth > 0) {
                     sector.style.brushType = 'both';
@@ -401,6 +445,48 @@ define(function (require) {
             }, this);
         },
 
+        _buildNodeIcons: function (serie, serieIdx, graph, mainSerie) {
+            var center = this.parseCenter(this.zr, mainSerie.center);
+            var radius = this.parseRadius(this.zr, mainSerie.radius);
+            // PENDING
+            var r = radius[1];
+            var clockWise = mainSerie.clockWise;
+            var sign = clockWise ? 1 : -1;
+
+            graph.eachNode(function (node) {
+                var startAngle = node.layout.startAngle;
+                var endAngle = node.layout.endAngle;
+                var angle = (startAngle + endAngle) / 2;
+                var x = r * Math.cos(angle);
+                var y = r * Math.sin(angle);
+                var queryTarget = [node.data, mainSerie];
+                var iconShape = new IconShape({
+                    zlevel: this.getZlevelBase(),
+                    z: 1,
+                    style: {
+                        x: - node.layout.size,
+                        y: - node.layout.size,
+                        width: node.layout.size * 2,
+                        height: node.layout.size * 2,
+                        iconType: this.deepQuery(queryTarget, 'symbol'),
+                        color: this.deepQuery(queryTarget, 'itemStyle.normal.color') || this.getColor(node.id),
+                        lineWidth: this.deepQuery(queryTarget, 'itemStyle.normal.borderWidth'),
+                        strokeColor: this.deepQuery(queryTarget, 'itemStyle.normal.borderColor')
+                    },
+                    highlightStyle: {
+                        color: this.deepQuery(queryTarget, 'itemStyle.emphasis.color'),
+                        lineWidth: this.deepQuery(queryTarget, 'itemStyle.emphasis.borderWidth'),
+                        strokeColor: this.deepQuery(queryTarget, 'itemStyle.emphasis.borderColor'),
+                    },
+                    clickable: mainSerie.clickable,
+                    position: [x + center[0], y + center[1]],
+                });
+
+                this.shapeList.push(iconShape);
+                node.shape = iconShape;
+            }, this);
+        },
+
         _buildLabels: function (serie, serieIdx, graph, mainSerie) {
             var labelColor = this.query(
                 mainSerie, 'itemStyle.normal.label.color'
@@ -419,7 +505,7 @@ define(function (require) {
             graph.eachNode(function (node) {
                 var startAngle = node.layout.startAngle / Math.PI * 180 * sign;
                 var endAngle = node.layout.endAngle / Math.PI * 180 * sign;
-                var angle = [startAngle * -sign + endAngle * -sign] / 2;
+                var angle = (startAngle * -sign + endAngle * -sign) / 2;
                 angle %= 360;
                 if (angle < 0) { // Constrain to [0,360]
                     angle += 360;
@@ -429,7 +515,13 @@ define(function (require) {
                 angle = angle * Math.PI / 180;
                 var v = [Math.cos(angle), -Math.sin(angle)];
 
-                var distance = mainSerie.showScaleText ? 35 + labelDistance : labelDistance;
+                var distance = 0;
+                if (mainSerie.ribbonType) {
+                    distance = mainSerie.showScaleText ? 35 + labelDistance : labelDistance;
+                }
+                else {
+                    distance = labelDistance + node.layout.size
+                }
                 var start = vec2.scale([], v, radius[1] + distance);
                 vec2.add(start, start, center);
 
@@ -472,15 +564,11 @@ define(function (require) {
             }, this);
         },
 
-        _buildIcons: function (serie, serieIdx, graph, mainSerie, graphs) {
-
-        },
-
         _buildRibbons : function (serie, serieIdx, graph, mainSerie) {
-            var ribbonLineStyle 
-                = mainSerie.itemStyle.normal.chordStyle.lineStyle;
-            var ribbonLineStyleEmphsis
-                = mainSerie.itemStyle.emphasis.chordStyle.lineStyle;
+            var ribbonStyle 
+                = mainSerie.itemStyle.normal.chordStyle;
+            var ribbonStyleEmphsis
+                = mainSerie.itemStyle.emphasis.chordStyle;
 
             var center = this.parseCenter(this.zr, mainSerie.center);
             var radius = this.parseRadius(this.zr, mainSerie.radius);
@@ -525,15 +613,15 @@ define(function (require) {
                         brushType: 'both',
                         opacity: 0.5,
                         color: color,
-                        lineWidth: ribbonLineStyle.width,
-                        strokeColor: ribbonLineStyle.color,
+                        lineWidth: ribbonStyle.borderWidth,
+                        strokeColor: ribbonStyle.borderColor,
                         clockWise: mainSerie.clockWise
                     },
                     clickable: mainSerie.clickable,
                     highlightStyle: {
                         brushType: 'both',
-                        lineWidth: ribbonLineStyleEmphsis.width,
-                        strokeColor: ribbonLineStyleEmphsis.color
+                        lineWidth: ribbonStyleEmphsis.borderWidth,
+                        strokeColor: ribbonStyleEmphsis.borderColor
                     }
                 });
 
@@ -551,6 +639,34 @@ define(function (require) {
 
                 this.shapeList.push(ribbon);
                 edge.shape = ribbon;
+            }, this);
+        },
+
+        _buildEdgeCurves: function (serie, serieIdx, graph, mainSerie) {
+            var center = this.parseCenter(this.zr, mainSerie.center);
+            var radius = this.parseRadius(this.zr, mainSerie.radius);
+
+            graph.eachEdge(function (e) {
+                var shape1 = e.node1.shape;
+                var shape2 = e.node2.shape;
+                var queryTarget = [e.data, mainSerie];
+                var curveShape = new BezierCurveShape({
+                    zlevel: this.getZlevelBase(),
+                    z: 0,
+                    style: {
+                        xStart: shape1.position[0],
+                        yStart: shape1.position[1],
+                        xEnd: shape2.position[0],
+                        yEnd: shape2.position[1],
+                        cpX1: center[0],
+                        cpY1: center[1],
+                        lineWidth: this.deepQuery(queryTarget, 'itemStyle.normal.chordStyle.width'),
+                        strokeColor: this.deepQuery(queryTarget, 'itemStyle.normal.chordStyle.color')
+                    }
+                });
+
+                this.shapeList.push(curveShape);
+                e.shape = curveShape;
             }, this);
         },
 

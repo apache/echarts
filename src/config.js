@@ -933,8 +933,10 @@ define(function() {
             ribbonType: true,
             
             /***************** 下面的配置项在 ribbonType 为 false 时有效 */
-            minRadius: 30,
-            maxRadius: 50,
+            // 同force类似
+            minRadius: 10,
+            maxRadius: 20,
+            symbol: 'circle',
             /***************** 上面的配置项在 ribbonType 为 false 时有效 */
 
             /***************** 下面的配置项在 ribbonType 为 true 时有效 */
@@ -944,33 +946,33 @@ define(function() {
 
             itemStyle: {
                 normal: {
+                    borderWidth: 0,
+                    borderColor: '#000',
                     label: {
                         show: true,
                         rotate: false,
-                        distance: 10
+                        distance: 5
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
-                    lineStyle: {
-                        width: 0,
-                        color: '#000'
-                    },
                     chordStyle: {
-                        lineStyle: {
-                            width: 1,
-                            color: '#999'
-                        }
+                        /** ribbonType = false 时有效 */
+                        width: 1,
+                        color: 'black',
+                        /** ribbonType = true 时有效 */
+                        borderWidth: 1,
+                        borderColor: '#999'
                     }
                 },
                 emphasis: {
-                    lineStyle: {
-                        width: 0,
-                        color: '#000'
-                    },
+                    borderWidth: 0,
+                    borderColor: '#000',
                     chordStyle: {
-                        lineStyle: {
-                            width: 1,
-                            color: '#666'
-                        }
+                        /** ribbonType = false 时有效 */
+                        width: 1,
+                        color: 'black',
+                        /** ribbonType = true 时有效 */
+                        borderWidth: 1,
+                        borderColor: '#999'
                     }
                 }
             },

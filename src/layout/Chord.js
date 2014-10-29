@@ -31,6 +31,8 @@ define(function (require) {
         this.clockWise = opts.clockWise == null ? false : opts.clockWise;
 
         this.center = opts.center || [0, 0];
+
+        this.directed = true;
     }
 
     /**
@@ -78,9 +80,10 @@ define(function (require) {
                     continue;
                 }
                 group.size += node.layout.size;
-                // 包含所有出边
-                for (var j = 0; j < node.outEdges.length; j++) {
-                    var e = node.outEdges[j];
+                // PENDING
+                var edges = this.directed ? node.outEdges : node.edges;
+                for (var j = 0; j < edges.length; j++) {
+                    var e = edges[j];
                     var w = e.layout.weight;
                     group.subGroups.push({
                         weight: w,
@@ -131,7 +134,7 @@ define(function (require) {
                 angle += sign * subGroup.weight * multiplier;
                 subGroup.edge.layout.endAngle = angle;
             }
-            angle += sign * this.padding;
+            angle = group.node.layout.endAngle + sign * this.padding;
         }
     }
 
