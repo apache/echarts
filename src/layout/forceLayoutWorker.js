@@ -45,6 +45,9 @@ define(function __echartsForceLayoutWorker(require) {
                 out[1] = a[1] - b[1];
                 return out;
             },
+            dot: function (v1, v2) {
+                return v1[0] * v2[0] + v1[1] * v2[1];
+            },
             normalize: function(out, a) {
                 var x = a[0];
                 var y = a[1];
@@ -257,7 +260,9 @@ define(function __echartsForceLayoutWorker(require) {
 
         this.repulsionByDegree = false;
 
-        this.preventOverlap = false;
+        this.preventNodeOverlap = false;
+        this.preventNodeEdgeOverlap = false;
+
         this.strongGravity = true;
 
         this.gravity = 1.0;
@@ -270,7 +275,6 @@ define(function __echartsForceLayoutWorker(require) {
         this.height = 500;
 
         this.maxSpeedIncrease = 1;
-        this.enableAcceleration = true;
 
         this.nodes = [];
         this.edges = [];
@@ -284,6 +288,18 @@ define(function __echartsForceLayoutWorker(require) {
 
         this._k = 0;
     }
+
+    ForceLayout.prototype.nodeToNodeRepulsionFactor = function (mass, d, k) {
+        return k * k * mass / d;
+    };
+
+    ForceLayout.prototype.edgeToNodeRepulsionFactor = function (mass, d, k) {
+        return k * mass / d;
+    };
+
+    ForceLayout.prototype.attractionFactor = function (w, d, k) {
+        return w * d / k;
+    };
 
     ForceLayout.prototype.initNodes = function(positionArr, massArr, sizeArr) {
 
@@ -392,6 +408,10 @@ define(function __echartsForceLayoutWorker(require) {
         }
 
         this.updateEdgeForce();
+
+        if (this.preventNodeEdgeOverlap) {
+            this.updateNodeEdgeForce();
+        }
     };
 
     ForceLayout.prototype.updatePosition = function () {
@@ -413,12 +433,8 @@ define(function __echartsForceLayoutWorker(require) {
             var scale = Math.min(df, 500.0) / df;
             vec2.scale(node.force, node.force, scale);
 
-            if (this.enableAcceleration) {
-                vec2.add(speed, speed, node.force);
-                vec2.scale(speed, speed, this.temperature);
-            } else {
-                vec2.copy(speed, node.force);
-            }
+            vec2.add(speed, speed, node.force);
+            vec2.scale(speed, speed, this.temperature);
 
             // Prevent swinging
             // Limited the increase of speed up to 100% each step
@@ -463,8 +479,7 @@ define(function __echartsForceLayoutWorker(require) {
     };
 
     ForceLayout.prototype.updateGravityForce = function () {
-        var nNodes = this.nodes.length;
-        for (var i = 0; i < nNodes; i++) {
+        for (var i = 0; i < this.nodes.length; i++) {
             this.applyNodeGravity(this.nodes[i]);
         }
     };
@@ -473,6 +488,14 @@ define(function __echartsForceLayoutWorker(require) {
         // Attraction
         for (var i = 0; i < this.edges.length; i++) {
             this.applyEdgeAttraction(this.edges[i]);
+        }
+    };
+
+    ForceLayout.prototype.updateNodeEdgeForce = function () {
+        for (var i = 0; i < this.nodes.length; i++) {
+            for (var j = 0; j < this.edges.length; j++) {
+                this.applyEdgeToNodeRepulsion(this.edges[j], this.nodes[i]);
+            }
         }
     };
 
@@ -522,23 +545,28 @@ define(function __echartsForceLayoutWorker(require) {
             }
 
             var factor;
-            var k2 = this._k * this._k;
             var mass = na.mass + nb.mass;
+            var d = Math.sqrt(d2);
 
-            if (this.preventOverlap) {
-                var d = Math.sqrt(d2);
+            // Normalize v
+            vec2.scale(v, v, 1 / d);
+
+            if (this.preventNodeOverlap) {
                 d = d - na.size - nb.size;
                 if (d > 0) {
-                    factor = k2 * mass / (d * d);
+                    factor = this.nodeToNodeRepulsionFactor(
+                        mass, d, this._k
+                    );
                 }
                 else if (d <= 0) {
                     // A stronger repulsion if overlap
-                    factor = k2 * 10 * mass;
+                    factor = this._k * this._k * 10 * mass;
                 }
             }
             else {
-                // Divide factor by an extra `d` to normalize the `v`
-                factor = k2 * mass / d2;
+                factor = this.nodeToNodeRepulsionFactor(
+                    mass, d, this._k
+                );
             }
 
             if (!oneWay) {
@@ -578,10 +606,10 @@ define(function __echartsForceLayoutWorker(require) {
                 }
             }
 
-            var factor = -w * d / this._k;
+            var factor = this.attractionFactor(w, d, this._k);
 
-            vec2.scaleAndAdd(na.force, na.force, v, factor);
-            vec2.scaleAndAdd(nb.force, nb.force, v, -factor);
+            vec2.scaleAndAdd(na.force, na.force, v, -factor);
+            vec2.scaleAndAdd(nb.force, nb.force, v, factor);
         };
     })();
 
@@ -609,6 +637,47 @@ define(function __echartsForceLayoutWorker(require) {
                 vec2.scaleAndAdd(node.force, node.force, v, this.gravity * node.mass / (d + 1));
             }
         };
+    })();
+
+    ForceLayout.prototype.applyEdgeToNodeRepulsion = (function () {
+        var v12 = vec2.create();
+        var v13 = vec2.create();
+        var p = vec2.create();
+        return function (e, n3) {
+            var n1 = e.node1;
+            var n2 = e.node2;
+
+            if (n1 === n3 || n2 === n3) return;
+
+            vec2.sub(v12, n2.position, n1.position);
+            vec2.sub(v13, n3.position, n1.position);
+
+            var len12 = vec2.len(v12);
+            vec2.scale(v12, v12, 1 / len12);
+            var len = vec2.dot(v12, v13);
+
+            // n3 can't project on line n1-n2
+            if (len < 0 || len > len12) {
+                return;
+            }
+
+            // Project point
+            vec2.scaleAndAdd(p, n1.position, v12, len);
+
+            // n3 distance to line n1-n2
+            var dist = vec2.dist(p, n3.position) - n3.size;
+            var factor = this.edgeToNodeRepulsionFactor(
+                n3.mass, Math.max(dist, 0.1), 100
+            );
+            // Use v12 as normal vector
+            vec2.sub(v12, n3.position, p);
+            vec2.normalize(v12, v12);
+            vec2.scaleAndAdd(n3.force, n3.force, v12, factor);
+
+            // PENDING
+            vec2.scaleAndAdd(n1.force, n1.force, v12, -factor);
+            vec2.scaleAndAdd(n2.force, n2.force, v12, -factor);
+        }
     })();
 
     ForceLayout.prototype.updateBBox = function() {
@@ -653,9 +722,8 @@ define(function __echartsForceLayoutWorker(require) {
         self.onmessage = function(e) {
             // Position read back
             if (e.data instanceof ArrayBuffer) {
-                if (!forceLayout) {
-                    return;
-                }
+                if (!forceLayout) return;
+
                 var positionArr = new Float32Array(e.data);
                 var nNodes = (positionArr.length - 1) / 2;
                 for (var i = 0; i < nNodes; i++) {

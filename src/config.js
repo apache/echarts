@@ -828,6 +828,9 @@ define(function() {
             // 布局大小
             size: '100%',
 
+            // 防止节点和节点，节点和边之间的重叠
+            preventOverlap: false,
+            
             // 布局冷却因子，值越小结束时间越短，值越大时间越长但是结果也越收敛
             coolDown: 0.99,
             

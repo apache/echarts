@@ -190,6 +190,8 @@ define(function (require) {
             this._layout.gravity = serie.gravity;
             this._layout.temperature = 1;
             this._layout.coolDown = serie.coolDown;
+            this._layout.preventNodeEdgeOverlap = serie.preventOverlap;
+            this._layout.preventNodeOverlap = serie.preventOverlap;
 
             // 将值映射到minRadius-maxRadius的范围上
             var min = Infinity; var max = -Infinity;

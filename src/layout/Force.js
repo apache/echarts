@@ -53,10 +53,9 @@ define(function(require) {
         this.gravity = typeof(opts.gravity) !== 'undefined'
                         ? opts.gravity : 1;
         this.large = opts.large || false;
-        this.preventOverlap = opts.preventOverlap || false;
+        this.preventNodeOverlap = opts.preventNodeOverlap || false;
+        this.preventNodeEdgeOverlap = opts.preventNodeEdgeOverlap || false;
         this.maxSpeedIncrease = opts.maxSpeedIncrease || 1;
-        this.enableAcceleration = typeof(opts.enableAcceleration) === 'undefined'
-            ? true : opts.enableAcceleration;
 
         this.onupdate = opts.onupdate || function () {};
         this.temperature = opts.temperature || 1;
@@ -86,9 +85,9 @@ define(function(require) {
             scaling: this.scaling || 1.0,
             gravity: this.gravity || 1.0,
             barnesHutOptimize: this.large,
-            preventOverlap: this.preventOverlap,
-
-            enableAcceleration: this.enableAcceleration,
+            preventNodeOverlap: this.preventNodeOverlap,
+            preventNodeEdgeOverlap: this.preventNodeEdgeOverlap,
+            
             maxSpeedIncrease: this.maxSpeedIncrease
         };
 
