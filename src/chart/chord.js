@@ -2,7 +2,8 @@
  * echarts图表类：chord diagram
  *
  * @author pissang (https://github.com/pissang/)
- *
+ * 
+ * TODO undirected graph ?
  */
 
 define(function (require) {
@@ -104,21 +105,23 @@ define(function (require) {
         },
 
         _buildChords: function (series) {
-            if (!series.length) {
-                return;
-            }
-
             var graphs = [];
             for (var i = 0; i < series.length; i++) {
                 var serie = series[i];
 
                 if (this.selectedMap[serie.name]) {
-                    var graph = this._getSerieGraphFromDataMatrix(serie);
-                    graphs.push(graph);   
+                    if (serie.data && serie.matrix) {
+                        var graph = this._getSerieGraphFromDataMatrix(serie);
+                        graphs.push(graph);
+                    } else if (serie.nodes && serie.links) {
+                        var graph = this._getSerieGraphFromNodeLinks(serie);
+                        graphs.push(graph);
+                    }
                 }
             }
-
-            this._graphs = graphs;
+            if (!graphs.length) {
+                return;
+            }
 
             var mainSerie = series[0];
 
@@ -134,8 +137,15 @@ define(function (require) {
             layout.sortSub = mainSerie.sortSub;
             layout.run(graphs);
 
+            var showLabel = this.query(
+                mainSerie, 'itemStyle.normal.label.show'
+            );
+
             if (mainSerie.ribbonType) {
-                this._buildSectors(mainSerie, 0, graphs[0], mainSerie);
+                this._buildSectors(mainSerie, 0, graphs[0], mainSerie, graphs);
+                if (showLabel) {
+                    this._buildLabels(mainSerie, 0, graphs[0], mainSerie, graphs);
+                }
 
                 for (var i = 0; i < graphs.length; i++) {
                     this._buildRibbons(series[i], i, graphs[i], mainSerie);
@@ -191,34 +201,84 @@ define(function (require) {
             });
             graph.eachEdge(function (e) {
                 e.layout = {
-                    sourceWeight: e.data.sourceWeight,
-                    targetWeight: e.data.targetWeight
+                    weight: e.data.weight,
                 };
             });
 
             // 过滤输出为0的节点
             graph.filterNode(function (n) {
-                return n.data.outValue > 0;
+                return n.layout.size > 0;
             }, this);
 
             return graph;
         },
 
-        _buildSectors: function (serie, serieIdx, graph, mainSerie) {
-            var timeout;
+        _getSerieGraphFromNodeLinks: function (serie) {
+            var graph = new Graph(true);
 
-            var showLabel = this.query(
-                mainSerie, 'itemStyle.normal.label.show'
-            );
-            var labelColor = this.query(
-                mainSerie, 'itemStyle.normal.label.color'
-            );
-            var rotateLabel = this.query(
-                mainSerie, 'itemStyle.normal.label.rotate'
-            );
-            var labelDistance = this.query(
-                mainSerie, 'itemStyle.normal.label.distance'
-            );
+            for (var i = 0, len = serie.nodes.length; i < len; i++) {
+                var n = serie.nodes[i];
+                if (!n || n.ignore) {
+                    continue;
+                }
+                this.selectedMap[n.name] = this.isSelected(n.name);
+                if (this.selectedMap[n.name]) {
+                    var node = graph.addNode(n.name, n);
+                    node.rawIndex = i;
+                }
+            }
+
+            for (var i = 0, len = serie.links.length; i < len; i++) {
+                var e = serie.links[i];
+                var n1 = e.source;
+                var n2 = e.target;
+                if (typeof(n1) === 'number') {
+                    n1 = serie.nodes[n1];
+                    if (n1) {
+                        n1 = n1.name;
+                    }
+                }
+                if (typeof(n2) === 'number') {
+                    n2 = serie.nodes[n2];
+                    if (n2) {
+                        n2 = n2.name;
+                    }
+                }
+                var edge = graph.addEdge(n1, n2, e);
+                if (edge) {
+                    edge.rawIndex = i;
+                }
+            }
+
+            graph.eachNode(function (n) {
+                var value = n.data.value;
+                if (!value) {
+                    value = 0;
+                    // 默认使用所有出边值的和作为节点的大小, 不修改 data 里的数值
+                    for (var i = 0; i < n.outEdges.length; i++) {
+                        value += n.outEdges[i].data.weight || 0;
+                    }
+                }
+                n.layout = {
+                    size: value
+                };
+            });
+            graph.eachEdge(function (e) {
+                e.layout = {
+                    weight: e.data.weight
+                };
+            });
+
+            // 过滤输出为0的节点
+            graph.filterNode(function (n) {
+                return n.layout.size > 0;
+            }, this);
+
+            return graph;
+        },
+
+        _buildSectors: function (serie, serieIdx, graph, mainSerie, graphs) {
+            var timeout;
 
             var self = this;
             var center = this.parseCenter(this.zr, mainSerie.center);
@@ -256,8 +316,8 @@ define(function (require) {
                             }
                             n.shape.modSelf();
                         });
-                        for (var i = 0; i < self._graphs.length; i++) {
-                            self._graphs[i].eachEdge(function (e) {
+                        for (var i = 0; i < graphs.length; i++) {
+                            graphs[i].eachEdge(function (e) {
                                 e.shape.style.opacity = 0.1;
                                 e.shape.modSelf();
                             });
@@ -266,13 +326,13 @@ define(function (require) {
                         if (node.labelShape) {
                             node.labelShape.style.opacity = 1;
                         }
-                        for (var i = 0; i < self._graphs.length; i++) {
-                            var n = self._graphs[i].getNodeById(node.id);
+                        for (var i = 0; i < graphs.length; i++) {
+                            var n = graphs[i].getNodeById(node.id);
                             if (n) {    //  节点有可能没数据被过滤掉了
                                 for (var j = 0; j < n.outEdges.length; j++) {
                                     var e = n.outEdges[j];
                                     e.shape.style.opacity = 0.7;
-                                    var other = self._graphs[0].getNodeById(e.node2.id);
+                                    var other = graphs[0].getNodeById(e.node2.id);
                                     if (other) {
                                         if (other.shape) {
                                             other.shape.style.opacity = 1;
@@ -295,8 +355,8 @@ define(function (require) {
                             }
                             n.shape.modSelf();
                         });
-                        for (var i = 0; i < self._graphs.length; i++) {
-                            self._graphs[i].eachEdge(function (e) {
+                        for (var i = 0; i < graphs.length; i++) {
+                            graphs[i].eachEdge(function (e) {
                                 e.shape.style.opacity = 0.7;
                                 e.shape.modSelf();
                             });
@@ -333,58 +393,6 @@ define(function (require) {
                     node.data.value, node.rawIndex,
                     node.id
                 );
-                if (showLabel) {
-                    var halfAngle = [startAngle * -sign + endAngle * -sign] / 2;
-                    halfAngle %= 360;
-                    if (halfAngle < 0) { // Constrain to [0,360]
-                        halfAngle += 360;
-                    }
-                    var isRightSide = halfAngle <= 90
-                                     || halfAngle >= 270;
-                    halfAngle = halfAngle * Math.PI / 180;
-                    var v = [Math.cos(halfAngle), -Math.sin(halfAngle)];
-
-                    var distance = mainSerie.showScaleText ? 35 + labelDistance : labelDistance;
-                    var start = vec2.scale([], v, radius[1] + distance);
-                    vec2.add(start, start, center);
-
-                    var labelShape = {
-                        zlevel: this.getZlevelBase() - 1,
-                        hoverable: false,
-                        style: {
-                            text: node.id,
-                            textAlign: isRightSide ? 'left' : 'right',
-                            color: labelColor
-                        }
-                    };
-                    if (rotateLabel) {
-                        labelShape.rotation = isRightSide ? halfAngle : Math.PI + halfAngle;
-                        if (isRightSide) {
-                            labelShape.style.x = radius[1] + distance;
-                        }
-                        else {
-                            labelShape.style.x = -radius[1] - distance;
-                        }
-                        labelShape.style.y = 0;
-                        labelShape.position = center.slice();
-                    }
-                    else {
-                        labelShape.style.x = start[0];
-                        labelShape.style.y = start[1];
-                    }
-                    labelShape.style.textColor = this.deepQuery(
-                        [node.data, mainSerie],
-                        'itemStyle.normal.label.textStyle.color'
-                    ) || '#fff';
-                    labelShape.style.textFont = this.getFont(this.deepQuery(
-                        [node.data, mainSerie],
-                        'itemStyle.normal.label.textStyle'
-                    ));
-                    labelShape = new TextShape(labelShape);
-                    this.shapeList.push(labelShape);
-
-                    node.labelShape = labelShape;
-                }
 
                 this.shapeList.push(sector);
 
@@ -393,7 +401,78 @@ define(function (require) {
             }, this);
         },
 
-        _buildIcons: function (serie, serieIdx, graph) {
+        _buildLabels: function (serie, serieIdx, graph, mainSerie) {
+            var labelColor = this.query(
+                mainSerie, 'itemStyle.normal.label.color'
+            );
+            var rotateLabel = this.query(
+                mainSerie, 'itemStyle.normal.label.rotate'
+            );
+            var labelDistance = this.query(
+                mainSerie, 'itemStyle.normal.label.distance'
+            );
+            var center = this.parseCenter(this.zr, mainSerie.center);
+            var radius = this.parseRadius(this.zr, mainSerie.radius);
+            var clockWise = mainSerie.clockWise;
+            var sign = clockWise ? 1 : -1;
+
+            graph.eachNode(function (node) {
+                var startAngle = node.layout.startAngle / Math.PI * 180 * sign;
+                var endAngle = node.layout.endAngle / Math.PI * 180 * sign;
+                var angle = [startAngle * -sign + endAngle * -sign] / 2;
+                angle %= 360;
+                if (angle < 0) { // Constrain to [0,360]
+                    angle += 360;
+                }
+                var isRightSide = angle <= 90
+                                 || angle >= 270;
+                angle = angle * Math.PI / 180;
+                var v = [Math.cos(angle), -Math.sin(angle)];
+
+                var distance = mainSerie.showScaleText ? 35 + labelDistance : labelDistance;
+                var start = vec2.scale([], v, radius[1] + distance);
+                vec2.add(start, start, center);
+
+                var labelShape = {
+                    zlevel: this.getZlevelBase() - 1,
+                    hoverable: false,
+                    style: {
+                        text: node.id,
+                        textAlign: isRightSide ? 'left' : 'right',
+                        color: labelColor
+                    }
+                };
+                if (rotateLabel) {
+                    labelShape.rotation = isRightSide ? angle : Math.PI + angle;
+                    if (isRightSide) {
+                        labelShape.style.x = radius[1] + distance;
+                    }
+                    else {
+                        labelShape.style.x = -radius[1] - distance;
+                    }
+                    labelShape.style.y = 0;
+                    labelShape.position = center.slice();
+                }
+                else {
+                    labelShape.style.x = start[0];
+                    labelShape.style.y = start[1];
+                }
+                labelShape.style.textColor = this.deepQuery(
+                    [node.data, mainSerie],
+                    'itemStyle.normal.label.textStyle.color'
+                ) || '#fff';
+                labelShape.style.textFont = this.getFont(this.deepQuery(
+                    [node.data, mainSerie],
+                    'itemStyle.normal.label.textStyle'
+                ));
+                labelShape = new TextShape(labelShape);
+
+                this.shapeList.push(labelShape);
+                node.labelShape = labelShape;
+            }, this);
+        },
+
+        _buildIcons: function (serie, serieIdx, graph, mainSerie, graphs) {
 
         },
 
@@ -409,6 +488,7 @@ define(function (require) {
             // graph.edges.length = 1;
             graph.eachEdge(function (edge) {
                 var color;
+                // 反向边
                 var other = graph.getEdge(edge.node2, edge.node1);
                 if (!other  // 只有单边
                     || edge.shape // 已经创建过Ribbon
@@ -426,7 +506,7 @@ define(function (require) {
                 var t1 = other.layout.endAngle / Math.PI * 180;
 
                 // 取小端的颜色
-                if (edge.layout.sourceWeight <= edge.layout.targetWeight) {
+                if (edge.layout.weight <= other.layout.weight) {
                     color = this.getColor(edge.node1.id);
                 }
                 else {
@@ -465,8 +545,8 @@ define(function (require) {
                     edge.node1.rawIndex + '-' + edge.node2.rawIndex,
                     edge.node1.id,
                     edge.node2.id,
-                    edge.data.sourceWeight,
-                    edge.data.targetWeight
+                    edge.data.weight,
+                    other.data.weight
                 );
 
                 this.shapeList.push(ribbon);

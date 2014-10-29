@@ -490,7 +490,7 @@ define(function (require) {
                     || series[i].type === ecConfig.CHART_TYPE_FUNNEL
                 ) {
                     data = series[i].type != ecConfig.CHART_TYPE_FORCE
-                           ? series[i].data         // 饼图、雷达图、和弦图得查找里面的数据名字
+                           ? (series[i].data || series[i].nodes) // 饼图、雷达图、和弦图得查找里面的数据名字
                            : series[i].categories;  // 力导布局查找categories配置
                     for (var j = 0, k = data.length; j < k; j++) {
                         if (data[j].name === name) {

@@ -930,9 +930,18 @@ define(function() {
             sortSub: 'none',    // can be 'none', 'ascending', 'descending'
             startAngle: 90,
             clockWise: true,
+            ribbonType: true,
+            
+            /***************** 下面的配置项在 ribbonType 为 false 时有效 */
+            minRadius: 30,
+            maxRadius: 50,
+            /***************** 上面的配置项在 ribbonType 为 false 时有效 */
+
+            /***************** 下面的配置项在 ribbonType 为 true 时有效 */
             showScale: false,
             showScaleText: false,
-            ribbonType: true,
+            /***************** 上面的配置项在 ribbonType 为 true 时有效 */
+
             itemStyle: {
                 normal: {
                     label: {

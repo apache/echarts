@@ -418,7 +418,6 @@ define(function(require) {
      * 对于有向图会计算每一行的和写到`node.data.outValue`,
      * 计算每一列的和写到`node.data.inValue`。
      * 边的权重会被然后写到`edge.data.weight`。
-     * 如果是有向图被写到`edge.data.sourceWeight`和`edge.data.targetWeight`
      * 
      * @method module:echarts/data/Graph.fromMatrix
      * @param {Array.<Object>} nodesData 节点信息，必须有`id`属性, 会保存到`node.data`中
@@ -469,18 +468,12 @@ define(function(require) {
                 var n1 = graph.nodes[i];
                 var n2 = graph.nodes[j];
                 var edge = graph.addEdge(n1, n2, {});
-                if (directed) {
-                    edge.data.sourceWeight = item;
-                    edge.data.targetWeight = matrix[j][i];
-                }
                 edge.data.weight = item;
                 if (i !== j) {
-                    if (directed) {
+                    if (directed && matrix[j][i]) {
                         var inEdge = graph.addEdge(n2, n1, {});
-                        inEdge.data.sourceWeight = matrix[j][i];
-                        inEdge.data.targetWeight = item;
+                        inEdge.data.weight = matrix[j][i];
                     }
-                    edge.data.weight += matrix[j][i];
                 }
             }
         }

@@ -58,7 +58,7 @@ option = {
     },
     legend: {
         x: 'left',
-        data:['【 阿森纳 】', '【 拜仁慕尼黑 】', '【 多特蒙德 】']
+        data:['阿森纳', '拜仁慕尼黑', '多特蒙德']
     },
     series : [
         {
@@ -66,7 +66,15 @@ option = {
             sort : 'ascending',
             sortSub : 'descending',
             showScale : false,
-            data: [
+            itemStyle : {
+                normal : {
+                    label : {
+                        rotate : true
+                    }
+                }
+            },
+            // 使用 nodes links 表达和弦图
+            nodes: [
                 {name:'默特萨克'},
                 {name:'厄齐尔'},
                 {name:'波多尔斯基'},
@@ -81,39 +89,41 @@ option = {
                 {name:'魏登费勒'},
                 {name:'杜尔姆'},
                 {name:'格罗斯克罗伊茨'},
-                {name:'【 阿森纳 】'},
-                {name:'【 拜仁慕尼黑 】'},
-                {name:'【 多特蒙德 】'}
+                {name:'阿森纳'},
+                {name:'拜仁慕尼黑'},
+                {name:'多特蒙德'}
             ],
-            itemStyle : {
-                normal : {
-                    label : {
-                        rotate : true
-                    }
-                }
-            },
-            matrix : [
-                //阿森纳
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0],
-                //拜仁
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
-                //多特蒙德
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                //球队
-                [1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0]
+            links: [
+                {source: '阿森纳', target: '默特萨克', weight: 0.9},
+                {source: '阿森纳', target: '厄齐尔', weight: 0.9},
+                {source: '阿森纳', target: '波多尔斯基', weight: 0.9},
+                {source: '拜仁慕尼黑', target: '诺伊尔', weight: 0.9},
+                {source: '拜仁慕尼黑', target: '博阿滕', weight: 0.9},
+                {source: '拜仁慕尼黑', target: '施魏因施泰格', weight: 0.9},
+                {source: '拜仁慕尼黑', target: '拉姆', weight: 0.9},
+                {source: '拜仁慕尼黑', target: '克罗斯', weight: 0.9},
+                {source: '拜仁慕尼黑', target: '穆勒', weight: 0.9},
+                {source: '拜仁慕尼黑', target: '格策', weight: 0.9},
+                {source: '多特蒙德', target: '胡梅尔斯', weight: 0.9},
+                {source: '多特蒙德', target: '魏登费勒', weight: 0.9},
+                {source: '多特蒙德', target: '杜尔姆', weight: 0.9},
+                {source: '多特蒙德', target: '格罗斯克罗伊茨', weight: 0.9},
+
+                // Ribbon Type 的和弦图每一对节点之间必须是双向边
+                {target: '阿森纳', source: '默特萨克', weight: 1},
+                {target: '阿森纳', source: '厄齐尔', weight: 1},
+                {target: '阿森纳', source: '波多尔斯基', weight: 1},
+                {target: '拜仁慕尼黑', source: '诺伊尔', weight: 1},
+                {target: '拜仁慕尼黑', source: '博阿滕', weight: 1},
+                {target: '拜仁慕尼黑', source: '施魏因施泰格', weight: 1},
+                {target: '拜仁慕尼黑', source: '拉姆', weight: 1},
+                {target: '拜仁慕尼黑', source: '克罗斯', weight: 1},
+                {target: '拜仁慕尼黑', source: '穆勒', weight: 1},
+                {target: '拜仁慕尼黑', source: '格策', weight: 1},
+                {target: '多特蒙德', source: '胡梅尔斯', weight: 1},
+                {target: '多特蒙德', source: '魏登费勒', weight: 1},
+                {target: '多特蒙德', source: '杜尔姆', weight: 1},
+                {target: '多特蒙德', source: '格罗斯克罗伊茨', weight: 1},
             ]
         }
     ]

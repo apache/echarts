@@ -81,7 +81,7 @@ define(function (require) {
                 // 包含所有出边
                 for (var j = 0; j < node.outEdges.length; j++) {
                     var e = node.outEdges[j];
-                    var w = e.layout.sourceWeight;
+                    var w = e.layout.weight;
                     group.subGroups.push({
                         weight: w,
                         edge: e,
