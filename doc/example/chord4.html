@@ -74,6 +74,8 @@ option = {
                     }
                 }
             },
+            minRadius: 7,
+            maxRadius: 20,
             // 使用 nodes links 表达和弦图
             nodes: [
                 {name:'默特萨克'},
@@ -84,7 +86,7 @@ option = {
                 {name:'施魏因施泰格'},
                 {name:'拉姆'},
                 {name:'克罗斯'},
-                {name:'穆勒'},
+                {name:'穆勒', symbol: 'star'},
                 {name:'格策'},
                 {name:'胡梅尔斯'},
                 {name:'魏登费勒'},
@@ -95,20 +97,20 @@ option = {
                 {name:'多特蒙德'}
             ],
             links: [
-                {source: '阿森纳', target: '默特萨克', weight: 0.9},
-                {source: '阿森纳', target: '厄齐尔', weight: 0.9},
-                {source: '阿森纳', target: '波多尔斯基', weight: 0.9},
-                {source: '拜仁慕尼黑', target: '诺伊尔', weight: 0.9},
-                {source: '拜仁慕尼黑', target: '博阿滕', weight: 0.9},
-                {source: '拜仁慕尼黑', target: '施魏因施泰格', weight: 0.9},
-                {source: '拜仁慕尼黑', target: '拉姆', weight: 0.9},
-                {source: '拜仁慕尼黑', target: '克罗斯', weight: 0.9},
-                {source: '拜仁慕尼黑', target: '穆勒', weight: 0.9},
-                {source: '拜仁慕尼黑', target: '格策', weight: 0.9},
-                {source: '多特蒙德', target: '胡梅尔斯', weight: 0.9},
-                {source: '多特蒙德', target: '魏登费勒', weight: 0.9},
-                {source: '多特蒙德', target: '杜尔姆', weight: 0.9},
-                {source: '多特蒙德', target: '格罗斯克罗伊茨', weight: 0.9},
+                {source: '阿森纳', target: '默特萨克', weight: 1},
+                {source: '阿森纳', target: '厄齐尔', weight: 1},
+                {source: '阿森纳', target: '波多尔斯基', weight: 1},
+                {source: '拜仁慕尼黑', target: '诺伊尔', weight: 1},
+                {source: '拜仁慕尼黑', target: '博阿滕', weight: 1},
+                {source: '拜仁慕尼黑', target: '施魏因施泰格', weight: 1},
+                {source: '拜仁慕尼黑', target: '拉姆', weight: 1},
+                {source: '拜仁慕尼黑', target: '克罗斯', weight: 1},
+                {source: '拜仁慕尼黑', target: '穆勒', weight: 1},
+                {source: '拜仁慕尼黑', target: '格策', weight: 1},
+                {source: '多特蒙德', target: '胡梅尔斯', weight: 1},
+                {source: '多特蒙德', target: '魏登费勒', weight: 1},
+                {source: '多特蒙德', target: '杜尔姆', weight: 1},
+                {source: '多特蒙德', target: '格罗斯克罗伊茨', weight: 1}
             ]
         }
     ]

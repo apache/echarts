@@ -105,6 +105,15 @@ define(function (require) {
             this.addShapeList();
         },
 
+        _getNodeCategory: function (serie, group) {
+            return serie.categories && serie.categories[group.category || 0];
+        },
+
+        _getNodeQueryTarget: function (serie, group) {
+            var category = this._getNodeCategory(serie, group) || {};
+            return [group, category, serie];;
+        },
+
         _buildChords: function (series) {
             var graphs = [];
             var mainSerie = series[0];
@@ -115,11 +124,11 @@ define(function (require) {
                     var graph;
                     if (serie.data && serie.matrix) {
                         graph = this._getSerieGraphFromDataMatrix(
-                            serie, mainSerie.ribbonType
+                            serie, mainSerie
                         );
                     } else if (serie.nodes && serie.links) {
                         graph = this._getSerieGraphFromNodeLinks(
-                            serie, mainSerie.ribbonType
+                            serie, mainSerie
                         );
                     }
                     // 过滤输出为0的节点
@@ -146,7 +155,7 @@ define(function (require) {
                 });
                 var multiplier = (maxRadius - minRadius) / (max - min);
                 mainGraph.eachNode(function (node) {
-                    var queryTarget = [node, mainSerie];
+                    var queryTarget = this._getNodeQueryTarget(mainSerie, node);
                     var symbolSize = this.query(queryTarget, 'symbolSize');
                     if (max === min) {
                         node.layout.size = symbolSize || min;
@@ -206,7 +215,7 @@ define(function (require) {
             this._initHoverHandler(series, graphs);
         },
 
-        _getSerieGraphFromDataMatrix: function (serie, ribbonType) {
+        _getSerieGraphFromDataMatrix: function (serie, mainSerie) {
             var nodesData = [];
             var count = 0;
             var matrix = [];
@@ -226,8 +235,12 @@ define(function (require) {
                         node[key] = group[key];
                     }
                 }
-                this.selectedMap[group.name] = this.isSelected(group.name);
-                if (this.selectedMap[group.name]) {
+                // legends 选择优先级 category -> group
+                var category = this._getNodeCategory(mainSerie, group);
+                var name = category ? category.name : group.name;
+
+                this.selectedMap[name] = this.isSelected(name);
+                if (this.selectedMap[name]) {
                     nodesData.push(node);
                     count++;
                 }
@@ -258,7 +271,7 @@ define(function (require) {
             return graph;
         },
 
-        _getSerieGraphFromNodeLinks: function (serie, ribbonType) {
+        _getSerieGraphFromNodeLinks: function (serie, mainSerie) {
             var graph = new Graph(true);
 
             for (var i = 0, len = serie.nodes.length; i < len; i++) {
@@ -266,8 +279,12 @@ define(function (require) {
                 if (!n || n.ignore) {
                     continue;
                 }
-                this.selectedMap[n.name] = this.isSelected(n.name);
-                if (this.selectedMap[n.name]) {
+                // legends 选择优先级 category -> group
+                var category = this._getNodeCategory(mainSerie, n);
+                var name = category ? category.name : n.name;
+
+                this.selectedMap[name] = this.isSelected(name);
+                if (this.selectedMap[name]) {
                     var node = graph.addNode(n.name, n);
                     node.rawIndex = i;
                 }
@@ -297,9 +314,9 @@ define(function (require) {
 
             graph.eachNode(function (n) {
                 var value = n.data.value;
-                if (!value) {
+                if (value == null) {    // value 是 null 或者 undefined
                     value = 0;
-                    if (ribbonType) {
+                    if (mainSerie) {
                         // 默认使用所有出边值的和作为节点的大小, 不修改 data 里的数值
                         for (var i = 0; i < n.outEdges.length; i++) {
                             value += n.outEdges[i].data.weight || 0;
@@ -318,7 +335,8 @@ define(function (require) {
             });
             graph.eachEdge(function (e) {
                 e.layout = {
-                    weight: e.data.weight
+                    // 默认 weight 为1
+                    weight: e.data.weight == null ? 1 : e.data.weight,
                 };
             });
 
@@ -341,7 +359,10 @@ define(function (require) {
                     });
                     for (var i = 0; i < graphs.length; i++) {
                         graphs[i].eachEdge(function (e) {
-                            e.shape.style.opacity = 0.05;
+                            var queryTarget = [e.data, mainSerie];
+                            e.shape.style.opacity = self.deepQuery(
+                                queryTarget, 'itemStyle.normal.chordStyle.opacity'
+                            ) * 0.1;
                             e.shape.modSelf();
                         });
                     }
@@ -405,6 +426,10 @@ define(function (require) {
             var sign = clockWise ? 1 : -1;
 
             graph.eachNode(function (node) {
+                var category = this._getNodeCategory(mainSerie, node.data);
+                // 默认使用 category 分类颜色
+                var color = category ? this.getColor(category.name) : this.getColor(node.id);
+
                 var startAngle = node.layout.startAngle / Math.PI * 180 * sign;
                 var endAngle = node.layout.endAngle / Math.PI * 180 * sign;
                 var sector = new SectorShape({
@@ -477,7 +502,13 @@ define(function (require) {
                 var angle = (startAngle + endAngle) / 2;
                 var x = r * Math.cos(angle);
                 var y = r * Math.sin(angle);
-                var queryTarget = [node.data, mainSerie];
+                var queryTarget = this._getNodeQueryTarget(mainSerie, node.data);
+
+                var category = this._getNodeCategory(mainSerie, node.data);
+                var color = this.deepQuery(queryTarget, 'itemStyle.normal.color');
+                if (!color) {
+                    color = category ? this.getColor(category.name) : this.getColor(node.id);
+                }
                 var iconShape = new IconShape({
                     zlevel: this.getZlevelBase(),
                     z: 1,
@@ -487,7 +518,7 @@ define(function (require) {
                         width: node.layout.size * 2,
                         height: node.layout.size * 2,
                         iconType: this.deepQuery(queryTarget, 'symbol'),
-                        color: this.deepQuery(queryTarget, 'itemStyle.normal.color') || this.getColor(node.id),
+                        color: color,
                         lineWidth: this.deepQuery(queryTarget, 'itemStyle.normal.borderWidth'),
                         strokeColor: this.deepQuery(queryTarget, 'itemStyle.normal.borderColor')
                     },

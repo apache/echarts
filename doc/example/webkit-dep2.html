@@ -26,6 +26,11 @@
 
     <link href="../asset/css/codemirror.css" rel="stylesheet">
     <link href="../asset/css/monokai.css" rel="stylesheet">
+    <style type="text/css">
+        .CodeMirror {
+            height: 620px;
+        }
+    </style>
 </head>
 
 <body>
@@ -35,80 +40,20 @@
 
     <div class="container-fluid">
         <div class="row-fluid example">
-            <div id="sidebar-code" class="col-md-4">
+            <div id="sidebar-code" class="col-md-1">
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
-
-var nodes = [];
-var links = [];
-var constMaxDepth = 2;
-var constMaxChildren = 7;
-var constMinChildren = 4;
-var constMaxRadius = 10;
-var constMinRadius = 2;
-
-function rangeRandom(min, max) {
-    return Math.random() * (max - min) + min;
-}
-
-function createRandomNode(depth) {
-    var node = {
-        name : 'NODE_' + nodes.length,
-        value : rangeRandom(constMinRadius, constMaxRadius),
-        // Custom properties
-        id : nodes.length,
-        depth : depth,
-        category : depth === constMaxDepth ? 0 : 1
-    }
-    nodes.push(node);
-
-    return node;
-}
-
-function forceMockThreeData() {
-    var depth = 0;
-    var rootNode = {
-        name : 'ROOT',
-        value : rangeRandom(constMinRadius, constMaxRadius),
-        // Custom properties
-        id : 0,
-        depth : 0,
-        category : 2
-    }
-    nodes.push(rootNode);
-
-    function mock(parentNode, depth) {
-        var nChildren = Math.round(rangeRandom(constMinChildren, constMaxChildren));
-        
-        for (var i = 0; i < nChildren; i++) {
-            var childNode = createRandomNode(depth);
-            links.push({
-                source : parentNode.id,
-                target : childNode.id,
-                weight : 1 
-            });
-            if (depth < constMaxDepth) {
-                mock(childNode, depth + 1);
-            }
-        }
-    }
-
-    mock(rootNode, 0);
-}
-
-forceMockThreeData();
-
 option = {
     title : {
-        text: 'Force',
-        subtext: 'Force-directed tree',
+        text: 'webkit内核依赖',
+        subtext: '数据来自网络',
         x:'right',
         y:'bottom'
     },
     tooltip : {
         trigger: 'item',
-        formatter: '{a} : {b}'
+        formatter : "{b}"
     },
     toolbox: {
         show : true,
@@ -117,53 +62,47 @@ option = {
             saveAsImage : {show: true}
         }
     },
-    legend: {
-        x: 'left',
-        data:['叶子节点','非叶子节点', '根节点']
+    legend : {
+        data : ['HTMLElement', 'WebGL', 'SVG', 'CSS', 'Other'],
+        orient : 'vertical',
+        x : 'left'
     },
-    series : [
-        {
-            type:'force',
-            name : "Force tree",
-            categories : [
-                {
-                    name: '叶子节点'
-                },
-                {
-                    name: '非叶子节点'
-                },
-                {
-                    name: '根节点'
-                }
-            ],
-            itemStyle: {
+    series : (function (){
+        // If data have been loaded
+        if (webkitDepData) {
+            //webkitDepData has been required and defined in webkit-dep.js
+            webkitDepData.type = 'chord';
+            webkitDepData.ribbonType = false;
+            for (var i = 0; i < webkitDepData.nodes.length; i++) {
+                webkitDepData.nodes[i].value = null;
+            }
+            for (var i = 0; i < webkitDepData.links.length; i++) {
+                webkitDepData.links[i].weight = 1;
+            }
+            webkitDepData.minRadius = 2;
+            webkitDepData.maxRadius = 10;
+            webkitDepData.itemStyle = {
                 normal: {
                     label: {
-                        show: false
+                        show: true,
+                        rotate: true
                     },
-                    nodeStyle : {
-                        brushType : 'both',
-                        borderColor : 'rgba(255,215,0,0.6)',
-                        borderWidth : 1
+                    chordStyle: {
+                        opacity: 0.2
                     }
                 }
-            },
-            minRadius : constMinRadius,
-            maxRadius : constMaxRadius,
-            coolDown: 0.995,
-            steps: 10,
-            nodes : nodes,
-            links : links,
-            steps: 1
+            };
+            return [webkitDepData];
+        } else {
+            return [];
         }
-    ]
+    })()
 };
-
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->
-            <div id="graphic" class="col-md-8">
-                <div id="main" class="main"></div>
+            <div id="graphic" class="col-md-11">
+                <div id="main" class="main" style="height:600px;"></div>
                 <div>
                     <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
                     <span class="text-primary">切换主题</span>
@@ -183,6 +122,28 @@ option = {
     <script src="../asset/js/jquery.min.js"></script>
     <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
     <script src="../asset/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        var webkitDepData;
+        require(['webkit-dep'], function (wd) {
+            webkitDepData = wd;
+            //webkitDepData has been required and defined in webkit-dep.js
+            webkitDepData.minRadius = 5;
+            webkitDepData.maxRadius = 8;
+            webkitDepData.density = 1.1;
+            webkitDepData.attractiveness = 1.1;
+            webkitDepData.itemStyle = {
+                normal : {
+                    linkStyle : {
+                        opacity : 0.5
+                    }
+                }
+            }
+            // Echarts have been loaded
+            if (typeof(echarts) !== 'undefined') {
+                refresh();
+            }
+        })
+    </script>
     <script src="../asset/js/echartsExample.js"></script>
 </body>
 </html>

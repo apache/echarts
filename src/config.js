@@ -883,11 +883,12 @@ define(function() {
                     nodeStyle: {
                         brushType: 'both',
                         color: '#f08c2e',
-                        strokeColor: '#5182ab',
-                        lineWidth: 1
+                        borderColor: '#5182ab',
+                        borderWidth: 1
                     },
                     linkStyle: {
-                        strokeColor: '#5182ab'
+                        color: '#5182ab',
+                        width: 1
                     }
                 },
                 emphasis: {
@@ -947,6 +948,14 @@ define(function() {
             showScaleText: false,
             /***************** 上面的配置项在 ribbonType 为 true 时有效 */
 
+            // 分类里如果有样式会覆盖节点默认样式
+            // categories: [{
+                // itemStyle
+                // symbol
+                // symbolSize
+                // name
+            // }],
+
             itemStyle: {
                 normal: {
                     borderWidth: 0,
@@ -980,6 +989,8 @@ define(function() {
                     }
                 }
             },
+            /****** 使用 Data-matrix 表示数据 */
+            // data: [],
             // Source data matrix
             /**
              *         target
@@ -995,7 +1006,12 @@ define(function() {
              *  
              *  Row based
              */
-            matrix: []
+            // matrix: [],
+
+            /****** 使用 node-links 表示数据 */
+            // 参考 force
+            // nodes: [],
+            // links: []
         },
 
         gauge: {

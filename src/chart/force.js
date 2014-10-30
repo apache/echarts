@@ -342,6 +342,13 @@ define(function (require) {
                         zrUtil.merge(shape.highlightStyle, shapeEmphasisStyle[k], true);
                     }
                 }
+                // 兼容原有写法
+                shape.style.strokeColor = shape.style.strokeColor || shape.style.borderColor;
+                shape.style.lineWidth = shape.style.lineWidth || shape.style.borderWidth;
+                shape.highlightStyle.strokeColor = 
+                    shape.highlightStyle.strokeColor || shape.highlightStyle.borderColor;
+                shape.highlightStyle.lineWidth = 
+                    shape.highlightStyle.lineWidth || shape.highlightStyle.borderWidth;
                 
                 // 节点标签样式
                 if (this.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {
@@ -452,6 +459,17 @@ define(function (require) {
                         );
                     }
                 }
+
+                // 兼容原有写法
+                linkShape.style.lineWidth
+                    = linkShape.style.lineWidth || linkShape.style.width;
+                linkShape.style.strokeColor
+                    = linkShape.style.strokeColor || linkShape.style.color;
+                linkShape.highlightStyle.lineWidth
+                    = linkShape.highlightStyle.lineWidth || linkShape.highlightStyle.width;
+                linkShape.highlightStyle.strokeColor
+                    = linkShape.highlightStyle.strokeColor || linkShape.highlightStyle.color;
+
 
                 ecData.pack(
                     linkShape,
