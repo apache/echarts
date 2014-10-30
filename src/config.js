@@ -867,12 +867,12 @@ define(function() {
             clickable: true,
 
             // 分类里如果有样式会覆盖节点默认样式
-            categories: [{
+            // categories: [{
                 // itemStyle
                 // symbol
                 // symbolSize
                 // name
-            }],
+            // }],
             itemStyle: {
                 normal: {
                     // color: 各异,
@@ -881,8 +881,6 @@ define(function() {
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     nodeStyle: {
-                        brushType: 'both',
-                        color: '#f08c2e',
                         borderColor: '#5182ab',
                         borderWidth: 1
                     },

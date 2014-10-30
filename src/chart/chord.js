@@ -110,8 +110,16 @@ define(function (require) {
         },
 
         _getNodeQueryTarget: function (serie, group) {
-            var category = this._getNodeCategory(serie, group) || {};
+            var category = this._getNodeCategory(serie, group);
             return [group, category, serie];;
+        },
+
+        _getEdgeQueryTarget: function (serie, edge, type) {
+            type = type || 'normal';
+            return [
+                (edge.itemStyle && edge.itemStyle[type]),
+                serie.itemStyle[type].chordStyle
+            ];
         },
 
         _buildChords: function (series) {
@@ -136,6 +144,8 @@ define(function (require) {
                         return n.layout.size > 0;
                     }, this);
                     graphs.push(graph);
+
+                    graph.__serie = serie;
                 }
             }
             if (!graphs.length) {
@@ -359,9 +369,11 @@ define(function (require) {
                     });
                     for (var i = 0; i < graphs.length; i++) {
                         graphs[i].eachEdge(function (e) {
-                            var queryTarget = [e.data, mainSerie];
+                            var queryTarget = self._getEdgeQueryTarget(
+                                graphs[i].__serie, e.data
+                            );
                             e.shape.style.opacity = self.deepQuery(
-                                queryTarget, 'itemStyle.normal.chordStyle.opacity'
+                                queryTarget, 'opacity'
                             ) * 0.1;
                             e.shape.modSelf();
                         });
@@ -375,9 +387,11 @@ define(function (require) {
                         if (n) {    //  节点有可能没数据被过滤掉了
                             for (var j = 0; j < n.outEdges.length; j++) {
                                 var e = n.outEdges[j];
-                                var queryTarget = [e.data, mainSerie];
+                                var queryTarget = self._getEdgeQueryTarget(
+                                    graphs[i].__serie, e.data
+                                );
                                 e.shape.style.opacity = self.deepQuery(
-                                    queryTarget, 'itemStyle.normal.chordStyle.opacity'
+                                    queryTarget, 'opacity'
                                 );
                                 var other = graphs[0].getNodeById(e.node2.id);
                                 if (other) {
@@ -656,7 +670,10 @@ define(function (require) {
                     //  使用系列颜色
                     color = this.getColor(serie.name);
                 }
-                var queryTarget = [edge.data, mainSerie];
+                var queryTarget = this._getEdgeQueryTarget(serie, edge.data);
+                var queryTargetEmphasis = this._getEdgeQueryTarget(
+                    serie, edge.data, 'emphasis'
+                );
                 var ribbon = new RibbonShape({
                     zlevel: this.getZlevelBase(),
                     style: {
@@ -669,7 +686,7 @@ define(function (require) {
                         target1: t1,
                         brushType: 'both',
                         opacity: this.deepQuery(
-                            queryTarget, 'itemStyle.normal.chordStyle.opacity'
+                            queryTarget, 'opacity'
                         ),
                         color: color,
                         lineWidth: ribbonStyle.borderWidth,
@@ -710,7 +727,11 @@ define(function (require) {
             graph.eachEdge(function (e) {
                 var shape1 = e.node1.shape;
                 var shape2 = e.node2.shape;
-                var queryTarget = [e.data, mainSerie];
+                var queryTarget = this._getEdgeQueryTarget(serie, e.data);
+                var queryTargetEmphasis = this._getEdgeQueryTarget(
+                    serie, e.data, 'emphasis'
+                );
+
                 var curveShape = new BezierCurveShape({
                     zlevel: this.getZlevelBase(),
                     z: 0,
@@ -722,13 +743,24 @@ define(function (require) {
                         cpX1: center[0],
                         cpY1: center[1],
                         lineWidth: this.deepQuery(
-                            queryTarget, 'itemStyle.normal.chordStyle.width'
+                            queryTarget, 'width'
                         ),
                         strokeColor: this.deepQuery(
-                            queryTarget, 'itemStyle.normal.chordStyle.color'
+                            queryTarget, 'color'
                         ),
                         opacity: this.deepQuery(
-                            queryTarget, 'itemStyle.normal.chordStyle.opacity'
+                            queryTarget, 'opacity'
+                        )
+                    },
+                    highlightStyle: {
+                        lineWidth: this.deepQuery(
+                            queryTargetEmphasis, 'width'
+                        ),
+                        strokeColor: this.deepQuery(
+                            queryTargetEmphasis, 'color'
+                        ),
+                        opacity: this.deepQuery(
+                            queryTargetEmphasis, 'opacity'
                         )
                     }
                 });
@@ -878,7 +910,6 @@ define(function (require) {
                 };
             }
             else {
-                var colorIndices = {};
                 var colorMap = {};
                 var count = 0;
                 this.getColor = function (key) {

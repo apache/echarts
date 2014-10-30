@@ -65,7 +65,8 @@ define(function (require) {
         this.onmousemove = function() {
             onmousemove.apply(self, arguments);
         };
-        this._init();
+
+        this.refresh(option);
     }
 
     /**
@@ -114,12 +115,31 @@ define(function (require) {
                     }
 
                     // TODO 多个 force 
-                    this._forceSerie = serie;
-
                     this._initSerie(serie);
                     break;
                 }
             }
+        },
+
+        _getNodeCategory: function (serie, node) {
+            return serie.categories && serie.categories[node.category || 0];
+        },
+
+        _getNodeQueryTarget: function (serie, node) {
+            var category = this._getNodeCategory(serie, node) || {};
+            return [
+                node.itemStyle && node.itemStyle.normal,
+                category && category.itemStyle && category.itemStyle.normal,
+                serie.itemStyle.normal.nodeStyle
+            ];
+        },
+
+        _getEdgeQueryTarget: function (serie, edge, type) {
+            type = type || 'normal';
+            return [
+                (edge.itemStyle && edge.itemStyle[type]),
+                serie.itemStyle[type].linkStyle
+            ];
         },
 
         _initSerie: function(serie) {
@@ -271,48 +291,41 @@ define(function (require) {
             var graph = this._graph;
 
             var categories = this.query(serie, 'categories');
-            var len = graph.nodes.length;
             var legend = this.component.legend;
 
-            for (var i = 0; i < len; i++) {
-                var gNode = graph.nodes[i];
-                var node = gNode.data;
+            graph.eachNode(function (node) {
+                var category = this._getNodeCategory(serie, node.data);
+                var queryTarget = [node.data, category, serie];
+                var styleQueryTarget = this._getNodeQueryTarget(serie, node.data);
+                var emphasisStyleQueryTarget = this._getNodeQueryTarget(
+                    serie, node.data, 'emphasis'
+                );
 
                 var shape = new IconShape({
-                    style : {
-                        x : 0,
-                        y : 0
+                    style: {
+                        x: 0,
+                        y: 0,
+                        color: this.deepQuery(styleQueryTarget, 'color'),
+                        // 兼容原有写法
+                        strokeColor: this.deepQuery(styleQueryTarget, 'strokeColor')
+                            || this.deepQuery(styleQueryTarget, 'borderColor'),
+                        lineWidth: this.deepQuery(styleQueryTarget, 'lineWidth')
+                            || this.deepQuery(styleQueryTarget, 'borderWidth')
                     },
-                    clickable: this.query(serie, 'clickable'),
-                    highlightStyle : {}
+                    highlightStyle: {
+                        color: this.deepQuery(styleQueryTarget, 'color', 'emphasis'),
+                        // 兼容原有写法
+                        strokeColor: this.deepQuery(styleQueryTarget, 'strokeColor', 'emphasis')
+                            || this.deepQuery(styleQueryTarget, 'borderColor', 'emphasis'),
+                        lineWidth: this.deepQuery(styleQueryTarget, 'lineWidth', 'emphasis')
+                            || this.deepQuery(styleQueryTarget, 'borderWidth', 'emphasis')
+                    },
+                    clickable: serie.clickable
                 });
-
-                var queryTarget = [];
-                var shapeNormalStyle = [];
-                var shapeEmphasisStyle = [];
-
-                queryTarget.push(node);
-                if (node.itemStyle) {
-                    shapeNormalStyle.push(node.itemStyle.normal);
-                    shapeEmphasisStyle.push(node.itemStyle.emphasis);
+                if (!shape.style.color) {
+                    shape.style.color = category 
+                        ? this.getColor(category.name) : this.getColor(node.id);
                 }
-                if (typeof(node.category) !== 'undefined') {
-                    var category = categories[node.category];
-                    if (category) {
-                        // 使用 Legend.getColor 配置默认 category 的默认颜色
-                        category.itemStyle = category.itemStyle || {};
-                        category.itemStyle.normal = category.itemStyle.normal || {};
-                        category.itemStyle.normal.color = category.itemStyle.normal.color
-                            || legend.getColor(category.name);
-
-                        queryTarget.push(category);
-                        shapeNormalStyle.unshift(category.itemStyle.normal);
-                        shapeEmphasisStyle.unshift(category.itemStyle.emphasis);
-                    }
-                }
-                queryTarget.push(serie);
-                shapeNormalStyle.unshift(serie.itemStyle.normal.nodeStyle);
-                shapeEmphasisStyle.unshift(serie.itemStyle.emphasis.nodeStyle);
 
                 shape.style.iconType = this.deepQuery(queryTarget, 'symbol');
                 // 强制设定节点大小，否则默认映射到 minRadius 到 maxRadius 后的值
@@ -330,18 +343,6 @@ define(function (require) {
                     });
                 }
 
-                // 节点样式
-                for (var k = 0; k < shapeNormalStyle.length; k++) {
-                    if (shapeNormalStyle[k]) {
-                        zrUtil.merge(shape.style, shapeNormalStyle[k], true);
-                    }
-                } 
-                // 节点高亮样式
-                for (var k = 0; k < shapeEmphasisStyle.length; k++) {
-                    if (shapeEmphasisStyle[k]) {
-                        zrUtil.merge(shape.highlightStyle, shapeEmphasisStyle[k], true);
-                    }
-                }
                 // 兼容原有写法
                 shape.style.strokeColor = shape.style.strokeColor || shape.style.borderColor;
                 shape.style.lineWidth = shape.style.lineWidth || shape.style.borderWidth;
@@ -352,7 +353,7 @@ define(function (require) {
                 
                 // 节点标签样式
                 if (this.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {
-                    shape.style.text = node.name;
+                    shape.style.text = node.data.name;
                     shape.style.textPosition = 'inside';
                     var labelStyle = this.deepQuery(
                         queryTarget, 'itemStyle.normal.label.textStyle'
@@ -364,7 +365,7 @@ define(function (require) {
                 }
 
                 if (this.deepQuery(queryTarget, 'itemStyle.emphasis.label.show')) {
-                    shape.highlightStyle.text = node.name;
+                    shape.highlightStyle.text = node.data.name;
                     shape.highlightStyle.textPosition = 'inside';
                     var labelStyle = this.deepQuery(
                         queryTarget, 'itemStyle.emphasis.label.textStyle'
@@ -399,20 +400,20 @@ define(function (require) {
                     // series index
                     0,
                     // data
-                    node,
+                    node.data,
                     // data index
-                    gNode.rawIndex,
+                    node.rawIndex,
                     // name
-                    node.name || '',
+                    node.data.name || '',
                     // value
-                    node.value
+                    node.data.value
                 );
                 
                 this.shapeList.push(shape);
                 this.zr.addShape(shape);
 
-                gNode.shape = shape;
-            }
+                node.shape = shape;
+            }, this);
         },
 
         _buildLinkShapes: function(serie) {
@@ -469,7 +470,6 @@ define(function (require) {
                     = linkShape.highlightStyle.lineWidth || linkShape.highlightStyle.width;
                 linkShape.highlightStyle.strokeColor
                     = linkShape.highlightStyle.strokeColor || linkShape.highlightStyle.color;
-
 
                 ecData.pack(
                     linkShape,
@@ -622,6 +622,34 @@ define(function (require) {
                 this.option = newOption;
                 this.series = this.option.series;
             }
+
+            this.legend = this.component.legend;
+            if (this.legend) {
+                this.getColor = function(param) {
+                    return this.legend.getColor(param);
+                };
+                this.isSelected = function(param) {
+                    return this.legend.isSelected(param);
+                };
+            }
+            else {
+                var colorMap = {};
+                var count = 0;
+                this.getColor = function (key) {
+                    if (colorMap[key]) {
+                        return colorMap[key];
+                    }
+                    if (!colorMap[key]) {
+                        colorMap[key] = this.zr.getColor(count++);
+                    }
+
+                    return colorMap[key];
+                };
+                this.isSelected = function () {
+                    return true;
+                };
+            }
+
             this._init();
         },
 
