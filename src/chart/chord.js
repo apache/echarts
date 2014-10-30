@@ -181,8 +181,10 @@ define(function (require) {
                     this._buildLabels(mainSerie, 0, mainGraph, mainSerie, graphs);
                 }
 
-                for (var i = 0; i < graphs.length; i++) {
-                    this._buildRibbons(series[i], i, graphs[i], mainSerie);
+                for (var i = 0, j = 0; i < series.length; i++) {
+                    if (this.selectedMap[series[i].name]) {
+                        this._buildRibbons(series, i, graphs[j++], mainSerie);
+                    }
                 }
 
                 if (serie.showScale) {
@@ -194,8 +196,10 @@ define(function (require) {
                 if (showLabel) {
                     this._buildLabels(mainSerie, 0, mainGraph, mainSerie, graphs);
                 }
-                for (var i = 0; i < graphs.length; i++) {
-                    this._buildEdgeCurves(series[i], i, graphs[i], mainSerie);
+                for (var i = 0, j = 0; i < series.length; i++) {
+                    if (this.selectedMap[series[i].name]) {
+                        this._buildEdgeCurves(series, i, graphs[j++], mainSerie);
+                    }
                 }
             }
 
@@ -391,7 +395,7 @@ define(function (require) {
             });
         },
 
-        _buildSectors: function (serie, serieIdx, graph, mainSerie, graphs) {
+        _buildSectors: function (serie, serieIdx, graph, mainSerie) {
             var timeout;
 
             var self = this;
@@ -578,7 +582,9 @@ define(function (require) {
             }, this);
         },
 
-        _buildRibbons : function (serie, serieIdx, graph, mainSerie) {
+        _buildRibbons : function (series, serieIdx, graph, mainSerie) {
+            var serie = series[serieIdx];
+
             var ribbonStyle 
                 = mainSerie.itemStyle.normal.chordStyle;
             var ribbonStyleEmphsis
@@ -607,12 +613,17 @@ define(function (require) {
                 var t0 = other.layout.startAngle / Math.PI * 180;
                 var t1 = other.layout.endAngle / Math.PI * 180;
 
-                // 取小端的颜色
-                if (edge.layout.weight <= other.layout.weight) {
-                    color = this.getColor(edge.node1.id);
-                }
-                else {
-                    color = this.getColor(edge.node2.id);
+                if (series.length === 1) {
+                    // 取小端的颜色
+                    if (edge.layout.weight <= other.layout.weight) {
+                        color = this.getColor(edge.node1.id);
+                    }
+                    else {
+                        color = this.getColor(edge.node2.id);
+                    }
+                } else {
+                    //  使用系列颜色
+                    color = this.getColor(serie.name);
                 }
                 var queryTarget = [edge.data, mainSerie];
                 var ribbon = new RibbonShape({
@@ -659,7 +670,9 @@ define(function (require) {
             }, this);
         },
 
-        _buildEdgeCurves: function (serie, serieIdx, graph, mainSerie) {
+        _buildEdgeCurves: function (series, serieIdx, graph, mainSerie) {
+            var serie = series[serieIdx];
+            
             var center = this.parseCenter(this.zr, mainSerie.center);
             var radius = this.parseRadius(this.zr, mainSerie.radius);
 
@@ -841,34 +854,8 @@ define(function (require) {
                     if (colorMap[key]) {
                         return colorMap[key];
                     }
-                    if (colorIndices[key] === undefined) {
-                        colorIndices[key] = count++;
-                    }
-                    // key is serie name
-                    for (var i = 0; i < this.chordSeries.length; i++) {
-                        if (this.chordSeries[i].name === key) {
-                            colorMap[key] = this.query(
-                                this.chordSeries[i],
-                                'itemStyle.normal.color'
-                            );
-                            break;
-                        }
-                    }
                     if (!colorMap[key]) {
-                        var len = this.groups.length;
-                        // key is group name
-                        for (var i = 0; i < len; i++) {
-                            if (this.groups[i].name === key) {
-                                colorMap[key] = this.query(
-                                    this.groups[i],
-                                    'itemStyle.normal.color'
-                                );
-                                break;
-                            }
-                        }
-                    }
-                    if (!colorMap[key]) {
-                        colorMap[key] = this.zr.getColor(colorIndices[key]);
+                        colorMap[key] = this.zr.getColor(count++);
                     }
 
                     return colorMap[key];
