@@ -101,19 +101,6 @@ define(function (require) {
 
                     this.buildMark(i);
                     
-                    // 同步selected状态
-                    var categories = serie.categories;
-                    for (var j = 0, len = categories.length; j < len; j++) {
-                        if (categories[j].name) {
-                            if (legend){
-                                this.selectedMap[j] = 
-                                    legend.isSelected(categories[j].name);
-                            } else {
-                                this.selectedMap[j] = true;
-                            }
-                        }
-                    }
-
                     // TODO 多个 force 
                     this._initSerie(serie);
                     break;
@@ -150,16 +137,18 @@ define(function (require) {
 
             for (var i = 0, len = serie.nodes.length; i < len; i++) {
                 var n = serie.nodes[i];
-                if (
-                    !n || n.ignore
-                    || (typeof(n.category) !== 'undefined' 
-                        && !this.selectedMap[n.category]
-                    )
-                ) {
+                if (!n || n.ignore) {
                     continue;
                 }
-                var node = graph.addNode(n.name, n);
-                node.rawIndex = i;
+                // legends 选择优先级 category -> group
+                var category = this._getNodeCategory(serie, n);
+                var name = category ? category.name : n.name;
+
+                this.selectedMap[name] = this.isSelected(name);
+                if (this.selectedMap[name]) {
+                    var node = graph.addNode(n.name, n);
+                    node.rawIndex = i;
+                }
             }
             for (var i = 0, len = serie.links.length; i < len; i++) {
                 var e = serie.links[i];
