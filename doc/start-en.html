@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-cn">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -42,53 +42,52 @@
     <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
     
     <div class="container">
-        <h2 class="text-center">5分钟上手写ECharts的第一个图表</h2>
+        <h2 class="text-center">5 minutes to your first chart</h2>        
         <ul class="nav nav-tabs nav-justified">
             <li class="active">
-                <a id = "o-aqi" href="#main0" data-toggle="tab">模块化单文件引入（推荐）</a></li>
-            <li><a id = "o-pm25" href="#main1" data-toggle="tab">标签式单文件引入</a></li>
+                <a id = "o-aqi" href="#main0" data-toggle="tab">modular single file import (preferred)</a></li>
+            <li><a id = "o-pm25" href="#main1" data-toggle="tab">tabbed single file import</a></li>            
         </ul>
         <div class="tab-content">
             <div class="tab-pane active" id="main0">
-        <b class="title">1、新建一个echarts.html文件。为ECharts准备一个具备大小（宽高）的Dom。</b>
+        <b class="title">1, Creat a echarts.html file. Prepare a Dom with size (width and height) for ECharts.</b>
         <pre class="prettyprint"><xmp><!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
 </head>
+
 <body>
-    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <!-- Prepare a Dom with size (width and height) for ECharts -->
     <div id="main" style="height:400px"></div>
 </body></xmp></pre>
 
-
-        <b class="title">2、新建&lt;script&gt;标签引入符合AMD规范的加载器，如esl.js</b>
+        <b class="title">2, Create a &lt; script &gt; tag to include an AMD loader, such as esl.js. </ b></b>
         <pre class="prettyprint"><xmp><!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
-    <!-- 来自百度CDN -->
+    <!-- from Baidu's CDN -->
     <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-6-10/esl.js"></script>
 </head>
 <body>
-    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <!-- Prepare a Dom with size (width and height) for ECharts -->
     <div id="main" style="height:400px"></div>
 </body></xmp></pre>
 
-
-        <b class="title">3、新建&lt;script&gt;标签中为模块加载器配置echarts和所需图表的路径（相对路径为从当前页面链接到echarts.js），引入图表文件见<a href="doc.html#引入ECharts2" target="_blank">引入ECharts2</a></b>
+        <b class="title">3, Create a new &lt; script &gt; tag, configure for module loader a path of echarts and the chart you need (the relative path is to link from the current page to echarts.js). For imported chart file, refer to <a href="doc-en.html#Import-ECharts2" target="_blank">Import ECharts2</a></b>
         <pre class="prettyprint"><xmp><!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
-    <!-- 来自百度CDN -->
+    <!-- from Baidu's CDN -->
     <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-6-10/esl.js"></script>
 </head>
 <body>
-    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <!-- Prepare a Dom with size (width and height) for ECharts -->
     <div id="main" style="height:400px"></div>
     <script type="text/javascript">
-        // 路径配置
+        // configure for module loader
         require.config({
             paths:{ 
                 'echarts' : 'http://echarts.baidu.com/build/echarts',
@@ -99,19 +98,19 @@
 </body></xmp></pre>
 
 
-        <b class="title">4、&lt;script&gt;标签内动态加载echarts和所需图表，回调函数中可以初始化图表并驱动图表的生成，option见<a href="doc.html#Option" target="_blank">API & Doc</a></b>
+            <b class="title">4, Dynamically load echarts and the chart you need in the &lt; script &gt; tag. Use callback function to initialize and drive the generation of charts. For option, refer to <a href="doc-en.html#Option" target="_blank">API &amp; Doc</a></b>
         <pre class="prettyprint"><xmp><!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
-    <!-- 来自百度CDN -->
+    <!-- from Baidu's CDN -->
     <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-6-10/esl.js"></script>
 </head>
 <body>
-    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <!-- Prepare a Dom with size (width and height) for ECharts -->
     <div id="main" style="height:400px"></div>
     <script type="text/javascript">
-        // 路径配置
+        // configure for module loader
         require.config({
             paths:{ 
                 'echarts' : 'http://echarts.baidu.com/build/echarts',
@@ -119,14 +118,14 @@
             }
         });
         
-        // 使用
+        // use
         require(
             [
                 'echarts',
-                'echarts/chart/bar' // 使用柱状图就加载bar模块，按需加载
+                'echarts/chart/bar' // require the specific chart type
             ],
             function (ec) {
-                // 基于准备好的dom，初始化echarts图表
+                // Initialize after dom ready
                 var myChart = ec.init(document.getElementById('main')); 
                 
                 var option = {
@@ -134,12 +133,12 @@
                         show: true
                     },
                     legend: {
-                        data:['销量']
+                        data:['Sales']
                     },
                     xAxis : [
                         {
                             type : 'category',
-                            data : ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
+                            data : ["Shirts", "Sweaters", "Chiffon Shirts", "Pants", "High Heels", "Socks"]
                         }
                     ],
                     yAxis : [
@@ -149,14 +148,14 @@
                     ],
                     series : [
                         {
-                            "name":"销量",
+                            "name":"Sales",
                             "type":"bar",
                             "data":[5, 20, 40, 10, 10, 20]
                         }
                     ]
                 };
         
-                // 为echarts对象加载数据 
+                // Load data into the ECharts instance 
                 myChart.setOption(option); 
             }
         );
@@ -164,51 +163,51 @@
 </body></xmp></pre>
 
 
-        <b>5、浏览器中打开echarts.html，就可看到以下效果</b>
+        <b>5, Open echarts.html in the browser to see the following results.</b>
             </div>
 
 <!------------------------------>
 
             <div class="tab-pane" id="main1">
-        <b class="title">1、新建一个echarts.html文件。为ECharts准备一个具备大小（宽高）的Dom。</b>
+        <b class="title">1, Creat a echarts.html file. Prepare a Dom with size (width and height) for ECharts.</b>
         <pre class="prettyprint"><xmp><!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
 </head>
 <body>
-    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <!-- Prepare a Dom with size (width and height) for ECharts -->
     <div id="main" style="height:400px"></div>
 </body></xmp></pre>
 
 
-        <b class="title">2、新建&lt;script&gt;标签引入echarts-plain.js，引入图表文件见<a href="doc.html#引入ECharts3" target="_blank">引入ECharts3</a></b>
+        <b class="title">2, Create a &lt; script &gt; tag to import echarts-plain.js. For the imported chart file, refer to<a href="doc-en.html#Import-ECharts3" target="_blank">Import ECharts3</a></b>
         <pre class="prettyprint"><xmp><!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
 </head>
 <body>
-    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <!-- Prepare a Dom with size (width and height) for ECharts -->
     <div id="main" style="height:400px"></div>
-    <!-- ECharts单文件引入 -->
+    <!-- Tabbed single file import  -->
     <script src="http://echarts.baidu.com/build/echarts-plain.js"></script>
 </body></xmp></pre>
 
 
-        <b class="title">3、新建&lt;script&gt;标签，使用全局变量echarts初始化图表并驱动图表的生成，option见<a href="doc.html#Option" target="_blank">API & Doc</a></b>
+        <b class="title">3, Create a &lt;script&gt; tag. Use global variable echarts to initialize and drive the generation of charts. For option, refer to<a href="doc-en.html#Option" target="_blank">API & Doc</a></b> 
         <pre class="prettyprint"><xmp><!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
 </head>
 <body>
-    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <!-- Prepare a Dom with size (width and height) for ECharts -->
     <div id="main" style="height:400px"></div>
-    <!-- ECharts单文件引入 -->
+    <!-- Tabbed single file import  -->
     <script src="http://echarts.baidu.com/build/echarts-plain.js"></script>
     <script type="text/javascript">
-        // 基于准备好的dom，初始化echarts图表
+        // Initialize after dom ready
         var myChart = echarts.init(document.getElementById('main')); 
         
         var option = {
@@ -216,12 +215,12 @@
                 show: true
             },
             legend: {
-                data:['销量']
+                data:['Sales']
             },
             xAxis : [
                 {
                     type : 'category',
-                    data : ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
+                    data : ["Shirts", "Sweaters", "Chiffon Shirts", "Pants", "High Heels", "Socks"]
                 }
             ],
             yAxis : [
@@ -231,20 +230,20 @@
             ],
             series : [
                 {
-                    "name":"销量",
+                    "name":"Sales",
                     "type":"bar",
                     "data":[5, 20, 40, 10, 10, 20]
                 }
             ]
         };
 
-        // 为echarts对象加载数据 
+        // Load data into the ECharts instance 
         myChart.setOption(option); 
     </script>
 </body></xmp></pre>
 
 
-        <b>4、浏览器中打开echarts.html，就可看到以下效果</b>
+        <b>4, Open echarts.html in the browser to see the following results.</b>
             </div>
         
         
@@ -252,8 +251,8 @@
         <div id="main" style="height:400px;border: 1px solid #dddddd;border-top-width:0"></div>
         
         <div class="row" style="margin-top: 30px;">
-            <h2>最好的参考资源：实例</h2>
-            <p>ECharts可以说是数据驱动的图表，大部分时候你关心的是那个option该如何实现，官网的<a href="./doc.html">文档</a>提供详细的说明，另外我们还有近100个<a href="./example.html">实例</a>，这些例子都为你展现了最核心的option代码，可以通过在线修改查看效果，ECharts是玩出来的，希望你玩得开心。</p>
+            <h2>Best Reference Resource: Instances</h2>
+            <p>ECharts is a data-driven chart. Since your main concern is how to achieve that option, we offer you, right here on our official website, an extensive <a href="./doc-en.html">documentation</a> for your reference and over 100 ready-made <a href="./example-en.html">demos</a> with the most core option code that is free to edit online. For ECharts, play makes perfect; hope you enjoy playing here.</p>
         </div>
     </div>
     <script src="./asset/js/esl/esl.js"></script>
@@ -280,12 +279,14 @@
                 show: true
             },
             legend: {
-                data:['销量']
+                //data:['销量']
+                data:['Sales']
             },
             xAxis : [
                 {
                     type : 'category',
-                    data : ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
+                    //data : ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
+                    data : ["Shirts", "Sweaters", "Chiffon Shirts", "Pants", "High Heels", "Socks"]
                 }
             ],
             yAxis : [
@@ -295,7 +296,8 @@
             ],
             series : [
                 {
-                    "name":"销量",
+                    //"name":"销量",
+                    "name":"Sales",
                     "type":"bar",
                     "data":[5,20,40,10,10,20]
                 }

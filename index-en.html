@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-cn">
   <head>
     <meta charset="utf-8">
@@ -19,6 +19,11 @@
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
+    <style type="text/css">
+        blockquote {
+            font-size:14px;
+        }
+    </style>
   </head>
 
   <body>
@@ -31,52 +36,41 @@
     <div id="myCarousel" class="carousel slide" data-ride="carousel">
       <!-- Indicators -->
       <ol class="carousel-indicators">
-        <li data-target="#myCarousel" data-slide-to="0"></li>
+        <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
         <li data-target="#myCarousel" data-slide-to="1"></li>
         <li data-target="#myCarousel" data-slide-to="2"></li>
         <li data-target="#myCarousel" data-slide-to="3"></li>
-        <li data-target="#myCarousel" data-slide-to="4" class="active"></li>
       </ol>
       <div class="carousel-inner">
-        <div class="item">
-          <img src="./doc/asset/img/slide-01.png" alt="ECharts"/>
-        </div>
-        <div class="item">
-          <img src="./doc/asset/img/slide-02.png" alt="ECharts"/>
-          <div class="container">
-            <div class="carousel-caption" style="bottom:0;left:25%">
-              <p style="text-align:left;">
-                  <a class="btn btn-lg btn-warning" href="./doc/example.html#gauge" role="button">查看 »</a>
-              </p>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <img src="./doc/asset/img/slide-03.png" alt="ECharts"/>
-          <div class="container">
-            <div class="carousel-caption" style="bottom:0;left:25%">
-              <p style="text-align:left;">
-                  <a class="btn btn-lg btn-warning" href="./doc/example/bar12.html" role="button">查看 »</a>
-              </p>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <img src="./doc/asset/img/slide-04.png" alt="ECharts"/>
-          <div class="container">
-            <div class="carousel-caption" style="bottom:0;left:25%">
-              <p style="text-align:left;">
-                  <a class="btn btn-lg btn-warning" href="./doc/example/theme.html" role="button">查看 »</a>
-              </p>
-            </div>
-          </div>
-        </div>
         <div class="item active">
-          <img src="./doc/asset/img/slide-05.jpg" alt="百度图说"/>
+          <img src="./doc/asset/img/banner1.png" alt="ECharts"/>
+        </div>
+        <div class="item">
+          <img src="./doc/asset/img/banner2.png" alt="ECharts"/>
           <div class="container">
             <div class="carousel-caption" style="bottom:0;left:25%">
               <p style="text-align:left;">
-                  <a class="btn btn-lg btn-warning" href="http://tushuo.baidu.com" role="button" target="_blank">了解更多 »</a>
+                  <a class="btn btn-lg btn-warning" href="./doc/example.html#gauge" role="button">View »</a>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <img src="./doc/asset/img/banner3.png" alt="ECharts"/>
+          <div class="container">
+            <div class="carousel-caption" style="bottom:0;left:25%">
+              <p style="text-align:left;">
+                  <a class="btn btn-lg btn-warning" href="./doc/example/bar12.html" role="button">View »</a>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <img src="./doc/asset/img/banner4.png" alt="ECharts"/>
+          <div class="container">
+            <div class="carousel-caption" style="bottom:0;left:25%">
+              <p style="text-align:left;">
+                  <a class="btn btn-lg btn-warning" href="./doc/example/theme.html" role="button">View »</a>
               </p>
             </div>
           </div>
@@ -91,83 +85,84 @@
     <!-- Wrap the rest of the page in another container to center all the content. -->
 
     <div class="container marketing">
-      <h1 class="text-center" style="margin-bottom:30px;">让数据说话</h1>
+      <!--<h1 class="text-center" style="margin-bottom:30px;">让数据说话</h1>-->
+      <h1 class="text-center" style="margin-bottom:30px;">BRING YOUR DATA TO LIFE</h1>
       <!-- Three columns of text below the carousel -->
       <div class="row">
         <div class="col-lg-4">
-          <img class="col-lg-12" src="doc/asset/img/feature1.png"  alt="Echarts 拖拽重计算" style="margin-bottom:20px"/>
-          <h2>拖拽重计算</h2>
-          <p class="text-left">&#12288;&#12288;拖拽重计算特性（专利）带来了数据统计图表从未有过的用户体验，允许用户对统计数据进行有效的提取、整合，甚至在多个图表间交换数据，赋予了用户对数据进行挖掘、整合的能力。</p>
+          <img class="col-lg-12" src="doc/asset/img/feature1.png"  alt="Echarts Drag-Recalculate" style="margin-bottom:20px"/>
+          <h2>DRAG-RECALCULATE</h2>
+          <p class="text-left">Our "Drag-Recalculate" feature (patented) brings you the best user experience ever: by allowing you to effectively extract, integrate, or even exchange data among multiple charts, ECharts opens you up every opportunity for data mining and integration.</p>
         </div><!-- /.col-lg-4 -->
         <div class="col-lg-4">
-          <img class="col-lg-12" src="doc/asset/img/feature2.png"  alt="Echarts 数据视图" style="margin-bottom:20px"/>
-          <h2>大规模数据模式</h2>
-          <p class="text-left">&#12288;&#12288;如何展现成千上百万的数据？貌似除了用专业的统计工具（如MATLAB）外别无选择？不，在拥有众多交互特性下ECharts依然可以做到直角系图表（折、柱、散点、K线）20万数据秒级出图。</p>
+          <img class="col-lg-12" src="doc/asset/img/feature2.png"  alt="Echarts dataView" style="margin-bottom:20px"/>
+          <h2>BIG DATA MODE</h2>
+          <p class="text-left">Got tens of millions of data to present? And once again professional statistical tools (e.g. MATLAB) seems like the only option left? Nope, not anymore! Despite rich interactivity, ECharts can still plot up to 200,000 data points on a Cartesian chart (line, column, scatter, candlestick) in the blink of an eye. </p>
         </div><!-- /.col-lg-4 -->
         <div class="col-lg-4">
-          <img class="col-lg-12" src="doc/asset/img/feature3.png"  alt="Echarts 值域漫游" style="margin-bottom:20px"/>
-          <h2>值域漫游</h2>
-          <p class="text-left">&#12288;&#12288;基于坐标的图表（如地图、散点图）通过色彩变化表现数值的大小能直观形象的展示数据分布。但如何聚焦到我所关心的数值上？ECharts拥有值域漫游的功能，让你可以轻松进行数值筛选。</p>
+          <img class="col-lg-12" src="doc/asset/img/feature3.png"  alt="Echarts Scale Roaming" style="margin-bottom:20px"/>
+          <h2>SCALE ROAMING</h2>
+          <p class="text-left">The colors in the Cartesian chart (like map or scatter) will help you to classify data at first glance. But how to focus on data that matters after the initial analysis? With our "Scale Roaming" feature, you can turn off other scales and focus on the scale you are interested in with just a click.</p>
         </div><!-- /.col-lg-4 -->
-        <p class="pull-right"><a href="doc/feature.html">更多 »</a></p>
+        <p class="pull-right"><a href="doc/feature.html">Read More »</a></p>
       </div><!-- /.row -->
       
       <div class="row featurette thx">
-        <h1 class="text-center">感谢有你</h1>
-        <div class="col-lg-4">
+        <h1 class="text-center">OPINIONS</h1>
+        <div class="col-lg-6">
           <blockquote>
-            <p>“ ECharts是中国的，也是世界的。”</p>
+            <p>"ECharts is a treasure, not just for China, but also for the world."</p>
             <br/>
-            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/shearwarp" target="_blank">浙江大学教授 · 陈为</a></small>
-          </blockquote>
-        </div>
-        <div class="col-lg-4">
-          <blockquote>
-            <p>“ 期待ECharts 2.0让数据更生动，图表更闪耀，交互更友好，使用更便捷。”</p>
-            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/u/1688425190" target="_blank">AdMaster CTO · 洪倍</a></small>
-          </blockquote>
-        </div>
-        <div class="col-lg-4">
-          <blockquote>
-            <p>“ ECharts，发现数据可视化之美！”</p>
-            <br/>
-            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/shenhaolaoshi" target="_blank">中国传媒大学教授 · 沈浩</a></small>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/shearwarp" target="_blank">Chen Wei, Professor at Zhejiang University</a></small>
           </blockquote>
         </div>
         <div class="col-lg-6">
           <blockquote>
-            <p>“ ECharts是我接触过的最优秀的可视化工具，也是进步最快的软件，希望它早日成为世界级的开源项目。”</p>
-            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/u/2006785117" target="_blank">财新传媒CTO · 黄志敏</a></small>
+            <p>"ECharts, the beauty of data visualization!"</p>
+            <br/>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/shenhaolaoshi" target="_blank">Shen Hao, Professor at Communication University of China</a></small>
           </blockquote>
         </div>
         
+        <div class="col-lg-3">
+          <blockquote>
+            <p>"ECharts is not only the best, but also the most improved visualization tool I know. Hopes are high that it will become a world-class open source project before long."</p>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/u/2006785117" target="_blank">Huang Zhimin, CTO of Caixin Media</a></small>
+          </blockquote>
+        </div>
         <div class="col-lg-6">
           <blockquote>
-            <p>“ 根据我们多年的国内外图表工具使用经验，ECharts完胜所有免费图表工具，媲美最优秀收费图表软件的好东东。”</p>
-            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/tiemuyu" target="_blank">水清木华总经理 · 余杰</a></small>
-          </blockquote>
-        </div>
-        <div class="col-lg-5">
-          <blockquote>
-            <p>“ ECharts是一款开源、功能强大的数据可视化产品，紧跟着大数据时代的步伐！希望ECharts在未来继续发扬开源的力量，让国内外更多的人用上这款数据可视化产品，为企业、社会创造更大的价值。”</p>
-            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/DataScientistUnion" target="_blank">数盟社区创始人 · 兴宝</a></small>
-          </blockquote>
-        </div>
-        <div class="col-lg-4">
-          <blockquote>
-            <p>“ ECharts开放、大气、优雅， 1.0就很赞了，更新很快，2.0更是惊艳。我身边的一些美帝朋友们也不辞劳苦，用在线翻译来学习ECharts！”</p>
-            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/cosname/" target="_blank">统计之都创始人 · 谢益辉</a></small>
+            <p>"ECharts is a most impressive tool for data visualization: it's fully open-source, it's sophisticated-yet-flexible, and it keeps abreast of the era of 'big data'! I hope that ECharts will stick to the open source approach and bring into full play the power of community, so as to better serve users at home and abroad and create greater value in business and society."</p>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/DataScientistUnion" target="_blank">Xing Bao, Founder of DataUnion</a></small>
           </blockquote>
         </div>
         <div class="col-lg-3">
           <blockquote>
-            <p>“ ECharts代表了新一代的大数据可视化基础库，希望能早日完善对移动平台的支持，帮助企业将大数据玩于指尖。”</p>
-            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/austinhu" target="_blank">海智CTO · 胡嵩</a></small>
+            <p>"It is my fervent hope that ECharts 2.0 can make their visualization more vivid, charts more shining, interaction more agreeable and leave their users nothing to worry about."</p>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/u/1688425190" target="_blank">Hong Bei, CTO of AdMaster</a></small>
+          </blockquote>
+        </div>
+        <div class="col-lg-4">
+          <blockquote>
+            <p>"We have tried all kinds of charting tools - foreign and domestic, free and paid - for many years, and we say that ECharts absolutely stands out in the free ones, and is even comparable to the best of the paid ones."</p>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/tiemuyu" target="_blank">Yu Jie, GM of ResearchInChina</a></small>
+          </blockquote>
+        </div>
+        <div class="col-lg-4">
+          <blockquote>
+            <p>"ECharts is open, simple and elegant. 1.0 was great, and 2.0 was leapfrogged in just a year with something even more amazing. Anecdotally, some of my American friends are learning ECharts with online translators!"</p>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/cosname/" target="_blank">Xie Yihui, Founder of Capital of Statistics</a></small>
+          </blockquote>
+        </div>
+        <div class="col-lg-4">
+          <blockquote>
+            <p>"ECharts represents a new generation of visualization tools for big data. I really hope that it will soon support mobile platforms, so that we can have the freedom to explore big data at our fingertips - both literally and figuratively."</p>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/austinhu" target="_blank">Hu Song, CTO of haizhi</a></small>
           </blockquote>
         </div>
         
         <div class="col-md-12 user text-center">
-            <a href="http://www.baidu.com" target="_blank" ><img src="http://www.baidu.com/img/baidu_jgylogo3.gif" alt="到百度首页" title="到百度首页"></a>
+            <a href="http://www.baidu.com" target="_blank" ><img src="http://www.baidu.com/img/baidu_jgylogo3.gif" alt="Go to the Baidu front page" title="Go to the Baidu front page"></a>
             <a href="http://dev2.baidu.com/index.do" target="_blank" ><img src="http://dev2.baidu.com/zh/img/zh-logo.jpg" alt="百度商业开发者中心" title="百度商业开发者中心"></a>
             <a href="http://zhanzhang.baidu.com/" target="_blank" ><img src="http://zhanzhang.baidu.com/static/img/zhanzhang_logo.png" alt="百度站长平台" title="百度站长平台"></a>
             <a href="http://adm.baidu.com/index.html" target="_blank" ><img src="http://adm.baidu.com/home/common/img/logo.png"></a>
@@ -211,38 +206,38 @@
       
       <div class="row featurette" style="padding-bottom: 0;">
         <div class="col-md-12">
-          <h1 class="text-primary" style="margin-bottom: 20px;"><small>大数据时代</small><br/><strong>重新定义数据图表的时候到了</strong></h1>
-          <p class="lead">&#12288;&#12288;我们只是尽我们所能为你呈现数据<span class="text-primary">真实</span>的一面，并且提供了一些直观、易用的交互方式以方便你对所展现数据进行<span class="text-primary">挖掘、提取、修正或整合</span>，让你可以更加<span class="text-primary">专注</span>于你所关心地方，无论是系列选择、区域缩放还是数值筛选，让你可以有<span class="text-primary">不同的方式解读同样的数据</span>。</p>
+          <h1 class="text-primary" style="margin-bottom: 20px;"><small>The Era of Big Data</small><br/><strong>IT'S TIME TO REDEFINE DATA CHARTS</strong></h1>
+          <p class="lead">We are just doing our best to present your data in its own <span class="text-primary">true</span> aspect, and provide you with intuitive, interactive ways for data <span class="text-primary">mining, extraction, correction or integration</span>, so that you can <span class="text-primary">focus on</span> what you are interested in. Legend Switch, Area Zoom, and Value Filter let you <span class="text-primary">analyze your data in ways you didn't think possible</span>. </p>
         </div>
         <div class="col-md-12">
-          <p class="lead" style="margin-bottom: 0;">&#12288;&#12288;浏览<span class="text-primary">ECharts</span>所输出的图表，你不再只是个“读者”，你可以参与其中，这就是<span class="text-primary">ECharts</span>，我们正在打造的一个拥有<strong class="text-primary">互动图形用户界面（GUI）</strong>的数据可视化工具。</p>
+          <p class="lead" style="margin-bottom: 0;">Look at the charts created using <span class="text-primary">ECharts</span>, you are no longer just a "reader"; you can also be a "creator". This is <span class="text-primary">ECharts</span>, a <strong class="text-primary">GUI-based</strong> data visualization tool that we are working on.</p>
         </div>
       </div>
       <div class="jumbotron">
-        <h1 style="font-size: 80px;margin-bottom:30px;">现在就出发!</h1>
-        <a class="btn btn-large btn-warning" href="./doc/start.html"><i class="fa fa-paper-plane"></i> Get started</a>
+        <h1 style="font-size: 80px;margin-bottom:30px;">LET'S GO!</h1>
+        <a class="btn btn-large btn-warning" href="./doc/start-en.html"><i class="fa fa-paper-plane"></i> Get started</a>
       </div>
       <!-- /END THE FEATURETTES -->
       
       <div class="row featurette e-list" style="padding-bottom: 0;">
-        <p>开源的ECharts来自百度<a href="http://efe.baidu.com/">EFE</a>数据可视化团队。在<a href="http://efe.baidu.com/">EFE</a>，我们还有其他开源产品：</p>
+        <p>ECharts is an open source from the data visualization team of Baidu <a href="http://efe.baidu.com/">EFE</a>. In <a href="http://efe.baidu.com/">EFE</a>, we also have:</p> 
         <dl>
             <dt><a target="_blank" href="https://github.com/ecomfe/esl">ESL</a></dt>
-            <dd>比Require.js更精简、更高效、更健壮的AMD Loader。</dd>
+            <dd>Leaner, more efficient and more robust AMD Loader than Require.js.</dd>
             <dt><a target="_blank" href="http://ecomfe.github.io/etpl/">ETpl</a></dt>
-            <dd>强复用、灵活、高性能的JavaScript模板引擎。</dd>
+            <dd>Reusable, flexible, and high performance JavaScript template engine.</dd>
             <dt><a target="_blank" href="https://github.com/ecomfe/edp">EDP</a></dt>
-            <dd>提供了前端开发时常用工具：项目管理、包管理、调试、构建、代码生成、代码检测等，并允许用户自定义扩展。</dd>
+            <dd>Provides the front-end development tool: project and package management, debug, build, test etc. and allow users to custom extend.</dd>
             <dt><a target="_blank" href="https://github.com/ecomfe/er">ER</a></dt>
-            <dd>富浏览器端 web 应用的框架，适用于并能很方便地构建一个整站式的 AJAX web 应用。</dd>
+            <dd>RIA web framework, which is suitable for building a single page AJAX web application.</dd>
             <dt><a target="_blank" href="https://github.com/ecomfe/esui">ESUI</a></dt>
-            <dd>一套功能完善，并具有强大扩展机制的 UI 组件库。基于模板、声明式地编程方式让视图更具表达能力。</dd>
+            <dd>A set of perfect functions, and has strong extension mechanism UI library. Base on template, declarative programming let the View more powerful.</dd>
             <dt><a target="_blank" href="http://ecomfe.github.io/est/">EST</a></dt>
-            <dd>基于 Less 的样式工具库，提供了一系列方便快捷的 mixin，只在调用时才输出代码。</dd>
+            <dd>Base on Less style, provide a series of convenient mixin way, can output just in debug mode.</dd>
             <dt><a target="_blank" href="https://github.com/ecomfe/saber">Saber</a></dt>
-            <dd>提供了 JavaScript 模块、CSS 样式库与开发平台的完整前端解决方案。擅长移动端 SPA 项目、轻应用。</dd>
+            <dd>Provide a JavaScript model, CSS style and development platform etc, which is a complete the front-end solutions for mobile SPA project.</dd>
             <dt><a target="_blank" href="https://github.com/ecomfe/rider">Rider</a></dt>
-            <dd>专为移动端设计的 Mixin 风格样式工具库。在其基础上创建了 Rider UI，一个灵活的 UI 样式库。</dd>
+            <dd>Designed for mobile device, mixin style library. Base on it, we create the Rider UI, a flexible UI library.</dd>
             <dt><a target="_blank" href="http://efe.baidu.com/">......</a></dt>
         </dl>
       </div>

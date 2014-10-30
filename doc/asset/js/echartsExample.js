@@ -6,12 +6,14 @@ var domMessage = document.getElementById('wrong-message');
 var iconResize = document.getElementById('icon-resize');
 var needRefresh = false;
 
-var hash = location.hash.replace('#','') || (needMap() ? 'default' : 'macarons');
+var enVersion = location.hash.indexOf('-en') != -1;
+var hash = location.hash.replace('-en','');
+hash = hash.replace('#','') || (needMap() ? 'default' : 'macarons');
+hash += enVersion ? '-en' : '';
+
 var curTheme;
 function requireCallback (ec, defaultTheme) {
-    curTheme = themeSelector 
-               ? defaultTheme
-               : {};
+    curTheme = themeSelector ? defaultTheme : {};
     echarts = ec;
     refresh();
     window.onresize = myChart.resize;
@@ -38,14 +40,14 @@ if (themeSelector) {
         myChart.showLoading();
         $(themeSelector).val(theme);
         if (theme != 'default') {
-            window.location.hash = value;
+            window.location.hash = value + (enVersion ? '-en' : '');
             require(['theme/' + theme], function(tarTheme){
                 curTheme = tarTheme;
                 setTimeout(refreshTheme, 500);
             })
         }
         else {
-            window.location.hash = '';
+            window.location.hash = enVersion ? '-en' : '';
             curTheme = {};
             setTimeout(refreshTheme, 500);
         }
@@ -54,9 +56,9 @@ if (themeSelector) {
         myChart.hideLoading();
         myChart.setTheme(curTheme);
     }
-    if ($(themeSelector).val(hash).val() != hash) {
+    if ($(themeSelector).val(hash.replace('-en', '')).val() != hash.replace('-en', '')) {
         $(themeSelector).val('macarons');
-        hash = 'macarons';
+        hash = 'macarons' + enVersion ? '-en' : '';
         window.location.hash = hash;
     }
 }
@@ -167,7 +169,7 @@ else {
 require(
     [
         'echarts',
-        'theme/' + hash,
+        'theme/' + hash.replace('-en', ''),
         'echarts/chart/line',
         'echarts/chart/bar',
         'echarts/chart/scatter',
