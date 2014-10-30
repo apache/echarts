@@ -316,7 +316,7 @@ define(function (require) {
                 var value = n.data.value;
                 if (value == null) {    // value 是 null 或者 undefined
                     value = 0;
-                    if (mainSerie) {
+                    if (mainSerie.ribbonType) {
                         // 默认使用所有出边值的和作为节点的大小, 不修改 data 里的数值
                         for (var i = 0; i < n.outEdges.length; i++) {
                             value += n.outEdges[i].data.weight || 0;
