@@ -65,6 +65,7 @@ define(function (require) {
                         this.buildMark(i);
                     }
 
+                    this.reformOption(series[i]);
                     chordSeriesMap[series[i].name] = series[i];
                 }
             }
@@ -76,7 +77,6 @@ define(function (require) {
                     }
                     else {
                         chordSeriesGroups[series[i].name] = [series[i]];
-                        this.reformOption(series[i]);
                     }
                 }
             }

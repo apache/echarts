@@ -132,8 +132,82 @@ define(function (require) {
         _initSerie: function(serie) {
             this._temperature = 1;
 
-            var graph = this._graph;
-            graph.clear();
+            // data-matrix 表示数据
+            if (serie.data) {
+                this._graph = this._getSerieGraphFromDataMatrix(serie);
+            }
+            // node-links 表示数据
+            else {
+                this._graph = this._getSerieGraphFromNodeLinks(serie);
+            }
+
+            this._buildLinkShapes(serie);
+            this._buildNodeShapes(serie);
+
+            this._initLayout(serie);
+
+            this._step();
+        },
+
+        _getSerieGraphFromDataMatrix: function (serie) {
+            var nodesData = [];
+            var count = 0;
+            var matrix = [];
+            // 复制一份新的matrix
+            for (var i = 0; i < serie.matrix.length; i++) {
+                matrix[i] = serie.matrix[i].slice();
+            }
+            for (var i = 0; i < serie.data.length; i++) {
+                var node = {};
+                var group = serie.data[i];
+                for (var key in group) {
+                    // name改为id
+                    if (key === 'name') {
+                        node['id'] = group['name'];
+                    }
+                    else {
+                        node[key] = group[key];
+                    }
+                }
+                // legends 选择优先级 category -> group
+                var category = this._getNodeCategory(serie, group);
+                var name = category ? category.name : group.name;
+
+                this.selectedMap[name] = this.isSelected(name);
+                if (this.selectedMap[name]) {
+                    nodesData.push(node);
+                    count++;
+                }
+                else {
+                    // 过滤legend未选中的数据
+                    matrix.splice(count, 1);
+                    for (var j = 0; j < matrix.length; j++) {
+                        matrix[j].splice(count, 1);
+                    }
+                }
+            }
+
+            var graph = Graph.fromMatrix(nodesData, matrix, true);
+
+            // Prepare layout parameters
+            graph.eachNode(function (n, idx) {
+                n.layout = {
+                    size: n.data.value,
+                    mass: 0
+                };
+                n.rawIndex = idx;
+            });
+            graph.eachEdge(function (e) {
+                e.layout = {
+                    weight: e.data.weight,
+                };
+            });
+
+            return graph;
+        },
+
+        _getSerieGraphFromNodeLinks: function (serie) {
+            var graph = new Graph(true);
 
             for (var i = 0, len = serie.nodes.length; i < len; i++) {
                 var n = serie.nodes[i];
@@ -150,6 +224,7 @@ define(function (require) {
                     node.rawIndex = i;
                 }
             }
+
             for (var i = 0, len = serie.links.length; i < len; i++) {
                 var e = serie.links[i];
                 var n1 = e.source;
@@ -172,12 +247,28 @@ define(function (require) {
                 }
             }
 
-            this._buildLinkShapes(serie);
-            this._buildNodeShapes(serie);
+            graph.eachNode(function (n) {
+                var value = n.data.value;
+                if (value == null) {    // value 是 null 或者 undefined
+                    value = 0;
+                    // 默认使用所有边值的和作为节点的大小, 不修改 data 里的数值
+                    for (var i = 0; i < n.edges.length; i++) {
+                        value += n.edges[i].data.weight || 0;
+                    }
+                }
+                n.layout = {
+                    size: value,
+                    mass: 0
+                };
+            });
+            graph.eachEdge(function (e) {
+                e.layout = {
+                    // 默认 weight 为1
+                    weight: e.data.weight == null ? 1 : e.data.weight,
+                };
+            });
 
-            this._initLayout(serie);
-
-            this._step();
+            return graph;
         },
 
         _initLayout: function(serie) {
@@ -206,12 +297,8 @@ define(function (require) {
             var min = Infinity; var max = -Infinity;
             for (var i = 0; i < len; i++) {
                 var gNode = graph.nodes[i];
-                gNode.layout = {
-                    size: gNode.data.value || 1,
-                    mass: 0
-                };
-                max = Math.max(gNode.data.value, max);
-                min = Math.min(gNode.data.value, min);
+                max = Math.max(gNode.layout.size, max);
+                min = Math.min(gNode.layout.size, min);
             }
             var divider = max - min;
             for (var i = 0; i < len; i++) {
@@ -260,9 +347,6 @@ define(function (require) {
             max = -Infinity;
             for (var i = 0; i < len; i++) {
                 var e = graph.edges[i];
-                e.layout = {
-                    weight: e.data.weight || 1
-                };
                 if (e.layout.weight > max) {
                     max = e.layout.weight;
                 }
