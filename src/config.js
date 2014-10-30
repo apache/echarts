@@ -190,7 +190,7 @@ define(function() {
                     show: false,
                     title: '数据视图',
                     readOnly: false,
-                    lang: ['Data View', 'close', 'refresh']
+                    lang: ['数据视图', '关闭', '刷新']
                 },
                 magicType: {
                     show: false,
