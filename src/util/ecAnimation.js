@@ -96,6 +96,7 @@ define(function (require) {
         var newShapeStyle = newShape.style;
         if (!oldShape) {        // add
             oldShape = {
+                position : newShape.position,
                 style : {
                     x : newShapeStyle.x,
                     y : newShape._orient == 'vertical'
@@ -113,12 +114,25 @@ define(function (require) {
         var newY = newShapeStyle.y;
         var newWidth = newShapeStyle.width;
         var newHeight = newShapeStyle.height;
+        var newPosition = [newShape.position[0], newShape.position[1]];
         cloneStyle(
             newShape, oldShape,
             'x', 'y', 'width', 'height'
         );
+        newShape.position = oldShape.position;
 
         zr.addShape(newShape);
+        if (newPosition[0] != oldShape.position[0] || newPosition[1] != oldShape.position[1]) {
+            zr.animate(newShape.id, '')
+                .when(
+                    duration,
+                    {
+                        position: newPosition
+                    }
+                )
+                .start(easing);
+        }
+        
         zr.animate(newShape.id, 'style')
             .when(
                 duration,
@@ -445,6 +459,8 @@ define(function (require) {
         if (!oldShape) {
             oldShape = {
                 style : {
+                    xStart : newShape.style.xStart,
+                    yStart : newShape.style.yStart,
                     xEnd : newShape.style.xStart,
                     yEnd : newShape.style.yStart
                 }

@@ -1477,6 +1477,7 @@ define(function (require) {
                 case 'mark-line' :
                     ecAnimation.markline(this.zr, oldShape, newShape, duration, easing);
                     break;
+                case 'bezier-curve' :
                 case 'line' :
                     ecAnimation.line(this.zr, oldShape, newShape, duration, easing);
                     break;
