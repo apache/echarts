@@ -427,26 +427,23 @@ define(function (require) {
                 // 节点标签样式
                 if (this.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {
                     shape.style.text = node.data.name;
-                    shape.style.textPosition = 'inside';
                     var labelStyle = this.deepQuery(
-                        queryTarget, 'itemStyle.normal.label.textStyle'
+                        queryTarget, 'itemStyle.normal.label'
                     ) || {};
-                    shape.style.textColor = labelStyle.color || '#fff';
-                    shape.style.textAlign = labelStyle.align || 'center';
-                    shape.style.textBaseline = labelStyle.baseline || 'middle';
-                    shape.style.textFont = this.getFont(labelStyle);
+                    var textStyle = labelStyle.textStyle || {};
+                    shape.style.textPosition = labelStyle.position;
+                    shape.style.textColor = textStyle.color || '#fff';
+                    shape.style.textFont = this.getFont(textStyle);
                 }
 
                 if (this.deepQuery(queryTarget, 'itemStyle.emphasis.label.show')) {
                     shape.highlightStyle.text = node.data.name;
-                    shape.highlightStyle.textPosition = 'inside';
                     var labelStyle = this.deepQuery(
                         queryTarget, 'itemStyle.emphasis.label.textStyle'
                     ) || {};
-                    shape.highlightStyle.textColor = labelStyle.color || '#fff';
-                    shape.highlightStyle.textAlign = labelStyle.align  || 'center';
-                    shape.highlightStyle.textBaseline = labelStyle.baseline || 'middle';
-                    shape.highlightStyle.textFont = this.getFont(labelStyle);
+                    shape.highlightStyle.textPosition = labelStyle.position;
+                    shape.highlightStyle.textColor = textStyle.color || '#fff';
+                    shape.highlightStyle.textFont = this.getFont(textStyle);
                 }
 
                 // 拖拽特性

@@ -734,7 +734,7 @@ define(function() {
                     borderWidth: 1,
                     label: {
                         show: true,
-                        position: 'outer'
+                        position: 'inside'
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
@@ -877,7 +877,8 @@ define(function() {
                 normal: {
                     // color: 各异,
                     label: {
-                        show: false
+                        show: false,
+                        position: 'inside'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     nodeStyle: {
@@ -886,7 +887,8 @@ define(function() {
                     },
                     linkStyle: {
                         color: '#5182ab',
-                        width: 1
+                        width: 1,
+                        type: 'line'
                     }
                 },
                 emphasis: {
