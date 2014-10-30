@@ -546,6 +546,14 @@ define(function (require) {
                     position: [x + center[0], y + center[1]],
                 });
 
+                ecData.pack(
+                    iconShape,
+                    serie,
+                    serieIdx,
+                    node.data.value, node.rawIndex,
+                    node.id
+                );
+
                 this.shapeList.push(iconShape);
                 node.shape = iconShape;
             }, this);
@@ -767,6 +775,17 @@ define(function (require) {
                         )
                     }
                 });
+
+                ecData.pack(
+                    curveShape,
+                    serie,
+                    serieIdx,
+                    e.data.weight,
+                    e.node1.rawIndex + '-' + e.node2.rawIndex,
+                    e.node1.id,
+                    e.node2.id,
+                    e.data.weight
+                );
 
                 this.shapeList.push(curveShape);
                 e.shape = curveShape;
