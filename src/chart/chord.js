@@ -217,7 +217,7 @@ define(function (require) {
                 }
                 for (var i = 0, j = 0; i < series.length; i++) {
                     if (this.selectedMap[series[i].name]) {
-                        this._buildEdgeCurves(series, i, graphs[j++], mainSerie);
+                        this._buildEdgeCurves(series, i, graphs[j++], mainSerie, mainGraph);
                     }
                 }
             }
@@ -718,15 +718,17 @@ define(function (require) {
             }, this);
         },
 
-        _buildEdgeCurves: function (series, serieIdx, graph, mainSerie) {
+        _buildEdgeCurves: function (series, serieIdx, graph, mainSerie, mainGraph) {
             var serie = series[serieIdx];
             
             var center = this.parseCenter(this.zr, mainSerie.center);
             var radius = this.parseRadius(this.zr, mainSerie.radius);
 
             graph.eachEdge(function (e) {
-                var shape1 = e.node1.shape;
-                var shape2 = e.node2.shape;
+                var node1 = mainGraph.getNodeById(e.node1.id);
+                var node2 = mainGraph.getNodeById(e.node2.id);
+                var shape1 = node1.shape;
+                var shape2 = node2.shape;
                 var queryTarget = this._getEdgeQueryTarget(serie, e.data);
                 var queryTargetEmphasis = this._getEdgeQueryTarget(
                     serie, e.data, 'emphasis'
