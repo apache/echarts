@@ -198,7 +198,9 @@ define(function() {
                         line: '折线图切换',
                         bar: '柱形图切换',
                         stack: '堆积',
-                        tiled: '平铺'
+                        tiled: '平铺',
+                        force: '力导向布局图切换',
+                        chord: '和弦图切换'
                     },
                     type: [] // 'line', 'bar', 'stack', 'tiled'
                 },

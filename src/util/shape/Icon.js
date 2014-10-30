@@ -187,6 +187,51 @@ define(function (require) {
         ctx.lineTo(style.x + 12 * dx,       style.y + 9 * dy);
         ctx.lineTo(style.x + 12 * dx,       style.y + 14 * dy);
     }
+    
+    function _iconForceChart(ctx, style) {
+        var x = style.x;
+        var y = style.y;
+        var width = style.width;
+        var height = style.height;
+        var dx = width / 16;
+        var dy = height / 16;
+        var r = Math.min(dx, dy) * 2;
+
+        ctx.moveTo(x + dx + r, y + dy + r);
+        ctx.arc(x + dx, y + dy, r, Math.PI / 4, Math.PI * 3);
+        
+        ctx.lineTo(x + 7 * dx - r, y + 6 * dy - r);
+        ctx.arc(x + 7 * dx, y + 6 * dy, r, Math.PI / 4 * 5, Math.PI * 4);
+        ctx.arc(x + 7 * dx, y + 6 * dy, r / 2, Math.PI / 4 * 5, Math.PI * 4);
+        
+        ctx.moveTo(x + 7 * dx - r / 2, y + 6 * dy + r);
+        ctx.lineTo(x + dx + r, y + 14 * dy - r);
+        ctx.arc(x + dx, y + 14 * dy, r, -Math.PI / 4, Math.PI * 2);
+        
+        ctx.moveTo(x + 7 * dx + r / 2, y + 6 * dy);
+        ctx.lineTo(x + 14 * dx - r, y + 10 * dy - r / 2);
+        ctx.moveTo(x + 16 * dx, y + 10 * dy);
+        ctx.arc(x + 14 * dx, y + 10 * dy, r, 0, Math.PI * 3);
+        ctx.lineWidth = 1.5;
+    }
+    
+    function _iconChordChart(ctx, style) {
+        var x = style.x;
+        var y = style.y;
+        var width = style.width;
+        var height = style.height;
+        var dx = width / 16;
+        var dy = height / 16;
+        var r = Math.min(width, height) / 2;
+
+        ctx.moveTo(x + width, y + height / 2);
+        ctx.arc(x + r, y + r, r, 0, Math.PI * 2);
+        
+        ctx.arc(x + r, y, r, Math.PI / 4, Math.PI / 5 * 4);
+        ctx.arc(x, y + r, r, -Math.PI / 3, Math.PI / 3);
+        ctx.arc(x + width, y + height, r, Math.PI, Math.PI / 2 * 3);
+        ctx.lineWidth = 1.5;
+    }
 
     function _iconStackChart(ctx, style) {
         var x = style.x;
@@ -406,6 +451,8 @@ define(function (require) {
             restore : _iconRestore,
             lineChart : _iconLineChart,
             barChart : _iconBarChart,
+            forceChart : _iconForceChart,
+            chordChart : _iconChordChart,
             stackChart : _iconStackChart,
             tiledChart : _iconTiledChart,
             dataView : _iconDataView,
