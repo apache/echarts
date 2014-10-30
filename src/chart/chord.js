@@ -491,7 +491,7 @@ define(function (require) {
                     sector,
                     serie,
                     serieIdx,
-                    node.data.value, node.rawIndex,
+                    node.data.value || 0, node.rawIndex,
                     node.id
                 );
 
@@ -550,7 +550,7 @@ define(function (require) {
                     iconShape,
                     serie,
                     serieIdx,
-                    node.data.value, node.rawIndex,
+                    node.data.value || 0, node.rawIndex,
                     node.id
                 );
 
