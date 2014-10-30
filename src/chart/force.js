@@ -16,6 +16,7 @@ define(function (require) {
     
     // 图形依赖
     var LineShape = require('zrender/shape/Line');
+    var BezierCurveShape = require('zrender/shape/BezierCurve');
     var ImageShape = require('zrender/shape/Image');
     var IconShape = require('../util/shape/Icon');
 
@@ -112,12 +113,16 @@ define(function (require) {
             return serie.categories && serie.categories[node.category || 0];
         },
 
-        _getNodeQueryTarget: function (serie, node) {
+        _getNodeQueryTarget: function (serie, node, type) {
+            type = type || 'normal';
             var category = this._getNodeCategory(serie, node) || {};
             return [
-                node.itemStyle && node.itemStyle.normal,
-                category && category.itemStyle && category.itemStyle.normal,
-                serie.itemStyle.normal.nodeStyle
+                // Node
+                node.itemStyle && node.itemStyle[type],
+                // Category
+                category && category.itemStyle && category.itemStyle[type],
+                // Serie
+                serie.itemStyle[type].nodeStyle
             ];
         },
 
@@ -379,6 +384,7 @@ define(function (require) {
                         x: 0,
                         y: 0,
                         color: this.deepQuery(styleQueryTarget, 'color'),
+                        brushType: 'both',
                         // 兼容原有写法
                         strokeColor: this.deepQuery(styleQueryTarget, 'strokeColor')
                             || this.deepQuery(styleQueryTarget, 'borderColor'),
@@ -415,14 +421,6 @@ define(function (require) {
                         clickable: shape.clickable
                     });
                 }
-
-                // 兼容原有写法
-                shape.style.strokeColor = shape.style.strokeColor || shape.style.borderColor;
-                shape.style.lineWidth = shape.style.lineWidth || shape.style.borderWidth;
-                shape.highlightStyle.strokeColor = 
-                    shape.highlightStyle.strokeColor || shape.highlightStyle.borderColor;
-                shape.highlightStyle.lineWidth = 
-                    shape.highlightStyle.lineWidth || shape.highlightStyle.borderWidth;
                 
                 // 节点标签样式
                 if (this.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {
@@ -496,7 +494,15 @@ define(function (require) {
                 var source = gEdge.node1;
                 var target = gEdge.node2;
 
-                var linkShape = new LineShape({
+                var queryTarget = this._getEdgeQueryTarget(serie, gEdge);
+                var linkType = this.deepQuery(queryTarget, 'type');
+                // TODO 暂时只有线段支持箭头
+                if (serie.linkSymbol && serie.linkSymbol !== 'none') {
+                    linkType = 'line';
+                }
+                var LinkShapeCtor = linkType === 'line' ? LineShape : BezierCurveShape;
+
+                var linkShape = new LinkShapeCtor({
                     style : {
                         xStart : 0,
                         yStart : 0,
@@ -607,12 +613,20 @@ define(function (require) {
                 var sourceShape = edge.node1.shape;
                 var targetShape = edge.node2.shape;
 
-                edge.shape.style.xStart = sourceShape.position[0];
-                edge.shape.style.yStart = sourceShape.position[1];
-                edge.shape.style.xEnd = targetShape.position[0];
-                edge.shape.style.yEnd = targetShape.position[1];
+                var p1 = sourceShape.position;
+                var p2 = targetShape.position;
 
-                this.zr.modShape(edge.shape.id);
+                edge.shape.style.xStart = p1[0];
+                edge.shape.style.yStart = p1[1];
+                edge.shape.style.xEnd = p2[0];
+                edge.shape.style.yEnd = p2[1];
+
+                if (edge.shape.type === 'bezier-curve') {
+                    edge.shape.style.cpX1 = (p1[0] + p2[0]) / 2 - (p2[1] - p1[1]) / 4;
+                    edge.shape.style.cpY1 = (p1[1] + p2[1]) / 2 - (p1[0] - p2[0]) / 4;
+                }
+
+                edge.shape.modSelf();
 
                 if (edge.shape._symbolShape) {
                     var symbolShape = edge.shape._symbolShape;
@@ -626,16 +640,10 @@ define(function (require) {
                         v, targetShape.style.width / 2 + 2
                     );
 
-                    var angle;
-                    if (v[1] < 0) {
-                        angle = 2 * Math.PI - Math.acos(-v[0]);
-                    }
-                    else {
-                        angle = Math.acos(-v[0]);
-                    }
-                    symbolShape.rotation = angle - Math.PI / 2;
+                    var angle = Math.atan2(v[1], v[0]);
+                    symbolShape.rotation = Math.PI / 2 - angle;
 
-                    this.zr.modShape(symbolShape.id);
+                    symbolShape.modSelf();
                 }
             }
         },
@@ -671,7 +679,7 @@ define(function (require) {
                     vec2.copy(gPos, position);
                 }
 
-                this.zr.modShape(shape.id);
+                shape.modSelf();
             }
         },
 

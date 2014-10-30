@@ -65,6 +65,7 @@ option = {
         {
             type:'force',
             name : "人物关系",
+            ribbonType: false,
             categories : [
                 {
                     name: '人物'
@@ -88,6 +89,9 @@ option = {
                         brushType : 'both',
                         borderColor : 'rgba(255,215,0,0.4)',
                         borderWidth : 1
+                    },
+                    linkStyle: {
+                        type: 'curve'
                     }
                 },
                 emphasis: {
@@ -106,7 +110,7 @@ option = {
             maxRadius : 25,
             gravity: 1.1,
             scaling: 1.1,
-            linkSymbol: 'arrow',
+            // linkSymbol: 'arrow',
             nodes:[
                 {category:0, name: '乔布斯', value : 10},
                 {category:1, name: '丽萨-乔布斯',value : 2},

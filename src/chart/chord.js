@@ -533,6 +533,7 @@ define(function (require) {
                         height: node.layout.size * 2,
                         iconType: this.deepQuery(queryTarget, 'symbol'),
                         color: color,
+                        brushType: 'both',
                         lineWidth: this.deepQuery(queryTarget, 'itemStyle.normal.borderWidth'),
                         strokeColor: this.deepQuery(queryTarget, 'itemStyle.normal.borderColor')
                     },
