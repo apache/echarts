@@ -535,12 +535,8 @@ require(
                     </ul>
                         
                     <h3>自定义构建echarts单文件<a name="自定义构建echarts单文件"></a></h3>
-                    <p>
-                        默认echarts通过build目录下的build.sh（build.bat）脚本可以输出是否包含地图，是否压缩和是否打包esl（可以标签引入）排列组合总共6个版本的echarts单文件，大部分场景下已经够用，但是如果你还是觉得很多图表用不到还放在里面非常浪费，可以通过build目录下的build.js来构建一个更加贴身的echarts单文件。
-                    </p>
-                    <p>
-                        运行build.js只需要一个<a href="http://nodejs.org/">node</a>环境， build文件夹内已经为你准备好配置项， 可根据你的项目需求修改config-tpl.js以构建你的最佳配置， 你甚至可以在终端里通过命令行参数的方式运行 node build.js 构建脚本，具体示例：
-                    </p>
+                    <p>默认echarts通过build目录下的build.sh（build.bat）脚本可以输出是否包含地图，是否压缩和是否打包esl（可以标签引入）排列组合总共6个版本的echarts单文件，大部分场景下已经够用，但是如果你还是觉得很多图表用不到还放在里面非常浪费，可以通过build目录下的build.js来构建一个更加贴身的echarts单文件。</p>
+                    <p>运行build.js只需要一个<a href="http://nodejs.org/">node</a>环境， build文件夹内已经为你准备好配置项， 可根据你的项目需求修改config-tpl.js以构建你的最佳配置， 你甚至可以在终端里通过命令行参数的方式运行 node build.js 构建脚本，具体示例：</p>
                     <div class="code">
                         <pre>node build.js optimize=true exclude=map,force,line output=echarts.js plain=true</pre>
                     </div>
@@ -1555,7 +1551,6 @@ require(['echarts'], function (ec){
                             <td> 10 </td>
                             <td> 各个item之间的间隔，单位px，默认为10，横向布局时为水平间隔，纵向布局时为纵向间隔，见下图 </td>
                         </tr>
-                        <!--
                         <tr>
                             <td> <b>{number}</b> itemWidth </td>
                             <td> 20 </td>
@@ -1566,7 +1561,6 @@ require(['echarts'], function (ec){
                             <td> 14 </td>
                             <td> 图例图形高度 </td>
                         </tr>
-                        -->
                         <tr>
                             <td> <b>{Object}</b> textStyle </td>
                             <td> {color: '#333'} </td>
@@ -4092,6 +4086,7 @@ geoCoord : {
 // step1: 找到目标地区的geoJson数据文件，如HK_geo.json
 
 // step2: 在require('echarts/util/mapData/params').params中命名你的地图类型，如HK
+
 // step3: 命名赋值为对象{}, 实现接口方法getGeoJson，通过callback返回目标地区geoJson数据文件
 require('echarts/util/mapData/params').params.HK = {
     getGeoJson: function (callback) {
