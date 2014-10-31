@@ -44,6 +44,7 @@ define(function (require) {
         this._featureTitle = {};             // 文字
         this._featureIcon = {};              // 图标
         this._featureColor = {};             // 颜色
+        this._featureOption = {};
         this._enableColor = 'red';
         this._disableColor = '#ccc';
         // this._markStart;
@@ -124,6 +125,10 @@ define(function (require) {
                             for (var i = 0, l = feature[key].type.length; i < l; i++) {
                                 feature[key].title[feature[key].type[i] + 'Chart']
                                     = feature[key].title[feature[key].type[i]];
+                                if (feature[key].option) {
+                                    feature[key].option[feature[key].type[i] + 'Chart']
+                                        = feature[key].option[feature[key].type[i]];
+                                }
                                 iconName.push({ key: key, name: feature[key].type[i] + 'Chart' });
                             }
                             break;
@@ -155,6 +160,10 @@ define(function (require) {
                     }
                     if (feature[key].color) {
                         this._featureColor[name] = feature[key].color[name] || feature[key].color;
+                    }
+                    if (feature[key].option) {
+                        this._featureOption[name] = feature[key].option[name] 
+                                                    || feature[key].option;
                     }
                 }
                 this._itemGroupLocation = this._getItemGroupLocation();
@@ -982,15 +991,16 @@ define(function (require) {
         
         getMagicOption: function (){
             var axis;
+            var chartType;
             if (this._magicType[ecConfig.CHART_TYPE_LINE] 
                 || this._magicType[ecConfig.CHART_TYPE_BAR]
             ) {
                 // 图表类型有折柱切换
                 var boundaryGap = this._magicType[ecConfig.CHART_TYPE_LINE] ? false : true;
                 for (var i = 0, l = this.option.series.length; i < l; i++) {
-                    if (this._magicMap[this.option.series[i].type]
-                        && (this.option.series[i].type == ecConfig.CHART_TYPE_LINE
-                            || this.option.series[i].type == ecConfig.CHART_TYPE_BAR)
+                    chartType = this.option.series[i].type;
+                    if (chartType == ecConfig.CHART_TYPE_LINE
+                        || chartType == ecConfig.CHART_TYPE_BAR
                     ) {
                         this.option.series[i].type = this._magicType[ecConfig.CHART_TYPE_LINE]
                                                      ? ecConfig.CHART_TYPE_LINE
@@ -999,7 +1009,14 @@ define(function (require) {
                         this.option.series[i].itemStyle = zrUtil.clone(
                             this.option.series[i].__itemStyle
                         );
-                        
+                        chartType = this.option.series[i].type;
+                        if (this._featureOption[chartType + 'Chart']) {
+                            zrUtil.merge(
+                                this.option.series[i],
+                                this._featureOption[chartType + 'Chart'] || {},
+                                true
+                            );
+                        }
                         axis = this.option.xAxis instanceof Array
                                ? this.option.xAxis[this.option.series[i].xAxisIndex || 0]
                                : this.option.xAxis;
@@ -1022,10 +1039,19 @@ define(function (require) {
                     if (this._magicType[_MAGICTYPE_STACK]) {
                         // 启用堆积
                         this.option.series[i].stack = '_ECHARTS_STACK_KENER_2014_';
+                        chartType = _MAGICTYPE_STACK;
                     }
                     else if (this._magicType[_MAGICTYPE_TILED]) {
                         // 启用平铺
                         this.option.series[i].stack = null;
+                        chartType = _MAGICTYPE_TILED;
+                    }
+                    if (this._featureOption[chartType + 'Chart']) {
+                        zrUtil.merge(
+                            this.option.series[i],
+                            this._featureOption[chartType + 'Chart'] || {},
+                            true
+                        );
                     }
                 }
             }
@@ -1035,19 +1061,26 @@ define(function (require) {
             ) {
                 // 图表类型有和弦力导切换
                 for (var i = 0, l = this.option.series.length; i < l; i++) {
-                    if (this._magicMap[this.option.series[i].type]
-                        && (this.option.series[i].type == ecConfig.CHART_TYPE_CHORD
-                            || this.option.series[i].type == ecConfig.CHART_TYPE_FORCE)
+                    chartType = this.option.series[i].type;
+                    if (chartType == ecConfig.CHART_TYPE_CHORD
+                        || chartType == ecConfig.CHART_TYPE_FORCE
                     ) {
-                        
+                        this.option.series[i].type = this._magicType[ecConfig.CHART_TYPE_CHORD]
+                                                     ? ecConfig.CHART_TYPE_CHORD
+                                                     : ecConfig.CHART_TYPE_FORCE;
+                        // 避免不同类型图表类型的样式污染
+                        this.option.series[i].itemStyle = zrUtil.clone(
+                            this.option.series[i].__itemStyle
+                        );
+                        chartType = this.option.series[i].type;
+                        if (this._featureOption[chartType + 'Chart']) {
+                            zrUtil.merge(
+                                this.option.series[i],
+                                this._featureOption[chartType + 'Chart'] || {},
+                                true
+                            );
+                        }
                     }
-                    this.option.series[i].type = this._magicType[ecConfig.CHART_TYPE_CHORD]
-                                                 ? ecConfig.CHART_TYPE_CHORD
-                                                 : ecConfig.CHART_TYPE_FORCE;
-                    // 避免不同类型图表类型的样式污染
-                    this.option.series[i].itemStyle = zrUtil.clone(
-                        this.option.series[i].__itemStyle
-                    );
                 }
             }
             

@@ -59,7 +59,42 @@ option = {
         show : true,
         feature : {
             restore : {show: true},
-            magicType: {show: true, type: ['force', 'chord']},
+            magicType: {
+                show: true,
+                type: ['force', 'chord'],
+                option: {
+                    chord: {
+                        minRadius : 2,
+                        maxRadius : 10,
+                        ribbonType: false,
+                        itemStyle: {
+                            normal: {
+                                label: {
+                                    show: true,
+                                    rotate: true
+                                },
+                                chordStyle: {
+                                    opacity: 0.2
+                                }
+                            }
+                        }
+                    },
+                    force: {
+                        minRadius : 5,
+                        maxRadius : 8,
+                        itemStyle : {
+                            normal : {
+                                label: {
+                                    show: false
+                                },
+                                linkStyle : {
+                                    opacity : 0.5
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             saveAsImage : {show: true}
         }
     },
