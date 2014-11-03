@@ -1107,6 +1107,7 @@ define(function() {
             maxSize: '100%',
             sort: 'descending', // 'ascending', 'descending'
             gap: 0,
+            funnelAlign: 'center',
             itemStyle: {
                 normal: {
                     // color: 各异,
