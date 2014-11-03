@@ -492,8 +492,11 @@ define(function (require) {
                     sector,
                     serie,
                     serieIdx,
-                    node.data.value || 0, node.rawIndex,
-                    node.id
+                    node.data,
+                    node.rawIndex,
+                    node.id,
+                    // special
+                    node.category
                 );
 
                 this.shapeList.push(sector);
@@ -551,8 +554,11 @@ define(function (require) {
                     iconShape,
                     serie,
                     serieIdx,
-                    node.data.value || 0, node.rawIndex,
-                    node.id
+                    node.data,
+                    node.rawIndex,
+                    node.id,
+                    // special
+                    node.category
                 );
 
                 this.shapeList.push(iconShape);
@@ -715,12 +721,13 @@ define(function (require) {
                     ribbon,
                     serie,
                     serieIdx,
-                    edge.data.weight,
-                    edge.node1.rawIndex + '-' + edge.node2.rawIndex,
+                    edge.data,
+                    edge.rawIndex,
+                    edge.data.name || (edge.node1.id + '-' + edge.node2.id),
+                    // special
                     edge.node1.id,
-                    edge.node2.id,
-                    edge.data.weight,
-                    other.data.weight
+                    // special2
+                    edge.node2.id
                 );
 
                 this.shapeList.push(ribbon);
@@ -781,11 +788,13 @@ define(function (require) {
                     curveShape,
                     serie,
                     serieIdx,
-                    e.data.weight,
-                    e.node1.rawIndex + '-' + e.node2.rawIndex,
+                    e.data,
+                    e.rawIndex,
+                    e.data.name || (e.node1.rawIndex + '-' + e.node2.rawIndex),
+                    // special
                     e.node1.id,
-                    e.node2.id,
-                    e.data.weight
+                    // special2
+                    e.node2.id
                 );
 
                 this.shapeList.push(curveShape);

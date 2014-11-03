@@ -103,7 +103,7 @@ define(function (require) {
                     this.buildMark(i);
                     
                     // TODO 多个 force 
-                    this._initSerie(serie);
+                    this._initSerie(serie, i);
                     break;
                 }
             }
@@ -134,7 +134,7 @@ define(function (require) {
             ];
         },
 
-        _initSerie: function(serie) {
+        _initSerie: function(serie, serieIdx) {
             this._temperature = 1;
 
             // data-matrix 表示数据
@@ -146,8 +146,8 @@ define(function (require) {
                 this._graph = this._getSerieGraphFromNodeLinks(serie);
             }
 
-            this._buildLinkShapes(serie);
-            this._buildNodeShapes(serie);
+            this._buildLinkShapes(serie, serieIdx);
+            this._buildNodeShapes(serie, serieIdx);
 
             // Enable pan and zooom
             this.zr.modLayer(this.getZlevelBase(), {
@@ -372,7 +372,7 @@ define(function (require) {
             this._layout.init(graph, serie.useWorker);
         },
 
-        _buildNodeShapes: function(serie) {
+        _buildNodeShapes: function(serie, serieIdx) {
             var graph = this._graph;
 
             var categories = this.query(serie, 'categories');
@@ -469,20 +469,17 @@ define(function (require) {
                 // !!Pack data before addShape
                 ecData.pack(
                     shape,
-                    // category
-                    {
-                        name : categoryName
-                    },
-                    // series index
-                    0,
+                    serie,
+                    serieIdx,
                     // data
                     node.data,
                     // data index
                     node.rawIndex,
                     // name
                     node.data.name || '',
-                    // value
-                    node.data.value
+                    // category
+                    // special
+                    node.category
                 );
                 
                 this.shapeList.push(shape);
@@ -492,7 +489,7 @@ define(function (require) {
             }, this);
         },
 
-        _buildLinkShapes: function(serie) {
+        _buildLinkShapes: function(serie, serieIdx) {
             var graph = this._graph;
             var len = graph.edges.length;
 
@@ -561,22 +558,19 @@ define(function (require) {
                     // serie
                     serie,
                     // serie index
-                    0,
+                    serieIdx,
                     // link data
-                    {
-                        source : source.rawIndex,
-                        target : target.rawIndex,
-                        weight : gEdge.data.weight || 0
-                    },
+                    gEdge.data,
                     // link data index
                     gEdge.rawIndex,
                     // source name - target name
-                    source.id + ' - ' + target.id,
-                    // link weight
-                    gEdge.data.weight || 0,
+                    gEdge.data.name || (source.id + ' - ' + target.id),
+                    // link source id
                     // special
-                    // 这一项只是为了表明这是条边
-                    true
+                    source.id,
+                    // link target id
+                    // special2
+                    target.id
                 );
 
                 this.shapeList.push(linkShape);

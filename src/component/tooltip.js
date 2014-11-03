@@ -943,11 +943,12 @@ define(function (require) {
                         this, serie, name, value, special
                     );
                 }
-                else if (serie.type === ecConfig.CHART_TYPE_CHORD) {
-                    this._tDom.innerHTML = this._itemFormatter.chord.call(
-                        this, serie, name, value, special, special2
-                    );
-                }
+                // chord 处理暂时跟 force 一样
+                // else if (serie.type === ecConfig.CHART_TYPE_CHORD) {
+                //     this._tDom.innerHTML = this._itemFormatter.chord.call(
+                //         this, serie, name, value, special, special2
+                //     );
+                // }
                 else if (serie.type === ecConfig.CHART_TYPE_EVENTRIVER) {
                     this._tDom.innerHTML = this._itemFormatter.eventRiver.call(
                         this, serie, name, value, data

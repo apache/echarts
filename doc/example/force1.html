@@ -111,7 +111,8 @@ option = {
             maxRadius : 25,
             gravity: 1.1,
             scaling: 1.1,
-            // linkSymbol: 'arrow',
+            panable: true,
+            zoomable: true,
             nodes:[
                 {category:0, name: '乔布斯', value : 10},
                 {category:1, name: '丽萨-乔布斯',value : 2},
@@ -126,14 +127,14 @@ option = {
                 {category:2, name: '龙-韦恩',value : 1},
             ],
             links : [
-                {source : '丽萨-乔布斯', target : '乔布斯', weight : 1},
-                {source : '保罗-乔布斯', target : '乔布斯', weight : 2},
-                {source : '克拉拉-乔布斯', target : '乔布斯', weight : 1},
+                {source : '丽萨-乔布斯', target : '乔布斯', weight : 1, name: '女儿'},
+                {source : '保罗-乔布斯', target : '乔布斯', weight : 2, name: '父亲'},
+                {source : '克拉拉-乔布斯', target : '乔布斯', weight : 1, name: '母亲'},
                 {source : '劳伦-鲍威尔', target : '乔布斯', weight : 2},
-                {source : '史蒂夫-沃兹尼艾克', target : '乔布斯', weight : 3},
-                {source : '奥巴马', target : '乔布斯', weight : 6},
-                {source : '比尔-盖茨', target : '乔布斯', weight : 6},
-                {source : '乔纳森-艾夫', target : '乔布斯', weight : 1},
+                {source : '史蒂夫-沃兹尼艾克', target : '乔布斯', weight : 3, name: '合伙人'},
+                {source : '奥巴马', target : '乔布斯', weight : 1},
+                {source : '比尔-盖茨', target : '乔布斯', weight : 6, name: '竞争对手'},
+                {source : '乔纳森-艾夫', target : '乔布斯', weight : 1, name: '爱将'},
                 {source : '蒂姆-库克', target : '乔布斯', weight : 1},
                 {source : '龙-韦恩', target : '乔布斯', weight : 1},
                 {source : '克拉拉-乔布斯', target : '保罗-乔布斯', weight : 1},
@@ -163,7 +164,6 @@ function focus(param) {
     } else { // 点击的是点
         console.log("选中了" + data.name + '(' + data.value + ')');
     }
-    console.log(param);
 }
 myChart.on(ecConfig.EVENT.CLICK, focus)
 
