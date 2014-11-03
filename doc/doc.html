@@ -1489,7 +1489,7 @@ require(['echarts'], function (ec){
                         <li>
                             <b>{Function}</b>，传递参数列表如下：
                             <ul>
-                                <li>&lt;Array&gt; params : 数组内容同模板变量，[[a, b, c, d, e, data], [a1, b1, c1, d1, e1, data1], ...]，参数列表最后一项返回option中的完整data</li>
+                                <li>&lt;Array&gt; params : 数组内容同模板变量，[[a, b, c, d, e, data, seriesIndex, dataIndex], [a1, b1, c1, d1, e1, data1,seriesIndex, dataIndex], ...]</li>
                                 <li>&lt;String&gt; ticket : 异步回调标识</li>
                                 <li>&lt;Function&gt; callback : 异步回调，回调时需要两个参数，第一个为前面提到的ticket，第二个为填充内容html</li>
                                 <li><i>*函数回调时this指针指向当前图表实例（myChart）</i></li>

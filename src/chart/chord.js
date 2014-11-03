@@ -237,6 +237,7 @@ define(function (require) {
             for (var i = 0; i < data.length; i++) {
                 var node = {};
                 var group = data[i];
+                group.rawIndex = i;
                 for (var key in group) {
                     // name改为id
                     if (key === 'name') {
@@ -271,7 +272,7 @@ define(function (require) {
                 n.layout = {
                     size: n.data.outValue
                 };
-                n.rawIndex = idx;
+                n.rawIndex = n.data.rawIndex;
             });
             graph.eachEdge(function (e) {
                 e.layout = {
@@ -655,7 +656,7 @@ define(function (require) {
             var radius = this.parseRadius(this.zr, mainSerie.radius);
 
             // graph.edges.length = 1;
-            graph.eachEdge(function (edge) {
+            graph.eachEdge(function (edge, idx) {
                 var color;
                 // 反向边
                 var other = graph.getEdge(edge.node2, edge.node1);
@@ -722,7 +723,7 @@ define(function (require) {
                     serie,
                     serieIdx,
                     edge.data,
-                    edge.rawIndex,
+                    edge.rawIndex == null ? idx : e.rawIndex,
                     edge.data.name || (edge.node1.id + '-' + edge.node2.id),
                     // special
                     edge.node1.id,
@@ -741,7 +742,7 @@ define(function (require) {
             var center = this.parseCenter(this.zr, mainSerie.center);
             var radius = this.parseRadius(this.zr, mainSerie.radius);
 
-            graph.eachEdge(function (e) {
+            graph.eachEdge(function (e, idx) {
                 var node1 = mainGraph.getNodeById(e.node1.id);
                 var node2 = mainGraph.getNodeById(e.node2.id);
                 var shape1 = node1.shape;
@@ -789,8 +790,8 @@ define(function (require) {
                     serie,
                     serieIdx,
                     e.data,
-                    e.rawIndex,
-                    e.data.name || (e.node1.rawIndex + '-' + e.node2.rawIndex),
+                    e.rawIndex == null ? idx : e.rawIndex,
+                    e.data.name || (e.node1.id + '-' + e.node2.id),
                     // special
                     e.node1.id,
                     // special2

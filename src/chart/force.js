@@ -562,7 +562,7 @@ define(function (require) {
                     // link data
                     gEdge.data,
                     // link data index
-                    gEdge.rawIndex,
+                    gEdge.rawIndex == null ? i : e.rawIndex,
                     // source name - target name
                     gEdge.data.name || (source.id + ' - ' + target.id),
                     // link source id

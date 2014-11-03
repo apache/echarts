@@ -908,7 +908,9 @@ define(function (require) {
                         value,
                         special,
                         special2,
-                        data
+                        data,
+                        ecData.get(this._curTarget, 'seriesIndex'),
+                        ecData.get(this._curTarget, 'dataIndex')
                     ],
                     this._curTicket,
                     this._setContent

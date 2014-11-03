@@ -44,7 +44,14 @@ option = {
         text: '测试数据'
     },
     tooltip : {
-        trigger: 'item'
+        trigger: 'item',
+        formatter: function (params) {
+            if (params[4]) { // is edge
+                return params[2].weight;
+            } else {// is node
+                return params[1]
+            }
+        }
     },
     toolbox: {
         show : true,

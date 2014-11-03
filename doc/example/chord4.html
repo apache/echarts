@@ -46,7 +46,14 @@ option = {
         y:'bottom'
     },
     tooltip : {
-        trigger: 'item'
+        trigger: 'item',
+        formatter: function (params) {
+            if (params[4]) {    // is edge
+                return params[4] + params[1] + params[3];
+            } else {    // is node
+                return params[1]
+            }
+        }
     },
     toolbox: {
         show : true,
@@ -62,6 +69,7 @@ option = {
     },
     series : [
         {
+            name: '德国队效力联盟',
             type:'chord',
             sort : 'ascending',
             sortSub : 'descending',
@@ -97,20 +105,20 @@ option = {
                 {name:'多特蒙德'}
             ],
             links: [
-                {source: '阿森纳', target: '默特萨克', weight: 1},
-                {source: '阿森纳', target: '厄齐尔', weight: 1},
-                {source: '阿森纳', target: '波多尔斯基', weight: 1},
-                {source: '拜仁慕尼黑', target: '诺伊尔', weight: 1},
-                {source: '拜仁慕尼黑', target: '博阿滕', weight: 1},
-                {source: '拜仁慕尼黑', target: '施魏因施泰格', weight: 1},
-                {source: '拜仁慕尼黑', target: '拉姆', weight: 1},
-                {source: '拜仁慕尼黑', target: '克罗斯', weight: 1},
-                {source: '拜仁慕尼黑', target: '穆勒', weight: 1},
-                {source: '拜仁慕尼黑', target: '格策', weight: 1},
-                {source: '多特蒙德', target: '胡梅尔斯', weight: 1},
-                {source: '多特蒙德', target: '魏登费勒', weight: 1},
-                {source: '多特蒙德', target: '杜尔姆', weight: 1},
-                {source: '多特蒙德', target: '格罗斯克罗伊茨', weight: 1}
+                {source: '阿森纳', target: '默特萨克', weight: 1, name: '效力'},
+                {source: '阿森纳', target: '厄齐尔', weight: 1, name: '效力'},
+                {source: '阿森纳', target: '波多尔斯基', weight: 1, name: '效力'},
+                {source: '拜仁慕尼黑', target: '诺伊尔', weight: 1, name: '效力'},
+                {source: '拜仁慕尼黑', target: '博阿滕', weight: 1, name: '效力'},
+                {source: '拜仁慕尼黑', target: '施魏因施泰格', weight: 1, name: '效力'},
+                {source: '拜仁慕尼黑', target: '拉姆', weight: 1, name: '效力'},
+                {source: '拜仁慕尼黑', target: '克罗斯', weight: 1, name: '效力'},
+                {source: '拜仁慕尼黑', target: '穆勒', weight: 1, name: '效力'},
+                {source: '拜仁慕尼黑', target: '格策', weight: 1, name: '效力'},
+                {source: '多特蒙德', target: '胡梅尔斯', weight: 1, name: '效力'},
+                {source: '多特蒙德', target: '魏登费勒', weight: 1, name: '效力'},
+                {source: '多特蒙德', target: '杜尔姆', weight: 1, name: '效力'},
+                {source: '多特蒙德', target: '格罗斯克罗伊茨', weight: 1, name: '效力'}
             ]
         }
     ]
