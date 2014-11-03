@@ -18,7 +18,7 @@ define(function(require) {
     var workerUrl;
 
     function getToken() {
-        return Math.round(Date.now() / 100) % 10000000;
+        return Math.round((new Date()).getTime() / 100) % 10000000;
     }
 
     function createWorkerUrl() {
