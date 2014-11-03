@@ -723,7 +723,7 @@ define(function (require) {
                     serie,
                     serieIdx,
                     edge.data,
-                    edge.rawIndex == null ? idx : e.rawIndex,
+                    edge.rawIndex == null ? idx : edge.rawIndex,
                     edge.data.name || (edge.node1.id + '-' + edge.node2.id),
                     // special
                     edge.node1.id,
