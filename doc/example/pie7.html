@@ -72,6 +72,18 @@ option = {
                 feature : {
                     mark : {show: true},
                     dataView : {show: true, readOnly: false},
+                    magicType : {
+                        show: true, 
+                        type: ['pie', 'funnel'],
+                        option: {
+                            funnel: {
+                                x: '25%',
+                                width: '50%',
+                                funnelAlign: 'left',
+                                max: 1700
+                            }
+                        }
+                    },
                     restore : {show: true},
                     saveAsImage : {show: true}
                 }
