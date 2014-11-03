@@ -2758,62 +2758,18 @@ indicator : [
                         </tr>
                         <tr>
                             <td> <b>{Array}</b> categories </td>
-                            <td> [] </td>
-                            <td>
-                                力导向图中节点的分类, 对于每一项:
-                                <table cellspacing="0" class="ADoc_table full">
-                                    <tr>
-                                        <th> 名称 </th>
-                                        <th> 默认值 </th>
-                                        <th> 描述 </th>
-                                    </tr>
-                                    <tr>
-                                        <td> <b>{string}</b> name </td>
-                                        <td></td>
-                                        <td> 类目名称 </td>
-                                    </tr>
-                                    <tr>
-                                        <td> <b>{string}</b> symbol </td>
-                                        <td> 'circle' </td>
-                                        <td> 同<a href="#SeriesCartesian" title="">series（直角系）</a></td>
-                                    </tr>
-                                    <tr>
-                                        <td> {number} symbolSize </td>
-                                        <td></td>
-                                        <td> 所有该类目的节点的大小 </td>
-                                    </tr>
-                                    <tr>
-                                        <td> {boolean} draggable </td>
-                                        <td></td>
-                                        <td> 所有该类目的节点是否能被拖拽 </td>
-                                    </tr>
-                                    <tr>
-                                        <td> itemStyle </td>
-                                        <td></td>
-                                        <td> 详见 <a href="#ItemStyle">itemStyle</a> </td>
-                                    </tr>
-                                </table>
-                            </td>
+                            <td> null </td>
+                            <td> 节点分类, 详见图数据结构表示中的<a href="#categories">categories</a></td>
                         </tr>
                         <tr>
-                            <td> <b>{Array}</b> nodes </td>
+                            <td> <b>{Array}</b> nodes(data) </td>
                             <td> [] </td>
-                            <td> 力导向图的顶点数据, 每一项：
+                            <td> 力导向图的顶点数据, 详见图数据结构表示中的<a href="#nodes(data)">nodes(data)</a>, 力导向中独有的项：
                                 <table cellspacing="0" class="ADoc_table full">
                                     <tr>
                                         <th> 名称 </th>
                                         <th> 默认值 </th>
                                         <th> 描述 </th>
-                                    </tr>
-                                    <tr>
-                                        <td> <b>{string}</b> name </td>
-                                        <td></td>
-                                        <td> 节点名称 </td>
-                                    </tr>
-                                    <tr>
-                                        <td> <b>{number}</b> value </td>
-                                        <td> 1 </td>
-                                        <td> 节点值，在不指定 symbolSize 的时候会被映射成 minRadius - maxRadius 作为节点大小 </td>
                                     </tr>
                                     <tr>
                                         <td> {Array} initial </td>
@@ -2836,16 +2792,6 @@ indicator : [
                                         <td>是否忽略该节点</td>
                                     </tr>
                                     <tr>
-                                        <td> <b>{string}</b> symbol </td>
-                                        <td>'circle' </td>
-                                        <td> 同<a href="#SeriesCartesian" title="">series（直角系）</a></td>
-                                    </tr>
-                                    <tr>
-                                        <td> {number} symbolSize </td>
-                                        <td></td>
-                                        <td> 强制指定节点的大小 </td>
-                                    </tr>
-                                    <tr>
                                         <td> {boolean} draggable </td>
                                         <td></td>
                                         <td> 节点是否能被拖拽 </td>
@@ -2855,45 +2801,18 @@ indicator : [
                                         <td></td>
                                         <td> 节点的 category index </td>
                                     </tr>
-                                    <tr>
-                                        <td> itemStyle </td>
-                                        <td></td>
-                                        <td> 详见 <a href="#ItemStyle">itemStyle</a> </td>
-                                    </tr>
                                 </table>
                             </td>
                         </tr>
                         <tr>
                             <td> <b>{Array}</b> links </td>
                             <td> [] </td>
-                            <td> 力导向图的边数据, 每一项:
-                                <table cellspacing="0" class="ADoc_table full">
-                                    <tr>
-                                        <th> 名称 </th>
-                                        <th> 默认值 </th>
-                                        <th> 描述 </th>
-                                    </tr>
-                                    <tr>
-                                        <td> <b>{string|number}</b> source </td>
-                                        <td></td>
-                                        <td> 源节点的index或者源节点的name </td>
-                                    </tr>
-                                    <tr>
-                                        <td> <b>{string|number}</b> target </td>
-                                        <td></td>
-                                        <td> 目标节点的index或者目标节点的name </td>
-                                    </tr>
-                                    <tr>
-                                        <td> <b>{number}</b> weight </td>
-                                        <td> 1 </td>
-                                        <td> 边的权重，权重越大邻接节点越靠拢 </td>
-                                    </tr>
-                                    <tr>
-                                        <td> itemStyle </td>
-                                        <td></td>
-                                        <td> 详见 <a href="#ItemStyle">itemStyle</a>, 只能设置 lineWidth, strokeColor, lineType 等描边的属性 </td>
-                                    </tr>
-                                </table>
+                            <td> 力导向图的边数据, 和matrix二选一 详见图数据结构表示中的<a href="#GraphLinks">links</a></td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> matrix </td>
+                            <td> [] </td>
+                            <td> 力导向图的邻接矩阵, 和links二选一 详见图数据结构表示中的<a href="#GraphMatrix">matrix</a></td>
                         </tr>
                         <tr>
                             <td><b> {Array} center</b></td>
@@ -2965,6 +2884,16 @@ indicator : [
                             <td> 1 </td>
                             <td> 每一帧布局计算的迭代次数，因为每一帧绘制的时间经常会比布局时间长很多，所以在使用 web worker 的时候可以把 steps 调大来平衡两者的时间从而达到效率最优化 </td>
                         </tr>
+                        <tr>
+                            <td> <b>{number}</b> panable </td>
+                            <td> false </td>
+                            <td> 鼠标拖拽平移 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> zoomable </td>
+                            <td> false </td>
+                            <td> 鼠标缩放 </td>
+                        </tr>
                     </table>
 
                     <h5>series（和弦图）<a name="SeriesChord"> </a></h5>
@@ -2975,6 +2904,65 @@ indicator : [
                             <th> 默认值 </th>
                             <th> 描述 </th>
                         </tr>
+                        <tr>
+                        <tr>
+                            <td> <b>{Array}</b> categories </td>
+                            <td> null </td>
+                            <td> 节点分类, 详见图数据结构表示中的<a href="#categories">categories</a></td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> nodes(data) </td>
+                            <td> [] </td>
+                            <td> 和弦图的顶点数据, 详见图数据结构表示中的<a href="#nodes(data)">nodes(data)</a> </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> links </td>
+                            <td> [] </td>
+                            <td> 和弦图的边数据, 和matrix二选一 详见图数据结构表示中的<a href="#GraphLinks">links</a></td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> matrix </td>
+                            <td> [] </td>
+                            <td> 和弦图的邻接矩阵, 和links二选一 详见图数据结构表示中的<a href="#GraphMatrix">matrix</a></td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Boolean}</b> ribbonType </td>
+                            <td>true</td>
+                            <td>ribbonType的和弦图节点使用扇形绘制，边使用有大小端的ribbon绘制，可以表示出边的权重，图的节点边之间必须是双向边，非ribbonType的和弦图节点使用symbol绘制，边使用贝塞尔曲线，不能表示边的权重，但是可以使用单向边</td>
+                        </tr>
+                        <!-- ribbonType 为false时的配置项 -->
+                        <tr>
+                            <td> <b>{string}</b> symbol </td>
+                            <td> 'circle' </td>
+                            <td> 同<a href="#SeriesCartesian" title="">series（直角系）</a>, ribbonType为false时有效</td>
+                        </tr>
+                        <tr>
+                            <td> {number} symbolSize </td>
+                            <td></td>
+                            <td> 节点的大小, ribbonType为false时有效 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> minRadius </td>
+                            <td> 10 </td>
+                            <td> 顶点数据映射成symbol半径后的最小半径, ribbonType为false时有效 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> maxRadius </td>
+                            <td> 20 </td>
+                            <td> 顶点数据映射成symbol半径后的最大半径, ribbonType为false时有效 </td>
+                        </tr>
+                        <!-- ribbonType 为true时的配置项 -->
+                        <tr>
+                            <td> <b>{boolean}</b> showScale </td>
+                            <td> false </td>
+                            <td> 是否显示刻度, ribbonType为true时有效</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> showScaleText </td>
+                            <td> false </td>
+                            <td> 是否显示刻度文字, ribbonType为true时有效 </td>
+                        </tr>
+
                         <tr>
                             <td> <b>{number}</b> padding </td>
                             <td> 2 </td>
@@ -2991,16 +2979,6 @@ indicator : [
                             <td> 数据排序（弦）， 可以取none, ascending, descending</td>
                         </tr>
                         <tr>
-                            <td> <b>{boolean}</b> showScale </td>
-                            <td> false </td>
-                            <td> 是否显示刻度 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{boolean}</b> showScaleText </td>
-                            <td> false </td>
-                            <td> 是否显示刻度文字 </td>
-                        </tr>
-                        <tr>
                             <td> <b>{boolean}</b> clockWise </td>
                             <td> false </td>
                             <td> 显示是否顺时针 </td>
@@ -3009,6 +2987,20 @@ indicator : [
                             <td> <b>{Array}</b> matrix </td>
                             <td>[[]]</td>
                             <td> 关系数据，用二维数组表示，项 [i][j] 的数值表示 i 到 j 的关系数据 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> nodes </td>
+                            <td> [] </td>
+                            <td> 和弦图的顶点数据, 每一项：
+                                <table cellspacing="0" class="ADoc_table full">
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> links </td>
+                            <td> [] </td>
+                            <td> 和弦图的边数据, 每一项
+                            </td>
                         </tr>
                     </table>
 
@@ -3851,9 +3843,24 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> <b>{Object}</b> lineStyle</td>
-                            <td> {width: 1, color: '#999'} </td>
-                            <td> </td>
+                            <td> <b>{number}</b> width</td>
+                            <td>1</td>
+                            <td>贝塞尔曲线的线宽, ribbonType是false时有效</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> color</td>
+                            <td>1</td>
+                            <td>贝塞尔曲线的颜色, ribbonType是false时有效</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> borderWidth</td>
+                            <td>1</td>
+                            <td>ribbon的描边线宽, ribbonType是true时有效</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> borderColor</td>
+                            <td>1</td>
+                            <td>ribbon的描边颜色, ribbonType是true时有效</td>
                         </tr>
                     </table>
 
@@ -3866,22 +3873,17 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> <b>{string}</b> brushType</td>
-                            <td> 'both' </td>
-                            <td> 可选 'both', 'stroke', 'fill' </td>
-                        </tr>
-                        <tr>
                             <td> <b>{color}</b> color</td>
                             <td> '#f08c2e' </td>
                             <td> 填充颜色 </td>
                         </tr>
                         <tr>
-                            <td> <b>{color}</b> strokeColor</td>
+                            <td> <b>{color}</b> borderColor</td>
                             <td> '#5182ab' </td>
                             <td> 描边颜色 </td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> lineWidth </td>
+                            <td> <b>{number}</b> borderWidth </td>
                             <td> 1 </td>
                             <td> 描边线宽 </td>
                         </tr>
@@ -3896,12 +3898,12 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                            <td> <b>{color}</b> strokeColor</td>
+                            <td> <b>{color}</b> borderColor</td>
                             <td> '#5182ab' </td>
                             <td> 线条颜色 </td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> lineWidth </td>
+                            <td> <b>{number}</b> borderWidth </td>
                             <td> 1 </td>
                             <td> 线宽 </td>
                         </tr>
@@ -4079,6 +4081,114 @@ geoCoord : {
                     </ul>
                     <p><img src="./asset/img/doc/multiControl.jpg" title="" alt="多级控制"/></P>
 
+                    <h4>图数据表示<a name="图数据表示"> </a></h4>
+                    <p>和弦图和力导向图等图的数据表示需要一个图的数据结构，Echarts中可以使用nodes或者data来表示节点数据，用links或者邻接矩阵matrix表示边, 对于每个节点可以通过一个额外的category配置节点的分类。</p>
+
+                    <h5>categories(data)<a name="categories"></h5>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> name </td>
+                            <td></td>
+                            <td> 类目名称 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> symbol </td>
+                            <td> 'circle' </td>
+                            <td> 同<a href="#SeriesCartesian" title="">series（直角系）</a></td>
+                        </tr>
+                        <tr>
+                            <td> {number} symbolSize </td>
+                            <td></td>
+                            <td> 所有该类目的节点的大小 </td>
+                        </tr>
+                        <tr>
+                            <td> itemStyle </td>
+                            <td></td>
+                            <td> 详见 <a href="#ItemStyle">itemStyle</a> </td>
+                        </tr>
+                    </table>
+
+                    <h5>nodes(data)<a name="nodes(data)"></h5>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> name </td>
+                            <td></td>
+                            <td> 节点名称 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> value </td>
+                            <td> </td>
+                            <td> 节点值，如果不设置会取所有边的权重(weight)和 </td>
+                        </tr>
+                        <tr>
+                            <td> {boolean} ignore </td>
+                            <td>false</td>
+                            <td>是否忽略该节点</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> symbol </td>
+                            <td>'circle' </td>
+                            <td> 同<a href="#SeriesCartesian" title="">series（直角系）</a></td>
+                        </tr>
+                        <tr>
+                            <td> {number} symbolSize </td>
+                            <td></td>
+                            <td> 强制指定节点的大小 </td>
+                        </tr>
+                        <tr>
+                            <td> {number} category </td>
+                            <td>0</td>
+                            <td> 节点的 category index </td>
+                        </tr>
+                        <tr>
+                            <td> itemStyle </td>
+                            <td></td>
+                            <td> 详见 <a href="#ItemStyle">itemStyle</a> </td>
+                        </tr>
+                    </table>
+
+                    <h5>links<a name="GraphLinks"></h5>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{string|number}</b> source </td>
+                            <td></td>
+                            <td> 源节点的index或者源节点的name </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string|number}</b> target </td>
+                            <td></td>
+                            <td> 目标节点的index或者目标节点的name </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> weight </td>
+                            <td> 1 </td>
+                            <td> 边的权重 </td>
+                        </tr>
+                        <tr>
+                            <td> itemStyle </td>
+                            <td></td>
+                            <td> see <a href="#ItemStyle">itemStyle</a> </td>
+                        </tr>
+                    </table>
+                    <h5>matrix<a name="GraphMatrix"></h5>
+                    <p>关系数据，用二维数组表示，项 [i][j] 的数值表示 i 到 j 的关系数据</p>
+
+
                     <h3>附录：地图扩展<a name="附录地图扩展"> </a></h3>
                     <p>支持标准<a href='http://www.oschina.net/translate/geojson-spec?cmp' target="_blank">GeoJson</a>动态扩展地图类型，try <a href="./example/map6.html" target="_blank">HK 》</a> <a href="./example/map7.html" target="_blank">USA 》</a></p>
                     <div class="code">
@@ -4131,7 +4241,6 @@ option.series = [
  ]
 </pre>
                     </div>
-                    
                     <h3>附录：组件和图表的实例接口<a name="附录组件图表实例接口"> </a></h3>
                     <p>为了实现更高级的功能和需求定制，ECharts团队做了个艰难的决定，开放组件和图表实例接口。这些组件和图表实例都被挂载到init所得到的实例上（如myChart），分别存放在chart和component下，如可以通过myChart.chart.map得到当前地图实例并可以读取并调用里面的各种属性和方法。</p>
                     <p><b style="color:red">【重要】</b>请注意，ECharts接口基于数据驱动设计，这些实例并不为开放准备，虽然你可以无限制的访问，甚至动态的覆盖重写，但这可能会导致图表无法正常工作或随着版本升级无法得到兼容，所以我们仅列出如下部分方法和属性作为使用上的参考（或者说限制），我们会尽最大的努力去保证这些方法或属性的稳定和向下兼容，并且保证在出现无法兼容的更新时在changelog上通告。如果你使用了并不出现在下述文档中的方法或属性将得不到这份保证，请谅解。</p>
