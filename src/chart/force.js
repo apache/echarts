@@ -149,6 +149,12 @@ define(function (require) {
             this._buildLinkShapes(serie);
             this._buildNodeShapes(serie);
 
+            // Enable pan and zooom
+            this.zr.modLayer(this.getZlevelBase(), {
+                panable: serie.panable,
+                zoomable: serie.zoomable
+            });
+
             this._initLayout(serie);
 
             this._step();
@@ -162,9 +168,10 @@ define(function (require) {
             for (var i = 0; i < serie.matrix.length; i++) {
                 matrix[i] = serie.matrix[i].slice();
             }
-            for (var i = 0; i < serie.data.length; i++) {
+            var data = serie.data || serie.nodes;
+            for (var i = 0; i < data.length; i++) {
                 var node = {};
-                var group = serie.data[i];
+                var group = data[i];
                 for (var key in group) {
                     // name改为id
                     if (key === 'name') {
@@ -213,9 +220,9 @@ define(function (require) {
 
         _getSerieGraphFromNodeLinks: function (serie) {
             var graph = new Graph(true);
-
-            for (var i = 0, len = serie.nodes.length; i < len; i++) {
-                var n = serie.nodes[i];
+            var nodes = serie.data || serie.nodes;
+            for (var i = 0, len = nodes.length; i < len; i++) {
+                var n = nodes[i];
                 if (!n || n.ignore) {
                     continue;
                 }
@@ -235,13 +242,13 @@ define(function (require) {
                 var n1 = e.source;
                 var n2 = e.target;
                 if (typeof(n1) === 'number') {
-                    n1 = serie.nodes[n1];
+                    n1 = nodes[n1];
                     if (n1) {
                         n1 = n1.name;
                     }
                 }
                 if (typeof(n2) === 'number') {
-                    n2 = serie.nodes[n2];
+                    n2 = nodes[n2];
                     if (n2) {
                         n2 = n2.name;
                     }
@@ -399,7 +406,8 @@ define(function (require) {
                         lineWidth: this.deepQuery(styleQueryTarget, 'lineWidth', 'emphasis')
                             || this.deepQuery(styleQueryTarget, 'borderWidth', 'emphasis')
                     },
-                    clickable: serie.clickable
+                    clickable: serie.clickable,
+                    zlevel: this.getZlevelBase()
                 });
                 if (!shape.style.color) {
                     shape.style.color = category 
@@ -511,7 +519,8 @@ define(function (require) {
                         lineWidth : 1
                     },
                     clickable: this.query(serie, 'clickable'),
-                    highlightStyle : {}
+                    highlightStyle : {},
+                    zlevel: this.getZlevelBase()
                 });
 
                 zrUtil.merge(
