@@ -166,6 +166,11 @@ function focus(param) {
 }
 myChart.on(ecConfig.EVENT.CLICK, focus)
 
+myChart.on(ecConfig.EVENT.FORCE_LAYOUT_END, function () {
+    console.log(myChart.chart.force.getPosition());
+});
+
+
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->

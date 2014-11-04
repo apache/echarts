@@ -653,11 +653,13 @@ define(function (require) {
 
         _syncNodePositions: function() {
             var graph = this._graph;
+            // var delta = 0;
             for (var i = 0; i < graph.nodes.length; i++) {
                 var gNode = graph.nodes[i];
                 var position = gNode.layout.position;
                 var node = gNode.data;
                 var shape = gNode.shape;
+                // delta += vec2.len(shape.position, position);
                 if (shape.fixed || (node.fixX && node.fixY)) {
                     vec2.copy(position, shape.position);
                 }
@@ -684,6 +686,9 @@ define(function (require) {
 
                 shape.modSelf();
             }
+            // if (delta < 1) {  // All shape stopped moving
+                // this._layout.temperature = 0;
+            // }
         },
 
         _step: function(e) {
@@ -695,6 +700,13 @@ define(function (require) {
 
             if (this._layout.temperature > 0.01) {
                 this._layout.step(this._steps);
+            } else {
+                this.messageCenter.dispatch(
+                    ecConfig.EVENT.FORCE_LAYOUT_END,
+                    {},
+                    {},
+                    this.myChart
+                );
             }
         },
 
@@ -743,6 +755,19 @@ define(function (require) {
             this._layout = null;
 
             this.__nodePositionMap = {};
+        },
+
+        getPosition: function () {
+            var position = [];
+            this._graph.eachNode(function (n) {
+                if (n.layout) {
+                    position.push({
+                        name: n.data.name,
+                        position: Array.prototype.slice.call(n.layout.position)
+                    });
+                }
+            });
+            return position;
         }
     };
 

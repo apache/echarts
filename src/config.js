@@ -1305,6 +1305,7 @@ define(function() {
             DATA_VIEW_CHANGED: 'dataViewChanged',
             TIMELINE_CHANGED: 'timelineChanged',
             MAP_ROAM: 'mapRoam',
+            FORCE_LAYOUT_END: 'forceLayoutEnd',
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover',
             TOOLTIP_IN_GRID: 'tooltipInGrid',
