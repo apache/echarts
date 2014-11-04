@@ -1333,6 +1333,10 @@ define(function (require) {
                     this.option.dataRange.padding
                 );
                 this.dataRangeOption = this.option.dataRange;
+                if (!this.myChart.canvasSupported) {
+                    // 不支持Canvas的强制关闭实时动画
+                    this.dataRangeOption.realtime = false;
+                }
                 
                 var splitNumber = this.dataRangeOption.splitNumber <= 0 
                                   || this.dataRangeOption.calculable

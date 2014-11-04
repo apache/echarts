@@ -62,6 +62,7 @@ define(function (require) {
         }
         _instances[key] = new Echarts(dom);
         _instances[key].id = key;
+        _instances[key].canvasSupported = _canvasSupported;
         _instances[key].setTheme(theme);
         
         return  _instances[key];
@@ -869,7 +870,13 @@ define(function (require) {
             if (!(themeColor && themeColor.length)) {
                 themeColor = this._themeConfig.color;
             }
-
+            
+            if (!_canvasSupported) {
+                // 不支持Canvas的强制关闭动画
+                magicOption.animation = false;
+                magicOption.addDataAnimation = false;
+            }
+            
             this._zr.getColor = function (idx) {
                 var zrColor = require('zrender/tool/color');
                 return zrColor.getColor(idx, themeColor);
