@@ -10,7 +10,7 @@
 
     <link rel="shortcut icon" href="../asset/ico/favicon.png">
 
-    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <!--link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet"-->
     <link href="../asset/css/bootstrap.css" rel="stylesheet">
     <link href="../asset/css/carousel.css" rel="stylesheet">
     <link href="../asset/css/echartsHome.css" rel="stylesheet">
@@ -41,89 +41,118 @@
                     <textarea id="code" name="code">
 option = {
     title : {
-        text: '南丁格尔玫瑰图',
+        text: '漏斗图(对比)',
         subtext: '纯属虚构',
-        x:'center'
+        x: 'left',
+        y: 'bottom'
     },
     tooltip : {
         trigger: 'item',
-        formatter: "{a} <br/>{b} : {c} ({d}%)"
-    },
-    legend: {
-        x : 'center',
-        y : 'bottom',
-        data:['rose1','rose2','rose3','rose4','rose5','rose6','rose7','rose8']
+        formatter: "{a} <br/>{b} : {c}%"
     },
     toolbox: {
         show : true,
+        orient: 'vertical',
+        y: 'center',
         feature : {
             mark : {show: true},
             dataView : {show: true, readOnly: false},
             magicType : {
                 show: true, 
-                type: ['pie', 'funnel']
+                type: ['pie', 'funnel'],
+                option: {
+                    pie: {
+                        radius : [0, 50]
+                    }
+                }
             },
             restore : {show: true},
             saveAsImage : {show: true}
         }
     },
+    legend: {
+        orient: 'vertical',
+        x: 'left',
+        data : ['产品A','产品B','产品C','产品D','产品E']
+    },
     calculable : true,
     series : [
         {
-            name:'半径模式',
-            type:'pie',
-            radius : [20, 110],
-            center : ['25%', 200],
-            roseType : 'radius',
-            width: '40%',       // for funnel
-            max: 40,            // for funnel
-            itemStyle : {
-                normal : {
-                    label : {
-                        show : false
-                    },
-                    labelLine : {
-                        show : false
-                    }
-                },
-                emphasis : {
-                    label : {
-                        show : true
-                    },
-                    labelLine : {
-                        show : true
-                    }
-                }
-            },
+            name:'漏斗图',
+            type:'funnel',
+            width: '40%',
+            height: '45%',
+            x:'5%',
+            y:'50%',
+            funnelAlign: 'right',
+            
+            center: ['25%', '25%'],  // for pie
+            
             data:[
-                {value:10, name:'rose1'},
-                {value:5, name:'rose2'},
-                {value:15, name:'rose3'},
-                {value:25, name:'rose4'},
-                {value:20, name:'rose5'},
-                {value:35, name:'rose6'},
-                {value:30, name:'rose7'},
-                {value:40, name:'rose8'}
+                {value:60, name:'产品C'},
+                {value:30, name:'产品D'},
+                {value:10, name:'产品E'},
+                {value:80, name:'产品B'},
+                {value:100, name:'产品A'}
             ]
         },
         {
-            name:'面积模式',
-            type:'pie',
-            radius : [30, 110],
-            center : ['75%', 200],
-            roseType : 'area',
-            x: '50%',               // for funnel
-            max: 40,                // for funnel
-            sort : 'ascending',     // for funnel
+            name:'金字塔',
+            type:'funnel',
+            width: '40%',
+            height: '45%',
+            x: '5%',
+            y: '5%',
+            sort : 'ascending',
+            funnelAlign: 'right',
+            
+            center: ['25%', '75%'],  // for pie
+            
             data:[
-                {value:10, name:'rose1'},
-                {value:5, name:'rose2'},
-                {value:15, name:'rose3'},
-                {value:25, name:'rose4'},
-                {value:20, name:'rose5'},
-                {value:35, name:'rose6'},
-                {value:30, name:'rose7'},
-                {value:40, name:'rose8'}
+                {value:60, name:'产品C'},
+                {value:30, name:'产品D'},
+                {value:10, name:'产品E'},
+                {value:80, name:'产品B'},
+                {value:100, name:'产品A'}
+            ]
+        },
+        {
+            name:'漏斗图',
+            type:'funnel',
+            width: '40%',
+            height: '45%',
+            x:'55%',
+            y: '5%',
+            funnelAlign: 'left',
+            
+            center: ['75%', '25%'],  // for pie
+            
+            data:[
+                {value:60, name:'产品C'},
+                {value:30, name:'产品D'},
+                {value:10, name:'产品E'},
+                {value:80, name:'产品B'},
+                {value:100, name:'产品A'}
+            ]
+        },
+        {
+            name:'金字塔',
+            type:'funnel',
+            width: '40%',
+            height: '45%',
+            x:'55%',
+            y:'50%',
+            sort : 'ascending',
+            funnelAlign: 'left',
+            
+            center: ['75%', '75%'],  // for pie
+            
+            data:[
+                {value:60, name:'产品C'},
+                {value:30, name:'产品D'},
+                {value:10, name:'产品E'},
+                {value:80, name:'产品B'},
+                {value:100, name:'产品A'}
             ]
         }
     ]

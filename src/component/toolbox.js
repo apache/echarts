@@ -858,6 +858,13 @@ define(function (require) {
                 else if (itemName === ecConfig.CHART_TYPE_BAR) {
                     this._magicType[ecConfig.CHART_TYPE_LINE] = false;
                 }
+                // 饼图漏斗互斥
+                if (itemName === ecConfig.CHART_TYPE_PIE) {
+                    this._magicType[ecConfig.CHART_TYPE_FUNNEL] = false;
+                }
+                else if (itemName === ecConfig.CHART_TYPE_FUNNEL) {
+                    this._magicType[ecConfig.CHART_TYPE_PIE] = false;
+                }
                 // 力导和弦互斥
                 if (itemName === ecConfig.CHART_TYPE_FORCE) {
                     this._magicType[ecConfig.CHART_TYPE_CHORD] = false;
@@ -1002,21 +1009,6 @@ define(function (require) {
                     if (chartType == ecConfig.CHART_TYPE_LINE
                         || chartType == ecConfig.CHART_TYPE_BAR
                     ) {
-                        this.option.series[i].type = this._magicType[ecConfig.CHART_TYPE_LINE]
-                                                     ? ecConfig.CHART_TYPE_LINE
-                                                     : ecConfig.CHART_TYPE_BAR;
-                        // 避免不同类型图表类型的样式污染
-                        this.option.series[i].itemStyle = zrUtil.clone(
-                            this.option.series[i].__itemStyle
-                        );
-                        chartType = this.option.series[i].type;
-                        if (this._featureOption[chartType + 'Chart']) {
-                            zrUtil.merge(
-                                this.option.series[i],
-                                this._featureOption[chartType + 'Chart'] || {},
-                                true
-                            );
-                        }
                         axis = this.option.xAxis instanceof Array
                                ? this.option.xAxis[this.option.series[i].xAxisIndex || 0]
                                : this.option.xAxis;
@@ -1031,8 +1023,12 @@ define(function (require) {
                         }
                     }
                 }
+                
+                this._defaultMagic(ecConfig.CHART_TYPE_LINE, ecConfig.CHART_TYPE_BAR);
             }
-           
+            this._defaultMagic(ecConfig.CHART_TYPE_CHORD, ecConfig.CHART_TYPE_FORCE);
+            this._defaultMagic(ecConfig.CHART_TYPE_PIE, ecConfig.CHART_TYPE_FUNNEL);
+            
             if (this._magicType[_MAGICTYPE_STACK] || this._magicType[_MAGICTYPE_TILED]) {
                 // 有堆积平铺切换
                 for (var i = 0, l = this.option.series.length; i < l; i++) {
@@ -1055,19 +1051,15 @@ define(function (require) {
                     }
                 }
             }
-            
-            if (this._magicType[ecConfig.CHART_TYPE_CHORD] 
-                || this._magicType[ecConfig.CHART_TYPE_FORCE]
-            ) {
-                // 图表类型有和弦力导切换
+            return this.option;
+        },
+        
+        _defaultMagic : function(cType1, cType2) {
+            if (this._magicType[cType1] || this._magicType[cType2]) {
                 for (var i = 0, l = this.option.series.length; i < l; i++) {
-                    chartType = this.option.series[i].type;
-                    if (chartType == ecConfig.CHART_TYPE_CHORD
-                        || chartType == ecConfig.CHART_TYPE_FORCE
-                    ) {
-                        this.option.series[i].type = this._magicType[ecConfig.CHART_TYPE_CHORD]
-                                                     ? ecConfig.CHART_TYPE_CHORD
-                                                     : ecConfig.CHART_TYPE_FORCE;
+                    var chartType = this.option.series[i].type;
+                    if (chartType == cType1 || chartType == cType2) {
+                        this.option.series[i].type = this._magicType[cType1] ? cType1 : cType2;
                         // 避免不同类型图表类型的样式污染
                         this.option.series[i].itemStyle = zrUtil.clone(
                             this.option.series[i].__itemStyle
@@ -1083,8 +1075,6 @@ define(function (require) {
                     }
                 }
             }
-            
-            return this.option;
         },
 
         silence: function (s) {

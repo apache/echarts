@@ -200,7 +200,9 @@ define(function() {
                         stack: '堆积',
                         tiled: '平铺',
                         force: '力导向布局图切换',
-                        chord: '和弦图切换'
+                        chord: '和弦图切换',
+                        pie: '饼图切换',
+                        funnel: '漏斗图切换'
                     },
                     type: [] // 'line', 'bar', 'stack', 'tiled'
                 },
@@ -1106,6 +1108,7 @@ define(function() {
             maxSize: '100%',
             sort: 'descending', // 'ascending', 'descending'
             gap: 0,
+            funnelAlign: 'center',
             itemStyle: {
                 normal: {
                     // color: 各异,
