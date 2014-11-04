@@ -537,6 +537,18 @@ define(function (require) {
             pin : _iconPin,
             image : _iconImage
         },
+        brush: function (ctx, isHighlight, refresh) {
+            var style = isHighlight ? this.highlightStyle : this.style;
+            style = style || {};
+            var iconType = style.iconType || this.style.iconType;
+            if (iconType === 'image') {
+                var ImageShape = require('zrender/shape/Image');
+                ImageShape.prototype.brush.call(this, ctx, isHighlight, refresh);
+            } else {
+                var BaseShape = require('zrender/shape/Base');
+                BaseShape.prototype.brush.call(this, ctx, isHighlight, refresh);
+            }
+        },
         /**
          * 创建矩形路径
          * @param {Context2D} ctx Canvas 2D上下文
