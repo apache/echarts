@@ -151,8 +151,8 @@ define(function (require) {
 
             // Enable pan and zooom
             this.zr.modLayer(this.getZlevelBase(), {
-                panable: serie.panable,
-                zoomable: serie.zoomable
+                panable: serie.roam === true || serie.roam === 'move',
+                zoomable: serie.roam === true || serie.roam === 'scale',
             });
 
             this._initLayout(serie);

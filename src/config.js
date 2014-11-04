@@ -868,8 +868,7 @@ define(function() {
             draggable: true,
             clickable: true,
 
-            panable: false,
-            zoomable: false,
+            roam: false,
 
             // 分类里如果有样式会覆盖节点默认样式
             // categories: [{
