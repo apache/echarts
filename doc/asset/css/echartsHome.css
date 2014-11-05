@@ -1,7 +1,7 @@
 * {
     font-family: "Microsoft YaHei";
 }
-#sidebar-code * {
+.CodeMirror * {
     font-family: sans-serif;
 }
 html {

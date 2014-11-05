@@ -35,14 +35,15 @@ switch (curPage) {
         isExample = true;
         forkWidth = 60;
         activeClass['example'] = 'active';
-        loc.index = '../..';
-        loc.feature = '../../doc';
-        loc.example = '../../doc';
-        loc.doc = '../../doc';
-        loc.about = '../../doc';
-        loc.changelog = '../../doc';
-        loc.start = '../../doc';
-        loc.img = '../../doc';
+        var extSub = location.href.indexOf('extension') != -1 ? '../' : '';
+        loc.index = extSub + '../..';
+        loc.feature = extSub + '../../doc';
+        loc.example = extSub + '../../doc';
+        loc.doc = extSub + '../../doc';
+        loc.about = extSub + '../../doc';
+        loc.changelog = extSub + '../../doc';
+        loc.start = extSub + '../../doc';
+        loc.img = extSub + '../../doc';
         break;
 }
 
