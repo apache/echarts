@@ -18,7 +18,7 @@ define(function (require) {
         this._layerOffsets = [];
 
         this._layers = [];
-    };
+    }
 
     TreeLayout.prototype.run = function (tree) {
         this._layerOffsets.length = 0;

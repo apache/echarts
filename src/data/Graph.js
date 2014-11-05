@@ -38,7 +38,7 @@ define(function(require) {
      */
     Graph.prototype.isDirected = function () {
         return this._directed;
-    }
+    };
 
     /**
      * 添加一个新的节点
@@ -148,7 +148,7 @@ define(function(require) {
         } else {
             return this._edgesMap[n1 + '-' + n2];
         }
-    }
+    };
 
     /**
      * 移除节点（及其邻接边）
@@ -314,7 +314,7 @@ define(function(require) {
             graph.addEdge(e.node1.id, e.node2.id, e.data);
         }
         return graph;
-    }
+    };
 
     /**
      * 图节点

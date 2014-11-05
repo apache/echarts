@@ -172,13 +172,13 @@ define(function (require) {
                                 lastP += barHeight;
                             }
                         }
-                        cruBarWidth = Math.min(
+                        var curBarWidth = Math.min(
                             barMaxWidthMap[seriesIndex] || Number.MAX_VALUE,
                             barWidthMap[seriesIndex] || barWidth
                         );
                         xMarkMap[seriesIndex][i] = orient == 'horizontal'
-                                                   ? (x + cruBarWidth / 2) 
-                                                   : (y - cruBarWidth / 2);
+                                                   ? (x + curBarWidth / 2) 
+                                                   : (y - curBarWidth / 2);
                         if (xMarkMap[seriesIndex].min > value) {
                             xMarkMap[seriesIndex].min = value;
                             if (orient == 'horizontal') {
@@ -210,9 +210,9 @@ define(function (require) {
                                 seriesIndex, i,
                                 categoryAxis.getNameByIndex(i),
                                 x,
-                                y - (orient == 'horizontal' ? 0 : cruBarWidth),
-                                orient == 'horizontal' ? cruBarWidth : barHeight,
-                                orient == 'horizontal' ? barHeight : cruBarWidth,
+                                y - (orient == 'horizontal' ? 0 : curBarWidth),
+                                orient == 'horizontal' ? curBarWidth : barHeight,
+                                orient == 'horizontal' ? barHeight : curBarWidth,
                                 orient == 'horizontal' ? 'vertical' : 'horizontal'
                             );
                             this.shapeList.push(new RectangleShape(barShape));
@@ -244,7 +244,7 @@ define(function (require) {
                                 lastP += this.ecTheme.island.r;
                             }
                             
-                            cruBarWidth = Math.min(
+                            curBarWidth = Math.min(
                                 barMaxWidthMap[seriesIndex] || Number.MAX_VALUE,
                                 barWidthMap[seriesIndex] || barWidth
                             );
@@ -252,9 +252,9 @@ define(function (require) {
                                 seriesIndex, i,
                                 categoryAxis.getNameByIndex(i),
                                 x + 0.5,
-                                y + 0.5 - (orient == 'horizontal' ? 0 : cruBarWidth),
-                                (orient == 'horizontal' ? cruBarWidth : this.ecTheme.island.r) - 1,
-                                (orient == 'horizontal' ? this.ecTheme.island.r : cruBarWidth) - 1,
+                                y + 0.5 - (orient == 'horizontal' ? 0 : curBarWidth),
+                                (orient == 'horizontal' ? curBarWidth : this.ecTheme.island.r) - 1,
+                                (orient == 'horizontal' ? this.ecTheme.island.r : curBarWidth) - 1,
                                 orient == 'horizontal' ? 'vertical' : 'horizontal'
                             );
                             barShape.hoverable = false;
@@ -268,7 +268,7 @@ define(function (require) {
                         }
                     }
                     orient == 'horizontal'
-                        ? (x += (cruBarWidth + barGap)) : (y -= (cruBarWidth + barGap));
+                        ? (x += (curBarWidth + barGap)) : (y -= (curBarWidth + barGap));
                 }
             }
             
@@ -441,15 +441,10 @@ define(function (require) {
          * @param {Array} locationMap 整形数据的系列索引
          */
         _mapSize: function (categoryAxis, locationMap, ignoreUserDefined) {
-            var series = this.series;
-            var seriesIndex;
-            
             var res = this._findSpecialBarSzie(locationMap, ignoreUserDefined);
             var barWidthMap = res.barWidthMap;
             var barMaxWidthMap = res.barMaxWidthMap;
             var barMinHeightMap = res.barMinHeightMap;
-            var sBarWidth = res.sBarWidth;                  // 用户指定
-            var sBarMaxWidth = res.sBarMaxWidth;            // 用户指定
             var sBarWidthCounter = res.sBarWidthCounter;    // 用户指定
             var sBarWidthTotal = res.sBarWidthTotal;        // 用户指定
             var barGap = res.barGap;
@@ -614,7 +609,7 @@ define(function (require) {
                 sBarWidthTotal: sBarWidthTotal,
                 barGap: barGap,
                 barCategoryGap: barCategoryGap
-            }
+            };
         },
         
         /**
@@ -643,7 +638,7 @@ define(function (require) {
                 barWidth: barWidth,
                 barGap: barGap,
                 interval: interval
-            }
+            };
         },
         
         /**

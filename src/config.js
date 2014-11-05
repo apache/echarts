@@ -994,7 +994,7 @@ define(function() {
                         borderColor: '#999'
                     }
                 }
-            },
+            }
             /****** 使用 Data-matrix 表示数据 */
             // data: [],
             // Source data matrix

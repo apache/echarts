@@ -17,7 +17,6 @@ define(function (require) {
     var LineShape = require('zrender/shape/Line');
     var SectorShape = require('zrender/shape/Sector');
     var RibbonShape = require('../util/shape/Ribbon');
-    var CircleShape = require('zrender/shape/Circle');
     var IconShape = require('../util/shape/Icon');
     var BezierCurveShape = require('zrender/shape/BezierCurve');
     
@@ -27,8 +26,6 @@ define(function (require) {
     var vec2 = require('zrender/tool/vector');
     var Graph = require('../data/Graph');
     var ChordLayout = require('../layout/Chord');
-    
-    var _devicePixelRatio = window.devicePixelRatio || 1;
     
     function Chord(ecTheme, messageCenter, zr, option, myChart) {
         // 基类
@@ -111,7 +108,7 @@ define(function (require) {
 
         _getNodeQueryTarget: function (serie, group) {
             var category = this._getNodeCategory(serie, group);
-            return [group, category, serie];;
+            return [group, category, serie];
         },
 
         _getEdgeQueryTarget: function (serie, edge, type) {
@@ -125,6 +122,10 @@ define(function (require) {
         _buildChords: function (series) {
             var graphs = [];
             var mainSerie = series[0];
+
+            var nodeFilter = function (n) {
+                return n.layout.size > 0;
+            };
             for (var i = 0; i < series.length; i++) {
                 var serie = series[i];
 
@@ -140,9 +141,7 @@ define(function (require) {
                         );
                     }
                     // 过滤输出为0的节点
-                    graph.filterNode(function (n) {
-                        return n.layout.size > 0;
-                    }, this);
+                    graph.filterNode(nodeFilter, this);
                     graphs.push(graph);
 
                     graph.__serie = serie;
@@ -206,8 +205,8 @@ define(function (require) {
                     }
                 }
 
-                if (serie.showScale) {
-                    this._buildScales(mainSerie, 0, graph);
+                if (mainSerie.showScale) {
+                    this._buildScales(mainSerie, 0, mainGraph);
                 }
             }
             else {
@@ -276,7 +275,7 @@ define(function (require) {
             });
             graph.eachEdge(function (e) {
                 e.layout = {
-                    weight: e.data.weight,
+                    weight: e.data.weight
                 };
             });
 
@@ -348,7 +347,7 @@ define(function (require) {
             graph.eachEdge(function (e) {
                 e.layout = {
                     // 默认 weight 为1
-                    weight: e.data.weight == null ? 1 : e.data.weight,
+                    weight: e.data.weight == null ? 1 : e.data.weight
                 };
             });
 
@@ -370,7 +369,8 @@ define(function (require) {
                         n.shape.modSelf();
                     });
                     for (var i = 0; i < graphs.length; i++) {
-                        graphs[i].eachEdge(function (e) {
+                        for (var j = 0; j < graphs[i].edges.length; j++) {
+                            var e = graphs[i].edges[j];
                             var queryTarget = self._getEdgeQueryTarget(
                                 graphs[i].__serie, e.data
                             );
@@ -378,7 +378,7 @@ define(function (require) {
                                 queryTarget, 'opacity'
                             ) * 0.1;
                             e.shape.modSelf();
-                        });
+                        }
                     }
                     node.shape.style.opacity = 1;
                     if (node.labelShape) {
@@ -419,13 +419,14 @@ define(function (require) {
                         n.shape.modSelf();
                     });
                     for (var i = 0; i < graphs.length; i++) {
-                        graphs[i].eachEdge(function (e) {
+                        for (var j = 0; j < graphs[i].edges.length; j++) {
+                            var e = graphs[i].edges[j];
                             var queryTarget = [e.data, mainSerie];
                             e.shape.style.opacity = self.deepQuery(
                                 queryTarget, 'itemStyle.normal.chordStyle.opacity'
                             );
                             e.shape.modSelf();
-                        });
+                        }
                     }
                     self.zr.refreshNextFrame();
                 };
@@ -433,9 +434,6 @@ define(function (require) {
         },
 
         _buildSectors: function (serie, serieIdx, graph, mainSerie) {
-            var timeout;
-
-            var self = this;
             var center = this.parseCenter(this.zr, mainSerie.center);
             var radius = this.parseRadius(this.zr, mainSerie.radius);
             var clockWise = mainSerie.clockWise;
@@ -459,7 +457,7 @@ define(function (require) {
                         endAngle: endAngle,
                         brushType: 'fill',
                         opacity: 1,
-                        color: this.getColor(node.id),
+                        color: color,
                         clockWise: clockWise
                     },
                     clickable: mainSerie.clickable,
@@ -512,8 +510,6 @@ define(function (require) {
             var radius = this.parseRadius(this.zr, mainSerie.radius);
             // PENDING
             var r = radius[1];
-            var clockWise = mainSerie.clockWise;
-            var sign = clockWise ? 1 : -1;
 
             graph.eachNode(function (node) {
                 var startAngle = node.layout.startAngle;
@@ -545,10 +541,10 @@ define(function (require) {
                     highlightStyle: {
                         color: this.deepQuery(queryTarget, 'itemStyle.emphasis.color'),
                         lineWidth: this.deepQuery(queryTarget, 'itemStyle.emphasis.borderWidth'),
-                        strokeColor: this.deepQuery(queryTarget, 'itemStyle.emphasis.borderColor'),
+                        strokeColor: this.deepQuery(queryTarget, 'itemStyle.emphasis.borderColor')
                     },
                     clickable: mainSerie.clickable,
-                    position: [x + center[0], y + center[1]],
+                    position: [x + center[0], y + center[1]]
                 });
 
                 ecData.pack(
@@ -600,7 +596,7 @@ define(function (require) {
                     distance = mainSerie.showScaleText ? 35 + labelDistance : labelDistance;
                 }
                 else {
-                    distance = labelDistance + node.layout.size
+                    distance = labelDistance + node.layout.size;
                 }
                 var start = vec2.scale([], v, radius[1] + distance);
                 vec2.add(start, start, center);
@@ -646,11 +642,6 @@ define(function (require) {
 
         _buildRibbons : function (series, serieIdx, graph, mainSerie) {
             var serie = series[serieIdx];
-
-            var ribbonStyle 
-                = mainSerie.itemStyle.normal.chordStyle;
-            var ribbonStyleEmphsis
-                = mainSerie.itemStyle.emphasis.chordStyle;
 
             var center = this.parseCenter(this.zr, mainSerie.center);
             var radius = this.parseRadius(this.zr, mainSerie.radius);
@@ -706,15 +697,18 @@ define(function (require) {
                             queryTarget, 'opacity'
                         ),
                         color: color,
-                        lineWidth: ribbonStyle.borderWidth,
-                        strokeColor: ribbonStyle.borderColor,
+                        lineWidth: this.deepQuery(queryTarget, 'borderWidth'),
+                        strokeColor: this.deepQuery(queryTarget, 'borderColor'),
                         clockWise: mainSerie.clockWise
                     },
                     clickable: mainSerie.clickable,
                     highlightStyle: {
                         brushType: 'both',
-                        lineWidth: ribbonStyleEmphsis.borderWidth,
-                        strokeColor: ribbonStyleEmphsis.borderColor
+                        opacity: this.deepQuery(
+                            queryTargetEmphasis, 'opacity'
+                        ),
+                        lineWidth: this.deepQuery(queryTargetEmphasis, 'borderWidth'),
+                        strokeColor: this.deepQuery(queryTargetEmphasis, 'borderColor')
                     }
                 });
 
@@ -740,7 +734,6 @@ define(function (require) {
             var serie = series[serieIdx];
             
             var center = this.parseCenter(this.zr, mainSerie.center);
-            var radius = this.parseRadius(this.zr, mainSerie.radius);
 
             graph.eachEdge(function (e, idx) {
                 var node1 = mainGraph.getNodeById(e.node1.id);

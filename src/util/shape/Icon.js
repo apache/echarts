@@ -281,8 +281,6 @@ define(function (require) {
         var y = style.y;
         var width = style.width;
         var height = style.height;
-        var dx = width / 16;
-        var dy = height / 16;
         var r = Math.min(width, height) / 2;
 
         ctx.moveTo(x + width, y + height / 2);

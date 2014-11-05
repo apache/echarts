@@ -458,7 +458,7 @@ define(function __echartsForceLayoutWorker(require) {
 
             vec2.add(node.position, node.position, speed);
         }
-    }
+    };
 
     ForceLayout.prototype.updateNodeNodeForce = function () {
         var nNodes = this.nodes.length;
@@ -647,7 +647,9 @@ define(function __echartsForceLayoutWorker(require) {
             var n1 = e.node1;
             var n2 = e.node2;
 
-            if (n1 === n3 || n2 === n3) return;
+            if (n1 === n3 || n2 === n3) {
+                return;
+            }
 
             vec2.sub(v12, n2.position, n1.position);
             vec2.sub(v13, n3.position, n1.position);
@@ -677,7 +679,7 @@ define(function __echartsForceLayoutWorker(require) {
             // PENDING
             vec2.scaleAndAdd(n1.force, n1.force, v12, -factor);
             vec2.scaleAndAdd(n2.force, n2.force, v12, -factor);
-        }
+        };
     })();
 
     ForceLayout.prototype.updateBBox = function() {

@@ -5,11 +5,6 @@
  */
 define(function (require) {
 
-    var vector = require('zrender/tool/vector');
-
-    var ArrayCtor = typeof(Float32Array) == 'undefined' ? Array : Float32Array;
-    var PI2 = Math.PI * 2;
-
     var ChordLayout = function (opts) {
 
         opts = opts || {};
@@ -33,7 +28,7 @@ define(function (require) {
         this.center = opts.center || [0, 0];
 
         this.directed = true;
-    }
+    };
 
     /**
      * 对指定的一个或多个 Graph 运行 chord 布局
@@ -136,7 +131,7 @@ define(function (require) {
             }
             angle = group.node.layout.endAngle + sign * this.padding;
         }
-    }
+    };
 
     var compareSubGroups = function (a, b) {
         return a.weight - b.weight;

@@ -152,7 +152,7 @@ define(function (require) {
             // Enable pan and zooom
             this.zr.modLayer(this.getZlevelBase(), {
                 panable: serie.roam === true || serie.roam === 'move',
-                zoomable: serie.roam === true || serie.roam === 'scale',
+                zoomable: serie.roam === true || serie.roam === 'scale'
             });
 
             this._initLayout(serie);
@@ -211,7 +211,7 @@ define(function (require) {
             });
             graph.eachEdge(function (e) {
                 e.layout = {
-                    weight: e.data.weight,
+                    weight: e.data.weight
                 };
             });
 
@@ -276,7 +276,7 @@ define(function (require) {
             graph.eachEdge(function (e) {
                 e.layout = {
                     // 默认 weight 为1
-                    weight: e.data.weight == null ? 1 : e.data.weight,
+                    weight: e.data.weight == null ? 1 : e.data.weight
                 };
             });
 
@@ -376,7 +376,6 @@ define(function (require) {
             var graph = this._graph;
 
             var categories = this.query(serie, 'categories');
-            var legend = this.component.legend;
 
             graph.eachNode(function (node) {
                 var category = this._getNodeCategory(serie, node.data);
@@ -399,12 +398,12 @@ define(function (require) {
                             || this.deepQuery(styleQueryTarget, 'borderWidth')
                     },
                     highlightStyle: {
-                        color: this.deepQuery(styleQueryTarget, 'color', 'emphasis'),
+                        color: this.deepQuery(emphasisStyleQueryTarget, 'color', 'emphasis'),
                         // 兼容原有写法
-                        strokeColor: this.deepQuery(styleQueryTarget, 'strokeColor', 'emphasis')
-                            || this.deepQuery(styleQueryTarget, 'borderColor', 'emphasis'),
-                        lineWidth: this.deepQuery(styleQueryTarget, 'lineWidth', 'emphasis')
-                            || this.deepQuery(styleQueryTarget, 'borderWidth', 'emphasis')
+                        strokeColor: this.deepQuery(emphasisStyleQueryTarget, 'strokeColor', 'emphasis')
+                            || this.deepQuery(emphasisStyleQueryTarget, 'borderColor', 'emphasis'),
+                        lineWidth: this.deepQuery(emphasisStyleQueryTarget, 'lineWidth', 'emphasis')
+                            || this.deepQuery(emphasisStyleQueryTarget, 'borderWidth', 'emphasis')
                     },
                     clickable: serie.clickable,
                     zlevel: this.getZlevelBase()
@@ -447,6 +446,7 @@ define(function (require) {
                     var labelStyle = this.deepQuery(
                         queryTarget, 'itemStyle.emphasis.label.textStyle'
                     ) || {};
+                    var textStyle = labelStyle.textStyle || {};
                     shape.highlightStyle.textPosition = labelStyle.position;
                     shape.highlightStyle.textColor = textStyle.color || '#fff';
                     shape.highlightStyle.textFont = this.getFont(textStyle);
