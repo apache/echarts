@@ -230,23 +230,23 @@ define(function (require) {
         y -= dy;
         ctx.moveTo(x + 1 * dx,      y + 2 * dy);
         ctx.lineTo(x + 15 * dx,     y + 2 * dy);
-        ctx.lineTo(x + 15 * dx,     y + 3 * dy);
-        ctx.lineTo(x + 1 * dx,      y + 3 * dy);
+        ctx.lineTo(x + 14 * dx,     y + 3 * dy);
+        ctx.lineTo(x + 2 * dx,      y + 3 * dy);
         
-        ctx.moveTo(x + 1 * dx,      y + 6 * dy);
-        ctx.lineTo(x + 12 * dx,     y + 6 * dy);
+        ctx.moveTo(x + 3 * dx,      y + 6 * dy);
+        ctx.lineTo(x + 13 * dx,     y + 6 * dy);
         ctx.lineTo(x + 12 * dx,     y + 7 * dy);
-        ctx.lineTo(x + 2 * dx,      y + 7 * dy);
+        ctx.lineTo(x + 4 * dx,      y + 7 * dy);
         
-        ctx.moveTo(x + 1 * dx,      y + 10 * dy);
-        ctx.lineTo(x + 8 * dx,      y + 10 * dy);
-        ctx.lineTo(x + 8 * dx,      y + 11 * dy);
-        ctx.lineTo(x + 1 * dx,      y + 11 * dy);
+        ctx.moveTo(x + 5 * dx,      y + 10 * dy);
+        ctx.lineTo(x + 11 * dx,      y + 10 * dy);
+        ctx.lineTo(x + 10 * dx,      y + 11 * dy);
+        ctx.lineTo(x + 6 * dx,      y + 11 * dy);
         
-        ctx.moveTo(x + 1 * dx,      y + 14 * dy);
-        ctx.lineTo(x + 4 * dx,      y + 14 * dy);
-        ctx.lineTo(x + 4 * dx,      y + 15 * dy);
-        ctx.lineTo(x + 1 * dx,      y + 15 * dy);
+        ctx.moveTo(x + 7 * dx,      y + 14 * dy);
+        ctx.lineTo(x + 9 * dx,      y + 14 * dy);
+        ctx.lineTo(x + 8 * dx,      y + 15 * dy);
+        ctx.lineTo(x + 7 * dx,      y + 15 * dy);
     }
     
     function _iconForceChart(ctx, style) {
