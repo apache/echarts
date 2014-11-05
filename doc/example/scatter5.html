@@ -46,10 +46,10 @@ option = {
     },
     tooltip : {
         trigger: 'item',
-        formatter : function (value) {
-            return value[0] + ' （'  + '类目' + value[2][0] + '）<br/>'
-                   + value[2][1] + ', ' 
-                   + value[2][2]; 
+        formatter : function (params) {
+            return params.seriesName + ' （'  + '类目' + params.value[0] + '）<br/>'
+                   + params.value[1] + ', ' 
+                   + params.value[2]; 
         }
     },
     toolbox: {

@@ -635,12 +635,14 @@ define(function (require) {
                                 ? (data.value != null ? data.value : data)
                                 : '-';
                         
-                        params.push([
-                            seriesArray[i].name || '',
-                            categoryAxis.getNameByIndex(dataIndex),
-                            value,
-                            data
-                        ]);
+                        params.push({
+                            seriesIndex: seriesIndex[i],
+                            seriesName: seriesArray[i].name || '',
+                            dataIndex: dataIndex,
+                            data: data,
+                            name: categoryAxis.getNameByIndex(dataIndex),
+                            value: value
+                        });
                     }
                     this._curTicket = 'axis:' + dataIndex;
                     this._tDom.innerHTML = formatter.call(
@@ -726,6 +728,7 @@ define(function (require) {
             }
             var series = this.option.series;
             var seriesArray = [];
+            var seriesIndex = [];
 
             var formatter;
             var position;
@@ -756,6 +759,7 @@ define(function (require) {
                                || position;
                     specialCssText += this._style(this.query(series[i], 'tooltip'));
                     seriesArray.push(series[i]);
+                    seriesIndex.push(i);
                 }
             }
             if (seriesArray.length > 0) {
@@ -774,13 +778,16 @@ define(function (require) {
                                ? data
                                : {name:'', value: {dataIndex:'-'}};
                                
-                        params.push([
-                            seriesArray[i].name || '',
-                            data.name,
-                            data.value[dataIndex].value != null
-                                ? data.value[dataIndex].value : data.value[dataIndex],
-                            indicatorName
-                        ]);
+                        params.push({
+                            seriesIndex: seriesIndex[i],
+                            seriesName: seriesArray[i].name || '',
+                            dataIndex: dataIndex,
+                            data: data,
+                            name: data.name,
+                            indicator: indicatorName,
+                            value: data.value[dataIndex].value != null
+                                   ? data.value[dataIndex].value : data.value[dataIndex]
+                        });
                     }
                 }
                 if (params.length <= 0) {
@@ -800,32 +807,32 @@ define(function (require) {
                     for (var i = 0, l = params.length; i < l; i++) {
                         formatter = formatter.replace(
                             '{a' + i + '}',
-                            this._encodeHTML(params[i][0])
+                            this._encodeHTML(params[i].seriesName)
                         );
                         formatter = formatter.replace(
                             '{b' + i + '}',
-                            this._encodeHTML(params[i][1])
+                            this._encodeHTML(params[i].name)
                         );
                         formatter = formatter.replace(
                             '{c' + i + '}',
-                            this.numAddCommas(params[i][2])
+                            this.numAddCommas(params[i].value)
                         );
                         formatter = formatter.replace(
                             '{d' + i + '}',
-                            this._encodeHTML(params[i][3])
+                            this._encodeHTML(params[i].indicator)
                         );
                     }
                     this._tDom.innerHTML = formatter;
                 }
                 else {
-                    formatter = this._encodeHTML(params[0][1]) + '<br/>' 
-                                + this._encodeHTML(params[0][3]) + ' : ' 
-                                + this.numAddCommas(params[0][2]);
+                    formatter = this._encodeHTML(params[0].name) + '<br/>' 
+                                + this._encodeHTML(params[0].indicator) + ' : ' 
+                                + this.numAddCommas(params[0].value);
                     for (var i = 1, l = params.length; i < l; i++) {
-                        formatter += '<br/>' + this._encodeHTML(params[i][1]) 
+                        formatter += '<br/>' + this._encodeHTML(params[i].name) 
                                      + '<br/>';
-                        formatter += this._encodeHTML(params[i][3]) + ' : ' 
-                                     + this.numAddCommas(params[i][2]);
+                        formatter += this._encodeHTML(params[i].indicator) + ' : ' 
+                                     + this.numAddCommas(params[i].value);
                     }
                     this._tDom.innerHTML = formatter;
                 }
@@ -861,6 +868,7 @@ define(function (require) {
             }
             var serie = ecData.get(this._curTarget, 'series');
             var data = ecData.get(this._curTarget, 'data');
+            var dataIndex = ecData.get(this._curTarget, 'dataIndex');
             var name = ecData.get(this._curTarget, 'name');
             var value = ecData.get(this._curTarget, 'value');
             var special = ecData.get(this._curTarget, 'special');
@@ -897,11 +905,22 @@ define(function (require) {
             }
 
             if (typeof formatter === 'function') {
-                this._curTicket = (serie.name || '')
-                                  + ':'
-                                  + ecData.get(this._curTarget, 'dataIndex');
+                this._curTicket = (serie.name || '') + ':' + dataIndex;
                 this._tDom.innerHTML = formatter.call(
                     this.myChart,
+                    {
+                        seriesIndex: ecData.get(this._curTarget, 'seriesIndex'),
+                        seriesName: serie.name || '',
+                        dataIndex: dataIndex,
+                        data: data,
+                        name: name,
+                        value: value,
+                        percent: special,   // 饼图
+                        indicator: special, // 雷达图
+                        value2: special2,
+                        indicator2: special2
+                    },
+                    /*
                     [
                         serie.name || '',
                         name,
@@ -912,6 +931,7 @@ define(function (require) {
                         ecData.get(this._curTarget, 'seriesIndex'),
                         ecData.get(this._curTarget, 'dataIndex')
                     ],
+                    */
                     this._curTicket,
                     this._setContent
                 );

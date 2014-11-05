@@ -73,10 +73,10 @@ option = {
         trigger: 'axis',
         showDelay: 0,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
         formatter: function (params) {
-            var res = params[0][1];
-            res += '<br/>' + params[0][0];
-            res += '<br/>  开盘 : ' + params[0][2][0] + '  最高 : ' + params[0][2][3];
-            res += '<br/>  收盘 : ' + params[0][2][1] + '  最低 : ' + params[0][2][2];
+            var res = params[0].name;
+            res += '<br/>' + params[0].seriesName;
+            res += '<br/>  开盘 : ' + params[0].value[0] + '  最高 : ' + params[0].value[3];
+            res += '<br/>  收盘 : ' + params[0].value[1] + '  最低 : ' + params[0].value[2];
             return res;
         }
     },
@@ -459,7 +459,8 @@ setTimeout(function (){
                 <div id="main3" class="main" style='height:105px;padding-top:1px;border-top-width:0'></div>
                 <div>
                     <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
-                    
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
 
                     <span id='wrong-message' style="color:red"></span>
                 </div>

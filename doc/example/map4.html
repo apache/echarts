@@ -55,13 +55,11 @@ option = {
     },
     tooltip : {
         trigger: 'item',
-        formatter : function (a) {
-            var sName = a[0];
-            var pName = a[1];
-            var value = (a[2] + '').split('.');
+        formatter : function (params) {
+            var value = (params.value + '').split('.');
             value = value[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,')
                     + '.' + value[1];
-            return sName + '<br/>' + pName + ' : ' + value;
+            return params.seriesName + '<br/>' + params.name + ' : ' + value;
         }
     },
     toolbox: {

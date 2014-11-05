@@ -66,9 +66,9 @@ option = {
         },
         formatter: function (params,ticket,callback) {
             console.log(params)
-            var res = 'Function formatter : <br/>' + params[0][1];
+            var res = 'Function formatter : <br/>' + params[0].name;
             for (var i = 0, l = params.length; i < l; i++) {
-                res += '<br/>' + params[i][0] + ' : ' + params[i][2];
+                res += '<br/>' + params[i].seriesName + ' : ' + params[i].value;
             }
             setTimeout(function (){
                 // 仅为了模拟异步回调

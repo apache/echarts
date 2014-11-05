@@ -46,12 +46,18 @@ option = {
     tooltip : {
         trigger: 'axis',
         formatter: function (params) {
-            var res = params[1][1];
-            res += '<br/>' + params[1][0];
-            res += '<br/>  开盘 : ' + params[1][2][0] + '  最高 : ' + params[1][2][3];
-            res += '<br/>  收盘 : ' + params[1][2][1] + '  最低 : ' + params[1][2][2];
-            res += '<br/>' + params[0][0];
-            res += ' : ' + params[0][2];
+            var res = params[0].name;
+            for (var i = params.length - 1; i >= 0; i--) {
+                if (params[i].value instanceof Array) {
+                    res += '<br/>' + params[i].seriesName;
+                    res += '<br/>  开盘 : ' + params[i].value[0] + '  最高 : ' + params[i].value[3];
+                    res += '<br/>  收盘 : ' + params[i].value[1] + '  最低 : ' + params[i].value[2];
+                }
+                else {
+                    res += '<br/>' + params[i].seriesName;
+                    res += ' : ' + params[i].value;
+                }
+            }
             return res;
         }
     },

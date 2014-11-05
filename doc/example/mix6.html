@@ -46,12 +46,12 @@ option = {
     },
     tooltip : {
         trigger: 'axis',
-        formatter: function (v){
-            return v[0][1] + ' : '
-                   + (v[0][2] - v[1][2] > 0 ? '+' : '-') 
-                   + v[3][2] + '<br/>'
-                   + v[0][0] + ' : ' + v[0][2] + '<br/>'
-                   + v[1][0] + ' : ' + v[1][2] + '<br/>'
+        formatter: function (params){
+            return params[0].name + ' : '
+                   + (params[2].value - params[1].value > 0 ? '+' : '-') 
+                   + params[0].value + '<br/>'
+                   + params[2].seriesName + ' : ' + params[2].value + '<br/>'
+                   + params[3].seriesName + ' : ' + params[3].value + '<br/>'
         }
     },
     toolbox: {

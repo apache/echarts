@@ -47,10 +47,10 @@ option = {
     },
     tooltip : {
         trigger: 'axis',
-        formatter: function(v) {
-            return v[0][1] + '<br/>'
-                   + v[0][0] + ' : ' + v[0][2] + ' (m^3/s)<br/>'
-                   + v[1][0] + ' : ' + -v[1][2] + ' (mm)';
+        formatter: function(params) {
+            return params[0].name + '<br/>'
+                   + params[0].seriesName + ' : ' + params[0].value + ' (m^3/s)<br/>'
+                   + params[1].seriesName + ' : ' + -params[1].value + ' (mm)';
         }
     },
     legend: {

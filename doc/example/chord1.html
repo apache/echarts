@@ -49,10 +49,10 @@ option = {
     tooltip : {
         trigger: 'item',
         formatter: function (params) {
-            if (params[4]) { // is edge
-                return params[2].weight;
+            if (params.indicator2) { // is edge
+                return params.value.weight;
             } else {// is node
-                return params[1]
+                return params.name
             }
         }
     },

@@ -52,13 +52,13 @@ option = {
         },
         formatter: function (params) {
             var tar;
-            if (params[1][2] != '-') {
+            if (params[1].value != '-') {
                 tar = params[1];
             }
             else {
-                tar = params[2];
+                tar = params[0];
             }
-            return tar[1] + '<br/>' + tar[0] + ' : ' + tar[2];
+            return tar.name + '<br/>' + tar.seriesName + ' : ' + tar.value;
         }
     },
     legend: {

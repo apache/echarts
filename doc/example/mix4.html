@@ -96,11 +96,11 @@ option = {
             type:'scatter',
             tooltip : {
                 trigger: 'item',
-                formatter : function (value) {
-                    return '2013-03-' + value[2][0] + '<br/>'
-                           + value[0] + ' : ' 
-                           + value[2][1] + ', ' 
-                           + value[2][2]; 
+                formatter : function (params) {
+                    return '2013-03-' + params.value[0] + '<br/>'
+                           + params.seriesName + ' : ' 
+                           + params.value[1] + ', ' 
+                           + params.value[2]; 
                 }
             },
             yAxisIndex:1,

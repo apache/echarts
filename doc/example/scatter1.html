@@ -96,16 +96,16 @@ option = {
             type:'scatter',
             tooltip : {
                 trigger: 'item',
-                formatter : function (value) {
-                    if (value[2].length > 1) {
-                        return value[0] + ' :<br/>'
-                           + value[2][0] + 'cm ' 
-                           + value[2][1] + 'kg ';
+                formatter : function (params) {
+                    if (params.value.length > 1) {
+                        return params.seriesName + ' :<br/>'
+                           + params.value[0] + 'cm ' 
+                           + params.value[1] + 'kg ';
                     }
                     else {
-                        return value[0] + ' :<br/>'
-                           + value[1] + ' : '
-                           + value[2] + 'kg ';
+                        return params.seriesName + ' :<br/>'
+                           + params.name + ' : '
+                           + params.value + 'kg ';
                     }
                 }
             },
@@ -179,16 +179,16 @@ option = {
             type:'scatter',
             tooltip : {
                 trigger: 'item',
-                formatter : function (value) {
-                    if (value[2].length > 1) {
-                        return value[0] + ' :<br/>'
-                           + value[2][0] + 'cm ' 
-                           + value[2][1] + 'kg ';
+                formatter : function (params) {
+                    if (params.value.length > 1) {
+                        return params.seriesName + ' :<br/>'
+                           + params.value[0] + 'cm ' 
+                           + params.value[1] + 'kg ';
                     }
                     else {
-                        return value[0] + ' :<br/>'
-                           + value[1] + ' : '
-                           + value[2] + 'kg ';
+                        return params.seriesName + ' :<br/>'
+                           + params.name + ' : '
+                           + params.value + 'kg ';
                     }
                 }
             },

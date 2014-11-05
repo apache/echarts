@@ -60,11 +60,9 @@ option = {
     },
     tooltip : {
         trigger: 'item',
-        formatter: function (a){
-            var sName = a[0];
-            var pName = a[1];
-            var value = a[2] + '万人次 （' + (a[2]/98.19).toFixed(2) + '%）';
-            return sName + '<br/>' + pName + ' : ' + value;
+        formatter: function (params){
+            var value = params.value + '万人次 （' + (params.value/98.19).toFixed(2) + '%）';
+            return params.seriesName + '<br/>' + params.name + ' : ' + value;
         }
     },
     toolbox: {

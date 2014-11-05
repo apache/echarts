@@ -53,10 +53,10 @@ option = {
                 width : 1
             }
         },
-        formatter : function (value) {
-            return value[0] + ' : [ '
-               + value[2][0] + ', ' 
-               + value[2][1] + ' ]';
+        formatter : function (params) {
+            return params.seriesName + ' : [ '
+                   + params.value[0] + ', ' 
+                   + params.value[1] + ' ]';
         }
     },
     legend: {

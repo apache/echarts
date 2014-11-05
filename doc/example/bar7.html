@@ -51,14 +51,8 @@ option = {
             type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
         },
         formatter: function (params) {
-            var tar;
-            if (params[1][2] != '-') {
-                tar = params[1];
-            }
-            else {
-                tar = params[2];
-            }
-            return tar[1] + '<br/>' + tar[0] + ' : ' + tar[2];
+            var tar = params[0];
+            return tar.name + '<br/>' + tar.seriesName + ' : ' + tar.value;
         }
     },
     toolbox: {
