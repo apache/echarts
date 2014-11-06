@@ -204,7 +204,19 @@ define(function() {
                         pie: '饼图切换',
                         funnel: '漏斗图切换'
                     },
-                    type: [] // 'line', 'bar', 'stack', 'tiled'
+                    /*
+                    option: {
+                        line: {},
+                        bar: {},
+                        stack: {},
+                        tiled: {},
+                        force: {},
+                        chord: {},
+                        pie: {},
+                        funnel: {}
+                    },
+                    */
+                    type: [] // 'line', 'bar', 'stack', 'tiled', 'force', 'chord', 'pie', 'funnel'
                 },
                 restore: {
                     show: false,
@@ -362,9 +374,7 @@ define(function() {
             // min: null,          // 最小值
             // max: null,          // 最大值
             // scale: false,       // 脱离0值比例，放大聚焦到最终_min，_max区间
-            precision: 0,          // 小数精度，默认为0，无小数点
-            power: 100,            // 整数精度，默认为100，个位和百位为0
-            splitNumber: 5,        // 分割段数，默认为5
+            //splitNumber: 5,        // 分割段数，默认为5
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
                 onZero: true,
@@ -413,6 +423,7 @@ define(function() {
             center: ['50%', '50%'],    // 默认全局居中
             radius: '75%',
             startAngle: 90,
+            boundaryGap: [0, 0],   // 数值起始和结束两端空白策略
             splitNumber: 5,
             name: {
                 show: true,
