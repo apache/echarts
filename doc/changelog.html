@@ -48,14 +48,64 @@
         <span>[+]新增 [-]删除 [^]升级 [#]修复 【】重要</span>
         <div class="row-fluid">
             <div>
-                <h3>2.x.x</h3>
+                <h3>2.1.8<small>（2014-11-07）</small></h3>
                 <ul>
+                    <li>【+】 <a href="../index-en.html">英文官网</a>正式启动</li>
+                    <li>【+】 [echarts-optimizer]全新的单文件打包构建策略、<a href="https://github.com/ecomfe/echarts-optimizer" target="_blank">工具</a>和按需加载引入方式调整，by <a href="http://weibo.com/errorrik" target="_blank">erik</a></li>
+                    <li>【+】 [extension][BMap]新增百度地图扩展，支持百度地图作为地图源叠加echarts可视化功能，
+                        <a href="../extension/BMap/doc/doc.html" target="_blank">文档</a>，
+                        <a href="../extension/BMap/doc/BMap.html" target="_blank">例子1</a>，
+                        <a href="../extension/BMap/doc/example.html" target="_blank">例子2</a>，
+                        by <a href="http://weibo.com/wind108369" target="_blank">杨骥</a>
+                    </li>
+                    <li>【+】 [eventRiver]新增事件河流图，查看 <a href="./example.html#eventRiver" target="_blank">this »</a>，by <a href="http://weibo.com/u/2076050925" target="_blank">车丽美</a></li>
+                    <li>【+】 [line][bar]不等距折线图
+                        <a href="./example/line7.html" target="_blank">this »</a>（柱状图
+                        <a href="./example/bar13.html" target="_blank">this »</a>），双数值轴曲线（柱形）support
+                        <a href="https://github.com/ecomfe/echarts/issues/331" target="_blank">#331 »</a>,
+                        <a href="https://github.com/ecomfe/echarts/issues/624" target="_blank">#624 »</a>
+                    </li>
                     <li>【+】 [chord]和弦图通过ribbonType配置项支持两种绘制形态</li>
-                    <li>【^】 和弦图和力导向图数据格式统一</li>
-                    <li> [^] [force]节点的itemStyle中的strokeColor和lineWidth统一为borderColor和borderWidth, 边的strokeColor和lineWidth统一为color和width (兼容以前写法但是不推荐) </li>
-                    <li> [+] [force]边的样式可以使用type配置为曲线 </li>
-                    <li> [+] [force]支持鼠标平移和缩放 </li>
-                    <li> [+] [force]节点可以使用label.position配置标签的位置 </li>
+                    <li>【^】 [valueAxis]数值间隔自动调整算法优化，splitNumber默认自动调整，废除power、precision，by <a href="https://github.com/i6ma" target="_blank">谢世威</a>。</li>
+                    <li>【^】 [pie]优化饼图标签布局算法， fix 
+                        <a href="https://github.com/ecomfe/echarts/issues/326" target="_blank">#326 »</a>,
+                        <a href="https://github.com/ecomfe/echarts/issues/405" target="_blank">#405 »</a>,
+                        <a href="https://github.com/ecomfe/echarts/issues/290" target="_blank">#290 »</a>
+                    </li>
+                    <li>【^】 [chord][force]和弦图和力导向图数据格式统一，详见<a href="./doc.html#图数据表示" target="_blank">图数据表示</a></li>
+                    <li>【^】 [funnel]漏斗图通过funnelAlign支持三种不同的水平布局样式</li>
+                    <li>【^】 [toolbox]支持和弦图[chord]与力导向布局图[force]，饼图[pie]和漏斗图[funnel]间的动态类型切换</li>
+                    <li>【^】 [dataRange]值域漫游（hoverLink）与地图（dataRangeHoverLink）双向悬浮连接高亮显示</li>
+                    <li>【^】 [tooltip]重新设计tooltip回调参数，披露更多可用信息，[]改{}</li>
+                    <li>【+】 [timeAxis]新增时间类型坐标轴（beta）</li>
+                    <li>[+] 新增全国344个主要城市（县）地图数据（geoJson），try <a href="./example/map20.html" target="_blank">this »</a></li>
+                    <li>[+] [force]边的样式可以使用linkStyle.type配置为曲线(curve) </li>
+                    <li>[+] [force]支持鼠标平移和缩放，roam:false|true|'scale'|'move'，同地图 </li>
+                    <li>[+] [force]节点可以使用label.position配置标签的位置 ，新增实例接口getPosition获得当前节点的布局位置</li>
+                    <li>[+] [force]增加布局结束后事件，ecConfig.EVENT.FORCE_LAYOUT_END</li>
+                    <li>[^] [force]节点的itemStyle中的strokeColor和lineWidth统一为borderColor和borderWidth, 边的strokeColor和lineWidth统一为color和width (兼容以前写法但是不推荐) </li>
+                    <li>[^] [toolbox]支持动态类型切换时动态修改option，feature.magicType.option</li>
+                    <li>[^] [bar]柱形图支持最大柱形宽度设置barMaxWidth</li>
+                    <li>[^] [dataZoom]拖拽交互详情显示（showDetail），support <a href="https://github.com/ecomfe/echarts/issues/381" target="_blank">#381 »</a></li>
+                    <li>[^] [legend]图例到图表（legendHoverLink）的悬浮连接高亮显示</li>
+                    <li>[^] [dataRange]支持透明度（alpha通道）变化，support <a href="http://www.oschina.net/question/2241318_175315" target="_blank">this »</a></li>
+                    <li>[^] [tooltip]气泡内可交互，鼠标进入tooltip的dom上停止触发新的定位行为 ，support <a href="https://github.com/ecomfe/echarts/issues/698" target="_blank">#698 »</a></li>
+                    <li>[^] 不支持Canvas的浏览器上强制关闭所有动画和实时变化</li>
+                    <li>[#] IE8双击事件，fix <a href="http://www.oschina.net/question/699139_173111" target="_blank">this »</a></li>
+                    <li>[#] [markX]无legend时样式错误</li>
+                    <li>[#] [roamController]同时指定多地图（mapTypeControl）缩放控制时缩放错误，handleColor指定失效</li>
+                    <li>[#] clear无法清除背景，fix <a href="http://www.oschina.net/question/2005941_178466" target="_blank">this »</a></li>
+                    <li>[#] 若干issues，fix
+                        <a href="https://github.com/ecomfe/echarts/issues/704" target="_blank">#704（多地图异步回调问题）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/756" target="_blank">#756（散点图透明效果）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/760" target="_blank">#760（最值点的格式化）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/772" target="_blank">#772（边界计算异常）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/798" target="_blank">#798（饼图原地拖拽重计算问题）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/801" target="_blank">#801（tooltip返回参数调整）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/839" target="_blank">#839（图片显示异常）»</a>
+                        <a href="http://www.oschina.net/question/2003065_173244" target="_blank">this（折线填充过渡动画）»</a>
+                    </li>
+                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.0.5+</li>
                 </ul>
             </div>
 
