@@ -641,7 +641,12 @@ define(function (require) {
                             dataIndex: dataIndex,
                             data: data,
                             name: categoryAxis.getNameByIndex(dataIndex),
-                            value: value
+                            value: value,
+                            // 向下兼容
+                            0: seriesArray[i].name || '',
+                            1: categoryAxis.getNameByIndex(dataIndex),
+                            2: value,
+                            3: data
                         });
                     }
                     this._curTicket = 'axis:' + dataIndex;
@@ -765,6 +770,7 @@ define(function (require) {
             if (seriesArray.length > 0) {
                 var polarData;
                 var data;
+                var value;
                 var params = [];
 
                 for (var i = 0, l = seriesArray.length; i < l; i++) {
@@ -777,7 +783,8 @@ define(function (require) {
                         data = data != null
                                ? data
                                : {name:'', value: {dataIndex:'-'}};
-                               
+                        value = data.value[dataIndex].value != null
+                                ? data.value[dataIndex].value : data.value[dataIndex];
                         params.push({
                             seriesIndex: seriesIndex[i],
                             seriesName: seriesArray[i].name || '',
@@ -785,8 +792,12 @@ define(function (require) {
                             data: data,
                             name: data.name,
                             indicator: indicatorName,
-                            value: data.value[dataIndex].value != null
-                                   ? data.value[dataIndex].value : data.value[dataIndex]
+                            value: value,
+                            // 向下兼容
+                            0: seriesArray[i].name || '',
+                            1: data.name,
+                            2: value,
+                            3: indicatorName
                         });
                     }
                 }
@@ -918,20 +929,17 @@ define(function (require) {
                         percent: special,   // 饼图
                         indicator: special, // 雷达图
                         value2: special2,
-                        indicator2: special2
+                        indicator2: special2,
+                        // 向下兼容
+                        0: serie.name || '',
+                        1: name,
+                        2: value,
+                        3: special,
+                        4: special2,
+                        5: data,
+                        6: ecData.get(this._curTarget, 'seriesIndex'),
+                        7: dataIndex
                     },
-                    /*
-                    [
-                        serie.name || '',
-                        name,
-                        value,
-                        special,
-                        special2,
-                        data,
-                        ecData.get(this._curTarget, 'seriesIndex'),
-                        ecData.get(this._curTarget, 'dataIndex')
-                    ],
-                    */
                     this._curTicket,
                     this._setContent
                 );
