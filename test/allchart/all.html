@@ -580,10 +580,10 @@ option = {
     tooltip : {
         trigger: 'axis',
         formatter: function (params) {
-            var res = params[0][1];
-            res += '<br/>' + params[0][0];
-            res += '<br/>  开盘 : ' + params[0][2][0] + '  最高 : ' + params[0][2][3];
-            res += '<br/>  收盘 : ' + params[0][2][1] + '  最低 : ' + params[0][2][2];
+            var res = params[0].name;
+            res += '<br/>' + params[0].seriesName;
+            res += '<br/>  开盘 : ' + params[0].value[0] + '  最高 : ' + params[0].value[3];
+            res += '<br/>  收盘 : ' + params[0].value[1] + '  最低 : ' + params[0].value[2];
             return res;
         }
     },
@@ -1198,6 +1198,15 @@ option = {
     tooltip : {
         trigger: 'item'
     },
+    toolbox: {
+        show : true,
+        y: 'bottom',
+        feature : {
+            restore : {show: true},
+            magicType: {show: true, type: ['force', 'chord']},
+            saveAsImage : {show: true}
+        }
+    },
     legend: {
         x: 'right',
         data:['g1','g2', 'g3', 'g4']
@@ -1314,6 +1323,14 @@ option = {
         trigger: 'item',
         formatter: '{a} : {b}'
     },
+    toolbox: {
+        show : true,
+        feature : {
+            restore : {show: true},
+            magicType: {show: true, type: ['force', 'chord']},
+            saveAsImage : {show: true}
+        }
+    },
     legend: {
         x: 'left',
         data:['家人','朋友']
@@ -1321,6 +1338,7 @@ option = {
     series : [
         {
             type:'force',
+            ribbonType: false,
             name : "人物关系",
             categories : [
                 {
