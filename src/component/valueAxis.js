@@ -462,10 +462,10 @@ define(function (require) {
                     }
                     // 修复最大值==最小值时数据整形
                     else if (this._max > 0) {
-                        this._min = this._max / this.option.splitNumber;
+                        this._min = this._max / this.option.splitNumber != null ? this.option.splitNumber : 5;
                     }
                     else { // this._max < 0
-                        this._max = this._max / this.option.splitNumber;
+                        this._max = this._max / this.option.splitNumber != null ? this.option.splitNumber : 5;
                     }
                 }
                 this.option.type != 'time' 
@@ -578,78 +578,38 @@ define(function (require) {
          * 找到原始数据的极值后根据选项整形最终 this._min / this._max / this._valueList
          * 如果你不知道这个“整形”的用义，请不要试图去理解和修改这个方法！找我也没用，我相信我已经记不起来！
          * 如果你有更简洁的数学推导欢迎重写，后果自负~
-         * 一旦你不得不遇到了需要修改或重写的厄运，希望下面的脚手架能帮助你
-         * ps:其实我是想说别搞砸了！升级后至少得保证这些case通过！！
          *
          * by linzhifeng@baidu.com 2013-1-8
          * --------
-         this._valueList = [];
-         this.option = {splitNumber:5,power:100,precision:0};
-         this._min = 1; this._max = 123; console.log(this._min, this._max); this._reformValue();
-         console.log('result is :', this._min, this._max, this._valueList);
-         console.log('should be : 0 150 [0, 30, 60, 90, 120, 150]',
-                    (this._min == 0 && this._max == 150) ? 'success' : 'failed');
-
-         this._min = 10; this._max = 1923; console.log(this._min, this._max); this._reformValue();
-         console.log('result is :', this._min, this._max, this._valueList);
-         console.log('should be : 0 2000 [0, 400, 800, 1200, 1600, 2000]',
-                    (this._min == 0 && this._max == 2000) ? 'success' : 'failed');
-
-         this._min = 10; this._max = 78; console.log(this._min, this._max); this._reformValue();
-         console.log('result is :', this._min, this._max, this._valueList);
-         console.log('should be : 0 100 [0, 20, 40, 60, 80, 100]',
-                    (this._min == 0 && this._max == 100) ? 'success' : 'failed');
-
-         this._min = -31; this._max = -3; console.log(this._min, this._max); this._reformValue();
-         console.log('result is :', this._min, this._max, this._valueList);
-         console.log('should be : -35 0 [-35, -28, -21, -14, -7, 0]',
-                    (this._min == -35 && this._max == 0) ? 'success' : 'failed');
-
-         this._min = -51; this._max = 203; console.log(this._min, this._max); this._reformValue();
-         console.log('result is :', this._min, this._max, this._valueList);
-         console.log('should be : -60 240 [-60, 0, 60, 120, 180, 240]',
-                    (this._min == -60 && this._max == 240) ? 'success' : 'failed');
-
-         this._min = -251; this._max = 23; console.log(this._min, this._max); this._reformValue();
-         console.log('result is :', this._min, this._max, this._valueList);
-         console.log('should be : -280 70 [-280, -210, -140, -70, 0, 70]',
-                    (this._min == -280 && this._max == 70) ? 'success' : 'failed');
-
-         this.option.precision = 2;
-         this._min = 0.23; this._max = 0.78; console.log(this._min, this._max); this._reformValue();
-         console.log('result is :', this._min, this._max, this._valueList);
-         console.log('should be : 0.00 1.00'
-             + '["0.00", "0.20", "0.40", "0.60", "0.80", "1.00"]',
-            (this._min == 0.00 && this._max == 1.00) ? 'success' : 'failed');
-
-         this._min = -12.23; this._max = -0.78; console.log(this._min, this._max);
-         this._reformValue();
-         console.log('result is :', this._min, this._max, this._valueList);
-         console.log('should be : -15.00 0.00'
-             + '["-15.00", "-12.00", "-9.00", "-6.00", "-3.00", "0.00"]',
-            (this._min == -15.00 && this._max == 0.00) ? 'success' : 'failed');
-
-         this._min = -0.23; this._max = 0.78; console.log(this._min, this._max); this._reformValue()
-         console.log('result is :', this._min, this._max, this._valueList);
-         console.log('should be : -0.30 1.20'
-             + '["-0.30", "0.00", "0.30", "0.60", "0.90", "1.20"]',
-            (this._min == -0.30 && this._max == 1.20) ? 'success' : 'failed');
-
-         this._min = -1.23; this._max = 0.78; console.log(this._min, this._max); _reformValue();
-         console.log('result is :', this._min, this._max, this._valueList);
-         console.log('should be : -1.50 1.00'
-             + '["-1.50", "-1.00", "-0.50", "0.00", "0.50", "1.00"]',
-            (this._min == -1.50 && this._max == 1.00) ? 'success' : 'failed');
-
-         this.option.precision = 1;
-         this._min = -2.3; this._max = 0.5; console.log(this._min, this._max); _reformValue();
-         console.log('result is :', this._min, this._max, this._valueList);
-         console.log('should be : -2.4 0.6'
-             + '["-2.4", "-1.8", "-1.2", "-0.6", "0.0", "0.6"]',
-            (this._min == -2.4 && this._max == 0.6) ? 'success' : 'failed');
-         * --------
+         * 感谢谢世威(xieshiwei@baidu.com)，终于有人改这个方法了
+         * by lizhifeng@baidu.com 2014-11-6
          */
         _reformValue: function (scale) {
+            var smartSteps = require('../util/smartSteps');
+            var splitNumber = this.option.splitNumber;
+            var precision = this.option.precision;
+            
+            // 非scale下双正，修正最小值为0
+            if (!scale && this._min >= 0 && this._max >= 0) {
+                this._min = 0;
+            }
+            // 非scale下双负，修正最大值为0
+            if (!scale && this._min <= 0 && this._max <= 0) {
+                this._max = 0;
+            }
+            
+            var stepOpt = smartSteps(this._min, this._max, splitNumber);
+            splitNumber = splitNumber != null ? splitNumber : stepOpt.secs;
+            this.option.splitNumber = splitNumber;
+            this._min = stepOpt.min.toFixed(precision) - 0;
+            this._max = stepOpt.max.toFixed(precision) - 0;
+            this._valueList = [];
+            for (var i = 0; i <= splitNumber; i++) {
+                this._valueList[i] =  (stepOpt.pnts[i] - 0).toFixed(precision) - 0;
+            }
+            this._reformLabelData();
+            
+            return;
             var splitNumber = this.option.splitNumber;
             var precision = this.option.precision;
             var splitGap;
@@ -763,7 +723,7 @@ define(function (require) {
          * 格式化时间值 
          */
         _reformTimeValue : function() {
-            var splitNumber = this.option.splitNumber;
+            var splitNumber = this.option.splitNumber != null ? this.option.splitNumber : 5;;
             
             // 最优解
             var curValue = ecDate.getAutoFormatter(this._min, this._max, splitNumber);
@@ -830,7 +790,7 @@ define(function (require) {
         },
         
         _customerValue: function () {
-            var splitNumber = this.option.splitNumber;
+            var splitNumber = this.option.splitNumber != null ? this.option.splitNumber : 5;;
             var precision = this.option.precision;
             var splitGap = (this._max - this._min) / splitNumber;
             
