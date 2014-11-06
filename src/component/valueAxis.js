@@ -458,7 +458,7 @@ define(function (require) {
                 if (this._min === this._max) {
                     if (this._max === 0) {
                         // 修复全0数据
-                        this._max = this.option.power > 0 ? this.option.power : 1;
+                        this._max = 1;
                     }
                     // 修复最大值==最小值时数据整形
                     else if (this._max > 0) {
@@ -587,7 +587,6 @@ define(function (require) {
         _reformValue: function (scale) {
             var smartSteps = require('../util/smartSteps');
             var splitNumber = this.option.splitNumber;
-            var precision = this.option.precision;
             
             // 非scale下双正，修正最小值为0
             if (!scale && this._min >= 0 && this._max >= 0) {
@@ -601,121 +600,9 @@ define(function (require) {
             var stepOpt = smartSteps(this._min, this._max, splitNumber);
             splitNumber = splitNumber != null ? splitNumber : stepOpt.secs;
             this.option.splitNumber = splitNumber;
-            this._min = stepOpt.min.toFixed(precision) - 0;
-            this._max = stepOpt.max.toFixed(precision) - 0;
-            this._valueList = [];
-            for (var i = 0; i <= splitNumber; i++) {
-                this._valueList[i] =  (stepOpt.pnts[i] - 0).toFixed(precision) - 0;
-            }
-            this._reformLabelData();
-            
-            return;
-            var splitNumber = this.option.splitNumber;
-            var precision = this.option.precision;
-            var splitGap;
-            var power;
-            if (precision === 0) {    // 整数
-                 power = this.option.power > 1 ? this.option.power : 1;
-            }
-            else {                          // 小数
-                // 放大倍数后复用整数逻辑，最后再缩小回去
-                power = Math.pow(10, precision);
-                this._min *= power;
-                this._max *= power;
-                power = this.option.power;
-            }
-            // console.log(this._min,this._max)
-            var total;
-            if (this._min >= 0 && this._max >= 0) {
-                // 双正
-                if (!scale) {
-                    // power自动降级
-                    while ((this._max / power < splitNumber) && power != 1) {
-                        power = power / 10;
-                    }
-                    this._min = 0;
-                }
-                else {
-                    // power自动降级
-                    while (this._min < power && power != 1) {
-                        power = power / 10;
-                    }
-                    if (precision === 0) {    // 整数
-                        // 满足power
-                        this._min = Math.floor(this._min / power) * power;
-                        this._max = Math.ceil(this._max / power) * power;
-                    }
-                }
-                power = power > 1 ? power / 10 : 1;
-                total = this._max - this._min;
-                splitGap = Math.ceil((total / splitNumber) / power) * power;
-                this._max = this._min + splitGap * splitNumber;
-            }
-            else if (this._min <= 0 && this._max <= 0) {
-                // 双负
-                power = -power;
-                if (!scale) {
-                    // power自动降级
-                    while ((this._min / power < splitNumber) && power != -1) {
-                        power = power / 10;
-                    }
-                    this._max = 0;
-                }
-                else {
-                    // power自动降级
-                    while (this._max > power && power != -1) {
-                        power = power / 10;
-                    }
-                    if (precision === 0) {    // 整数
-                        // 满足power
-                        this._min = Math.ceil(this._min / power) * power;
-                        this._max = Math.floor(this._max / power) * power;
-                    }
-                }
-                power = power < -1 ? power / 10 : -1;
-                total = this._min - this._max;
-                splitGap = -Math.ceil((total / splitNumber) / power) * power;
-                this._min = -splitGap * splitNumber + this._max;
-            }
-            else {
-                // 一正一负，确保0被选中
-                total = this._max - this._min;
-                // power自动降级
-                while ((total / power < splitNumber) && power != 1) {
-                    power = power/10;
-                }
-                // 正数部分的分隔数
-                var partSplitNumber = Math.round(this._max / total * splitNumber);
-                // 修正数据范围极度偏正向，留给负数一个
-                partSplitNumber -= (partSplitNumber === splitNumber ? 1 : 0);
-                // 修正数据范围极度偏负向，留给正数一个
-                partSplitNumber += partSplitNumber === 0 ? 1 : 0;
-                splitGap = (Math.ceil(Math.max(
-                                          this._max / partSplitNumber,
-                                          this._min / (partSplitNumber - splitNumber)
-                                      )
-                           / power))
-                           * power;
-
-                this._max = splitGap * partSplitNumber;
-                this._min = splitGap * (partSplitNumber - splitNumber);
-            }
-            //console.log(this._min,this._max,'vvvvvrrrrrr')
-            this._valueList = [];
-            for (var i = 0; i <= splitNumber; i++) {
-                this._valueList.push(this._min + splitGap * i);
-            }
-
-            if (precision !== 0) {    // 小数
-                 // 放大倍数后复用整数逻辑，最后再缩小回去
-                power = Math.pow(10, precision);
-                this._min = (this._min / power).toFixed(precision) - 0;
-                this._max = (this._max / power).toFixed(precision) - 0;
-                for (var i = 0; i <= splitNumber; i++) {
-                    this._valueList[i] = 
-                        (this._valueList[i] / power).toFixed(precision) - 0;
-                }
-            }
+            this._min = stepOpt.min;
+            this._max = stepOpt.max;
+            this._valueList = stepOpt.pnts;
             this._reformLabelData();
         },
         
@@ -790,13 +677,13 @@ define(function (require) {
         },
         
         _customerValue: function () {
-            var splitNumber = this.option.splitNumber != null ? this.option.splitNumber : 5;;
-            var precision = this.option.precision;
+            var accMath = require('../util/accMath');
+            var splitNumber = this.option.splitNumber != null ? this.option.splitNumber : 5;
             var splitGap = (this._max - this._min) / splitNumber;
             
             this._valueList = [];
             for (var i = 0; i <= splitNumber; i++) {
-                this._valueList.push((this._min + splitGap * i).toFixed(precision) - 0);
+                this._valueList.push(accMath.accAdd(this._min, accMath.accMul(splitGap, i)));
             }
             this._reformLabelData();
         },

@@ -158,7 +158,7 @@ define(function() {
         var deltaMax    = newMax - params.zmax;
         var deltaDelta  = deltaMin - deltaMax;
         if (deltaDelta >= step * 2) {                           // 当 min 端的误差比 max 端大很多时，考虑将 newMin newMax 同时上移
-            deltaDelta  = Math_floor(deltaDelta / step) * step;
+            deltaDelta  = MATH_FLOOR(deltaDelta / step) * step;
             newMin     += deltaDelta;
             newMax     += deltaDelta;
         }
