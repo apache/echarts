@@ -4,9 +4,9 @@
  * @author clmtulip  (车丽美, chelimei@baidu.com)
  */
 define(function(require) {
-    function eventRiverLayout(series, area) {
-        var space = 15;
-        var scale = 10;
+    function eventRiverLayout(series, intervalX, area) {
+        var space = 5;
+        var scale = intervalX;
 
         function importanceSort(a, b) {
             var x = a.importance;
@@ -75,7 +75,7 @@ define(function(require) {
         // console.log('maxTime: ' + maxTime);
         
         // 建立线段树根节点
-        var root = segmentTreeBuild(minTime, maxTime);
+        var root = segmentTreeBuild(Math.floor(minTime), Math.ceil(maxTime));
 
         var totalMaxY = 0;
         for (var i = 0; i < series.length; i++) {
@@ -95,12 +95,12 @@ define(function(require) {
                 // 检测overlap，调整event.y
                 for (k = 0; k < e.time.length - 1; k++) {
                     var curMaxY = segmentTreeQuery(root, e.time[k], e.time[k + 1]);
-                    if (e.y - e.value[k] / 2 < curMaxY) {
+                    if (e.y - e.value[k] / 2 - space < curMaxY) {
                         e.y = curMaxY + e.value[k] / 2  + space;
                     }
                 }
                 var curMaxY = segmentTreeQuery(root, e.time[k], e.time[k] + scale);
-                if (e.y - e.value[k] / 2 < curMaxY) {
+                if (e.y - e.value[k] / 2 - space < curMaxY) {
                     e.y = curMaxY + e.value[k] / 2 + space;
                 }
                 series[i].y = e.y;
@@ -134,7 +134,7 @@ define(function(require) {
                 eventList[j].y = eventList[j].y * yScale + yBase;
                 var evolutionList = eventList[j].evolution;
                 for (var k = 0; k < evolutionList.length; k++) {
-                    evolutionList[k].valueScale *= yScale * 0.9;
+                    evolutionList[k].valueScale *= yScale * 1;
                 }
             }
             
@@ -149,18 +149,24 @@ define(function(require) {
             'rightChild': null,
             'maxValue': 0
         };
-        // console.log(left + ' ' + right);
-        if (Math.ceil(left) + 1 < Math.floor(right)) {
-            var mid = (left + right) >> 1;
+        
+        if (left + 1 < right) {
+            var mid = Math.round( (left + right) / 2);
             root.leftChild = segmentTreeBuild(left, mid);
             root.rightChild = segmentTreeBuild(mid, right);
         }
+        
         return root;
     }
 
     function segmentTreeQuery(root, left, right) {
-        var mid = (root.left + root.right) >> 1;
+        if (right - left < 1) {
+            return 0;
+        }
+
+        var mid = Math.round( (root.left + root.right) / 2);
         var result = 0;
+        
         if (left == root.left && right == root.right) {
             result = root.maxValue;
         }
@@ -189,11 +195,13 @@ define(function(require) {
         if (root == null) {
             return ;
         }
-        var mid = (root.left + root.right) >> 1;
+        var mid = Math.round( (root.left + root.right) / 2);
         root.maxValue = root.maxValue > value ? root.maxValue : value;
 
-        if (left == root.left && right == root.right) {
-            return ;
+        if (Math.floor(left * 10) == Math.floor(root.left * 10) 
+            && Math.floor(right * 10) == Math.floor(root.right * 10)
+        ) {
+            return;
         }
         else if (right <= mid) {
             segmentTreeInsert(root.leftChild, left, right, value);
