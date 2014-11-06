@@ -157,14 +157,10 @@ define(function() {
         var deltaMin    = params.zmin - newMin;                 // 上面的计算可能会让 min 端的误差更大，下面尝试均衡误差
         var deltaMax    = newMax - params.zmax;
         var deltaDelta  = deltaMin - deltaMax;
-        if (deltaDelta >= 20) {                                // 当 min 端的误差比 max 端大很多时，考虑将 newMin newMax 同时上移
-            deltaDelta = getCeil(deltaDelta / 20, custSteps, true); // 误差分配的 量级 不能小
-            deltaDelta.n += 1;
-            deltaDelta.d *= 10;
-            if (params.exp - deltaDelta.n < 1) {               // 前面对 span 做了放大，所以还要看 误差修正值 与 span 的量级关系
-                newMin += deltaDelta.d;
-                newMax += deltaDelta.d;
-            }
+        if (deltaDelta >= step * 2) {                           // 当 min 端的误差比 max 端大很多时，考虑将 newMin newMax 同时上移
+            deltaDelta  = Math_floor(deltaDelta / step) * step;
+            newMin     += deltaDelta;
+            newMax     += deltaDelta;
         }
         params.min = newMin;
         params.max = newMax;
