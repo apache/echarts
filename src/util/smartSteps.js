@@ -89,7 +89,7 @@ define(function() {
         // 如果原始值都是整数，让输出值也保持整数
         if ((min === MATH_ROUND(min)) && (max === MATH_ROUND(max))) {
             step = params.step * zoom;
-            if (params.exp < 0 && step !== MATH_ROUND(step)) {
+            if (params.exp < 0 && step !== MATH_ROUND(step) && min * max >= 0) {
                 step = MATH_FLOOR(step);
                 span = step * params.secs;
                 if (span < max - min) {
@@ -158,7 +158,9 @@ define(function() {
         var deltaMax    = newMax - params.zmax;
         var deltaDelta  = deltaMin - deltaMax;
         if (deltaDelta >= 20) {                                // 当 min 端的误差比 max 端大很多时，考虑将 newMin newMax 同时上移
-            deltaDelta = getCeil(deltaDelta / 2, custSteps, true);
+            deltaDelta = getCeil(deltaDelta / 20, custSteps, true); // 误差分配的 量级 不能小
+            deltaDelta.n += 1;
+            deltaDelta.d *= 10;
             if (params.exp - deltaDelta.n < 1) {               // 前面对 span 做了放大，所以还要看 误差修正值 与 span 的量级关系
                 newMin += deltaDelta.d;
                 newMax += deltaDelta.d;
