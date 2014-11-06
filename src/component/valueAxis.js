@@ -610,7 +610,7 @@ define(function (require) {
          * 格式化时间值 
          */
         _reformTimeValue : function() {
-            var splitNumber = this.option.splitNumber != null ? this.option.splitNumber : 5;;
+            var splitNumber = this.option.splitNumber != null ? this.option.splitNumber : 5;
             
             // 最优解
             var curValue = ecDate.getAutoFormatter(this._min, this._max, splitNumber);

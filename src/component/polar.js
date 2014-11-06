@@ -703,11 +703,6 @@ define(function (require) {
             var max;
             var min;
             var value;
-            var delta;
-            var str;
-            var len = 0;
-            var max0;
-            var min0;
             var one;
 
             if (!data || data.length === 0) {
