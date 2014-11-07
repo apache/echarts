@@ -547,7 +547,7 @@ require.config({
 &lt;/body&gt;
 </pre>
                     </div>
-                    <p>require.config配置后后就可以通过动态加载使用echarts</p>
+                    <p>require.config配置后就可以通过动态加载使用echarts</p>
                     <div class="code">
                         <pre>//from echarts example
 &lt;body&gt;
@@ -567,7 +567,7 @@ require.config({
         require(
             [
                 'echarts',
-                'echarts/chart/line',   // 按需加载所需图表，如需动态类型切换功能，别忘了同时加载响应图表
+                'echarts/chart/line',   // 按需加载所需图表，如需动态类型切换功能，别忘了同时加载相应图表
                 'echarts/chart/bar'
             ],
             function (ec) {
@@ -779,8 +779,8 @@ require(['echarts'], function (ec){
                                 <br/>DATA_CHANGED（数据修改），DATA_VIEW_CHANGED（数据视图修改），
                                 <br/>MAGIC_TYPE_CHANGED（动态类型切换），TIMELINE_CHANGED（时间轴变化），
                                 <br/>DATA_ZOOM（数据区域缩放），DATA_RANGE（值域漫游），MAP_ROAM（地图漫游），
-                                <br/>DATA_RANGE_HOVERLINK（值域漫游hover），LEGEND_HOVERLINK（图例hover）
-                                <br/>LEGEND_SELECTED（图例选择），MAP_SELECTED（地图选择），PIE_SELECTED（饼图选择）
+                                <br/>DATA_RANGE_HOVERLINK（值域漫游hover），LEGEND_HOVERLINK（图例hover），
+                                <br/>LEGEND_SELECTED（图例选择），MAP_SELECTED（地图选择），PIE_SELECTED（饼图选择），
                                 <br/>FORCE_LAYOUT_END（力导向布局结束）
                                 <br/><a href="./example/event.html" target="_blank">事件调试 » </a>
                             </td>
@@ -2996,7 +2996,6 @@ indicator : [
                             <th> 描述 </th>
                         </tr>
                         <tr>
-                        <tr>
                             <td> <b>{Array}</b> categories </td>
                             <td> null </td>
                             <td> 节点分类, 详见图数据结构表示中的<a href="#categories">categories</a></td>
@@ -3387,7 +3386,7 @@ indicator : [
                                     </tr>
                                     <tr>
                                         <td> <b>{string}</b> name </td>
-                                        <td></td>
+                                        <td> null</td>
                                         <td> 事件名称 </td>
                                     </tr>
                                     <tr>
