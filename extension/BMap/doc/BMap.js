@@ -35,6 +35,7 @@ if (themeSelector) {
         + '<option name="green">green</option>'
         + '<option name="red">red</option>'
         + '<option name="gray">gray</option>'
+        + '<option name="helianthus">helianthus</option>'
         + '<option name="default">default</option>'
     );
     $(themeSelector).on('change', function(){
@@ -46,7 +47,7 @@ if (themeSelector) {
         $(themeSelector).val(theme);
         if (theme != 'default') {
             window.location.hash = value + (enVersion ? '-en' : '');
-            require(['theme/' + theme], function(tarTheme){
+            require(['http://echarts.baidu.com/doc/example/theme/' + theme], function(tarTheme){
                 curTheme = tarTheme;
                 setTimeout(refreshTheme, 500);
             })
@@ -171,7 +172,7 @@ else {
 require(
     [
         'echarts',
-        'theme/' + hash.replace('-en', ''),
+        'http://echarts.baidu.com/doc/example/theme/' + hash.replace('-en', ''),
         needMap() ? 'echarts/chart/map' : 'echarts'
     ],
     requireCallback
