@@ -30,6 +30,7 @@ if (themeSelector) {
         + '<option name="green">green</option>'
         + '<option name="red">red</option>'
         + '<option name="gray">gray</option>'
+        + '<option name="helianthus">helianthus</option>'
         + '<option name="default">default</option>'
     );
     $(themeSelector).on('change', function(){
