@@ -46,7 +46,7 @@
         <ul class="nav nav-tabs nav-justified">
             <li class="active">
                 <a id = "o-aqi" href="#main0" data-toggle="tab">modular single file import (preferred)</a></li>
-            <li><a id = "o-pm25" href="#main1" data-toggle="tab">tabbed single file import</a></li>            
+            <li><a id = "o-pm25" href="#main1" data-toggle="tab">plain single file import</a></li>            
         </ul>
         <div class="tab-content">
             <div class="tab-pane active" id="main0">
@@ -62,59 +62,58 @@
     <div id="main" style="height:400px"></div>
 </body></xmp></pre>
 
-        <b class="title">2, Create a &lt; script &gt; tag to include an AMD loader, such as esl.js. </ b></b>
+        <b class="title">2, Create a &lt; script &gt; tag to include echarts' core file, echarts.js. </ b></b>
         <pre class="prettyprint"><xmp><!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
-    <!-- from Baidu's CDN -->
-    <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-6-10/esl.js"></script>
 </head>
 <body>
     <!-- Prepare a Dom with size (width and height) for ECharts -->
     <div id="main" style="height:400px"></div>
+    <!-- ECharts import -->
+    <script src="http://echarts.baidu.com/build/dist/echarts.js"></script>
 </body></xmp></pre>
+
 
         <b class="title">3, Create a new &lt; script &gt; tag, configure for module loader a path of echarts and the chart you need (the relative path is to link from the current page to echarts.js). For imported chart file, refer to <a href="doc-en.html#Import-ECharts2" target="_blank">Import ECharts2</a></b>
         <pre class="prettyprint"><xmp><!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
-    <!-- from Baidu's CDN -->
-    <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-6-10/esl.js"></script>
 </head>
 <body>
     <!-- Prepare a Dom with size (width and height) for ECharts -->
     <div id="main" style="height:400px"></div>
+    <!-- ECharts import -->
+    <script src="http://echarts.baidu.com/build/dist/echarts.js"></script>
     <script type="text/javascript">
         // configure for module loader
         require.config({
-            paths:{ 
-                'echarts' : 'http://echarts.baidu.com/build/echarts',
-                'echarts/chart/bar' : 'http://echarts.baidu.com/build/echarts'
+            paths: {
+                echarts: 'http://echarts.baidu.com/build/dist'
             }
         });
     </script>
 </body></xmp></pre>
 
 
-            <b class="title">4, Dynamically load echarts and the chart you need in the &lt; script &gt; tag. Use callback function to initialize and drive the generation of charts. For option, refer to <a href="doc-en.html#Option" target="_blank">API &amp; Doc</a></b>
+        <b class="title">4, Dynamically load echarts and the chart you need in the &lt; script &gt; tag. Use callback function to initialize and drive the generation of charts. For option, refer to <a href="doc-en.html#Option" target="_blank">API &amp; Doc</a></b>
         <pre class="prettyprint"><xmp><!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
-    <!-- from Baidu's CDN -->
-    <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-6-10/esl.js"></script>
 </head>
 <body>
     <!-- Prepare a Dom with size (width and height) for ECharts -->
     <div id="main" style="height:400px"></div>
+    <!-- ECharts import -->
+    <script src="http://echarts.baidu.com/build/dist/echarts.js"></script>
     <script type="text/javascript">
         // configure for module loader
         require.config({
-            paths:{ 
-                'echarts' : 'http://echarts.baidu.com/build/echarts',
-                'echarts/chart/bar' : 'http://echarts.baidu.com/build/echarts'
+            paths: {
+                echarts: 'http://echarts.baidu.com/build/dist'
             }
         });
         
@@ -190,8 +189,8 @@
 <body>
     <!-- Prepare a Dom with size (width and height) for ECharts -->
     <div id="main" style="height:400px"></div>
-    <!-- Tabbed single file import  -->
-    <script src="http://echarts.baidu.com/build/echarts-plain.js"></script>
+    <!-- ECharts import -->
+    <script src="http://echarts.baidu.com/build/dist/echarts-all.js"></script>
 </body></xmp></pre>
 
 
@@ -204,8 +203,8 @@
 <body>
     <!-- Prepare a Dom with size (width and height) for ECharts -->
     <div id="main" style="height:400px"></div>
-    <!-- Tabbed single file import  -->
-    <script src="http://echarts.baidu.com/build/echarts-plain.js"></script>
+    <!-- ECharts import -->
+    <script src="http://echarts.baidu.com/build/dist/echarts-all.js"></script>
     <script type="text/javascript">
         // Initialize after dom ready
         var myChart = echarts.init(document.getElementById('main')); 
@@ -250,18 +249,17 @@
         </div>
         <div id="main" style="height:400px;border: 1px solid #dddddd;border-top-width:0"></div>
         
-        <div class="row" style="margin-top: 30px;">
+        <div class="row" style="margin: 35px 0;">
             <h2>Best Reference Resource: Instances</h2>
             <p>ECharts is a data-driven chart. Since your main concern is how to achieve that option, we offer you, right here on our official website, an extensive <a href="./doc-en.html">documentation</a> for your reference and over 100 ready-made <a href="./example-en.html">demos</a> with the most core option code that is free to edit online. For ECharts, play makes perfect; hope you enjoy playing here.</p>
         </div>
     </div>
-    <script src="./asset/js/esl/esl.js"></script>
+    <script src="../build/dist/echarts.js"></script>
      
     <script type="text/javascript">
         require.config({
-            paths:{ 
-                'echarts' : 'http://echarts.baidu.com/build/echarts',
-                'echarts/chart/bar' : 'http://echarts.baidu.com/build/echarts'
+            paths: {
+                echarts: '../build/dist'
             }
         });
         require(
@@ -279,13 +277,11 @@
                 show: true
             },
             legend: {
-                //data:['销量']
                 data:['Sales']
             },
             xAxis : [
                 {
                     type : 'category',
-                    //data : ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
                     data : ["Shirts", "Sweaters", "Chiffon Shirts", "Pants", "High Heels", "Socks"]
                 }
             ],
@@ -296,7 +292,6 @@
             ],
             series : [
                 {
-                    //"name":"销量",
                     "name":"Sales",
                     "type":"bar",
                     "data":[5,20,40,10,10,20]
