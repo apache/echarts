@@ -7,7 +7,7 @@
     <meta name="description" content="ECharts">
     <meta name="author" content="linzhifeng@baidu.com">
 
-    <script src="../../doc/asset/js/esl/esl.js"></script>
+    <script src="../../build/dist/echarts.js"></script>
     <script src="../../doc/asset/js/codemirror.js"></script>
     <script src="../../doc/asset/js/javascript.js"></script>
 
@@ -638,7 +638,6 @@ option = {
         {
             type : 'value',
             scale:true,
-            precision: 2,
             splitNumber: 9,
             boundaryGap: [0.05, 0.05],
             splitArea : {show : true}
@@ -1026,8 +1025,6 @@ option = {
                 textStyle: {color:'red'}
             },
             scale: true,
-            precision: 1,
-            //power: 100,
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
                 lineStyle: {       // 属性lineStyle控制线条样式
