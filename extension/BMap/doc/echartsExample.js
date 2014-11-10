@@ -127,7 +127,7 @@ function needMap() {
 }
 
 var echarts;
-var developMode = true;
+var developMode = false;
 
 if (developMode) {
     // for develop
@@ -153,23 +153,17 @@ if (developMode) {
     });
 }
 else {
-    // for echarts online home page
-    var fileLocation = needMap() ? './www/js/echarts-map' : './www/js/echarts';
     require.config({
-        paths:{ 
-            echarts: fileLocation,
-            'echarts/chart/line': fileLocation,
-            'echarts/chart/bar': fileLocation,
-            'echarts/chart/scatter': fileLocation,
-            'echarts/chart/k': fileLocation,
-            'echarts/chart/pie': fileLocation,
-            'echarts/chart/radar': fileLocation,
-            'echarts/chart/map': fileLocation,
-            'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation,
-            'echarts/chart/gauge': fileLocation,
-            'echarts/chart/funnel': fileLocation
-        }
+        paths: {
+            echarts: '../../../doc/example/www/js'
+        },
+        packages: [
+            {
+                name: 'BMap',
+                location: '../src',
+                main: 'main'
+            }
+        ]
     });
 }
 
@@ -178,17 +172,6 @@ require(
     [
         'echarts',
         'theme/' + hash.replace('-en', ''),
-        'echarts/chart/line',
-        'echarts/chart/bar',
-        'echarts/chart/scatter',
-        'echarts/chart/k',
-        'echarts/chart/pie',
-        'echarts/chart/radar',
-        'echarts/chart/map',
-        'echarts/chart/force',
-        'echarts/chart/chord',
-        'echarts/chart/gauge',
-        'echarts/chart/funnel',
         needMap() ? 'echarts/chart/map' : 'echarts'
     ],
     requireCallback
