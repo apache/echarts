@@ -192,20 +192,17 @@
     <script src="./asset/js/jquery.min.js"></script>
     <script type="text/javascript" src="./asset/js/echartsHome.js"></script>
     <script src="./asset/js/bootstrap.min.js"></script>
-    <script src="asset/js/esl/esl.js"></script>
+    <script src="example/www/js/echarts.js"></script>
     <script type="text/javascript">
         require.config({
-            paths:{ 
-                echarts:'example/www/js/echarts',
-                'echarts/chart/bar' : 'example/www/js/echarts',
-                'echarts/chart/line': 'example/www/js/echarts'
+            paths: {
+                echarts: 'example/www/js'
             }
         });
         require(
             [
                 'echarts',
                 'example/theme/infographic',
-                'echarts/chart/bar',
                 'echarts/chart/line'
             ],
             function(ec, theme) {
@@ -228,7 +225,8 @@
                             data : [
                                 '2013年6月','2013年7月','2013年8月','2013年9月','2013年10月',
                                 '2013年11月','2013年12月','2014年1月','2014年2月','2014年3月',
-                                '2014年4月','2014年5月','2014年6月','2014年7月','2014年8月'
+                                '2014年4月','2014年5月','2014年6月','2014年7月','2014年8月',
+                                '2014年9月','2014年10月'
                             ]
                         }
                     ],
@@ -256,7 +254,9 @@
                           {value:1767,itemStyle:{normal:{label:{show:true,formatter:'1.4.1'}}}},
                           {value:1928,itemStyle:{normal:{label:{show:true,formatter:'2.0.0'}}}},
                           {value:2390,itemStyle:{normal:{label:{show:true,formatter:'2.0.1'}}}},
-                          {value:2610,itemStyle:{normal:{label:{show:true,formatter:'2.0.2'}}}}
+                          {value:2610,itemStyle:{normal:{label:{show:true,formatter:'2.0.2'}}}},
+                          {value:2740,itemStyle:{normal:{label:{show:true,formatter:'2.0.3'}}}},
+                          {value:2930,itemStyle:{normal:{label:{show:true,formatter:'2.0.4'}}}}
                         ]
                     }]
                 });
