@@ -44225,6 +44225,7 @@ define('zrender/zrender', [
             var centerX = location.centerX;
             var pointList = [];
             var x;
+            var polygon;
             var lastPolygon;
             for (var i = 0, l = selectedData.length; i < l; i++) {
                 itemName = selectedData[i].name;
@@ -44240,9 +44241,9 @@ define('zrender/zrender', [
                     default:
                         x = centerX - lastWidth / 2;
                     }
-                    lastPolygon = this._buildItem(seriesIndex, selectedData[i]._index, legend ? legend.getColor(itemName) : this.zr.getColor(selectedData[i]._index), x, lastY, lastWidth, width, height, align);
+                    polygon = this._buildItem(seriesIndex, selectedData[i]._index, legend ? legend.getColor(itemName) : this.zr.getColor(selectedData[i]._index), x, lastY, lastWidth, width, height, align);
                     lastY += height + gap;
-                    lastPolygon = lastPolygon.style.pointList;
+                    lastPolygon = polygon.style.pointList;
                     pointList.unshift([
                         lastPolygon[0][0] - 10,
                         lastPolygon[0][1]
@@ -44257,6 +44258,9 @@ define('zrender/zrender', [
                             align == 'center' && (pointList[0][0] += 10);
                             align == 'right' && (pointList[0][0] = lastPolygon[0]);
                             pointList[0][1] -= align == 'center' ? 10 : 15;
+                            if (l == 1) {
+                                lastPolygon = polygon.style.pointList;
+                            }
                         } else {
                             pointList[pointList.length - 1][1] -= 5;
                             pointList[0][1] -= 5;
