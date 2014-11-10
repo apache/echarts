@@ -93,6 +93,10 @@ $('#head')[0].innerHTML =
               + '<ul class="dropdown-menu">'
                 + '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.zip"> echarts-' + version + '</a></li>'
                 + '<li><a href="http://echarts.baidu.com/build/echarts-1.4.1.zip"> echarts-1.4.1</a></li>'
+                + '<li class="divider"></li>'
+                + '<li><a href="http://echarts.baidu.com/doc/changelog'
+                  + (enVersion ? '-en': '') 
+                  + '.html">Changelog</a></li>'
               + '</ul>'
             + '</li>'
             //+ '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.rar">下载</a></li>'
