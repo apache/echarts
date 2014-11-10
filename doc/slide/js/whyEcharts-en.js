@@ -1,4 +1,4 @@
-var developMode = true;
+var developMode = false;
 
 if (developMode) {
     // for develop
@@ -23,21 +23,9 @@ if (developMode) {
 }
 else {
     // for echarts online home page
-    var fileLocation = '../../doc/example/www/js/echarts-map';
     require.config({
         paths:{ 
-            echarts: fileLocation,
-            'echarts/chart/line': fileLocation,
-            'echarts/chart/bar': fileLocation,
-            'echarts/chart/scatter': fileLocation,
-            'echarts/chart/k': fileLocation,
-            'echarts/chart/pie': fileLocation,
-            'echarts/chart/radar': fileLocation,
-            'echarts/chart/map': fileLocation,
-            'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation,
-            'echarts/chart/gauge': fileLocation,
-            'echarts/chart/funnel': fileLocation,
+            echarts: '../../doc/example/www/js',
             webkitDep : '../../doc/example/webkit-dep'
         }
     });
