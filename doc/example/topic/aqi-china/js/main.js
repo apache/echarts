@@ -19,20 +19,10 @@ if (developMode) {
     });
 }
 else {
-    var fileLocation = '../../www/js/echarts-map';
     require.config({
-        paths:{ 
-            air: 'http://echarts.iconpng.com/china',
-            echarts:fileLocation,
-            'echarts/chart/bar' : fileLocation,
-            'echarts/chart/line': fileLocation,
-            'echarts/chart/scatter': fileLocation,
-            'echarts/chart/k': fileLocation,
-            'echarts/chart/pie': fileLocation,
-            'echarts/chart/radar': fileLocation,
-            'echarts/chart/map': fileLocation,
-            'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation
+        paths: {
+            echarts: '../../www/js',
+            air: 'http://echarts.iconpng.com/china'
         }
     });
 }
