@@ -478,8 +478,8 @@ define(function (require) {
                             for (var j = 0, k = singlePL.length; j < k; j++) {
                                 data = serie.data[singlePL[j][2]];
                                 if (this.deepQuery([data, serie, this.option], 'calculable') // 可计算
-                                    || this.deepQuery([data, serie], 'showAllSymbol')       // 全显示
-                                    || (categoryAxis.type === 'category'                   // 主轴非空
+                                    || this.deepQuery([data, serie], 'showAllSymbol')        // 全显示
+                                    || (categoryAxis.type === 'categoryAxis'                 // 主轴非空
                                         && categoryAxis.isMainAxis(singlePL[j][2])
                                         && this.deepQuery([data, serie], 'symbol') != 'none'
                                        )
