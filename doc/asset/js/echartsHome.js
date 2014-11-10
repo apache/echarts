@@ -1,4 +1,4 @@
-var version = '2.0.4';
+var version = '2.1.8';
 var sp = location.href.lastIndexOf('/');
 var ep = location.href.lastIndexOf('.html');
 var curPage = sp < ep ? location.href.slice(sp + 1, ep) : 'index';
@@ -139,7 +139,7 @@ $('#footer')[0].innerHTML =
                 + '<p>' + (enVersion ? 'More' : '更多') + '</p>'
                 + '<ul>'
                     + '<li><a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">License</a></li>'
-                    + '<li><a href="http://echarts.baidu.com/doc/changelog.html" target="_blank">Changelog</a></li>'
+                    + '<li><a href="http://echarts.baidu.com/doc/changelog' + (enVersion ? '-en' : '') + '.html" target="_blank">Changelog</a></li>'
                     + '<li><a href="http://www.oschina.net/p/echarts" target="_blank">' + (enVersion ? 'Open Source China' : '开源中国') + '</a></li>'
                 + '</ul>'
             + '</div>'
