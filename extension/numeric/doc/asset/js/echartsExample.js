@@ -122,7 +122,7 @@ function needMap() {
 }
 
 var echarts;
-var developMode = false;
+var developMode = true;
 
 if (developMode) {
     // for develop
@@ -142,7 +142,8 @@ if (developMode) {
         ],
 		paths: {
 			'theme/macarons': '../../../doc/example/theme/macarons',
-			'echarts/extension/numeric': '../src/numeric'
+			'echarts/extension/numeric': '../src/numeric',
+			'echarts/extension/numeric/formatter': '../src/util/formatter'
 		}
     });
 }
@@ -164,7 +165,8 @@ else {
             'echarts/chart/force': fileLocation,
             'echarts/chart/gauge': fileLocation,
             'echarts/chart/funnel': fileLocation,
-			'echarts/extension/numeric': '../src/numeric'
+			'echarts/extension/numeric': '../src/numeric',
+			'echarts/extension/numeric/formatter': '../src/util/formatter'
         }
     });
 }
