@@ -189,7 +189,16 @@ define(function (require) {
         
         getItemStyleColor: function (itemColor, seriesIndex, dataIndex, data) {
             return typeof itemColor === 'function'
-                   ? itemColor(seriesIndex, dataIndex, data) : itemColor;
+                   ? itemColor.call(
+                        this.myChart,
+                        {
+                            seriesIndex: seriesIndex,
+                            series: this.series[seriesIndex],
+                            dataIndex: dataIndex,
+                            data: data
+                        }
+                   )
+                   : itemColor;
             
         },        
         
