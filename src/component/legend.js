@@ -52,6 +52,9 @@ define(function (require) {
     Legend.prototype = {
         type: ecConfig.COMPONENT_TYPE_LEGEND,
         _buildShape: function () {
+            if (!this.legendOption.show) {
+                return;
+            }
             // 图例元素组的位置参数，通过计算所得x, y, width, height
             this._itemGroupLocation = this._getItemGroupLocation();
 
