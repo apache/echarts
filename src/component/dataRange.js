@@ -75,9 +75,11 @@ define(function (require) {
             else {
                 this._buildItem();
             }
-
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                this.zr.addShape(this.shapeList[i]);
+            
+            if (this.dataRangeOption.show) {
+                for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                    this.zr.addShape(this.shapeList[i]);
+                }
             }
             
             this._syncShapeFromRange();
