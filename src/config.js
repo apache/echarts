@@ -83,6 +83,7 @@ define(function() {
         
         // 图例
         legend: {
+            show: true,
             orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
             x: 'center',               // 水平安放位置，默认为全图居中，可选为：
@@ -110,6 +111,7 @@ define(function() {
         
         // 值域
         dataRange: {
+            show: true,
             orient: 'vertical',        // 布局方式，默认为垂直布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
             x: 'left',                 // 水平安放位置，默认为全图左对齐，可选为：
@@ -310,6 +312,7 @@ define(function() {
 
         // 类目轴
         categoryAxis: {
+            show: true,
             position: 'bottom',    // 位置
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
@@ -366,6 +369,7 @@ define(function() {
 
         // 数值型坐标轴默认参数
         valueAxis: {
+            show: true,
             position: 'left',      // 位置
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
@@ -521,7 +525,7 @@ define(function() {
         },
         
         roamController: {
-            show: false,
+            show: true,
             x: 'left',                 // 水平安放位置，默认为全图左对齐，可选为：
                                        // 'center' ¦ 'left' ¦ 'right'
                                        // ¦ {number}（x坐标，单位px）
@@ -899,8 +903,10 @@ define(function() {
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     nodeStyle: {
-                        borderColor: '#5182ab',
-                        borderWidth: 1
+                        brushType : 'both',
+                        color : '#f08c2e',
+                        strokeColor : '#5182ab',
+                        lineWidth: 1
                     },
                     linkStyle: {
                         color: '#5182ab',

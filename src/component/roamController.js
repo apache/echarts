@@ -59,6 +59,9 @@ define(function (require) {
     RoamController.prototype = {
         type: ecConfig.COMPONENT_TYPE_ROAMCONTROLLER,
         _buildShape: function () {
+            if (!this.rcOption.show) {
+                return;
+            }
             // 元素组的位置参数，通过计算所得x, y, width, height
             this._itemGroupLocation = this._getItemGroupLocation();
 

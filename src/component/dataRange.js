@@ -1262,7 +1262,8 @@ define(function (require) {
         },
         
         __onhoverlink: function(param) {
-            if (this.dataRangeOption.hoverLink
+            if (this.dataRangeOption.show
+                && this.dataRangeOption.hoverLink
                 && this._indicatorShape
                 && param 
                 && param.seriesIndex != null && param.dataIndex != null
