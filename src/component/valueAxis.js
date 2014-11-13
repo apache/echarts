@@ -49,9 +49,10 @@ define(function (require) {
         _buildShape: function () {
             this._hasData = false;
             this._calculateValue();
-            if (!this._hasData) {
+            if (!this._hasData || !this.option.show) {
                 return;
             }
+            
             this.option.splitArea.show && this._buildSplitArea();
             this.option.splitLine.show && this._buildSplitLine();
             this.option.axisLine.show && this._buildAxisLine();
