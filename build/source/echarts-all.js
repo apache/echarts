@@ -18471,9 +18471,10 @@ define('zrender/zrender', [
                 var length = data.length;
                 var start = Math.floor(this._zoom.start / 100 * length);
                 var end = Math.ceil(this._zoom.end / 100 * length);
+                end -= end >= length ? 1 : 0;
                 return {
-                    start: data[start],
-                    end: data[end]
+                    start: data[start].value != null ? data[start].value : data[start],
+                    end: data[end].value != null ? data[end].value : data[end]
                 };
             }
             var seriesIndex = this._zoom.seriesIndex[0];
