@@ -20506,9 +20506,10 @@ define('zrender/zrender', [
                 }
             }
             this._calculMarkMapXY(xMarkMap, locationMap, 'xy');
-            this._buildBorkenLine(seriesArray, this.finalPLMap, xAxis, 'horizontal');
+            this._buildBorkenLine(seriesArray, this.finalPLMap, xAxis, 'other');
         },
-        _buildBorkenLine: function (seriesArray, pointList, categoryAxis, orient) {
+        _buildBorkenLine: function (seriesArray, pointList, categoryAxis, curOrient) {
+            var orient = curOrient == 'other' ? 'horizontal' : curOrient;
             var series = this.series;
             var data;
             for (var sIdx = seriesArray.length - 1; sIdx >= 0; sIdx--) {
@@ -20526,7 +20527,7 @@ define('zrender/zrender', [
                     var fillNormalColor = this.query(serie, 'itemStyle.normal.areaStyle.color');
                     for (var i = 0, l = seriesPL.length; i < l; i++) {
                         var singlePL = seriesPL[i];
-                        var isLarge = this._isLarge(orient, singlePL);
+                        var isLarge = curOrient != 'other' && this._isLarge(orient, singlePL);
                         if (!isLarge) {
                             for (var j = 0, k = singlePL.length; j < k; j++) {
                                 data = serie.data[singlePL[j][2]];

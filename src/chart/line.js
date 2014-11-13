@@ -433,13 +433,14 @@ define(function (require) {
             
             this._calculMarkMapXY(xMarkMap, locationMap, 'xy');
             
-            this._buildBorkenLine(seriesArray, this.finalPLMap, xAxis, 'horizontal');
+            this._buildBorkenLine(seriesArray, this.finalPLMap, xAxis, 'other');
         },
         
         /**
          * 生成折线和折线上的拐点
          */
-        _buildBorkenLine: function (seriesArray, pointList, categoryAxis, orient) {
+        _buildBorkenLine: function (seriesArray, pointList, categoryAxis, curOrient) {
+            var orient = curOrient == 'other' ? 'horizontal' : curOrient;
             var series = this.series;
             var data;
             
@@ -473,7 +474,7 @@ define(function (require) {
 
                     for (var i = 0, l = seriesPL.length; i < l; i++) {
                         var singlePL = seriesPL[i];
-                        var isLarge = this._isLarge(orient, singlePL);
+                        var isLarge = curOrient != 'other' && this._isLarge(orient, singlePL);
                         if (!isLarge) { // 非大数据模式才显示拐点symbol
                             for (var j = 0, k = singlePL.length; j < k; j++) {
                                 data = serie.data[singlePL[j][2]];
