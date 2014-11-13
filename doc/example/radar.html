@@ -186,7 +186,8 @@ option = {
                     name : '张三',
                     itemStyle: {
                         normal: {
-                            color: function(seriesIndex, dataIndex, value) {
+                            color: function(params) {
+                                var value = params.data
                                 return isNaN(value) 
                                        ? undefined
                                        : (value >= 120 ? 'green' : 'red')
