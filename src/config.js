@@ -753,7 +753,7 @@ define(function() {
                     borderWidth: 1,
                     label: {
                         show: true,
-                        position: 'inside'
+                        position: 'outer'
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
