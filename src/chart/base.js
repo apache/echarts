@@ -777,7 +777,8 @@ define(function (require) {
                     color = color == null ? this.zr.getColor(seriesIndex) : color;
                     
                     // 标准化一些参数
-                    data[i].tooltip = data[i].tooltip 
+                    data[i].tooltip = data[i].tooltip
+                                      || mpOption.tooltip
                                       || {trigger:'item'}; // tooltip.trigger指定为item
                     data[i].name = data[i].name != null ? data[i].name : '';
                     data[i].value = value;

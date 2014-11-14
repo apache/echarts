@@ -13941,7 +13941,7 @@ define('zrender/zrender', [
                         }
                     }
                     color = color == null ? this.zr.getColor(seriesIndex) : color;
-                    data[i].tooltip = data[i].tooltip || { trigger: 'item' };
+                    data[i].tooltip = data[i].tooltip || mpOption.tooltip || { trigger: 'item' };
                     data[i].name = data[i].name != null ? data[i].name : '';
                     data[i].value = value;
                     itemShape = this.getSymbolShape(mpOption, seriesIndex, data[i], i, data[i].name, this.parsePercent(data[i].x, zrWidth), this.parsePercent(data[i].y, zrHeight), 'pin', color, 'rgba(0,0,0,0)', 'horizontal');
