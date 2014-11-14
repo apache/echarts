@@ -2784,6 +2784,7 @@ define('echarts/echarts', [
             subtextStyle: { color: '#aaa' }
         },
         legend: {
+            show: true,
             orient: 'horizontal',
             x: 'center',
             y: 'top',
@@ -2798,6 +2799,7 @@ define('echarts/echarts', [
             selectedMode: true
         },
         dataRange: {
+            show: true,
             orient: 'vertical',
             x: 'left',
             y: 'bottom',
@@ -2949,6 +2951,7 @@ define('echarts/echarts', [
             borderColor: '#ccc'
         },
         categoryAxis: {
+            show: true,
             position: 'bottom',
             name: '',
             nameLocation: 'end',
@@ -2999,6 +3002,7 @@ define('echarts/echarts', [
             }
         },
         valueAxis: {
+            show: true,
             position: 'left',
             name: '',
             nameLocation: 'end',
@@ -3143,7 +3147,7 @@ define('echarts/echarts', [
             currentIndex: 0
         },
         roamController: {
-            show: false,
+            show: true,
             x: 'left',
             y: 'top',
             width: 80,
@@ -3292,7 +3296,7 @@ define('echarts/echarts', [
                     borderWidth: 1,
                     label: {
                         show: true,
-                        position: 'inside'
+                        position: 'outer'
                     },
                     labelLine: {
                         show: true,
@@ -3379,8 +3383,10 @@ define('echarts/echarts', [
                         position: 'inside'
                     },
                     nodeStyle: {
-                        borderColor: '#5182ab',
-                        borderWidth: 1
+                        brushType: 'both',
+                        color: '#f08c2e',
+                        strokeColor: '#5182ab',
+                        lineWidth: 1
                     },
                     linkStyle: {
                         color: '#5182ab',
@@ -5908,6 +5914,7 @@ define('zrender/zrender', [
                         params.push({
                             seriesIndex: seriesIndex[i],
                             seriesName: seriesArray[i].name || '',
+                            series: seriesArray[i],
                             dataIndex: dataIndex,
                             data: data,
                             name: categoryAxis.getNameByIndex(dataIndex),
@@ -6009,6 +6016,7 @@ define('zrender/zrender', [
                         params.push({
                             seriesIndex: seriesIndex[i],
                             seriesName: seriesArray[i].name || '',
+                            series: seriesArray[i],
                             dataIndex: dataIndex,
                             data: data,
                             name: data.name,
@@ -6110,6 +6118,7 @@ define('zrender/zrender', [
                 this._tDom.innerHTML = formatter.call(this.myChart, {
                     seriesIndex: ecData.get(this._curTarget, 'seriesIndex'),
                     seriesName: serie.name || '',
+                    series: serie,
                     dataIndex: dataIndex,
                     data: data,
                     name: name,
@@ -6681,6 +6690,9 @@ define('zrender/zrender', [
     Legend.prototype = {
         type: ecConfig.COMPONENT_TYPE_LEGEND,
         _buildShape: function () {
+            if (!this.legendOption.show) {
+                return;
+            }
             this._itemGroupLocation = this._getItemGroupLocation();
             this._buildBackground();
             this._buildItem();
@@ -14875,7 +14887,12 @@ define('zrender/zrender', [
             return finalTextStyle.fontStyle + ' ' + finalTextStyle.fontWeight + ' ' + finalTextStyle.fontSize + 'px ' + finalTextStyle.fontFamily;
         },
         getItemStyleColor: function (itemColor, seriesIndex, dataIndex, data) {
-            return typeof itemColor === 'function' ? itemColor(seriesIndex, dataIndex, data) : itemColor;
+            return typeof itemColor === 'function' ? itemColor.call(this.myChart, {
+                seriesIndex: seriesIndex,
+                series: this.series[seriesIndex],
+                dataIndex: dataIndex,
+                data: data
+            }) : itemColor;
         },
         subPixelOptimize: function (position, lineWidth) {
             if (lineWidth % 2 === 1) {
@@ -20338,6 +20355,9 @@ define('zrender/zrender', [
         },
         _buildShape: function () {
             this._interval = this._getInterval();
+            if (!this.option.show) {
+                return;
+            }
             this.option.splitArea.show && this._buildSplitArea();
             this.option.splitLine.show && this._buildSplitLine();
             this.option.axisLine.show && this._buildAxisLine();
@@ -20734,7 +20754,7 @@ define('zrender/zrender', [
         _buildShape: function () {
             this._hasData = false;
             this._calculateValue();
-            if (!this._hasData) {
+            if (!this._hasData || !this.option.show) {
                 return;
             }
             this.option.splitArea.show && this._buildSplitArea();

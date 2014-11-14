@@ -394,8 +394,10 @@ define('echarts/chart/scatter', [
             } else {
                 this._buildItem();
             }
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                this.zr.addShape(this.shapeList[i]);
+            if (this.dataRangeOption.show) {
+                for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                    this.zr.addShape(this.shapeList[i]);
+                }
             }
             this._syncShapeFromRange();
         },
@@ -1373,7 +1375,7 @@ define('echarts/chart/scatter', [
             return;
         },
         __onhoverlink: function (param) {
-            if (this.dataRangeOption.hoverLink && this._indicatorShape && param && param.seriesIndex != null && param.dataIndex != null) {
+            if (this.dataRangeOption.show && this.dataRangeOption.hoverLink && this._indicatorShape && param && param.seriesIndex != null && param.dataIndex != null) {
                 var curValue = param.value;
                 if (isNaN(curValue)) {
                     return;

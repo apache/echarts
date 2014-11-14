@@ -293,7 +293,7 @@ define('echarts/chart/pie', [
                 x = centerX;
                 y = centerY;
                 textAlign = 'center';
-            } else if (labelControl.position === 'inner') {
+            } else if (labelControl.position === 'inner' || labelControl.position === 'inside') {
                 radius = (radius[0] + radius[1]) / 2;
                 x = Math.round(centerX + radius * zrMath.cos(midAngle, true));
                 y = Math.round(centerY - radius * zrMath.sin(midAngle, true));
@@ -305,7 +305,7 @@ define('echarts/chart/pie', [
                 y = Math.round(centerY - radius * zrMath.sin(midAngle, true));
                 textAlign = midAngle >= 90 && midAngle <= 270 ? 'right' : 'left';
             }
-            if (labelControl.position != 'center' && labelControl.position != 'inner') {
+            if (labelControl.position != 'center' && labelControl.position != 'inner' && labelControl.position != 'inside') {
                 x += textAlign === 'left' ? 20 : -20;
             }
             data.__labelX = x - (textAlign === 'left' ? 5 : -5);
@@ -411,7 +411,7 @@ define('echarts/chart/pie', [
             var leftList = [];
             var rightList = [];
             for (var i = 0, l = sList.length; i < l; i++) {
-                if (sList[i]._labelPosition === 'outer') {
+                if (sList[i]._labelPosition === 'outer' || sList[i]._labelPosition === 'outside') {
                     sList[i]._rect._y = sList[i]._rect.y;
                     if (sList[i]._rect.x < center[0]) {
                         leftList.push(sList[i]);

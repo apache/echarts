@@ -1576,8 +1576,10 @@ define('echarts/chart/map', [
             } else {
                 this._buildItem();
             }
-            for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                this.zr.addShape(this.shapeList[i]);
+            if (this.dataRangeOption.show) {
+                for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                    this.zr.addShape(this.shapeList[i]);
+                }
             }
             this._syncShapeFromRange();
         },
@@ -2555,7 +2557,7 @@ define('echarts/chart/map', [
             return;
         },
         __onhoverlink: function (param) {
-            if (this.dataRangeOption.hoverLink && this._indicatorShape && param && param.seriesIndex != null && param.dataIndex != null) {
+            if (this.dataRangeOption.show && this.dataRangeOption.hoverLink && this._indicatorShape && param && param.seriesIndex != null && param.dataIndex != null) {
                 var curValue = param.value;
                 if (isNaN(curValue)) {
                     return;
@@ -2726,6 +2728,9 @@ define('echarts/chart/map', [
     RoamController.prototype = {
         type: ecConfig.COMPONENT_TYPE_ROAMCONTROLLER,
         _buildShape: function () {
+            if (!this.rcOption.show) {
+                return;
+            }
             this._itemGroupLocation = this._getItemGroupLocation();
             this._buildBackground();
             this._buildItem();
