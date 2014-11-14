@@ -638,6 +638,7 @@ define(function (require) {
                         params.push({
                             seriesIndex: seriesIndex[i],
                             seriesName: seriesArray[i].name || '',
+                            series: seriesArray[i],
                             dataIndex: dataIndex,
                             data: data,
                             name: categoryAxis.getNameByIndex(dataIndex),
@@ -788,6 +789,7 @@ define(function (require) {
                         params.push({
                             seriesIndex: seriesIndex[i],
                             seriesName: seriesArray[i].name || '',
+                            series: seriesArray[i],
                             dataIndex: dataIndex,
                             data: data,
                             name: data.name,
@@ -922,6 +924,7 @@ define(function (require) {
                     {
                         seriesIndex: ecData.get(this._curTarget, 'seriesIndex'),
                         seriesName: serie.name || '',
+                        series: serie,
                         dataIndex: dataIndex,
                         data: data,
                         name: name,
