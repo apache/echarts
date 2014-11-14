@@ -215,6 +215,7 @@ hr {
 }
 .main {
     height: 400px;
+    /*width: 778px !important;*/
     overflow: hidden;
     padding : 10px;
     margin-bottom: 10px;
