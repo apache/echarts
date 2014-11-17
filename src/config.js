@@ -904,9 +904,8 @@ define(function() {
                     },
                     nodeStyle: {
                         brushType : 'both',
-                        color : '#f08c2e',
-                        strokeColor : '#5182ab',
-                        lineWidth: 1
+                        borderColor : '#5182ab',
+                        borderWidth: 1
                     },
                     linkStyle: {
                         color: '#5182ab',
