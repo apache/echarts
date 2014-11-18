@@ -1338,6 +1338,7 @@ define(function (require) {
             var duration = lastShapeList.length > 0
                            ? 500 : this.query(this.option, 'animationDuration');
             var easing = this.query(this.option, 'animationEasing');
+            var delay;
             var key;
             var oldMap = {};
             var newMap = {};
@@ -1383,7 +1384,12 @@ define(function (require) {
                     else {
                         // 新有旧没有  添加并动画过渡
                         //this._animateAdd(newMap[key], duration, easing);
-                        this._animateMod(false, newMap[key], duration, easing);
+                        delay = (this.type == ecConfig.CHART_TYPE_LINE
+                                || this.type == ecConfig.CHART_TYPE_RADAR)
+                                && key.indexOf('icon') != 0
+                                ? duration / 2
+                                : 0;
+                        this._animateMod(false, newMap[key], duration, easing, delay);
                     }
                 }
                 this.zr.refresh();
@@ -1418,7 +1424,7 @@ define(function (require) {
         /**
          * 动画过渡 
          */
-        _animateMod: function (oldShape, newShape, duration, easing) {
+        _animateMod: function (oldShape, newShape, duration, easing, delay) {
             switch (newShape.type) {
                 case 'broken-line' :
                 case 'half-smooth-polygon' :
@@ -1428,7 +1434,7 @@ define(function (require) {
                     ecAnimation.rectangle(this.zr, oldShape, newShape, duration, easing);
                     break;
                 case 'icon' :
-                    ecAnimation.icon(this.zr, oldShape, newShape, duration, easing);
+                    ecAnimation.icon(this.zr, oldShape, newShape, duration, easing, delay);
                     break;
                 case 'candle' :
                     if (duration > 500) {

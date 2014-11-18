@@ -422,7 +422,7 @@ define(function (require) {
      * @param {number} duration
      * @param {tring} easing
      */
-    function icon(zr, oldShape, newShape, duration, easing) {
+    function icon(zr, oldShape, newShape, duration, easing, delay) {
         // 避免markPoint特效取值在动画帧上
         newShape.style._x = newShape.style.x;
         newShape.style._y = newShape.style.y;
@@ -432,9 +432,10 @@ define(function (require) {
         if (!oldShape) {    // add
             var x = newShape._x || 0;
             var y = newShape._y || 0;
-            newShape.scale = [0, 0, x, y];
+            newShape.scale = [0.01, 0.01, x, y];
             zr.addShape(newShape);
             zr.animate(newShape.id, '')
+                .delay(delay)
                 .when(
                     duration,
                     {scale : [1, 1, x, y]}
