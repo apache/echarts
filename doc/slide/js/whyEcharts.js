@@ -486,6 +486,209 @@ var optionMap = {
             }
         ]
     },
+    magicType2: (function(){
+        var labelTop = {
+            normal : {
+                label : {
+                    show : true,
+                    position : 'center',
+                    formatter : '{b}',
+                    textStyle: {
+                        baseline : 'bottom'
+                    }
+                },
+                labelLine : {
+                    show : false
+                }
+            }
+        };
+        var labelFromatter = {
+            normal : {
+                label : {
+                    formatter : function (a,b,c){return 100 - c + '%'},
+                    textStyle: {
+                        baseline : 'top'
+                    }
+                }
+            },
+        }
+        var labelBottom = {
+            normal : {
+                color: '#ccc',
+                label : {
+                    show : true,
+                    position : 'center'
+                },
+                labelLine : {
+                    show : false
+                }
+            },
+            emphasis: {
+                color: 'rgba(0,0,0,0)'
+            }
+        };
+        var radius = [40, 55];
+        return {
+            legend: {
+                x : 'center',
+                y : 'center',
+                data:[
+                    'GoogleMaps','Facebook','Youtube','Google+','Weixin',
+                    'Twitter', 'Skype', 'Messenger', 'Whatsapp', 'Instagram'
+                ]
+            },
+            title : {
+                text: 'The App World',
+                subtext: 'from global web index',
+                x: 'center'
+            },
+            toolbox: {
+                show : true,
+                feature : {
+                    dataView : {show: true, readOnly: false},
+                    magicType : {
+                        show: true, 
+                        type: ['pie', 'funnel'],
+                        option: {
+                            funnel: {
+                                width: '20%',
+                                height: '30%',
+                                itemStyle : {
+                                    normal : {
+                                        label : {
+                                            formatter : function (a,b,c){return 'other\n' + c + '%\n'},
+                                            textStyle: {
+                                                baseline : 'middle'
+                                            }
+                                        }
+                                    },
+                                } 
+                            }
+                        }
+                    },
+                    restore : {show: true},
+                    saveAsImage : {show: true}
+                }
+            },
+            series : [
+                {
+                    type : 'pie',
+                    center : ['10%', '30%'],
+                    radius : radius,
+                    x: '0%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:46, itemStyle : labelBottom},
+                        {name:'GoogleMaps', value:54,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['30%', '30%'],
+                    radius : radius,
+                    x:'20%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:56, itemStyle : labelBottom},
+                        {name:'Facebook', value:44,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['50%', '30%'],
+                    radius : radius,
+                    x:'40%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:65, itemStyle : labelBottom},
+                        {name:'Youtube', value:35,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['70%', '30%'],
+                    radius : radius,
+                    x:'60%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:70, itemStyle : labelBottom},
+                        {name:'Google+', value:30,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['90%', '30%'],
+                    radius : radius,
+                    x:'80%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:73, itemStyle : labelBottom},
+                        {name:'Weixin', value:27,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['10%', '70%'],
+                    radius : radius,
+                    y: '55%',   // for funnel
+                    x: '0%',    // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:78, itemStyle : labelBottom},
+                        {name:'Twitter', value:22,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['30%', '70%'],
+                    radius : radius,
+                    y: '55%',   // for funnel
+                    x:'20%',    // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:78, itemStyle : labelBottom},
+                        {name:'Skype', value:22,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['50%', '70%'],
+                    radius : radius,
+                    y: '55%',   // for funnel
+                    x:'40%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:78, itemStyle : labelBottom},
+                        {name:'Messenger', value:22,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['70%', '70%'],
+                    radius : radius,
+                    y: '55%',   // for funnel
+                    x:'60%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:83, itemStyle : labelBottom},
+                        {name:'Whatsapp', value:17,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['90%', '70%'],
+                    radius : radius,
+                    y: '55%',   // for funnel
+                    x:'80%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:89, itemStyle : labelBottom},
+                        {name:'Instagram', value:11,itemStyle : labelTop}
+                    ]
+                }
+            ]
+        };
+    })(),
     dataRange1 : {
         title : {
             text: '2011全国GDP（亿元）',
@@ -516,7 +719,8 @@ var optionMap = {
                 type: 'map',
                 mapType: 'china',
                 itemStyle:{
-                    normal:{label:{show:true}}
+                    normal:{label:{show:true}},
+                    emphasis:{color:'rgba(104,255,104,0.5)'}
                 },
                 data:[
                     {name:'西藏', value:605.83},
@@ -598,7 +802,6 @@ var optionMap = {
             {
                 type : 'value',
                 scale:true,
-                precision: 2,
                 splitNumber: 9,
                 boundaryGap: [0.05, 0.05],
                 splitArea : {show : true}
@@ -931,7 +1134,6 @@ var optionMap = {
                 {
                     type : 'value',
                     scale:true,
-                    precision: 2,
                     boundaryGap: [0.05, 0.05],
                     splitArea : {show : true}
                 }
@@ -976,16 +1178,12 @@ var optionMap = {
         xAxis : [
             {
                 type : 'value',
-                power: 1,
-                precision: 2,
                 scale:true
             }
         ],
         yAxis : [
             {
                 type : 'value',
-                power: 1,
-                precision: 2,
                 scale:true,
                 splitArea : {show : true}
             }
@@ -1038,6 +1236,14 @@ var optionMap = {
             trigger: 'item',
             formatter: '{a} : {b}'
         },
+        toolbox: {
+            show : true,
+            feature : {
+                restore : {show: true},
+                magicType: {show: true, type: ['force', 'chord']},
+                saveAsImage : {show: true}
+            }
+        },
         legend: {
             x: 'left',
             data:['家人','朋友']
@@ -1045,6 +1251,7 @@ var optionMap = {
         series : [
             {
                 type:'force',
+                ribbonType: false,
                 categories : [
                     {
                         name: '人物',
@@ -1237,14 +1444,14 @@ var optionMap = {
                 {
                     type : 'value',
                     scale: true,
-                    precision:1,
-                    power:1,
                     name : '价格',
                     boundaryGap: [0.2, 0.2],
+                    splitNumber:5,
                     splitArea : {show : true}
                 },
                 {
                     type : 'value',
+                    splitNumber:5,
                     scale: true,
                     name : '预购量',
                     boundaryGap: [0.2, 0.2]
@@ -1307,22 +1514,22 @@ var optionMap = {
             x:'right',
             y:'bottom'
         },
+        toolbox: {
+            show : true,
+            feature : {
+                restore : {show: true},
+                magicType: {show: true, type: ['force', 'chord']},
+                saveAsImage : {show: true}
+            }
+        },
         tooltip : {
             trigger: 'item',
             formatter : function (params) {
-                var g1 = params[1];
-                var serie = params[0];
-                var g2 = params[3];
-                var data = params[2];
-                var data2 = params[4];
-                if (data2) {
-                    if (data > data2) {
-                        return [g1, serie, g2].join(' ');
-                    } else {
-                        return [g2, serie, g1].join(' ');
-                    }
-                } else {
-                    return g1
+                if (params.name && params.name.indexOf('-') != -1) {
+                    return params.name.replace('-', ' ' + params.seriesName + ' ')
+                }
+                else {
+                    return params.name ? params.name : params.data.id
                 }
             }
         },
@@ -1356,6 +1563,7 @@ var optionMap = {
                 "name": "支持",
                 "type": "chord",
                 "showScaleText": false,
+                "clockWise": false,
                 "data": [
                     {"name": "美国"},
                     {"name": "叙利亚反对派"},
@@ -1394,7 +1602,7 @@ var optionMap = {
             {
                 "name": "反对",
                 "type": "chord",
-                "showScaleText": false,
+                "insertToSerie": "支持",
                 "data": [
                     {"name": "美国"},
                     {"name": "叙利亚反对派"},
@@ -1433,7 +1641,7 @@ var optionMap = {
             {
                 "name": "未表态",
                 "type": "chord",
-                "showScaleText": false,
+                "insertToSerie": "支持",
                 "data": [
                     {"name": "美国"},
                     {"name": "叙利亚反对派"},
@@ -1747,10 +1955,6 @@ var optionMap = {
                 splitLine : {show : false}
             }
         ],
-        dataZoom : {
-            show : true,
-            realtime: true
-        },
         series : [
             {
                 name:'总和',
