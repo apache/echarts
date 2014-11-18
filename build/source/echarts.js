@@ -3384,9 +3384,8 @@ define('echarts/echarts', [
                     },
                     nodeStyle: {
                         brushType: 'both',
-                        color: '#f08c2e',
-                        strokeColor: '#5182ab',
-                        lineWidth: 1
+                        borderColor: '#5182ab',
+                        borderWidth: 1
                     },
                     linkStyle: {
                         color: '#5182ab',
@@ -15816,6 +15815,7 @@ define('zrender/zrender', [
             var shapeList = this.shapeList;
             var duration = lastShapeList.length > 0 ? 500 : this.query(this.option, 'animationDuration');
             var easing = this.query(this.option, 'animationEasing');
+            var delay;
             var key;
             var oldMap = {};
             var newMap = {};
@@ -15848,7 +15848,8 @@ define('zrender/zrender', [
                         this.zr.delShape(oldMap[key].id);
                         this._animateMod(oldMap[key], newMap[key], duration, easing);
                     } else {
-                        this._animateMod(false, newMap[key], duration, easing);
+                        delay = (this.type == ecConfig.CHART_TYPE_LINE || this.type == ecConfig.CHART_TYPE_RADAR) && key.indexOf('icon') != 0 ? duration / 2 : 0;
+                        this._animateMod(false, newMap[key], duration, easing, delay);
                     }
                 }
                 this.zr.refresh();
@@ -15868,7 +15869,7 @@ define('zrender/zrender', [
                 return ecData.get(shape, 'seriesIndex') + '_' + ecData.get(shape, 'dataIndex') + (shape._mark ? shape._mark : 'undefined');
             }
         },
-        _animateMod: function (oldShape, newShape, duration, easing) {
+        _animateMod: function (oldShape, newShape, duration, easing, delay) {
             switch (newShape.type) {
             case 'broken-line':
             case 'half-smooth-polygon':
@@ -15878,7 +15879,7 @@ define('zrender/zrender', [
                 ecAnimation.rectangle(this.zr, oldShape, newShape, duration, easing);
                 break;
             case 'icon':
-                ecAnimation.icon(this.zr, oldShape, newShape, duration, easing);
+                ecAnimation.icon(this.zr, oldShape, newShape, duration, easing, delay);
                 break;
             case 'candle':
                 if (duration > 500) {
@@ -17275,7 +17276,7 @@ define('zrender/zrender', [
         zr.addShape(newShape);
         zr.animate(newShape.id, 'style').when(duration, { angle: angle }).start(easing);
     }
-    function icon(zr, oldShape, newShape, duration, easing) {
+    function icon(zr, oldShape, newShape, duration, easing, delay) {
         newShape.style._x = newShape.style.x;
         newShape.style._y = newShape.style.y;
         newShape.style._width = newShape.style.width;
@@ -17284,13 +17285,13 @@ define('zrender/zrender', [
             var x = newShape._x || 0;
             var y = newShape._y || 0;
             newShape.scale = [
-                0,
-                0,
+                0.01,
+                0.01,
                 x,
                 y
             ];
             zr.addShape(newShape);
-            zr.animate(newShape.id, '').when(duration, {
+            zr.animate(newShape.id, '').delay(delay).when(duration, {
                 scale: [
                     1,
                     1,
