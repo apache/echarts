@@ -535,13 +535,9 @@ require.config({
     &lt;script src="./js/echarts.js"&gt;&lt;/script&gt;
     &lt;script type="text/javascript"&gt;
         require.config({
-            packages: [
-                {
-                    name: 'echarts',
-                    location: './js/dist',
-                    main: 'echarts'
-                }
-            ]
+            paths: {
+                echarts: './js/dist'
+            }
         });
     &lt;/script&gt;
 &lt;/body&gt;
@@ -556,13 +552,9 @@ require.config({
     &lt;script src="./js/echarts.js"&gt;&lt;/script&gt;
     &lt;script type="text/javascript"&gt;
         require.config({
-            packages: [
-                {
-                    name: 'echarts',
-                    location: './js/dist',
-                    main: 'echarts'
-                }
-            ]
+            paths: {
+                echarts: './js/dist'
+            }
         });
         require(
             [
