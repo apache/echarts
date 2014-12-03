@@ -605,7 +605,7 @@ define(function (require) {
                     zlevel: this.getZlevelBase() + 1,
                     hoverable: false,
                     style: {
-                        text: node.id,
+                        text: node.data.label == null ? node.id : node.data.label,
                         textAlign: isRightSide ? 'left' : 'right',
                         color: labelColor || '#000000'
                     }
