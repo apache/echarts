@@ -431,7 +431,7 @@ define(function (require) {
                 
                 // 节点标签样式
                 if (this.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {
-                    shape.style.text = node.data.name;
+                    shape.style.text = node.data.label == null ? node.id : node.data.label;
                     var labelStyle = this.deepQuery(
                         queryTarget, 'itemStyle.normal.label'
                     ) || {};
@@ -442,7 +442,6 @@ define(function (require) {
                 }
 
                 if (this.deepQuery(queryTarget, 'itemStyle.emphasis.label.show')) {
-                    shape.highlightStyle.text = node.data.name;
                     var labelStyle = this.deepQuery(
                         queryTarget, 'itemStyle.emphasis.label.textStyle'
                     ) || {};
