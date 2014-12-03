@@ -150,19 +150,16 @@ define(function (require) {
         },
 
         _buildBackground: function () {
-            var pTop = this.titleOption.padding[0];
-            var pRight = this.titleOption.padding[1];
-            var pBottom = this.titleOption.padding[2];
-            var pLeft = this.titleOption.padding[3];
+            var padding = this.reformCssArray(this.titleOption.padding);
 
             this.shapeList.push(new RectangleShape({
                 zlevel: this._zlevelBase,
                 hoverable :false,
                 style: {
-                    x: this._itemGroupLocation.x - pLeft,
-                    y: this._itemGroupLocation.y - pTop,
-                    width: this._itemGroupLocation.width + pLeft + pRight,
-                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    x: this._itemGroupLocation.x - padding[3],
+                    y: this._itemGroupLocation.y - padding[0],
+                    width: this._itemGroupLocation.width + padding[3] + padding[1],
+                    height: this._itemGroupLocation.height + padding[0] + padding[2],
                     brushType: this.titleOption.borderWidth === 0 ? 'fill' : 'both',
                     color: this.titleOption.backgroundColor,
                     strokeColor: this.titleOption.borderColor,
@@ -175,6 +172,7 @@ define(function (require) {
          * 根据选项计算标题实体的位置坐标
          */
         _getItemGroupLocation: function () {
+            var padding = this.reformCssArray(this.titleOption.padding);
             var text = this.titleOption.text;
             var subtext = this.titleOption.subtext;
             var font = this.getFont(this.titleOption.textStyle);
@@ -198,12 +196,12 @@ define(function (require) {
                     x = Math.floor((zrWidth - totalWidth) / 2);
                     break;
                 case 'left' :
-                    x = this.titleOption.padding[3] + this.titleOption.borderWidth;
+                    x = padding[3] + this.titleOption.borderWidth;
                     break;
                 case 'right' :
                     x = zrWidth
                         - totalWidth
-                        - this.titleOption.padding[1]
+                        - padding[1]
                         - this.titleOption.borderWidth;
                     break;
                 default :
@@ -216,12 +214,12 @@ define(function (require) {
             var zrHeight = this.zr.getHeight();
             switch (this.titleOption.y) {
                 case 'top' :
-                    y = this.titleOption.padding[0] + this.titleOption.borderWidth;
+                    y = padding[0] + this.titleOption.borderWidth;
                     break;
                 case 'bottom' :
                     y = zrHeight
                         - totalHeight
-                        - this.titleOption.padding[2]
+                        - padding[2]
                         - this.titleOption.borderWidth;
                     break;
                 case 'center' :
@@ -249,11 +247,6 @@ define(function (require) {
                 this.option = newOption;
 
                 this.option.title = this.reformOption(this.option.title);
-                // 补全padding属性
-                this.option.title.padding = this.reformCssArray(
-                    this.option.title.padding
-                );
-    
                 this.titleOption = this.option.title;
                 this.titleOption.textStyle = zrUtil.merge(
                     this.titleOption.textStyle,

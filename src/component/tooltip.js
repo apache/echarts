@@ -1629,11 +1629,6 @@ define(function (require) {
                     this.option.tooltip.textStyle,
                     this.ecTheme.textStyle
                 );
-                // 补全padding属性
-                this.option.tooltip.padding = this.reformCssArray(
-                    this.option.tooltip.padding
-                );
-    
                 this._needAxisTrigger = false;
                 if (this.option.tooltip.trigger === 'axis') {
                     this._needAxisTrigger = true;
