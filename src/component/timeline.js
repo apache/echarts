@@ -141,7 +141,7 @@ define(function (require) {
          */
         _getLocation: function () {
             var timelineOption = this.timelineOption;
-            var padding = timelineOption.padding;
+            var padding = this.reformCssArray(this.timelineOption.padding);
             
             // 水平布局
             var zrWidth = this.zr.getWidth();
@@ -370,7 +370,7 @@ define(function (require) {
         
         _buildBackground: function () {
             var timelineOption = this.timelineOption;
-            var padding = timelineOption.padding;
+            var padding = this.reformCssArray(this.timelineOption.padding);
             var width = this._location.width;
             var height = this._location.height;
             
@@ -779,10 +779,6 @@ define(function (require) {
         
         setTheme: function(needRefresh) {
             this.timelineOption = this.reformOption(zrUtil.clone(this.option.timeline));
-            // 补全padding属性
-            this.timelineOption.padding = this.reformCssArray(
-                this.timelineOption.padding
-            );
             // 通用字体设置
             this.timelineOption.label.textStyle = zrUtil.merge(
                 this.timelineOption.label.textStyle || {},

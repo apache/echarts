@@ -295,19 +295,16 @@ define(function (require) {
         },
 
         _buildBackground: function () {
-            var pTop = this.legendOption.padding[0];
-            var pRight = this.legendOption.padding[1];
-            var pBottom = this.legendOption.padding[2];
-            var pLeft = this.legendOption.padding[3];
+            var padding = this.reformCssArray(this.legendOption.padding);
 
             this.shapeList.push(new RectangleShape({
                 zlevel: this._zlevelBase,
                 hoverable :false,
                 style: {
-                    x: this._itemGroupLocation.x - pLeft,
-                    y: this._itemGroupLocation.y - pTop,
-                    width: this._itemGroupLocation.width + pLeft + pRight,
-                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    x: this._itemGroupLocation.x - padding[3],
+                    y: this._itemGroupLocation.y - padding[0],
+                    width: this._itemGroupLocation.width + padding[3] + padding[1],
+                    height: this._itemGroupLocation.height + padding[0] + padding[2],
                     brushType: this.legendOption.borderWidth === 0 ? 'fill' : 'both',
                     color: this.legendOption.backgroundColor,
                     strokeColor: this.legendOption.borderColor,
@@ -329,7 +326,7 @@ define(function (require) {
             var font = this.getFont(textStyle);
             var totalWidth = 0;
             var totalHeight = 0;
-            var padding = this.legendOption.padding;
+            var padding = this.reformCssArray(this.legendOption.padding);
             var zrWidth = this.zr.getWidth() - padding[1] - padding[3];
             var zrHeight = this.zr.getHeight() - padding[0] - padding[2];
             
@@ -425,13 +422,13 @@ define(function (require) {
                     x = Math.floor((zrWidth - totalWidth) / 2);
                     break;
                 case 'left' :
-                    x = this.legendOption.padding[3] + this.legendOption.borderWidth;
+                    x = padding[3] + this.legendOption.borderWidth;
                     break;
                 case 'right' :
                     x = zrWidth
                         - totalWidth
-                        - this.legendOption.padding[1]
-                        - this.legendOption.padding[3]
+                        - padding[1]
+                        - padding[3]
                         - this.legendOption.borderWidth * 2;
                     break;
                 default :
@@ -442,13 +439,13 @@ define(function (require) {
             var y;
             switch (this.legendOption.y) {
                 case 'top' :
-                    y = this.legendOption.padding[0] + this.legendOption.borderWidth;
+                    y = padding[0] + this.legendOption.borderWidth;
                     break;
                 case 'bottom' :
                     y = zrHeight
                         - totalHeight
-                        - this.legendOption.padding[0]
-                        - this.legendOption.padding[2]
+                        - padding[0]
+                        - padding[2]
                         - this.legendOption.borderWidth * 2;
                     break;
                 case 'center' :
@@ -620,10 +617,6 @@ define(function (require) {
             if (newOption) {
                 this.option = newOption || this.option;
                 this.option.legend = this.reformOption(this.option.legend);
-                // 补全padding属性
-                this.option.legend.padding = this.reformCssArray(
-                    this.option.legend.padding
-                );
                 this.legendOption = this.option.legend;
                 
                 var data = this.legendOption.data || [];

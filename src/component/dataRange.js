@@ -684,19 +684,16 @@ define(function (require) {
         },
         
         _buildBackground : function () {
-            var pTop = this.dataRangeOption.padding[0];
-            var pRight = this.dataRangeOption.padding[1];
-            var pBottom = this.dataRangeOption.padding[2];
-            var pLeft = this.dataRangeOption.padding[3];
-
+            var padding = this.reformCssArray(this.dataRangeOption.padding);
+            
             this.shapeList.push(new RectangleShape({
                 zlevel : this._zlevelBase,
                 hoverable :false,
                 style : {
-                    x : this._itemGroupLocation.x - pLeft,
-                    y : this._itemGroupLocation.y - pTop,
-                    width : this._itemGroupLocation.width + pLeft + pRight,
-                    height : this._itemGroupLocation.height + pTop + pBottom,
+                    x : this._itemGroupLocation.x - padding[3],
+                    y : this._itemGroupLocation.y - padding[0],
+                    width : this._itemGroupLocation.width + padding[3] + padding[1],
+                    height : this._itemGroupLocation.height + padding[0] + padding[2],
                     brushType : this.dataRangeOption.borderWidth === 0
                                 ? 'fill' : 'both',
                     color : this.dataRangeOption.backgroundColor,
@@ -817,6 +814,7 @@ define(function (require) {
                 totalHeight -= itemGap;     // 减去最后一个的itemGap;
             }
 
+            var padding = this.reformCssArray(this.dataRangeOption.padding);
             var x;
             var zrWidth = this.zr.getWidth();
             switch (this.dataRangeOption.x) {
@@ -824,13 +822,12 @@ define(function (require) {
                     x = Math.floor((zrWidth - totalWidth) / 2);
                     break;
                 case 'left' :
-                    x = this.dataRangeOption.padding[3] 
-                        + this.dataRangeOption.borderWidth;
+                    x = padding[3] + this.dataRangeOption.borderWidth;
                     break;
                 case 'right' :
                     x = zrWidth
                         - totalWidth
-                        - this.dataRangeOption.padding[1]
+                        - padding[1]
                         - this.dataRangeOption.borderWidth;
                     break;
                 default :
@@ -843,13 +840,12 @@ define(function (require) {
             var zrHeight = this.zr.getHeight();
             switch (this.dataRangeOption.y) {
                 case 'top' :
-                    y = this.dataRangeOption.padding[0] 
-                        + this.dataRangeOption.borderWidth;
+                    y = padding[0] + this.dataRangeOption.borderWidth;
                     break;
                 case 'bottom' :
                     y = zrHeight
                         - totalHeight
-                        - this.dataRangeOption.padding[2]
+                        - padding[2]
                         - this.dataRangeOption.borderWidth;
                     break;
                 case 'center' :
@@ -1331,10 +1327,6 @@ define(function (require) {
             if (newOption) {
                 this.option = newOption;
                 this.option.dataRange = this.reformOption(this.option.dataRange);
-                // 补全padding属性
-                this.option.dataRange.padding = this.reformCssArray(
-                    this.option.dataRange.padding
-                );
                 this.dataRangeOption = this.option.dataRange;
                 if (!this.myChart.canvasSupported) {
                     // 不支持Canvas的强制关闭实时动画
