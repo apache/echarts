@@ -489,10 +489,13 @@ define(function (require) {
     
     function _iconImage(ctx, style, refreshNextFrame) {
         var ImageShape = require('zrender/shape/Image');
-        var itemShape = new ImageShape({
-            style : style
+        this._imageShape = this._imageShape || new ImageShape({
+            style: {}
         });
-        itemShape.brush(ctx, false, refreshNextFrame);
+        for (var name in style) {
+            this._imageShape.style[name] = style[name];
+        }
+        this._imageShape.brush(ctx, false, refreshNextFrame);
     }
     
     var Base = require('zrender/shape/Base');
