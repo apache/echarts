@@ -279,7 +279,7 @@ define(function (require) {
             var len = data.length;
             
             function _getName(i) {
-                return data[i].name != null ? data[i].name : data[i];
+                return (data[i].name != null ? data[i].name : data[i] + '');
             }
             var xList = [];
             if (len > 1) {
