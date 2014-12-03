@@ -1,25 +1,51 @@
 var developMode = false;
 
 if (developMode) {
-    // for develop
-    require.config({
-        paths : {
-            webkitDep : '../../doc/example/webkit-dep'
-        },
-        packages: [
-            {
-                name: 'echarts',
-                location: '../../src',
-                main: 'echarts'
-            },
-            {
-                name: 'zrender',
-                //location: 'http://ecomfe.github.io/zrender/src',
-                location: '../../../zrender/src',
-                main: 'zrender'
-            }
-        ]
-    });
+    window.esl = null;
+    window.define = null;
+    window.require = null;
+    (function () {
+        var script = document.createElement('script');
+        script.async = true;
+
+        var pathname = location.pathname;
+
+        var pathSegs = pathname.slice(pathname.indexOf('doc')).split('/');
+        var pathLevelArr = new Array(pathSegs.length - 1);
+        script.src = pathLevelArr.join('../') + 'asset/js/esl/esl.js';
+        if (script.readyState) {
+            script.onreadystatechange = loadedListener;
+        }
+        else {
+            script.onload = loadedListener;
+        }
+        (document.getElementsByTagName('head')[0] || document.body).appendChild(script);
+
+        function loadedListener() {
+            script.onload = script.onreadystatechange = null;
+
+            // for develop
+            require.config({
+                paths : {
+                    webkitDep : '../../doc/example/webkit-dep'
+                },
+                packages: [
+                    {
+                        name: 'echarts',
+                        location: '../../src',
+                        main: 'echarts'
+                    },
+                    {
+                        name: 'zrender',
+                        //location: 'http://ecomfe.github.io/zrender/src',
+                        location: '../../../zrender/src',
+                        main: 'zrender'
+                    }
+                ]
+            });
+            launchExample();
+        }
+    })();
 }
 else {
     // for echarts online home page
@@ -29,6 +55,7 @@ else {
             webkitDep : '../../doc/example/webkit-dep'
         }
     });
+    launchExample();
 }
 
 var theme = {
@@ -57,49 +84,60 @@ var theme = {
 }
 var echarts;
 var webkitDepData;
-require(
-    [
-        'echarts',
-        'webkitDep',
-        'echarts/chart/line',
-        'echarts/chart/bar',
-        'echarts/chart/scatter',
-        'echarts/chart/k',
-        'echarts/chart/pie',
-        'echarts/chart/radar',
-        'echarts/chart/force',
-        'echarts/chart/chord',
-        'echarts/chart/map',
-        'echarts/chart/gauge',
-        'echarts/chart/funnel'
-    ],
-    function (ec, wd) {
-        echarts = ec;
-        webkitDepData = wd;
-        webkitDepData.minRadius = 5;
-        webkitDepData.maxRadius = 8;
-        webkitDepData.density = 1.1;
-        webkitDepData.attractiveness = 1.3;
-        webkitDepData.itemStyle = {
-            normal : {
-                linkStyle : {
-                    opacity : 0.6
+
+var isExampleLaunched;
+function launchExample() {
+    if (isExampleLaunched) {
+        return;
+    }
+
+    // 按需加载
+    isExampleLaunched = 1;
+    require(
+        [
+            'echarts',
+            'webkitDep',
+            'echarts/chart/line',
+            'echarts/chart/bar',
+            'echarts/chart/scatter',
+            'echarts/chart/k',
+            'echarts/chart/pie',
+            'echarts/chart/radar',
+            'echarts/chart/force',
+            'echarts/chart/chord',
+            'echarts/chart/map',
+            'echarts/chart/gauge',
+            'echarts/chart/funnel'
+        ],
+        function (ec, wd) {
+            echarts = ec;
+            webkitDepData = wd;
+            webkitDepData.minRadius = 5;
+            webkitDepData.maxRadius = 8;
+            webkitDepData.density = 1.1;
+            webkitDepData.attractiveness = 1.3;
+            webkitDepData.itemStyle = {
+                normal : {
+                    linkStyle : {
+                        opacity : 0.6
+                    }
                 }
             }
+            optionMap.force2.series[0] = webkitDepData;
+            optionMap.force2.color = ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
+                    '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
+                    '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
+                    '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'];
+            if (typeof curEvent != 'undefined') {
+                clearTimeout(showChartTimer);
+                getCurParams();
+                showChart()
+                //showChartTimer = setTimeout(showChart, 500);
+            }
         }
-        optionMap.force2.series[0] = webkitDepData;
-        optionMap.force2.color = ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
-                '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
-                '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
-                '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'];
-        if (typeof curEvent != 'undefined') {
-            clearTimeout(showChartTimer);
-            getCurParams();
-            showChart()
-            //showChartTimer = setTimeout(showChart, 500);
-        }
-    }
-);
+    );
+}
+
 
 var curEvent;
 var showChartTimer;

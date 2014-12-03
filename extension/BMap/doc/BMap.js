@@ -131,27 +131,49 @@ var echarts;
 var developMode = false;
 
 if (developMode) {
-    // for develop
-    require.config({
-        packages: [
-            {
-                name: 'echarts',
-                location: '../../../src',
-                main: 'echarts'
-            },
-            {
-                name: 'zrender',
-                //location: 'http://ecomfe.github.io/zrender/src',
-                location: '../../../../zrender/src',
-                main: 'zrender'
-            },
-            {
-                name: 'BMap',
-                location: '../src',
-                main: 'main'
-            }
-        ]
-    });
+    window.esl = null;
+    window.define = null;
+    window.require = null;
+    (function () {
+        var script = document.createElement('script');
+        script.async = true;
+
+        script.src = '../../../doc/asset/js/esl/esl.js';
+        if (script.readyState) {
+            script.onreadystatechange = loadedListener;
+        }
+        else {
+            script.onload = loadedListener;
+        }
+        (document.getElementsByTagName('head')[0] || document.body).appendChild(script);
+
+        function loadedListener() {
+            script.onload = script.onreadystatechange = null;
+
+            // for develop
+            require.config({
+                packages: [
+                    {
+                        name: 'echarts',
+                        location: '../../../src',
+                        main: 'echarts'
+                    },
+                    {
+                        name: 'zrender',
+                        //location: 'http://ecomfe.github.io/zrender/src',
+                        location: '../../../../zrender/src',
+                        main: 'zrender'
+                    },
+                    {
+                        name: 'BMap',
+                        location: '../src',
+                        main: 'main'
+                    }
+                ]
+            });
+            launchExample();
+        }
+    })();
 }
 else {
     require.config({
@@ -166,15 +188,24 @@ else {
             }
         ]
     });
+    launchExample();
 }
 
-// 按需加载
-require(
-    [
-        'echarts',
-        'http://echarts.baidu.com/doc/example/theme/' + hash.replace('-en', ''),
-        needMap() ? 'echarts/chart/map' : 'echarts'
-    ],
-    requireCallback
-);
+var isExampleLaunched;
+function launchExample() {
+    if (isExampleLaunched) {
+        return;
+    }
+
+    // 按需加载
+    isExampleLaunched = 1;
+    require(
+        [
+            'echarts',
+            'http://echarts.baidu.com/doc/example/theme/' + hash.replace('-en', ''),
+            needMap() ? 'echarts/chart/map' : 'echarts'
+        ],
+        requireCallback
+    );
+}
 
