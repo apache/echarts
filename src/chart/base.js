@@ -1518,6 +1518,9 @@ define(function (require) {
         animationEffect: function (addShapeList) {
             !addShapeList && this.clearEffectShape();
             var shapeList = addShapeList || this.shapeList;
+            if (shapeList == null) {
+                return;
+            }
             var zlevel = ecConfig.EFFECT_ZLEVEL;
             if (this.canvasSupported) {
                 this.zr.modLayer(
