@@ -142,13 +142,12 @@
             var vector;
             var polar = this.component.polar;
 
+            var value;
             for (var i = 0, l = dataArr.value.length; i < l; i++) {
-                vector = polar.getVector(
-                    polarIndex, 
-                    i, 
-                    typeof dataArr.value[i].value != 'undefined'
-                    ? dataArr.value[i].value : dataArr.value[i]
-                );
+                value = dataArr.value[i].value != null ? dataArr.value[i].value : dataArr.value[i];
+                vector = value != '-' 
+                         ? polar.getVector(polarIndex, i, value)
+                         : false;
                 if (vector) {
                     pointList.push(vector);
                 } 
