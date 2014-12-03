@@ -45,6 +45,7 @@ define(function (require) {
         this._colorIndex = 0;
         this._colorMap = {};
         this._selectedMap = {};
+        this._hasDataMap = {};
         
         this.refresh(option);
     }
@@ -152,7 +153,7 @@ define(function (require) {
                 itemShape = this._getItemShapeByType(
                     lastX, lastY,
                     itemWidth, itemHeight,
-                    (this._selectedMap[itemName] ? color : '#ccc'),
+                    (this._selectedMap[itemName] && this._hasDataMap[itemName] ? color : '#ccc'),
                     itemType,
                     color
                 );
@@ -644,9 +645,10 @@ define(function (require) {
                     }
                     something = this._getSomethingByName(itemName);
                     if (!something.series) {
-                        this._selectedMap[itemName] = false;
+                        this._hasDataMap[itemName] = false;
                     } 
                     else {
+                        this._hasDataMap[itemName] = true;
                         if (something.data
                             && (something.type === ecConfig.CHART_TYPE_PIE
                                 || something.type === ecConfig.CHART_TYPE_FORCE
@@ -668,7 +670,7 @@ define(function (require) {
                             this.setColor(itemName, color);
                         }
                         this._selectedMap[itemName] = 
-                            typeof this._selectedMap[itemName] != 'undefined'
+                            this._selectedMap[itemName] != null
                             ? this._selectedMap[itemName] : true; 
                     }
                 }
@@ -733,6 +735,7 @@ define(function (require) {
             this.legendOption.data.push(name);
             this.setColor(name,color);
             this._selectedMap[name] = true;
+            this._hasDataMap[name] = true;
         },
 
         del: function (name){
