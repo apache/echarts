@@ -622,14 +622,13 @@ define(function (require) {
                 barWidth, barGap, interval
         ) {
             for (var j = 0, k = locationMap.length; j < k; j++) {
-                for (var m = 0, n = locationMap[j].length; m < n; m++) {
-                    var seriesIndex = locationMap[j][m];
-                    if (barMaxWidthMap[seriesIndex] && barMaxWidthMap[seriesIndex] < barWidth) {
-                        // 不满足最大宽度
-                        gap -= barWidth - barMaxWidthMap[seriesIndex]; // 总宽度减少
-                    }
+                var seriesIndex = locationMap[j][0];
+                if (barMaxWidthMap[seriesIndex] && barMaxWidthMap[seriesIndex] < barWidth) {
+                    // 不满足最大宽度
+                    gap -= barWidth - barMaxWidthMap[seriesIndex]; // 总宽度减少
                 }
             }
+            
             return {
                 barWidthMap: barWidthMap,
                 barMaxWidthMap: barMaxWidthMap,
