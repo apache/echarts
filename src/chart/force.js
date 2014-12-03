@@ -432,23 +432,27 @@ define(function (require) {
                 // 节点标签样式
                 if (this.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {
                     shape.style.text = node.data.label == null ? node.id : node.data.label;
-                    var labelStyle = this.deepQuery(
-                        queryTarget, 'itemStyle.normal.label'
-                    ) || {};
-                    var textStyle = labelStyle.textStyle || {};
-                    shape.style.textPosition = labelStyle.position;
-                    shape.style.textColor = textStyle.color || '#fff';
-                    shape.style.textFont = this.getFont(textStyle);
+                    shape.style.textPosition = this.deepQuery(
+                        queryTarget, 'itemStyle.normal.label.position'
+                    ) ;
+                    shape.style.textColor = this.deepQuery(
+                        queryTarget, 'itemStyle.normal.label.textStyle.color'
+                    );
+                    shape.style.textFont = this.getFont(this.deepQuery(
+                        queryTarget, 'itemStyle.normal.label.textStyle'
+                    ) || {});
                 }
 
                 if (this.deepQuery(queryTarget, 'itemStyle.emphasis.label.show')) {
-                    var labelStyle = this.deepQuery(
+                    shape.highlightStyle.textPosition = this.deepQuery(
+                        queryTarget, 'itemStyle.emphasis.label.position'
+                    );
+                    shape.highlightStyle.textColor = this.deepQuery(
+                        queryTarget, 'itemStyle.emphasis.label.textStyle.color'
+                    );
+                    shape.highlightStyle.textFont = this.getFont(this.deepQuery(
                         queryTarget, 'itemStyle.emphasis.label.textStyle'
-                    ) || {};
-                    var textStyle = labelStyle.textStyle || {};
-                    shape.highlightStyle.textPosition = labelStyle.position;
-                    shape.highlightStyle.textColor = textStyle.color || '#fff';
-                    shape.highlightStyle.textFont = this.getFont(textStyle);
+                    ) || {});
                 }
 
                 // 拖拽特性
