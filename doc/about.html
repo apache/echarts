@@ -81,6 +81,11 @@
               <p>百度前端研发工程师</p>
             </div>
             <div class="col-md-2 text-center">
+              <img class="img-circle" src="asset/img/about/denghongqi.jpg">
+              <h2><a href="http://weibo.com/u/2810393271" target="_blank">邓红启</a></h2>
+              <p>百度前端研发工程师</p>
+            </div>
+            <div class="col-md-2 text-center">
               <img class="img-circle" src="asset/img/about/yangji.jpg">
               <h2><a href="http://weibo.com/wind108369" target="_blank">杨骥</a></h2>
               <p>百度前端研发工程师</p>
@@ -111,11 +116,16 @@
               <p>百度交互设计师</p>
             </div>
             <div class="col-md-2 text-center">
+              <img class="img-circle" src="asset/img/about/huyao.jpg">
+              <h2><a href="http://weibo.com/p/1005051742233685" target="_blank">胡瑶</a></h2>
+              <p>百度前端研发工程师</p>
+            </div>
+            <!--div class="col-md-2 text-center">
               <img class="img-circle" src="asset/img/about/zhangyanru.jpg">
               <h2><a href="#" target="_blank">张彦如</a></h2>
               <p>百度交互设计师</p>
             </div>
-            <!--div class="col-md-2 text-center">
+            <div class="col-md-2 text-center">
               <img class="img-circle" src="asset/img/about/yandong.jpg">
               <h2><a href="http://weibo.com/ShiMiTu2007" target="_blank">颜东</a></h2>
               <p>视觉中国设计总监</p>
@@ -153,7 +163,7 @@
             <div class="col-md-2 text-center">
               <img class="img-circle" src="asset/img/about/zhouyang.jpg">
               <h2><a href="http://weibo.com/zhouyummy" target="_blank">周扬</a></h2>
-              <p>AdMaster高级数据研究员<br/><abbr title="R语言下的ECharts包">recharts</abbr>作者</p>
+              <p>高级数据研究员<br/><abbr title="R语言下的ECharts包">recharts</abbr>作者</p>
             </div>
             <div class="col-md-2 text-center">
               <img class="img-circle" src="asset/img/about/weitaiyun.jpg">
@@ -166,14 +176,14 @@
               <p>百度前端研发工程师</p>
             </div>
             <div class="col-md-2 text-center">
-              <img class="img-circle" src="asset/img/about/denghongqi.jpg">
-              <h2><a href="http://weibo.com/u/2810393271" target="_blank">邓红启</a></h2>
-              <p>百度前端研发工程师</p>
-            </div>
-            <div class="col-md-2 text-center">
               <img class="img-circle" src="asset/img/about/tanhe.jpg">
               <h2><a href="http://weibo.com/fengmengxia" target="_blank">谈和</a></h2>
               <p>中国传媒大学硕士研究生<br/>传媒大学数据可视化小组</p>
+            </div>
+            <div class="col-md-2 text-center">
+              <img class="img-circle" src="asset/img/about/xieshiwei.jpg">
+              <h2><a href="https://github.com/i6ma" target="_blank">谢世威</a></h2>
+              <p>百度前端研发工程师</p>
             </div>
           </div>
       </div>
@@ -209,30 +219,46 @@
                 myChart = ec.init(document.getElementById('main'), theme);
                 myChart.setOption({
                     title : {
-                        text: 'Github关注度'
+                        text: 'Github关注度',
+                        x:'center'
                     },
                     tooltip : {
                         trigger: 'axis',
                         axisPointer:{type:'none'},
                         showDelay: 0
                     },
-                    grid:{y2:30},
+                    grid:{x:45,x2:20,y:40,y2:50},
                     xAxis : [
                         {
                             type : 'category',
                             boundaryGap : false,
-                            axisLabel: {interval:0,formatter:function(v){return v.replace('年',' - ').replace('月','')}},
+                            axisLabel: {
+                                interval:0,
+                                formatter:function(v){
+                                    switch(v) {
+                                        case '2013年6月':
+                                            return '6\n2013';
+                                        case '2014年1月':
+                                            return '1\n2014';
+                                        default:
+                                            return v.substr(5).replace('月','');
+                                    }
+                                }
+                            },
                             data : [
                                 '2013年6月','2013年7月','2013年8月','2013年9月','2013年10月',
                                 '2013年11月','2013年12月','2014年1月','2014年2月','2014年3月',
                                 '2014年4月','2014年5月','2014年6月','2014年7月','2014年8月',
-                                '2014年9月','2014年10月'
+                                '2014年9月','2014年10月','2014年11月'
                             ]
                         }
                     ],
                     yAxis : [
                         {
-                            type : 'value'
+                            type: 'value',
+                            splitNumber: 7,
+                            min: 0,
+                            max: 3500
                         }
                     ],
                     series : [{
@@ -256,10 +282,12 @@
                           {value:2390,itemStyle:{normal:{label:{show:true,formatter:'2.0.1'}}}},
                           {value:2610,itemStyle:{normal:{label:{show:true,formatter:'2.0.2'}}}},
                           {value:2740,itemStyle:{normal:{label:{show:true,formatter:'2.0.3'}}}},
-                          {value:2930,itemStyle:{normal:{label:{show:true,formatter:'2.0.4'}}}}
+                          {value:2930,itemStyle:{normal:{label:{show:true,formatter:'2.0.4'}}}},
+                          {value:3210,itemStyle:{normal:{label:{show:true,formatter:'2.1.8'}}}}
                         ]
                     }]
                 });
+                window.onresize = myChart.resize;
             }
         );
 

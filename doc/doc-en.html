@@ -945,7 +945,6 @@ require(['echarts'], function (ec){
                     
 
                     <h4>timeline<a name="Timeline"> </a></h4>
-                    <table cellspacing="0" class="ADoc_table full">
                     <P> timeline, at most one timeline control is allowed in one chart. Try <a href="./example/bar11.html#-en" target="_blank">bar »</a>, <a href="./example/scatter4.html#-en" target="_blank">scatter »</a>, <a href="./example/pie7.html#-en" target="_blank">pie »</a>, <a href="./example/map14.html#-en" target="_blank">map »</a></P>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
@@ -1123,6 +1122,7 @@ require(['echarts'], function (ec){
                         </tr>
                     </table>
                     <p><img src="./asset/img/doc/timeline.png" title="" alt="timeline"/></P>
+
 
                     <h4>title<a name="Title"> </a></h4>
                     <P> title. In one chart, at most one title control is allowed, which can be devided into title and subtitle. </P>
@@ -1529,7 +1529,6 @@ require(['echarts'], function (ec){
                                         <li><b>scatter &amp; bubble</b>:  a (series name), b (data name), c (value array), d(null)</li>
                                         <li><b>map</b>: a (series name), b (area name), c(merged value), d(null)</li>
                                         <li><b>pie</b>, <b>radar</b>, <b>gauge</b>, <b>funnel</b>: a (series name), b (data item name)，c(value), d (pie: percent | radar: indicator name) </li>
-                                        <li><b>chord</b>: a (series name), b (item1 name), c (item1 value - item2 value), d (item2 name), e(item2 value - item1 value) </li>
                                         <li><b>force, chord</b> : 
                                             <ul>
                                                 <li>node : a (series name)，b (node name)，c (node value), d (node index), e</li>
@@ -4325,6 +4324,11 @@ geoCoord : {
                             <td> Name of node </td>
                         </tr>
                         <tr>
+                            <td> <b>{string}</b> label </td>
+                            <td></td>
+                            <td> Label name of the node, name(above) as default. </td>
+                        </tr>
+                        <tr>
                             <td> <b>{number}</b> value </td>
                             <td> </td>
                             <td> Value of name </td>
@@ -4397,6 +4401,12 @@ geoCoord : {
                     <p><img src="./asset/img/doc/multiControl.jpg" title="" alt="multi-level control"/></P>
 
                     <h3>Appendix: Map Extension<a name="Appendix-Map-Extension"> </a></h3>
+                    <p>BMap which is base on map.baidu.com, see 
+                        <a href="../extension/BMap/doc/doc.html" target="_blank">doc</a>, 
+                        <a href="../extension/BMap/doc/BMap.html" target="_blank">example1</a>, 
+                        <a href="../extension/BMap/doc/example.html" target="_blank">example2</a>, 
+                        by <a href="http://weibo.com/wind108369" target="_blank">Ji Yang</a>.
+                    </p>
                     <p>Supports extended map on <a href='http://www.oschina.net/translate/geojson-spec?cmp' target="_blank">GeoJson</a> format. Try <a href="./example/map6.html#-en" target="_blank">HK 》</a> <a href="./example/map7.html#-en" target="_blank">USA 》</a></p>
                     <div class="code">
 <pre>
