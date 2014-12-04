@@ -249,7 +249,7 @@ NDArray.prototype = {
 
     /**
      * Get array dimension.
-     * @return {[type]} [description]
+     * @return {number} [description]
      */
     dimension : function () {
         return this._shape.length;

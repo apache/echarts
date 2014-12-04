@@ -1,9 +1,6 @@
 require.config({
     paths:{ 
-        echarts:'example/www/js/echarts',
-        'echarts/chart/bar' : 'example/www/js/echarts',
-        'echarts/chart/line': 'example/www/js/echarts',
-        'echarts/chart/scatter': 'example/www/js/echarts'
+        echarts:'example/www/js'
     }
 });
 require(

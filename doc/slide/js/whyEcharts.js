@@ -1,51 +1,68 @@
-﻿var developMode = false;
+var developMode = false;
 
 if (developMode) {
-    // for develop
-    require.config({
-    	paths : {
-    		webkitDep : '../../doc/example/webkit-dep'
-    	},
-        packages: [
-            {
-                name: 'echarts',
-                location: '../../src',
-                main: 'echarts'
-            },
-            {
-                name: 'zrender',
-                //location: 'http://ecomfe.github.io/zrender/src',
-                location: '../../../zrender/src',
-                main: 'zrender'
-            }
-        ]
-    });
+    window.esl = null;
+    window.define = null;
+    window.require = null;
+    (function () {
+        var script = document.createElement('script');
+        script.async = true;
+
+        var pathname = location.pathname;
+
+        var pathSegs = pathname.slice(pathname.indexOf('doc')).split('/');
+        var pathLevelArr = new Array(pathSegs.length - 1);
+        script.src = pathLevelArr.join('../') + 'asset/js/esl/esl.js';
+        if (script.readyState) {
+            script.onreadystatechange = fireLoad;
+        }
+        else {
+            script.onload = fireLoad;
+        }
+        (document.getElementsByTagName('head')[0] || document.body).appendChild(script);
+        
+        function fireLoad() {
+            script.onload = script.onreadystatechange = null;
+            setTimeout(loadedListener,100);
+        }
+        function loadedListener() {
+            // for develop
+            require.config({
+                paths : {
+                    webkitDep : '../../doc/example/webkit-dep'
+                },
+                packages: [
+                    {
+                        name: 'echarts',
+                        location: '../../src',
+                        main: 'echarts'
+                    },
+                    {
+                        name: 'zrender',
+                        //location: 'http://ecomfe.github.io/zrender/src',
+                        location: '../../../zrender/src',
+                        main: 'zrender'
+                    }
+                ]
+            });
+            launchExample();
+        }
+    })();
 }
 else {
     // for echarts online home page
-    var fileLocation = '../../doc/example/www/js/echarts-map';
     require.config({
         paths:{ 
-            echarts: fileLocation,
-            'echarts/chart/line': fileLocation,
-            'echarts/chart/bar': fileLocation,
-            'echarts/chart/scatter': fileLocation,
-            'echarts/chart/k': fileLocation,
-            'echarts/chart/pie': fileLocation,
-            'echarts/chart/radar': fileLocation,
-            'echarts/chart/map': fileLocation,
-            'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation,
-            'echarts/chart/gauge': fileLocation,
-            'echarts/chart/funnel': fileLocation,
-       		 webkitDep : '../../doc/example/webkit-dep'
+            echarts: '../../doc/example/www/js',
+            webkitDep : '../../doc/example/webkit-dep'
         }
     });
+    launchExample();
 }
 
 var theme = {
     backgroundColor:'#fff',
-     color: [
+    color: [
         '#5d9cec', '#62c87f', '#f15755', '#fc863f', '#7053b6',
         '#6ed5e6','#ffce55',  '#f57bc1', '#dcb186', '#647c9d'
     ],
@@ -67,62 +84,62 @@ var theme = {
         }
     }
 }
-/*
-require.config({
-    paths:{ 
-        echarts: '../../doc/example/www/js/echarts-map',
-        'echarts/chart/line': '../../doc/example/www/js/echarts-map',
-        'echarts/chart/bar': '../../doc/example/www/js/echarts-map',
-        'echarts/chart/scatter': '../../doc/example/www/js/echarts-map',
-        'echarts/chart/k': '../../doc/example/www/js/echarts-map',
-        'echarts/chart/pie': '../../doc/example/www/js/echarts-map',
-        'echarts/chart/radar': '../../doc/example/www/js/echarts-map',
-        'echarts/chart/map': '../../doc/example/www/js/echarts-map',
-        'echarts/chart/force': '../../doc/example/www/js/echarts-map',
-        'echarts/chart/chord': '../../doc/example/www/js/echarts-map'
-    }
-});
-*/
 var echarts;
 var webkitDepData;
-require(
-    [
-        'echarts',
-        'webkitDep',
-        'echarts/chart/line',
-        'echarts/chart/bar',
-        'echarts/chart/scatter',
-        'echarts/chart/k',
-        'echarts/chart/pie',
-        'echarts/chart/radar',
-        'echarts/chart/force',
-        'echarts/chart/chord',
-        'echarts/chart/map',
-        'echarts/chart/gauge',
-        'echarts/chart/funnel'
-    ],
-    function (ec, wd) {
-        echarts = ec;
-        webkitDepData = wd;
-        webkitDepData.minRadius = 5;
-        webkitDepData.maxRadius = 8;
-        webkitDepData.density = 1.1;
-        webkitDepData.attractiveness = 1.3;
-        webkitDepData.itemStyle = {
-            normal : {
-                linkStyle : {
-                    opacity : 0.6
+
+var isExampleLaunched;
+function launchExample() {
+    if (isExampleLaunched) {
+        return;
+    }
+
+    // 按需加载
+    isExampleLaunched = 1;
+    require(
+        [
+            'echarts',
+            'webkitDep',
+            'echarts/chart/line',
+            'echarts/chart/bar',
+            'echarts/chart/scatter',
+            'echarts/chart/k',
+            'echarts/chart/pie',
+            'echarts/chart/radar',
+            'echarts/chart/force',
+            'echarts/chart/chord',
+            'echarts/chart/map',
+            'echarts/chart/gauge',
+            'echarts/chart/funnel'
+        ],
+        function (ec, wd) {
+            echarts = ec;
+            webkitDepData = wd;
+            webkitDepData.minRadius = 5;
+            webkitDepData.maxRadius = 8;
+            webkitDepData.density = 1.1;
+            webkitDepData.attractiveness = 1.3;
+            webkitDepData.itemStyle = {
+                normal : {
+                    linkStyle : {
+                        opacity : 0.6
+                    }
                 }
             }
+            optionMap.force2.series[0] = webkitDepData;
+            optionMap.force2.color = ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
+                    '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
+                    '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
+                    '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'];
+            if (typeof curEvent != 'undefined') {
+                clearTimeout(showChartTimer);
+                getCurParams();
+                showChart()
+                //showChartTimer = setTimeout(showChart, 500);
+            }
         }
-        if (typeof curEvent != 'undefined') {
-        	clearTimeout(showChartTimer);
-        	getCurParams();
-        	showChart()
-            //showChartTimer = setTimeout(showChart, 500);
-        }
-    }
-);
+    );
+}
+
 
 var curEvent;
 var showChartTimer;
@@ -147,23 +164,23 @@ var timeTicket;
 var dom;
 var optionKey;
 function getCurParams(){
-	clearInterval(timeTicket);
+    clearInterval(timeTicket);
     var len = curEvent.currentSlide.childNodes.length;
     while(--len) {
         dom = curEvent.currentSlide.childNodes[len];
         if (dom.className == 'main'){
             optionKey = dom.getAttribute('optionKey');
             if (optionKey == 'multiCharts') {
-            	if (myChart2 && myChart2.dispose) {
-					myChart2.getDom().className = 'main';
-			        myChart2.dispose();
-			        myChart2 = null;
-			    }
-			    if (myChart3 && myChart3.dispose) {
-					myChart3.getDom().className = 'main';
-			        myChart3.dispose();
-			        myChart3 = null;
-			    }
+                if (myChart2 && myChart2.dispose) {
+                    myChart2.getDom().className = 'main';
+                    myChart2.dispose();
+                    myChart2 = null;
+                }
+                if (myChart3 && myChart3.dispose) {
+                    myChart3.getDom().className = 'main';
+                    myChart3.dispose();
+                    myChart3 = null;
+                }
             }
             return;
         }
@@ -171,20 +188,20 @@ function getCurParams(){
     optionKey = false;
 }
 function showChart() {
-	if (!echarts) {return;}
-	if (myChart && myChart.dispose) {
-		myChart.getDom().className = 'main';
+    if (!echarts) {return;}
+    if (myChart && myChart.dispose) {
+        myChart.getDom().className = 'main';
         myChart.dispose();
         myChart = null;
     }
     if (optionKey) {
         myChart = echarts.init(dom, theme);
-	    var option = optionMap[optionKey];
-	    dom.className = 'main noLoading';
-		myChart.setOption(option);
-	    if (functionMap[optionKey]) {
-	        functionMap[optionKey]();
-	    }
+        var option = optionMap[optionKey];
+        dom.className = 'main noLoading';
+        myChart.setOption(option);
+        if (functionMap[optionKey]) {
+            functionMap[optionKey]();
+        }
     }
 }
 
@@ -509,6 +526,209 @@ var optionMap = {
             }
         ]
     },
+    magicType2: (function(){
+        var labelTop = {
+            normal : {
+                label : {
+                    show : true,
+                    position : 'center',
+                    formatter : '{b}',
+                    textStyle: {
+                        baseline : 'bottom'
+                    }
+                },
+                labelLine : {
+                    show : false
+                }
+            }
+        };
+        var labelFromatter = {
+            normal : {
+                label : {
+                    formatter : function (a,b,c){return 100 - c + '%'},
+                    textStyle: {
+                        baseline : 'top'
+                    }
+                }
+            },
+        }
+        var labelBottom = {
+            normal : {
+                color: '#ccc',
+                label : {
+                    show : true,
+                    position : 'center'
+                },
+                labelLine : {
+                    show : false
+                }
+            },
+            emphasis: {
+                color: 'rgba(0,0,0,0)'
+            }
+        };
+        var radius = [40, 55];
+        return {
+            legend: {
+                x : 'center',
+                y : 'center',
+                data:[
+                    'GoogleMaps','Facebook','Youtube','Google+','Weixin',
+                    'Twitter', 'Skype', 'Messenger', 'Whatsapp', 'Instagram'
+                ]
+            },
+            title : {
+                text: 'The App World',
+                subtext: 'from global web index',
+                x: 'center'
+            },
+            toolbox: {
+                show : true,
+                feature : {
+                    dataView : {show: true, readOnly: false},
+                    magicType : {
+                        show: true, 
+                        type: ['pie', 'funnel'],
+                        option: {
+                            funnel: {
+                                width: '20%',
+                                height: '30%',
+                                itemStyle : {
+                                    normal : {
+                                        label : {
+                                            formatter : function (a,b,c){return 'other\n' + c + '%\n'},
+                                            textStyle: {
+                                                baseline : 'middle'
+                                            }
+                                        }
+                                    },
+                                } 
+                            }
+                        }
+                    },
+                    restore : {show: true},
+                    saveAsImage : {show: true}
+                }
+            },
+            series : [
+                {
+                    type : 'pie',
+                    center : ['10%', '30%'],
+                    radius : radius,
+                    x: '0%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:46, itemStyle : labelBottom},
+                        {name:'GoogleMaps', value:54,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['30%', '30%'],
+                    radius : radius,
+                    x:'20%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:56, itemStyle : labelBottom},
+                        {name:'Facebook', value:44,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['50%', '30%'],
+                    radius : radius,
+                    x:'40%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:65, itemStyle : labelBottom},
+                        {name:'Youtube', value:35,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['70%', '30%'],
+                    radius : radius,
+                    x:'60%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:70, itemStyle : labelBottom},
+                        {name:'Google+', value:30,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['90%', '30%'],
+                    radius : radius,
+                    x:'80%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:73, itemStyle : labelBottom},
+                        {name:'Weixin', value:27,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['10%', '70%'],
+                    radius : radius,
+                    y: '55%',   // for funnel
+                    x: '0%',    // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:78, itemStyle : labelBottom},
+                        {name:'Twitter', value:22,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['30%', '70%'],
+                    radius : radius,
+                    y: '55%',   // for funnel
+                    x:'20%',    // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:78, itemStyle : labelBottom},
+                        {name:'Skype', value:22,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['50%', '70%'],
+                    radius : radius,
+                    y: '55%',   // for funnel
+                    x:'40%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:78, itemStyle : labelBottom},
+                        {name:'Messenger', value:22,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['70%', '70%'],
+                    radius : radius,
+                    y: '55%',   // for funnel
+                    x:'60%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:83, itemStyle : labelBottom},
+                        {name:'Whatsapp', value:17,itemStyle : labelTop}
+                    ]
+                },
+                {
+                    type : 'pie',
+                    center : ['90%', '70%'],
+                    radius : radius,
+                    y: '55%',   // for funnel
+                    x:'80%', // for funnel
+                    itemStyle : labelFromatter,
+                    data : [
+                        {name:'other', value:89, itemStyle : labelBottom},
+                        {name:'Instagram', value:11,itemStyle : labelTop}
+                    ]
+                }
+            ]
+        };
+    })(),
     dataRange1 : {
         title : {
             text: '2011全国GDP（亿元）',
@@ -539,7 +759,8 @@ var optionMap = {
                 type: 'map',
                 mapType: 'china',
                 itemStyle:{
-                    normal:{label:{show:true}}
+                    normal:{label:{show:true}},
+                    emphasis:{color:'rgba(104,255,104,0.5)'}
                 },
                 data:[
                     {name:'西藏', value:605.83},
@@ -621,7 +842,6 @@ var optionMap = {
             {
                 type : 'value',
                 scale:true,
-                precision: 2,
                 splitNumber: 9,
                 boundaryGap: [0.05, 0.05],
                 splitArea : {show : true}
@@ -632,10 +852,10 @@ var optionMap = {
                 splitNumber: 9,
                 boundaryGap: [0.05, 0.05],
                 axisLabel: {
-	                formatter: function (v) {
-	                    return Math.round(v/10000) + ' 万'
-	                }
-	            },
+                    formatter: function (v) {
+                        return Math.round(v/10000) + ' 万'
+                    }
+                },
                 splitArea : {show : true}
             }
         ],
@@ -671,41 +891,41 @@ var optionMap = {
                     7526158.5, 8105835, 7971452.5
                 ],
                 markPoint : {
-                	symbol: 'emptyPin',
-                	itemStyle : {
-                		normal : {
-                			color:'#1e90ff',
-                			label : {
-                				show:true,
-                				position:'top',
-				                formatter: function (a,b,v) {
-				                    return Math.round(v/10000) + ' 万'
-				                }
-                			}
-                		}
-                	},
-	                data : [
-	                    {type : 'max', name: '最大值', symbolSize:5},
-	                    {type : 'min', name: '最小值', symbolSize:5}
-	                ]
-	            },
-	            markLine : {
-	            	symbol : 'none',
-	            	itemStyle : {
-                		normal : {
-                			color:'#1e90ff',
-                			label : {
-                				show:true,
-				                formatter: function (a,b,v) {
-				                    return Math.round(v/10000) + ' 万'
-				                }
-                			}
-                		}
-                	},
-	                data : [
-	                    {type : 'average', name: '平均值'}
-	                ]
-	            }
+                    symbol: 'emptyPin',
+                    itemStyle : {
+                        normal : {
+                            color:'#1e90ff',
+                            label : {
+                                show:true,
+                                position:'top',
+                                formatter: function (a,b,v) {
+                                    return Math.round(v/10000) + ' 万'
+                                }
+                            }
+                        }
+                    },
+                    data : [
+                        {type : 'max', name: '最大值', symbolSize:5},
+                        {type : 'min', name: '最小值', symbolSize:5}
+                    ]
+                },
+                markLine : {
+                    symbol : 'none',
+                    itemStyle : {
+                        normal : {
+                            color:'#1e90ff',
+                            label : {
+                                show:true,
+                                formatter: function (a,b,v) {
+                                    return Math.round(v/10000) + ' 万'
+                                }
+                            }
+                        }
+                    },
+                    data : [
+                        {type : 'average', name: '平均值'}
+                    ]
+                }
             },
             {
                 name:'上证指数',
@@ -767,10 +987,10 @@ var optionMap = {
                         splitNumber: 3,
                         boundaryGap: [0.05, 0.05],
                         axisLabel: {
-			                formatter: function (v) {
-			                    return Math.round(v/10000) + ' 万'
-			                }
-			            },
+                            formatter: function (v) {
+                                return Math.round(v/10000) + ' 万'
+                            }
+                        },
                         splitArea : {show : true}
                     }
                 ],
@@ -857,10 +1077,10 @@ var optionMap = {
                         splitNumber:3,
                         boundaryGap: [0.05, 0.05],
                         axisLabel: {
-			                formatter: function (v) {
-			                    return Math.round(v/10000) + ' 万'
-			                }
-			            },
+                            formatter: function (v) {
+                                return Math.round(v/10000) + ' 万'
+                            }
+                        },
                         splitArea : {show : true}
                     }
                 ],
@@ -954,7 +1174,6 @@ var optionMap = {
                 {
                     type : 'value',
                     scale:true,
-                    precision: 2,
                     boundaryGap: [0.05, 0.05],
                     splitArea : {show : true}
                 }
@@ -999,16 +1218,12 @@ var optionMap = {
         xAxis : [
             {
                 type : 'value',
-                power: 1,
-                precision: 2,
                 scale:true
             }
         ],
         yAxis : [
             {
                 type : 'value',
-                power: 1,
-                precision: 2,
                 scale:true,
                 splitArea : {show : true}
             }
@@ -1056,133 +1271,131 @@ var optionMap = {
             }
         ]
     },
-    force : (function () {
-            functionMap.force = function () {
-                myChart.setOption({
-                    tooltip : {
-                        trigger: 'item',
-                        formatter: '{a} : {b}'
-                    },
-                    legend: {
-                        x: 'left',
-                        data:['家人','朋友']
-                    },
-                    series : [
-                        {
-                            type:'force',
-                            categories : [
-                                {
-                                    name: '人物',
-                                    itemStyle: {
-                                        normal: {
-                                            color : '#ff7f50'
-                                        }
-                                    }
-                                },
-                                {
-                                    name: '家人',
-                                    itemStyle: {
-                                        normal: {
-                                            color : '#87cdfa'
-                                        }
-                                    }
-                                },
-                                {
-                                    name:'朋友',
-                                    itemStyle: {
-                                        normal: {
-                                            color : '#9acd32'
-                                        }
-                                    }
-                                }
-                            ],
-                            itemStyle: {
-                                normal: {
-                                    label: {
-                                        show: true,
-                                        textStyle: {
-                                            color: '#800080'
-                                        }
-                                    },
-                                    nodeStyle : {
-                                        brushType : 'both',
-                                        strokeColor : 'rgba(255,215,0,0.4)',
-                                        lineWidth : 8
-                                    }
-                                },
-                                emphasis: {
-                                    label: {
-                                        show: false
-                                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                                    },
-                                    nodeStyle : {
-                                        r: 30
-                                    },
-                                    linkStyle : {}
-                                }
-                            },
-                            minRadius : 15,
-                            maxRadius : 25,
-                            density : 0.05,
-                            attractiveness: 1.2,
-                            nodes:[
-                                {category:0, name: '乔布斯', value : 10},
-                                {category:1, name: '丽萨-乔布斯',value : 2},
-                                {category:1, name: '保罗-乔布斯',value : 3},
-                                {category:1, name: '克拉拉-乔布斯',value : 3},
-                                {category:1, name: '劳伦-鲍威尔',value : 7},
-                                {category:2, name: '史蒂夫-沃兹尼艾克',value : 5},
-                                {category:2, name: '奥巴马',value : 8},
-                                {category:2, name: '比尔-盖茨',value : 9},
-                                {category:2, name: '乔纳森-艾夫',value : 4},
-                                {category:2, name: '蒂姆-库克',value : 4},
-                                {category:2, name: '龙-韦恩',value : 1},
-                            ],
-                            links : [
-                                {source : 1, target : 0, weight : 1},
-                                {source : 2, target : 0, weight : 2},
-                                {source : 3, target : 0, weight : 1},
-                                {source : 4, target : 0, weight : 2},
-                                {source : 5, target : 0, weight : 3},
-                                {source : 6, target : 0, weight : 6},
-                                {source : 7, target : 0, weight : 6},
-                                {source : 8, target : 0, weight : 1},
-                                {source : 9, target : 0, weight : 1},
-                                {source : 10, target : 0, weight : 1},
-                                {source : 3, target : 2, weight : 1},
-                                {source : 6, target : 2, weight : 1},
-                                {source : 6, target : 3, weight : 1},
-                                {source : 6, target : 4, weight : 1},
-                                {source : 6, target : 5, weight : 1},
-                                {source : 7, target : 6, weight : 6},
-                                {source : 7, target : 3, weight : 1},
-                                {source : 9, target : 6, weight : 1}
-                            ]
+    force1 : {
+        tooltip : {
+            trigger: 'item',
+            formatter: '{a} : {b}'
+        },
+        toolbox: {
+            show : true,
+            feature : {
+                restore : {show: true},
+                magicType: {show: true, type: ['force', 'chord']},
+                saveAsImage : {show: true}
+            }
+        },
+        legend: {
+            x: 'left',
+            data:['家人','朋友']
+        },
+        series : [
+            {
+                type:'force',
+                ribbonType: false,
+                categories : [
+                    {
+                        name: '人物',
+                        itemStyle: {
+                            normal: {
+                                color : '#ff7f50'
+                            }
                         }
-                    ]
-                }, true);
-            }
-            functionMap.force2 = function () {
-                myChart.setOption({
-                    color : ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
-                '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
-                '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
-                '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'],
-                    tooltip : {
-                        trigger: 'item'
                     },
-                    legend : {
-                        data : ['HTMLElement', 'WebGL', 'SVG', 'CSS', 'Other'],
-                        orient : 'vertical',
-                        x : 'left'
+                    {
+                        name: '家人',
+                        itemStyle: {
+                            normal: {
+                                color : '#87cdfa'
+                            }
+                        }
                     },
-                    series : [webkitDepData]
-                }, true);
+                    {
+                        name:'朋友',
+                        itemStyle: {
+                            normal: {
+                                color : '#9acd32'
+                            }
+                        }
+                    }
+                ],
+                itemStyle: {
+                    normal: {
+                        label: {
+                            show: true,
+                            textStyle: {
+                                color: '#800080'
+                            }
+                        },
+                        nodeStyle : {
+                            brushType : 'both',
+                            strokeColor : 'rgba(255,215,0,0.4)',
+                            lineWidth : 8
+                        }
+                    },
+                    emphasis: {
+                        label: {
+                            show: false
+                            // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                        },
+                        nodeStyle : {
+                            r: 30
+                        },
+                        linkStyle : {}
+                    }
+                },
+                minRadius : 15,
+                maxRadius : 25,
+                density : 0.05,
+                attractiveness: 1.2,
+                nodes:[
+                    {category:0, name: '乔布斯', value : 10},
+                    {category:1, name: '丽萨-乔布斯',value : 2},
+                    {category:1, name: '保罗-乔布斯',value : 3},
+                    {category:1, name: '克拉拉-乔布斯',value : 3},
+                    {category:1, name: '劳伦-鲍威尔',value : 7},
+                    {category:2, name: '史蒂夫-沃兹尼艾克',value : 5},
+                    {category:2, name: '奥巴马',value : 8},
+                    {category:2, name: '比尔-盖茨',value : 9},
+                    {category:2, name: '乔纳森-艾夫',value : 4},
+                    {category:2, name: '蒂姆-库克',value : 4},
+                    {category:2, name: '龙-韦恩',value : 1},
+                ],
+                links : [
+                    {source : 1, target : 0, weight : 1},
+                    {source : 2, target : 0, weight : 2},
+                    {source : 3, target : 0, weight : 1},
+                    {source : 4, target : 0, weight : 2},
+                    {source : 5, target : 0, weight : 3},
+                    {source : 6, target : 0, weight : 6},
+                    {source : 7, target : 0, weight : 6},
+                    {source : 8, target : 0, weight : 1},
+                    {source : 9, target : 0, weight : 1},
+                    {source : 10, target : 0, weight : 1},
+                    {source : 3, target : 2, weight : 1},
+                    {source : 6, target : 2, weight : 1},
+                    {source : 6, target : 3, weight : 1},
+                    {source : 6, target : 4, weight : 1},
+                    {source : 6, target : 5, weight : 1},
+                    {source : 7, target : 6, weight : 6},
+                    {source : 7, target : 3, weight : 1},
+                    {source : 9, target : 6, weight : 1}
+                ]
             }
-            return {};
-    })(),
-    dynamic : (function (){
-        functionMap.dynamic = function () {
+        ]
+    },
+    force2 : {
+        tooltip : {
+            trigger: 'item'
+        },
+        legend : {
+            data : ['HTMLElement', 'WebGL', 'SVG', 'CSS', 'Other'],
+            orient : 'vertical',
+            x : 'left'
+        },
+        series : []
+    },
+    dynamic : (function(){
+        functionMap.dynamic = function() {
             var lastData = 11;
             var axisData;            
             timeTicket = setInterval(function (){
@@ -1235,10 +1448,12 @@ var optionMap = {
                 start : 0,
                 end : 50
             },
+            grid:{y2:30,y:70},
             xAxis : [
                 {
                     type : 'category',
                     boundaryGap : true,
+                    axisLine: {onZero: false},
                     data : (function (){
                         var now = new Date();
                         var res = [];
@@ -1254,6 +1469,7 @@ var optionMap = {
                     type : 'category',
                     boundaryGap : true,
                     splitline : {show : false},
+                    axisLine: {onZero: false},
                     data : (function (){
                         var res = [];
                         var len = 10;
@@ -1268,14 +1484,14 @@ var optionMap = {
                 {
                     type : 'value',
                     scale: true,
-                    precision:1,
-                    power:1,
                     name : '价格',
                     boundaryGap: [0.2, 0.2],
+                    splitNumber:5,
                     splitArea : {show : true}
                 },
                 {
                     type : 'value',
+                    splitNumber:5,
                     scale: true,
                     name : '预购量',
                     boundaryGap: [0.2, 0.2]
@@ -1338,22 +1554,22 @@ var optionMap = {
             x:'right',
             y:'bottom'
         },
+        toolbox: {
+            show : true,
+            feature : {
+                restore : {show: true},
+                magicType: {show: true, type: ['force', 'chord']},
+                saveAsImage : {show: true}
+            }
+        },
         tooltip : {
             trigger: 'item',
             formatter : function (params) {
-                var g1 = params[1];
-                var serie = params[0];
-                var g2 = params[3];
-                var data = params[2];
-                var data2 = params[4];
-                if (data2) {
-                    if (data > data2) {
-                        return [g1, serie, g2].join(' ');
-                    } else {
-                        return [g2, serie, g1].join(' ');
-                    }
-                } else {
-                    return g1
+                if (params.name && params.name.indexOf('-') != -1) {
+                    return params.name.replace('-', ' ' + params.seriesName + ' ')
+                }
+                else {
+                    return params.name ? params.name : params.data.id
                 }
             }
         },
@@ -1387,6 +1603,7 @@ var optionMap = {
                 "name": "支持",
                 "type": "chord",
                 "showScaleText": false,
+                "clockWise": false,
                 "data": [
                     {"name": "美国"},
                     {"name": "叙利亚反对派"},
@@ -1425,7 +1642,7 @@ var optionMap = {
             {
                 "name": "反对",
                 "type": "chord",
-                "showScaleText": false,
+                "insertToSerie": "支持",
                 "data": [
                     {"name": "美国"},
                     {"name": "叙利亚反对派"},
@@ -1464,7 +1681,7 @@ var optionMap = {
             {
                 "name": "未表态",
                 "type": "chord",
-                "showScaleText": false,
+                "insertToSerie": "支持",
                 "data": [
                     {"name": "美国"},
                     {"name": "叙利亚反对派"},
@@ -1737,7 +1954,7 @@ var optionMap = {
         ]
     },
     mix1 : {
-    	color: ['#ff7f50','#87cefa','#da70d6','#ff69b4','#ba55d3','#32cd32','#6495ed'],
+        color: ['#ff7f50','#87cefa','#da70d6','#ff69b4','#ba55d3','#32cd32','#6495ed'],
         tooltip : {
             trigger: 'axis'
         },
@@ -1753,7 +1970,7 @@ var optionMap = {
         },
         calculable : true,
         legend: {
-        	x : 'left',
+            x : 'left',
             data:['蒸发量','降水量','平均温度','日蒸发量','夜蒸发量','日降水量','夜降水量']
         },
         xAxis : [
@@ -1779,7 +1996,7 @@ var optionMap = {
             }
         ],
         series : [
-        	{
+            {
                 name:'总和',
                 type:'pie',
                 tooltip : {
@@ -1796,7 +2013,7 @@ var optionMap = {
                     }
                 },
                 data:[
-                	{value:356.5, name:'日降水量'},
+                    {value:356.5, name:'日降水量'},
                     {value:220.4, name:'夜降水量'},
                     {value:59.0, name:'夜蒸发量'},
                     {value:440.5, name:'日蒸发量'}
@@ -1821,122 +2038,122 @@ var optionMap = {
         ]
     },
     mix2 : (function (){
-    	var sData1 = (function () {
-		    var d = [];
-		    var len = 40;
-		    var value;
-		    while (len--) {
-		        d.push([
-		            Math.round(Math.random()*10) * (Math.round(Math.random()*10) > 5 ? 1 : -1),
-		            Math.round(Math.random()*10) * (Math.round(Math.random()*10) > 5 ? 1 : -1),
-		            Math.round(Math.random()*20)
-		        ]);
-		    }
-		    return d;
-		})();
-		var sData2 = (function () {
-		    var d = [];
-		    var len = sData1.length;
-		    for (var i = 0; i < len; i++) {
-		        d.push([
-		            sData1[i][0],
-		            sData1[i][1],
-		            Math.round(Math.random()*15)
-		        ]);
-		    }
-		    return d;
-		})();
+        var sData1 = (function () {
+            var d = [];
+            var len = 40;
+            var value;
+            while (len--) {
+                d.push([
+                    Math.round(Math.random()*10) * (Math.round(Math.random()*10) > 5 ? 1 : -1),
+                    Math.round(Math.random()*10) * (Math.round(Math.random()*10) > 5 ? 1 : -1),
+                    Math.round(Math.random()*20)
+                ]);
+            }
+            return d;
+        })();
+        var sData2 = (function () {
+            var d = [];
+            var len = sData1.length;
+            for (var i = 0; i < len; i++) {
+                d.push([
+                    sData1[i][0],
+                    sData1[i][1],
+                    Math.round(Math.random()*15)
+                ]);
+            }
+            return d;
+        })();
 
-		functionMap.mix2 = function (){
-		    var xAxis = myChart.component.xAxis.getAxis(0);
-		    var yAxis = myChart.component.yAxis.getAxis(0);
-		    var len = sData1.length;
-		    var option = myChart.getOption();
-		    option.series = option.series.slice(0,2);
-		    option.legend = {
+        functionMap.mix2 = function (){
+            var xAxis = myChart.component.xAxis.getAxis(0);
+            var yAxis = myChart.component.yAxis.getAxis(0);
+            var len = sData1.length;
+            var option = myChart.getOption();
+            option.series = option.series.slice(0,2);
+            option.legend = {
                 data : ['系列1', '系列2']
             };
-		    while (len--) {
-		        option.series.push({
-		            type: 'pie',
-		            itemStyle : {
-		                normal : {
-		                    label : {
-		                        show : false
-		                    },
-		                    labelLine : {
-		                        show : false
-		                    }
-		                }
-		            },
-		            //radius : [(sData1[len][2] + sData2[len][2])/2.5, (sData1[len][2] + sData2[len][2])/2.5 + 15],
-		            radius : (sData1[len][2] + sData2[len][2])/2.5 + 15,
-		            center: [
-		                xAxis.getCoord(sData1[len][0]), 
-		                yAxis.getCoord(sData1[len][1])
-		            ],
-		            data: [
-		                {name: '系列1', value: sData1[len][2]},
-		                {name: '系列2', value: sData2[len][2]}
-		            ]
-		        })
-		    }
-		    option.animation = true;
-		    myChart.setOption(option);
-		}
+            while (len--) {
+                option.series.push({
+                    type: 'pie',
+                    itemStyle : {
+                        normal : {
+                            label : {
+                                show : false
+                            },
+                            labelLine : {
+                                show : false
+                            }
+                        }
+                    },
+                    //radius : [(sData1[len][2] + sData2[len][2])/2.5, (sData1[len][2] + sData2[len][2])/2.5 + 15],
+                    radius : (sData1[len][2] + sData2[len][2])/2.5 + 15,
+                    center: [
+                        xAxis.getCoord(sData1[len][0]), 
+                        yAxis.getCoord(sData1[len][1])
+                    ],
+                    data: [
+                        {name: '系列1', value: sData1[len][2]},
+                        {name: '系列2', value: sData2[len][2]}
+                    ]
+                })
+            }
+            option.animation = true;
+            myChart.setOption(option);
+        }
 
-		return {
-		    color : ['rgba(255, 69, 0, 0.5)', 'rgba(30, 144, 255, 0.5)'],
-		    title : {
-		        text: '饼图代替散点',
-		        subtext : '混搭（随机数据）'
-		    },
-		    tooltip : {
-		        trigger: 'item',
-		         formatter: "{b} : {c} ({d}%)"
-		    },
-		    toolbox: {
-		        show : true,
-		        feature : {
-		            mark : {show: true},
-		            dataView : {show: true, readOnly: false},
-		            restore : {show: true},
-		            saveAsImage : {show: true}
-		        }
-		    },
-		    xAxis : [
-		        {
-		            type : 'value',
-		            splitNumber: 2,
-		            splitLine : {lineStyle:{color:'#48b',width:2}},
-		            splitArea: {show:true},
-		            axisLine : {show:false}
-		        }
-		    ],
-		    yAxis : [
-		        {
-		            type : 'value',
-		            splitNumber: 2,
-		            splitLine : {lineStyle:{color:'#48b',width:2}},
-		            splitArea : {show : true},
-		            axisLine : {show:false}
-		        }
-		    ],
-		    animation: false,
-		    series : [
-		        {
-		            type:'scatter',
-		            symbol: 'none',
-		            data: sData1
-		        },
-		        {
-		            type:'scatter',
-		            symbol: 'none',
-		            data: sData2
-		        }
-		    ]
-		};
-		
+        return {
+            color : ['rgba(255, 69, 0, 0.5)', 'rgba(30, 144, 255, 0.5)'],
+            title : {
+                text: '饼图代替散点',
+                subtext : '混搭（随机数据）'
+            },
+            tooltip : {
+                trigger: 'item',
+                 formatter: "{b} : {c} ({d}%)"
+            },
+            toolbox: {
+                show : true,
+                feature : {
+                    mark : {show: true},
+                    dataView : {show: true, readOnly: false},
+                    restore : {show: true},
+                    saveAsImage : {show: true}
+                }
+            },
+            xAxis : [
+                {
+                    type : 'value',
+                    splitNumber: 2,
+                    splitLine : {lineStyle:{color:'#48b',width:2}},
+                    splitArea: {show:true},
+                    axisLine : {show:false}
+                }
+            ],
+            yAxis : [
+                {
+                    type : 'value',
+                    splitNumber: 2,
+                    splitLine : {lineStyle:{color:'#48b',width:2}},
+                    splitArea : {show : true},
+                    axisLine : {show:false}
+                }
+            ],
+            animation: false,
+            series : [
+                {
+                    type:'scatter',
+                    symbol: 'none',
+                    data: sData1
+                },
+                {
+                    type:'scatter',
+                    symbol: 'none',
+                    data: sData2
+                }
+            ]
+        };
+        
     })(),
     mix3 : {
         title : {
@@ -2237,827 +2454,1156 @@ var optionMap = {
         return {};
     })(),
     effect1 : (function() {
-    	var effect = {
-		    show: true,
+        var effect = {
+            show: true,
             scaleSize: 1,//require('zrender/tool/env').canvasSupported ? 1 : 2,
             period: 30,             // 运动周期，无单位，值越大越慢
-		    color: '#fff',
+            color: '#fff',
             shadowColor: 'rgba(220,220,220,0.4)',
             shadowBlur : 5 
-		};
-		function itemStyle(idx) {
-		    return {
-		        normal: {
-		            color:'#fff',
-		            borderWidth:1,
-		            borderColor:['rgba(30,144,255,1)','lime'][idx],
-		            lineStyle: {
+        };
+        function itemStyle(idx) {
+            return {
+                normal: {
+                    color:'#fff',
+                    borderWidth:1,
+                    borderColor:['rgba(30,144,255,1)','lime'][idx],
+                    lineStyle: {
                         //shadowColor : ['rgba(30,144,255,1)','lime'][idx], //默认透明
                         //shadowBlur: 10,
                         //shadowOffsetX: 0,
                         //shadowOffsetY: 0,
                         type: 'solid'
-		            }
-		        }
-		    }
-		};
+                    }
+                }
+            }
+        };
         functionMap.effect1 = function() {
             myChart.setOption({
-		    backgroundColor: 'rgba(0,0,0,0)',
-		    color: ['rgba(30,144,255,1)','lime'],
-		    title : {
-		        text: '中国铁路运输主干线',
-		        subtext:'数据来自维基百科',
-		        sublink: 'http://zh.wikipedia.org/wiki/%E4%B8%AD%E5%8D%8E%E4%BA%BA%E6%B0%91%E5%85%B1%E5%92%8C%E5%9B%BD%E9%93%81%E8%B7%AF%E8%BF%90%E8%BE%93',
-		        x:'center',
-		        textStyle : {
-		            color: '#fff'
-		        }
-		    },
-		    tooltip : {
-		        trigger: 'item',
+            backgroundColor: 'rgba(0,0,0,0)',
+                color: ['rgba(30,144,255,1)','lime'],
+                title : {
+                    text: '中国铁路运输主干线',
+                    subtext:'数据来自维基百科',
+                    sublink: 'http://zh.wikipedia.org/wiki/%E4%B8%AD%E5%8D%8E%E4%BA%BA%E6%B0%91%E5%85%B1%E5%92%8C%E5%9B%BD%E9%93%81%E8%B7%AF%E8%BF%90%E8%BE%93',
+                    x:'center',
+                    textStyle : {
+                        color: '#fff'
+                    }
+                },
+                tooltip : {
+                    trigger: 'item',
                     formatter: function(v) {
-		            return v[1].replace(':', ' > ');
-		        }
-		    },
-		    legend: {
-		        orient: 'vertical',
-                x:'left',
-		        selectedMode:'single',
-		        data:['八纵通道', '八横通道'],
-		        textStyle : {
-		            color: '#fff'
-		        }
-		    },
-		    toolbox: {
-		        show : true,
-		        orient : 'vertical',
-		        x: 'right',
-		        y: 'center',
-		        feature : {
-		            mark : {show: true},
-		            dataView : {show: true, readOnly: false},
-		            restore : {show: true},
-		            saveAsImage : {show: true}
-		        }
-		    },
-		    series : [
-		        {
-		            name: '八纵通道',
-		            type: 'map',
-		            roam: true,
-		            hoverable: false,
-		            mapType: 'china',
-		            itemStyle:{
-		                normal:{
-		                    borderColor:'rgba(100,149,237,1)',
-		                    borderWidth:0.5,
-		                    areaStyle:{
-		                        color: '#333'
-		                    }
-		                }
-		            },
-		            data:[],
-		            markLine : {
-		                symbol: ['circle', 'circle'],  
-		                symbolSize : 1,
-		                effect : effect,
-		                itemStyle : itemStyle(0),
+                        return v[1].replace(':', ' > ');
+                    }
+                },
+                legend: {
+                    orient: 'vertical',
+                    x:'left',
+                    selectedMode:'single',
+                    data:['八纵通道', '八横通道'],
+                    textStyle : {
+                        color: '#fff'
+                    }
+                },
+                toolbox: {
+                    show : true,
+                    orient : 'vertical',
+                    x: 'right',
+                    y: 'center',
+                    feature : {
+                        mark : {show: true},
+                        dataView : {show: true, readOnly: false},
+                        restore : {show: true},
+                        saveAsImage : {show: true}
+                    }
+                },
+                series : [
+                    {
+                        name: '八纵通道',
+                        type: 'map',
+                        roam: true,
+                        hoverable: false,
+                        mapType: 'china',
+                        itemStyle:{
+                            normal:{
+                                borderColor:'rgba(100,149,237,1)',
+                                borderWidth:0.5,
+                                areaStyle:{
+                                    color: '#333'
+                                }
+                            }
+                        },
+                        data:[],
+                        markLine : {
+                            symbol: ['circle', 'circle'],  
+                            symbolSize : 1,
+                            effect : effect,
+                            itemStyle : itemStyle(0),
                             smooth:true,
-		                data : [
-		                    [{name:'北京'}, {name:'哈尔滨'}],
-		                    [{name:'哈尔滨'}, {name:'满洲里'}],
-		                    
-		                    [{name:'沈阳'}, {name:'大连'}],
-		                    [{name:'大连'}, {name:'烟台'}],
-		                    [{name:'烟台'}, {name:'青岛'}],
-		                    [{name:'青岛'}, {name:'淮安'}],
-		                    [{name:'淮安'}, {name:'上海'}],
-		                    [{name:'上海'}, {name:'杭州'}],
-		                    [{name:'杭州'}, {name:'宁波'}],
-		                    [{name:'宁波'}, {name:'温州'}],
-		                    [{name:'温州'}, {name:'福州'}],
-		                    [{name:'福州'}, {name:'厦门'}],
-		                    [{name:'厦门'}, {name:'广州'}],
-		                    [{name:'广州'}, {name:'湛江'}],
-		                    
-		                    [{name:'北京'}, {name:'天津'}],
-		                    [{name:'天津'}, {name:'济南'}],
-		                    [{name:'济南'}, {name:'南京'}],
-		                    [{name:'南京'}, {name:'上海'}],
-		                    
-		                    [{name:'北京'}, {name:'南昌'}],
-		                    [{name:'南昌'}, {name:'深圳'}],
-		                    [{name:'深圳'}, {name:'九龙红磡'}],
-		                    
-		                    [{name:'北京'}, {name:'郑州'}],
-		                    [{name:'郑州'}, {name:'武汉'}],
-		                    [{name:'武汉'}, {name:'广州'}],
-		                    
-		                    [{name:'大同'}, {name:'太原'}],
-		                    [{name:'太原'}, {name:'焦作'}],
-		                    [{name:'焦作'}, {name:'洛阳'}],
-		                    [{name:'洛阳'}, {name:'柳州'}],
-		                    [{name:'柳州'}, {name:'湛江'}],
-		                    
-		                    [{name:'包头'}, {name:'西安'}],
-		                    [{name:'西安'}, {name:'重庆'}],
-		                    [{name:'重庆'}, {name:'贵阳'}],
-		                    [{name:'贵阳'}, {name:'柳州'}],
-		                    [{name:'柳州'}, {name:'南宁'}],
-		                    
-		                    [{name:'兰州'}, {name:'成都'}],
-		                    [{name:'成都'}, {name:'昆明'}]
-		                ]
-		            }
-		        },
-		        {
-		            name: '八横通道',
-		            type: 'map',
-		            mapType: 'china',
-		            data:[],
-		            markLine : {
-		                symbol: ['circle', 'circle'],  
-		                symbolSize : 1,
-		                effect : effect,
-		                itemStyle : itemStyle(1),
+                            data : [
+                                [{name:'北京'}, {name:'哈尔滨'}],
+                                [{name:'哈尔滨'}, {name:'满洲里'}],
+                                
+                                [{name:'沈阳'}, {name:'大连'}],
+                                [{name:'大连'}, {name:'烟台'}],
+                                [{name:'烟台'}, {name:'青岛'}],
+                                [{name:'青岛'}, {name:'淮安'}],
+                                [{name:'淮安'}, {name:'上海'}],
+                                [{name:'上海'}, {name:'杭州'}],
+                                [{name:'杭州'}, {name:'宁波'}],
+                                [{name:'宁波'}, {name:'温州'}],
+                                [{name:'温州'}, {name:'福州'}],
+                                [{name:'福州'}, {name:'厦门'}],
+                                [{name:'厦门'}, {name:'广州'}],
+                                [{name:'广州'}, {name:'湛江'}],
+                                
+                                [{name:'北京'}, {name:'天津'}],
+                                [{name:'天津'}, {name:'济南'}],
+                                [{name:'济南'}, {name:'南京'}],
+                                [{name:'南京'}, {name:'上海'}],
+                                
+                                [{name:'北京'}, {name:'南昌'}],
+                                [{name:'南昌'}, {name:'深圳'}],
+                                [{name:'深圳'}, {name:'九龙红磡'}],
+                                
+                                [{name:'北京'}, {name:'郑州'}],
+                                [{name:'郑州'}, {name:'武汉'}],
+                                [{name:'武汉'}, {name:'广州'}],
+                                
+                                [{name:'大同'}, {name:'太原'}],
+                                [{name:'太原'}, {name:'焦作'}],
+                                [{name:'焦作'}, {name:'洛阳'}],
+                                [{name:'洛阳'}, {name:'柳州'}],
+                                [{name:'柳州'}, {name:'湛江'}],
+                                
+                                [{name:'包头'}, {name:'西安'}],
+                                [{name:'西安'}, {name:'重庆'}],
+                                [{name:'重庆'}, {name:'贵阳'}],
+                                [{name:'贵阳'}, {name:'柳州'}],
+                                [{name:'柳州'}, {name:'南宁'}],
+                                
+                                [{name:'兰州'}, {name:'成都'}],
+                                [{name:'成都'}, {name:'昆明'}]
+                            ]
+                        }
+                    },
+                    {
+                        name: '八横通道',
+                        type: 'map',
+                        mapType: 'china',
+                        data:[],
+                        markLine : {
+                            symbol: ['circle', 'circle'],  
+                            symbolSize : 1,
+                            effect : effect,
+                            itemStyle : itemStyle(1),
                             smooth:true,
-		                data : [
-		                    [{name:'北京'}, {name:'兰州'}],
-		                    [{name:'兰州'}, {name:'拉萨'}],
-		                    
-		                    [{name:'大同'}, {name:'秦皇岛'}],
-		                    
-		                    [{name:'神木'}, {name:'黄骅'}],
-		                    
-		                    [{name:'太原'}, {name:'德州'}],
-		                    [{name:'德州'}, {name:'龙口'}],
-		                    [{name:'龙口'}, {name:'烟台'}],
-		                    
-		                    [{name:'太原'}, {name:'德州'}],
-		                    [{name:'德州'}, {name:'济南'}],
-		                    [{name:'济南'}, {name:'青岛'}],
-		                    
-		                    [{name:'长治'}, {name:'邯郸'}],
-		                    [{name:'邯郸'}, {name:'济南'}],
-		                    [{name:'济南'}, {name:'青岛'}],
-		                    
-		                    [{name:'瓦塘'}, {name:'临汾'}],
-		                    [{name:'临汾'}, {name:'长治'}],
-		                    [{name:'长治'}, {name:'汤阴'}],
-		                    [{name:'汤阴'}, {name:'台前'}],
-		                    [{name:'台前'}, {name:'兖州'}],
-		                    [{name:'兖州'}, {name:'日照'}],
-		                    
-		                    [{name:'侯马'}, {name:'月山'}],
-		                    [{name:'月山'}, {name:'新乡'}],
-		                    [{name:'新乡'}, {name:'兖州'}],
-		                    [{name:'兖州'}, {name:'日照'}],
-		                    
-		                    [{name:'连云港'}, {name:'郑州'}],
-		                    [{name:'郑州'}, {name:'兰州'}],
-		                    [{name:'兰州'}, {name:'乌鲁木齐'}],
-		                    [{name:'乌鲁木齐'}, {name:'阿拉山口'}],
-		                    
-		                    [{name:'西安'}, {name:'南阳'}],
-		                    [{name:'南阳'}, {name:'信阳'}],
-		                    [{name:'信阳'}, {name:'合肥'}],
-		                    [{name:'合肥'}, {name:'南京'}],
-		                    [{name:'南京'}, {name:'启东'}],
-		                    
-		                    [{name:'重庆'}, {name:'武汉'}],
-		                    [{name:'武汉'}, {name:'九江'}],
-		                    [{name:'九江'}, {name:'铜陵'}],
-		                    [{name:'铜陵'}, {name:'南京'}],
-		                    [{name:'南京'}, {name:'上海'}],
-		                    
-		                    [{name:'上海'}, {name:'怀化'}],
-		                    [{name:'怀化'}, {name:'重庆'}],
-		                    [{name:'重庆'}, {name:'成都'}],
-		                    [{name:'成都'}, {name:'贵阳'}],
-		                    [{name:'贵阳'}, {name:'昆明'}],
-		                    
-		                    [{name:'昆明'}, {name:'南宁'}],
-		                    [{name:'南宁'}, {name:'黎塘'}],
-		                    [{name:'黎塘'}, {name:'湛江'}]
-		                ]
-		            },
-		            geoCoord: {
-		                '阿拉山口':[82.5757,45.1706],
-		                '包头':[109.8403,40.6574],
-		                '北京':[116.4075,39.9040],
-		                '成都':[104.0665,30.5723],
-		                '大连':[121.6147,38.9140],
-		                '大同':[113.3001,40.0768],
-		                '德州':[116.3575,37.4341],
-		                '福州':[119.2965,26.0745],
-		                '广州':[113.2644,23.1292],
-		                '贵阳':[106.6302,26.6477],
-		                '哈尔滨':[126.5363,45.8023],
-		                '邯郸':[114.5391,36.6256],
-		                '杭州':[120.1551,30.2741],
-		                '合肥':[117.2272,31.8206],
-		                '侯马':[111.3720,35.6191],
-		                '怀化':[109.9985,27.5550],
-		                '淮安':[119.0153,33.6104],
-		                '黄骅':[117.3300,38.3714],
-		                '济南':[117.1205,36.6510],
-		                '焦作':[113.2418,35.2159],
-		                '九江':[116.0019,29.7051],
-		                '九龙红磡':[114.1870,22.3076],
-		                '昆明':[102.8329,24.8801],
-		                '拉萨':[91.1409,29.6456],
-		                '兰州':[103.8343,36.0611],
-		                '黎塘':[109.1363,23.2066],
-		                '连云港':[119.2216,34.5967],
-		                '临汾':[111.5190,36.0880],
-		                '柳州':[109.4160,24.3255],
-		                '龙口':[120.4778,37.6461],
-		                '洛阳':[112.4540,34.6197],
-		                '满洲里':[117.3787,49.5978],
-		                '南昌':[115.8581,28.6832],
-		                '南京':[118.7969,32.0603],
-		                '南宁':[108.3661,22.8172],
-		                '南阳':[112.5283,32.9908],
-		                '宁波':[121.5440,29.8683],
-		                '启东':[121.6574,31.8082],
-		                '秦皇岛':[119.6005,39.9354],
-		                '青岛':[120.3826,36.0671],
-		                '日照':[119.5269,35.4164],
-		                '厦门':[118.0894,24.4798],
-		                '上海':[121.4737,31.2304],
-		                '深圳':[114.0579,22.5431],
-		                '神木':[110.4871,38.8610],
-		                '沈阳':[123.4315,41.8057],
-		                '台前':[115.8717,35.9701],
-		                '太原':[112.5489,37.8706],
-		                '汤阴':[114.3572,35.9218],
-		                '天津':[117.2010,39.0842],
-		                '铜陵':[117.8121,30.9454],
-		                '瓦塘':[109.7600,23.3161],
-		                '温州':[120.6994,27.9943],
-		                '乌鲁木齐':[87.6168,43.8256],
-		                '武汉':[114.3054,30.5931],
-		                '西安':[108.9402,34.3416],
-		                '新乡':[113.9268,35.3030],
-		                '信阳':[114.0913,32.1470],
-		                '烟台':[121.4479,37.4638],
-		                '兖州':[116.7838,35.5531],
-		                '月山':[113.0550,35.2104],
-		                '湛江':[110.3594,21.2707],
-		                '长治':[113.1163,36.1954],
-		                '郑州':[113.6254,34.7466],
-		                '重庆':[106.5516,29.5630]
-		            }
-		        }
-		    ]
-		}, true);
-        }
-        functionMap.effect2 = function () {
-            myChart.setOption({
-                backgroundColor: 'rgba(0,0,0,0)',
-			    color: ['gold','aqua','lime'],
-			    title : {
-			        text: '模拟迁徙',
-			        subtext:'数据纯属虚构',
-			        x:'center',
-			        textStyle : {
-			            color: '#fff'
-			        }
-			    },
-			    tooltip : {
-			        trigger: 'item',
-            formatter: function(v) {
-			            return v[1].replace(':', ' > ');
-			        }
-			    },
-			    legend: {
-			        orient: 'vertical',
-			        x:'left',
-			        data:['北京 Top10', '上海 Top10', '广州 Top10'],
-			        selectedMode: 'single',
-			        selected:{
-			            '上海 Top10' : false,
-			            '广州 Top10' : false
-			        },
-			        textStyle : {
-			            color: '#fff'
-			        }
-			    },
-			    toolbox: {
-			        show : true,
-			        orient : 'vertical',
-			        x: 'right',
-			        y: 'center',
-			        feature : {
-			            mark : {show: true},
-			            dataView : {show: true, readOnly: false},
-			            restore : {show: true},
-			            saveAsImage : {show: true}
-			        }
-			    },
-			    dataRange: {
-			        min : 0,
-			        max : 100,
-			        calculable : true,
-            color: ['#ff3333', 'orange', 'yellow','lime','aqua'],
-			        textStyle:{
-			            color:'#fff'
-			        }
-			    },
-			    series : [
-			        {
-			            name: '全国',
-			            type: 'map',
-			            roam: true,
-			            hoverable: false,
-			            mapType: 'china',
-			            itemStyle:{
-			                normal:{
-			                    borderColor:'rgba(100,149,237,1)',
-			                    borderWidth:0.5,
-			                    areaStyle:{
-			                        color: '#333'
-			                    }
-			                }
-			            },
-			            data:[],
-			            markLine : {
-			                smooth:true,
-			                symbol: ['none', 'circle'],  
-			                symbolSize : 1,
-			                itemStyle : {
-			                    normal: {
-			                        color:'#fff',
-			                        borderWidth:1,
-			                        borderColor:'rgba(30,144,255,0.5)'
-			                    }
-			                },
-			                data : [
-			                    [{name:'北京'},{name:'包头'}],
-			                    [{name:'北京'},{name:'北海'}],
-			                    [{name:'北京'},{name:'广州'}],
-			                    [{name:'北京'},{name:'郑州'}],
-			                    [{name:'北京'},{name:'长春'}],
-			                    [{name:'北京'},{name:'长治'}],
-			                    [{name:'北京'},{name:'重庆'}],
-			                    [{name:'北京'},{name:'长沙'}],
-			                    [{name:'北京'},{name:'成都'}],
-			                    [{name:'北京'},{name:'常州'}],
-			                    [{name:'北京'},{name:'丹东'}],
-			                    [{name:'北京'},{name:'大连'}],
-			                    [{name:'北京'},{name:'东营'}],
-			                    [{name:'北京'},{name:'延安'}],
-			                    [{name:'北京'},{name:'福州'}],
-			                    [{name:'北京'},{name:'海口'}],
-			                    [{name:'北京'},{name:'呼和浩特'}],
-			                    [{name:'北京'},{name:'合肥'}],
-			                    [{name:'北京'},{name:'杭州'}],
-			                    [{name:'北京'},{name:'哈尔滨'}],
-			                    [{name:'北京'},{name:'舟山'}],
-			                    [{name:'北京'},{name:'银川'}],
-			                    [{name:'北京'},{name:'衢州'}],
-			                    [{name:'北京'},{name:'南昌'}],
-			                    [{name:'北京'},{name:'昆明'}],
-			                    [{name:'北京'},{name:'贵阳'}],
-			                    [{name:'北京'},{name:'兰州'}],
-			                    [{name:'北京'},{name:'拉萨'}],
-			                    [{name:'北京'},{name:'连云港'}],
-			                    [{name:'北京'},{name:'临沂'}],
-			                    [{name:'北京'},{name:'柳州'}],
-			                    [{name:'北京'},{name:'宁波'}],
-			                    [{name:'北京'},{name:'南京'}],
-			                    [{name:'北京'},{name:'南宁'}],
-			                    [{name:'北京'},{name:'南通'}],
-			                    [{name:'北京'},{name:'上海'}],
-			                    [{name:'北京'},{name:'沈阳'}],
-			                    [{name:'北京'},{name:'西安'}],
-			                    [{name:'北京'},{name:'汕头'}],
-			                    [{name:'北京'},{name:'深圳'}],
-			                    [{name:'北京'},{name:'青岛'}],
-			                    [{name:'北京'},{name:'济南'}],
-			                    [{name:'北京'},{name:'太原'}],
-			                    [{name:'北京'},{name:'乌鲁木齐'}],
-			                    [{name:'北京'},{name:'潍坊'}],
-			                    [{name:'北京'},{name:'威海'}],
-			                    [{name:'北京'},{name:'温州'}],
-			                    [{name:'北京'},{name:'武汉'}],
-			                    [{name:'北京'},{name:'无锡'}],
-			                    [{name:'北京'},{name:'厦门'}],
-			                    [{name:'北京'},{name:'西宁'}],
-			                    [{name:'北京'},{name:'徐州'}],
-			                    [{name:'北京'},{name:'烟台'}],
-			                    [{name:'北京'},{name:'盐城'}],
-			                    [{name:'北京'},{name:'珠海'}],
-			                    [{name:'上海'},{name:'包头'}],
-			                    [{name:'上海'},{name:'北海'}],
-			                    [{name:'上海'},{name:'广州'}],
-			                    [{name:'上海'},{name:'郑州'}],
-			                    [{name:'上海'},{name:'长春'}],
-			                    [{name:'上海'},{name:'重庆'}],
-			                    [{name:'上海'},{name:'长沙'}],
-			                    [{name:'上海'},{name:'成都'}],
-			                    [{name:'上海'},{name:'丹东'}],
-			                    [{name:'上海'},{name:'大连'}],
-			                    [{name:'上海'},{name:'福州'}],
-			                    [{name:'上海'},{name:'海口'}],
-			                    [{name:'上海'},{name:'呼和浩特'}],
-			                    [{name:'上海'},{name:'合肥'}],
-			                    [{name:'上海'},{name:'哈尔滨'}],
-			                    [{name:'上海'},{name:'舟山'}],
-			                    [{name:'上海'},{name:'银川'}],
-			                    [{name:'上海'},{name:'南昌'}],
-			                    [{name:'上海'},{name:'昆明'}],
-			                    [{name:'上海'},{name:'贵阳'}],
-			                    [{name:'上海'},{name:'兰州'}],
-			                    [{name:'上海'},{name:'拉萨'}],
-			                    [{name:'上海'},{name:'连云港'}],
-			                    [{name:'上海'},{name:'临沂'}],
-			                    [{name:'上海'},{name:'柳州'}],
-			                    [{name:'上海'},{name:'宁波'}],
-			                    [{name:'上海'},{name:'南宁'}],
-			                    [{name:'上海'},{name:'北京'}],
-			                    [{name:'上海'},{name:'沈阳'}],
-			                    [{name:'上海'},{name:'秦皇岛'}],
-			                    [{name:'上海'},{name:'西安'}],
-			                    [{name:'上海'},{name:'石家庄'}],
-			                    [{name:'上海'},{name:'汕头'}],
-			                    [{name:'上海'},{name:'深圳'}],
-			                    [{name:'上海'},{name:'青岛'}],
-			                    [{name:'上海'},{name:'济南'}],
-			                    [{name:'上海'},{name:'天津'}],
-			                    [{name:'上海'},{name:'太原'}],
-			                    [{name:'上海'},{name:'乌鲁木齐'}],
-			                    [{name:'上海'},{name:'潍坊'}],
-			                    [{name:'上海'},{name:'威海'}],
-			                    [{name:'上海'},{name:'温州'}],
-			                    [{name:'上海'},{name:'武汉'}],
-			                    [{name:'上海'},{name:'厦门'}],
-			                    [{name:'上海'},{name:'西宁'}],
-			                    [{name:'上海'},{name:'徐州'}],
-			                    [{name:'上海'},{name:'烟台'}],
-			                    [{name:'上海'},{name:'珠海'}],
-			                    [{name:'广州'},{name:'北海'}],
-			                    [{name:'广州'},{name:'郑州'}],
-			                    [{name:'广州'},{name:'长春'}],
-			                    [{name:'广州'},{name:'重庆'}],
-			                    [{name:'广州'},{name:'长沙'}],
-			                    [{name:'广州'},{name:'成都'}],
-			                    [{name:'广州'},{name:'常州'}],
-			                    [{name:'广州'},{name:'大连'}],
-			                    [{name:'广州'},{name:'福州'}],
-			                    [{name:'广州'},{name:'海口'}],
-			                    [{name:'广州'},{name:'呼和浩特'}],
-			                    [{name:'广州'},{name:'合肥'}],
-			                    [{name:'广州'},{name:'杭州'}],
-			                    [{name:'广州'},{name:'哈尔滨'}],
-			                    [{name:'广州'},{name:'舟山'}],
-			                    [{name:'广州'},{name:'银川'}],
-			                    [{name:'广州'},{name:'南昌'}],
-			                    [{name:'广州'},{name:'昆明'}],
-			                    [{name:'广州'},{name:'贵阳'}],
-			                    [{name:'广州'},{name:'兰州'}],
-			                    [{name:'广州'},{name:'拉萨'}],
-			                    [{name:'广州'},{name:'连云港'}],
-			                    [{name:'广州'},{name:'临沂'}],
-			                    [{name:'广州'},{name:'柳州'}],
-			                    [{name:'广州'},{name:'宁波'}],
-			                    [{name:'广州'},{name:'南京'}],
-			                    [{name:'广州'},{name:'南宁'}],
-			                    [{name:'广州'},{name:'南通'}],
-			                    [{name:'广州'},{name:'北京'}],
-			                    [{name:'广州'},{name:'上海'}],
-			                    [{name:'广州'},{name:'沈阳'}],
-			                    [{name:'广州'},{name:'西安'}],
-			                    [{name:'广州'},{name:'石家庄'}],
-			                    [{name:'广州'},{name:'汕头'}],
-			                    [{name:'广州'},{name:'青岛'}],
-			                    [{name:'广州'},{name:'济南'}],
-			                    [{name:'广州'},{name:'天津'}],
-			                    [{name:'广州'},{name:'太原'}],
-			                    [{name:'广州'},{name:'乌鲁木齐'}],
-			                    [{name:'广州'},{name:'温州'}],
-			                    [{name:'广州'},{name:'武汉'}],
-			                    [{name:'广州'},{name:'无锡'}],
-			                    [{name:'广州'},{name:'厦门'}],
-			                    [{name:'广州'},{name:'西宁'}],
-			                    [{name:'广州'},{name:'徐州'}],
-			                    [{name:'广州'},{name:'烟台'}],
-			                    [{name:'广州'},{name:'盐城'}]
-			                ]
-			            },
-			            geoCoord: {
-			                '上海': [121.4648,31.2891],
-			                '东莞': [113.8953,22.901],
-			                '东营': [118.7073,37.5513],
-			                '中山': [113.4229,22.478],
-			                '临汾': [111.4783,36.1615],
-			                '临沂': [118.3118,35.2936],
-			                '丹东': [124.541,40.4242],
-			                '丽水': [119.5642,28.1854],
-			                '乌鲁木齐': [87.9236,43.5883],
-			                '佛山': [112.8955,23.1097],
-			                '保定': [115.0488,39.0948],
-			                '兰州': [103.5901,36.3043],
-			                '包头': [110.3467,41.4899],
-			                '北京': [116.4551,40.2539],
-			                '北海': [109.314,21.6211],
-			                '南京': [118.8062,31.9208],
-			                '南宁': [108.479,23.1152],
-			                '南昌': [116.0046,28.6633],
-			                '南通': [121.1023,32.1625],
-			                '厦门': [118.1689,24.6478],
-			                '台州': [121.1353,28.6688],
-			                '合肥': [117.29,32.0581],
-			                '呼和浩特': [111.4124,40.4901],
-			                '咸阳': [108.4131,34.8706],
-			                '哈尔滨': [127.9688,45.368],
-			                '唐山': [118.4766,39.6826],
-			                '嘉兴': [120.9155,30.6354],
-			                '大同': [113.7854,39.8035],
-			                '大连': [122.2229,39.4409],
-			                '天津': [117.4219,39.4189],
-			                '太原': [112.3352,37.9413],
-			                '威海': [121.9482,37.1393],
-			                '宁波': [121.5967,29.6466],
-			                '宝鸡': [107.1826,34.3433],
-			                '宿迁': [118.5535,33.7775],
-			                '常州': [119.4543,31.5582],
-			                '广州': [113.5107,23.2196],
-			                '廊坊': [116.521,39.0509],
-			                '延安': [109.1052,36.4252],
-			                '张家口': [115.1477,40.8527],
-			                '徐州': [117.5208,34.3268],
-			                '德州': [116.6858,37.2107],
-			                '惠州': [114.6204,23.1647],
-			                '成都': [103.9526,30.7617],
-			                '扬州': [119.4653,32.8162],
-			                '承德': [117.5757,41.4075],
-			                '拉萨': [91.1865,30.1465],
-			                '无锡': [120.3442,31.5527],
-			                '日照': [119.2786,35.5023],
-			                '昆明': [102.9199,25.4663],
-			                '杭州': [119.5313,29.8773],
-			                '枣庄': [117.323,34.8926],
-			                '柳州': [109.3799,24.9774],
-			                '株洲': [113.5327,27.0319],
-			                '武汉': [114.3896,30.6628],
-			                '汕头': [117.1692,23.3405],
-			                '江门': [112.6318,22.1484],
-			                '沈阳': [123.1238,42.1216],
-			                '沧州': [116.8286,38.2104],
-			                '河源': [114.917,23.9722],
-			                '泉州': [118.3228,25.1147],
-			                '泰安': [117.0264,36.0516],
-			                '泰州': [120.0586,32.5525],
-			                '济南': [117.1582,36.8701],
-			                '济宁': [116.8286,35.3375],
-			                '海口': [110.3893,19.8516],
-			                '淄博': [118.0371,36.6064],
-			                '淮安': [118.927,33.4039],
-			                '深圳': [114.5435,22.5439],
-			                '清远': [112.9175,24.3292],
-			                '温州': [120.498,27.8119],
-			                '渭南': [109.7864,35.0299],
-			                '湖州': [119.8608,30.7782],
-			                '湘潭': [112.5439,27.7075],
-			                '滨州': [117.8174,37.4963],
-			                '潍坊': [119.0918,36.524],
-			                '烟台': [120.7397,37.5128],
-			                '玉溪': [101.9312,23.8898],
-			                '珠海': [113.7305,22.1155],
-			                '盐城': [120.2234,33.5577],
-			                '盘锦': [121.9482,41.0449],
-			                '石家庄': [114.4995,38.1006],
-			                '福州': [119.4543,25.9222],
-			                '秦皇岛': [119.2126,40.0232],
-			                '绍兴': [120.564,29.7565],
-			                '聊城': [115.9167,36.4032],
-			                '肇庆': [112.1265,23.5822],
-			                '舟山': [122.2559,30.2234],
-			                '苏州': [120.6519,31.3989],
-			                '莱芜': [117.6526,36.2714],
-			                '菏泽': [115.6201,35.2057],
-			                '营口': [122.4316,40.4297],
-			                '葫芦岛': [120.1575,40.578],
-			                '衡水': [115.8838,37.7161],
-			                '衢州': [118.6853,28.8666],
-			                '西宁': [101.4038,36.8207],
-			                '西安': [109.1162,34.2004],
-			                '贵阳': [106.6992,26.7682],
-			                '连云港': [119.1248,34.552],
-			                '邢台': [114.8071,37.2821],
-			                '邯郸': [114.4775,36.535],
-			                '郑州': [113.4668,34.6234],
-			                '鄂尔多斯': [108.9734,39.2487],
-			                '重庆': [107.7539,30.1904],
-			                '金华': [120.0037,29.1028],
-			                '铜川': [109.0393,35.1947],
-			                '银川': [106.3586,38.1775],
-			                '镇江': [119.4763,31.9702],
-			                '长春': [125.8154,44.2584],
-			                '长沙': [113.0823,28.2568],
-			                '长治': [112.8625,36.4746],
-			                '阳泉': [113.4778,38.0951],
-			                '青岛': [120.4651,36.3373],
-			                '韶关': [113.7964,24.7028]
-			            }
-			        },
-			        {
-			            name: '北京 Top10',
-			            type: 'map',
-			            mapType: 'china',
-			            data:[],
-			            markLine : {
-			                smooth:true,
-			                effect : {
-			                    show: true,
-                        scaleSize: 1,
-                        period: 30,
-                        color: '#fff',
-                        shadowBlur: 10
-			                },
-			                itemStyle : {
-			                    normal: {
-                            borderWidth:1,
-                            lineStyle: {
-                                type: 'solid',
-                                shadowBlur: 10
-                            }
-			                    }
-			                },
-			                data : [
-			                    [{name:'北京'}, {name:'上海',value:95}],
-			                    [{name:'北京'}, {name:'广州',value:90}],
-			                    [{name:'北京'}, {name:'大连',value:80}],
-			                    [{name:'北京'}, {name:'南宁',value:70}],
-			                    [{name:'北京'}, {name:'南昌',value:60}],
-			                    [{name:'北京'}, {name:'拉萨',value:50}],
-			                    [{name:'北京'}, {name:'长春',value:40}],
-			                    [{name:'北京'}, {name:'包头',value:30}],
-			                    [{name:'北京'}, {name:'重庆',value:20}],
-			                    [{name:'北京'}, {name:'常州',value:10}]
-			                ]
-			            },
-			            markPoint : {
-			                symbol:'emptyCircle',
-                    symbolSize : function(v){
-			                    return 10 + v/10
-			                },
-			                effect : {
-			                    show: true,
-			                    shadowBlur : 0
-			                },
-			                itemStyle:{
-			                    normal:{
-			                        label:{show:false}
-			                    }
-			                },
-			                data : [
-			                    {name:'上海',value:95},
-			                    {name:'广州',value:90},
-			                    {name:'大连',value:80},
-			                    {name:'南宁',value:70},
-			                    {name:'南昌',value:60},
-			                    {name:'拉萨',value:50},
-			                    {name:'长春',value:40},
-			                    {name:'包头',value:30},
-			                    {name:'重庆',value:20},
-			                    {name:'常州',value:10}
-			                ]
-			            }
-			        },
-			        {
-			            name: '上海 Top10',
-			            type: 'map',
-			            mapType: 'china',
-			            data:[],
-			            markLine : {
-			                smooth:true,
-			                effect : {
-			                    show: true,
-                        scaleSize: 1,
-                        period: 30,
-                        color: '#fff',
-                        shadowBlur: 10
-			                },
-			                itemStyle : {
-			                    normal: {
-                            borderWidth:1,
-                            lineStyle: {
-                                type: 'solid',
-                                shadowBlur: 10
-                            }
-			                    }
-			                },
-			                data : [
-			                    [{name:'上海'},{name:'包头',value:95}],
-			                    [{name:'上海'},{name:'昆明',value:90}],
-			                    [{name:'上海'},{name:'广州',value:80}],
-			                    [{name:'上海'},{name:'郑州',value:70}],
-			                    [{name:'上海'},{name:'长春',value:60}],
-			                    [{name:'上海'},{name:'重庆',value:50}],
-			                    [{name:'上海'},{name:'长沙',value:40}],
-			                    [{name:'上海'},{name:'北京',value:30}],
-			                    [{name:'上海'},{name:'丹东',value:20}],
-			                    [{name:'上海'},{name:'大连',value:10}]
-			                ]
-			            },
-			            markPoint : {
-			                symbol:'emptyCircle',
-                    symbolSize : function(v){
-			                    return 10 + v/10
-			                },
-			                effect : {
-			                    show: true,
-			                    shadowBlur : 0
-			                },
-			                itemStyle:{
-			                    normal:{
-			                        label:{show:false}
-			                    }
-			                },
-			                data : [
-			                    {name:'包头',value:95},
-			                    {name:'昆明',value:90},
-			                    {name:'广州',value:80},
-			                    {name:'郑州',value:70},
-			                    {name:'长春',value:60},
-			                    {name:'重庆',value:50},
-			                    {name:'长沙',value:40},
-			                    {name:'北京',value:30},
-			                    {name:'丹东',value:20},
-			                    {name:'大连',value:10}
-			                ]
-			            }
-			        },
-			        {
-			            name: '广州 Top10',
-			            type: 'map',
-			            mapType: 'china',
-			            data:[],
-			            markLine : {
-			                smooth:true,
-			                effect : {
-			                    show: true,
-                        scaleSize: 1,
-                        period: 30,
-                        color: '#fff',
-                        shadowBlur: 10
-			                },
-			                itemStyle : {
-			                    normal: {
-                            borderWidth:1,
-                            lineStyle: {
-                                type: 'solid',
-                                shadowBlur: 10
-                            }
-			                    }
-			                },
-			                data : [
-			                    [{name:'广州'},{name:'福州',value:95}],
-			                    [{name:'广州'},{name:'太原',value:90}],
-			                    [{name:'广州'},{name:'长春',value:80}],
-			                    [{name:'广州'},{name:'重庆',value:70}],
-			                    [{name:'广州'},{name:'西安',value:60}],
-			                    [{name:'广州'},{name:'成都',value:50}],
-			                    [{name:'广州'},{name:'常州',value:40}],
-			                    [{name:'广州'},{name:'北京',value:30}],
-			                    [{name:'广州'},{name:'北海',value:20}],
-			                    [{name:'广州'},{name:'海口',value:10}]
-			                ]
-			            },
-			            markPoint : {
-			                symbol:'emptyCircle',
-                    symbolSize : function(v){
-			                    return 10 + v/10
-			                },
-			                effect : {
-			                    show: true,
-			                    shadowBlur : 0
-			                },
-			                itemStyle:{
-			                    normal:{
-			                        label:{show:false}
-			                    }
-			                },
-			                data : [
-			                    {name:'福州',value:95},
-			                    {name:'太原',value:90},
-			                    {name:'长春',value:80},
-			                    {name:'重庆',value:70},
-			                    {name:'西安',value:60},
-			                    {name:'成都',value:50},
-			                    {name:'常州',value:40},
-			                    {name:'北京',value:30},
-			                    {name:'北海',value:20},
-			                    {name:'海口',value:10}
-			                ]
-			            }
-			        }
-			    ]
-			}, true);
+                            data : [
+                                [{name:'北京'}, {name:'兰州'}],
+                                [{name:'兰州'}, {name:'拉萨'}],
+                                
+                                [{name:'大同'}, {name:'秦皇岛'}],
+                                
+                                [{name:'神木'}, {name:'黄骅'}],
+                                
+                                [{name:'太原'}, {name:'德州'}],
+                                [{name:'德州'}, {name:'龙口'}],
+                                [{name:'龙口'}, {name:'烟台'}],
+                                
+                                [{name:'太原'}, {name:'德州'}],
+                                [{name:'德州'}, {name:'济南'}],
+                                [{name:'济南'}, {name:'青岛'}],
+                                
+                                [{name:'长治'}, {name:'邯郸'}],
+                                [{name:'邯郸'}, {name:'济南'}],
+                                [{name:'济南'}, {name:'青岛'}],
+                                
+                                [{name:'瓦塘'}, {name:'临汾'}],
+                                [{name:'临汾'}, {name:'长治'}],
+                                [{name:'长治'}, {name:'汤阴'}],
+                                [{name:'汤阴'}, {name:'台前'}],
+                                [{name:'台前'}, {name:'兖州'}],
+                                [{name:'兖州'}, {name:'日照'}],
+                                
+                                [{name:'侯马'}, {name:'月山'}],
+                                [{name:'月山'}, {name:'新乡'}],
+                                [{name:'新乡'}, {name:'兖州'}],
+                                [{name:'兖州'}, {name:'日照'}],
+                                
+                                [{name:'连云港'}, {name:'郑州'}],
+                                [{name:'郑州'}, {name:'兰州'}],
+                                [{name:'兰州'}, {name:'乌鲁木齐'}],
+                                [{name:'乌鲁木齐'}, {name:'阿拉山口'}],
+                                
+                                [{name:'西安'}, {name:'南阳'}],
+                                [{name:'南阳'}, {name:'信阳'}],
+                                [{name:'信阳'}, {name:'合肥'}],
+                                [{name:'合肥'}, {name:'南京'}],
+                                [{name:'南京'}, {name:'启东'}],
+                                
+                                [{name:'重庆'}, {name:'武汉'}],
+                                [{name:'武汉'}, {name:'九江'}],
+                                [{name:'九江'}, {name:'铜陵'}],
+                                [{name:'铜陵'}, {name:'南京'}],
+                                [{name:'南京'}, {name:'上海'}],
+                                
+                                [{name:'上海'}, {name:'怀化'}],
+                                [{name:'怀化'}, {name:'重庆'}],
+                                [{name:'重庆'}, {name:'成都'}],
+                                [{name:'成都'}, {name:'贵阳'}],
+                                [{name:'贵阳'}, {name:'昆明'}],
+                                
+                                [{name:'昆明'}, {name:'南宁'}],
+                                [{name:'南宁'}, {name:'黎塘'}],
+                                [{name:'黎塘'}, {name:'湛江'}]
+                            ]
+                        },
+                        geoCoord: {
+                            '阿拉山口':[82.5757,45.1706],
+                            '包头':[109.8403,40.6574],
+                            '北京':[116.4075,39.9040],
+                            '成都':[104.0665,30.5723],
+                            '大连':[121.6147,38.9140],
+                            '大同':[113.3001,40.0768],
+                            '德州':[116.3575,37.4341],
+                            '福州':[119.2965,26.0745],
+                            '广州':[113.2644,23.1292],
+                            '贵阳':[106.6302,26.6477],
+                            '哈尔滨':[126.5363,45.8023],
+                            '邯郸':[114.5391,36.6256],
+                            '杭州':[120.1551,30.2741],
+                            '合肥':[117.2272,31.8206],
+                            '侯马':[111.3720,35.6191],
+                            '怀化':[109.9985,27.5550],
+                            '淮安':[119.0153,33.6104],
+                            '黄骅':[117.3300,38.3714],
+                            '济南':[117.1205,36.6510],
+                            '焦作':[113.2418,35.2159],
+                            '九江':[116.0019,29.7051],
+                            '九龙红磡':[114.1870,22.3076],
+                            '昆明':[102.8329,24.8801],
+                            '拉萨':[91.1409,29.6456],
+                            '兰州':[103.8343,36.0611],
+                            '黎塘':[109.1363,23.2066],
+                            '连云港':[119.2216,34.5967],
+                            '临汾':[111.5190,36.0880],
+                            '柳州':[109.4160,24.3255],
+                            '龙口':[120.4778,37.6461],
+                            '洛阳':[112.4540,34.6197],
+                            '满洲里':[117.3787,49.5978],
+                            '南昌':[115.8581,28.6832],
+                            '南京':[118.7969,32.0603],
+                            '南宁':[108.3661,22.8172],
+                            '南阳':[112.5283,32.9908],
+                            '宁波':[121.5440,29.8683],
+                            '启东':[121.6574,31.8082],
+                            '秦皇岛':[119.6005,39.9354],
+                            '青岛':[120.3826,36.0671],
+                            '日照':[119.5269,35.4164],
+                            '厦门':[118.0894,24.4798],
+                            '上海':[121.4737,31.2304],
+                            '深圳':[114.0579,22.5431],
+                            '神木':[110.4871,38.8610],
+                            '沈阳':[123.4315,41.8057],
+                            '台前':[115.8717,35.9701],
+                            '太原':[112.5489,37.8706],
+                            '汤阴':[114.3572,35.9218],
+                            '天津':[117.2010,39.0842],
+                            '铜陵':[117.8121,30.9454],
+                            '瓦塘':[109.7600,23.3161],
+                            '温州':[120.6994,27.9943],
+                            '乌鲁木齐':[87.6168,43.8256],
+                            '武汉':[114.3054,30.5931],
+                            '西安':[108.9402,34.3416],
+                            '新乡':[113.9268,35.3030],
+                            '信阳':[114.0913,32.1470],
+                            '烟台':[121.4479,37.4638],
+                            '兖州':[116.7838,35.5531],
+                            '月山':[113.0550,35.2104],
+                            '湛江':[110.3594,21.2707],
+                            '长治':[113.1163,36.1954],
+                            '郑州':[113.6254,34.7466],
+                            '重庆':[106.5516,29.5630]
+                        }
+                    }
+                ]
+            }, true);
         }
         return {};
-    })()
+    })(),
+    effect2 : {
+        backgroundColor: 'rgba(0,0,0,0)',
+        color: ['gold','aqua','lime'],
+        title : {
+            text: '模拟迁徙',
+            subtext:'数据纯属虚构',
+            x:'center',
+            textStyle : {
+                color: '#fff'
+            }
+        },
+        tooltip : {
+            trigger: 'item',
+            formatter: function(v) {
+                return v[1].replace(':', ' > ');
+            }
+        },
+        legend: {
+            orient: 'vertical',
+            x:'left',
+            data:['北京 Top10', '上海 Top10', '广州 Top10'],
+            selectedMode: 'single',
+            selected:{
+                '上海 Top10' : false,
+                '广州 Top10' : false
+            },
+            textStyle : {
+                color: '#fff'
+            }
+        },
+        toolbox: {
+            show : true,
+            orient : 'vertical',
+            x: 'right',
+            y: 'center',
+            feature : {
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                restore : {show: true},
+                saveAsImage : {show: true}
+            }
+        },
+        dataRange: {
+            min : 0,
+            max : 100,
+            calculable : true,
+            color: ['#ff3333', 'orange', 'yellow','lime','aqua'],
+            textStyle:{
+                color:'#fff'
+            }
+        },
+        series : [
+            {
+                name: '全国',
+                type: 'map',
+                roam: true,
+                hoverable: false,
+                mapType: 'china',
+                itemStyle:{
+                    normal:{
+                        borderColor:'rgba(100,149,237,1)',
+                        borderWidth:0.5,
+                        areaStyle:{
+                            color: '#333'
+                        }
+                    }
+                },
+                data:[],
+                markLine : {
+                    smooth:true,
+                    symbol: ['none', 'circle'],  
+                    symbolSize : 1,
+                    itemStyle : {
+                        normal: {
+                            color:'#fff',
+                            borderWidth:1,
+                            borderColor:'rgba(30,144,255,0.5)'
+                        }
+                    },
+                    data : [
+                        [{name:'北京'},{name:'包头'}],
+                        [{name:'北京'},{name:'北海'}],
+                        [{name:'北京'},{name:'广州'}],
+                        [{name:'北京'},{name:'郑州'}],
+                        [{name:'北京'},{name:'长春'}],
+                        [{name:'北京'},{name:'长治'}],
+                        [{name:'北京'},{name:'重庆'}],
+                        [{name:'北京'},{name:'长沙'}],
+                        [{name:'北京'},{name:'成都'}],
+                        [{name:'北京'},{name:'常州'}],
+                        [{name:'北京'},{name:'丹东'}],
+                        [{name:'北京'},{name:'大连'}],
+                        [{name:'北京'},{name:'东营'}],
+                        [{name:'北京'},{name:'延安'}],
+                        [{name:'北京'},{name:'福州'}],
+                        [{name:'北京'},{name:'海口'}],
+                        [{name:'北京'},{name:'呼和浩特'}],
+                        [{name:'北京'},{name:'合肥'}],
+                        [{name:'北京'},{name:'杭州'}],
+                        [{name:'北京'},{name:'哈尔滨'}],
+                        [{name:'北京'},{name:'舟山'}],
+                        [{name:'北京'},{name:'银川'}],
+                        [{name:'北京'},{name:'衢州'}],
+                        [{name:'北京'},{name:'南昌'}],
+                        [{name:'北京'},{name:'昆明'}],
+                        [{name:'北京'},{name:'贵阳'}],
+                        [{name:'北京'},{name:'兰州'}],
+                        [{name:'北京'},{name:'拉萨'}],
+                        [{name:'北京'},{name:'连云港'}],
+                        [{name:'北京'},{name:'临沂'}],
+                        [{name:'北京'},{name:'柳州'}],
+                        [{name:'北京'},{name:'宁波'}],
+                        [{name:'北京'},{name:'南京'}],
+                        [{name:'北京'},{name:'南宁'}],
+                        [{name:'北京'},{name:'南通'}],
+                        [{name:'北京'},{name:'上海'}],
+                        [{name:'北京'},{name:'沈阳'}],
+                        [{name:'北京'},{name:'西安'}],
+                        [{name:'北京'},{name:'汕头'}],
+                        [{name:'北京'},{name:'深圳'}],
+                        [{name:'北京'},{name:'青岛'}],
+                        [{name:'北京'},{name:'济南'}],
+                        [{name:'北京'},{name:'太原'}],
+                        [{name:'北京'},{name:'乌鲁木齐'}],
+                        [{name:'北京'},{name:'潍坊'}],
+                        [{name:'北京'},{name:'威海'}],
+                        [{name:'北京'},{name:'温州'}],
+                        [{name:'北京'},{name:'武汉'}],
+                        [{name:'北京'},{name:'无锡'}],
+                        [{name:'北京'},{name:'厦门'}],
+                        [{name:'北京'},{name:'西宁'}],
+                        [{name:'北京'},{name:'徐州'}],
+                        [{name:'北京'},{name:'烟台'}],
+                        [{name:'北京'},{name:'盐城'}],
+                        [{name:'北京'},{name:'珠海'}],
+                        [{name:'上海'},{name:'包头'}],
+                        [{name:'上海'},{name:'北海'}],
+                        [{name:'上海'},{name:'广州'}],
+                        [{name:'上海'},{name:'郑州'}],
+                        [{name:'上海'},{name:'长春'}],
+                        [{name:'上海'},{name:'重庆'}],
+                        [{name:'上海'},{name:'长沙'}],
+                        [{name:'上海'},{name:'成都'}],
+                        [{name:'上海'},{name:'丹东'}],
+                        [{name:'上海'},{name:'大连'}],
+                        [{name:'上海'},{name:'福州'}],
+                        [{name:'上海'},{name:'海口'}],
+                        [{name:'上海'},{name:'呼和浩特'}],
+                        [{name:'上海'},{name:'合肥'}],
+                        [{name:'上海'},{name:'哈尔滨'}],
+                        [{name:'上海'},{name:'舟山'}],
+                        [{name:'上海'},{name:'银川'}],
+                        [{name:'上海'},{name:'南昌'}],
+                        [{name:'上海'},{name:'昆明'}],
+                        [{name:'上海'},{name:'贵阳'}],
+                        [{name:'上海'},{name:'兰州'}],
+                        [{name:'上海'},{name:'拉萨'}],
+                        [{name:'上海'},{name:'连云港'}],
+                        [{name:'上海'},{name:'临沂'}],
+                        [{name:'上海'},{name:'柳州'}],
+                        [{name:'上海'},{name:'宁波'}],
+                        [{name:'上海'},{name:'南宁'}],
+                        [{name:'上海'},{name:'北京'}],
+                        [{name:'上海'},{name:'沈阳'}],
+                        [{name:'上海'},{name:'秦皇岛'}],
+                        [{name:'上海'},{name:'西安'}],
+                        [{name:'上海'},{name:'石家庄'}],
+                        [{name:'上海'},{name:'汕头'}],
+                        [{name:'上海'},{name:'深圳'}],
+                        [{name:'上海'},{name:'青岛'}],
+                        [{name:'上海'},{name:'济南'}],
+                        [{name:'上海'},{name:'天津'}],
+                        [{name:'上海'},{name:'太原'}],
+                        [{name:'上海'},{name:'乌鲁木齐'}],
+                        [{name:'上海'},{name:'潍坊'}],
+                        [{name:'上海'},{name:'威海'}],
+                        [{name:'上海'},{name:'温州'}],
+                        [{name:'上海'},{name:'武汉'}],
+                        [{name:'上海'},{name:'厦门'}],
+                        [{name:'上海'},{name:'西宁'}],
+                        [{name:'上海'},{name:'徐州'}],
+                        [{name:'上海'},{name:'烟台'}],
+                        [{name:'上海'},{name:'珠海'}],
+                        [{name:'广州'},{name:'北海'}],
+                        [{name:'广州'},{name:'郑州'}],
+                        [{name:'广州'},{name:'长春'}],
+                        [{name:'广州'},{name:'重庆'}],
+                        [{name:'广州'},{name:'长沙'}],
+                        [{name:'广州'},{name:'成都'}],
+                        [{name:'广州'},{name:'常州'}],
+                        [{name:'广州'},{name:'大连'}],
+                        [{name:'广州'},{name:'福州'}],
+                        [{name:'广州'},{name:'海口'}],
+                        [{name:'广州'},{name:'呼和浩特'}],
+                        [{name:'广州'},{name:'合肥'}],
+                        [{name:'广州'},{name:'杭州'}],
+                        [{name:'广州'},{name:'哈尔滨'}],
+                        [{name:'广州'},{name:'舟山'}],
+                        [{name:'广州'},{name:'银川'}],
+                        [{name:'广州'},{name:'南昌'}],
+                        [{name:'广州'},{name:'昆明'}],
+                        [{name:'广州'},{name:'贵阳'}],
+                        [{name:'广州'},{name:'兰州'}],
+                        [{name:'广州'},{name:'拉萨'}],
+                        [{name:'广州'},{name:'连云港'}],
+                        [{name:'广州'},{name:'临沂'}],
+                        [{name:'广州'},{name:'柳州'}],
+                        [{name:'广州'},{name:'宁波'}],
+                        [{name:'广州'},{name:'南京'}],
+                        [{name:'广州'},{name:'南宁'}],
+                        [{name:'广州'},{name:'南通'}],
+                        [{name:'广州'},{name:'北京'}],
+                        [{name:'广州'},{name:'上海'}],
+                        [{name:'广州'},{name:'沈阳'}],
+                        [{name:'广州'},{name:'西安'}],
+                        [{name:'广州'},{name:'石家庄'}],
+                        [{name:'广州'},{name:'汕头'}],
+                        [{name:'广州'},{name:'青岛'}],
+                        [{name:'广州'},{name:'济南'}],
+                        [{name:'广州'},{name:'天津'}],
+                        [{name:'广州'},{name:'太原'}],
+                        [{name:'广州'},{name:'乌鲁木齐'}],
+                        [{name:'广州'},{name:'温州'}],
+                        [{name:'广州'},{name:'武汉'}],
+                        [{name:'广州'},{name:'无锡'}],
+                        [{name:'广州'},{name:'厦门'}],
+                        [{name:'广州'},{name:'西宁'}],
+                        [{name:'广州'},{name:'徐州'}],
+                        [{name:'广州'},{name:'烟台'}],
+                        [{name:'广州'},{name:'盐城'}]
+                    ]
+                },
+                geoCoord: {
+                    '上海': [121.4648,31.2891],
+                    '东莞': [113.8953,22.901],
+                    '东营': [118.7073,37.5513],
+                    '中山': [113.4229,22.478],
+                    '临汾': [111.4783,36.1615],
+                    '临沂': [118.3118,35.2936],
+                    '丹东': [124.541,40.4242],
+                    '丽水': [119.5642,28.1854],
+                    '乌鲁木齐': [87.9236,43.5883],
+                    '佛山': [112.8955,23.1097],
+                    '保定': [115.0488,39.0948],
+                    '兰州': [103.5901,36.3043],
+                    '包头': [110.3467,41.4899],
+                    '北京': [116.4551,40.2539],
+                    '北海': [109.314,21.6211],
+                    '南京': [118.8062,31.9208],
+                    '南宁': [108.479,23.1152],
+                    '南昌': [116.0046,28.6633],
+                    '南通': [121.1023,32.1625],
+                    '厦门': [118.1689,24.6478],
+                    '台州': [121.1353,28.6688],
+                    '合肥': [117.29,32.0581],
+                    '呼和浩特': [111.4124,40.4901],
+                    '咸阳': [108.4131,34.8706],
+                    '哈尔滨': [127.9688,45.368],
+                    '唐山': [118.4766,39.6826],
+                    '嘉兴': [120.9155,30.6354],
+                    '大同': [113.7854,39.8035],
+                    '大连': [122.2229,39.4409],
+                    '天津': [117.4219,39.4189],
+                    '太原': [112.3352,37.9413],
+                    '威海': [121.9482,37.1393],
+                    '宁波': [121.5967,29.6466],
+                    '宝鸡': [107.1826,34.3433],
+                    '宿迁': [118.5535,33.7775],
+                    '常州': [119.4543,31.5582],
+                    '广州': [113.5107,23.2196],
+                    '廊坊': [116.521,39.0509],
+                    '延安': [109.1052,36.4252],
+                    '张家口': [115.1477,40.8527],
+                    '徐州': [117.5208,34.3268],
+                    '德州': [116.6858,37.2107],
+                    '惠州': [114.6204,23.1647],
+                    '成都': [103.9526,30.7617],
+                    '扬州': [119.4653,32.8162],
+                    '承德': [117.5757,41.4075],
+                    '拉萨': [91.1865,30.1465],
+                    '无锡': [120.3442,31.5527],
+                    '日照': [119.2786,35.5023],
+                    '昆明': [102.9199,25.4663],
+                    '杭州': [119.5313,29.8773],
+                    '枣庄': [117.323,34.8926],
+                    '柳州': [109.3799,24.9774],
+                    '株洲': [113.5327,27.0319],
+                    '武汉': [114.3896,30.6628],
+                    '汕头': [117.1692,23.3405],
+                    '江门': [112.6318,22.1484],
+                    '沈阳': [123.1238,42.1216],
+                    '沧州': [116.8286,38.2104],
+                    '河源': [114.917,23.9722],
+                    '泉州': [118.3228,25.1147],
+                    '泰安': [117.0264,36.0516],
+                    '泰州': [120.0586,32.5525],
+                    '济南': [117.1582,36.8701],
+                    '济宁': [116.8286,35.3375],
+                    '海口': [110.3893,19.8516],
+                    '淄博': [118.0371,36.6064],
+                    '淮安': [118.927,33.4039],
+                    '深圳': [114.5435,22.5439],
+                    '清远': [112.9175,24.3292],
+                    '温州': [120.498,27.8119],
+                    '渭南': [109.7864,35.0299],
+                    '湖州': [119.8608,30.7782],
+                    '湘潭': [112.5439,27.7075],
+                    '滨州': [117.8174,37.4963],
+                    '潍坊': [119.0918,36.524],
+                    '烟台': [120.7397,37.5128],
+                    '玉溪': [101.9312,23.8898],
+                    '珠海': [113.7305,22.1155],
+                    '盐城': [120.2234,33.5577],
+                    '盘锦': [121.9482,41.0449],
+                    '石家庄': [114.4995,38.1006],
+                    '福州': [119.4543,25.9222],
+                    '秦皇岛': [119.2126,40.0232],
+                    '绍兴': [120.564,29.7565],
+                    '聊城': [115.9167,36.4032],
+                    '肇庆': [112.1265,23.5822],
+                    '舟山': [122.2559,30.2234],
+                    '苏州': [120.6519,31.3989],
+                    '莱芜': [117.6526,36.2714],
+                    '菏泽': [115.6201,35.2057],
+                    '营口': [122.4316,40.4297],
+                    '葫芦岛': [120.1575,40.578],
+                    '衡水': [115.8838,37.7161],
+                    '衢州': [118.6853,28.8666],
+                    '西宁': [101.4038,36.8207],
+                    '西安': [109.1162,34.2004],
+                    '贵阳': [106.6992,26.7682],
+                    '连云港': [119.1248,34.552],
+                    '邢台': [114.8071,37.2821],
+                    '邯郸': [114.4775,36.535],
+                    '郑州': [113.4668,34.6234],
+                    '鄂尔多斯': [108.9734,39.2487],
+                    '重庆': [107.7539,30.1904],
+                    '金华': [120.0037,29.1028],
+                    '铜川': [109.0393,35.1947],
+                    '银川': [106.3586,38.1775],
+                    '镇江': [119.4763,31.9702],
+                    '长春': [125.8154,44.2584],
+                    '长沙': [113.0823,28.2568],
+                    '长治': [112.8625,36.4746],
+                    '阳泉': [113.4778,38.0951],
+                    '青岛': [120.4651,36.3373],
+                    '韶关': [113.7964,24.7028]
+                }
+            },
+            {
+                name: '北京 Top10',
+                type: 'map',
+                mapType: 'china',
+                data:[],
+                markLine : {
+                    smooth:true,
+                    effect : {
+                        show: true,
+                        scaleSize: 1,
+                        period: 30,
+                        color: '#fff',
+                        shadowBlur: 10
+                    },
+                    itemStyle : {
+                        normal: {
+                            borderWidth:1,
+                            lineStyle: {
+                                type: 'solid',
+                                shadowBlur: 10
+                            }
+                        }
+                    },
+                    data : [
+                        [{name:'北京'}, {name:'上海',value:95}],
+                        [{name:'北京'}, {name:'广州',value:90}],
+                        [{name:'北京'}, {name:'大连',value:80}],
+                        [{name:'北京'}, {name:'南宁',value:70}],
+                        [{name:'北京'}, {name:'南昌',value:60}],
+                        [{name:'北京'}, {name:'拉萨',value:50}],
+                        [{name:'北京'}, {name:'长春',value:40}],
+                        [{name:'北京'}, {name:'包头',value:30}],
+                        [{name:'北京'}, {name:'重庆',value:20}],
+                        [{name:'北京'}, {name:'常州',value:10}]
+                    ]
+                },
+                markPoint : {
+                    symbol:'emptyCircle',
+                    symbolSize : function(v){
+                        return 10 + v/10
+                    },
+                    effect : {
+                        show: true,
+                        shadowBlur : 0
+                    },
+                    itemStyle:{
+                        normal:{
+                            label:{show:false}
+                        }
+                    },
+                    data : [
+                        {name:'上海',value:95},
+                        {name:'广州',value:90},
+                        {name:'大连',value:80},
+                        {name:'南宁',value:70},
+                        {name:'南昌',value:60},
+                        {name:'拉萨',value:50},
+                        {name:'长春',value:40},
+                        {name:'包头',value:30},
+                        {name:'重庆',value:20},
+                        {name:'常州',value:10}
+                    ]
+                }
+            },
+            {
+                name: '上海 Top10',
+                type: 'map',
+                mapType: 'china',
+                data:[],
+                markLine : {
+                    smooth:true,
+                    effect : {
+                        show: true,
+                        scaleSize: 1,
+                        period: 30,
+                        color: '#fff',
+                        shadowBlur: 10
+                    },
+                    itemStyle : {
+                        normal: {
+                            borderWidth:1,
+                            lineStyle: {
+                                type: 'solid',
+                                shadowBlur: 10
+                            }
+                        }
+                    },
+                    data : [
+                        [{name:'上海'},{name:'包头',value:95}],
+                        [{name:'上海'},{name:'昆明',value:90}],
+                        [{name:'上海'},{name:'广州',value:80}],
+                        [{name:'上海'},{name:'郑州',value:70}],
+                        [{name:'上海'},{name:'长春',value:60}],
+                        [{name:'上海'},{name:'重庆',value:50}],
+                        [{name:'上海'},{name:'长沙',value:40}],
+                        [{name:'上海'},{name:'北京',value:30}],
+                        [{name:'上海'},{name:'丹东',value:20}],
+                        [{name:'上海'},{name:'大连',value:10}]
+                    ]
+                },
+                markPoint : {
+                    symbol:'emptyCircle',
+                    symbolSize : function(v){
+                        return 10 + v/10
+                    },
+                    effect : {
+                        show: true,
+                        shadowBlur : 0
+                    },
+                    itemStyle:{
+                        normal:{
+                            label:{show:false}
+                        }
+                    },
+                    data : [
+                        {name:'包头',value:95},
+                        {name:'昆明',value:90},
+                        {name:'广州',value:80},
+                        {name:'郑州',value:70},
+                        {name:'长春',value:60},
+                        {name:'重庆',value:50},
+                        {name:'长沙',value:40},
+                        {name:'北京',value:30},
+                        {name:'丹东',value:20},
+                        {name:'大连',value:10}
+                    ]
+                }
+            },
+            {
+                name: '广州 Top10',
+                type: 'map',
+                mapType: 'china',
+                data:[],
+                markLine : {
+                    smooth:true,
+                    effect : {
+                        show: true,
+                        scaleSize: 1,
+                        period: 30,
+                        color: '#fff',
+                        shadowBlur: 10
+                    },
+                    itemStyle : {
+                        normal: {
+                            borderWidth:1,
+                            lineStyle: {
+                                type: 'solid',
+                                shadowBlur: 10
+                            }
+                        }
+                    },
+                    data : [
+                        [{name:'广州'},{name:'福州',value:95}],
+                        [{name:'广州'},{name:'太原',value:90}],
+                        [{name:'广州'},{name:'长春',value:80}],
+                        [{name:'广州'},{name:'重庆',value:70}],
+                        [{name:'广州'},{name:'西安',value:60}],
+                        [{name:'广州'},{name:'成都',value:50}],
+                        [{name:'广州'},{name:'常州',value:40}],
+                        [{name:'广州'},{name:'北京',value:30}],
+                        [{name:'广州'},{name:'北海',value:20}],
+                        [{name:'广州'},{name:'海口',value:10}]
+                    ]
+                },
+                markPoint : {
+                    symbol:'emptyCircle',
+                    symbolSize : function(v){
+                        return 10 + v/10
+                    },
+                    effect : {
+                        show: true,
+                        shadowBlur : 0
+                    },
+                    itemStyle:{
+                        normal:{
+                            label:{show:false}
+                        }
+                    },
+                    data : [
+                        {name:'福州',value:95},
+                        {name:'太原',value:90},
+                        {name:'长春',value:80},
+                        {name:'重庆',value:70},
+                        {name:'西安',value:60},
+                        {name:'成都',value:50},
+                        {name:'常州',value:40},
+                        {name:'北京',value:30},
+                        {name:'北海',value:20},
+                        {name:'海口',value:10}
+                    ]
+                }
+            }
+        ]
+    },
+    effect3 : (function(){
+        var placeList = [
+            {name:'海门', geoCoord:[121.15, 31.89]},
+            {name:'鄂尔多斯', geoCoord:[109.781327, 39.608266]},
+            {name:'招远', geoCoord:[120.38, 37.35]},
+            {name:'舟山', geoCoord:[122.207216, 29.985295]},
+            {name:'齐齐哈尔', geoCoord:[123.97, 47.33]},
+            {name:'盐城', geoCoord:[120.13, 33.38]},
+            {name:'赤峰', geoCoord:[118.87, 42.28]},
+            {name:'青岛', geoCoord:[120.33, 36.07]},
+            {name:'乳山', geoCoord:[121.52, 36.89]},
+            {name:'金昌', geoCoord:[102.188043, 38.520089]},
+            {name:'泉州', geoCoord:[118.58, 24.93]},
+            {name:'莱西', geoCoord:[120.53, 36.86]},
+            {name:'日照', geoCoord:[119.46, 35.42]},
+            {name:'胶南', geoCoord:[119.97, 35.88]},
+            {name:'南通', geoCoord:[121.05, 32.08]},
+            {name:'拉萨', geoCoord:[91.11, 29.97]},
+            {name:'云浮', geoCoord:[112.02, 22.93]},
+            {name:'梅州', geoCoord:[116.1, 24.55]},
+            {name:'文登', geoCoord:[122.05, 37.2]},
+            {name:'上海', geoCoord:[121.48, 31.22]},
+            {name:'攀枝花', geoCoord:[101.718637, 26.582347]},
+            {name:'威海', geoCoord:[122.1, 37.5]},
+            {name:'承德', geoCoord:[117.93, 40.97]},
+            {name:'厦门', geoCoord:[118.1, 24.46]},
+            {name:'汕尾', geoCoord:[115.375279, 22.786211]},
+            {name:'潮州', geoCoord:[116.63, 23.68]},
+            {name:'丹东', geoCoord:[124.37, 40.13]},
+            {name:'太仓', geoCoord:[121.1, 31.45]},
+            {name:'曲靖', geoCoord:[103.79, 25.51]},
+            {name:'烟台', geoCoord:[121.39, 37.52]},
+            {name:'福州', geoCoord:[119.3, 26.08]},
+            {name:'瓦房店', geoCoord:[121.979603, 39.627114]},
+            {name:'即墨', geoCoord:[120.45, 36.38]},
+            {name:'抚顺', geoCoord:[123.97, 41.97]},
+            {name:'玉溪', geoCoord:[102.52, 24.35]},
+            {name:'张家口', geoCoord:[114.87, 40.82]},
+            {name:'阳泉', geoCoord:[113.57, 37.85]},
+            {name:'莱州', geoCoord:[119.942327, 37.177017]},
+            {name:'湖州', geoCoord:[120.1, 30.86]},
+            {name:'汕头', geoCoord:[116.69, 23.39]},
+            {name:'昆山', geoCoord:[120.95, 31.39]},
+            {name:'宁波', geoCoord:[121.56, 29.86]},
+            {name:'湛江', geoCoord:[110.359377, 21.270708]},
+            {name:'揭阳', geoCoord:[116.35, 23.55]},
+            {name:'荣成', geoCoord:[122.41, 37.16]},
+            {name:'连云港', geoCoord:[119.16, 34.59]},
+            {name:'葫芦岛', geoCoord:[120.836932, 40.711052]},
+            {name:'常熟', geoCoord:[120.74, 31.64]},
+            {name:'东莞', geoCoord:[113.75, 23.04]},
+            {name:'河源', geoCoord:[114.68, 23.73]},
+            {name:'淮安', geoCoord:[119.15, 33.5]},
+            {name:'泰州', geoCoord:[119.9, 32.49]},
+            {name:'南宁', geoCoord:[108.33, 22.84]},
+            {name:'营口', geoCoord:[122.18, 40.65]},
+            {name:'惠州', geoCoord:[114.4, 23.09]},
+            {name:'江阴', geoCoord:[120.26, 31.91]},
+            {name:'蓬莱', geoCoord:[120.75, 37.8]},
+            {name:'韶关', geoCoord:[113.62, 24.84]},
+            {name:'嘉峪关', geoCoord:[98.289152, 39.77313]},
+            {name:'广州', geoCoord:[113.23, 23.16]},
+            {name:'延安', geoCoord:[109.47, 36.6]},
+            {name:'太原', geoCoord:[112.53, 37.87]},
+            {name:'清远', geoCoord:[113.01, 23.7]},
+            {name:'中山', geoCoord:[113.38, 22.52]},
+            {name:'昆明', geoCoord:[102.73, 25.04]},
+            {name:'寿光', geoCoord:[118.73, 36.86]},
+            {name:'盘锦', geoCoord:[122.070714, 41.119997]},
+            {name:'长治', geoCoord:[113.08, 36.18]},
+            {name:'深圳', geoCoord:[114.07, 22.62]},
+            {name:'珠海', geoCoord:[113.52, 22.3]},
+            {name:'宿迁', geoCoord:[118.3, 33.96]},
+            {name:'咸阳', geoCoord:[108.72, 34.36]},
+            {name:'铜川', geoCoord:[109.11, 35.09]},
+            {name:'平度', geoCoord:[119.97, 36.77]},
+            {name:'佛山', geoCoord:[113.11, 23.05]},
+            {name:'海口', geoCoord:[110.35, 20.02]},
+            {name:'江门', geoCoord:[113.06, 22.61]},
+            {name:'章丘', geoCoord:[117.53, 36.72]},
+            {name:'肇庆', geoCoord:[112.44, 23.05]},
+            {name:'大连', geoCoord:[121.62, 38.92]},
+            {name:'临汾', geoCoord:[111.5, 36.08]},
+            {name:'吴江', geoCoord:[120.63, 31.16]},
+            {name:'石嘴山', geoCoord:[106.39, 39.04]},
+            {name:'沈阳', geoCoord:[123.38, 41.8]},
+            {name:'苏州', geoCoord:[120.62, 31.32]},
+            {name:'茂名', geoCoord:[110.88, 21.68]},
+            {name:'嘉兴', geoCoord:[120.76, 30.77]},
+            {name:'长春', geoCoord:[125.35, 43.88]},
+            {name:'胶州', geoCoord:[120.03336, 36.264622]},
+            {name:'银川', geoCoord:[106.27, 38.47]},
+            {name:'张家港', geoCoord:[120.555821, 31.875428]},
+            {name:'三门峡', geoCoord:[111.19, 34.76]},
+            {name:'锦州', geoCoord:[121.15, 41.13]},
+            {name:'南昌', geoCoord:[115.89, 28.68]},
+            {name:'柳州', geoCoord:[109.4, 24.33]},
+            {name:'三亚', geoCoord:[109.511909, 18.252847]},
+            {name:'自贡', geoCoord:[104.778442, 29.33903]},
+            {name:'吉林', geoCoord:[126.57, 43.87]},
+            {name:'阳江', geoCoord:[111.95, 21.85]},
+            {name:'泸州', geoCoord:[105.39, 28.91]},
+            {name:'西宁', geoCoord:[101.74, 36.56]},
+            {name:'宜宾', geoCoord:[104.56, 29.77]},
+            {name:'呼和浩特', geoCoord:[111.65, 40.82]},
+            {name:'成都', geoCoord:[104.06, 30.67]},
+            {name:'大同', geoCoord:[113.3, 40.12]},
+            {name:'镇江', geoCoord:[119.44, 32.2]},
+            {name:'桂林', geoCoord:[110.28, 25.29]},
+            {name:'张家界', geoCoord:[110.479191, 29.117096]},
+            {name:'宜兴', geoCoord:[119.82, 31.36]},
+            {name:'北海', geoCoord:[109.12, 21.49]},
+            {name:'西安', geoCoord:[108.95, 34.27]},
+            {name:'金坛', geoCoord:[119.56, 31.74]},
+            {name:'东营', geoCoord:[118.49, 37.46]},
+            {name:'牡丹江', geoCoord:[129.58, 44.6]},
+            {name:'遵义', geoCoord:[106.9, 27.7]},
+            {name:'绍兴', geoCoord:[120.58, 30.01]},
+            {name:'扬州', geoCoord:[119.42, 32.39]},
+            {name:'常州', geoCoord:[119.95, 31.79]},
+            {name:'潍坊', geoCoord:[119.1, 36.62]},
+            {name:'重庆', geoCoord:[106.54, 29.59]},
+            {name:'台州', geoCoord:[121.420757, 28.656386]},
+            {name:'南京', geoCoord:[118.78, 32.04]},
+            {name:'滨州', geoCoord:[118.03, 37.36]},
+            {name:'贵阳', geoCoord:[106.71, 26.57]},
+            {name:'无锡', geoCoord:[120.29, 31.59]},
+            {name:'本溪', geoCoord:[123.73, 41.3]},
+            {name:'克拉玛依', geoCoord:[84.77, 45.59]},
+            {name:'渭南', geoCoord:[109.5, 34.52]},
+            {name:'马鞍山', geoCoord:[118.48, 31.56]},
+            {name:'宝鸡', geoCoord:[107.15, 34.38]},
+            {name:'焦作', geoCoord:[113.21, 35.24]},
+            {name:'句容', geoCoord:[119.16, 31.95]},
+            {name:'北京', geoCoord:[116.46, 39.92]},
+            {name:'徐州', geoCoord:[117.2, 34.26]},
+            {name:'衡水', geoCoord:[115.72, 37.72]},
+            {name:'包头', geoCoord:[110, 40.58]},
+            {name:'绵阳', geoCoord:[104.73, 31.48]},
+            {name:'乌鲁木齐', geoCoord:[87.68, 43.77]},
+            {name:'枣庄', geoCoord:[117.57, 34.86]},
+            {name:'杭州', geoCoord:[120.19, 30.26]},
+            {name:'淄博', geoCoord:[118.05, 36.78]},
+            {name:'鞍山', geoCoord:[122.85, 41.12]},
+            {name:'溧阳', geoCoord:[119.48, 31.43]},
+            {name:'库尔勒', geoCoord:[86.06, 41.68]},
+            {name:'安阳', geoCoord:[114.35, 36.1]},
+            {name:'开封', geoCoord:[114.35, 34.79]},
+            {name:'济南', geoCoord:[117, 36.65]},
+            {name:'德阳', geoCoord:[104.37, 31.13]},
+            {name:'温州', geoCoord:[120.65, 28.01]},
+            {name:'九江', geoCoord:[115.97, 29.71]},
+            {name:'邯郸', geoCoord:[114.47, 36.6]},
+            {name:'临安', geoCoord:[119.72, 30.23]},
+            {name:'兰州', geoCoord:[103.73, 36.03]},
+            {name:'沧州', geoCoord:[116.83, 38.33]},
+            {name:'临沂', geoCoord:[118.35, 35.05]},
+            {name:'南充', geoCoord:[106.110698, 30.837793]},
+            {name:'天津', geoCoord:[117.2, 39.13]},
+            {name:'富阳', geoCoord:[119.95, 30.07]},
+            {name:'泰安', geoCoord:[117.13, 36.18]},
+            {name:'诸暨', geoCoord:[120.23, 29.71]},
+            {name:'郑州', geoCoord:[113.65, 34.76]},
+            {name:'哈尔滨', geoCoord:[126.63, 45.75]},
+            {name:'聊城', geoCoord:[115.97, 36.45]},
+            {name:'芜湖', geoCoord:[118.38, 31.33]},
+            {name:'唐山', geoCoord:[118.02, 39.63]},
+            {name:'平顶山', geoCoord:[113.29, 33.75]},
+            {name:'邢台', geoCoord:[114.48, 37.05]},
+            {name:'德州', geoCoord:[116.29, 37.45]},
+            {name:'济宁', geoCoord:[116.59, 35.38]},
+            {name:'荆州', geoCoord:[112.239741, 30.335165]},
+            {name:'宜昌', geoCoord:[111.3, 30.7]},
+            {name:'义乌', geoCoord:[120.06, 29.32]},
+            {name:'丽水', geoCoord:[119.92, 28.45]},
+            {name:'洛阳', geoCoord:[112.44, 34.7]},
+            {name:'秦皇岛', geoCoord:[119.57, 39.95]},
+            {name:'株洲', geoCoord:[113.16, 27.83]},
+            {name:'石家庄', geoCoord:[114.48, 38.03]},
+            {name:'莱芜', geoCoord:[117.67, 36.19]},
+            {name:'常德', geoCoord:[111.69, 29.05]},
+            {name:'保定', geoCoord:[115.48, 38.85]},
+            {name:'湘潭', geoCoord:[112.91, 27.87]},
+            {name:'金华', geoCoord:[119.64, 29.12]},
+            {name:'岳阳', geoCoord:[113.09, 29.37]},
+            {name:'长沙', geoCoord:[113, 28.21]},
+            {name:'衢州', geoCoord:[118.88, 28.97]},
+            {name:'廊坊', geoCoord:[116.7, 39.53]},
+            {name:'菏泽', geoCoord:[115.480656, 35.23375]},
+            {name:'合肥', geoCoord:[117.27, 31.86]},
+            {name:'武汉', geoCoord:[114.31, 30.52]},
+            {name:'大庆', geoCoord:[125.03, 46.58]}
+        ]
+        return {
+            backgroundColor: 'rgba(0,0,0,0)',
+            color: [
+                'rgba(255, 255, 255, 0.8)',
+                'rgba(14, 241, 242, 0.8)',
+                'rgba(37, 140, 249, 0.8)'
+            ],
+            title : {
+                text: '百度人气',
+                link: 'http://renqi.baidu.com',
+                subtext: '纯属虚构',
+                x: 'center',
+                textStyle : {
+                    color: '#fff'
+                }
+            },
+            legend: {
+                orient: 'vertical',
+                x:'left',
+                data:['强','中','弱'],
+                textStyle : {
+                    color: '#fff'
+                }
+            },
+            toolbox: {
+                show : true,
+                orient : 'vertical',
+                x: 'right',
+                y: 'center',
+                feature : {
+                    mark : {show: true},
+                    dataView : {show: true, readOnly: false},
+                    restore : {show: true},
+                    saveAsImage : {show: true}
+                }
+            },
+            series : [
+                {
+                    name: '弱',
+                    type: 'map',
+                    mapType: 'china',
+                    itemStyle:{
+                        normal:{
+                            borderColor:'rgba(100,149,237,1)',
+                            borderWidth:0.5,
+                            areaStyle:{
+                                color: '#333'
+                            }
+                        }
+                    },
+                    data : [],
+                    markPoint : {
+                        symbolSize: 2,
+                        large: true,
+                        effect : {
+                            show: true
+                        },
+                        data : (function(){
+                            var data = [];
+                            var len = 3000;
+                            var geoCoord
+                            while(len--) {
+                                geoCoord = placeList[len % placeList.length].geoCoord;
+                                data.push({
+                                    name : placeList[len % placeList.length].name + len,
+                                    value : 10,
+                                    geoCoord : [
+                                        geoCoord[0] + Math.random() * 5 * -1,
+                                        geoCoord[1] + Math.random() * 3 * -1
+                                    ]
+                                })
+                            }
+                            return data;
+                        })()
+                    }
+                },
+                {
+                    name: '中',
+                    type: 'map',
+                    mapType: 'china',
+                    data : [],
+                    markPoint : {
+                        symbolSize: 3,
+                        large: true,
+                        effect : {
+                            show: true
+                        },
+                        data : (function(){
+                            var data = [];
+                            var len = 1000;
+                            var geoCoord
+                            while(len--) {
+                                geoCoord = placeList[len % placeList.length].geoCoord;
+                                data.push({
+                                    name : placeList[len % placeList.length].name + len,
+                                    value : 50,
+                                    geoCoord : [
+                                        geoCoord[0] + Math.random() * 3 * -1,
+                                        geoCoord[1] + Math.random() * 3 * -1
+                                    ]
+                                })
+                            }
+                            return data;
+                        })()
+                    }
+                },
+                {
+                    name: '强',
+                    type: 'map',
+                    mapType: 'china',
+                    hoverable: false,
+                    roam:true,
+                    data : [],
+                    markPoint : {
+                        symbol : 'diamond',
+                        symbolSize: 6,
+                        large: true,
+                        effect : {
+                            show: true
+                        },
+                        data : (function(){
+                            var data = [];
+                            var len = placeList.length;
+                            while(len--) {
+                                data.push({
+                                    name : placeList[len].name,
+                                    value : 90,
+                                    geoCoord : placeList[len].geoCoord
+                                })
+                            }
+                            return data;
+                        })()
+                    }
+                }
+            ]
+        };
+    })(),
+    adddddd : {}
 }

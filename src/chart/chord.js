@@ -2,7 +2,8 @@
  * echarts图表类：chord diagram
  *
  * @author pissang (https://github.com/pissang/)
- *
+ * 
+ * TODO 非Ribbon Type 支持 undirected graph ?
  */
 
 define(function (require) {
@@ -16,20 +17,25 @@ define(function (require) {
     var LineShape = require('zrender/shape/Line');
     var SectorShape = require('zrender/shape/Sector');
     var RibbonShape = require('../util/shape/Ribbon');
+    var IconShape = require('../util/shape/Icon');
+    var BezierCurveShape = require('zrender/shape/BezierCurve');
     
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var vec2 = require('zrender/tool/vector');
-    var NDArray = require('../util/ndarray');
-    
-    var _devicePixelRatio = window.devicePixelRatio || 1;
+    var Graph = require('../data/Graph');
+    var ChordLayout = require('../layout/Chord');
     
     function Chord(ecTheme, messageCenter, zr, option, myChart) {
         // 基类
         ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 图表基类
         ChartBase.call(this);
+
+        this.scaleLineLength = 4;
+
+        this.scaleUnitAngle = 4;
 
         this.refresh(option);
     }
@@ -39,354 +45,441 @@ define(function (require) {
         /**
          * 绘制图形
          */
-        _buildShape: function () {
+        _init: function () {
             var series = this.series;
             this.selectedMap = {};
-            this.chordSeries = [];
-            this.chordSerieSample = null;
-            var matrix = [];
-            var serieNumber = 0;
+
+            var chordSeriesMap = {};
+
+            var chordSeriesGroups = {};
+
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type === this.type) {
-                    // Use the config of first chord serie
-                    if (!this.chordSerieSample) {
-                        this.chordSerieSample = series[i];
-                        this.reformOption(this.chordSerieSample);
-                    }
-
                     var _isSelected = this.isSelected(series[i].name);
                     // Filter by selected serie
                     this.selectedMap[series[i].name] = _isSelected;
-                    if (!_isSelected) {
-                        continue;
+                    if (_isSelected) {
+                        this.buildMark(i);
                     }
-                    this.chordSeries.push(series[i]);
-                    this.buildMark(i);
-                    matrix.push(series[i].matrix);
-                    serieNumber++;
+
+                    this.reformOption(series[i]);
+                    chordSeriesMap[series[i].name] = series[i];
                 }
             }
-            if (!this.chordSerieSample) {
-                return;
-            }
-            if (!this.chordSeries.length) {
-                this.addShapeList();
-                return;
-            }
-
-            var zrWidth = this.zr.getWidth();
-            var zrHeight = this.zr.getHeight();
-            var zrSize = Math.min(zrWidth, zrHeight);
-
-            this.groups = this.chordSerieSample.data;
-            this.startAngle = this.chordSerieSample.startAngle;
-            // Constrain to [0, 360]
-            this.startAngle = this.startAngle % 360;
-            if (this.startAngle < 0) {
-                this.startAngle = this.startAngle + 360;
-            }
-            this.clockWise = this.chordSerieSample.clockWise;
-            this.innerRadius = this.parsePercent(
-                this.chordSerieSample.radius[0],
-                zrSize / 2
-            );
-            this.outerRadius = this.parsePercent(
-                this.chordSerieSample.radius[1],
-                zrSize / 2
-            );
-            this.padding = this.chordSerieSample.padding;
-            this.sortGroups = this.chordSerieSample.sort;
-            this.sortSubGroups = this.chordSerieSample.sortSub;
-            this.showScale = this.chordSerieSample.showScale;
-            this.showScaleText = this.chordSerieSample.showScaleText;
-            this.center = [
-                this.parsePercent(this.chordSerieSample.center[0], zrWidth),
-                this.parsePercent(this.chordSerieSample.center[1], zrHeight)
-            ];
-            var fixSize = 
-                this.chordSerieSample.itemStyle.normal.chordStyle.lineStyle.width -
-                this.chordSerieSample.itemStyle.normal.lineStyle.width;
-            this.strokeFix = 
-                (fixSize / _devicePixelRatio) / this.innerRadius / Math.PI * 180;
-
-
-            this.dataMat = new NDArray(matrix);
-            this.dataMat = this.dataMat._transposelike([1, 2, 0]);
-
-            // Filter the data by selected legend
-            var res = this._filterData(this.dataMat, this.groups);
-            this.dataMat = res[0];
-            this.groups = res[1];
-
-            // Check if data is valid
-            var shape = this.dataMat.shape();
-            if (shape[0] !== shape[1] || shape[0] !== this.groups.length) {
-                throw new Error('Data not valid');
-            }
-            if (shape[0] === 0 || shape[2] === 0) {
-                this.addShapeList();
-                return;
-            }
-
-            // Down to 2 dimension
-            // More convenient for angle calculating and sort
-            this.dataMat.reshape(shape[0], shape[1] * shape[2]);
-
-            // Processing data
-            var sumOut = this.dataMat.sum(1);
-            var percents = sumOut.mul(1 / sumOut.sum());
-
-            var groupNumber = shape[0];
-            var subGroupNumber = shape[1] * shape[2];
-
-            var groupAngles = percents.mul(360 - this.padding * groupNumber);
-            var subGroupAngles = this.dataMat.div(
-                this.dataMat.sum(1).reshape(groupNumber, 1)
-            );
-            subGroupAngles = subGroupAngles.mul(
-                groupAngles.sub(this.strokeFix * 2).reshape(groupNumber, 1)
-            );
-
-            switch (this.sortGroups) {
-                case 'ascending':
-                case 'descending':
-                    var groupIndices = groupAngles
-                            .argsort(0, this.sortGroups);
-                    groupAngles['sort'](0, this.sortGroups);
-                    sumOut['sort'](0, this.sortGroups);
-                    break;
-                default:
-                    var groupIndices = NDArray.range(shape[0]);
-            }
-
-            switch (this.sortSubGroups) {
-                case 'ascending':
-                case 'descending':
-                    var subGroupIndices = subGroupAngles
-                            .argsort(1, this.sortSubGroups);
-                    subGroupAngles['sort'](1, this.sortSubGroups);
-                    break;
-                default:
-                    var subGroupIndices = NDArray
-                            .range(subGroupNumber)
-                            .reshape(1, subGroupNumber)
-                            .repeat(groupNumber, 0);
-            }
-
-            var groupIndicesArr = groupIndices.toArray();
-            var groupAnglesArr = groupAngles.toArray();
-            var subGroupIndicesArr = subGroupIndices.toArray();
-            var subGroupAnglesArr = subGroupAngles.toArray();
-            var sumOutArray = sumOut.toArray();
-
-            var sectorAngles = [];
-            var chordAngles = new NDArray(
-                groupNumber, subGroupNumber
-            ).toArray();
-            var values = [];
-            var start = 0;
-            var end = 0;
-            for (var i = 0; i < groupNumber; i++) {
-                var sortedIdx = groupIndicesArr[i];
-                values[sortedIdx] = sumOutArray[i];
-
-                end = start + groupAnglesArr[i];
-                sectorAngles[sortedIdx] = [start, end];
-
-                // Sub Group
-                var subStart = start + this.strokeFix;
-                var subEnd = subStart;
-                for (var j = 0; j < subGroupNumber; j++) {
-                    subEnd = subStart + subGroupAnglesArr[sortedIdx][j];
-                    var subSortedIndex = subGroupIndicesArr[sortedIdx][j];
-                    /*jshint maxlen : 200*/
-                    chordAngles[sortedIdx][subSortedIndex]
-                        = [subStart, subEnd];
-                    subStart = subEnd;
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (series[i].type === this.type) {
+                    if (series[i].insertToSerie) {
+                        var referenceSerie = chordSeriesMap[series[i].insertToSerie];
+                        series[i]._referenceSerie = referenceSerie;
+                    }
+                    else {
+                        chordSeriesGroups[series[i].name] = [series[i]];
+                    }
                 }
-
-                start = end + this.padding;
+            }
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (series[i].type === this.type) {
+                    if (series[i].insertToSerie) {
+                        // insertToSerie 可能会存在链式的使用，找到最原始的系列，分到一个 Group 里
+                        var mainSerie = series[i]._referenceSerie;
+                        while (mainSerie && mainSerie._referenceSerie) {
+                            mainSerie = mainSerie._referenceSerie;
+                        }
+                        if (
+                            chordSeriesGroups[mainSerie.name]
+                            && this.selectedMap[series[i].name]
+                        ) {
+                            chordSeriesGroups[mainSerie.name].push(series[i]);
+                        }
+                    }
+                }
             }
 
-            // reset data
-            this.chordShapes = new NDArray(groupNumber, groupNumber, serieNumber)
-                                .toArray();
-            this.sectorShapes = [];
-
-            this._buildSectors(sectorAngles, values);
-
-            chordAngles = new NDArray(chordAngles).reshape(
-                groupNumber, groupNumber, serieNumber, 2
-            ).toArray();
-            this._buildChords(chordAngles, this.dataMat.reshape(shape).toArray());
-
-            var res = this.normalizeValue(values);
-            if (this.showScale) {
-                this._buildScales(
-                    res[0],
-                    res[1],
-                    sectorAngles,
-                    new NDArray(res[0]).sum() / (360 - this.padding * groupNumber)
-                );
+            for (var name in chordSeriesGroups) {
+                this._buildChords(chordSeriesGroups[name]);
             }
             
             this.addShapeList();
         },
 
-        _filterData: function  (dataMat, groups) {
-            var indices = [];
-            var groupsFilted = [];
-            // Filter by selected group
-            for (var i = 0; i < groups.length; i++) {
-                var name = groups[i].name;
-                this.selectedMap[name] = this.isSelected(name);
-                if (!this.selectedMap[name]) {
-                    indices.push(i);
-                } else {
-                    groupsFilted.push(groups[i]);
-                }
-            }
-            if (indices.length) {
-                dataMat = dataMat['delete'](indices, 0);
-                dataMat = dataMat['delete'](indices, 1);   
-            }
-            if (!dataMat.size()) {
-                return [dataMat, groupsFilted];
-            }
-            // Empty data also need to be removed
-            indices = [];
-            var groupsFilted2 = [];
-            var shape = dataMat.shape();
-            dataMat.reshape(shape[0], shape[1] * shape[2]);
-            var sumOutArray = dataMat.sum(1).toArray();
-            dataMat.reshape(shape);
-            for (var i = 0; i < groupsFilted.length; i++) {
-                if (sumOutArray[i] === 0) {
-                    indices.push(i);
-                } else {
-                    groupsFilted2.push(groupsFilted[i]);
-                }
-            }
-            if (indices.length) {
-                dataMat = dataMat['delete'](indices, 0);
-                dataMat = dataMat['delete'](indices, 1);
-            }
-
-            return [dataMat, groupsFilted2];
+        _getNodeCategory: function (serie, group) {
+            return serie.categories && serie.categories[group.category || 0];
         },
 
-        _buildSectors: function (angles, data) {
-            var len = this.groups.length;
-            var len2 = this.chordSeries.length;
+        _getNodeQueryTarget: function (serie, group) {
+            var category = this._getNodeCategory(serie, group);
+            return [group, category, serie];
+        },
 
-            var timeout;
+        _getEdgeQueryTarget: function (serie, edge, type) {
+            type = type || 'normal';
+            return [
+                (edge.itemStyle && edge.itemStyle[type]),
+                serie.itemStyle[type].chordStyle
+            ];
+        },
+
+        _buildChords: function (series) {
+            var graphs = [];
+            var mainSerie = series[0];
+
+            var nodeFilter = function (n) {
+                return n.layout.size > 0;
+            };
+            for (var i = 0; i < series.length; i++) {
+                var serie = series[i];
+
+                if (this.selectedMap[serie.name]) {
+                    var graph;
+                    if (serie.data && serie.matrix) {
+                        graph = this._getSerieGraphFromDataMatrix(
+                            serie, mainSerie
+                        );
+                    } else if (serie.nodes && serie.links) {
+                        graph = this._getSerieGraphFromNodeLinks(
+                            serie, mainSerie
+                        );
+                    }
+                    // 过滤输出为0的节点
+                    graph.filterNode(nodeFilter, this);
+                    graphs.push(graph);
+
+                    graph.__serie = serie;
+                }
+            }
+            if (!graphs.length) {
+                return;
+            }
+
+            var mainGraph = graphs[0];
+
+            if (!mainSerie.ribbonType) {
+                var minRadius = mainSerie.minRadius;
+                var maxRadius = mainSerie.maxRadius;
+                // Map size to [minRadius, maxRadius]
+                var min = Infinity, max = -Infinity;
+                mainGraph.eachNode(function (node) {
+                    max = Math.max(node.layout.size, max);
+                    min = Math.min(node.layout.size, min);
+                });
+                var multiplier = (maxRadius - minRadius) / (max - min);
+                mainGraph.eachNode(function (node) {
+                    var queryTarget = this._getNodeQueryTarget(mainSerie, node);
+                    var symbolSize = this.query(queryTarget, 'symbolSize');
+                    if (max === min) {
+                        node.layout.size = symbolSize || min;
+                    }
+                    else {
+                        node.layout.size = symbolSize
+                            || (node.layout.size - min) * multiplier + minRadius;
+                    }
+                }, this);
+            }
+
+            // Do layout
+            var layout = new ChordLayout();
+            layout.clockWise = mainSerie.clockWise;
+            layout.startAngle = mainSerie.startAngle * Math.PI / 180;
+            if (!layout.clockWise) {
+                layout.startAngle = -layout.startAngle;
+            }
+            layout.padding = mainSerie.padding * Math.PI / 180;
+            layout.sort = mainSerie.sort;
+            layout.sortSub = mainSerie.sortSub;
+            layout.directed = mainSerie.ribbonType;
+            layout.run(graphs);
 
             var showLabel = this.query(
-                this.chordSerieSample, 'itemStyle.normal.label.show'
-            );
-            var labelColor = this.query(
-                this.chordSerieSample, 'itemStyle.normal.label.color'
-            );
-            var rotateLabel = this.query(
-                this.chordSerieSample, 'itemStyle.normal.label.rotate'
-            );
-            var labelDistance = this.query(
-                this.chordSerieSample, 'itemStyle.normal.label.distance'
+                mainSerie, 'itemStyle.normal.label.show'
             );
 
-            var self = this;
-            function createMouseOver(idx) {
-                return function () {
-                    if (timeout) {
-                        clearTimeout(timeout);
+            if (mainSerie.ribbonType) {
+                this._buildSectors(mainSerie, 0, mainGraph, mainSerie, graphs);
+                if (showLabel) {
+                    this._buildLabels(mainSerie, 0, mainGraph, mainSerie, graphs);
+                }
+
+                for (var i = 0, j = 0; i < series.length; i++) {
+                    if (this.selectedMap[series[i].name]) {
+                        this._buildRibbons(series, i, graphs[j++], mainSerie);
                     }
-                    timeout = setTimeout(function (){
-                        for (var i = 0; i < len; i++) {
-                            self.sectorShapes[i].style.opacity 
-                                = i === idx ? 1 : 0.1;
-                            self.zr.modShape(self.sectorShapes[i].id);
+                }
 
-                            for (var j = 0; j < len; j++) {
-                                for (var k = 0; k < len2; k++) {
-                                    var chordShape = self.chordShapes[i][j][k];
-                                    if (chordShape) {
-                                        chordShape.style.opacity 
-                                            = (i === idx || j === idx)
-                                                 ? 0.5 : 0.03;
-                                        self.zr.modShape(chordShape.id);
+                if (mainSerie.showScale) {
+                    this._buildScales(mainSerie, 0, mainGraph);
+                }
+            }
+            else {
+                this._buildNodeIcons(mainSerie, 0, mainGraph, mainSerie, graphs);
+                if (showLabel) {
+                    this._buildLabels(mainSerie, 0, mainGraph, mainSerie, graphs);
+                }
+                for (var i = 0, j = 0; i < series.length; i++) {
+                    if (this.selectedMap[series[i].name]) {
+                        this._buildEdgeCurves(series, i, graphs[j++], mainSerie, mainGraph);
+                    }
+                }
+            }
+
+            this._initHoverHandler(series, graphs);
+        },
+
+        _getSerieGraphFromDataMatrix: function (serie, mainSerie) {
+            var nodesData = [];
+            var count = 0;
+            var matrix = [];
+            // 复制一份新的matrix
+            for (var i = 0; i < serie.matrix.length; i++) {
+                matrix[i] = serie.matrix[i].slice();
+            }
+            var data = serie.data || serie.nodes;
+            for (var i = 0; i < data.length; i++) {
+                var node = {};
+                var group = data[i];
+                group.rawIndex = i;
+                for (var key in group) {
+                    // name改为id
+                    if (key === 'name') {
+                        node['id'] = group['name'];
+                    }
+                    else {
+                        node[key] = group[key];
+                    }
+                }
+                // legends 选择优先级 category -> group
+                var category = this._getNodeCategory(mainSerie, group);
+                var name = category ? category.name : group.name;
+
+                this.selectedMap[name] = this.isSelected(name);
+                if (this.selectedMap[name]) {
+                    nodesData.push(node);
+                    count++;
+                }
+                else {
+                    // 过滤legend未选中的数据
+                    matrix.splice(count, 1);
+                    for (var j = 0; j < matrix.length; j++) {
+                        matrix[j].splice(count, 1);
+                    }
+                }
+            }
+
+            var graph = Graph.fromMatrix(nodesData, matrix, true);
+
+            // Prepare layout parameters
+            graph.eachNode(function (n, idx) {
+                n.layout = {
+                    size: n.data.outValue
+                };
+                n.rawIndex = n.data.rawIndex;
+            });
+            graph.eachEdge(function (e) {
+                e.layout = {
+                    weight: e.data.weight
+                };
+            });
+
+            return graph;
+        },
+
+        _getSerieGraphFromNodeLinks: function (serie, mainSerie) {
+            var graph = new Graph(true);
+            var nodes = serie.data || serie.nodes;
+            for (var i = 0, len = nodes.length; i < len; i++) {
+                var n = nodes[i];
+                if (!n || n.ignore) {
+                    continue;
+                }
+                // legends 选择优先级 category -> group
+                var category = this._getNodeCategory(mainSerie, n);
+                var name = category ? category.name : n.name;
+
+                this.selectedMap[name] = this.isSelected(name);
+                if (this.selectedMap[name]) {
+                    var node = graph.addNode(n.name, n);
+                    node.rawIndex = i;
+                }
+            }
+
+            for (var i = 0, len = serie.links.length; i < len; i++) {
+                var e = serie.links[i];
+                var n1 = e.source;
+                var n2 = e.target;
+                if (typeof(n1) === 'number') {
+                    n1 = nodes[n1];
+                    if (n1) {
+                        n1 = n1.name;
+                    }
+                }
+                if (typeof(n2) === 'number') {
+                    n2 = nodes[n2];
+                    if (n2) {
+                        n2 = n2.name;
+                    }
+                }
+                var edge = graph.addEdge(n1, n2, e);
+                if (edge) {
+                    edge.rawIndex = i;
+                }
+            }
+
+            graph.eachNode(function (n) {
+                var value = n.data.value;
+                if (value == null) {    // value 是 null 或者 undefined
+                    value = 0;
+                    if (mainSerie.ribbonType) {
+                        // 默认使用所有出边值的和作为节点的大小, 不修改 data 里的数值
+                        for (var i = 0; i < n.outEdges.length; i++) {
+                            value += n.outEdges[i].data.weight || 0;
+                        }
+                    }
+                    else {
+                        // 默认使用所有边值的和作为节点的大小, 不修改 data 里的数值
+                        for (var i = 0; i < n.edges.length; i++) {
+                            value += n.edges[i].data.weight || 0;
+                        }
+                    }
+                }
+                n.layout = {
+                    size: value
+                };
+            });
+            graph.eachEdge(function (e) {
+                e.layout = {
+                    // 默认 weight 为1
+                    weight: e.data.weight == null ? 1 : e.data.weight
+                };
+            });
+
+            return graph;
+        },
+
+        _initHoverHandler: function (series, graphs) {
+            var mainSerie = series[0];
+            var mainGraph = graphs[0];
+            var self = this;
+            mainGraph.eachNode(function (node) {
+                node.shape.onmouseover = function () {
+                    mainGraph.eachNode(function (n) {
+                        n.shape.style.opacity = 0.1;
+                        if (n.labelShape) {
+                            n.labelShape.style.opacity = 0.1;
+                            n.labelShape.modSelf();
+                        }
+                        n.shape.modSelf();
+                    });
+                    for (var i = 0; i < graphs.length; i++) {
+                        for (var j = 0; j < graphs[i].edges.length; j++) {
+                            var e = graphs[i].edges[j];
+                            var queryTarget = self._getEdgeQueryTarget(
+                                graphs[i].__serie, e.data
+                            );
+                            e.shape.style.opacity = self.deepQuery(
+                                queryTarget, 'opacity'
+                            ) * 0.1;
+                            e.shape.modSelf();
+                        }
+                    }
+                    node.shape.style.opacity = 1;
+                    if (node.labelShape) {
+                        node.labelShape.style.opacity = 1;
+                    }
+                    for (var i = 0; i < graphs.length; i++) {
+                        var n = graphs[i].getNodeById(node.id);
+                        if (n) {    //  节点有可能没数据被过滤掉了
+                            for (var j = 0; j < n.outEdges.length; j++) {
+                                var e = n.outEdges[j];
+                                var queryTarget = self._getEdgeQueryTarget(
+                                    graphs[i].__serie, e.data
+                                );
+                                e.shape.style.opacity = self.deepQuery(
+                                    queryTarget, 'opacity'
+                                );
+                                var other = graphs[0].getNodeById(e.node2.id);
+                                if (other) {
+                                    if (other.shape) {
+                                        other.shape.style.opacity = 1;
+                                    }
+                                    if (other.labelShape) {
+                                        other.labelShape.style.opacity = 1;
                                     }
                                 }
                             }
                         }
-                        self.zr.refresh();
-                    }, 50);
-                };
-            }
-
-            function createMouseOut() {
-                return function () {
-                    if (timeout) {
-                        clearTimeout(timeout);
                     }
-                    timeout = setTimeout(function (){
-                        for (var i = 0; i < len; i++) {
-                            self.sectorShapes[i].style.opacity = 1.0;
-                            self.zr.modShape(self.sectorShapes[i].id);
-
-                            for (var j = 0; j < len; j++) {
-                                for (var k = 0; k < len2; k++) {
-                                    var chordShape = self.chordShapes[i][j][k];
-                                    if (chordShape) {
-                                        chordShape.style.opacity = 0.5;
-                                        self.zr.modShape(chordShape.id);
-                                    } 
-                                }
-                            }
-                        }
-                        self.zr.refresh();
-                    }, 50);
+                    self.zr.refreshNextFrame();
                 };
-            }
+                node.shape.onmouseout = function () {
+                    mainGraph.eachNode(function (n) {
+                        n.shape.style.opacity = 1;
+                        if (n.labelShape) {
+                            n.labelShape.style.opacity = 1;
+                            n.labelShape.modSelf();
+                        }
+                        n.shape.modSelf();
+                    });
+                    for (var i = 0; i < graphs.length; i++) {
+                        for (var j = 0; j < graphs[i].edges.length; j++) {
+                            var e = graphs[i].edges[j];
+                            var queryTarget = [e.data, mainSerie];
+                            e.shape.style.opacity = self.deepQuery(
+                                queryTarget, 'itemStyle.normal.chordStyle.opacity'
+                            );
+                            e.shape.modSelf();
+                        }
+                    }
+                    self.zr.refreshNextFrame();
+                };
+            });
+        },
 
-            for (var i = 0; i < len; i++) {
-                var group = this.groups[i];
-                var angle = angles[i];
-                var _start = (this.clockWise ? (360 - angle[1]) : angle[0]) + this.startAngle;
-                var _end = (this.clockWise ? (360 - angle[0]) : angle[1]) + this.startAngle;
+        _buildSectors: function (serie, serieIdx, graph, mainSerie) {
+            var center = this.parseCenter(this.zr, mainSerie.center);
+            var radius = this.parseRadius(this.zr, mainSerie.radius);
+            var clockWise = mainSerie.clockWise;
+            var sign = clockWise ? 1 : -1;
 
-                var sector = {
-                    zlevel: this._zlevelBase,
+            graph.eachNode(function (node) {
+                var category = this._getNodeCategory(mainSerie, node.data);
+                // 默认使用 category 分类颜色
+                var color = category ? this.getColor(category.name) : this.getColor(node.id);
+
+                var startAngle = node.layout.startAngle / Math.PI * 180 * sign;
+                var endAngle = node.layout.endAngle / Math.PI * 180 * sign;
+                var sector = new SectorShape({
+                    zlevel: this.getZlevelBase(),
                     style: {
-                        x: this.center[0],
-                        y: this.center[1],
-                        r0: this.innerRadius,
-                        r: this.outerRadius,
-                        startAngle: _start,
-                        endAngle: _end,
+                        x: center[0],
+                        y: center[1],
+                        r0: radius[0],
+                        r: radius[1],
+                        startAngle: startAngle,
+                        endAngle: endAngle,
                         brushType: 'fill',
                         opacity: 1,
-                        color: this.getColor(group.name)
+                        color: color,
+                        clockWise: clockWise
                     },
-                    clickable: this.chordSerieSample.clickable,
+                    clickable: mainSerie.clickable,
                     highlightStyle: {
                         brushType: 'fill'
                     }
-                };
+                });
                 sector.style.lineWidth = this.deepQuery(
-                    [group, this.chordSerieSample],
-                    'itemStyle.normal.lineStyle.width'
+                    [node.data, mainSerie],
+                    'itemStyle.normal.borderWidth'
                 );
                 sector.highlightStyle.lineWidth = this.deepQuery(
-                    [group, this.chordSerieSample],
-                    'itemStyle.emphasis.lineStyle.width'
+                    [node.data, mainSerie],
+                    'itemStyle.emphasis.borderWidth'
                 );
                 sector.style.strokeColor = this.deepQuery(
-                    [group, this.chordSerieSample],
-                    'itemStyle.normal.lineStyle.color'
+                    [node.data, mainSerie],
+                    'itemStyle.normal.borderColor'
                 );
                 sector.highlightStyle.strokeColor = this.deepQuery(
-                    [group, this.chordSerieSample],
-                    'itemStyle.emphasis.lineStyle.color'
+                    [node.data, mainSerie],
+                    'itemStyle.emphasis.borderColor'
                 );
                 if (sector.style.lineWidth > 0) {
                     sector.style.brushType = 'both';
@@ -396,179 +489,370 @@ define(function (require) {
                 }
                 ecData.pack(
                     sector,
-                    this.chordSeries[0],
-                    0,
-                    data[i], i,
-                    group.name
+                    serie,
+                    serieIdx,
+                    node.data,
+                    node.rawIndex,
+                    node.id,
+                    // special
+                    node.category
                 );
-                if (showLabel) {
-                    var halfAngle = [_start + _end] / 2;
-                    halfAngle %= 360;  // Constrain to [0,360]
-                    var isRightSide = halfAngle <= 90
-                                     || halfAngle >= 270;
-                    halfAngle = halfAngle * Math.PI / 180;
-                    var v = [Math.cos(halfAngle), -Math.sin(halfAngle)];
 
-                    var distance = this.showScaleText ? 35 + labelDistance : labelDistance;
-                    var start = vec2.scale([], v, this.outerRadius + distance);
-                    vec2.add(start, start, this.center);
-
-                    var labelShape = {
-                        zlevel: this._zlevelBase - 1,
-                        hoverable: false,
-                        style: {
-                            text: group.name,
-                            textAlign: isRightSide ? 'left' : 'right',
-                            color: labelColor
-                        }
-                    };
-                    if (rotateLabel) {
-                        labelShape.rotation = isRightSide ? halfAngle : Math.PI + halfAngle;
-                        if (isRightSide) {
-                            labelShape.style.x = this.outerRadius + distance;
-                        } else {
-                            labelShape.style.x = -this.outerRadius - distance;
-                        }
-                        labelShape.style.y = 0;
-                        labelShape.position = this.center;
-                    } else {
-                        labelShape.style.x = start[0];
-                        labelShape.style.y = start[1];
-                    }
-                    labelShape.style.textColor = this.deepQuery(
-                        [group, this.chordSerieSample],
-                        'itemStyle.normal.label.textStyle.color'
-                    ) || '#fff';
-                    labelShape.style.textFont = this.getFont(this.deepQuery(
-                        [group, this.chordSerieSample],
-                        'itemStyle.normal.label.textStyle'
-                    ));
-                    labelShape = new TextShape(labelShape);
-                    this.shapeList.push(labelShape);
-                }
-
-                sector.onmouseover = createMouseOver(i);
-                sector.onmouseout = createMouseOut();
-
-                sector = new SectorShape(sector);
                 this.shapeList.push(sector);
-                this.sectorShapes.push(sector);
-            }
+
+                node.shape = sector;
+
+            }, this);
         },
 
-        _buildChords : function (angles, dataArr) {
-            var len = angles.length;
-            if (!len) {
-                return;
-            }
-            var len2 = angles[0][0].length;
+        _buildNodeIcons: function (serie, serieIdx, graph, mainSerie) {
+            var center = this.parseCenter(this.zr, mainSerie.center);
+            var radius = this.parseRadius(this.zr, mainSerie.radius);
+            // PENDING
+            var r = radius[1];
 
-            var ribbonLineStyle 
-                = this.chordSerieSample.itemStyle.normal.chordStyle.lineStyle;
-            var ribbonLineStyleEmphsis
-                = this.chordSerieSample.itemStyle.emphasis.chordStyle.lineStyle;
+            graph.eachNode(function (node) {
+                var startAngle = node.layout.startAngle;
+                var endAngle = node.layout.endAngle;
+                var angle = (startAngle + endAngle) / 2;
+                var x = r * Math.cos(angle);
+                var y = r * Math.sin(angle);
+                var queryTarget = this._getNodeQueryTarget(mainSerie, node.data);
 
-            for (var i = 0; i < len; i++) {
-                for (var j = 0; j < len; j++) {
-                    for (var k = 0; k < len2; k++) {
-                        if (this.chordShapes[j][i][k]) {
-                            continue;
-                        }
+                var category = this._getNodeCategory(mainSerie, node.data);
+                var color = this.deepQuery(queryTarget, 'itemStyle.normal.color');
+                if (!color) {
+                    color = category ? this.getColor(category.name) : this.getColor(node.id);
+                }
+                var iconShape = new IconShape({
+                    zlevel: this.getZlevelBase(),
+                    z: 1,
+                    style: {
+                        x: - node.layout.size,
+                        y: - node.layout.size,
+                        width: node.layout.size * 2,
+                        height: node.layout.size * 2,
+                        iconType: this.deepQuery(queryTarget, 'symbol'),
+                        color: color,
+                        brushType: 'both',
+                        lineWidth: this.deepQuery(queryTarget, 'itemStyle.normal.borderWidth'),
+                        strokeColor: this.deepQuery(queryTarget, 'itemStyle.normal.borderColor')
+                    },
+                    highlightStyle: {
+                        color: this.deepQuery(queryTarget, 'itemStyle.emphasis.color'),
+                        lineWidth: this.deepQuery(queryTarget, 'itemStyle.emphasis.borderWidth'),
+                        strokeColor: this.deepQuery(queryTarget, 'itemStyle.emphasis.borderColor')
+                    },
+                    clickable: mainSerie.clickable,
+                    position: [x + center[0], y + center[1]]
+                });
 
-                        var angleIJ0 = angles[i][j][k][0];
-                        var angleJI0 = angles[j][i][k][0];
+                ecData.pack(
+                    iconShape,
+                    serie,
+                    serieIdx,
+                    node.data,
+                    node.rawIndex,
+                    node.id,
+                    // special
+                    node.category
+                );
 
-                        var angleIJ1 = angles[i][j][k][1];
-                        var angleJI1 = angles[j][i][k][1];
+                this.shapeList.push(iconShape);
+                node.shape = iconShape;
+            }, this);
+        },
 
-                        if (
-                            angleIJ0 - angleJI1 === 0
-                            || angleJI0 - angleJI1 === 0
-                        ) {
-                            this.chordShapes[i][j][k] = null;
-                            continue;
-                        }
+        _buildLabels: function (serie, serieIdx, graph, mainSerie) {
+            var labelColor = this.query(
+                mainSerie, 'itemStyle.normal.label.color'
+            );
+            var rotateLabel = this.query(
+                mainSerie, 'itemStyle.normal.label.rotate'
+            );
+            var labelDistance = this.query(
+                mainSerie, 'itemStyle.normal.label.distance'
+            );
+            var center = this.parseCenter(this.zr, mainSerie.center);
+            var radius = this.parseRadius(this.zr, mainSerie.radius);
+            var clockWise = mainSerie.clockWise;
+            var sign = clockWise ? 1 : -1;
 
-                        var color;
-                        if (len2 === 1) {
-                            if (angleIJ1 - angleIJ0 <= angleJI1 - angleJI0) {
-                                color = this.getColor(this.groups[i].name);
-                            } else {
-                                color = this.getColor(this.groups[j].name);
-                            }
-                        } else {
-                            color = this.getColor(this.chordSeries[k].name);
-                        }
-                        var s0 = !this.clockWise ? (360 - angleIJ1) : angleIJ0;
-                        var s1 = !this.clockWise ? (360 - angleIJ0) : angleIJ1;
-                        var t0 = !this.clockWise ? (360 - angleJI1) : angleJI0;
-                        var t1 = !this.clockWise ? (360 - angleJI0) : angleJI1;
-                        var chord = {
-                            zlevel: this._zlevelBase,
-                            style: {
-                                x: this.center[0],
-                                y: this.center[1],
-                                r: this.innerRadius,
-                                source0: s0 - this.startAngle,
-                                source1: s1 - this.startAngle,
-                                target0: t0 - this.startAngle,
-                                target1: t1 - this.startAngle,
-                                brushType: 'both',
-                                opacity: 0.5,
-                                color: color,
-                                lineWidth: ribbonLineStyle.width,
-                                strokeColor: ribbonLineStyle.color
-                            },
-                            clickable: this.chordSerieSample.clickable,
-                            highlightStyle: {
-                                brushType: 'both',
-                                lineWidth: ribbonLineStyleEmphsis.width,
-                                strokeColor: ribbonLineStyleEmphsis.color
-                            }
-                        };
+            graph.eachNode(function (node) {
+                var startAngle = node.layout.startAngle / Math.PI * 180 * sign;
+                var endAngle = node.layout.endAngle / Math.PI * 180 * sign;
+                var angle = (startAngle * -sign + endAngle * -sign) / 2;
+                angle %= 360;
+                if (angle < 0) { // Constrain to [0,360]
+                    angle += 360;
+                }
+                var isRightSide = angle <= 90
+                                 || angle >= 270;
+                angle = angle * Math.PI / 180;
+                var v = [Math.cos(angle), -Math.sin(angle)];
 
-                        ecData.pack(
-                            chord,
-                            this.chordSeries[k],
-                            k,
-                            dataArr[i][j][k], i + '-' +j,
-                            this.groups[i].name,
-                            this.groups[j].name,
-                            dataArr[j][i][k]
-                        );
+                var distance = 0;
+                if (mainSerie.ribbonType) {
+                    distance = mainSerie.showScaleText ? 35 + labelDistance : labelDistance;
+                }
+                else {
+                    distance = labelDistance + node.layout.size;
+                }
+                var start = vec2.scale([], v, radius[1] + distance);
+                vec2.add(start, start, center);
 
-                        chord = new RibbonShape(chord);
-                        this.chordShapes[i][j][k] = chord;
-                        this.shapeList.push(chord);
+                var labelShape = {
+                    zlevel: this.getZlevelBase() + 1,
+                    hoverable: false,
+                    style: {
+                        text: node.data.label == null ? node.id : node.data.label,
+                        textAlign: isRightSide ? 'left' : 'right',
+                        color: labelColor || '#000000'
                     }
+                };
+                if (rotateLabel) {
+                    labelShape.rotation = isRightSide ? angle : Math.PI + angle;
+                    if (isRightSide) {
+                        labelShape.style.x = radius[1] + distance;
+                    }
+                    else {
+                        labelShape.style.x = -radius[1] - distance;
+                    }
+                    labelShape.style.y = 0;
+                    labelShape.position = center.slice();
+                }
+                else {
+                    labelShape.style.x = start[0];
+                    labelShape.style.y = start[1];
+                }
+                labelShape.style.textColor = this.deepQuery(
+                    [node.data, mainSerie],
+                    'itemStyle.normal.label.textStyle.color'
+                ) || '#fff';
+                labelShape.style.textFont = this.getFont(this.deepQuery(
+                    [node.data, mainSerie],
+                    'itemStyle.normal.label.textStyle'
+                ));
+                labelShape = new TextShape(labelShape);
+
+                this.shapeList.push(labelShape);
+                node.labelShape = labelShape;
+            }, this);
+        },
+
+        _buildRibbons : function (series, serieIdx, graph, mainSerie) {
+            var serie = series[serieIdx];
+
+            var center = this.parseCenter(this.zr, mainSerie.center);
+            var radius = this.parseRadius(this.zr, mainSerie.radius);
+
+            // graph.edges.length = 1;
+            graph.eachEdge(function (edge, idx) {
+                var color;
+                // 反向边
+                var other = graph.getEdge(edge.node2, edge.node1);
+                if (!other  // 只有单边
+                    || edge.shape // 已经创建过Ribbon
+                ) {
+                    return;
+                }
+                if (other.shape) { // 已经创建过Ribbon
+                    edge.shape = other.shape;
+                    return;
+                }
+                var s0 = edge.layout.startAngle / Math.PI * 180;
+                var s1 = edge.layout.endAngle / Math.PI * 180;
+
+                var t0 = other.layout.startAngle / Math.PI * 180;
+                var t1 = other.layout.endAngle / Math.PI * 180;
+
+                if (series.length === 1) {
+                    // 取小端的颜色
+                    if (edge.layout.weight <= other.layout.weight) {
+                        color = this.getColor(edge.node1.id);
+                    }
+                    else {
+                        color = this.getColor(edge.node2.id);
+                    }
+                } else {
+                    //  使用系列颜色
+                    color = this.getColor(serie.name);
+                }
+                var queryTarget = this._getEdgeQueryTarget(serie, edge.data);
+                var queryTargetEmphasis = this._getEdgeQueryTarget(
+                    serie, edge.data, 'emphasis'
+                );
+                var ribbon = new RibbonShape({
+                    zlevel: this.getZlevelBase(),
+                    style: {
+                        x: center[0],
+                        y: center[1],
+                        r: radius[0],
+                        source0: s0,
+                        source1: s1,
+                        target0: t0,
+                        target1: t1,
+                        brushType: 'both',
+                        opacity: this.deepQuery(
+                            queryTarget, 'opacity'
+                        ),
+                        color: color,
+                        lineWidth: this.deepQuery(queryTarget, 'borderWidth'),
+                        strokeColor: this.deepQuery(queryTarget, 'borderColor'),
+                        clockWise: mainSerie.clockWise
+                    },
+                    clickable: mainSerie.clickable,
+                    highlightStyle: {
+                        brushType: 'both',
+                        opacity: this.deepQuery(
+                            queryTargetEmphasis, 'opacity'
+                        ),
+                        lineWidth: this.deepQuery(queryTargetEmphasis, 'borderWidth'),
+                        strokeColor: this.deepQuery(queryTargetEmphasis, 'borderColor')
+                    }
+                });
+
+                ecData.pack(
+                    ribbon,
+                    serie,
+                    serieIdx,
+                    edge.data,
+                    edge.rawIndex == null ? idx : edge.rawIndex,
+                    edge.data.name || (edge.node1.id + '-' + edge.node2.id),
+                    // special
+                    edge.node1.id,
+                    // special2
+                    edge.node2.id
+                );
+
+                this.shapeList.push(ribbon);
+                edge.shape = ribbon;
+            }, this);
+        },
+
+        _buildEdgeCurves: function (series, serieIdx, graph, mainSerie, mainGraph) {
+            var serie = series[serieIdx];
+            
+            var center = this.parseCenter(this.zr, mainSerie.center);
+
+            graph.eachEdge(function (e, idx) {
+                var node1 = mainGraph.getNodeById(e.node1.id);
+                var node2 = mainGraph.getNodeById(e.node2.id);
+                var shape1 = node1.shape;
+                var shape2 = node2.shape;
+                var queryTarget = this._getEdgeQueryTarget(serie, e.data);
+                var queryTargetEmphasis = this._getEdgeQueryTarget(
+                    serie, e.data, 'emphasis'
+                );
+
+                var curveShape = new BezierCurveShape({
+                    zlevel: this.getZlevelBase(),
+                    z: 0,
+                    style: {
+                        xStart: shape1.position[0],
+                        yStart: shape1.position[1],
+                        xEnd: shape2.position[0],
+                        yEnd: shape2.position[1],
+                        cpX1: center[0],
+                        cpY1: center[1],
+                        lineWidth: this.deepQuery(
+                            queryTarget, 'width'
+                        ),
+                        strokeColor: this.deepQuery(
+                            queryTarget, 'color'
+                        ),
+                        opacity: this.deepQuery(
+                            queryTarget, 'opacity'
+                        )
+                    },
+                    highlightStyle: {
+                        lineWidth: this.deepQuery(
+                            queryTargetEmphasis, 'width'
+                        ),
+                        strokeColor: this.deepQuery(
+                            queryTargetEmphasis, 'color'
+                        ),
+                        opacity: this.deepQuery(
+                            queryTargetEmphasis, 'opacity'
+                        )
+                    }
+                });
+
+                ecData.pack(
+                    curveShape,
+                    serie,
+                    serieIdx,
+                    e.data,
+                    e.rawIndex == null ? idx : e.rawIndex,
+                    e.data.name || (e.node1.id + '-' + e.node2.id),
+                    // special
+                    e.node1.id,
+                    // special2
+                    e.node2.id
+                );
+
+                this.shapeList.push(curveShape);
+                e.shape = curveShape;
+            }, this);
+        },
+
+        _buildScales: function (serie, serieIdx, graph) {
+            var clockWise = serie.clockWise;
+            var center = this.parseCenter(this.zr, serie.center);
+            var radius = this.parseRadius(this.zr, serie.radius);
+            var sign = clockWise ? 1 : -1;
+
+            var sumValue = 0;
+            var maxValue = -Infinity;
+            var unitPostfix;
+            var unitScale;
+
+            if (serie.showScaleText) {
+                graph.eachNode(function (node) {
+                    var val = node.data.value;
+                    if (val > maxValue) {
+                        maxValue = val;
+                    }
+                    sumValue += val;
+                });
+                if (maxValue > 1e10) {
+                    unitPostfix  = 'b';
+                    unitScale = 1e-9;
+                }
+                else if (maxValue > 1e7) {
+                    unitPostfix = 'm';
+                    unitScale = 1e-6;
+                }
+                else if (maxValue > 1e4) {
+                    unitPostfix = 'k';
+                    unitScale = 1e-3;
+                }
+                else {
+                    unitPostfix = '';
+                    unitScale = 1;
                 }
             }
-        },
 
-        _buildScales : function (
-            values,
-            unitPostfix,
-            angles,
-            unitValue
-        ) {
-            for (var i = 0; i < angles.length; i++) {
-                var subStartAngle = angles[i][0];
-                var subEndAngle = angles[i][1];
+            var unitValue = sumValue / (360 - serie.padding);
 
-                var scaleAngle = subStartAngle;
-                while (scaleAngle < subEndAngle) {
-                    var thelta = ((this.clockWise ? (360 - scaleAngle) : scaleAngle)
-                                    + this.startAngle) / 180 * Math.PI;
-                    var v = [
-                        Math.cos(thelta),
-                        -Math.sin(thelta)
-                    ];
-                    var start = vec2.scale([], v, this.outerRadius + 1);
-                    vec2.add(start, start, this.center);
-                    var end = vec2.scale([], v, this.outerRadius + this.scaleLineLength);
-                    vec2.add(end, end, this.center);
-                    var scaleShape = {
-                        zlevel: this._zlevelBase - 1,
+            graph.eachNode(function (node) {
+                var startAngle = node.layout.startAngle / Math.PI * 180;
+                var endAngle = node.layout.endAngle / Math.PI * 180;
+                var scaleAngle = startAngle;
+                while (true) {
+                    if ((clockWise && scaleAngle > endAngle)
+                        || (!clockWise && scaleAngle < endAngle)
+                    ) {
+                        break;
+                    }
+                    var theta = scaleAngle / 180 * Math.PI;
+                    var v = [Math.cos(theta), Math.sin(theta)];
+                    var start = vec2.scale([], v, radius[1] + 1);
+                    vec2.add(start, start, center);
+                    var end = vec2.scale([], v, radius[1] + this.scaleLineLength);
+                    vec2.add(end, end, center);
+                    var scaleShape = new LineShape({
+                        zlevel: this.getZlevelBase() - 1,
                         hoverable: false,
                         style: {
                             xStart: start[0],
@@ -580,76 +864,60 @@ define(function (require) {
                             strokeColor: '#666',
                             lineWidth: 1
                         }
-                    };
+                    });
 
-                    scaleShape = new LineShape(scaleShape);
                     this.shapeList.push(scaleShape);
 
-                    scaleAngle += this.scaleUnitAngle;
+                    scaleAngle += sign * this.scaleUnitAngle;
                 }
-                if (!this.showScaleText) {
-                    continue;
+                if (!serie.showScaleText) {
+                    return;
                 }
 
-                var scaleTextAngle = subStartAngle;
+                var scaleTextAngle = startAngle;
                 var step = unitValue * 5 * this.scaleUnitAngle;
-                var scaleValues = NDArray.range(0, values[i], step).toArray();
-                while (scaleTextAngle < subEndAngle) {
-                    var thelta = this.clockWise 
-                                    ? (360 - scaleTextAngle) : scaleTextAngle;
-                    thelta = (thelta + this.startAngle) % 360;
-                    var isRightSide = thelta <= 90
-                                     || thelta >= 270;
-                    var textShape = {
-                        zlevel: this._zlevelBase - 1,
+                var scaleValue = 0;
+                while (true) {
+                    if ((clockWise && scaleTextAngle > endAngle)
+                        || (!clockWise && scaleTextAngle < endAngle)
+                    ) {
+                        break;
+                    }
+                    var theta = scaleTextAngle;
+                    theta = theta % 360;
+                    if (theta < 0) {
+                        theta += 360;
+                    }
+                    var isRightSide = theta <= 90
+                                     || theta >= 270;
+
+                    var textShape = new TextShape({
+                        zlevel: this.getZlevelBase() - 1,
                         hoverable: false,
                         style: {
                             x: isRightSide 
-                                    ? this.outerRadius + this.scaleLineLength + 4 
-                                    : -this.outerRadius - this.scaleLineLength - 4,
+                                    ? radius[1] + this.scaleLineLength + 4 
+                                    : -radius[1] - this.scaleLineLength - 4,
                             y: 0,
-                            text: Math.round(scaleValues.shift()*10)/10 
+                            text: Math.round(scaleValue * 10) / 10 
                                     + unitPostfix,
                             textAlign: isRightSide ? 'left' : 'right'
                         },
-                        position: this.center.slice(),
+                        position: center.slice(),
                         rotation: isRightSide
-                            ? [thelta / 180 * Math.PI, 0, 0]
+                            ? [-theta / 180 * Math.PI, 0, 0]
                             : [
-                                (thelta + 180) / 180 * Math.PI,
+                                -(theta + 180) / 180 * Math.PI,
                                 0, 0
                               ]
-                    };
+                    });
 
-                    textShape = new TextShape(textShape);
                     this.shapeList.push(textShape);
-                    scaleTextAngle += this.scaleUnitAngle * 5;
+
+                    scaleValue += step * unitScale;
+                    scaleTextAngle += sign * this.scaleUnitAngle * 5;
                 }
-            }
-        },
-
-        normalizeValue : function (values) {
-            var result = [];
-            var max = new NDArray(values).max();
-            var unitPostfix, unitScale;
-            if (max > 10000) {
-                unitPostfix = 'k';
-                unitScale = 1 / 1000;
-            } else if (max > 10000000) {
-                unitPostfix = 'm';
-                unitScale = 1 / 1000000;
-            } else if (max > 10000000000) {
-                unitPostfix  = 'b';
-                unitScale = 1 / 1000000000;
-            } else {
-                unitPostfix = '';
-                unitScale = 1;
-            }
-
-            for (var i = 0; i < values.length; i++) {
-                result[i] = values[i] * unitScale;
-            }
-            return [result, unitPostfix];
+            }, this);
         },
 
         refresh : function (newOption) {
@@ -657,17 +925,6 @@ define(function (require) {
                 this.option = newOption;
                 this.series = newOption.series;
             }
-            
-            // Config
-            this.chordSeries = [];
-
-            this.strokeFix = 0;
-            // Adjacency matrix
-            this.sectorShapes = [];
-            this.chordShapes = [];
-    
-            this.scaleLineLength = 4;
-            this.scaleUnitAngle = 4;
             
             this.legend = this.component.legend;
             if (this.legend) {
@@ -677,42 +934,16 @@ define(function (require) {
                 this.isSelected = function(param) {
                     return this.legend.isSelected(param);
                 };
-            } else {
-                var colorIndices = {};
+            }
+            else {
                 var colorMap = {};
                 var count = 0;
                 this.getColor = function (key) {
                     if (colorMap[key]) {
                         return colorMap[key];
                     }
-                    if (colorIndices[key] === undefined) {
-                        colorIndices[key] = count++;
-                    }
-                    // key is serie name
-                    for (var i = 0; i < this.chordSeries.length; i++) {
-                        if (this.chordSeries[i].name === key) {
-                            colorMap[key] = this.query(
-                                this.chordSeries[i],
-                                'itemStyle.normal.color'
-                            );
-                            break;
-                        }
-                    }
                     if (!colorMap[key]) {
-                        var len = this.groups.length;
-                        // key is group name
-                        for (var i = 0; i < len; i++) {
-                            if (this.groups[i].name === key) {
-                                colorMap[key] = this.query(
-                                    this.groups[i],
-                                    'itemStyle.normal.color'
-                                );
-                                break;
-                            }
-                        }
-                    }
-                    if (!colorMap[key]) {
-                        colorMap[key] = this.zr.getColor(colorIndices[key]);
+                        colorMap[key] = this.zr.getColor(count++);
                     }
 
                     return colorMap[key];
@@ -723,7 +954,7 @@ define(function (require) {
             }
             
             this.backupShapeList();
-            this._buildShape();
+            this._init();
         },
 
         reformOption : function (opt) {

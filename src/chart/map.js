@@ -60,6 +60,9 @@ define(function (require) {
         self._onroamcontroller = function(params) {
             return self.__onroamcontroller(params);
         };
+        self._ondrhoverlink = function(params) {
+            return self.__ondrhoverlink(params);
+        };
         
         this._isAlive = true;           // 活着标记
         this._selectedMode = {};        // 选择模式
@@ -75,6 +78,7 @@ define(function (require) {
         this._refreshDelayTicket;       // 滚轮缩放时让refresh飞一会
         this._mapDataRequireCounter;    // 异步回调计数器
         this._markAnimation = false;
+        this._hoverLinkMap = {};
         
         // 漫游相关信息
         this._roamMap = {};
@@ -90,6 +94,7 @@ define(function (require) {
         this.zr.on(zrConfig.EVENT.MOUSEWHEEL, this._onmousewheel);
         this.zr.on(zrConfig.EVENT.MOUSEDOWN, this._onmousedown);
         messageCenter.bind(ecConfig.EVENT.ROAMCONTROLLER, this._onroamcontroller);
+        messageCenter.bind(ecConfig.EVENT.DATA_RANGE_HOVERLINK, this._ondrhoverlink);
     }
     
     Map.prototype = {
@@ -121,13 +126,16 @@ define(function (require) {
                                                  || series[i].mapValuePrecision;
                     this._scaleLimitMap[mapType] = this._scaleLimitMap[mapType] || {};
                     series[i].scaleLimit 
-                    && zrUtil.merge(this._scaleLimitMap[mapType], series[i].scaleLimit, true);
+                        && zrUtil.merge(this._scaleLimitMap[mapType], series[i].scaleLimit, true);
                     
                     this._roamMap[mapType] = series[i].roam || this._roamMap[mapType];
                     
+                    this._hoverLinkMap[mapType] = series[i].dataRangeHoverLink
+                                                  || this._hoverLinkMap[mapType];
+                    
                     this._nameMap[mapType] = this._nameMap[mapType] || {};
-                    series[i].nameMap 
-                    && zrUtil.merge(this._nameMap[mapType], series[i].nameMap, true);
+                    series[i].nameMap
+                        && zrUtil.merge(this._nameMap[mapType], series[i].nameMap, true);
                     this._activeMapType[mapType] = true;
 
                     if (series[i].textFixed) {
@@ -241,7 +249,7 @@ define(function (require) {
         _mapDataCallback : function (mt, vd, ms) {
             var self = this;
             return function (md) {
-                if (!self._isAlive) {
+                if (!self._isAlive || self._activeMapType[mt] == null) {
                     // 异步地图数据回调时有可能实例已经被释放
                     return;
                 }
@@ -866,7 +874,6 @@ define(function (require) {
                     textShape.hoverable = shape.hoverable = true;
                     shape.hoverConnect = textShape.id;
                     textShape.hoverConnect = shape.id;
-                    shape.onmouseover = textShape.onmouseover = this.hoverConnect;
                 }
                 else {
                     textShape.hoverable = shape.hoverable = false;
@@ -1006,8 +1013,9 @@ define(function (require) {
             var event = params.event;
             var mx = zrEvent.getX(event);
             var my = zrEvent.getY(event);
-            var delta = zrEvent.getDelta(event);
-            //delta = delta > 0 ? (-1) : 1;
+            var delta;
+            var eventDelta = zrEvent.getDelta(event);
+            //eventDelta = eventDelta > 0 ? (-1) : 1;
             var mapType;
             var mapTypeControl = params.mapTypeControl;
             if (!mapTypeControl) {
@@ -1029,12 +1037,12 @@ define(function (require) {
                     var height = transform.height;
                     // 位置转经纬度
                     var geoAndPos = this.pos2geo(mapType, [mx - left, my - top]);
-                    if (delta > 0) {
+                    if (eventDelta > 0) {
                         delta = 1.2;        // 放大
                         if (this._scaleLimitMap[mapType].max != null
                             && transform.baseScale >= this._scaleLimitMap[mapType].max
                         ) {
-                            return;     // 缩放限制
+                            continue;     // 缩放限制
                         }
                     }
                     else {
@@ -1042,7 +1050,7 @@ define(function (require) {
                         if (this._scaleLimitMap[mapType].min != null
                             && transform.baseScale <= this._scaleLimitMap[mapType].min
                         ) {
-                            return;     // 缩放限制
+                            continue;     // 缩放限制
                         }
                     }
                     
@@ -1210,6 +1218,9 @@ define(function (require) {
             },120);
         },
         
+        /**
+         * 漫游组件事件响应
+         */
         __onroamcontroller: function(params) {
             var event = params.event;
             event.zrenderX = this.zr.getWidth() / 2;
@@ -1286,6 +1297,24 @@ define(function (require) {
             this.dircetionTimer = setTimeout(function() {
                 self.animationEffect();
             }, 150);
+        },
+        
+        /**
+         * dataRange hoverlink 事件响应
+         */
+        __ondrhoverlink : function(param) {
+            var curMapType;
+            var value;
+            for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                curMapType = this.shapeList[i]._mapType;
+                if (!this._hoverLinkMap[curMapType] || !this._activeMapType[curMapType]) {
+                    continue;
+                }
+                value = ecData.get(this.shapeList[i], 'value');
+                if (value != null && value >= param.valueMin && value <= param.valueMax) {
+                    this.zr.addHoverShape(this.shapeList[i]);
+                }
+            }
         },
         
         /**
@@ -1481,15 +1510,15 @@ define(function (require) {
         /**
          * 释放后实例不可用
          */
-        dispose : function () {
-            this.clear();
-            this.shapeList = null;
-            this.effectList = null;
+        onbeforDispose : function () {
             this._isAlive = false;
             this.zr.un(zrConfig.EVENT.MOUSEWHEEL, this._onmousewheel);
             this.zr.un(zrConfig.EVENT.MOUSEDOWN, this._onmousedown);
             this.messageCenter.unbind(
                 ecConfig.EVENT.ROAMCONTROLLER, this._onroamcontroller
+            );
+            this.messageCenter.unbind(
+                ecConfig.EVENT.DATA_RANGE_HOVERLINK, this._ondrhoverlink
             );
         }
     };

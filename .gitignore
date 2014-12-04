@@ -137,7 +137,7 @@ Desktop.ini
 # Packages
 *.egg
 *.egg-info
-dist
+# dist
 eggs
 parts
 bin

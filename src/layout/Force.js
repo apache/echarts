@@ -18,7 +18,7 @@ define(function(require) {
     var workerUrl;
 
     function getToken() {
-        return Math.round(Date.now() / 100) % 10000000;
+        return Math.round((new Date()).getTime() / 100) % 10000000;
     }
 
     function createWorkerUrl() {
@@ -53,10 +53,9 @@ define(function(require) {
         this.gravity = typeof(opts.gravity) !== 'undefined'
                         ? opts.gravity : 1;
         this.large = opts.large || false;
-        this.preventOverlap = opts.preventOverlap || false;
+        this.preventNodeOverlap = opts.preventNodeOverlap || false;
+        this.preventNodeEdgeOverlap = opts.preventNodeEdgeOverlap || false;
         this.maxSpeedIncrease = opts.maxSpeedIncrease || 1;
-        this.enableAcceleration = typeof(opts.enableAcceleration) === 'undefined'
-            ? true : opts.enableAcceleration;
 
         this.onupdate = opts.onupdate || function () {};
         this.temperature = opts.temperature || 1;
@@ -86,9 +85,9 @@ define(function(require) {
             scaling: this.scaling || 1.0,
             gravity: this.gravity || 1.0,
             barnesHutOptimize: this.large,
-            preventOverlap: this.preventOverlap,
-
-            enableAcceleration: this.enableAcceleration,
+            preventNodeOverlap: this.preventNodeOverlap,
+            preventNodeEdgeOverlap: this.preventNodeEdgeOverlap,
+            
             maxSpeedIncrease: this.maxSpeedIncrease
         };
 
@@ -139,7 +138,7 @@ define(function(require) {
         var len = graph.nodes.length;
         var positionArr = new ArrayCtor(len * 2);
         var massArr = new ArrayCtor(len);
-        var radiusArr = new ArrayCtor(len);
+        var sizeArr = new ArrayCtor(len);
 
         for (var i = 0; i < len; i++) {
             var n = graph.nodes[i];
@@ -147,8 +146,8 @@ define(function(require) {
             positionArr[i * 2 + 1] = n.layout.position[1];
             massArr[i] = typeof(n.layout.mass) === 'undefined'
                 ? 1 : n.layout.mass;
-            radiusArr[i] = typeof(n.layout.radius) === 'undefined'
-                ? 1 : n.layout.radius;
+            sizeArr[i] = typeof(n.layout.size) === 'undefined'
+                ? 1 : n.layout.size;
 
             n.layout.__index = i;
         }
@@ -171,7 +170,7 @@ define(function(require) {
                 cmd: 'init',
                 nodesPosition: positionArr,
                 nodesMass: massArr,
-                nodesSize: radiusArr,
+                nodesSize: sizeArr,
                 edges: edgeArr,
                 edgesWeight: edgeWeightArr,
                 token: this._token
@@ -179,7 +178,7 @@ define(function(require) {
         }
         else {
             this._layout.setToken(this._token);
-            this._layout.initNodes(positionArr, massArr, radiusArr);
+            this._layout.initNodes(positionArr, massArr, sizeArr);
             this._layout.initEdges(edgeArr, edgeWeightArr);   
         }
 

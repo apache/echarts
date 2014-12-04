@@ -7,6 +7,7 @@
  */
 define(function (require) {
     var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
     var ecQuery = require('../util/ecQuery');
     var number = require('../util/number');
     var zrUtil = require('zrender/tool/util');
@@ -25,30 +26,25 @@ define(function (require) {
         this.effectList = [];
         
         var self = this;
-        self.hoverConnect = function (param) {
-            var target = (param.target || {}).hoverConnect;
-            if (target) {
-                var zlevel = 10;
-                var shape;
-                if (!(target instanceof Array)) {
-                    shape = self.getShapeById(target);
-                    if (shape) {
-                        self.zr.addHoverShape(shape);
-                        zlevel = Math.min(zlevel, shape.zlevel);
+        
+        self._onlegendhoverlink = function(param) {
+            if (self.legendHoverLink) {
+                var targetName = param.target;
+                var name;
+                for (var i = self.shapeList.length - 1; i >= 0; i--) {
+                    name = self.type == ecConfig.CHART_TYPE_PIE
+                           || self.type == ecConfig.CHART_TYPE_FUNNEL
+                           ? ecData.get(self.shapeList[i], 'name')
+                           : (ecData.get(self.shapeList[i], 'series') || {}).name;
+                    if (name == targetName && !self.shapeList[i].invisible) {
+                        self.zr.addHoverShape(self.shapeList[i]);
                     }
-                }
-                else {
-                    for (var i = 0, l = target.length; i < l; i++) {
-                        shape = self.getShapeById(target[i]);
-                        self.zr.addHoverShape(shape);
-                        zlevel = Math.min(zlevel, shape.zlevel);
-                    }
-                }
-                if (zlevel < param.target.zlevel) {
-                    self.zr.addHoverShape(param.target);
                 }
             }
         };
+        messageCenter && messageCenter.bind(
+            ecConfig.EVENT.LEGEND_HOVERLINK, this._onlegendhoverlink
+        );
     }
 
     /**
@@ -80,6 +76,7 @@ define(function (require) {
                 case ecConfig.CHART_TYPE_CHORD:
                 case ecConfig.CHART_TYPE_GUAGE:
                 case ecConfig.CHART_TYPE_FUNNEL:
+                case ecConfig.CHART_TYPE_EVENTRIVER:
                     return 2;
 
                 case ecConfig.COMPONENT_TYPE_LEGEND :
@@ -141,7 +138,7 @@ define(function (require) {
                 return [p, p, p, p];
             }
         },
-
+        
         getShapeById: function(id) {
             for (var i = 0, l = this.shapeList.length; i < l; i++) {
                 if (this.shapeList[i].id === id) {
@@ -167,7 +164,16 @@ define(function (require) {
         
         getItemStyleColor: function (itemColor, seriesIndex, dataIndex, data) {
             return typeof itemColor === 'function'
-                   ? itemColor(seriesIndex, dataIndex, data) : itemColor;
+                   ? itemColor.call(
+                        this.myChart,
+                        {
+                            seriesIndex: seriesIndex,
+                            series: this.series[seriesIndex],
+                            dataIndex: dataIndex,
+                            data: data
+                        }
+                   )
+                   : itemColor;
             
         },        
         
@@ -206,9 +212,14 @@ define(function (require) {
          * 释放后实例不可用
          */
         dispose: function () {
+            this.onbeforDispose && this.onbeforDispose();
             this.clear();
             this.shapeList = null;
             this.effectList = null;
+            this.messageCenter && this.messageCenter.unbind(
+                ecConfig.EVENT.LEGEND_HOVERLINK, this._onlegendhoverlink
+            );
+            this.onafterDispose && this.onafterDispose();
         },
         
         query: ecQuery.query,

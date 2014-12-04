@@ -11,6 +11,7 @@
  * @property {number} target0
  * @property {number} target1
  * @property {number} r
+ * @property {boolean} clockWise
  * @property {string} [brushType='fill']
  * @property {string} [color='#000000'] 填充颜色
  * @property {string} [strokeColor='#000000'] 描边颜色
@@ -45,15 +46,16 @@ define(function (require) {
     }
 
     RibbonShape.prototype = {
-        type : 'chord',
         
-        // center, source0, source1, target0, target1, r
+        type : 'ribbon',
+        
         buildPath : function (ctx, style) {
+
+            var clockWise = style.clockWise || false;
 
             var path = this._pathProxy;
             path.begin(ctx);
 
-            var PI2 = Math.PI * 2;
             var cx = style.x;
             var cy = style.y;
             var r = style.r;
@@ -61,17 +63,17 @@ define(function (require) {
             var s1 = style.source1 / 180 * Math.PI;
             var t0 = style.target0 / 180 * Math.PI;
             var t1 = style.target1 / 180 * Math.PI;
-            var sx0 = cx + Math.cos(PI2 - s0) * r;
-            var sy0 = cy - Math.sin(PI2 - s0) * r;
-            var sx1 = cx + Math.cos(PI2 - s1) * r;
-            var sy1 = cy - Math.sin(PI2 - s1) * r;
-            var tx0 = cx + Math.cos(PI2 - t0) * r;
-            var ty0 = cy - Math.sin(PI2 - t0) * r;
-            var tx1 = cx + Math.cos(PI2 - t1) * r;
-            var ty1 = cy - Math.sin(PI2 - t1) * r;
+            var sx0 = cx + Math.cos(s0) * r;
+            var sy0 = cy + Math.sin(s0) * r;
+            var sx1 = cx + Math.cos(s1) * r;
+            var sy1 = cy + Math.sin(s1) * r;
+            var tx0 = cx + Math.cos(t0) * r;
+            var ty0 = cy + Math.sin(t0) * r;
+            var tx1 = cx + Math.cos(t1) * r;
+            var ty1 = cy + Math.sin(t1) * r;
 
             path.moveTo(sx0, sy0);
-            path.arc(cx, cy, style.r, s0, s1, false);
+            path.arc(cx, cy, style.r, s0, s1, !clockWise);
             path.bezierCurveTo(
                 (cx - sx1) * 0.70 + sx1, 
                 (cy - sy1) * 0.70 + sy1,
@@ -85,9 +87,9 @@ define(function (require) {
             ) {
                 return;
             }
-            path.arc(cx, cy, style.r, t0, t1, false);
+            path.arc(cx, cy, style.r, t0, t1, !clockWise);
             path.bezierCurveTo(
-                (cx - tx1) * 0.70 + tx1, 
+                (cx - tx1) * 0.70 + tx1,
                 (cy - ty1) * 0.70 + ty1,
                 (cx - sx0) * 0.70 + sx0, 
                 (cy - sy0) * 0.70 + sy0,
@@ -104,7 +106,7 @@ define(function (require) {
             }
             return this._pathProxy.fastBoundingRect();
         },
-                
+
         isCover : function (x, y) {
             var rect = this.getRect(this.style);
             if (x >= rect.x

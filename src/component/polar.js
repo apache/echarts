@@ -122,6 +122,7 @@ define(function (require) {
          * 绘制axisLabel
          */
         _addAxisLabel : function (index) {
+            var accMath = require('../util/accMath');
             var item = this.polar[index];
             var indicator = this.deepQuery(this._queryTarget, 'indicator');
             var __ecIndicator = item.__ecIndicator;
@@ -137,7 +138,6 @@ define(function (require) {
             var theta;
             // var startAngle = this.deepQuery(this._queryTarget, 'startAngle');
             var offset;
-            var precision = this.deepQuery(this._queryTarget, 'precision');
             var interval;
 
             for (var i = 0; i < indicator.length; i ++) {
@@ -164,12 +164,7 @@ define(function (require) {
 
                     for (var j = 1 ; j <= splitNumber; j += interval + 1) {
                         newStyle = zrUtil.merge({}, style);
-                        text = 
-                            j * (value.max - value.min) / splitNumber
-                                + value.min;
-                        if (precision) {
-                            text  = text.toFixed(precision);
-                        }
+                        text = accMath.accAdd(value.min, accMath.accMul(value.step, j));
                         newStyle.text = this.numAddCommas(text);
                         newStyle.x = j * vector[0] / splitNumber 
                                      + Math.cos(theta) * offset + center[0];
@@ -622,34 +617,42 @@ define(function (require) {
             var indicator = this.deepQuery(this._queryTarget, 'indicator');
             var len = indicator.length;
             var __ecIndicator = item.__ecIndicator;
-            var value;
             var max;
             var min;
             var data = this._getSeriesData(index);
+            
+            var boundaryGap = item.boundaryGap;
             var splitNumber = item.splitNumber;
+            var scale = item.scale;
 
-            var boundaryGap = this.deepQuery(this._queryTarget, 'boundaryGap');
-            var precision = this.deepQuery(this._queryTarget, 'precision');
-            var power = this.deepQuery(this._queryTarget, 'power');
-            var scale = this.deepQuery(this._queryTarget, 'scale');
-
+            var smartSteps = require('../util/smartSteps');
             for (var i = 0; i < len ; i ++ ) {
                 if (typeof indicator[i].max == 'number') {
                     max = indicator[i].max;
                     min = indicator[i].min || 0;
-                    value = {
-                        max : max,
-                        min : min
-                    };
                 }
                 else {
-                    value = this._findValue(
-                        data, i, splitNumber,
-                        boundaryGap, precision, power, scale
+                    var value = this._findValue(
+                        data, i, splitNumber, boundaryGap
                     );
+                    min = value.min;
+                    max = value.max;
                 }
+                 // 非scale下双正，修正最小值为0
+                if (!scale && min >= 0 && max >= 0) {
+                    min = 0;
+                }
+                // 非scale下双负，修正最大值为0
+                if (!scale && min <= 0 && max <= 0) {
+                    max = 0;
+                }
+                var stepOpt = smartSteps(min, max, splitNumber);
 
-                __ecIndicator[i].value = value;
+                __ecIndicator[i].value = {
+                    min: stepOpt.min,
+                    max: stepOpt.max,
+                    step: stepOpt.step
+                };
             }
         },
 
@@ -692,23 +695,14 @@ define(function (require) {
          * 如果是多组，使用同一维度的进行比较 选出最大值最小值 
          * 对它们进行处理  
          * @param {Object} serie 的 data
-         * @param {number} 指标的序号
-         * @param {boolean} boundaryGap 两端留白
-         * @param {number} precision 小数精度
-         * @param {number} power 整数精度
-         * @return {Object} 指标的最大值最小值
+         * @param {number} index 指标的序号
+         * @param {number} splitNumber 分段格式
+         * * @param {boolean} boundaryGap 两端留白
          */ 
-        _findValue : function (
-            data, index, splitNumber, boundaryGap, precision, power, scale
-        ) {
+        _findValue : function (data, index, splitNumber, boundaryGap) {
             var max;
             var min;
             var value;
-            var delta;
-            var str;
-            var len = 0;
-            var max0;
-            var min0;
             var one;
 
             if (!data || data.length === 0) {
@@ -740,127 +734,27 @@ define(function (require) {
                 }
             }
 
-            if (data.length != 1) {
-                if (scale) {
-                    delta = this._getDelta(
-                        max, min, splitNumber, precision, power
-                    );
-
-                    if (delta >= 1) {
-                        min = Math.floor(min / delta) * delta - delta;
-                    }
-                    else if (delta === 0) {
-                        if (max > 0) {
-                            min0 = 0;
-                            max0 = 2 * max;
-                        }
-                        else if (max === 0) {
-                            min0 = 0;
-                            max0 = 100;
-                        }
-                        else {
-                            max0 = 0;
-                            min0 = 2 * min;
-                        }
-
-                        return {
-                            max : max0,
-                            min : min0
-                        };
-                    }
-                    else {
-                        str = (delta + '').split('.')[1];
-                        len = str.length;
-                        min = Math.floor(
-                                min * Math.pow(10, len)) / Math.pow(10, len
-                              ) - delta;
-                    }
-
-                    if (Math.abs(min) <= delta) {
-                        min = 0;
-                    }
-                    
-                    max = min + Math.floor(delta * Math.pow(10, len) 
-                        * (splitNumber + 1)) / Math.pow(10, len) ;
+            var gap = Math.abs(max - min);
+            min = min - Math.abs(gap * boundaryGap[0]);
+            max = max + Math.abs(gap * boundaryGap[1]);
+            if (min === max) {
+                if (max === 0) {
+                    // 修复全0数据
+                    max = 1;
                 }
-                else {
-                    min = min > 0 ? 0 : min;
+                // 修复最大值==最小值时数据整形
+                else if (max > 0) {
+                    min = max / splitNumber;
                 }
-            }
-
-            if (boundaryGap) {
-                max = max > 0 ? max * 1.2 : max * 0.8;
-                min = min > 0 ? min * 0.8 : min * 1.2;
+                else { // max < 0
+                    max = max / splitNumber;
+                }
             }
 
             return {
                 max : max,
                 min : min
             };
-        },
-
-        /**
-         * 获取最大值与最小值中间比较合适的差值
-         * @param {number} max;
-         * @param {number} min
-         * @param {number} precision 小数精度
-         * @param {number} power 整数精度
-         * @return {number} delta
-         */
-        _getDelta : function (max , min, splitNumber, precision, power) {
-            var delta = (max - min) / splitNumber;
-            var str;
-            var n;
-
-            if (delta > 1) {
-                if (!power) {
-                    str = (delta + '').split('.')[0];
-                    n = str.length;
-                    if (str.charAt(0) >= 5) {
-                        return Math.pow(10, n);
-                    }
-                    else {
-                        return (str.charAt(0) - 0 + 1 ) * Math.pow(10, n - 1);
-                    }
-                }
-                else {
-                    delta = Math.ceil(delta);
-                    if (delta % power > 0) {
-                        return (Math.ceil(delta / power) + 1) * power;
-                    }
-                    else {
-                        return delta;
-                    }
-                }
-            }
-            else if (delta == 1) {
-                return 1;
-            }
-            else if (delta === 0) {
-                return 0;
-            } 
-            else {
-                if (!precision) {
-                    str = (delta + '').split('.')[1];
-                    n = 0;
-                    while (str[n] == '0') {
-                        n ++ ;
-                    }
-
-                    if (str[n] >= 5) {
-                        return '0.' + str.substring(0, n + 1) - 0 
-                            + 1 / Math.pow(10, n);
-                    }
-                    else {
-                        return '0.' + str.substring(0, n + 1) - 0 
-                            + 1 / Math.pow(10, n + 1);
-                    }
-                } 
-                else {
-                    return Math.ceil(delta * Math.pow(10, precision)) 
-                        / Math.pow(10, precision);
-                }
-            }
         },
 
         /**

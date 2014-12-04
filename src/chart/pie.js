@@ -44,7 +44,6 @@ define(function (require) {
             var seriesIndex = ecData.get(shape, 'seriesIndex');
             var dataIndex = ecData.get(shape, 'dataIndex');
             var percent = ecData.get(shape, 'special');
-            var lastAddRadius = shape._lastAddRadius;
 
             var center = [shape.style.x, shape.style.y];
             var startAngle = shape.style.startAngle;
@@ -98,6 +97,7 @@ define(function (require) {
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type === ecConfig.CHART_TYPE_PIE) {
                     series[i] = this.reformOption(series[i]);
+                    this.legendHoverLink = series[i].legendHoverLink || this.legendHoverLink;
                     serieName = series[i].name || '';
                     // 系列图例开关
                     this.selectedMap[serieName] = 
@@ -456,7 +456,7 @@ define(function (require) {
                 y = centerY;
                 textAlign = 'center';
             }
-            else if (labelControl.position === 'inner'){
+            else if (labelControl.position === 'inner' || labelControl.position === 'inside') {
                 // 内部显示
                 radius = (radius[0] + radius[1]) / 2;
                 x = Math.round(centerX + radius * zrMath.cos(midAngle, true));
@@ -472,7 +472,10 @@ define(function (require) {
                 textAlign = (midAngle >= 90 && midAngle <= 270) ? 'right' : 'left';
             }
             
-            if (labelControl.position != 'center' && labelControl.position != 'inner') {
+            if (labelControl.position != 'center' 
+                && labelControl.position != 'inner'
+                && labelControl.position != 'inside'
+            ) {
                 x += textAlign === 'left' ? 20 : -20;
             }
             data.__labelX = x - (textAlign === 'left' ? 5 : -5);
@@ -653,7 +656,7 @@ define(function (require) {
             var rightList = [];
             
             for (var i = 0, l = sList.length; i < l; i++) {
-                if (sList[i]._labelPosition === 'outer') {
+                if (sList[i]._labelPosition === 'outer' || sList[i]._labelPosition === 'outside') {
                     sList[i]._rect._y = sList[i]._rect.y;
                     if (sList[i]._rect.x < center[0]) {
                         leftList.push(sList[i]);
@@ -694,7 +697,7 @@ define(function (require) {
                     }
                 }
                 
-                _changeUp(end - 1, delta / 2)
+                _changeUp(end - 1, delta / 2);
             }
             
             // 弹
@@ -763,7 +766,7 @@ define(function (require) {
             for (var i = 0; i < len; i++) {
                 delta = tList[i]._rect.y - lastY;
                 if (delta < 0) {
-                    _changeDown(i, len, -delta, direction)
+                    _changeDown(i, len, -delta, direction);
                 }
                 lastY = tList[i]._rect.y + tList[i]._rect.height;
             }

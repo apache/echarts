@@ -62,11 +62,11 @@ define(function (require) {
                 serieName = serie.name;
                 if (serie.type === ecConfig.CHART_TYPE_SCATTER) {
                     series[i] = this.reformOption(series[i]);
+                    this.legendHoverLink = series[i].legendHoverLink || this.legendHoverLink;
                     this._sIndex2ShapeMap[i] = this.query(serie, 'symbol')
                                           || this._symbol[i % this._symbol.length];
                     if (legend){
                         this.selectedMap[serieName] = legend.isSelected(serieName);
-                            
                         this._sIndex2ColorMap[i] = zrColor.alpha(legend.getColor(serieName), 0.5);
                             
                         iconShape = legend.getItemShape(serieName);
@@ -105,7 +105,7 @@ define(function (require) {
                     } 
                     else {
                         this.selectedMap[serieName] = true;
-                        this._sIndex2ColorMap[i] = this.zr.getColor(i);
+                        this._sIndex2ColorMap[i] = zrColor.alpha(this.zr.getColor(i), 0.5);
                     }
                       
                     if (this.selectedMap[serieName]) {

@@ -7,7 +7,7 @@
     <meta name="description" content="ECharts">
     <meta name="author" content="linzhifeng@baidu.com">
 
-    <script src="../../doc/asset/js/esl/esl.js"></script>
+    <script src="../../doc/example/www/js/echarts.js"></script>
     <script src="../../doc/asset/js/codemirror.js"></script>
     <script src="../../doc/asset/js/javascript.js"></script>
 
@@ -580,10 +580,10 @@ option = {
     tooltip : {
         trigger: 'axis',
         formatter: function (params) {
-            var res = params[0][1];
-            res += '<br/>' + params[0][0];
-            res += '<br/>  开盘 : ' + params[0][2][0] + '  最高 : ' + params[0][2][3];
-            res += '<br/>  收盘 : ' + params[0][2][1] + '  最低 : ' + params[0][2][2];
+            var res = params[0].name;
+            res += '<br/>' + params[0].seriesName;
+            res += '<br/>  开盘 : ' + params[0].value[0] + '  最高 : ' + params[0].value[3];
+            res += '<br/>  收盘 : ' + params[0].value[1] + '  最低 : ' + params[0].value[2];
             return res;
         }
     },
@@ -638,7 +638,6 @@ option = {
         {
             type : 'value',
             scale:true,
-            precision: 2,
             splitNumber: 9,
             boundaryGap: [0.05, 0.05],
             splitArea : {show : true}
@@ -1026,8 +1025,6 @@ option = {
                 textStyle: {color:'red'}
             },
             scale: true,
-            precision: 1,
-            //power: 100,
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
                 lineStyle: {       // 属性lineStyle控制线条样式
@@ -1198,6 +1195,15 @@ option = {
     tooltip : {
         trigger: 'item'
     },
+    toolbox: {
+        show : true,
+        y: 'bottom',
+        feature : {
+            restore : {show: true},
+            magicType: {show: true, type: ['force', 'chord']},
+            saveAsImage : {show: true}
+        }
+    },
     legend: {
         x: 'right',
         data:['g1','g2', 'g3', 'g4']
@@ -1314,6 +1320,14 @@ option = {
         trigger: 'item',
         formatter: '{a} : {b}'
     },
+    toolbox: {
+        show : true,
+        feature : {
+            restore : {show: true},
+            magicType: {show: true, type: ['force', 'chord']},
+            saveAsImage : {show: true}
+        }
+    },
     legend: {
         x: 'left',
         data:['家人','朋友']
@@ -1321,6 +1335,7 @@ option = {
     series : [
         {
             type:'force',
+            ribbonType: false,
             name : "人物关系",
             categories : [
                 {
@@ -1757,6 +1772,211 @@ option = {
             </div><!--/row-->
         </div><!--/.fluid-container-->
         
+        <!--------11:eventRiver--------->
+        <div class="container-fluid" idx='11'>
+            <div class="row-fluid">
+                <div md="sidebar-code" class="span4">
+                    <div class="well sidebar-nav">
+                        <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" md ="icon-resize" ></a>option</div>
+                        <textarea md="code" name="code">
+option = {
+    title : {
+        text: 'Event River',
+        subtext: '纯属虚构'
+    },
+    tooltip : {
+        trigger: 'item'
+    },
+    legend: {
+        data:['财经事件']
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : {show: true},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    xAxis : [
+        {
+            type : 'time',
+            boundaryGap: [0.05,0.1]
+        }
+    ],
+    series : [
+        {
+            "name": "财经事件", 
+            "type": "eventRiver", 
+            "weight": 123, 
+            "eventList": [
+                {
+                    "name": "阿里巴巴上市", 
+                    "weight": 123, 
+                    "evolution": [
+                        {
+                            "time": "2014-05-01", 
+                            "value": 14, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-02", 
+                            "value": 34, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-03", 
+                            "value": 60, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-04", 
+                            "value": 40, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-05", 
+                            "value": 10, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }
+                    ]
+                }, 
+                {
+                    "name": "阿里巴巴上市2", 
+                    "weight": 123, 
+                    "evolution": [
+                        {
+                            "time": "2014-05-02", 
+                            "value": 10, 
+                            "detail": {
+                                "link": "www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-03", 
+                            "value": 34, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-04", 
+                            "value": 40, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-05", 
+                            "value": 10, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }
+                    ]
+                }, 
+                {
+                    "name": "三星业绩暴跌", 
+                    "weight": 123, 
+                    "evolution": [
+                        {
+                            "time": "2014-05-03", 
+                            "value": 24, 
+                            "detail": {
+                                "link": "www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-04", 
+                            "value": 34, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-05", 
+                            "value": 50, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-06", 
+                            "value": 30, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }, 
+                        {
+                            "time": "2014-05-07", 
+                            "value": 20, 
+                            "detail": {
+                                "link": "http://www.baidu.com", 
+                                "text": "百度指数", 
+                                "img": '../../doc/asset/ico/favicon.png'
+                            }
+                        }
+                    ]
+                }
+            ],
+            markPoint : {
+                symbol: 'emptyCircle',
+                data : [
+                    {name : '打酱油的标注', value : 100, x:'5%', y:'50%', symbolSize:32},
+                    {name : '打酱油的标注', value : 100, x:'95%', y:'50%', symbolSize:32}
+                ]
+            }
+        }
+    ]
+};
+                    </textarea>
+                    </div><!--/.well -->
+                </div><!--/span-->
+                <div md="graphic" class="span8">
+                    <div md="main" class="main"></div>
+                    <div>
+                        <button onclick="refresh(true, 11)">Refresh ~</button>
+                        <span md='wrong-message' style="color:red"></span>
+                    </div>
+                </div><!--/span-->
+            </div><!--/row-->
+        </div><!--/.fluid-container-->
         <hr>
         <!-- FOOTER -->
         <footer>

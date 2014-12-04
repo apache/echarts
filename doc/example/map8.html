@@ -20,7 +20,7 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-    <script src="../asset/js/esl/esl.js"></script>
+    <script src="./www/js/echarts.js"></script>
     <script src="../asset/js/codemirror.js"></script>
     <script src="../asset/js/javascript.js"></script>
 
@@ -64,11 +64,10 @@ option = {
         trigger: 'item',
         showDelay: 0,
         transitionDuration: 0.2,
-        formatter : function (a) {
-            var sName = a[0];
-            var value = a[2] + '';
+        formatter : function (params) {
+            var value = params.value + '';
             value = value.replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,');
-            return sName + '<br/>' + value + ' Billion';
+            return params.seriesName + '<br/>' + value + ' Billion';
         }
     },
     toolbox: {

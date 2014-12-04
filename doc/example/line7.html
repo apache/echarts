@@ -20,7 +20,7 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-    <script src="../asset/js/esl/esl.js"></script>
+    <script src="./www/js/echarts.js"></script>
     <script src="../asset/js/codemirror.js"></script>
     <script src="../asset/js/javascript.js"></script>
 
@@ -53,10 +53,10 @@ option = {
                 width : 1
             }
         },
-        formatter : function (value) {
-            return value[0] + ' : [ '
-               + value[2][0] + ', ' 
-               + value[2][1] + ' ]';
+        formatter : function (params) {
+            return params.seriesName + ' : [ '
+                   + params.value[0] + ', ' 
+                   + params.value[1] + ' ]';
         }
     },
     legend: {
@@ -66,6 +66,7 @@ option = {
         show : true,
         feature : {
             mark : {show: true},
+            dataZoom : {show: true},
             dataView : {show: true, readOnly: false},
             magicType : {show: true, type: ['line', 'bar']},
             restore : {show: true},
@@ -75,12 +76,12 @@ option = {
     calculable : true,
     xAxis : [
         {
-            type : 'value'
+            type: 'value'
         }
     ],
     yAxis : [
         {
-            type : 'value',
+            type: 'value',
             axisLine: {
                 lineStyle: {
                     color: '#dc143c'

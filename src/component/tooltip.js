@@ -66,6 +66,12 @@ define(function (require) {
         this._tDom.onselectstart = function() {
             return false;
         };
+        this._tDom.onmouseover = function() {
+            self._mousein = true;
+        };
+        this._tDom.onmouseout = function() {
+            self._mousein = false;
+        };
         this._tDom.style.position = 'absolute';  // 不是多余的，别删！
         this.hasAppend = false;
         
@@ -527,6 +533,8 @@ define(function (require) {
                                   === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
                                ? 'yAxis'    // 纵轴为类目轴，找到所有用这条纵轴并且axis触发的系列数据
                                : false;
+            var x;
+            var y;
             if (axisLayout) {
                 var axisIndex = axisLayout == 'xAxis' ? xAxisIndex : yAxisIndex;
                 categoryAxis = this.component[axisLayout].getAxis(axisIndex);
@@ -567,8 +575,6 @@ define(function (require) {
                     this.myChart
                 );
                 
-                var x;
-                var y;
                 var rect;
                 if (axisLayout == 'xAxis') {
                     x = this.subPixelOptimize(
@@ -620,21 +626,29 @@ define(function (require) {
 
             if (seriesArray.length > 0) {
                 var data;
+                var value;
                 if (typeof formatter === 'function') {
                     var params = [];
                     for (var i = 0, l = seriesArray.length; i < l; i++) {
                         data = seriesArray[i].data[dataIndex];
-                        data = data != null
-                               ? (data.value != null
-                                   ? data.value
-                                   : data)
-                               : '-';
-                               
-                        params.push([
-                            seriesArray[i].name || '',
-                            categoryAxis.getNameByIndex(dataIndex),
-                            data
-                        ]);
+                        value = data != null
+                                ? (data.value != null ? data.value : data)
+                                : '-';
+                        
+                        params.push({
+                            seriesIndex: seriesIndex[i],
+                            seriesName: seriesArray[i].name || '',
+                            series: seriesArray[i],
+                            dataIndex: dataIndex,
+                            data: data,
+                            name: categoryAxis.getNameByIndex(dataIndex),
+                            value: value,
+                            // 向下兼容
+                            0: seriesArray[i].name || '',
+                            1: categoryAxis.getNameByIndex(dataIndex),
+                            2: value,
+                            3: data
+                        });
                     }
                     this._curTicket = 'axis:' + dataIndex;
                     this._tDom.innerHTML = formatter.call(
@@ -720,6 +734,7 @@ define(function (require) {
             }
             var series = this.option.series;
             var seriesArray = [];
+            var seriesIndex = [];
 
             var formatter;
             var position;
@@ -750,11 +765,13 @@ define(function (require) {
                                || position;
                     specialCssText += this._style(this.query(series[i], 'tooltip'));
                     seriesArray.push(series[i]);
+                    seriesIndex.push(i);
                 }
             }
             if (seriesArray.length > 0) {
                 var polarData;
                 var data;
+                var value;
                 var params = [];
 
                 for (var i = 0, l = seriesArray.length; i < l; i++) {
@@ -767,14 +784,23 @@ define(function (require) {
                         data = data != null
                                ? data
                                : {name:'', value: {dataIndex:'-'}};
-                               
-                        params.push([
-                            seriesArray[i].name || '',
-                            data.name,
-                            data.value[dataIndex].value != null
-                                ? data.value[dataIndex].value : data.value[dataIndex],
-                            indicatorName
-                        ]);
+                        value = data.value[dataIndex].value != null
+                                ? data.value[dataIndex].value : data.value[dataIndex];
+                        params.push({
+                            seriesIndex: seriesIndex[i],
+                            seriesName: seriesArray[i].name || '',
+                            series: seriesArray[i],
+                            dataIndex: dataIndex,
+                            data: data,
+                            name: data.name,
+                            indicator: indicatorName,
+                            value: value,
+                            // 向下兼容
+                            0: seriesArray[i].name || '',
+                            1: data.name,
+                            2: value,
+                            3: indicatorName
+                        });
                     }
                 }
                 if (params.length <= 0) {
@@ -794,32 +820,32 @@ define(function (require) {
                     for (var i = 0, l = params.length; i < l; i++) {
                         formatter = formatter.replace(
                             '{a' + i + '}',
-                            this._encodeHTML(params[i][0])
+                            this._encodeHTML(params[i].seriesName)
                         );
                         formatter = formatter.replace(
                             '{b' + i + '}',
-                            this._encodeHTML(params[i][1])
+                            this._encodeHTML(params[i].name)
                         );
                         formatter = formatter.replace(
                             '{c' + i + '}',
-                            this.numAddCommas(params[i][2])
+                            this.numAddCommas(params[i].value)
                         );
                         formatter = formatter.replace(
                             '{d' + i + '}',
-                            this._encodeHTML(params[i][3])
+                            this._encodeHTML(params[i].indicator)
                         );
                     }
                     this._tDom.innerHTML = formatter;
                 }
                 else {
-                    formatter = this._encodeHTML(params[0][1]) + '<br/>' 
-                                + this._encodeHTML(params[0][3]) + ' : ' 
-                                + this.numAddCommas(params[0][2]);
+                    formatter = this._encodeHTML(params[0].name) + '<br/>' 
+                                + this._encodeHTML(params[0].indicator) + ' : ' 
+                                + this.numAddCommas(params[0].value);
                     for (var i = 1, l = params.length; i < l; i++) {
-                        formatter += '<br/>' + this._encodeHTML(params[i][1]) 
+                        formatter += '<br/>' + this._encodeHTML(params[i].name) 
                                      + '<br/>';
-                        formatter += this._encodeHTML(params[i][3]) + ' : ' 
-                                     + this.numAddCommas(params[i][2]);
+                        formatter += this._encodeHTML(params[i].indicator) + ' : ' 
+                                     + this.numAddCommas(params[i].value);
                     }
                     this._tDom.innerHTML = formatter;
                 }
@@ -855,6 +881,7 @@ define(function (require) {
             }
             var serie = ecData.get(this._curTarget, 'series');
             var data = ecData.get(this._curTarget, 'data');
+            var dataIndex = ecData.get(this._curTarget, 'dataIndex');
             var name = ecData.get(this._curTarget, 'name');
             var value = ecData.get(this._curTarget, 'value');
             var special = ecData.get(this._curTarget, 'special');
@@ -864,11 +891,9 @@ define(function (require) {
             var position;
             var showContent;
             var specialCssText = '';
-            var indicator;
-            var html = '';
             if (this._curTarget._type != 'island') {
                 // 全局
-                var trigger = axisTrigger ? 'axis' : 'item'
+                var trigger = axisTrigger ? 'axis' : 'item';
                 if (this.option.tooltip.trigger === trigger) {
                     formatter = this.option.tooltip.formatter;
                     position = this.option.tooltip.position;
@@ -893,19 +918,31 @@ define(function (require) {
             }
 
             if (typeof formatter === 'function') {
-                this._curTicket = (serie.name || '')
-                                  + ':'
-                                  + ecData.get(this._curTarget, 'dataIndex');
+                this._curTicket = (serie.name || '') + ':' + dataIndex;
                 this._tDom.innerHTML = formatter.call(
                     this.myChart,
-                    [
-                        serie.name || '',
-                        name,
-                        value,
-                        special,
-                        special2,
-                        data
-                    ],
+                    {
+                        seriesIndex: ecData.get(this._curTarget, 'seriesIndex'),
+                        seriesName: serie.name || '',
+                        series: serie,
+                        dataIndex: dataIndex,
+                        data: data,
+                        name: name,
+                        value: value,
+                        percent: special,   // 饼图
+                        indicator: special, // 雷达图
+                        value2: special2,
+                        indicator2: special2,
+                        // 向下兼容
+                        0: serie.name || '',
+                        1: name,
+                        2: value,
+                        3: special,
+                        4: special2,
+                        5: data,
+                        6: ecData.get(this._curTarget, 'seriesIndex'),
+                        7: dataIndex
+                    },
                     this._curTicket,
                     this._setContent
                 );
@@ -935,33 +972,20 @@ define(function (require) {
             else {
                 this._curTicket = NaN;
                 if (serie.type === ecConfig.CHART_TYPE_RADAR && special) {
-                    indicator = special;
-                    html += this._encodeHTML(name === '' ? (serie.name || '') : name);
-                    html += html === '' ? '' : '<br />';
-                    for (var i = 0 ; i < indicator.length; i ++) {
-                        html += this._encodeHTML(indicator[i].text) + ' : ' 
-                                + this.numAddCommas(value[i]) + '<br />';
-                    }
-                    this._tDom.innerHTML = html;
+                    this._tDom.innerHTML = this._itemFormatter.radar.call(
+                        this, serie, name, value, special
+                    );
                 }
-                else if (serie.type === ecConfig.CHART_TYPE_CHORD) {
-                    if (special2 == null) {
-                        // 外环上
-                        this._tDom.innerHTML = ''
-                            + this._encodeHTML(name) + ' (' + this.numAddCommas(value) + ')';
-                    }
-                    else {
-                        var name1 = this._encodeHTML(name);
-                        var name2 = this._encodeHTML(special);
-                        // 内部弦上
-                        this._tDom.innerHTML = ''
-                            + (serie.name != null ? (this._encodeHTML(serie.name) + '<br/>') : '')
-                            + name1 + ' -> ' + name2 
-                            + ' (' + this.numAddCommas(value) + ')'
-                            + '<br />'
-                            + name2 + ' -> ' + name1
-                            + ' (' + this.numAddCommas(special2) + ')';
-                    }
+                // chord 处理暂时跟 force 一样
+                // else if (serie.type === ecConfig.CHART_TYPE_CHORD) {
+                //     this._tDom.innerHTML = this._itemFormatter.chord.call(
+                //         this, serie, name, value, special, special2
+                //     );
+                // }
+                else if (serie.type === ecConfig.CHART_TYPE_EVENTRIVER) {
+                    this._tDom.innerHTML = this._itemFormatter.eventRiver.call(
+                        this, serie, name, value, data
+                    );
                 }
                 else {
                     this._tDom.innerHTML = ''
@@ -1001,6 +1025,59 @@ define(function (require) {
             );
         },
 
+        _itemFormatter: {
+            radar: function(serie, name, value, indicator){
+                var html = '';
+                html += this._encodeHTML(name === '' ? (serie.name || '') : name);
+                html += html === '' ? '' : '<br />';
+                for (var i = 0 ; i < indicator.length; i ++) {
+                    html += this._encodeHTML(indicator[i].text) + ' : ' 
+                            + this.numAddCommas(value[i]) + '<br />';
+                }
+                return html;
+            },
+            chord: function(serie, name, value, special, special2) {
+                if (special2 == null) {
+                    // 外环上
+                    return this._encodeHTML(name) + ' (' + this.numAddCommas(value) + ')';
+                }
+                else {
+                    var name1 = this._encodeHTML(name);
+                    var name2 = this._encodeHTML(special);
+                    // 内部弦上
+                    return ''
+                        + (serie.name != null ? (this._encodeHTML(serie.name) + '<br/>') : '')
+                        + name1 + ' -> ' + name2 
+                        + ' (' + this.numAddCommas(value) + ')'
+                        + '<br />'
+                        + name2 + ' -> ' + name1
+                        + ' (' + this.numAddCommas(special2) + ')';
+                }
+            },
+            eventRiver: function(serie, name, value, data) {
+                var html = '';
+                html += this._encodeHTML(serie.name === '' ? '' : (serie.name + ' : ') );
+                html += this._encodeHTML(name);
+                html += html === '' ? '' : '<br />';
+                data = data.evolution;
+                for (var i = 0, l = data.length; i < l; i++) {
+                    html += '<div style="padding-top:5px;">';
+                    if (!data[i].detail) {
+                        continue;
+                    }
+                    if (data[i].detail.img) {
+                        html += '<img src="' + data[i].detail.img 
+                                + '" style="float:left;width:40px;height:40px;">';
+                    }
+                    html += '<div style="margin-left:45px;">' + data[i].time + '<br/>';
+                    html += '<a href="' + data[i].detail.link + '" target="_blank">';
+                    html += data[i].detail.text + '</a></div>';
+                    html += '</div>';
+                }
+                return html;
+            }
+        },
+        
         /**
          * 设置坐标轴指示器样式 
          */
@@ -1145,6 +1222,9 @@ define(function (require) {
         __onmousemove: function (param) {
             clearTimeout(this._hidingTicket);
             clearTimeout(this._showingTicket);
+            if (this._mousein) {
+                return;
+            }
             var target = param.target;
             var mx = zrEvent.getX(param.event);
             var my = zrEvent.getY(param.event);
@@ -1549,11 +1629,6 @@ define(function (require) {
                     this.option.tooltip.textStyle,
                     this.ecTheme.textStyle
                 );
-                // 补全padding属性
-                this.option.tooltip.padding = this.reformCssArray(
-                    this.option.tooltip.padding
-                );
-    
                 this._needAxisTrigger = false;
                 if (this.option.tooltip.trigger === 'axis') {
                     this._needAxisTrigger = true;
@@ -1586,13 +1661,10 @@ define(function (require) {
         /**
          * 释放后实例不可用，重载基类方法
          */
-        dispose: function () {
+        onbeforDispose: function () {
             if (this._lastTipShape && this._lastTipShape.tipShape.length > 0) {
                 this.zr.delShape(this._lastTipShape.tipShape);
             }
-            this.clear();
-            this.shapeList = null;
-            
             clearTimeout(this._hidingTicket);
             clearTimeout(this._showingTicket);
             this.zr.un(zrConfig.EVENT.MOUSEMOVE, this._onmousemove);

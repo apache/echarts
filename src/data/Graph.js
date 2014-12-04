@@ -33,6 +33,14 @@ define(function(require) {
     };
 
     /**
+     * 是否是有向图
+     * @return {boolean}
+     */
+    Graph.prototype.isDirected = function () {
+        return this._directed;
+    };
+
+    /**
      * 添加一个新的节点
      * @param {string} id 节点名称
      * @param {*} [data] 存储的数据
@@ -89,7 +97,9 @@ define(function(require) {
             n2.inEdges.push(edge);   
         }
         n1.edges.push(edge);
-        n2.edges.push(edge);
+        if (n1 !== n2) {
+            n2.edges.push(edge);
+        }
 
         this.edges.push(edge);
         this._edgesMap[key] = edge;
@@ -110,7 +120,9 @@ define(function(require) {
             n2.inEdges.splice(util.indexOf(n2.inEdges, edge), 1);   
         }
         n1.edges.splice(util.indexOf(n1.edges, edge), 1);
-        n2.edges.splice(util.indexOf(n2.edges, edge), 1);
+        if (n1 !== n2) {
+            n2.edges.splice(util.indexOf(n2.edges, edge), 1);
+        }
 
         delete this._edgesMap[key];
         this.edges.splice(util.indexOf(this.edges, edge), 1);
@@ -136,7 +148,7 @@ define(function(require) {
         } else {
             return this._edgesMap[n1 + '-' + n2];
         }
-    }
+    };
 
     /**
      * 移除节点（及其邻接边）
@@ -155,7 +167,7 @@ define(function(require) {
 
         for (var i = 0; i < this.edges.length;) {
             var edge = this.edges[i];
-            if (edge.node1 == node || edge.node2 == node) {
+            if (edge.node1 === node || edge.node2 === node) {
                 this.removeEdge(edge);
             } else {
                 i++;
@@ -164,24 +176,64 @@ define(function(require) {
     };
 
     /**
+     * 遍历并且过滤指定的节点
+     * @param  {Function} cb
+     * @param  {*}   [context]
+     */
+     Graph.prototype.filterNode = function (cb, context) {
+        var len = this.nodes.length;
+        for (var i = 0; i < len;) {
+            if (cb.call(context, this.nodes[i], i)) {
+                i++;
+            } else {
+                this.removeNode(this.nodes[i]);
+                len--;
+            }
+        }
+     };
+
+    /**
+     * 遍历并且过滤指定的边
+     * @param  {Function} cb
+     * @param  {*}   [context]
+     */
+     Graph.prototype.filterEdge = function (cb, context) {
+        var len = this.edges.length;
+        for (var i = 0; i < len;) {
+            if (cb.call(context, this.edges[i], i)) {
+                i++;
+            } else {
+                this.removeEdge(this.edges[i]);
+                len--;
+            }
+        }
+     };
+
+    /**
      * 线性遍历所有节点
      * @param  {Function} cb
-     * @param  {*}   context
+     * @param  {*}   [context]
      */
     Graph.prototype.eachNode = function (cb, context) {
-        for (var i = 0; i < this.nodes.length; i++) {
-            cb.call(context, this.nodes[i]);
+        var len = this.nodes.length;
+        for (var i = 0; i < len; i++) {
+            if (this.nodes[i]) {    // 可能在遍历过程中存在节点删除
+                cb.call(context, this.nodes[i], i);
+            }
         }
     };
     
     /**
      * 线性遍历所有边
      * @param  {Function} cb
-     * @param  {*}   context
+     * @param  {*}   [context]
      */
     Graph.prototype.eachEdge = function (cb, context) {
-        for (var i = 0; i < this.edges.length; i++) {
-            cb.call(context, this.edges[i]);
+        var len = this.edges.length;
+        for (var i = 0; i < len; i++) {
+            if (this.edges[i]) {    // 可能在遍历过程中存在边删除
+                cb.call(context, this.edges[i], i);
+            }
         }
     };
     
@@ -198,6 +250,10 @@ define(function(require) {
     
     /**
      * 广度优先遍历
+     * @param {Function} cb
+     * @param {module:echarts/data/Graph~Node} startNode 遍历起始节点
+     * @param {string} [direction=none] none, in, out 指定遍历边
+     * @param {*} [context] 回调函数调用context
      */
     Graph.prototype.breadthFirstTraverse = function (
         cb, startNode, direction, context
@@ -258,7 +314,7 @@ define(function(require) {
             graph.addEdge(e.node1.id, e.node2.id, e.data);
         }
         return graph;
-    }
+    };
 
     /**
      * 图节点
@@ -362,10 +418,9 @@ define(function(require) {
      * 对于有向图会计算每一行的和写到`node.data.outValue`,
      * 计算每一列的和写到`node.data.inValue`。
      * 边的权重会被然后写到`edge.data.weight`。
-     * 如果是有向图被写到`edge.data.sourceWeight`和`edge.data.targetWeight`
      * 
      * @method module:echarts/data/Graph.fromMatrix
-     * @param {Array.<Object>} nodesData 节点信息，必须有`id`属性
+     * @param {Array.<Object>} nodesData 节点信息，必须有`id`属性, 会保存到`node.data`中
      * @param {Array} matrix 邻接矩阵
      * @param {boolean} directed 是否是有向图
      * @return {module:echarts/data/Graph}
@@ -384,7 +439,9 @@ define(function(require) {
         var graph = new Graph(directed);
 
         for (var i = 0; i < size; i++) {
-            var node = graph.addNode(nodesData[i].id, {});
+            var node = graph.addNode(nodesData[i].id, nodesData[i]);
+            // TODO
+            // node.data已经有value的情况
             node.data.value = 0;
             if (directed) {
                 node.data.outValue = node.data.inValue = 0;
@@ -394,11 +451,11 @@ define(function(require) {
             for (var j = 0; j < size; j++) {
                 var item = matrix[i][j];
                 if (directed) {
-                    graph.nodes[i].outValue += item;
-                    graph.nodes[j].inValue += item;
+                    graph.nodes[i].data.outValue += item;
+                    graph.nodes[j].data.inValue += item;
                 }
-                graph.nodes[i].value += item;
-                graph.nodes[j].value += item;
+                graph.nodes[i].data.value += item;
+                graph.nodes[j].data.value += item;
             }
         }
 
@@ -411,21 +468,17 @@ define(function(require) {
                 var n1 = graph.nodes[i];
                 var n2 = graph.nodes[j];
                 var edge = graph.addEdge(n1, n2, {});
-                if (directed) {
-                    edge.data.sourceWeight = item;
-                    edge.data.targetWeight = matrix[j][i];
-                }
                 edge.data.weight = item;
                 if (i !== j) {
-                    if (directed) {
+                    if (directed && matrix[j][i]) {
                         var inEdge = graph.addEdge(n2, n1, {});
-                        inEdge.sourceWeight = matrix[j][i];
-                        inEdge.targetWeight = item;
+                        inEdge.data.weight = matrix[j][i];
                     }
-                    edge.data.weight += matrix[j][i];
                 }
             }
         }
+
+        return graph;
     };
 
     return Graph;

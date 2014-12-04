@@ -21,6 +21,7 @@ define(function() {
         CHART_TYPE_CHORD: 'chord',
         CHART_TYPE_GAUGE: 'gauge',
         CHART_TYPE_FUNNEL: 'funnel',
+        CHART_TYPE_EVENTRIVER: 'eventRiver',
 
         // 组件类型
         COMPONENT_TYPE_TITLE: 'title',
@@ -82,6 +83,7 @@ define(function() {
         
         // 图例
         legend: {
+            show: true,
             orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
             x: 'center',               // 水平安放位置，默认为全图居中，可选为：
@@ -109,6 +111,7 @@ define(function() {
         
         // 值域
         dataRange: {
+            show: true,
             orient: 'vertical',        // 布局方式，默认为垂直布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
             x: 'left',                 // 水平安放位置，默认为全图左对齐，可选为：
@@ -131,6 +134,7 @@ define(function() {
             precision: 0,              // 小数精度，默认为0，无小数点
             splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变
             calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
+            hoverLink: true,
             realtime: true,
             color:['#006edd','#e0ffff'],//颜色 
             // formatter: null,
@@ -188,7 +192,7 @@ define(function() {
                     show: false,
                     title: '数据视图',
                     readOnly: false,
-                    lang: ['Data View', 'close', 'refresh']
+                    lang: ['数据视图', '关闭', '刷新']
                 },
                 magicType: {
                     show: false,
@@ -196,9 +200,25 @@ define(function() {
                         line: '折线图切换',
                         bar: '柱形图切换',
                         stack: '堆积',
-                        tiled: '平铺'
+                        tiled: '平铺',
+                        force: '力导向布局图切换',
+                        chord: '和弦图切换',
+                        pie: '饼图切换',
+                        funnel: '漏斗图切换'
                     },
-                    type: [] // 'line', 'bar', 'stack', 'tiled'
+                    /*
+                    option: {
+                        line: {},
+                        bar: {},
+                        stack: {},
+                        tiled: {},
+                        force: {},
+                        chord: {},
+                        pie: {},
+                        funnel: {}
+                    },
+                    */
+                    type: [] // 'line', 'bar', 'stack', 'tiled', 'force', 'chord', 'pie', 'funnel'
                 },
                 restore: {
                     show: false,
@@ -268,6 +288,7 @@ define(function() {
             dataBackgroundColor: '#eee',            // 数据背景颜色
             fillerColor: 'rgba(144,197,237,0.2)',   // 填充颜色
             handleColor: 'rgba(70,130,180,0.8)',    // 手柄颜色
+            showDetail: true,
             // xAxisIndex: [],         // 默认控制所有横向类目
             // yAxisIndex: [],         // 默认控制所有横向类目
             // start: 0,               // 默认为0
@@ -291,6 +312,7 @@ define(function() {
 
         // 类目轴
         categoryAxis: {
+            show: true,
             position: 'bottom',    // 位置
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
@@ -347,6 +369,7 @@ define(function() {
 
         // 数值型坐标轴默认参数
         valueAxis: {
+            show: true,
             position: 'left',      // 位置
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
@@ -355,9 +378,7 @@ define(function() {
             // min: null,          // 最小值
             // max: null,          // 最大值
             // scale: false,       // 脱离0值比例，放大聚焦到最终_min，_max区间
-            precision: 0,          // 小数精度，默认为0，无小数点
-            power: 100,            // 整数精度，默认为100，个位和百位为0
-            splitNumber: 5,        // 分割段数，默认为5
+            //splitNumber: 5,        // 分割段数，默认为5
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
                 onZero: true,
@@ -406,6 +427,7 @@ define(function() {
             center: ['50%', '50%'],    // 默认全局居中
             radius: '75%',
             startAngle: 90,
+            boundaryGap: [0, 0],   // 数值起始和结束两端空白策略
             splitNumber: 5,
             name: {
                 show: true,
@@ -503,7 +525,7 @@ define(function() {
         },
         
         roamController: {
-            show: false,
+            show: true,
             x: 'left',                 // 水平安放位置，默认为全图左对齐，可选为：
                                        // 'center' ¦ 'left' ¦ 'right'
                                        // ¦ {number}（x坐标，单位px）
@@ -517,7 +539,7 @@ define(function() {
             borderWidth: 0,            // 图例边框线宽，单位px，默认为0（无边框）
             padding: 5,                // 图例内边距，单位px，默认各方向内边距为5，
                                        // 接受数组分别设定上右下左边距，同css
-            handlerColor: '#6495ed',
+            handleColor: '#6495ed',
             fillerColor: '#fff',
             step: 15,                  // 移动幅度
             mapTypeControl: null
@@ -526,6 +548,7 @@ define(function() {
         // 柱形图默认参数
         bar: {
             clickable: true,
+            legendHoverLink: true,
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
@@ -566,6 +589,7 @@ define(function() {
         // 折线图默认参数
         line: {
             clickable: true,
+            legendHoverLink: true,
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
@@ -609,6 +633,7 @@ define(function() {
         // K线图默认参数
         k: {
             clickable: true,
+            legendHoverLink: false,
             xAxisIndex: 0,
             yAxisIndex: 0,
             // barWidth: null               // 默认自适应
@@ -633,6 +658,7 @@ define(function() {
         // 散点图默认参数
         scatter: {
             clickable: true,
+            legendHoverLink: true,
             xAxisIndex: 0,
             yAxisIndex: 0,
             // symbol: null,        // 图形类型
@@ -683,6 +709,7 @@ define(function() {
         // 雷达图默认参数
         radar: {
             clickable: true,
+            legendHoverLink: true,
             polarIndex: 0,
             itemStyle: {
                 normal: {
@@ -710,6 +737,7 @@ define(function() {
         // 饼图默认参数
         pie: {
             clickable: true,
+            legendHoverLink: true,
             center: ['50%', '50%'],     // 默认全局居中
             radius: [0, '75%'],
             clockWise: true,            // 默认顺时针
@@ -775,6 +803,7 @@ define(function() {
             mapValuePrecision: 0,           // 地图数值计算结果小数精度
             showLegendSymbol: true,         // 显示图例颜色标识（系列标识的小圆点），存在legend时生效
             // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
+            dataRangeHoverLink: true,
             hoverable: true,
             clickable: true,
             // roam: false,                 // 是否开启缩放及漫游模式
@@ -818,6 +847,9 @@ define(function() {
             // 布局大小
             size: '100%',
 
+            // 防止节点和节点，节点和边之间的重叠
+            preventOverlap: false,
+            
             // 布局冷却因子，值越小结束时间越短，值越大时间越长但是结果也越收敛
             coolDown: 0.99,
             
@@ -853,28 +885,32 @@ define(function() {
             draggable: true,
             clickable: true,
 
+            roam: false,
+
             // 分类里如果有样式会覆盖节点默认样式
-            categories: [{
+            // categories: [{
                 // itemStyle
                 // symbol
                 // symbolSize
                 // name
-            }],
+            // }],
             itemStyle: {
                 normal: {
                     // color: 各异,
                     label: {
-                        show: false
+                        show: false,
+                        position: 'inside'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     nodeStyle: {
-                        brushType: 'both',
-                        color: '#f08c2e',
-                        strokeColor: '#5182ab',
-                        lineWidth: 1
+                        brushType : 'both',
+                        borderColor : '#5182ab',
+                        borderWidth: 1
                     },
                     linkStyle: {
-                        strokeColor: '#5182ab'
+                        color: '#5182ab',
+                        width: 1,
+                        type: 'line'
                     }
                 },
                 emphasis: {
@@ -920,40 +956,63 @@ define(function() {
             sortSub: 'none',    // can be 'none', 'ascending', 'descending'
             startAngle: 90,
             clockWise: true,
+            ribbonType: true,
+            
+            /***************** 下面的配置项在 ribbonType 为 false 时有效 */
+            // 同force类似
+            minRadius: 10,
+            maxRadius: 20,
+            symbol: 'circle',
+            /***************** 上面的配置项在 ribbonType 为 false 时有效 */
+
+            /***************** 下面的配置项在 ribbonType 为 true 时有效 */
             showScale: false,
             showScaleText: false,
+            /***************** 上面的配置项在 ribbonType 为 true 时有效 */
+
+            // 分类里如果有样式会覆盖节点默认样式
+            // categories: [{
+                // itemStyle
+                // symbol
+                // symbolSize
+                // name
+            // }],
+
             itemStyle: {
                 normal: {
+                    borderWidth: 0,
+                    borderColor: '#000',
                     label: {
                         show: true,
                         rotate: false,
-                        distance: 10
+                        distance: 5
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
-                    lineStyle: {
-                        width: 0,
-                        color: '#000'
-                    },
                     chordStyle: {
-                        lineStyle: {
-                            width: 1,
-                            color: '#999'
-                        }
+                        /** ribbonType = false 时有效 */
+                        width: 1,
+                        color: 'black',
+                        /** ribbonType = true 时有效 */
+                        borderWidth: 1,
+                        borderColor: '#999',
+                        opacity: 0.5
                     }
                 },
                 emphasis: {
-                    lineStyle: {
-                        width: 0,
-                        color: '#000'
-                    },
+                    borderWidth: 0,
+                    borderColor: '#000',
                     chordStyle: {
-                        lineStyle: {
-                            width: 1,
-                            color: '#666'
-                        }
+                        /** ribbonType = false 时有效 */
+                        width: 1,
+                        color: 'black',
+                        /** ribbonType = true 时有效 */
+                        borderWidth: 1,
+                        borderColor: '#999'
                     }
                 }
-            },
+            }
+            /****** 使用 Data-matrix 表示数据 */
+            // data: [],
             // Source data matrix
             /**
              *         target
@@ -969,11 +1028,17 @@ define(function() {
              *  
              *  Row based
              */
-            matrix: []
+            // matrix: [],
+
+            /****** 使用 node-links 表示数据 */
+            // 参考 force
+            // nodes: [],
+            // links: []
         },
 
         gauge: {
             center: ['50%', '50%'],    // 默认全局居中
+            legendHoverLink: true,
             radius: '75%',
             startAngle: 225,
             endAngle: -45,
@@ -1046,6 +1111,7 @@ define(function() {
         
         funnel: {
             clickable: true,
+            legendHoverLink: true,
             x: 80,
             y: 60,
             x2: 80,
@@ -1058,6 +1124,7 @@ define(function() {
             maxSize: '100%',
             sort: 'descending', // 'ascending', 'descending'
             gap: 0,
+            funnelAlign: 'center',
             itemStyle: {
                 normal: {
                     // color: 各异,
@@ -1087,6 +1154,32 @@ define(function() {
                         show: true
                     },
                     labelLine: {
+                        show: true
+                    }
+                }
+            }
+        },
+        
+        eventRiver: {
+            clickable: true,
+            legendHoverLink: true,
+            itemStyle: {
+                normal: {
+                    // color: 各异,
+                    borderColor: 'rgba(0,0,0,0)',
+                    borderWidth: 1,
+                    label: {
+                        show: true,
+                        position: 'inside',     // 可选为'left'|'right'|'top'|'bottom'
+                        formatter: '{b}'
+                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    }
+                },
+                emphasis: {
+                    // color: 各异,
+                    borderColor: 'rgba(0,0,0,0)',
+                    borderWidth: 1,
+                    label: {
                         show: true
                     }
                 }
@@ -1219,13 +1312,16 @@ define(function() {
             DATA_CHANGED: 'dataChanged',
             DATA_ZOOM: 'dataZoom',
             DATA_RANGE: 'dataRange',
+            DATA_RANGE_HOVERLINK: 'dataRangeHoverLink',
             LEGEND_SELECTED: 'legendSelected',
+            LEGEND_HOVERLINK: 'legendHoverLink',
             MAP_SELECTED: 'mapSelected',
             PIE_SELECTED: 'pieSelected',
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',
             DATA_VIEW_CHANGED: 'dataViewChanged',
             TIMELINE_CHANGED: 'timelineChanged',
             MAP_ROAM: 'mapRoam',
+            FORCE_LAYOUT_END: 'forceLayoutEnd',
             // -------内部通信
             TOOLTIP_HOVER: 'tooltipHover',
             TOOLTIP_IN_GRID: 'tooltipInGrid',

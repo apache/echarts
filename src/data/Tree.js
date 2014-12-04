@@ -2,13 +2,13 @@ define(function(require) {
 
     function TreeNode(id) {
         this.id = id;
-        this.level = 0;
+        this.depth = 0;
         this.height = 0;
         this.children = [];
 
         this.data = {};
         this.layout = {};
-    };
+    }
 
     TreeNode.prototype.traverse = function (cb, context) {
         cb.call(context, this);
@@ -18,12 +18,12 @@ define(function(require) {
         }
     };
 
-    TreeNode.prototype.updateLevelAndHeight = function (level) {
+    TreeNode.prototype.updateDepthAndHeight = function (depth) {
         var height = 0;
-        this.level = level;
+        this.depth = depth;
         for (var i = 0; i < this.children.length; i++) {
             var child = this.children[i];
-            child.updateLevelAndHeight(level + 1);
+            child.updateDepthAndHeight(depth + 1);
             if (child.height > height) {
                 height = child.height;
             }
@@ -71,7 +71,7 @@ define(function(require) {
             var graphNode = graph.getNodeById(root.id);
             for (var i = 0; i < graphNode.outEdges.length; i++) {
                 var edge = graphNode.outEdges[i];
-                var childTreeNode = treeNodesMap[edge.node2.id]
+                var childTreeNode = treeNodesMap[edge.node2.id];
                 root.children.push(childTreeNode);
                 buildHierarch(childTreeNode);
             }
@@ -82,7 +82,7 @@ define(function(require) {
         for (var i = 0; i < graph.nodes.length; i++) {
             var node = graph.nodes[i];
             var treeNode;
-            if (node.inDegree() == 0) {
+            if (node.inDegree() === 0) {
                 treeMap[node.id] = new Tree(node.id);
                 treeNode = treeMap[node.id].root;
             } else {
@@ -96,11 +96,11 @@ define(function(require) {
         var treeList = [];
         for (var id in treeMap) {
             buildHierarch(treeMap[id].root);
-            treeMap[id].root.updateLevelAndHeight(0);
+            treeMap[id].root.updateDepthAndHeight(0);
             treeList.push(treeMap[id]);
         }
         return treeList;
-    }
+    };
 
     return Tree;
 });

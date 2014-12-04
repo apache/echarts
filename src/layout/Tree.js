@@ -1,28 +1,33 @@
+/**
+ * Tree layout
+ * @module echarts/layout/Tree
+ * @author pissang(http://github.com/pissang)
+ */
 define(function (require) {
 
     var vec2 = require('zrender/tool/vector');
 
-    function TreeLayout(tree) {
-        
-        this.tree = tree;
-        
-        this.nodePadding = 30;
+    function TreeLayout(opts) {
 
-        this.layerPadding = 100;
+        opts = opts || {};
+
+        this.nodePadding = opts.nodePadding || 30;
+
+        this.layerPadding = opts.layerPadding || 100;
 
         this._layerOffsets = [];
 
         this._layers = [];
-    };
+    }
 
-    TreeLayout.prototype.run = function () {
+    TreeLayout.prototype.run = function (tree) {
         this._layerOffsets.length = 0;
-        for (var i = 0; i < this.tree.root.height + 1; i++) {
+        for (var i = 0; i < tree.root.height + 1; i++) {
             this._layerOffsets[i] = 0;
             this._layers[i] = [];
         }
-        this._updateNodeXPosition(this.tree.root);
-        var root = this.tree.root;
+        this._updateNodeXPosition(tree.root);
+        var root = tree.root;
         this._updateNodeYPosition(root, 0, root.layout.height);
     };
 
@@ -46,17 +51,17 @@ define(function (require) {
         } else {
             node.layout.position[0] = 0;
         }
-        var off = this._layerOffsets[node.level] || 0;
+        var off = this._layerOffsets[node.depth] || 0;
         if (off > node.layout.position[0]) {
             var shift = off - node.layout.position[0];
             this._shiftSubtree(node, shift);
-            for (var i = node.level + 1; i < node.height + node.level; i++) {
+            for (var i = node.depth + 1; i < node.height + node.depth; i++) {
                 this._layerOffsets[i] += shift;
             }
         }
-        this._layerOffsets[node.level] = node.layout.position[0] + node.layout.width + this.nodePadding;
+        this._layerOffsets[node.depth] = node.layout.position[0] + node.layout.width + this.nodePadding;
 
-        this._layers[node.level].push(node);
+        this._layers[node.depth].push(node);
     };
 
     TreeLayout.prototype._shiftSubtree = function (root, offset) {
@@ -74,7 +79,7 @@ define(function (require) {
         }
         var layerPadding = this.layerPadding;
         if (typeof(layerPadding) === 'function') {
-            layerPadding = layerPadding(node.level);
+            layerPadding = layerPadding(node.depth);
         }
         for (var i = 0; i < node.children.length; i++) {
             this._updateNodeYPosition(node.children[i], y + layerPadding + prevLayerHeight, layerHeight);

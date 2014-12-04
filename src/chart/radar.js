@@ -55,6 +55,7 @@
             for (var i = 0, l = series.length; i < l ; i++) {
                 if (series[i].type === ecConfig.CHART_TYPE_RADAR) {
                     this.serie = this.reformOption(series[i]);
+                    this.legendHoverLink = series[i].legendHoverLink || this.legendHoverLink;
                     serieName = this.serie.name || '';
                     // 系列图例开关
                     this.selectedMap[serieName] = 
@@ -141,13 +142,12 @@
             var vector;
             var polar = this.component.polar;
 
+            var value;
             for (var i = 0, l = dataArr.value.length; i < l; i++) {
-                vector = polar.getVector(
-                    polarIndex, 
-                    i, 
-                    typeof dataArr.value[i].value != 'undefined'
-                    ? dataArr.value[i].value : dataArr.value[i]
-                );
+                value = dataArr.value[i].value != null ? dataArr.value[i].value : dataArr.value[i];
+                vector = value != '-' 
+                         ? polar.getVector(polarIndex, i, value)
+                         : false;
                 if (vector) {
                     pointList.push(vector);
                 } 

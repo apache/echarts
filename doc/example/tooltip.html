@@ -20,7 +20,7 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-    <script src="../asset/js/esl/esl.js"></script>
+    <script src="./www/js/echarts.js"></script>
     <script src="../asset/js/codemirror.js"></script>
     <script src="../asset/js/javascript.js"></script>
 
@@ -53,7 +53,7 @@ option = {
         padding: 10,    // [5, 10, 15, 20]
         position : function(p) {
             // 位置回调
-            console.log && console.log(p);
+            // console.log && console.log(p);
             return [p[0] + 10, p[1] - 10];
         },
         textStyle : {
@@ -65,9 +65,10 @@ option = {
             fontWeight: 'bold'
         },
         formatter: function (params,ticket,callback) {
-            var res = 'Function formatter : <br/>' + params[0][1];
+            console.log(params)
+            var res = 'Function formatter : <br/>' + params[0].name;
             for (var i = 0, l = params.length; i < l; i++) {
-                res += '<br/>' + params[i][0] + ' : ' + params[i][2];
+                res += '<br/>' + params[i].seriesName + ' : ' + params[i].value;
             }
             setTimeout(function (){
                 // 仅为了模拟异步回调
@@ -98,7 +99,10 @@ option = {
         {
             name:'坐标轴触发1',
             type:'bar',
-            data:[320, 332, 301, 334, 390, 330, 320]
+            data:[
+                {value:320, extra:'Hello~'},
+                332, 301, 334, 390, 330, 320
+            ]
         },
         {
             name:'坐标轴触发2',

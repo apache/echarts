@@ -20,7 +20,7 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-    <script src="../asset/js/esl/esl.js"></script>
+    <script src="./www/js/echarts.js"></script>
     <script src="../asset/js/codemirror.js"></script>
     <script src="../asset/js/javascript.js"></script>
 
@@ -54,6 +54,7 @@ option = {
         show : true,
         feature : {
             restore : {show: true},
+            magicType: {show: true, type: ['force', 'chord']},
             saveAsImage : {show: true}
         }
     },
@@ -65,6 +66,7 @@ option = {
         {
             type:'force',
             name : "人物关系",
+            ribbonType: false,
             categories : [
                 {
                     name: '人物'
@@ -87,8 +89,8 @@ option = {
                     },
                     nodeStyle : {
                         brushType : 'both',
-                        strokeColor : 'rgba(255,215,0,0.4)',
-                        lineWidth : 1
+                        borderColor : 'rgba(255,215,0,0.4)',
+                        borderWidth : 1
                     }
                 },
                 emphasis: {
@@ -110,16 +112,20 @@ option = {
             linkSymbol: 'arrow',
             steps: 10,
             coolDown: 0.9,
+            //preventOverlap: true,
             nodes:[
                 {
                     category:0, name: '乔布斯', value : 10,
-                    symbol: 'image://http://www.cnii.com.cn/hg/zt/2012315zt/content/attachement/jpg/site2/20120217/00137274b1a410a8340f07.jpg',
+                    symbol: 'image://http://www.damndigital.com/wp-content/uploads/2010/12/steve-jobs.jpg',
                     symbolSize: 30,
                     draggable: true,
                     itemStyle: {
                         normal: {
                             label: {
-                                show: false
+                                position: 'right',
+                                textStyle: {
+                                    color: 'black'
+                                }
                             }
                         }
                     }
@@ -136,19 +142,14 @@ option = {
                 {category:2, name: '龙-韦恩',value : 1},
             ],
             links : [
-                {source : 1, target : 0, weight : 1, itemStyle: {
-                    normal: {
-                        lineWidth: 10
-                    }
-                }},
-                {source : '丽萨-乔布斯', target : '乔布斯', weight : 1},
-                {source : '保罗-乔布斯', target : '乔布斯', weight : 2},
-                {source : '克拉拉-乔布斯', target : '乔布斯', weight : 1},
+                {source : '丽萨-乔布斯', target : '乔布斯', weight : 1, name: '女儿'},
+                {source : '保罗-乔布斯', target : '乔布斯', weight : 2, name: '父亲'},
+                {source : '克拉拉-乔布斯', target : '乔布斯', weight : 1, name: '母亲'},
                 {source : '劳伦-鲍威尔', target : '乔布斯', weight : 2},
-                {source : '史蒂夫-沃兹尼艾克', target : '乔布斯', weight : 3},
-                {source : '奥巴马', target : '乔布斯', weight : 3},
-                {source : '比尔-盖茨', target : '乔布斯', weight : 6},
-                {source : '乔纳森-艾夫', target : '乔布斯', weight : 1},
+                {source : '史蒂夫-沃兹尼艾克', target : '乔布斯', weight : 3, name: '合伙人'},
+                {source : '奥巴马', target : '乔布斯', weight : 1},
+                {source : '比尔-盖茨', target : '乔布斯', weight : 6, name: '竞争对手'},
+                {source : '乔纳森-艾夫', target : '乔布斯', weight : 1, name: '爱将'},
                 {source : '蒂姆-库克', target : '乔布斯', weight : 1},
                 {source : '龙-韦恩', target : '乔布斯', weight : 1},
                 {source : '克拉拉-乔布斯', target : '保罗-乔布斯', weight : 1},
@@ -178,10 +179,12 @@ function focus(param) {
     } else { // 点击的是点
         console.log("选中了" + data.name + '(' + data.value + ')');
     }
-    console.log(param);
 }
 myChart.on(ecConfig.EVENT.CLICK, focus)
 
+myChart.on(ecConfig.EVENT.FORCE_LAYOUT_END, function () {
+    console.log(myChart.chart.force.getPosition());
+});
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->

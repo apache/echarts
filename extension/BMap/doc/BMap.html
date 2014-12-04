@@ -20,7 +20,7 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-    <script src="../../../doc/asset/js/esl/esl.js"></script>
+    <script src="../../../doc/example/www/js/echarts.js"></script>
     <script src="../../../doc/asset/js/codemirror.js"></script>
     <script src="../../../doc/asset/js/javascript.js"></script>
 
@@ -60,10 +60,7 @@ option = {
     title : {
         text: '模拟迁徙',
         subtext:'数据纯属虚构',
-        x:'center',
-        textStyle : {
-            color: '#fff'
-        }
+        x:'right'
     },
     tooltip : {
         trigger: 'item',
@@ -79,9 +76,6 @@ option = {
         selected:{
             '上海' : false,
             '广州' : false
-        },
-        textStyle : {
-            color: '#fff'
         }
     },
     toolbox: {
@@ -99,11 +93,9 @@ option = {
     dataRange: {
         min : 0,
         max : 100,
+        y: '60%',
         calculable : true,
-        color: ['#ff3333', 'orange', 'yellow','lime','aqua'],
-        textStyle:{
-            color:'#fff'
-        }
+        color: ['#ff3333', 'orange', 'yellow','lime','aqua']
     },
     series : [
         {
@@ -620,6 +612,6 @@ BMapExt.setOption(option, true)
     <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=ZUONbpqGBsYGXNIYHicvbAbM"></script>
     <script type="text/javascript" src="../../../doc/asset/js/echartsHome.js"></script>
     <script src="../../../doc/asset/js/bootstrap.min.js"></script>
-    <script src="./echartsExample.js"></script>
+    <script src="./BMap.js"></script>
 </body>
 </html>

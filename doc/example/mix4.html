@@ -20,7 +20,7 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-    <script src="../asset/js/esl/esl.js"></script>
+    <script src="./www/js/echarts.js"></script>
     <script src="../asset/js/codemirror.js"></script>
     <script src="../asset/js/javascript.js"></script>
 
@@ -96,11 +96,11 @@ option = {
             type:'scatter',
             tooltip : {
                 trigger: 'item',
-                formatter : function (value) {
-                    return '2013-03-' + value[2][0] + '<br/>'
-                           + value[0] + ' : ' 
-                           + value[2][1] + ', ' 
-                           + value[2][2]; 
+                formatter : function (params) {
+                    return '2013-03-' + params.value[0] + '<br/>'
+                           + params.seriesName + ' : ' 
+                           + params.value[1] + ', ' 
+                           + params.value[2]; 
                 }
             },
             yAxisIndex:1,

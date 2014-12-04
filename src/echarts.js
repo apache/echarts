@@ -27,9 +27,9 @@ define(function (require) {
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
-    self.version = '2.0.4';
+    self.version = '2.1.9';
     self.dependencies = {
-        zrender: '2.0.4'
+        zrender: '2.0.6'
     };
     /**
      * 入口方法 
@@ -62,6 +62,7 @@ define(function (require) {
         }
         _instances[key] = new Echarts(dom);
         _instances[key].id = key;
+        _instances[key].canvasSupported = _canvasSupported;
         _instances[key].setTheme(theme);
         
         return  _instances[key];
@@ -869,7 +870,13 @@ define(function (require) {
             if (!(themeColor && themeColor.length)) {
                 themeColor = this._themeConfig.color;
             }
-
+            
+            if (!_canvasSupported) {
+                // 不支持Canvas的强制关闭动画
+                magicOption.animation = false;
+                magicOption.addDataAnimation = false;
+            }
+            
             this._zr.getColor = function (idx) {
                 var zrColor = require('zrender/tool/color');
                 return zrColor.getColor(idx, themeColor);
@@ -1645,6 +1652,7 @@ define(function (require) {
             this._zr.clear();
             this._option = {};
             this._optionRestore = {};
+            this.dom.style.backgroundColor = null;
             return this;
         },
 

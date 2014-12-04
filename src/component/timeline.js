@@ -141,7 +141,7 @@ define(function (require) {
          */
         _getLocation: function () {
             var timelineOption = this.timelineOption;
-            var padding = timelineOption.padding;
+            var padding = this.reformCssArray(this.timelineOption.padding);
             
             // 水平布局
             var zrWidth = this.zr.getWidth();
@@ -279,7 +279,7 @@ define(function (require) {
             var len = data.length;
             
             function _getName(i) {
-                return data[i].name != null ? data[i].name : data[i];
+                return (data[i].name != null ? data[i].name : data[i] + '');
             }
             var xList = [];
             if (len > 1) {
@@ -370,7 +370,7 @@ define(function (require) {
         
         _buildBackground: function () {
             var timelineOption = this.timelineOption;
-            var padding = timelineOption.padding;
+            var padding = this.reformCssArray(this.timelineOption.padding);
             var width = this._location.width;
             var height = this._location.height;
             
@@ -779,10 +779,6 @@ define(function (require) {
         
         setTheme: function(needRefresh) {
             this.timelineOption = this.reformOption(zrUtil.clone(this.option.timeline));
-            // 补全padding属性
-            this.timelineOption.padding = this.reformCssArray(
-                this.timelineOption.padding
-            );
             // 通用字体设置
             this.timelineOption.label.textStyle = zrUtil.merge(
                 this.timelineOption.label.textStyle || {},
@@ -792,6 +788,10 @@ define(function (require) {
                 this.timelineOption.checkpointStyle.label.textStyle || {},
                 this.ecTheme.textStyle
             );
+            if (!this.myChart.canvasSupported) {
+                // 不支持Canvas的强制关闭实时动画
+                this.timelineOption.realtime = false;
+            }
             
             if (this.timelineOption.show && needRefresh) {
                 this.clear();
@@ -803,10 +803,7 @@ define(function (require) {
         /**
          * 释放后实例不可用，重载基类方法
          */
-        dispose: function () {
-            this.clear();
-            this.shapeList = null;
-            
+        onbeforDispose: function () {
             clearTimeout(this.playTicket);
         }
     };

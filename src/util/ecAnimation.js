@@ -96,6 +96,7 @@ define(function (require) {
         var newShapeStyle = newShape.style;
         if (!oldShape) {        // add
             oldShape = {
+                position : newShape.position,
                 style : {
                     x : newShapeStyle.x,
                     y : newShape._orient == 'vertical'
@@ -113,12 +114,25 @@ define(function (require) {
         var newY = newShapeStyle.y;
         var newWidth = newShapeStyle.width;
         var newHeight = newShapeStyle.height;
+        var newPosition = [newShape.position[0], newShape.position[1]];
         cloneStyle(
             newShape, oldShape,
             'x', 'y', 'width', 'height'
         );
+        newShape.position = oldShape.position;
 
         zr.addShape(newShape);
+        if (newPosition[0] != oldShape.position[0] || newPosition[1] != oldShape.position[1]) {
+            zr.animate(newShape.id, '')
+                .when(
+                    duration,
+                    {
+                        position: newPosition
+                    }
+                )
+                .start(easing);
+        }
+        
         zr.animate(newShape.id, 'style')
             .when(
                 duration,
@@ -330,14 +344,14 @@ define(function (require) {
      * @param {number} duration
      * @param {tring} easing
      */
-    function chord(zr, oldShape, newShape, duration, easing) {
+    function ribbon(zr, oldShape, newShape, duration, easing) {
         if (!oldShape) {        // add
             oldShape = {
                 style : {
                     source0 : 0,
-                    source1 : 360,
+                    source1 : newShape.style.source1 > 0 ? 360 : -360,
                     target0 : 0,
-                    target1 : 360
+                    target1 : newShape.style.target1 > 0 ? 360 : -360
                 }
             };
         }
@@ -408,7 +422,7 @@ define(function (require) {
      * @param {number} duration
      * @param {tring} easing
      */
-    function icon(zr, oldShape, newShape, duration, easing) {
+    function icon(zr, oldShape, newShape, duration, easing, delay) {
         // 避免markPoint特效取值在动画帧上
         newShape.style._x = newShape.style.x;
         newShape.style._y = newShape.style.y;
@@ -418,9 +432,10 @@ define(function (require) {
         if (!oldShape) {    // add
             var x = newShape._x || 0;
             var y = newShape._y || 0;
-            newShape.scale = [0, 0, x, y];
+            newShape.scale = [0.01, 0.01, x, y];
             zr.addShape(newShape);
             zr.animate(newShape.id, '')
+                .delay(delay)
                 .when(
                     duration,
                     {scale : [1, 1, x, y]}
@@ -445,6 +460,8 @@ define(function (require) {
         if (!oldShape) {
             oldShape = {
                 style : {
+                    xStart : newShape.style.xStart,
+                    yStart : newShape.style.yStart,
                     xEnd : newShape.style.xStart,
                     yEnd : newShape.style.yStart
                 }
@@ -486,7 +503,7 @@ define(function (require) {
      */
     function markline(zr, oldShape, newShape, duration, easing) {
         if (!newShape.style.smooth) {
-            newShape.style.pointList = !oldShape 
+            newShape.style.pointList = !oldShape
                 ? [
                     [newShape.style.xStart, newShape.style.yStart],
                     [newShape.style.xStart, newShape.style.yStart]
@@ -512,18 +529,25 @@ define(function (require) {
         }
         else {
             // 曲线动画
-            newShape.style.pointListLength = 1;
-            zr.addShape(newShape);
-            newShape.style.pointList = newShape.style.pointList 
-                                       || newShape.getPointList(newShape.style);
-            zr.animate(newShape.id, 'style')
-                .when(
-                    duration,
-                    {
-                        pointListLength : newShape.style.pointList.length
-                    }
-                )
-                .start(easing || 'QuinticOut');
+            if (!oldShape) {
+                // 新增
+                newShape.style.pointListLength = 1;
+                zr.addShape(newShape);
+                newShape.style.pointList = newShape.style.pointList 
+                                           || newShape.getPointList(newShape.style);
+                zr.animate(newShape.id, 'style')
+                    .when(
+                        duration,
+                        {
+                            pointListLength : newShape.style.pointList.length
+                        }
+                    )
+                    .start(easing || 'QuinticOut');
+            }
+            else {
+                // 过渡
+                zr.addShape(newShape);
+            }
         }
     }
 
@@ -535,7 +559,7 @@ define(function (require) {
         sector : sector,
         text : text,
         polygon : polygon,
-        chord : chord,
+        ribbon : ribbon,
         gaugePointer : gaugePointer,
         icon : icon,
         line : line,

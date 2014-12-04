@@ -20,7 +20,7 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-    <script src="../asset/js/esl/esl.js"></script>
+    <script src="./www/js/echarts.js"></script>
     <script src="../asset/js/codemirror.js"></script>
     <script src="../asset/js/javascript.js"></script>
 
@@ -108,6 +108,14 @@ option = {
         trigger: 'item',
         formatter: '{a} : {b}'
     },
+    toolbox: {
+        show : true,
+        feature : {
+            restore : {show: true},
+            magicType: {show: true, type: ['force', 'chord']},
+            saveAsImage : {show: true}
+        }
+    },
     legend: {
         x: 'left',
         data:['叶子节点','非叶子节点', '根节点']
@@ -116,6 +124,7 @@ option = {
         {
             type:'force',
             name : "Force tree",
+            ribbonType: false,
             categories : [
                 {
                     name: '叶子节点'

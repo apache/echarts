@@ -217,14 +217,13 @@ define(function (require) {
 
             // 最多两条，其他参数忽略
             if (opt.length > 2) {
-                opt = [opt[0],opt[1]];
+                opt = [opt[0], opt[1]];
             }
 
             if (this.axisType === 'xAxis') {
                 // 横轴位置默认配置
                 if (!opt[0].position            // 没配置或配置错
-                    || (opt[0].position != 'bottom'
-                        && opt[0].position != 'top')
+                    || (opt[0].position != 'bottom' && opt[0].position != 'top')
                 ) {
                     opt[0].position = 'bottom';
                 }
@@ -243,8 +242,7 @@ define(function (require) {
             else {
                 // 纵轴位置默认配置
                 if (!opt[0].position            // 没配置或配置错
-                    || (opt[0].position != 'left'
-                        && opt[0].position != 'right')
+                    || (opt[0].position != 'left'  && opt[0].position != 'right')
                 ) {
                     opt[0].position = 'left';
                 }

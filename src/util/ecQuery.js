@@ -5,7 +5,7 @@
  * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
  *
  */
-define(function() {
+define(function(require) {
     var zrUtil = require('zrender/tool/util');
     
     /**

@@ -88,8 +88,8 @@ define(function (require) {
          * 数据项被拖拽进来
          */
         ondrop: function (param, status) {
-            if (!this.isDrop || !param.target) {
-                // 没有在当前实例上发生拖拽行为则直接返回
+            if (!this.isDrop || !param.target || status.dragIn) {
+                // 没有在当前实例上发生拖拽行为或者已经被认领了则直接返回
                 return;
             }
             var target = param.target;      // 拖拽安放目标
@@ -103,6 +103,13 @@ define(function (require) {
             var legend = this.component.legend;
             if (dataIndex === -1) {
                 // 落到calculableCase上，数据被拖拽进某个饼图|雷达|漏斗，增加数据
+                if (ecData.get(dragged, 'seriesIndex') == seriesIndex) {
+                    // 自己拖拽到自己
+                    status.dragOut = status.dragIn = status.needRefresh = true;
+                    this.isDrop = false;
+                    return;
+                }
+                
                 data = {
                     value: ecData.get(dragged, 'value'),
                     name: ecData.get(dragged, 'name')
@@ -189,8 +196,8 @@ define(function (require) {
          * 数据项被拖拽出去
          */
         ondragend: function (param, status) {
-            if (!this.isDragend || !param.target) {
-                // 没有在当前实例上发生拖拽行为则直接返回
+            if (!this.isDragend || !param.target || status.dragOut) {
+                // 没有在当前实例上发生拖拽行为或者已经被认领了则直接返回
                 return;
             }
             var target = param.target;      // 被拖拽图形元素
@@ -238,6 +245,278 @@ define(function (require) {
                 this.selectedMap[itemName] = legendSelected[itemName];
             }
             return;
+        },
+        
+        /**
+         * 折线图、柱形图公用方法
+         */
+        _bulidPosition: function() {
+            this._symbol = this.option.symbolList;
+            this._sIndex2ShapeMap = {};  // series拐点图形类型，seriesIndex索引到shape type
+            this._sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
+
+            this.selectedMap = {};
+            this.xMarkMap = {};
+            
+            var series = this.series;
+            // 水平垂直双向series索引 ，position索引到seriesIndex
+            var _position2sIndexMap = {
+                top: [],
+                bottom: [],
+                left: [],
+                right: [],
+                other: []
+            };
+            var xAxisIndex;
+            var yAxisIndex;
+            var xAxis;
+            var yAxis;
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (series[i].type === this.type) {
+                    series[i] = this.reformOption(series[i]);
+                    this.legendHoverLink = series[i].legendHoverLink || this.legendHoverLink;
+                    xAxisIndex = series[i].xAxisIndex;
+                    yAxisIndex = series[i].yAxisIndex;
+                    xAxis = this.component.xAxis.getAxis(xAxisIndex);
+                    yAxis = this.component.yAxis.getAxis(yAxisIndex);
+                    if (xAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY) {
+                        _position2sIndexMap[xAxis.getPosition()].push(i);
+                    }
+                    else if (yAxis.type === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY) {
+                        _position2sIndexMap[yAxis.getPosition()].push(i);
+                    }
+                    else {
+                        _position2sIndexMap.other.push(i);
+                    }
+                }
+            }
+            // console.log(_position2sIndexMap);
+            for (var position in _position2sIndexMap) {
+                if (_position2sIndexMap[position].length > 0) {
+                    this._buildSinglePosition(
+                        position, _position2sIndexMap[position]
+                    );
+                }
+            }
+
+            this.addShapeList();
+        },
+        
+        /**
+         * 构建单个方向上的折线图、柱形图公用方法
+         *
+         * @param {number} seriesIndex 系列索引
+         */
+        _buildSinglePosition: function (position, seriesArray) {
+            var mapData = this._mapData(seriesArray);
+            var locationMap = mapData.locationMap;
+            var maxDataLength = mapData.maxDataLength;
+
+            if (maxDataLength === 0 || locationMap.length === 0) {
+                return;
+            }
+            switch (position) {
+                case 'bottom' :
+                case 'top' :
+                    this._buildHorizontal(seriesArray, maxDataLength, locationMap, this.xMarkMap);
+                    break;
+                case 'left' :
+                case 'right' :
+                    this._buildVertical(seriesArray, maxDataLength, locationMap, this.xMarkMap);
+                    break;
+                case 'other' :
+                    this._buildOther(seriesArray, maxDataLength, locationMap, this.xMarkMap);
+                    break;
+            }
+            
+            for (var i = 0, l = seriesArray.length; i < l; i++) {
+                this.buildMark(seriesArray[i]);
+            }
+        },
+        
+        /**
+         * 数据整形，折线图、柱形图公用方法
+         * 数组位置映射到系列索引
+         */
+        _mapData: function (seriesArray) {
+            var series = this.series;
+            var serie;                              // 临时映射变量
+            var dataIndex = 0;                      // 堆积数据所在位置映射
+            var stackMap = {};                      // 堆积数据位置映射，堆积组在二维中的第几项
+            var magicStackKey = '__kener__stack__'; // 堆积命名，非堆积数据安单一堆积处理
+            var stackKey;                           // 临时映射变量
+            var serieName;                          // 临时映射变量
+            var legend = this.component.legend;
+            var locationMap = [];                   // 需要返回的东西：数组位置映射到系列索引
+            var maxDataLength = 0;                  // 需要返回的东西：最大数据长度
+            var iconShape;
+            // 计算需要显示的个数和分配位置并记在下面这个结构里
+            for (var i = 0, l = seriesArray.length; i < l; i++) {
+                serie = series[seriesArray[i]];
+                serieName = serie.name;
+                
+                this._sIndex2ShapeMap[seriesArray[i]] = this._sIndex2ShapeMap[seriesArray[i]]
+                                                        || this.query(serie,'symbol')
+                                                        || this._symbol[i % this._symbol.length];
+                      
+                if (legend){
+                    this.selectedMap[serieName] = legend.isSelected(serieName);
+                    
+                    this._sIndex2ColorMap[seriesArray[i]] = legend.getColor(serieName);
+                        
+                    iconShape = legend.getItemShape(serieName);
+                    if (iconShape) {
+                        // 回调legend，换一个更形象的icon
+                        if (this.type == ecConfig.CHART_TYPE_LINE) {
+                            iconShape.style.iconType = 'legendLineIcon';
+                            iconShape.style.symbol =  this._sIndex2ShapeMap[seriesArray[i]];
+                        }
+                        else if (serie.itemStyle.normal.barBorderWidth > 0) {
+                            iconShape.style.x += 1;
+                            iconShape.style.y += 1;
+                            iconShape.style.width -= 2;
+                            iconShape.style.height -= 2;
+                            iconShape.style.strokeColor = 
+                            iconShape.highlightStyle.strokeColor =
+                                serie.itemStyle.normal.barBorderColor;
+                            iconShape.highlightStyle.lineWidth = 3;
+                            iconShape.style.brushType = 'both';
+                        }
+                        
+                        legend.setItemShape(serieName, iconShape);
+                    }
+                }
+                else {
+                    this.selectedMap[serieName] = true;
+                    this._sIndex2ColorMap[seriesArray[i]] = this.zr.getColor(seriesArray[i]);
+                }
+
+                if (this.selectedMap[serieName]) {
+                    stackKey = serie.stack || (magicStackKey + seriesArray[i]);
+                    if (stackMap[stackKey] == null) {
+                        stackMap[stackKey] = dataIndex;
+                        locationMap[dataIndex] = [seriesArray[i]];
+                        dataIndex++;
+                    }
+                    else {
+                        // 已经分配了位置就推进去就行
+                        locationMap[stackMap[stackKey]].push(seriesArray[i]);
+                    }
+                }
+                // 兼职帮算一下最大长度
+                maxDataLength = Math.max(maxDataLength, serie.data.length);
+            }
+            /* 调试输出
+            var s = '';
+            for (var i = 0, l = maxDataLength; i < l; i++) {
+                s = '[';
+                for (var j = 0, k = locationMap.length; j < k; j++) {
+                    s +='['
+                    for (var m = 0, n = locationMap[j].length - 1; m < n; m++) {
+                        s += series[locationMap[j][m]].data[i] + ','
+                    }
+                    s += series[locationMap[j][locationMap[j].length - 1]]
+                         .data[i];
+                    s += ']'
+                }
+                s += ']';
+                console.log(s);
+            }
+            console.log(locationMap)
+            */
+
+            return {
+                locationMap: locationMap,
+                maxDataLength: maxDataLength
+            };
+        },
+        
+        _calculMarkMapXY : function(xMarkMap, locationMap, xy) {
+            var series = this.series;
+            for (var j = 0, k = locationMap.length; j < k; j++) {
+                for (var m = 0, n = locationMap[j].length; m < n; m++) {
+                    var seriesIndex = locationMap[j][m];
+                    var valueIndex = xy == 'xy' ? 0 : '';
+                    if (xy.indexOf('x') != '-1') {
+                        if (xMarkMap[seriesIndex]['counter' + valueIndex] > 0) {
+                            xMarkMap[seriesIndex]['average' + valueIndex] =
+                                (xMarkMap[seriesIndex]['sum' + valueIndex]
+                                 / xMarkMap[seriesIndex]['counter' + valueIndex]
+                                ).toFixed(2)
+                                - 0;
+                        }
+                        
+                        var x = this.component.xAxis.getAxis(series[seriesIndex].xAxisIndex || 0)
+                                .getCoord(xMarkMap[seriesIndex]['average' + valueIndex]);
+                        xMarkMap[seriesIndex]['averageLine' + valueIndex] = [
+                            [x, this.component.grid.getYend()],
+                            [x, this.component.grid.getY()]
+                        ];
+                        xMarkMap[seriesIndex]['minLine' + valueIndex] = [
+                            [
+                                xMarkMap[seriesIndex]['minX' + valueIndex],
+                                this.component.grid.getYend()
+                            ],
+                            [
+                                xMarkMap[seriesIndex]['minX' + valueIndex],
+                                this.component.grid.getY()
+                            ]
+                        ];
+                        xMarkMap[seriesIndex]['maxLine' + valueIndex] = [
+                            [
+                                xMarkMap[seriesIndex]['maxX' + valueIndex],
+                                this.component.grid.getYend()
+                            ],
+                            [
+                                xMarkMap[seriesIndex]['maxX' + valueIndex],
+                                this.component.grid.getY()
+                            ]
+                        ];
+                        
+                        xMarkMap[seriesIndex].isHorizontal = false;
+                    }
+                    
+                    valueIndex = xy == 'xy' ? 1 : '';
+                    if (xy.indexOf('y') != '-1') {
+                        if (xMarkMap[seriesIndex]['counter' + valueIndex] > 0) {
+                            xMarkMap[seriesIndex]['average' + valueIndex] = 
+                                (xMarkMap[seriesIndex]['sum' + valueIndex]
+                                 / xMarkMap[seriesIndex]['counter' + valueIndex]
+                                ).toFixed(2)
+                                - 0;
+                        }
+                        var y = this.component.yAxis.getAxis(series[seriesIndex].yAxisIndex || 0)
+                                .getCoord(xMarkMap[seriesIndex]['average' + valueIndex]);
+                        xMarkMap[seriesIndex]['averageLine' + valueIndex] = [
+                            [this.component.grid.getX(), y],
+                            [this.component.grid.getXend(), y]
+                        ];
+                        
+                        xMarkMap[seriesIndex]['minLine' + valueIndex] = [
+                            [
+                                this.component.grid.getX(),
+                                xMarkMap[seriesIndex]['minY' + valueIndex]
+                            ],
+                            [
+                                this.component.grid.getXend(),
+                                xMarkMap[seriesIndex]['minY' + valueIndex]
+                            ]
+                        ];
+                        xMarkMap[seriesIndex]['maxLine' + valueIndex] = [
+                            [
+                                this.component.grid.getX(),
+                                xMarkMap[seriesIndex]['maxY' + valueIndex]
+                            ],
+                            [
+                                this.component.grid.getXend(),
+                                xMarkMap[seriesIndex]['maxY' + valueIndex]
+                            ]
+                        ];
+                        
+                        xMarkMap[seriesIndex].isHorizontal = true;
+                    }
+                }
+            }
         },
         
         /**
@@ -315,13 +594,13 @@ define(function (require) {
                                          .replace('{c}','{c0}');
                     formatter = formatter.replace('{a0}', serie.name)
                                          .replace('{b0}', name)
-                                         .replace('{c0}', value);
+                                         .replace('{c0}', this.numAddCommas(value));
     
                     return formatter;
                 }
             }
             else {
-                return value;
+                return this.numAddCommas(value);
             }
         },
         
@@ -410,7 +689,10 @@ define(function (require) {
                         this.getMarkCoord(seriesIndex, mlData[1])
                     ];
                 }
-                
+                if (pos == null || pos[0] == null || pos[1] == null) {
+                    // 不在显示区域内
+                    continue;
+                }
                 markLine.data[i][0].x = mlData[0].x != null ? mlData[0].x : pos[0][0];
                 markLine.data[i][0].y = mlData[0].y != null ? mlData[0].y : pos[0][1];
                 markLine.data[i][1].x = mlData[1].x != null ? mlData[1].x : pos[1][0];
@@ -492,8 +774,11 @@ define(function (require) {
                         }
                     }
                     
+                    color = color == null ? this.zr.getColor(seriesIndex) : color;
+                    
                     // 标准化一些参数
-                    data[i].tooltip = data[i].tooltip 
+                    data[i].tooltip = data[i].tooltip
+                                      || mpOption.tooltip
                                       || {trigger:'item'}; // tooltip.trigger指定为item
                     data[i].name = data[i].name != null ? data[i].name : '';
                     data[i].value = value;
@@ -595,10 +880,8 @@ define(function (require) {
                     continue;
                 }
                     
-                // 图例
-                if (legend) {
-                    color = legend.getColor(serie.name);
-                }
+                color = legend ? legend.getColor(serie.name) : this.zr.getColor(seriesIndex);
+                
                 // 组装一个mergeData
                 mergeData = this.deepMerge(data[i]);
                 value = mergeData != null && mergeData.value != null
@@ -1055,6 +1338,7 @@ define(function (require) {
             var duration = lastShapeList.length > 0
                            ? 500 : this.query(this.option, 'animationDuration');
             var easing = this.query(this.option, 'animationEasing');
+            var delay;
             var key;
             var oldMap = {};
             var newMap = {};
@@ -1100,7 +1384,12 @@ define(function (require) {
                     else {
                         // 新有旧没有  添加并动画过渡
                         //this._animateAdd(newMap[key], duration, easing);
-                        this._animateMod(false, newMap[key], duration, easing);
+                        delay = (this.type == ecConfig.CHART_TYPE_LINE
+                                || this.type == ecConfig.CHART_TYPE_RADAR)
+                                && key.indexOf('icon') !== 0
+                                ? duration / 2
+                                : 0;
+                        this._animateMod(false, newMap[key], duration, easing, delay);
                     }
                 }
                 this.zr.refresh();
@@ -1135,7 +1424,7 @@ define(function (require) {
         /**
          * 动画过渡 
          */
-        _animateMod: function (oldShape, newShape, duration, easing) {
+        _animateMod: function (oldShape, newShape, duration, easing, delay) {
             switch (newShape.type) {
                 case 'broken-line' :
                 case 'half-smooth-polygon' :
@@ -1145,7 +1434,7 @@ define(function (require) {
                     ecAnimation.rectangle(this.zr, oldShape, newShape, duration, easing);
                     break;
                 case 'icon' :
-                    ecAnimation.icon(this.zr, oldShape, newShape, duration, easing);
+                    ecAnimation.icon(this.zr, oldShape, newShape, duration, easing, delay);
                     break;
                 case 'candle' :
                     if (duration > 500) {
@@ -1186,8 +1475,8 @@ define(function (require) {
                         ecAnimation.pointList(this.zr, oldShape, newShape, duration, easing);
                     }
                     break;
-                case 'chord' :
-                    ecAnimation.chord(this.zr, oldShape, newShape, duration, easing);
+                case 'ribbon' :
+                    ecAnimation.ribbon(this.zr, oldShape, newShape, duration, easing);
                     break;
                 case 'gauge-pointer' :
                     ecAnimation.gaugePointer(this.zr, oldShape, newShape, duration, easing);
@@ -1195,6 +1484,7 @@ define(function (require) {
                 case 'mark-line' :
                     ecAnimation.markline(this.zr, oldShape, newShape, duration, easing);
                     break;
+                case 'bezier-curve' :
                 case 'line' :
                     ecAnimation.line(this.zr, oldShape, newShape, duration, easing);
                     break;
@@ -1228,6 +1518,9 @@ define(function (require) {
         animationEffect: function (addShapeList) {
             !addShapeList && this.clearEffectShape();
             var shapeList = addShapeList || this.shapeList;
+            if (shapeList == null) {
+                return;
+            }
             var zlevel = ecConfig.EFFECT_ZLEVEL;
             if (this.canvasSupported) {
                 this.zr.modLayer(
