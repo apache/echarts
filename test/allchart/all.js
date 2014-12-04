@@ -84,7 +84,7 @@ function refreshAll() {
     }
 }
 
-var developMode = true;
+var developMode = false;
 if (developMode) {
     window.esl = null;
     window.define = null;
@@ -95,16 +95,18 @@ if (developMode) {
 
         script.src = '../../doc/asset/js/esl/esl.js';
         if (script.readyState) {
-            script.onreadystatechange = loadedListener;
+            script.onreadystatechange = fireLoad;
         }
         else {
-            script.onload = loadedListener;
+            script.onload = fireLoad;
         }
         (document.getElementsByTagName('head')[0] || document.body).appendChild(script);
-
-        function loadedListener() {
+        
+        function fireLoad() {
             script.onload = script.onreadystatechange = null;
-
+            setTimeout(loadedListener,100);
+        }
+        function loadedListener() {
             // for develop
             require.config({
                 packages: [
