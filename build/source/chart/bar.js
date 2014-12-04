@@ -396,11 +396,9 @@ define('echarts/chart/bar', [
         },
         _recheckBarMaxWidth: function (locationMap, barWidthMap, barMaxWidthMap, barMinHeightMap, gap, barWidth, barGap, interval) {
             for (var j = 0, k = locationMap.length; j < k; j++) {
-                for (var m = 0, n = locationMap[j].length; m < n; m++) {
-                    var seriesIndex = locationMap[j][m];
-                    if (barMaxWidthMap[seriesIndex] && barMaxWidthMap[seriesIndex] < barWidth) {
-                        gap -= barWidth - barMaxWidthMap[seriesIndex];
-                    }
+                var seriesIndex = locationMap[j][0];
+                if (barMaxWidthMap[seriesIndex] && barMaxWidthMap[seriesIndex] < barWidth) {
+                    gap -= barWidth - barMaxWidthMap[seriesIndex];
                 }
             }
             return {

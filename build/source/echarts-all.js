@@ -162,8 +162,8 @@ define('echarts/echarts', [
     var _idBase = new Date() - 0;
     var _instances = {};
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
-    self.version = '2.1.8';
-    self.dependencies = { zrender: '2.0.5' };
+    self.version = '2.1.9';
+    self.dependencies = { zrender: '2.0.6' };
     self.init = function (dom, theme) {
         var zrender = require('zrender');
         if ((zrender.version || '1.0.3').replace('.', '') - 0 < self.dependencies.zrender.replace('.', '') - 0) {
@@ -2447,7 +2447,7 @@ define('zrender/zrender', [
     var Animation = require('./animation/Animation');
     var _instances = {};
     var zrender = {};
-    zrender.version = '2.0.5';
+    zrender.version = '2.0.6';
     zrender.init = function (dom) {
         var zr = new ZRender(guid(), dom);
         _instances[zr.id] = zr;
@@ -2491,6 +2491,10 @@ define('zrender/zrender', [
         this.animatingElements = [];
         this.animation = new Animation({ stage: { update: getFrameCallback(this) } });
         this.animation.start();
+        var self = this;
+        this.painter.refreshNextFrame = function () {
+            self.refreshNextFrame();
+        };
         this._needsRefreshNextFrame = false;
     };
     ZRender.prototype.getId = function () {
@@ -3147,18 +3151,15 @@ define('zrender/zrender', [
         },
         _buildBackground: function () {
             var toolboxOption = this.option.toolbox;
-            var pTop = toolboxOption.padding[0];
-            var pRight = toolboxOption.padding[1];
-            var pBottom = toolboxOption.padding[2];
-            var pLeft = toolboxOption.padding[3];
+            var padding = this.reformCssArray(this.option.toolbox.padding);
             this.shapeList.push(new RectangleShape({
                 zlevel: this._zlevelBase,
                 hoverable: false,
                 style: {
-                    x: this._itemGroupLocation.x - pLeft,
-                    y: this._itemGroupLocation.y - pTop,
-                    width: this._itemGroupLocation.width + pLeft + pRight,
-                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    x: this._itemGroupLocation.x - padding[3],
+                    y: this._itemGroupLocation.y - padding[0],
+                    width: this._itemGroupLocation.width + padding[3] + padding[1],
+                    height: this._itemGroupLocation.height + padding[0] + padding[2],
                     brushType: toolboxOption.borderWidth === 0 ? 'fill' : 'both',
                     color: toolboxOption.backgroundColor,
                     strokeColor: toolboxOption.borderColor,
@@ -3168,6 +3169,7 @@ define('zrender/zrender', [
         },
         _getItemGroupLocation: function () {
             var toolboxOption = this.option.toolbox;
+            var padding = this.reformCssArray(this.option.toolbox.padding);
             var iconLength = this._iconList.length;
             var itemGap = toolboxOption.itemGap;
             var itemSize = toolboxOption.itemSize;
@@ -3187,10 +3189,10 @@ define('zrender/zrender', [
                 x = Math.floor((zrWidth - totalWidth) / 2);
                 break;
             case 'left':
-                x = toolboxOption.padding[3] + toolboxOption.borderWidth;
+                x = padding[3] + toolboxOption.borderWidth;
                 break;
             case 'right':
-                x = zrWidth - totalWidth - toolboxOption.padding[1] - toolboxOption.borderWidth;
+                x = zrWidth - totalWidth - padding[1] - toolboxOption.borderWidth;
                 break;
             default:
                 x = toolboxOption.x - 0;
@@ -3201,10 +3203,10 @@ define('zrender/zrender', [
             var zrHeight = this.zr.getHeight();
             switch (toolboxOption.y) {
             case 'top':
-                y = toolboxOption.padding[0] + toolboxOption.borderWidth;
+                y = padding[0] + toolboxOption.borderWidth;
                 break;
             case 'bottom':
-                y = zrHeight - totalHeight - toolboxOption.padding[2] - toolboxOption.borderWidth;
+                y = zrHeight - totalHeight - padding[2] - toolboxOption.borderWidth;
                 break;
             case 'center':
                 y = Math.floor((zrHeight - totalHeight) / 2);
@@ -3691,7 +3693,6 @@ define('zrender/zrender', [
                 this._resetMark();
                 this._resetZoom();
                 newOption.toolbox = this.reformOption(newOption.toolbox);
-                newOption.toolbox.padding = this.reformCssArray(newOption.toolbox.padding);
                 this.option = newOption;
                 this.clear(true);
                 if (newOption.toolbox.show) {
@@ -3838,18 +3839,15 @@ define('zrender/zrender', [
             subtext !== '' && this.shapeList.push(new TextShape(subtextShape));
         },
         _buildBackground: function () {
-            var pTop = this.titleOption.padding[0];
-            var pRight = this.titleOption.padding[1];
-            var pBottom = this.titleOption.padding[2];
-            var pLeft = this.titleOption.padding[3];
+            var padding = this.reformCssArray(this.titleOption.padding);
             this.shapeList.push(new RectangleShape({
                 zlevel: this._zlevelBase,
                 hoverable: false,
                 style: {
-                    x: this._itemGroupLocation.x - pLeft,
-                    y: this._itemGroupLocation.y - pTop,
-                    width: this._itemGroupLocation.width + pLeft + pRight,
-                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    x: this._itemGroupLocation.x - padding[3],
+                    y: this._itemGroupLocation.y - padding[0],
+                    width: this._itemGroupLocation.width + padding[3] + padding[1],
+                    height: this._itemGroupLocation.height + padding[0] + padding[2],
                     brushType: this.titleOption.borderWidth === 0 ? 'fill' : 'both',
                     color: this.titleOption.backgroundColor,
                     strokeColor: this.titleOption.borderColor,
@@ -3858,6 +3856,7 @@ define('zrender/zrender', [
             }));
         },
         _getItemGroupLocation: function () {
+            var padding = this.reformCssArray(this.titleOption.padding);
             var text = this.titleOption.text;
             var subtext = this.titleOption.subtext;
             var font = this.getFont(this.titleOption.textStyle);
@@ -3871,10 +3870,10 @@ define('zrender/zrender', [
                 x = Math.floor((zrWidth - totalWidth) / 2);
                 break;
             case 'left':
-                x = this.titleOption.padding[3] + this.titleOption.borderWidth;
+                x = padding[3] + this.titleOption.borderWidth;
                 break;
             case 'right':
-                x = zrWidth - totalWidth - this.titleOption.padding[1] - this.titleOption.borderWidth;
+                x = zrWidth - totalWidth - padding[1] - this.titleOption.borderWidth;
                 break;
             default:
                 x = this.titleOption.x - 0;
@@ -3885,10 +3884,10 @@ define('zrender/zrender', [
             var zrHeight = this.zr.getHeight();
             switch (this.titleOption.y) {
             case 'top':
-                y = this.titleOption.padding[0] + this.titleOption.borderWidth;
+                y = padding[0] + this.titleOption.borderWidth;
                 break;
             case 'bottom':
-                y = zrHeight - totalHeight - this.titleOption.padding[2] - this.titleOption.borderWidth;
+                y = zrHeight - totalHeight - padding[2] - this.titleOption.borderWidth;
                 break;
             case 'center':
                 y = Math.floor((zrHeight - totalHeight) / 2);
@@ -3909,7 +3908,6 @@ define('zrender/zrender', [
             if (newOption) {
                 this.option = newOption;
                 this.option.title = this.reformOption(this.option.title);
-                this.option.title.padding = this.reformCssArray(this.option.title.padding);
                 this.titleOption = this.option.title;
                 this.titleOption.textStyle = zrUtil.merge(this.titleOption.textStyle, this.ecTheme.textStyle);
                 this.titleOption.subtextStyle = zrUtil.merge(this.titleOption.subtextStyle, this.ecTheme.textStyle);
@@ -5063,7 +5061,6 @@ define('zrender/zrender', [
                 this.option = newOption;
                 this.option.tooltip = this.reformOption(this.option.tooltip);
                 this.option.tooltip.textStyle = zrUtil.merge(this.option.tooltip.textStyle, this.ecTheme.textStyle);
-                this.option.tooltip.padding = this.reformCssArray(this.option.tooltip.padding);
                 this._needAxisTrigger = false;
                 if (this.option.tooltip.trigger === 'axis') {
                     this._needAxisTrigger = true;
@@ -5146,6 +5143,7 @@ define('zrender/zrender', [
         this._colorIndex = 0;
         this._colorMap = {};
         this._selectedMap = {};
+        this._hasDataMap = {};
         this.refresh(option);
     }
     Legend.prototype = {
@@ -5211,7 +5209,7 @@ define('zrender/zrender', [
                         lastY = this._itemGroupLocation.y;
                     }
                 }
-                itemShape = this._getItemShapeByType(lastX, lastY, itemWidth, itemHeight, this._selectedMap[itemName] ? color : '#ccc', itemType, color);
+                itemShape = this._getItemShapeByType(lastX, lastY, itemWidth, itemHeight, this._selectedMap[itemName] && this._hasDataMap[itemName] ? color : '#ccc', itemType, color);
                 itemShape._name = itemName;
                 itemShape = new IconShape(itemShape);
                 textShape = {
@@ -5297,18 +5295,15 @@ define('zrender/zrender', [
             }
         },
         _buildBackground: function () {
-            var pTop = this.legendOption.padding[0];
-            var pRight = this.legendOption.padding[1];
-            var pBottom = this.legendOption.padding[2];
-            var pLeft = this.legendOption.padding[3];
+            var padding = this.reformCssArray(this.legendOption.padding);
             this.shapeList.push(new RectangleShape({
                 zlevel: this._zlevelBase,
                 hoverable: false,
                 style: {
-                    x: this._itemGroupLocation.x - pLeft,
-                    y: this._itemGroupLocation.y - pTop,
-                    width: this._itemGroupLocation.width + pLeft + pRight,
-                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    x: this._itemGroupLocation.x - padding[3],
+                    y: this._itemGroupLocation.y - padding[0],
+                    width: this._itemGroupLocation.width + padding[3] + padding[1],
+                    height: this._itemGroupLocation.height + padding[0] + padding[2],
                     brushType: this.legendOption.borderWidth === 0 ? 'fill' : 'both',
                     color: this.legendOption.backgroundColor,
                     strokeColor: this.legendOption.borderColor,
@@ -5326,7 +5321,7 @@ define('zrender/zrender', [
             var font = this.getFont(textStyle);
             var totalWidth = 0;
             var totalHeight = 0;
-            var padding = this.legendOption.padding;
+            var padding = this.reformCssArray(this.legendOption.padding);
             var zrWidth = this.zr.getWidth() - padding[1] - padding[3];
             var zrHeight = this.zr.getHeight() - padding[0] - padding[2];
             var temp = 0;
@@ -5394,10 +5389,10 @@ define('zrender/zrender', [
                 x = Math.floor((zrWidth - totalWidth) / 2);
                 break;
             case 'left':
-                x = this.legendOption.padding[3] + this.legendOption.borderWidth;
+                x = padding[3] + this.legendOption.borderWidth;
                 break;
             case 'right':
-                x = zrWidth - totalWidth - this.legendOption.padding[1] - this.legendOption.padding[3] - this.legendOption.borderWidth * 2;
+                x = zrWidth - totalWidth - padding[1] - padding[3] - this.legendOption.borderWidth * 2;
                 break;
             default:
                 x = this.parsePercent(this.legendOption.x, zrWidth);
@@ -5406,10 +5401,10 @@ define('zrender/zrender', [
             var y;
             switch (this.legendOption.y) {
             case 'top':
-                y = this.legendOption.padding[0] + this.legendOption.borderWidth;
+                y = padding[0] + this.legendOption.borderWidth;
                 break;
             case 'bottom':
-                y = zrHeight - totalHeight - this.legendOption.padding[0] - this.legendOption.padding[2] - this.legendOption.borderWidth * 2;
+                y = zrHeight - totalHeight - padding[0] - padding[2] - this.legendOption.borderWidth * 2;
                 break;
             case 'center':
                 y = Math.floor((zrHeight - totalHeight) / 2);
@@ -5535,7 +5530,6 @@ define('zrender/zrender', [
             if (newOption) {
                 this.option = newOption || this.option;
                 this.option.legend = this.reformOption(this.option.legend);
-                this.option.legend.padding = this.reformCssArray(this.option.legend.padding);
                 this.legendOption = this.option.legend;
                 var data = this.legendOption.data || [];
                 var itemName;
@@ -5554,8 +5548,9 @@ define('zrender/zrender', [
                     }
                     something = this._getSomethingByName(itemName);
                     if (!something.series) {
-                        this._selectedMap[itemName] = false;
+                        this._hasDataMap[itemName] = false;
                     } else {
+                        this._hasDataMap[itemName] = true;
                         if (something.data && (something.type === ecConfig.CHART_TYPE_PIE || something.type === ecConfig.CHART_TYPE_FORCE || something.type === ecConfig.CHART_TYPE_FUNNEL)) {
                             queryTarget = [
                                 something.data,
@@ -5568,7 +5563,7 @@ define('zrender/zrender', [
                         if (color && something.type != ecConfig.CHART_TYPE_K) {
                             this.setColor(itemName, color);
                         }
-                        this._selectedMap[itemName] = typeof this._selectedMap[itemName] != 'undefined' ? this._selectedMap[itemName] : true;
+                        this._selectedMap[itemName] = this._selectedMap[itemName] != null ? this._selectedMap[itemName] : true;
                     }
                 }
             }
@@ -5616,6 +5611,7 @@ define('zrender/zrender', [
             this.legendOption.data.push(name);
             this.setColor(name, color);
             this._selectedMap[name] = true;
+            this._hasDataMap[name] = true;
         },
         del: function (name) {
             var data = this.legendOption.data;
@@ -6330,7 +6326,7 @@ define('zrender/zrender', [
         return toColor(data, 'rgba');
     }
     function random() {
-        return '#' + Math.random().toString(16).slice(2, 8);
+        return '#' + (Math.random().toString(16) + '0000').slice(2, 8);
     }
     function getData(color) {
         color = normalize(color);
@@ -6750,7 +6746,7 @@ define('zrender/zrender', [
         },
         _getLocation: function () {
             var timelineOption = this.timelineOption;
-            var padding = timelineOption.padding;
+            var padding = this.reformCssArray(this.timelineOption.padding);
             var zrWidth = this.zr.getWidth();
             var x = this.parsePercent(timelineOption.x, zrWidth);
             var x2 = this.parsePercent(timelineOption.x2, zrWidth);
@@ -6851,7 +6847,7 @@ define('zrender/zrender', [
             var width = this._location.x2 - this._location.x;
             var len = data.length;
             function _getName(i) {
-                return data[i].name != null ? data[i].name : data[i];
+                return data[i].name != null ? data[i].name : data[i] + '';
             }
             var xList = [];
             if (len > 1) {
@@ -6928,7 +6924,7 @@ define('zrender/zrender', [
         },
         _buildBackground: function () {
             var timelineOption = this.timelineOption;
-            var padding = timelineOption.padding;
+            var padding = this.reformCssArray(this.timelineOption.padding);
             var width = this._location.width;
             var height = this._location.height;
             if (timelineOption.borderWidth !== 0 || timelineOption.backgroundColor.replace(/\s/g, '') != 'rgba(0,0,0,0)') {
@@ -7238,7 +7234,6 @@ define('zrender/zrender', [
         },
         setTheme: function (needRefresh) {
             this.timelineOption = this.reformOption(zrUtil.clone(this.option.timeline));
-            this.timelineOption.padding = this.reformCssArray(this.timelineOption.padding);
             this.timelineOption.label.textStyle = zrUtil.merge(this.timelineOption.label.textStyle || {}, this.ecTheme.textStyle);
             this.timelineOption.checkpointStyle.label.textStyle = zrUtil.merge(this.timelineOption.checkpointStyle.label.textStyle || {}, this.ecTheme.textStyle);
             if (!this.myChart.canvasSupported) {
@@ -7310,21 +7305,19 @@ define('zrender/zrender', [
     './Base',
     '../tool/util'
 ], function (require) {
-    var _needsRefresh = [];
-    var _refreshTimeout;
     var Base = require('./Base');
     var ZImage = function (options) {
         Base.call(this, options);
     };
     ZImage.prototype = {
         type: 'image',
-        brush: function (ctx, isHighlight, refresh) {
+        brush: function (ctx, isHighlight, refreshNextFrame) {
             var style = this.style || {};
             if (isHighlight) {
                 style = this.getHighlightStyle(style, this.highlightStyle || {});
             }
             var image = style.image;
-            var me = this;
+            var self = this;
             if (!this._imageCache) {
                 this._imageCache = {};
             }
@@ -7336,12 +7329,8 @@ define('zrender/zrender', [
                     image = new Image();
                     image.onload = function () {
                         image.onload = null;
-                        clearTimeout(_refreshTimeout);
-                        _needsRefresh.push(me);
-                        _refreshTimeout = setTimeout(function () {
-                            refresh && refresh(_needsRefresh);
-                            _needsRefresh = [];
-                        }, 10);
+                        self.modSelf();
+                        refreshNextFrame();
                     };
                     image.src = src;
                     this._imageCache[src] = image;
@@ -9350,7 +9339,9 @@ define('zrender/zrender', [
                 cursor = 'pointer';
             }
             this.root.style.cursor = cursor;
-            this._dispatchAgency(this._lastHover, EVENT.MOUSEMOVE, event);
+            if (Math.abs(this._mouseX - this._lastX) > 2 || Math.abs(this._mouseY - this._lastY) > 2) {
+                this._dispatchAgency(this._lastHover, EVENT.MOUSEMOVE, event);
+            }
             if (this._draggingTarget || this._hasfound || this.storage.hasHoverShape()) {
                 this.painter.refreshHover();
             }
@@ -9397,6 +9388,7 @@ define('zrender/zrender', [
             event = this._zrenderEventFixed(event);
             this.root.style.cursor = 'default';
             this._isMouseDown = 0;
+            this._clickThreshold = 0;
             this._mouseDownTarget = null;
             this._dispatchAgency(this._lastHover, EVENT.MOUSEUP, event);
             this._processDrop(event);
@@ -9785,10 +9777,7 @@ define('zrender/zrender', [
         hoverLayer.dom.style['-webkit-user-select'] = 'none';
         hoverLayer.dom.style['user-select'] = 'none';
         hoverLayer.dom.style['-webkit-touch-callout'] = 'none';
-        var me = this;
-        this.updatePainter = function (shapeList, callback) {
-            me.refreshShapes(shapeList, callback);
-        };
+        this.refreshNextFrame = null;
     };
     Painter.prototype.render = function (callback) {
         if (this.isLoading()) {
@@ -9861,12 +9850,12 @@ define('zrender/zrender', [
                 if (!shape.onbrush || shape.onbrush && !shape.onbrush(ctx, false)) {
                     if (config.catchBrushException) {
                         try {
-                            shape.brush(ctx, false, this.updatePainter);
+                            shape.brush(ctx, false, this.refreshNextFrame);
                         } catch (error) {
                             log(error, 'brush error of ' + shape.type, shape);
                         }
                     } else {
-                        shape.brush(ctx, false, this.updatePainter);
+                        shape.brush(ctx, false, this.refreshNextFrame);
                     }
                 }
             }
@@ -10085,12 +10074,12 @@ define('zrender/zrender', [
                 if (!shape.onbrush || shape.onbrush && !shape.onbrush(ctx, false)) {
                     if (config.catchBrushException) {
                         try {
-                            shape.brush(ctx, false, self.updatePainter);
+                            shape.brush(ctx, false, self.refreshNextFrame);
                         } catch (error) {
                             log(error, 'brush error of ' + shape.type, shape);
                         }
                     } else {
-                        shape.brush(ctx, false, self.updatePainter);
+                        shape.brush(ctx, false, self.refreshNextFrame);
                     }
                 }
             }
@@ -10129,12 +10118,12 @@ define('zrender/zrender', [
             }
             if (config.catchBrushException) {
                 try {
-                    shape.brush(ctx, true, this.updatePainter);
+                    shape.brush(ctx, true, this.refreshNextFrame);
                 } catch (error) {
                     log(error, 'hoverBrush error of ' + shape.type, shape);
                 }
             } else {
-                shape.brush(ctx, true, this.updatePainter);
+                shape.brush(ctx, true, this.refreshNextFrame);
             }
             if (layer.needTransform) {
                 ctx.restore();
@@ -12144,7 +12133,9 @@ define('zrender/zrender', [
         isInsideCircle: isInsideCircle,
         isInsideLine: isInsideLine,
         isInsideRect: isInsideRect,
-        isInsideBrokenLine: isInsideBrokenLine
+        isInsideBrokenLine: isInsideBrokenLine,
+        isInsideCubicStroke: isInsideCubicStroke,
+        isInsideQuadraticStroke: isInsideQuadraticStroke
     };
 });define('zrender/shape/Base', [
     'require',
@@ -13015,6 +13006,7 @@ define('zrender/zrender', [
             var time = new Date().getTime();
             var remainder = (time - this._startTime) % this._life;
             this._startTime = new Date().getTime() - remainder + this.gap;
+            this._needsRemove = false;
         },
         fire: function (eventType, arg) {
             for (var i = 0, len = this._targetPool.length; i < len; i++) {
@@ -14312,7 +14304,7 @@ define('zrender/zrender', [
                         this.zr.delShape(oldMap[key].id);
                         this._animateMod(oldMap[key], newMap[key], duration, easing);
                     } else {
-                        delay = (this.type == ecConfig.CHART_TYPE_LINE || this.type == ecConfig.CHART_TYPE_RADAR) && key.indexOf('icon') != 0 ? duration / 2 : 0;
+                        delay = (this.type == ecConfig.CHART_TYPE_LINE || this.type == ecConfig.CHART_TYPE_RADAR) && key.indexOf('icon') !== 0 ? duration / 2 : 0;
                         this._animateMod(false, newMap[key], duration, easing, delay);
                     }
                 }
@@ -14404,6 +14396,9 @@ define('zrender/zrender', [
         animationEffect: function (addShapeList) {
             !addShapeList && this.clearEffectShape();
             var shapeList = addShapeList || this.shapeList;
+            if (shapeList == null) {
+                return;
+            }
             var zlevel = ecConfig.EFFECT_ZLEVEL;
             if (this.canvasSupported) {
                 this.zr.modLayer(zlevel, {
@@ -14562,7 +14557,10 @@ define('zrender/zrender', [
         accAdd: accAdd,
         accSub: accSub
     };
-});define('echarts/util/ecQuery', [], function () {
+});define('echarts/util/ecQuery', [
+    'require',
+    'zrender/tool/util'
+], function (require) {
     var zrUtil = require('zrender/tool/util');
     function query(optionTarget, optionLocation) {
         if (typeof optionTarget == 'undefined') {
@@ -15038,12 +15036,13 @@ define('zrender/zrender', [
         ctx.lineTo(x + width, y + height + r * 1.5);
         ctx.closePath();
     }
-    function _iconImage(ctx, style) {
-        setTimeout(function () {
-            var ImageShape = require('zrender/shape/Image');
-            var itemShape = new ImageShape({ style: style });
-            itemShape.brush(ctx);
-        }, 100);
+    function _iconImage(ctx, style, refreshNextFrame) {
+        var ImageShape = require('zrender/shape/Image');
+        this._imageShape = this._imageShape || new ImageShape({ style: {} });
+        for (var name in style) {
+            this._imageShape.style[name] = style[name];
+        }
+        this._imageShape.brush(ctx, false, refreshNextFrame);
     }
     var Base = require('zrender/shape/Base');
     function Icon(options) {
@@ -15080,21 +15079,33 @@ define('zrender/zrender', [
             pin: _iconPin,
             image: _iconImage
         },
-        brush: function (ctx, isHighlight, refresh) {
+        brush: function (ctx, isHighlight, refreshNextFrame) {
             var style = isHighlight ? this.highlightStyle : this.style;
             style = style || {};
             var iconType = style.iconType || this.style.iconType;
             if (iconType === 'image') {
                 var ImageShape = require('zrender/shape/Image');
-                ImageShape.prototype.brush.call(this, ctx, isHighlight, refresh);
+                ImageShape.prototype.brush.call(this, ctx, isHighlight, refreshNextFrame);
             } else {
-                var BaseShape = require('zrender/shape/Base');
-                BaseShape.prototype.brush.call(this, ctx, isHighlight, refresh);
+                var style = this.beforeBrush(ctx, isHighlight);
+                ctx.beginPath();
+                this.buildPath(ctx, style, refreshNextFrame);
+                switch (style.brushType) {
+                case 'both':
+                    ctx.fill();
+                case 'stroke':
+                    style.lineWidth > 0 && ctx.stroke();
+                    break;
+                default:
+                    ctx.fill();
+                }
+                this.drawText(ctx, style, this.style);
+                this.afterBrush(ctx);
             }
         },
-        buildPath: function (ctx, style) {
+        buildPath: function (ctx, style, refreshNextFrame) {
             if (this.iconLibrary[style.iconType]) {
-                this.iconLibrary[style.iconType](ctx, style);
+                this.iconLibrary[style.iconType].call(this, ctx, style, refreshNextFrame);
             } else {
                 ctx.moveTo(style.x, style.y);
                 ctx.lineTo(style.x + style.width, style.y);
@@ -19944,32 +19955,51 @@ define('zrender/zrender', [
         nextNthOnYear: nextNthOnYear
     };
 });define('echarts/util/smartSteps', [], function () {
-    var mySections = [
-        4,
-        5,
-        6
-    ];
     var mySteps = [
         10,
         25,
         50
     ];
-    var custSteps = 0;
-    var Mt = Math;
-    var MATH_ROUND = Mt.round;
-    var MATH_FLOOR = Mt.floor;
-    var MATH_CEIL = Mt.ceil;
+    var mySections = [
+        4,
+        5,
+        6
+    ];
+    var custOpts;
+    var custSteps;
+    var custSecs;
+    var minLocked;
+    var maxLocked;
+    var MT = Math;
+    var MATH_ROUND = MT.round;
+    var MATH_FLOOR = MT.floor;
+    var MATH_CEIL = MT.ceil;
+    var MATH_ABS = MT.abs;
     function MATH_LOG(n) {
-        return Mt.log(n) / Mt.LN10;
+        return MT.log(MATH_ABS(n)) / MT.LN10;
     }
     function MATH_POW(n) {
-        return Mt.pow(10, n);
+        return MT.pow(10, n);
     }
-    function smartSteps(min, max, sections, opts) {
-        custSteps = (opts || {}).steps || mySteps;
-        sections = MATH_ROUND(+sections || 0) % 99;
+    function MATH_ISINT(n) {
+        return n === MATH_FLOOR(n);
+    }
+    function smartSteps(min, max, section, opts) {
+        custOpts = opts || {};
+        custSteps = custOpts.steps || mySteps;
+        custSecs = custOpts.secs || mySections;
+        section = MATH_ROUND(+section || 0) % 99;
         min = +min || 0;
         max = +max || 0;
+        minLocked = maxLocked = 0;
+        if ('min' in custOpts) {
+            min = +custOpts.min || 0;
+            minLocked = 1;
+        }
+        if ('max' in custOpts) {
+            max = +custOpts.max || 0;
+            maxLocked = 1;
+        }
         if (min > max) {
             max = [
                 min,
@@ -19977,133 +20007,43 @@ define('zrender/zrender', [
             ][0];
         }
         var span = max - min;
-        if (span === 0) {
-            return forSpan0(min, max, sections);
-        } else if (span < (sections || 5)) {
-            if (min === MATH_ROUND(min) && max === MATH_ROUND(max)) {
-                return forInteger(min, max, sections);
+        if (minLocked && maxLocked) {
+            return bothLocked(min, max, section);
+        }
+        if (span < (section || 5)) {
+            if (MATH_ISINT(min) && MATH_ISINT(max)) {
+                return forInteger(min, max, section);
+            } else if (span === 0) {
+                return forSpan0(min, max, section);
             }
         }
-        return coreCalc(min, max, sections);
+        return coreCalc(min, max, section);
     }
-    function coreCalc(min, max, sections, opts) {
-        custSteps = custSteps || (opts || {}).steps || mySteps;
-        var step;
-        var tmpSection = sections || mySections[mySections.length - 1];
-        var span = getCeil(max - min);
-        var expon = span.n;
-        span = span.c;
-        step = getCeil(span / tmpSection, custSteps);
-        if (step.n < 0) {
-            expon += step.n;
-            span *= MATH_POW(-step.n);
-            step.n = 0;
-        }
-        step = step.c * MATH_POW(step.n);
-        var zoom = MATH_POW(expon);
-        var params = {
-            min: min,
-            zmin: min / zoom,
-            max: max,
-            zmax: max / zoom,
-            span: span,
-            step: step,
-            secs: tmpSection,
-            exp: expon
-        };
-        if (!sections) {
-            look4sections(params);
-        } else {
-            look4step(params);
-        }
-        if (min === MATH_ROUND(min) && max === MATH_ROUND(max)) {
-            step = params.step * zoom;
-            if (params.exp < 0 && step !== MATH_ROUND(step) && min * max >= 0) {
-                step = MATH_FLOOR(step);
-                span = step * params.secs;
-                if (span < max - min) {
-                    step += 1;
-                    span = step * params.secs;
-                }
-                if (span >= max - min) {
-                    var deltaSpan = span - (max - min);
-                    params.max = MATH_ROUND(max + deltaSpan / 2);
-                    params.min = MATH_ROUND(min - deltaSpan / 2);
-                    params.step = step;
-                    params.span = span;
-                    params.exp = 0;
-                }
-            }
-        }
-        var arrMM = cross0(min, max, params.min, params.max);
-        return makeResult(arrMM[0], arrMM[1], params.secs, params.exp);
-    }
-    function look4sections(params) {
-        var sections = params.secs;
-        var newMin;
-        var newMax;
-        var tmpSpan;
-        var tmpStep;
-        var minStep = params.step;
-        var minSpan = params.step * sections;
-        for (var i = mySections.length - 1; i--;) {
-            sections = mySections[i];
-            tmpStep = getCeil(params.span / sections, custSteps).d;
-            newMin = MATH_FLOOR(params.zmin / tmpStep) * tmpStep;
-            newMax = MATH_CEIL(params.zmax / tmpStep) * tmpStep;
-            tmpSpan = newMax - newMin;
-            if (tmpSpan < minSpan) {
-                minSpan = tmpSpan;
-                minStep = tmpStep;
-            }
-        }
-        newMin = MATH_FLOOR(params.zmin / minStep) * minStep;
-        newMax = MATH_CEIL(params.zmax / minStep) * minStep;
-        sections = (newMax - newMin) / minStep;
-        if (sections < 3) {
-            sections *= 2;
-        }
-        params.min = newMin;
-        params.max = newMax;
-        params.step = minStep;
-        params.secs = sections;
-    }
-    function look4step(params) {
-        var newMax, span;
-        var newMin = params.zmax;
-        var step = params.step;
-        while (newMin > params.zmin) {
-            span = step * params.secs;
-            newMax = MATH_CEIL(params.zmax / step) * step;
-            newMin = newMax - span;
-            step = getCeil(step * 1.01, custSteps).d;
-        }
-        step = span / params.secs;
-        var deltaMin = params.zmin - newMin;
-        var deltaMax = newMax - params.zmax;
-        var deltaDelta = deltaMin - deltaMax;
-        if (deltaDelta >= step * 2) {
-            deltaDelta = MATH_FLOOR(deltaDelta / step) * step;
-            newMin += deltaDelta;
-            newMax += deltaDelta;
-        }
-        params.min = newMin;
-        params.max = newMax;
-        params.step = step;
-    }
-    function makeResult(newMin, newMax, sections, expon) {
+    function makeResult(newMin, newMax, section, expon) {
         expon = expon || 0;
+        var expStep = expNum((newMax - newMin) / section, -1);
+        var expMin = expNum(newMin, -1, 1);
+        var expMax = expNum(newMax, -1);
+        var minExp = MT.min(expStep.e, expMin.e, expMax.e);
+        expFixTo(expStep, {
+            c: 0,
+            e: minExp
+        });
+        expFixTo(expMin, expStep, 1);
+        expFixTo(expMax, expStep);
+        expon += minExp;
+        newMin = expMin.c;
+        newMax = expMax.c;
+        var step = (newMax - newMin) / section;
         var zoom = MATH_POW(expon);
-        var step = (newMax - newMin) / sections;
         var fixTo = 0;
         var points = [];
-        for (var i = sections + 1; i--;) {
+        for (var i = section + 1; i--;) {
             points[i] = (newMin + step * i) * zoom;
         }
         if (expon < 0) {
             fixTo = decimals(zoom);
             step = +(step * zoom).toFixed(fixTo);
-            fixTo = decimals(step);
             newMin = +(newMin * zoom).toFixed(fixTo);
             newMax = +(newMax * zoom).toFixed(fixTo);
             for (var i = points.length; i--;) {
@@ -20115,69 +20055,214 @@ define('zrender/zrender', [
             newMax *= zoom;
             step *= zoom;
         }
+        custSecs = 0;
         custSteps = 0;
+        custOpts = 0;
         return {
             min: newMin,
             max: newMax,
-            secs: sections,
+            secs: section,
             step: step,
             fix: fixTo,
+            exp: expon,
             pnts: points
         };
     }
-    function getCeil(num, rounds, butFloor) {
-        var n10 = MATH_FLOOR(MATH_LOG(num)) - 1;
-        var c10 = +(num * MATH_POW(-n10)).toFixed(9);
-        if (!rounds) {
-            c10 = butFloor ? MATH_FLOOR(c10) : MATH_CEIL(c10);
-        } else {
-            var i;
-            if (butFloor) {
-                i = rounds.length;
-                while (c10 < rounds[--i]) {
-                }
+    function expNum(num, digit, byFloor) {
+        digit = MATH_ROUND(digit % 10) || 2;
+        if (digit < 0) {
+            if (MATH_ISINT(num)) {
+                digit = ('' + MATH_ABS(num)).replace(/0+$/, '').length || 1;
             } else {
-                i = -1;
-                while (c10 > rounds[++i]) {
-                }
+                num = num.toFixed(15).replace(/0+$/, '');
+                digit = num.replace('.', '').replace(/^[-0]+/, '').length;
+                num = +num;
             }
-            c10 = custSteps[i];
         }
-        if (!c10 || c10 > 99 || c10 < 10) {
-            c10 = 10;
-            n10 += butFloor ? -1 : 1;
+        var expon = MATH_FLOOR(MATH_LOG(num)) - digit + 1;
+        var cNum = +(num * MATH_POW(-expon)).toFixed(15) || 0;
+        cNum = byFloor ? MATH_FLOOR(cNum) : MATH_CEIL(cNum);
+        !cNum && (expon = 0);
+        if (('' + MATH_ABS(cNum)).length > digit) {
+            expon += 1;
+            cNum /= 10;
         }
         return {
-            c: c10,
-            n: n10,
-            d: c10 * MATH_POW(n10)
+            c: cNum,
+            e: expon
         };
     }
-    function decimals(num) {
-        num = String(+num).split('.');
-        return num.length > 1 ? num.pop().length : 0;
-    }
-    function forSpan0(min, max, sections) {
-        sections = sections || 5;
-        if (max === 0) {
-            return makeResult(0, sections, sections);
+    function expFixTo(expnum1, expnum2, byFloor) {
+        var deltaExp = expnum2.e - expnum1.e;
+        if (deltaExp) {
+            expnum1.e += deltaExp;
+            expnum1.c *= MATH_POW(-deltaExp);
+            expnum1.c = byFloor ? MATH_FLOOR(expnum1.c) : MATH_CEIL(expnum1.c);
         }
-        var delta = Mt.abs(max / sections);
-        return coreCalc(min - delta, max + delta, sections);
     }
-    function forInteger(min, max, sections) {
-        sections = sections || 5;
-        var span2 = (sections - max + min) / 2;
-        var newMax = MATH_ROUND(max + span2);
-        var newMin = MATH_ROUND(min - span2);
-        var arrMM = cross0(min, max, newMin, newMax);
-        return makeResult(arrMM[0], arrMM[1], sections);
+    function expFixMin(expnum1, expnum2, byFloor) {
+        if (expnum1.e < expnum2.e) {
+            expFixTo(expnum2, expnum1, byFloor);
+        } else {
+            expFixTo(expnum1, expnum2, byFloor);
+        }
+    }
+    function getCeil(num, rounds) {
+        rounds = rounds || mySteps;
+        num = expNum(num);
+        var cNum = num.c;
+        var i = 0;
+        while (cNum > rounds[i]) {
+            i++;
+        }
+        if (!rounds[i]) {
+            cNum /= 10;
+            num.e += 1;
+            i = 0;
+            while (cNum > rounds[i]) {
+                i++;
+            }
+        }
+        num.c = rounds[i];
+        return num;
+    }
+    function coreCalc(min, max, section) {
+        var step;
+        var secs = section || +custSecs.slice(-1);
+        var expStep = getCeil((max - min) / secs, custSteps);
+        var expSpan = expNum(max - min);
+        var expMin = expNum(min, -1, 1);
+        var expMax = expNum(max, -1);
+        expFixTo(expSpan, expStep);
+        expFixTo(expMin, expStep, 1);
+        expFixTo(expMax, expStep);
+        if (!section) {
+            secs = look4sections(expMin, expMax);
+        } else {
+            step = look4step(expMin, expMax, secs);
+        }
+        if (MATH_ISINT(min) && MATH_ISINT(max) && min * max >= 0) {
+            if (max - min < secs) {
+                return forInteger(min, max, secs);
+            }
+            secs = tryForInt(min, max, section, expMin, expMax, secs);
+        }
+        var arrMM = cross0(min, max, expMin.c, expMax.c);
+        expMin.c = arrMM[0];
+        expMax.c = arrMM[1];
+        if (minLocked || maxLocked) {
+            singleLocked(min, max, expMin, expMax);
+        }
+        return makeResult(expMin.c, expMax.c, secs, expMax.e);
+    }
+    function look4sections(expMin, expMax) {
+        var section;
+        var tmpStep, tmpMin, tmpMax;
+        var reference = [];
+        for (var i = custSecs.length; i--;) {
+            section = custSecs[i];
+            tmpStep = getCeil((expMax.c - expMin.c) / section, custSteps);
+            tmpStep = tmpStep.c * MATH_POW(tmpStep.e);
+            tmpMin = MATH_FLOOR(expMin.c / tmpStep) * tmpStep;
+            tmpMax = MATH_CEIL(expMax.c / tmpStep) * tmpStep;
+            reference[i] = {
+                min: tmpMin,
+                max: tmpMax,
+                step: tmpStep,
+                span: tmpMax - tmpMin
+            };
+        }
+        reference.sort(function (a, b) {
+            return a.span - b.span;
+        });
+        reference = reference[0];
+        section = reference.span / reference.step;
+        expMin.c = reference.min;
+        expMax.c = reference.max;
+        return section < 3 ? section * 2 : section;
+    }
+    function look4step(expMin, expMax, secs) {
+        var span;
+        var tmpMax;
+        var tmpMin = expMax.c;
+        var tmpStep = (expMax.c - expMin.c) / secs - 1;
+        while (tmpMin > expMin.c) {
+            tmpStep = getCeil(tmpStep + 1, custSteps);
+            tmpStep = tmpStep.c * MATH_POW(tmpStep.e);
+            span = tmpStep * secs;
+            tmpMax = MATH_CEIL(expMax.c / tmpStep) * tmpStep;
+            tmpMin = tmpMax - span;
+        }
+        var deltaMin = expMin.c - tmpMin;
+        var deltaMax = tmpMax - expMax.c;
+        var deltaDelta = deltaMin - deltaMax;
+        if (deltaDelta >= tmpStep * 2) {
+            deltaDelta = MATH_FLOOR(deltaDelta / tmpStep) * tmpStep;
+            tmpMin += deltaDelta;
+            tmpMax += deltaDelta;
+        }
+        expMin.c = tmpMin;
+        expMax.c = tmpMax;
+        return tmpStep;
+    }
+    function tryForInt(min, max, section, expMin, expMax, secs) {
+        var span = expMax.c - expMin.c;
+        var step = span / secs * MATH_POW(expMax.e);
+        if (!MATH_ISINT(step)) {
+            step = MATH_FLOOR(step);
+            span = step * secs;
+            if (span < max - min) {
+                step += 1;
+                span = step * secs;
+                if (!section && step * (secs - 1) >= max - min) {
+                    secs -= 1;
+                    span = step * secs;
+                }
+            }
+            if (span >= max - min) {
+                var delta = span - (max - min);
+                expMin.c = MATH_ROUND(min - delta / 2);
+                expMax.c = MATH_ROUND(max + delta / 2);
+                expMin.e = 0;
+                expMax.e = 0;
+            }
+        }
+        return secs;
+    }
+    function forInteger(min, max, section) {
+        section = section || 5;
+        if (minLocked) {
+            max = min + section;
+        } else if (maxLocked) {
+            min = max - section;
+        } else {
+            var delta = section - (max - min);
+            var newMin = MATH_ROUND(min - delta / 2);
+            var newMax = MATH_ROUND(max + delta / 2);
+            var arrMM = cross0(min, max, newMin, newMax);
+            min = arrMM[0];
+            max = arrMM[1];
+        }
+        return makeResult(min, max, section);
+    }
+    function forSpan0(min, max, section) {
+        section = section || 5;
+        var delta = MT.min(MATH_ABS(max / section), section) / 2.1;
+        if (minLocked) {
+            max = min + delta;
+        } else if (maxLocked) {
+            min = max - delta;
+        } else {
+            min = min - delta;
+            max = max + delta;
+        }
+        return coreCalc(min, max, section);
     }
     function cross0(min, max, newMin, newMax) {
-        if (newMin < 0 && min >= 0) {
+        if (min >= 0 && newMin < 0) {
             newMax -= newMin;
             newMin = 0;
-        } else if (newMax > 0 && max <= 0) {
+        } else if (max <= 0 && newMax > 0) {
             newMin -= newMax;
             newMax = 0;
         }
@@ -20185,6 +20270,115 @@ define('zrender/zrender', [
             newMin,
             newMax
         ];
+    }
+    function decimals(num) {
+        num = (+num).toFixed(15).split('.');
+        return num.pop().replace(/0+$/, '').length;
+    }
+    function singleLocked(min, max, emin, emax) {
+        if (minLocked) {
+            var expMin = expNum(min, 4, 1);
+            if (emin.e - expMin.e > 6) {
+                expMin = {
+                    c: 0,
+                    e: emin.e
+                };
+            }
+            expFixMin(emin, expMin);
+            expFixMin(emax, expMin);
+            emax.c += expMin.c - emin.c;
+            emin.c = expMin.c;
+        } else if (maxLocked) {
+            var expMax = expNum(max, 4);
+            if (emax.e - expMax.e > 6) {
+                expMax = {
+                    c: 0,
+                    e: emax.e
+                };
+            }
+            expFixMin(emin, expMax);
+            expFixMin(emax, expMax);
+            emin.c += expMax.c - emax.c;
+            emax.c = expMax.c;
+        }
+    }
+    function bothLocked(min, max, section) {
+        var trySecs = section ? [section] : custSecs;
+        var span = max - min;
+        if (span === 0) {
+            max = expNum(max, 3);
+            section = trySecs[0];
+            max.c = MATH_ROUND(max.c + section / 2);
+            return makeResult(max.c - section, max.c, section, max.e);
+        }
+        if (MATH_ABS(max / span) < 0.000001) {
+            max = 0;
+        }
+        if (MATH_ABS(min / span) < 0.000001) {
+            min = 0;
+        }
+        var step, deltaSpan, score;
+        var scoreS = [
+            [
+                5,
+                10
+            ],
+            [
+                10,
+                2
+            ],
+            [
+                50,
+                10
+            ],
+            [
+                100,
+                2
+            ]
+        ];
+        var reference = [];
+        var debugLog = [];
+        var expSpan = expNum(max - min, 3);
+        var expMin = expNum(min, -1, 1);
+        var expMax = expNum(max, -1);
+        expFixTo(expMin, expSpan, 1);
+        expFixTo(expMax, expSpan);
+        span = expMax.c - expMin.c;
+        expSpan.c = span;
+        for (var i = trySecs.length; i--;) {
+            section = trySecs[i];
+            step = MATH_CEIL(span / section);
+            deltaSpan = step * section - span;
+            score = (deltaSpan + 3) * 3;
+            score += (section - trySecs[0] + 2) * 2;
+            if (section % 5 === 0) {
+                score -= 10;
+            }
+            for (var j = scoreS.length; j--;) {
+                if (step % scoreS[j][0] === 0) {
+                    score /= scoreS[j][1];
+                }
+            }
+            debugLog[i] = [
+                section,
+                step,
+                deltaSpan,
+                score
+            ].join();
+            reference[i] = {
+                secs: section,
+                step: step,
+                delta: deltaSpan,
+                score: score
+            };
+        }
+        reference.sort(function (a, b) {
+            return a.score - b.score;
+        });
+        reference = reference[0];
+        expMin.c = MATH_ROUND(expMin.c - reference.delta / 2);
+        expMax.c = MATH_ROUND(expMax.c + reference.delta / 2);
+        return makeResult(expMin.c, expMax.c, reference.secs, expSpan.e);
     }
     return smartSteps;
 });define('echarts/chart/line', [
@@ -20819,7 +21013,7 @@ define('zrender/zrender', [
             }
         }
     };
-    function legendLineIcon(ctx, style) {
+    function legendLineIcon(ctx, style, refreshNextFrame) {
         var x = style.x;
         var y = style.y;
         var width = style.width;
@@ -20853,6 +21047,7 @@ define('zrender/zrender', [
             ctx.lineTo(x2 + 5, y2 + dy);
             ctx.moveTo(x2 + style.width - 5, y2 + dy);
             ctx.lineTo(x2 + style.width, y2 + dy);
+            var self = this;
             symbol(ctx, {
                 x: x + 4,
                 y: y + 4,
@@ -20860,6 +21055,9 @@ define('zrender/zrender', [
                 height: height - 8,
                 n: dy,
                 image: imageLocation
+            }, function () {
+                self.modSelf();
+                refreshNextFrame();
             });
         } else {
             ctx.moveTo(x, y + dy);
@@ -21313,11 +21511,9 @@ define('zrender/zrender', [
         },
         _recheckBarMaxWidth: function (locationMap, barWidthMap, barMaxWidthMap, barMinHeightMap, gap, barWidth, barGap, interval) {
             for (var j = 0, k = locationMap.length; j < k; j++) {
-                for (var m = 0, n = locationMap[j].length; m < n; m++) {
-                    var seriesIndex = locationMap[j][m];
-                    if (barMaxWidthMap[seriesIndex] && barMaxWidthMap[seriesIndex] < barWidth) {
-                        gap -= barWidth - barMaxWidthMap[seriesIndex];
-                    }
+                var seriesIndex = locationMap[j][0];
+                if (barMaxWidthMap[seriesIndex] && barMaxWidthMap[seriesIndex] < barWidth) {
+                    gap -= barWidth - barMaxWidthMap[seriesIndex];
                 }
             }
             return {
@@ -22545,18 +22741,15 @@ define('zrender/zrender', [
             this.shapeList.push(this._endMask);
         },
         _buildBackground: function () {
-            var pTop = this.dataRangeOption.padding[0];
-            var pRight = this.dataRangeOption.padding[1];
-            var pBottom = this.dataRangeOption.padding[2];
-            var pLeft = this.dataRangeOption.padding[3];
+            var padding = this.reformCssArray(this.dataRangeOption.padding);
             this.shapeList.push(new RectangleShape({
                 zlevel: this._zlevelBase,
                 hoverable: false,
                 style: {
-                    x: this._itemGroupLocation.x - pLeft,
-                    y: this._itemGroupLocation.y - pTop,
-                    width: this._itemGroupLocation.width + pLeft + pRight,
-                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    x: this._itemGroupLocation.x - padding[3],
+                    y: this._itemGroupLocation.y - padding[0],
+                    width: this._itemGroupLocation.width + padding[3] + padding[1],
+                    height: this._itemGroupLocation.height + padding[0] + padding[2],
                     brushType: this.dataRangeOption.borderWidth === 0 ? 'fill' : 'both',
                     color: this.dataRangeOption.backgroundColor,
                     strokeColor: this.dataRangeOption.borderColor,
@@ -22602,6 +22795,7 @@ define('zrender/zrender', [
                 }
                 totalHeight -= itemGap;
             }
+            var padding = this.reformCssArray(this.dataRangeOption.padding);
             var x;
             var zrWidth = this.zr.getWidth();
             switch (this.dataRangeOption.x) {
@@ -22609,10 +22803,10 @@ define('zrender/zrender', [
                 x = Math.floor((zrWidth - totalWidth) / 2);
                 break;
             case 'left':
-                x = this.dataRangeOption.padding[3] + this.dataRangeOption.borderWidth;
+                x = padding[3] + this.dataRangeOption.borderWidth;
                 break;
             case 'right':
-                x = zrWidth - totalWidth - this.dataRangeOption.padding[1] - this.dataRangeOption.borderWidth;
+                x = zrWidth - totalWidth - padding[1] - this.dataRangeOption.borderWidth;
                 break;
             default:
                 x = this.parsePercent(this.dataRangeOption.x, zrWidth);
@@ -22623,10 +22817,10 @@ define('zrender/zrender', [
             var zrHeight = this.zr.getHeight();
             switch (this.dataRangeOption.y) {
             case 'top':
-                y = this.dataRangeOption.padding[0] + this.dataRangeOption.borderWidth;
+                y = padding[0] + this.dataRangeOption.borderWidth;
                 break;
             case 'bottom':
-                y = zrHeight - totalHeight - this.dataRangeOption.padding[2] - this.dataRangeOption.borderWidth;
+                y = zrHeight - totalHeight - padding[2] - this.dataRangeOption.borderWidth;
                 break;
             case 'center':
                 y = Math.floor((zrHeight - totalHeight) / 2);
@@ -22938,7 +23132,6 @@ define('zrender/zrender', [
             if (newOption) {
                 this.option = newOption;
                 this.option.dataRange = this.reformOption(this.option.dataRange);
-                this.option.dataRange.padding = this.reformCssArray(this.option.dataRange.padding);
                 this.dataRangeOption = this.option.dataRange;
                 if (!this.myChart.canvasSupported) {
                     this.dataRangeOption.realtime = false;
@@ -24101,8 +24294,10 @@ define('zrender/zrender', [
             var pointList = [];
             var vector;
             var polar = this.component.polar;
+            var value;
             for (var i = 0, l = dataArr.value.length; i < l; i++) {
-                vector = polar.getVector(polarIndex, i, typeof dataArr.value[i].value != 'undefined' ? dataArr.value[i].value : dataArr.value[i]);
+                value = dataArr.value[i].value != null ? dataArr.value[i].value : dataArr.value[i];
+                vector = value != '-' ? polar.getVector(polarIndex, i, value) : false;
                 if (vector) {
                     pointList.push(vector);
                 }
@@ -25344,7 +25539,7 @@ define('zrender/zrender', [
                     zlevel: this.getZlevelBase() + 1,
                     hoverable: false,
                     style: {
-                        text: node.id,
+                        text: node.data.label == null ? node.id : node.data.label,
                         textAlign: isRightSide ? 'left' : 'right',
                         color: labelColor || '#000000'
                     }
@@ -26416,20 +26611,15 @@ define('zrender/zrender', [
                     });
                 }
                 if (this.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {
-                    shape.style.text = node.data.name;
-                    var labelStyle = this.deepQuery(queryTarget, 'itemStyle.normal.label') || {};
-                    var textStyle = labelStyle.textStyle || {};
-                    shape.style.textPosition = labelStyle.position;
-                    shape.style.textColor = textStyle.color || '#fff';
-                    shape.style.textFont = this.getFont(textStyle);
+                    shape.style.text = node.data.label == null ? node.id : node.data.label;
+                    shape.style.textPosition = this.deepQuery(queryTarget, 'itemStyle.normal.label.position');
+                    shape.style.textColor = this.deepQuery(queryTarget, 'itemStyle.normal.label.textStyle.color');
+                    shape.style.textFont = this.getFont(this.deepQuery(queryTarget, 'itemStyle.normal.label.textStyle') || {});
                 }
                 if (this.deepQuery(queryTarget, 'itemStyle.emphasis.label.show')) {
-                    shape.highlightStyle.text = node.data.name;
-                    var labelStyle = this.deepQuery(queryTarget, 'itemStyle.emphasis.label.textStyle') || {};
-                    var textStyle = labelStyle.textStyle || {};
-                    shape.highlightStyle.textPosition = labelStyle.position;
-                    shape.highlightStyle.textColor = textStyle.color || '#fff';
-                    shape.highlightStyle.textFont = this.getFont(textStyle);
+                    shape.highlightStyle.textPosition = this.deepQuery(queryTarget, 'itemStyle.emphasis.label.position');
+                    shape.highlightStyle.textColor = this.deepQuery(queryTarget, 'itemStyle.emphasis.label.textStyle.color');
+                    shape.highlightStyle.textFont = this.getFont(this.deepQuery(queryTarget, 'itemStyle.emphasis.label.textStyle') || {});
                 }
                 if (this.deepQuery(queryTarget, 'draggable')) {
                     this.setCalculable(shape);
@@ -29146,18 +29336,15 @@ define('zrender/zrender', [
             return scaleShape;
         },
         _buildBackground: function () {
-            var pTop = this.rcOption.padding[0];
-            var pRight = this.rcOption.padding[1];
-            var pBottom = this.rcOption.padding[2];
-            var pLeft = this.rcOption.padding[3];
+            var padding = this.reformCssArray(this.rcOption.padding);
             this.shapeList.push(new RectangleShape({
                 zlevel: this._zlevelBase,
                 hoverable: false,
                 style: {
-                    x: this._itemGroupLocation.x - pLeft,
-                    y: this._itemGroupLocation.y - pTop,
-                    width: this._itemGroupLocation.width + pLeft + pRight,
-                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    x: this._itemGroupLocation.x - padding[3],
+                    y: this._itemGroupLocation.y - padding[0],
+                    width: this._itemGroupLocation.width + padding[3] + padding[1],
+                    height: this._itemGroupLocation.height + padding[0] + padding[2],
                     brushType: this.rcOption.borderWidth === 0 ? 'fill' : 'both',
                     color: this.rcOption.backgroundColor,
                     strokeColor: this.rcOption.borderColor,
@@ -29166,7 +29353,7 @@ define('zrender/zrender', [
             }));
         },
         _getItemGroupLocation: function () {
-            var padding = this.rcOption.padding;
+            var padding = this.reformCssArray(this.rcOption.padding);
             var width = this.rcOption.width;
             var height = this.rcOption.height;
             var zrWidth = this.zr.getWidth();
@@ -29252,7 +29439,6 @@ define('zrender/zrender', [
             if (newOption) {
                 this.option = newOption || this.option;
                 this.option.roamController = this.reformOption(this.option.roamController);
-                this.option.roamController.padding = this.reformCssArray(this.option.roamController.padding);
                 this.rcOption = this.option.roamController;
             }
             this.clear();
