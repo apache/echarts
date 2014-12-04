@@ -674,6 +674,22 @@ define(function (require) {
                     position[1] = shape.position[1];
                     shape.position[0] = position[0];
                 }
+                else if (isNaN(node.fixX - 0) == false && isNaN(node.fixY - 0) == false) {
+                    shape.position[0] += (position[0] - shape.position[0]) * node.fixX;
+                    position[0] = shape.position[0];
+                    shape.position[1] += (position[1] - shape.position[1]) * node.fixY;
+                    position[1] = shape.position[1];
+                }
+                else if (isNaN(node.fixX - 0) == false) {
+                    shape.position[0] += (position[0] - shape.position[0]) * node.fixX;
+                    position[0] = shape.position[0];
+                    shape.position[1] = position[1];
+                }
+                else if (isNaN(node.fixY - 0) == false) {
+                    shape.position[1] += (position[1] - shape.position[1]) * node.fixY;
+                    position[1] = shape.position[1];
+                    shape.position[0] = position[0];
+                }
                 else  {
                     vec2.copy(shape.position, position);
                 }
