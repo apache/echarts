@@ -922,17 +922,21 @@ define(function (require) {
             ctx.moveTo(x2 + style.width - 5, y2 + dy);
             ctx.lineTo(x2 + style.width, y2 + dy);
             var self = this;
-            symbol(ctx, {
-                x: x + 4,
-                y: y + 4,
-                width: width - 8,
-                height: height - 8,
-                n: dy,
-                image: imageLocation
-            }, function () {
-                self.modSelf();
-                refreshNextFrame()
-            });
+            symbol(
+                ctx,
+                {
+                    x: x + 4,
+                    y: y + 4,
+                    width: width - 8,
+                    height: height - 8,
+                    n: dy,
+                    image: imageLocation
+                },
+                function () {
+                    self.modSelf();
+                    refreshNextFrame();
+                }
+            );
         }
         else {
             ctx.moveTo(x, y + dy);

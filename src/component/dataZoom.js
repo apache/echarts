@@ -880,7 +880,7 @@ define(function (require) {
                 end -= end >= length ? 1 : 0;
                 return {
                     start : data[start].value != null ? data[start].value : data[start],
-                    end : data[end].value != null ? data[end].value : data[end],
+                    end : data[end].value != null ? data[end].value : data[end]
                 };
             }
             

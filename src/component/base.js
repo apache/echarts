@@ -26,32 +26,7 @@ define(function (require) {
         this.effectList = [];
         
         var self = this;
-        /*
-        self.hoverConnect = function (param) {
-            var target = (param.target || {}).hoverConnect;
-            if (target) {
-                var zlevel = 10;
-                var shape;
-                if (!(target instanceof Array)) {
-                    shape = self.getShapeById(target);
-                    if (shape) {
-                        self.zr.addHoverShape(shape);
-                        zlevel = Math.min(zlevel, shape.zlevel);
-                    }
-                }
-                else {
-                    for (var i = 0, l = target.length; i < l; i++) {
-                        shape = self.getShapeById(target[i]);
-                        self.zr.addHoverShape(shape);
-                        zlevel = Math.min(zlevel, shape.zlevel);
-                    }
-                }
-                if (zlevel < param.target.zlevel) {
-                    self.zr.addHoverShape(param.target);
-                }
-            }
-        };
-        */
+        
         self._onlegendhoverlink = function(param) {
             if (self.legendHoverLink) {
                 var targetName = param.target;
@@ -163,7 +138,7 @@ define(function (require) {
                 return [p, p, p, p];
             }
         },
-
+        
         getShapeById: function(id) {
             for (var i = 0, l = this.shapeList.length; i < l; i++) {
                 if (this.shapeList[i].id === id) {

@@ -1386,7 +1386,7 @@ define(function (require) {
                         //this._animateAdd(newMap[key], duration, easing);
                         delay = (this.type == ecConfig.CHART_TYPE_LINE
                                 || this.type == ecConfig.CHART_TYPE_RADAR)
-                                && key.indexOf('icon') != 0
+                                && key.indexOf('icon') !== 0
                                 ? duration / 2
                                 : 0;
                         this._animateMod(false, newMap[key], duration, easing, delay);

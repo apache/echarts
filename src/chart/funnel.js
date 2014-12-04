@@ -118,7 +118,7 @@ define(function (require) {
             var centerX = location.centerX;
             var pointList= [];
             var x;
-            var polygon
+            var polygon;
             var lastPolygon;
             for (var i = 0, l = selectedData.length; i < l; i++) {
                 itemName = selectedData[i].name;

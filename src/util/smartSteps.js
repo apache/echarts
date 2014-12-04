@@ -228,7 +228,7 @@ function coreCalc(min, max, section) {
     var expStep = getCeil((max - min) / secs, custSteps);   // 这是可能的最小步长，以它的量级作为后续计算的基准量级，以保证整数计算特性
     var expSpan = expNum(max - min);                        // 2 位精度的最值跨度，过高的精度意味着有效数位更多
     var expMin  = expNum(min, -1, 1);                       // 最小值向下近似，以涵盖原最小值
-    var expMax  = expNum(max, -1);                          // 最大值向上近似，参数 -1 表示保留全精度，因为要注意 min = 10000001, max = 10000002 等情况
+    var expMax  = expNum(max, -1);     // 最大值向上近似，参数 -1 表示保留全精度，因为要注意 min = 10000001, max = 10000002 等情况
     expFixTo(expSpan, expStep);                             // 指数对齐
     expFixTo(expMin, expStep, 1);                           // 经过指数对齐，原最大值、最小值都有可能变为 0
     expFixTo(expMax, expStep);
@@ -374,7 +374,8 @@ function forInteger(min, max, section) {
  */
 function forSpan0(min, max, section) {
     section     = section || 5;
-    var delta   = MT.min(MATH_ABS(max / section), section) / 2.1; // delta 一定不为 0 ，因为 min === max === 0 的情况会进入 forInteger 分支
+    // delta 一定不为 0 ，因为 min === max === 0 的情况会进入 forInteger 分支
+    var delta   = MT.min(MATH_ABS(max / section), section) / 2.1;
     if (minLocked) {
         max     = min + delta;                              // min max 没有写错，因为 min locked 所以 max 在 min 上浮动
     }
@@ -487,11 +488,11 @@ function bothLocked(min, max, section) {
         deltaSpan   = step * section - span;
         score       = (deltaSpan + 3) * 3;                  // 误差越大得分越高
         score      += (section - trySecs[0] + 2) * 2;       // 分段越多得分越高
-        if (!(section % 5)) {                               // 段数为 5 可以减分
+        if (section % 5 === 0) {                            // 段数为 5 可以减分
             score  -= 10;
         }
         for (var j  = scoreS.length; j--;) {                // 好的步长是最重要的减分项
-            if (!(step % scoreS[j][0])) {
+            if (step % scoreS[j][0] === 0) {
                 score /= scoreS[j][1];
             }
         }
