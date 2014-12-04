@@ -1,6 +1,6 @@
 {
   "name": "echarts",
-  "version": "2.1.8",
+  "version": "2.1.9",
   "homepage": "http://echarts.baidu.com",
   "repository": "git://github.com/ecomfe/echarts",
   "authors": [
@@ -22,7 +22,6 @@
     "**/.*",
     "node_modules",
     "bower_components",
-    "test",
-    "tests"
+    "test"
   ]
 }
