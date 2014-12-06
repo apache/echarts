@@ -619,7 +619,7 @@ define(function (require) {
             }
             else {
                 return orient === 'horizontal'
-                       ? (Math.abs(singlePL[0][0] - singlePL[1][0]) < 0.5)//数值越大，可绘制的原始点数越少 2000  数值越小可绘制的原始点数越多
+                       ? (Math.abs(singlePL[0][0] - singlePL[1][0]) < 0.5) //数值越大，可绘制的原始点数越少 2000  数值越小可绘制的原始点数越多
                        : (Math.abs(singlePL[0][1] - singlePL[1][1]) < 0.5);
             }
         },
