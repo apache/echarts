@@ -1,7 +1,7 @@
 /**
  * echarts扩展zrender shape
  *
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  * shape类：icon
  * 可配图形属性：

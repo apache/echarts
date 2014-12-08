@@ -1,7 +1,7 @@
 /**
  * zrender
  *
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  * shape类：支持半平滑的polygon，折线面积图使用
  * 可配图形属性：

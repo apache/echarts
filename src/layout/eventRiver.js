@@ -1,7 +1,7 @@
 /**
  * eventRiver 布局算法
  * @module echarts/layout/eventRiver
- * @author clmtulip  (车丽美, chelimei@baidu.com)
+ * @author clmtulip  (车丽美, clmtulip@gmail.com)
  */
 define(function(require) {
     function eventRiverLayout(series, intervalX, area) {

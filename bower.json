@@ -4,10 +4,10 @@
   "homepage": "http://echarts.baidu.com",
   "repository": "git://github.com/ecomfe/echarts",
   "authors": [
-    { "name": "Kener", "email": "linzhifeng@baidu.com" },
-    { "name": "Pissang", "email": "shenyi01@baidu.com" },
-    { "name": "Erik", "email": "dongrui02@baidu.com" },
-    { "name": "Yangji", "email": "yangji01@baidu.com" }
+    { "name": "Kener", "email": "kener.linfeng@gmail.com" },
+    { "name": "Pissang", "email": "shenyi.914@gmail.com" },
+    { "name": "Erik", "email": "errorrik@gmail.com" },
+    { "name": "Yangji", "email": "511415343@qq.com" }
   ],
   "description": "Enterprise Charts 【Baidu Hi : 1379172 | Email : echarts@baidu.com】",
   "main": ["build/dist/echarts.js"],

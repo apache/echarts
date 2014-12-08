@@ -2,7 +2,7 @@
  * echarts组件类： 坐标轴
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  * 直角坐标系中坐标轴数组，数组中每一项代表一条横轴（纵轴）坐标轴。
  * 标准（1.0）中规定最多同时存在2条横轴和2条纵轴

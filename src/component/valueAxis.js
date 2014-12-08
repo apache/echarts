@@ -2,7 +2,7 @@
  * echarts组件： 数值轴
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function (require) {
@@ -580,10 +580,10 @@ define(function (require) {
          * 如果你不知道这个“整形”的用义，请不要试图去理解和修改这个方法！找我也没用，我相信我已经记不起来！
          * 如果你有更简洁的数学推导欢迎重写，后果自负~
          *
-         * by linzhifeng@baidu.com 2013-1-8
+         * by kener.linfeng@gmail.com 2013-1-8
          * --------
-         * 感谢谢世威(xieshiwei@baidu.com)，终于有人改这个方法了
-         * by lizhifeng@baidu.com 2014-11-6
+         * 感谢谢世威(https://github.com/i6ma)，终于有人改这个方法了
+         * by Kener 2014-11-6
          */
         _reformValue: function (scale) {
             var smartSteps = require('../util/smartSteps');
