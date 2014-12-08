@@ -2906,6 +2906,7 @@ define('echarts/echarts', [
             showDelay: 20,
             hideDelay: 100,
             transitionDuration: 0.4,
+            enterable: true,
             backgroundColor: 'rgba(0,0,0,0.7)',
             borderColor: '#333',
             borderRadius: 4,
@@ -5601,6 +5602,8 @@ define('zrender/zrender', [
             return cssText;
         },
         __hide: function () {
+            this._lastDataIndex = -1;
+            this._lastSeriesIndex = -1;
             if (this._tDom) {
                 this._tDom.style.display = 'none';
             }
@@ -5901,50 +5904,54 @@ define('zrender/zrender', [
                 }
             }
             if (seriesArray.length > 0) {
-                var data;
-                var value;
-                if (typeof formatter === 'function') {
-                    var params = [];
-                    for (var i = 0, l = seriesArray.length; i < l; i++) {
-                        data = seriesArray[i].data[dataIndex];
-                        value = data != null ? data.value != null ? data.value : data : '-';
-                        params.push({
-                            seriesIndex: seriesIndex[i],
-                            seriesName: seriesArray[i].name || '',
-                            series: seriesArray[i],
-                            dataIndex: dataIndex,
-                            data: data,
-                            name: categoryAxis.getNameByIndex(dataIndex),
-                            value: value,
-                            0: seriesArray[i].name || '',
-                            1: categoryAxis.getNameByIndex(dataIndex),
-                            2: value,
-                            3: data
-                        });
+                if (this._lastDataIndex != dataIndex || this._lastSeriesIndex != seriesIndex[0]) {
+                    this._lastDataIndex = dataIndex;
+                    this._lastSeriesIndex = seriesIndex[0];
+                    var data;
+                    var value;
+                    if (typeof formatter === 'function') {
+                        var params = [];
+                        for (var i = 0, l = seriesArray.length; i < l; i++) {
+                            data = seriesArray[i].data[dataIndex];
+                            value = data != null ? data.value != null ? data.value : data : '-';
+                            params.push({
+                                seriesIndex: seriesIndex[i],
+                                seriesName: seriesArray[i].name || '',
+                                series: seriesArray[i],
+                                dataIndex: dataIndex,
+                                data: data,
+                                name: categoryAxis.getNameByIndex(dataIndex),
+                                value: value,
+                                0: seriesArray[i].name || '',
+                                1: categoryAxis.getNameByIndex(dataIndex),
+                                2: value,
+                                3: data
+                            });
+                        }
+                        this._curTicket = 'axis:' + dataIndex;
+                        this._tDom.innerHTML = formatter.call(this.myChart, params, this._curTicket, this._setContent);
+                    } else if (typeof formatter === 'string') {
+                        this._curTicket = NaN;
+                        formatter = formatter.replace('{a}', '{a0}').replace('{b}', '{b0}').replace('{c}', '{c0}');
+                        for (var i = 0, l = seriesArray.length; i < l; i++) {
+                            formatter = formatter.replace('{a' + i + '}', this._encodeHTML(seriesArray[i].name || ''));
+                            formatter = formatter.replace('{b' + i + '}', this._encodeHTML(categoryAxis.getNameByIndex(dataIndex)));
+                            data = seriesArray[i].data[dataIndex];
+                            data = data != null ? data.value != null ? data.value : data : '-';
+                            formatter = formatter.replace('{c' + i + '}', data instanceof Array ? data : this.numAddCommas(data));
+                        }
+                        this._tDom.innerHTML = formatter;
+                    } else {
+                        this._curTicket = NaN;
+                        formatter = this._encodeHTML(categoryAxis.getNameByIndex(dataIndex));
+                        for (var i = 0, l = seriesArray.length; i < l; i++) {
+                            formatter += '<br/>' + this._encodeHTML(seriesArray[i].name || '') + ' : ';
+                            data = seriesArray[i].data[dataIndex];
+                            data = data != null ? data.value != null ? data.value : data : '-';
+                            formatter += data instanceof Array ? data : this.numAddCommas(data);
+                        }
+                        this._tDom.innerHTML = formatter;
                     }
-                    this._curTicket = 'axis:' + dataIndex;
-                    this._tDom.innerHTML = formatter.call(this.myChart, params, this._curTicket, this._setContent);
-                } else if (typeof formatter === 'string') {
-                    this._curTicket = NaN;
-                    formatter = formatter.replace('{a}', '{a0}').replace('{b}', '{b0}').replace('{c}', '{c0}');
-                    for (var i = 0, l = seriesArray.length; i < l; i++) {
-                        formatter = formatter.replace('{a' + i + '}', this._encodeHTML(seriesArray[i].name || ''));
-                        formatter = formatter.replace('{b' + i + '}', this._encodeHTML(categoryAxis.getNameByIndex(dataIndex)));
-                        data = seriesArray[i].data[dataIndex];
-                        data = data != null ? data.value != null ? data.value : data : '-';
-                        formatter = formatter.replace('{c' + i + '}', data instanceof Array ? data : this.numAddCommas(data));
-                    }
-                    this._tDom.innerHTML = formatter;
-                } else {
-                    this._curTicket = NaN;
-                    formatter = this._encodeHTML(categoryAxis.getNameByIndex(dataIndex));
-                    for (var i = 0, l = seriesArray.length; i < l; i++) {
-                        formatter += '<br/>' + this._encodeHTML(seriesArray[i].name || '') + ' : ';
-                        data = seriesArray[i].data[dataIndex];
-                        data = data != null ? data.value != null ? data.value : data : '-';
-                        formatter += data instanceof Array ? data : this.numAddCommas(data);
-                    }
-                    this._tDom.innerHTML = formatter;
                 }
                 if (showContent === false || !this.option.tooltip.showContent) {
                     return;
@@ -6029,25 +6036,29 @@ define('zrender/zrender', [
                 if (params.length <= 0) {
                     return;
                 }
-                if (typeof formatter === 'function') {
-                    this._curTicket = 'axis:' + dataIndex;
-                    this._tDom.innerHTML = formatter.call(this.myChart, params, this._curTicket, this._setContent);
-                } else if (typeof formatter === 'string') {
-                    formatter = formatter.replace('{a}', '{a0}').replace('{b}', '{b0}').replace('{c}', '{c0}').replace('{d}', '{d0}');
-                    for (var i = 0, l = params.length; i < l; i++) {
-                        formatter = formatter.replace('{a' + i + '}', this._encodeHTML(params[i].seriesName));
-                        formatter = formatter.replace('{b' + i + '}', this._encodeHTML(params[i].name));
-                        formatter = formatter.replace('{c' + i + '}', this.numAddCommas(params[i].value));
-                        formatter = formatter.replace('{d' + i + '}', this._encodeHTML(params[i].indicator));
+                if (this._lastDataIndex != dataIndex || this._lastSeriesIndex != seriesIndex[0]) {
+                    this._lastDataIndex = dataIndex;
+                    this._lastSeriesIndex = seriesIndex[0];
+                    if (typeof formatter === 'function') {
+                        this._curTicket = 'axis:' + dataIndex;
+                        this._tDom.innerHTML = formatter.call(this.myChart, params, this._curTicket, this._setContent);
+                    } else if (typeof formatter === 'string') {
+                        formatter = formatter.replace('{a}', '{a0}').replace('{b}', '{b0}').replace('{c}', '{c0}').replace('{d}', '{d0}');
+                        for (var i = 0, l = params.length; i < l; i++) {
+                            formatter = formatter.replace('{a' + i + '}', this._encodeHTML(params[i].seriesName));
+                            formatter = formatter.replace('{b' + i + '}', this._encodeHTML(params[i].name));
+                            formatter = formatter.replace('{c' + i + '}', this.numAddCommas(params[i].value));
+                            formatter = formatter.replace('{d' + i + '}', this._encodeHTML(params[i].indicator));
+                        }
+                        this._tDom.innerHTML = formatter;
+                    } else {
+                        formatter = this._encodeHTML(params[0].name) + '<br/>' + this._encodeHTML(params[0].indicator) + ' : ' + this.numAddCommas(params[0].value);
+                        for (var i = 1, l = params.length; i < l; i++) {
+                            formatter += '<br/>' + this._encodeHTML(params[i].name) + '<br/>';
+                            formatter += this._encodeHTML(params[i].indicator) + ' : ' + this.numAddCommas(params[i].value);
+                        }
+                        this._tDom.innerHTML = formatter;
                     }
-                    this._tDom.innerHTML = formatter;
-                } else {
-                    formatter = this._encodeHTML(params[0].name) + '<br/>' + this._encodeHTML(params[0].indicator) + ' : ' + this.numAddCommas(params[0].value);
-                    for (var i = 1, l = params.length; i < l; i++) {
-                        formatter += '<br/>' + this._encodeHTML(params[i].name) + '<br/>';
-                        formatter += this._encodeHTML(params[i].indicator) + ' : ' + this.numAddCommas(params[i].value);
-                    }
-                    this._tDom.innerHTML = formatter;
                 }
                 if (showContent === false || !this.option.tooltip.showContent) {
                     return;
@@ -6067,6 +6078,7 @@ define('zrender/zrender', [
                 return;
             }
             var serie = ecData.get(this._curTarget, 'series');
+            var seriesIndex = ecData.get(this._curTarget, 'seriesIndex');
             var data = ecData.get(this._curTarget, 'data');
             var dataIndex = ecData.get(this._curTarget, 'dataIndex');
             var name = ecData.get(this._curTarget, 'name');
@@ -6094,6 +6106,8 @@ define('zrender/zrender', [
                 position = this.query(data, 'tooltip.position') || position;
                 specialCssText += this._style(this.query(data, 'tooltip'));
             } else {
+                this._lastDataIndex = NaN;
+                this._lastSeriesIndex = NaN;
                 showContent = this.deepQuery([
                     data,
                     serie,
@@ -6110,44 +6124,48 @@ define('zrender/zrender', [
                     this.option
                 ], 'tooltip.islandPosition');
             }
-            if (typeof formatter === 'function') {
-                this._curTicket = (serie.name || '') + ':' + dataIndex;
-                this._tDom.innerHTML = formatter.call(this.myChart, {
-                    seriesIndex: ecData.get(this._curTarget, 'seriesIndex'),
-                    seriesName: serie.name || '',
-                    series: serie,
-                    dataIndex: dataIndex,
-                    data: data,
-                    name: name,
-                    value: value,
-                    percent: special,
-                    indicator: special,
-                    value2: special2,
-                    indicator2: special2,
-                    0: serie.name || '',
-                    1: name,
-                    2: value,
-                    3: special,
-                    4: special2,
-                    5: data,
-                    6: ecData.get(this._curTarget, 'seriesIndex'),
-                    7: dataIndex
-                }, this._curTicket, this._setContent);
-            } else if (typeof formatter === 'string') {
-                this._curTicket = NaN;
-                formatter = formatter.replace('{a}', '{a0}').replace('{b}', '{b0}').replace('{c}', '{c0}');
-                formatter = formatter.replace('{a0}', this._encodeHTML(serie.name || '')).replace('{b0}', this._encodeHTML(name)).replace('{c0}', value instanceof Array ? value : this.numAddCommas(value));
-                formatter = formatter.replace('{d}', '{d0}').replace('{d0}', special || '');
-                formatter = formatter.replace('{e}', '{e0}').replace('{e0}', ecData.get(this._curTarget, 'special2') || '');
-                this._tDom.innerHTML = formatter;
-            } else {
-                this._curTicket = NaN;
-                if (serie.type === ecConfig.CHART_TYPE_RADAR && special) {
-                    this._tDom.innerHTML = this._itemFormatter.radar.call(this, serie, name, value, special);
-                } else if (serie.type === ecConfig.CHART_TYPE_EVENTRIVER) {
-                    this._tDom.innerHTML = this._itemFormatter.eventRiver.call(this, serie, name, value, data);
+            if (this._lastDataIndex != dataIndex || this._lastSeriesIndex != seriesIndex) {
+                this._lastDataIndex = dataIndex;
+                this._lastSeriesIndex = seriesIndex;
+                if (typeof formatter === 'function') {
+                    this._curTicket = (serie.name || '') + ':' + dataIndex;
+                    this._tDom.innerHTML = formatter.call(this.myChart, {
+                        seriesIndex: seriesIndex,
+                        seriesName: serie.name || '',
+                        series: serie,
+                        dataIndex: dataIndex,
+                        data: data,
+                        name: name,
+                        value: value,
+                        percent: special,
+                        indicator: special,
+                        value2: special2,
+                        indicator2: special2,
+                        0: serie.name || '',
+                        1: name,
+                        2: value,
+                        3: special,
+                        4: special2,
+                        5: data,
+                        6: seriesIndex,
+                        7: dataIndex
+                    }, this._curTicket, this._setContent);
+                } else if (typeof formatter === 'string') {
+                    this._curTicket = NaN;
+                    formatter = formatter.replace('{a}', '{a0}').replace('{b}', '{b0}').replace('{c}', '{c0}');
+                    formatter = formatter.replace('{a0}', this._encodeHTML(serie.name || '')).replace('{b0}', this._encodeHTML(name)).replace('{c0}', value instanceof Array ? value : this.numAddCommas(value));
+                    formatter = formatter.replace('{d}', '{d0}').replace('{d0}', special || '');
+                    formatter = formatter.replace('{e}', '{e0}').replace('{e0}', ecData.get(this._curTarget, 'special2') || '');
+                    this._tDom.innerHTML = formatter;
                 } else {
-                    this._tDom.innerHTML = '' + (serie.name != null ? this._encodeHTML(serie.name) + '<br/>' : '') + (name === '' ? '' : this._encodeHTML(name) + ' : ') + (value instanceof Array ? value : this.numAddCommas(value)) + (special == null ? '' : ' (' + special + ')');
+                    this._curTicket = NaN;
+                    if (serie.type === ecConfig.CHART_TYPE_RADAR && special) {
+                        this._tDom.innerHTML = this._itemFormatter.radar.call(this, serie, name, value, special);
+                    } else if (serie.type === ecConfig.CHART_TYPE_EVENTRIVER) {
+                        this._tDom.innerHTML = this._itemFormatter.eventRiver.call(this, serie, name, value, data);
+                    } else {
+                        this._tDom.innerHTML = '' + (serie.name != null ? this._encodeHTML(serie.name) + '<br/>' : '') + (name === '' ? '' : this._encodeHTML(name) + ' : ') + (value instanceof Array ? value : this.numAddCommas(value)) + (special == null ? '' : ' (' + special + ')');
+                    }
                 }
             }
             if (!this._axisLineShape.invisible || !this._axisShadowShape.invisible) {
@@ -6318,7 +6336,7 @@ define('zrender/zrender', [
         __onmousemove: function (param) {
             clearTimeout(this._hidingTicket);
             clearTimeout(this._showingTicket);
-            if (this._mousein) {
+            if (this._mousein && this.enterable) {
                 return;
             }
             var target = param.target;
@@ -6595,6 +6613,8 @@ define('zrender/zrender', [
             }
             this._lastTipShape = false;
             this.shapeList.length = 2;
+            this._lastDataIndex = -1;
+            this._lastSeriesIndex = -1;
             if (newOption) {
                 this.option = newOption;
                 this.option.tooltip = this.reformOption(this.option.tooltip);
@@ -10877,9 +10897,7 @@ define('zrender/zrender', [
                 cursor = 'pointer';
             }
             this.root.style.cursor = cursor;
-            if (Math.abs(this._mouseX - this._lastX) > 2 || Math.abs(this._mouseY - this._lastY) > 2) {
-                this._dispatchAgency(this._lastHover, EVENT.MOUSEMOVE, event);
-            }
+            this._dispatchAgency(this._lastHover, EVENT.MOUSEMOVE, event);
             if (this._draggingTarget || this._hasfound || this.storage.hasHoverShape()) {
                 this.painter.refreshHover();
             }
