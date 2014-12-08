@@ -1242,7 +1242,7 @@ define(function (require) {
         __onmousemove: function (param) {
             clearTimeout(this._hidingTicket);
             clearTimeout(this._showingTicket);
-            if (this._mousein) {
+            if (this._mousein && this.enterable) {
                 return;
             }
             var target = param.target;
