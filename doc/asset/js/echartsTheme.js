@@ -37,6 +37,12 @@ function refreshAll() {
     }
 }
 
+var hash = window.location.hash.replace('#','') || 'infographic';
+if ($('[name=theme-select]').val(hash).val() != hash) {
+    $('[name=theme-select]').val('infographic');
+    hash = 'infographic';
+}
+
 var developMode = false;
 if (developMode) {
     window.esl = null;
@@ -92,12 +98,6 @@ else {
         }
     });
     launchExample();
-}
-
-var hash = window.location.hash.replace('#','') || 'infographic';
-if ($('[name=theme-select]').val(hash).val() != hash) {
-    $('[name=theme-select]').val('infographic');
-    hash = 'infographic';
 }
 
 var isExampleLaunched;
