@@ -215,6 +215,7 @@ define(function (require) {
         __hide: function () {
             this._lastDataIndex = -1;
             this._lastSeriesIndex = -1;
+            this._lastItemTriggerId = -1;
             if (this._tDom) {
                 this._tDom.style.display = 'none';
             }
@@ -925,17 +926,15 @@ define(function (require) {
                 specialCssText += this._style(this.query(data, 'tooltip'));
             }
             else {
-                this._lastDataIndex = NaN;
-                this._lastSeriesIndex = NaN;
+                this._lastItemTriggerId = NaN;
                 showContent = this.deepQuery([data, serie, this.option], 'tooltip.showContent');
                 formatter = this.deepQuery([data, serie, this.option], 'tooltip.islandFormatter');
                 position = this.deepQuery([data, serie, this.option], 'tooltip.islandPosition');
             }
 
             // 相同dataIndex seriesIndex时不再触发内容更新
-            if (this._lastDataIndex != dataIndex || this._lastSeriesIndex != seriesIndex) {
-                this._lastDataIndex = dataIndex;
-                this._lastSeriesIndex = seriesIndex;
+            if (this._lastItemTriggerId !== this._curTarget.id) {
+                this._lastItemTriggerId = this._curTarget.id;
                 if (typeof formatter === 'function') {
                     this._curTicket = (serie.name || '') + ':' + dataIndex;
                     this._tDom.innerHTML = formatter.call(
@@ -1010,8 +1009,7 @@ define(function (require) {
                         this._tDom.innerHTML = ''
                             + (serie.name != null ? (this._encodeHTML(serie.name) + '<br/>') : '')
                             + (name === '' ? '' : (this._encodeHTML(name) + ' : '))
-                            + (value instanceof Array ? value : this.numAddCommas(value))
-                            + (special == null ? '' : (' (' + special + ')'));
+                            + (value instanceof Array ? value : this.numAddCommas(value));
                     }
                 }
             }
@@ -1118,10 +1116,7 @@ define(function (require) {
                     style[pType].type = axisPointer[pType + 'Style'].type;
                 }
                 for (var i = 0, l = seriesArray.length; i < l; i++) {
-                    if (this.deepQuery(
-                           [seriesArray[i], this.option], 'tooltip.trigger'
-                       ) === 'axis'
-                    ) {
+                    if (this.deepQuery([seriesArray[i], this.option], 'tooltip.trigger') === 'axis') {
                         queryTarget = seriesArray[i];
                         curType = this.query(queryTarget, 'tooltip.axisPointer.type');
                         pointType = curType || pointType; 
@@ -1242,7 +1237,7 @@ define(function (require) {
         __onmousemove: function (param) {
             clearTimeout(this._hidingTicket);
             clearTimeout(this._showingTicket);
-            if (this._mousein && this.enterable) {
+            if (this._mousein && this._enterable) {
                 return;
             }
             var target = param.target;
@@ -1644,6 +1639,7 @@ define(function (require) {
             
             this._lastDataIndex = -1;
             this._lastSeriesIndex = -1;
+            this._lastItemTriggerId = -1;
             
             if (newOption) {
                 this.option = newOption;
@@ -1672,6 +1668,7 @@ define(function (require) {
                 
                 this._setSelectedMap();
                 this._axisLineWidth = this.option.tooltip.axisPointer.lineStyle.width;
+                this._enterable = this.option.tooltip.enterable;
             }
             if (this.showing) {
                 var self = this;
