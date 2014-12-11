@@ -1,4 +1,4 @@
-var version = '2.1.9';
+var version = '2.1.10';
 var sp = location.href.lastIndexOf('/');
 var ep = location.href.lastIndexOf('.html');
 var curPage = sp < ep ? location.href.slice(sp + 1, ep) : 'index';

@@ -1700,7 +1700,7 @@ define('echarts/echarts', [
     var _idBase = new Date() - 0;
     var _instances = {};
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
-    self.version = '2.1.9';
+    self.version = '2.1.10';
     self.dependencies = { zrender: '2.0.6' };
     self.init = function (dom, theme) {
         var zrender = require('zrender');
@@ -2906,7 +2906,7 @@ define('echarts/echarts', [
             showDelay: 20,
             hideDelay: 100,
             transitionDuration: 0.4,
-            enterable: true,
+            enterable: false,
             backgroundColor: 'rgba(0,0,0,0.7)',
             borderColor: '#333',
             borderRadius: 4,
@@ -5604,6 +5604,7 @@ define('zrender/zrender', [
         __hide: function () {
             this._lastDataIndex = -1;
             this._lastSeriesIndex = -1;
+            this._lastItemTriggerId = -1;
             if (this._tDom) {
                 this._tDom.style.display = 'none';
             }
@@ -6106,8 +6107,7 @@ define('zrender/zrender', [
                 position = this.query(data, 'tooltip.position') || position;
                 specialCssText += this._style(this.query(data, 'tooltip'));
             } else {
-                this._lastDataIndex = NaN;
-                this._lastSeriesIndex = NaN;
+                this._lastItemTriggerId = NaN;
                 showContent = this.deepQuery([
                     data,
                     serie,
@@ -6124,9 +6124,8 @@ define('zrender/zrender', [
                     this.option
                 ], 'tooltip.islandPosition');
             }
-            if (this._lastDataIndex != dataIndex || this._lastSeriesIndex != seriesIndex) {
-                this._lastDataIndex = dataIndex;
-                this._lastSeriesIndex = seriesIndex;
+            if (this._lastItemTriggerId !== this._curTarget.id) {
+                this._lastItemTriggerId = this._curTarget.id;
                 if (typeof formatter === 'function') {
                     this._curTicket = (serie.name || '') + ':' + dataIndex;
                     this._tDom.innerHTML = formatter.call(this.myChart, {
@@ -6164,7 +6163,7 @@ define('zrender/zrender', [
                     } else if (serie.type === ecConfig.CHART_TYPE_EVENTRIVER) {
                         this._tDom.innerHTML = this._itemFormatter.eventRiver.call(this, serie, name, value, data);
                     } else {
-                        this._tDom.innerHTML = '' + (serie.name != null ? this._encodeHTML(serie.name) + '<br/>' : '') + (name === '' ? '' : this._encodeHTML(name) + ' : ') + (value instanceof Array ? value : this.numAddCommas(value)) + (special == null ? '' : ' (' + special + ')');
+                        this._tDom.innerHTML = '' + (serie.name != null ? this._encodeHTML(serie.name) + '<br/>' : '') + (name === '' ? '' : this._encodeHTML(name) + ' : ') + (value instanceof Array ? value : this.numAddCommas(value));
                     }
                 }
             }
@@ -6336,7 +6335,7 @@ define('zrender/zrender', [
         __onmousemove: function (param) {
             clearTimeout(this._hidingTicket);
             clearTimeout(this._showingTicket);
-            if (this._mousein && this.enterable) {
+            if (this._mousein && this._enterable) {
                 return;
             }
             var target = param.target;
@@ -6615,6 +6614,7 @@ define('zrender/zrender', [
             this.shapeList.length = 2;
             this._lastDataIndex = -1;
             this._lastSeriesIndex = -1;
+            this._lastItemTriggerId = -1;
             if (newOption) {
                 this.option = newOption;
                 this.option.tooltip = this.reformOption(this.option.tooltip);
@@ -6635,6 +6635,7 @@ define('zrender/zrender', [
                 this._defaultCssText = this._style(this.option.tooltip);
                 this._setSelectedMap();
                 this._axisLineWidth = this.option.tooltip.axisPointer.lineStyle.width;
+                this._enterable = this.option.tooltip.enterable;
             }
             if (this.showing) {
                 var self = this;
@@ -10506,7 +10507,10 @@ define('zrender/zrender', [
                 }
                 var doc = this.element_.ownerDocument;
                 this.textMeasureEl_.innerHTML = '';
-                this.textMeasureEl_.style.font = this.font;
+                try {
+                    this.textMeasureEl_.style.font = this.font;
+                } catch (ex) {
+                }
                 this.textMeasureEl_.appendChild(doc.createTextNode(text));
                 return { width: this.textMeasureEl_.offsetWidth };
             };
@@ -16740,7 +16744,7 @@ define('zrender/zrender', [
             this.setTransform(ctx);
             ctx.save();
             ctx.beginPath();
-            this.buildLinePath(ctx, style);
+            this.buildLinePath(ctx, style, this.style.lineWidth || 1);
             ctx.stroke();
             ctx.restore();
             this.brushSymbol(ctx, style, 0);
@@ -16748,7 +16752,7 @@ define('zrender/zrender', [
             this.drawText(ctx, style, this.style);
             ctx.restore();
         },
-        buildLinePath: function (ctx, style) {
+        buildLinePath: function (ctx, style, lineWidth) {
             var pointList = style.pointList || this.getPointList(style);
             style.pointList = pointList;
             var len = Math.min(style.pointList.length, Math.round(style.pointListLength || style.pointList.length));
@@ -16759,7 +16763,7 @@ define('zrender/zrender', [
                 }
             } else if (style.lineType == 'dashed' || style.lineType == 'dotted') {
                 if (style.smooth !== 'spline') {
-                    var dashLength = (style.lineWidth || 1) * (style.lineType == 'dashed' ? 5 : 1);
+                    var dashLength = lineWidth * (style.lineType == 'dashed' ? 5 : 1);
                     ctx.moveTo(pointList[0][0], pointList[0][1]);
                     for (var i = 1; i < len; i++) {
                         dashedLineTo(ctx, pointList[i - 1][0], pointList[i - 1][1], pointList[i][0], pointList[i][1], dashLength);
