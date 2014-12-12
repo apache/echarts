@@ -84,66 +84,86 @@ function refreshAll() {
     }
 }
 
-var developMode = true;
+var developMode = false;
 if (developMode) {
-    // for develop
-    require.config({
-        packages: [
-            {
-                name: 'echarts',
-                location: '../../src',
-                main: 'echarts'
-            },
-            {
-                name: 'zrender',
-                //location: 'http://ecomfe.github.io/zrender/src',
-                location: '../../../zrender/src',
-                main: 'zrender'
-            }
-        ]
-    });
+    window.esl = null;
+    window.define = null;
+    window.require = null;
+    (function () {
+        var script = document.createElement('script');
+        script.async = true;
+
+        script.src = '../../doc/asset/js/esl/esl.js';
+        if (script.readyState) {
+            script.onreadystatechange = fireLoad;
+        }
+        else {
+            script.onload = fireLoad;
+        }
+        (document.getElementsByTagName('head')[0] || document.body).appendChild(script);
+        
+        function fireLoad() {
+            script.onload = script.onreadystatechange = null;
+            setTimeout(loadedListener,100);
+        }
+        function loadedListener() {
+            // for develop
+            require.config({
+                packages: [
+                    {
+                        name: 'echarts',
+                        location: '../../src',
+                        main: 'echarts'
+                    },
+                    {
+                        name: 'zrender',
+                        //location: 'http://ecomfe.github.io/zrender/src',
+                        location: '../../../zrender/src',
+                        main: 'zrender'
+                    }
+                ]
+            });
+            launchExample();
+        }
+    })();
 }
 else {
     // for echarts online home page
-    var fileLocation = '../../build/echarts-map';
     require.config({
         paths:{ 
-            echarts: fileLocation,
-            'echarts/chart/line': fileLocation,
-            'echarts/chart/bar': fileLocation,
-            'echarts/chart/scatter': fileLocation,
-            'echarts/chart/k': fileLocation,
-            'echarts/chart/pie': fileLocation,
-            'echarts/chart/radar': fileLocation,
-            'echarts/chart/map': fileLocation,
-            'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation,
-            'echarts/chart/gauge': fileLocation,
-            'echarts/chart/funnel': fileLocation,
-            'echarts/chart/eventRiver': fileLocation
+            echarts: '../../build/dist'
         }
     });
+    launchExample();
 }
 
-// 按需加载
-require(
-    [
-        'echarts',
-        'echarts/chart/line',
-        'echarts/chart/bar',
-        'echarts/chart/scatter',
-        'echarts/chart/k',
-        'echarts/chart/pie',
-        'echarts/chart/radar',
-        'echarts/chart/force',
-        'echarts/chart/chord',
-        'echarts/chart/map',
-        'echarts/chart/gauge',
-        'echarts/chart/funnel',
-        'echarts/chart/eventRiver'
-    ],
-    requireCallback
-);
+var isExampleLaunched;
+function launchExample() {
+    if (isExampleLaunched) {
+        return;
+    }
+
+    // 按需加载
+    isExampleLaunched = 1;
+    require(
+        [
+            'echarts',
+            'echarts/chart/line',
+            'echarts/chart/bar',
+            'echarts/chart/scatter',
+            'echarts/chart/k',
+            'echarts/chart/pie',
+            'echarts/chart/radar',
+            'echarts/chart/force',
+            'echarts/chart/chord',
+            'echarts/chart/map',
+            'echarts/chart/gauge',
+            'echarts/chart/funnel',
+            'echarts/chart/eventRiver'
+        ],
+        requireCallback
+    );
+}
 
 var echarts;
 var option = {};

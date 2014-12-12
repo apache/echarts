@@ -2,7 +2,7 @@
  * echarts图表基类
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function (require) {
@@ -777,7 +777,8 @@ define(function (require) {
                     color = color == null ? this.zr.getColor(seriesIndex) : color;
                     
                     // 标准化一些参数
-                    data[i].tooltip = data[i].tooltip 
+                    data[i].tooltip = data[i].tooltip
+                                      || mpOption.tooltip
                                       || {trigger:'item'}; // tooltip.trigger指定为item
                     data[i].name = data[i].name != null ? data[i].name : '';
                     data[i].value = value;
@@ -1337,6 +1338,7 @@ define(function (require) {
             var duration = lastShapeList.length > 0
                            ? 500 : this.query(this.option, 'animationDuration');
             var easing = this.query(this.option, 'animationEasing');
+            var delay;
             var key;
             var oldMap = {};
             var newMap = {};
@@ -1382,7 +1384,12 @@ define(function (require) {
                     else {
                         // 新有旧没有  添加并动画过渡
                         //this._animateAdd(newMap[key], duration, easing);
-                        this._animateMod(false, newMap[key], duration, easing);
+                        delay = (this.type == ecConfig.CHART_TYPE_LINE
+                                || this.type == ecConfig.CHART_TYPE_RADAR)
+                                && key.indexOf('icon') !== 0
+                                ? duration / 2
+                                : 0;
+                        this._animateMod(false, newMap[key], duration, easing, delay);
                     }
                 }
                 this.zr.refresh();
@@ -1417,7 +1424,7 @@ define(function (require) {
         /**
          * 动画过渡 
          */
-        _animateMod: function (oldShape, newShape, duration, easing) {
+        _animateMod: function (oldShape, newShape, duration, easing, delay) {
             switch (newShape.type) {
                 case 'broken-line' :
                 case 'half-smooth-polygon' :
@@ -1427,7 +1434,7 @@ define(function (require) {
                     ecAnimation.rectangle(this.zr, oldShape, newShape, duration, easing);
                     break;
                 case 'icon' :
-                    ecAnimation.icon(this.zr, oldShape, newShape, duration, easing);
+                    ecAnimation.icon(this.zr, oldShape, newShape, duration, easing, delay);
                     break;
                 case 'candle' :
                     if (duration > 500) {
@@ -1511,6 +1518,9 @@ define(function (require) {
         animationEffect: function (addShapeList) {
             !addShapeList && this.clearEffectShape();
             var shapeList = addShapeList || this.shapeList;
+            if (shapeList == null) {
+                return;
+            }
             var zlevel = ecConfig.EFFECT_ZLEVEL;
             if (this.canvasSupported) {
                 this.zr.modLayer(

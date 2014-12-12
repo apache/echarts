@@ -2,7 +2,7 @@
  * echarts组件：时间轴组件
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function (require) {
@@ -141,7 +141,7 @@ define(function (require) {
          */
         _getLocation: function () {
             var timelineOption = this.timelineOption;
-            var padding = timelineOption.padding;
+            var padding = this.reformCssArray(this.timelineOption.padding);
             
             // 水平布局
             var zrWidth = this.zr.getWidth();
@@ -279,7 +279,7 @@ define(function (require) {
             var len = data.length;
             
             function _getName(i) {
-                return data[i].name != null ? data[i].name : data[i];
+                return (data[i].name != null ? data[i].name : data[i] + '');
             }
             var xList = [];
             if (len > 1) {
@@ -370,7 +370,7 @@ define(function (require) {
         
         _buildBackground: function () {
             var timelineOption = this.timelineOption;
-            var padding = timelineOption.padding;
+            var padding = this.reformCssArray(this.timelineOption.padding);
             var width = this._location.width;
             var height = this._location.height;
             
@@ -779,10 +779,6 @@ define(function (require) {
         
         setTheme: function(needRefresh) {
             this.timelineOption = this.reformOption(zrUtil.clone(this.option.timeline));
-            // 补全padding属性
-            this.timelineOption.padding = this.reformCssArray(
-                this.timelineOption.padding
-            );
             // 通用字体设置
             this.timelineOption.label.textStyle = zrUtil.merge(
                 this.timelineOption.label.textStyle || {},

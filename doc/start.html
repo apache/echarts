@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="ECharts">
-    <meta name="author" content="linzhifeng@baidu.com">
+    <meta name="author" content="kener.linfeng@gmail.com">
     <title>ECharts · Start</title>
     
     <link rel="shortcut icon" href="./asset/ico/favicon.png">
@@ -50,29 +50,29 @@
         </ul>
         <div class="tab-content">
             <div class="tab-pane active" id="main0">
-        <b class="title">1、新建一个echarts.html文件。为ECharts准备一个具备大小（宽高）的Dom。</b>
+        <b class="title">1、新建一个echarts.html文件，为ECharts准备一个具备大小（宽高）的Dom。</b>
         <pre class="prettyprint"><xmp><!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
 </head>
+
 <body>
     <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
     <div id="main" style="height:400px"></div>
 </body></xmp></pre>
 
-
-        <b class="title">2、新建&lt;script&gt;标签引入符合AMD规范的加载器，如esl.js</b>
+        <b class="title">2、新建&lt;script&gt;标签引入模块化单文件echarts.js</b>
         <pre class="prettyprint"><xmp><!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
-    <!-- 来自百度CDN -->
-    <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-6-10/esl.js"></script>
 </head>
 <body>
     <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
     <div id="main" style="height:400px"></div>
+    <!-- ECharts单文件引入 -->
+    <script src="http://echarts.baidu.com/build/dist/echarts.js"></script>
 </body></xmp></pre>
 
 
@@ -81,18 +81,17 @@
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
-    <!-- 来自百度CDN -->
-    <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-6-10/esl.js"></script>
 </head>
 <body>
     <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
     <div id="main" style="height:400px"></div>
+    <!-- ECharts单文件引入 -->
+    <script src="http://echarts.baidu.com/build/dist/echarts.js"></script>
     <script type="text/javascript">
         // 路径配置
         require.config({
-            paths:{ 
-                'echarts' : 'http://echarts.baidu.com/build/echarts',
-                'echarts/chart/bar' : 'http://echarts.baidu.com/build/echarts'
+            paths: {
+                echarts: 'http://echarts.baidu.com/build/dist'
             }
         });
     </script>
@@ -104,18 +103,17 @@
 <head>
     <meta charset="utf-8">
     <title>ECharts</title>
-    <!-- 来自百度CDN -->
-    <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-6-10/esl.js"></script>
 </head>
 <body>
     <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
     <div id="main" style="height:400px"></div>
+    <!-- ECharts单文件引入 -->
+    <script src="http://echarts.baidu.com/build/dist/echarts.js"></script>
     <script type="text/javascript">
         // 路径配置
         require.config({
-            paths:{ 
-                'echarts' : 'http://echarts.baidu.com/build/echarts',
-                'echarts/chart/bar' : 'http://echarts.baidu.com/build/echarts'
+            paths: {
+                echarts: 'http://echarts.baidu.com/build/dist'
             }
         });
         
@@ -182,7 +180,7 @@
 </body></xmp></pre>
 
 
-        <b class="title">2、新建&lt;script&gt;标签引入echarts-plain.js，引入图表文件见<a href="doc.html#引入ECharts3" target="_blank">引入ECharts3</a></b>
+        <b class="title">2、新建&lt;script&gt;标签引入echarts-all.js，引入图表文件见<a href="doc.html#引入ECharts3" target="_blank">引入ECharts3</a></b>
         <pre class="prettyprint"><xmp><!DOCTYPE html>
 <head>
     <meta charset="utf-8">
@@ -192,7 +190,7 @@
     <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
     <div id="main" style="height:400px"></div>
     <!-- ECharts单文件引入 -->
-    <script src="http://echarts.baidu.com/build/echarts-plain.js"></script>
+    <script src="http://echarts.baidu.com/build/dist/echarts-all.js"></script>
 </body></xmp></pre>
 
 
@@ -206,7 +204,7 @@
     <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
     <div id="main" style="height:400px"></div>
     <!-- ECharts单文件引入 -->
-    <script src="http://echarts.baidu.com/build/echarts-plain.js"></script>
+    <script src="http://echarts.baidu.com/build/dist/echarts-all.js"></script>
     <script type="text/javascript">
         // 基于准备好的dom，初始化echarts图表
         var myChart = echarts.init(document.getElementById('main')); 
@@ -251,18 +249,17 @@
         </div>
         <div id="main" style="height:400px;border: 1px solid #dddddd;border-top-width:0"></div>
         
-        <div class="row" style="margin-top: 30px;">
+        <div class="row" style="margin: 30px 0;">
             <h2>最好的参考资源：实例</h2>
             <p>ECharts可以说是数据驱动的图表，大部分时候你关心的是那个option该如何实现，官网的<a href="./doc.html">文档</a>提供详细的说明，另外我们还有近100个<a href="./example.html">实例</a>，这些例子都为你展现了最核心的option代码，可以通过在线修改查看效果，ECharts是玩出来的，希望你玩得开心。</p>
         </div>
     </div>
-    <script src="./asset/js/esl/esl.js"></script>
+    <script src="../build/dist/echarts.js"></script>
      
     <script type="text/javascript">
         require.config({
-            paths:{ 
-                'echarts' : 'http://echarts.baidu.com/build/echarts',
-                'echarts/chart/bar' : 'http://echarts.baidu.com/build/echarts'
+            paths: {
+                echarts: '../build/dist'
             }
         });
         require(

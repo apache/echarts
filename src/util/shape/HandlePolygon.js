@@ -1,7 +1,7 @@
 /**
  * zrender
  *
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  * shape类：handlePolygon，dataRange手柄
  */

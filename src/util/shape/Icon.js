@@ -1,7 +1,7 @@
 /**
  * echarts扩展zrender shape
  *
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  * shape类：icon
  * 可配图形属性：
@@ -487,14 +487,15 @@ define(function (require) {
         ctx.closePath();
     }
     
-    function _iconImage(ctx, style) {
-        setTimeout(function (){
-            var ImageShape = require('zrender/shape/Image');
-            var itemShape = new ImageShape({
-                style : style
-            });
-            itemShape.brush(ctx);
-        },100);
+    function _iconImage(ctx, style, refreshNextFrame) {
+        var ImageShape = require('zrender/shape/Image');
+        this._imageShape = this._imageShape || new ImageShape({
+            style: {}
+        });
+        for (var name in style) {
+            this._imageShape.style[name] = style[name];
+        }
+        this._imageShape.brush(ctx, false, refreshNextFrame);
     }
     
     var Base = require('zrender/shape/Base');
@@ -535,16 +536,36 @@ define(function (require) {
             pin : _iconPin,
             image : _iconImage
         },
-        brush: function (ctx, isHighlight, refresh) {
+        brush: function (ctx, isHighlight, refreshNextFrame) {
             var style = isHighlight ? this.highlightStyle : this.style;
             style = style || {};
             var iconType = style.iconType || this.style.iconType;
             if (iconType === 'image') {
                 var ImageShape = require('zrender/shape/Image');
-                ImageShape.prototype.brush.call(this, ctx, isHighlight, refresh);
+                ImageShape.prototype.brush.call(this, ctx, isHighlight, refreshNextFrame);
+
             } else {
-                var BaseShape = require('zrender/shape/Base');
-                BaseShape.prototype.brush.call(this, ctx, isHighlight, refresh);
+
+                var style = this.beforeBrush(ctx, isHighlight);
+
+                ctx.beginPath();
+                this.buildPath(ctx, style, refreshNextFrame);
+
+                switch (style.brushType) {
+                    /* jshint ignore:start */
+                    case 'both':
+                        ctx.fill();
+                    case 'stroke':
+                        style.lineWidth > 0 && ctx.stroke();
+                        break;
+                    /* jshint ignore:end */
+                    default:
+                        ctx.fill();
+                }
+                
+                this.drawText(ctx, style, this.style);
+
+                this.afterBrush(ctx);
             }
         },
         /**
@@ -552,9 +573,9 @@ define(function (require) {
          * @param {Context2D} ctx Canvas 2D上下文
          * @param {Object} style 样式
          */
-        buildPath : function (ctx, style) {
+        buildPath : function (ctx, style, refreshNextFrame) {
             if (this.iconLibrary[style.iconType]) {
-                this.iconLibrary[style.iconType](ctx, style);
+                this.iconLibrary[style.iconType].call(this, ctx, style, refreshNextFrame);
             }
             else {
                 ctx.moveTo(style.x, style.y);

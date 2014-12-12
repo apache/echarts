@@ -28,7 +28,6 @@
         <!--[if lt IE 9]>
         <script src="lib/js/html5shiv.js"></script>
         <![endif]-->
-        <script src="../asset/js/esl/esl.js"></script>
         <style type="text/css">
             * {
                 font-family:'微软雅黑' !important;
@@ -188,16 +187,40 @@
                 </section>
 
                 <section>
-                    <h4>[ 动态类型切换 ] 尝试不同类型的图表展现</h4>
-                    <p>
-                        <small>很多图表类型本身所表现的能力是相似的，但由于数据差异、表现需求和个人喜好的不同导致最终图表所呈现的张力又大不一样，比如折线图和柱状图的选择总是让人头疼？是否使用堆积也是一个艰难的决定？是放弃这个尝试还是重复的写上大段代码？
-                        </small>
-                    </p>
-                    <p class="fragment">
-                        <small>这是<a href="http://ecomfe.github.io/echarts/" target="_blank">ECharts</a>，我们提供了动态类型切换功能，让用户随心所欲的切换图表类型和堆积平铺状态。
-                            <br/>试试把柱状图<img src="./img/iconBarChart.png" class="echarts-icon"/><strong>切换</strong>成折线图<img src="./img/iconLineChart.png" class="echarts-icon"/>，或者切换堆积平铺状态<img src="./img/iconStack.png" class="echarts-icon"/>，你会对这份数据有更多的解读。</small>
-                    </p>
-                    <div class="main" optionKey="magicType"></div>
+                    <section>
+                        <h4>[ 动态类型切换 ] 尝试不同类型的图表展现</h4>
+                        <p>
+                            <small>很多图表类型本身所表现的能力是相似的，但由于数据差异、表现需求和个人喜好的不同导致最终图表所呈现的张力又大不一样，比如折线图和柱状图的选择总是让人头疼？是否使用堆积也是一个艰难的决定？是放弃这个尝试还是重复的写上大段代码？
+                            </small>
+                        </p>
+                        <p class="fragment">
+                            <small>这是<a href="http://ecomfe.github.io/echarts/" target="_blank">ECharts</a>，我们提供了动态类型切换功能，让用户随心所欲的切换图表类型和堆积平铺状态。
+                                <br/>试试把柱状图<img src="./img/iconBarChart.png" class="echarts-icon"/><strong>切换</strong>成折线图<img src="./img/iconLineChart.png" class="echarts-icon"/>，或者切换堆积平铺状态<img src="./img/iconStack.png" class="echarts-icon"/>，你会对这份数据有更多的解读。</small>
+                        </p>
+                        <div class="main" optionKey="magicType"></div>
+                    </section>
+                    <section>
+                        <h4>[ 动态类型切换 ] 尝试不同类型的图表展现</h4>
+                        <p>
+                            <small>很多图表类型本身所表现的能力是相似的，但由于数据差异、表现需求和个人喜好的不同导致最终图表所呈现的张力又大不一样，是放弃这个尝试还是重复的写上大段代码？
+                            </small>
+                        </p>
+                        <p>
+                            <small>这是<a href="http://ecomfe.github.io/echarts/" target="_blank">ECharts</a>，我们提供了动态类型切换功能。不同的图形表达去展现同样的数据，或许你会对这份数据有更多的解读。</small>
+                        </p>
+                        <div class="main" optionKey="magicType2"></div>
+                    </section>
+                    <section>
+                        <h4>[ 动态类型切换 ] 尝试不同类型的图表展现</h4>
+                        <p>
+                            <small>很多图表类型本身所表现的能力是相似的，但由于数据差异、表现需求和个人喜好的不同导致最终图表所呈现的张力又大不一样，是放弃这个尝试还是重复的写上大段代码？
+                            </small>
+                        </p>
+                        <p>
+                            <small>这是<a href="http://ecomfe.github.io/echarts/" target="_blank">ECharts</a>，我们提供了动态类型切换功能。不同的图形表达去展现同样的数据，或许你会对这份数据有更多的解读。</small>
+                        </p>
+                        <div class="main" optionKey="legendSelected"></div>
+                    </section>
                 </section>
 
                 <section>
@@ -208,8 +231,7 @@
                         </small>
                     </p>
                     <p class="fragment">
-                        <small>这是<a href="http://ecomfe.github.io/echarts/" target="_blank">ECharts</a>，我们创造了称为值域漫游的功能，尝试<strong>上下拖拽</strong>左下角的那个控件！
-                            <br/>他表达的意义并不需要过多的解析，看起来就像是理所当然的！<br/>
+                        <small>这是<a href="http://ecomfe.github.io/echarts/" target="_blank">ECharts</a>，我们创造了称为值域漫游的功能，尝试<strong>上下拖拽</strong>左下角的那个控件，甚至单纯的鼠标移动时你就发现了神奇的事情！他表达的意义并不需要过多的解析，看起来就像是理所当然的！<br/>
                         </small>
                     </p>
                     <div class="main" optionKey="dataRange1"></div>
@@ -482,6 +504,7 @@
                             <tr><td>和弦图</td><td>Yes</td><td class='error'>No</td></tr>
                             <tr><td>曲面图</td><td class='error'>No</td><td>Yes</td></tr>
                             <tr><td>地图</td><td>Yes</td><td class='error'>No</td></tr>
+                            <tr><td>事件河流图</td><td>Yes</td><td class='error'>No</td></tr>
                         </tbody>
                     </table>
                 </section>
@@ -511,6 +534,7 @@
                                 <tr><td>力导布局图</td><td>Yes</td><td class='error'>No</td></tr>
                                 <tr><td>和弦图</td><td>Yes</td><td class='error'>No</td></tr>
                                 <tr><td>地图</td><td>Yes</td><td class='success'>Highmap</td></tr>
+                                <tr><td>事件河流图</td><td>Yes</td><td class='error'>No</td></tr>
                                 <tr><td>特色图表（如仪表盘）</td><td>Yes</td><td>Yes</td></tr>
                             </tbody>
                         </table>
@@ -577,14 +601,14 @@
                         <a href="http://weibo.com/kenerlinfeng" target="_blank">@Kener-林峰</a>
                         <a href="http://weibo.com/pissang" target="_blank">@pissang</a>
                         <a href="http://weibo.com/errorrik" target="_blank">@errorrik</a>
-                        <a href="http://weibo.com/wind108369" target="_blank">@杨骥wind108369</a>
+                        <a href="http://weibo.com/forain" target="_blank">@diysimon</a>
                         <a href="http://weibo.com/u/2113446991" target="_blank">@宿爽</a>
-                        <a href="http://crossdo.com" target="_blank">@CrossDo</a>
+                        <a href="http://weibo.com/u/2810393271" target="_blank">@邓红启</a>
+                        <a href="http://weibo.com/wind108369" target="_blank">@杨骥wind108369</a>
                         <a href="http://weibo.com/loutongbing" target="_blank">@娄同兵</a>
                     </small></p><br/>
                     <p>
                         <small>以及他们的鼓舞助威、摇旗呐喊、推波助澜、煽风点火...<br/>
-                        <a href="http://weibo.com/forain" target="_blank">@diysimon</a>
                         <a href="http://weibo.com/taiyun" target="_blank">@cloud_wei</a>
                         <a href="http://weibo.com/u/2042635201" target="_blank">@李湛lizhan</a>
                         <a href="http://weibo.com/wfsr" target="_blank">@i我佛山人</a>
@@ -646,7 +670,7 @@
             });
 
         </script>
-        
+        <script src="../example/www/js/echarts.js"></script>
         <script src="js/whyEcharts.js"></script>
         <script src="js/timelineOption.js"></script>
     </body>

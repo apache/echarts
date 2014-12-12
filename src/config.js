@@ -2,7 +2,7 @@
  * echarts默认配置项
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function() {
@@ -83,6 +83,7 @@ define(function() {
         
         // 图例
         legend: {
+            show: true,
             orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
             x: 'center',               // 水平安放位置，默认为全图居中，可选为：
@@ -110,6 +111,7 @@ define(function() {
         
         // 值域
         dataRange: {
+            show: true,
             orient: 'vertical',        // 布局方式，默认为垂直布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
             x: 'left',                 // 水平安放位置，默认为全图左对齐，可选为：
@@ -242,6 +244,7 @@ define(function() {
             showDelay: 20,             // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
             hideDelay: 100,            // 隐藏延迟，单位ms
             transitionDuration: 0.4,   // 动画变换时间，单位s
+            enterable: false,
             backgroundColor: 'rgba(0,0,0,0.7)',     // 提示背景颜色，默认为透明度为0.7的黑色
             borderColor: '#333',       // 提示边框颜色
             borderRadius: 4,           // 提示边框圆角，单位px，默认为4
@@ -310,6 +313,7 @@ define(function() {
 
         // 类目轴
         categoryAxis: {
+            show: true,
             position: 'bottom',    // 位置
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
@@ -366,6 +370,7 @@ define(function() {
 
         // 数值型坐标轴默认参数
         valueAxis: {
+            show: true,
             position: 'left',      // 位置
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
@@ -521,7 +526,7 @@ define(function() {
         },
         
         roamController: {
-            show: false,
+            show: true,
             x: 'left',                 // 水平安放位置，默认为全图左对齐，可选为：
                                        // 'center' ¦ 'left' ¦ 'right'
                                        // ¦ {number}（x坐标，单位px）
@@ -749,7 +754,7 @@ define(function() {
                     borderWidth: 1,
                     label: {
                         show: true,
-                        position: 'inside'
+                        position: 'outer'
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
@@ -899,7 +904,8 @@ define(function() {
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     nodeStyle: {
-                        borderColor: '#5182ab',
+                        brushType : 'both',
+                        borderColor : '#5182ab',
                         borderWidth: 1
                     },
                     linkStyle: {

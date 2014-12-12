@@ -1,40 +1,59 @@
 var developMode = false;
 if (developMode) {
-    // for develop
-    require.config({
-        paths: {air: 'http://echarts.iconpng.com/china'},
-        packages: [
-            {
-                name: 'echarts',
-                location: '../../../../src',
-                main: 'echarts'
-            },
-            {
-                name: 'zrender',
-                //location: 'http://ecomfe.github.io/zrender/src',
-                location: '../../../../../zrender/src',
-                main: 'zrender'
-            }
-        ]
-    });
+    window.esl = null;
+    window.define = null;
+    window.require = null;
+    (function () {
+        var script = document.createElement('script');
+        script.async = true;
+
+        var pathname = location.pathname;
+
+        var pathSegs = pathname.slice(pathname.indexOf('doc')).split('/');
+        var pathLevelArr = new Array(pathSegs.length - 1);
+        script.src = pathLevelArr.join('../') + 'asset/js/esl/esl.js';
+        if (script.readyState) {
+            script.onreadystatechange = fireLoad;
+        }
+        else {
+            script.onload = fireLoad;
+        }
+        (document.getElementsByTagName('head')[0] || document.body).appendChild(script);
+        
+        function fireLoad() {
+            script.onload = script.onreadystatechange = null;
+            setTimeout(loadedListener,100);
+        }
+        function loadedListener() {
+            // for develop
+            require.config({
+                paths: {air: 'http://echarts.iconpng.com/china'},
+                packages: [
+                    {
+                        name: 'echarts',
+                        location: '../../../../src',
+                        main: 'echarts'
+                    },
+                    {
+                        name: 'zrender',
+                        //location: 'http://ecomfe.github.io/zrender/src',
+                        location: '../../../../../zrender/src',
+                        main: 'zrender'
+                    }
+                ]
+            });
+            launchExample();
+        }
+    })();
 }
 else {
-    var fileLocation = '../../www/js/echarts-map';
     require.config({
-        paths:{ 
-            air: 'http://echarts.iconpng.com/china',
-            echarts:fileLocation,
-            'echarts/chart/bar' : fileLocation,
-            'echarts/chart/line': fileLocation,
-            'echarts/chart/scatter': fileLocation,
-            'echarts/chart/k': fileLocation,
-            'echarts/chart/pie': fileLocation,
-            'echarts/chart/radar': fileLocation,
-            'echarts/chart/map': fileLocation,
-            'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation
+        paths: {
+            echarts: '../../www/js',
+            air: 'http://echarts.iconpng.com/china'
         }
     });
+    launchExample();
 }
 
 var EC_READY = false;
@@ -45,46 +64,56 @@ var myChart20;
 var myChart21;
 var myChart22;
 var myChart3;
-require(
-    [
-        'echarts',
-        'echarts/chart/line',
-        'echarts/chart/bar',
-        'echarts/chart/scatter',
-        'echarts/chart/radar',
-        'echarts/chart/map'
-    ],
-    function (ec) {
-        EC_READY = true;
-        myChart0 = ec.init(document.getElementById('g0')).showLoading({effect:'bubble'});
-        myChart1 = ec.init(document.getElementById('g1')).showLoading({effect:'bubble'});
-        myChart20 = ec.init(document.getElementById('g20')).showLoading({effect:'bubble'});
-        myChart21 = ec.init(document.getElementById('g21')).showLoading({effect:'bubble'});
-        myChart22 = ec.init(document.getElementById('g22')).showLoading({effect:'bubble'});
-        myChart3 = ec.init(document.getElementById('g3')).showLoading({effect:'bubble'});
-        
-        require(
-            ['air'],
-            function (airData) {
-                DATA_READY = true;
-                //airData = testData;
-                $('#time')[0].innerHTML = airData[0].time_point.replace(/[T|Z]/g, ' ')
-                var ecConfig = require('echarts/config');
-                
-                //console.log(airData);
-                data.format(airData,testData);
-                showTabContent(0, oCurTabIdx);
-                showTabContent(1);
-                showTabContent(2);
-                showTabContent(3, rCurTabIdx);
-                myChart0.on(ecConfig.EVENT.MAP_ROAM, extMark);
-                
-                myChart1.on(ecConfig.EVENT.LEGEND_SELECTED, legendShare);
-                myChart1.on(ecConfig.EVENT.RESTORE, legendShare);
-            }
-        );
+
+var isExampleLaunched;
+function launchExample() {
+    if (isExampleLaunched) {
+        return;
     }
-);
+
+    // 按需加载
+    isExampleLaunched = 1;
+    require(
+        [
+            'echarts',
+            'echarts/chart/line',
+            'echarts/chart/bar',
+            'echarts/chart/scatter',
+            'echarts/chart/radar',
+            'echarts/chart/map'
+        ],
+        function (ec) {
+            EC_READY = true;
+            myChart0 = ec.init(document.getElementById('g0')).showLoading({effect:'bubble'});
+            myChart1 = ec.init(document.getElementById('g1')).showLoading({effect:'bubble'});
+            myChart20 = ec.init(document.getElementById('g20')).showLoading({effect:'bubble'});
+            myChart21 = ec.init(document.getElementById('g21')).showLoading({effect:'bubble'});
+            myChart22 = ec.init(document.getElementById('g22')).showLoading({effect:'bubble'});
+            myChart3 = ec.init(document.getElementById('g3')).showLoading({effect:'bubble'});
+            
+            require(
+                ['air'],
+                function (airData) {
+                    DATA_READY = true;
+                    //airData = testData;
+                    $('#time')[0].innerHTML = airData[0].time_point.replace(/[T|Z]/g, ' ')
+                    var ecConfig = require('echarts/config');
+                    
+                    //console.log(airData);
+                    data.format(airData,testData);
+                    showTabContent(0, oCurTabIdx);
+                    showTabContent(1);
+                    showTabContent(2);
+                    showTabContent(3, rCurTabIdx);
+                    myChart0.on(ecConfig.EVENT.MAP_ROAM, extMark);
+                    
+                    myChart1.on(ecConfig.EVENT.LEGEND_SELECTED, legendShare);
+                    myChart1.on(ecConfig.EVENT.RESTORE, legendShare);
+                }
+            );
+        }
+    );
+}
 
 var oCurTabIdx = 'aqi';
 var rCurTabIdx = 'aqi';

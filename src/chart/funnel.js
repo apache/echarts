@@ -2,7 +2,7 @@
  * echarts图表类：漏斗图
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function (require) {
@@ -118,6 +118,7 @@ define(function (require) {
             var centerX = location.centerX;
             var pointList= [];
             var x;
+            var polygon;
             var lastPolygon;
             for (var i = 0, l = selectedData.length; i < l; i++) {
                 itemName = selectedData[i].name;
@@ -137,7 +138,7 @@ define(function (require) {
                         default:
                             x = centerX - lastWidth / 2;
                     }
-                    lastPolygon = this._buildItem(
+                    polygon = this._buildItem(
                         seriesIndex, selectedData[i]._index,
                         legend // color
                             ? legend.getColor(itemName) 
@@ -145,7 +146,7 @@ define(function (require) {
                         x, lastY, lastWidth, width, height, align
                     );
                     lastY += height + gap;
-                    lastPolygon = lastPolygon.style.pointList;
+                    lastPolygon = polygon.style.pointList;
                     
                     pointList.unshift([lastPolygon[0][0] - 10, lastPolygon[0][1]]); // 左
                     pointList.push([lastPolygon[1][0] + 10, lastPolygon[1][1]]);    // 右
@@ -155,6 +156,9 @@ define(function (require) {
                             align == 'center' && (pointList[0][0] += 10);
                             align == 'right' && (pointList[0][0] = lastPolygon[0]);
                             pointList[0][1] -= align == 'center' ? 10 : 15;
+                            if (l == 1) {
+                                lastPolygon = polygon.style.pointList;
+                            }
                         }
                         else {
                             pointList[pointList.length - 1][1] -= 5;
@@ -164,6 +168,7 @@ define(function (require) {
                     lastWidth = width;
                 }
             }
+            
             if (funnelCase) {
                 pointList.unshift([lastPolygon[3][0] - 10, lastPolygon[3][1]]); // 左
                 pointList.push([lastPolygon[2][0] + 10, lastPolygon[2][1]]);    // 右

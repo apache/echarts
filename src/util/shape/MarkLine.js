@@ -1,7 +1,7 @@
 /**
  * zrender
  *
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  * shape类：标线
  */
@@ -53,7 +53,7 @@ define(function (require) {
 
             ctx.save();
             ctx.beginPath();
-            this.buildLinePath(ctx, style);
+            this.buildLinePath(ctx, style, this.style.lineWidth || 1);
             ctx.stroke();
             ctx.restore();
 
@@ -70,7 +70,7 @@ define(function (require) {
          * @param {Context2D} ctx Canvas 2D上下文
          * @param {Object} style 样式
          */
-        buildLinePath : function (ctx, style) {
+        buildLinePath : function (ctx, style, lineWidth) {
             var pointList = style.pointList || this.getPointList(style);
             style.pointList = pointList;
 
@@ -91,8 +91,7 @@ define(function (require) {
             ) {
                 if (style.smooth !== 'spline') {
                     // 直线
-                    var dashLength = (style.lineWidth || 1)
-                                 * (style.lineType == 'dashed' ? 5 : 1);
+                    var dashLength = lineWidth * (style.lineType == 'dashed' ? 5 : 1);
                     ctx.moveTo(pointList[0][0],pointList[0][1]);
                     for (var i = 1; i < len; i++) {
                         dashedLineTo(

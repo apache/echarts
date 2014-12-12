@@ -2,7 +2,7 @@
  * echarts图表类：柱形图
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function (require) {
@@ -622,14 +622,13 @@ define(function (require) {
                 barWidth, barGap, interval
         ) {
             for (var j = 0, k = locationMap.length; j < k; j++) {
-                for (var m = 0, n = locationMap[j].length; m < n; m++) {
-                    var seriesIndex = locationMap[j][m];
-                    if (barMaxWidthMap[seriesIndex] && barMaxWidthMap[seriesIndex] < barWidth) {
-                        // 不满足最大宽度
-                        gap -= barWidth - barMaxWidthMap[seriesIndex]; // 总宽度减少
-                    }
+                var seriesIndex = locationMap[j][0];
+                if (barMaxWidthMap[seriesIndex] && barMaxWidthMap[seriesIndex] < barWidth) {
+                    // 不满足最大宽度
+                    gap -= barWidth - barMaxWidthMap[seriesIndex]; // 总宽度减少
                 }
             }
+            
             return {
                 barWidthMap: barWidthMap,
                 barMaxWidthMap: barMaxWidthMap,

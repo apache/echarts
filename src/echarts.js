@@ -12,7 +12,7 @@
  * echarts
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function (require) {
@@ -27,9 +27,9 @@ define(function (require) {
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
-    self.version = '2.0.4';
+    self.version = '2.1.10';
     self.dependencies = {
-        zrender: '2.0.4'
+        zrender: '2.0.6'
     };
     /**
      * 入口方法 

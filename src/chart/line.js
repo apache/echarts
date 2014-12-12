@@ -2,7 +2,7 @@
  * echarts图表类：折线图
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function (require) {
@@ -433,13 +433,14 @@ define(function (require) {
             
             this._calculMarkMapXY(xMarkMap, locationMap, 'xy');
             
-            this._buildBorkenLine(seriesArray, this.finalPLMap, xAxis, 'horizontal');
+            this._buildBorkenLine(seriesArray, this.finalPLMap, xAxis, 'other');
         },
         
         /**
          * 生成折线和折线上的拐点
          */
-        _buildBorkenLine: function (seriesArray, pointList, categoryAxis, orient) {
+        _buildBorkenLine: function (seriesArray, pointList, categoryAxis, curOrient) {
+            var orient = curOrient == 'other' ? 'horizontal' : curOrient;
             var series = this.series;
             var data;
             
@@ -473,13 +474,13 @@ define(function (require) {
 
                     for (var i = 0, l = seriesPL.length; i < l; i++) {
                         var singlePL = seriesPL[i];
-                        var isLarge = this._isLarge(orient, singlePL);
+                        var isLarge = curOrient != 'other' && this._isLarge(orient, singlePL);
                         if (!isLarge) { // 非大数据模式才显示拐点symbol
                             for (var j = 0, k = singlePL.length; j < k; j++) {
                                 data = serie.data[singlePL[j][2]];
                                 if (this.deepQuery([data, serie, this.option], 'calculable') // 可计算
-                                    || this.deepQuery([data, serie], 'showAllSymbol')       // 全显示
-                                    || (categoryAxis.type === 'category'                   // 主轴非空
+                                    || this.deepQuery([data, serie], 'showAllSymbol')        // 全显示
+                                    || (categoryAxis.type === 'categoryAxis'                 // 主轴非空
                                         && categoryAxis.isMainAxis(singlePL[j][2])
                                         && this.deepQuery([data, serie], 'symbol') != 'none'
                                        )
@@ -878,7 +879,7 @@ define(function (require) {
         }
     };
 
-    function legendLineIcon(ctx, style) {
+    function legendLineIcon(ctx, style, refreshNextFrame) {
         var x = style.x;
         var y = style.y;
         var width = style.width;
@@ -920,15 +921,22 @@ define(function (require) {
             ctx.lineTo(x2 + 5, y2 + dy);
             ctx.moveTo(x2 + style.width - 5, y2 + dy);
             ctx.lineTo(x2 + style.width, y2 + dy);
-            
-            symbol(ctx, {
-                x: x + 4,
-                y: y + 4,
-                width: width - 8,
-                height: height - 8,
-                n: dy,
-                image: imageLocation
-            });
+            var self = this;
+            symbol(
+                ctx,
+                {
+                    x: x + 4,
+                    y: y + 4,
+                    width: width - 8,
+                    height: height - 8,
+                    n: dy,
+                    image: imageLocation
+                },
+                function () {
+                    self.modSelf();
+                    refreshNextFrame();
+                }
+            );
         }
         else {
             ctx.moveTo(x, y + dy);

@@ -2,7 +2,7 @@
  * echarts组件：工具箱
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function (require) {
@@ -342,19 +342,16 @@ define(function (require) {
 
         _buildBackground: function () {
             var toolboxOption = this.option.toolbox;
-            var pTop = toolboxOption.padding[0];
-            var pRight = toolboxOption.padding[1];
-            var pBottom = toolboxOption.padding[2];
-            var pLeft = toolboxOption.padding[3];
+            var padding = this.reformCssArray(this.option.toolbox.padding);
 
             this.shapeList.push(new RectangleShape({
                 zlevel: this._zlevelBase,
                 hoverable :false,
                 style: {
-                    x: this._itemGroupLocation.x - pLeft,
-                    y: this._itemGroupLocation.y - pTop,
-                    width: this._itemGroupLocation.width + pLeft + pRight,
-                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    x: this._itemGroupLocation.x - padding[3],
+                    y: this._itemGroupLocation.y - padding[0],
+                    width: this._itemGroupLocation.width + padding[3] + padding[1],
+                    height: this._itemGroupLocation.height + padding[0] + padding[2],
                     brushType: toolboxOption.borderWidth === 0 ? 'fill' : 'both',
                     color: toolboxOption.backgroundColor,
                     strokeColor: toolboxOption.borderColor,
@@ -368,6 +365,7 @@ define(function (require) {
          */
         _getItemGroupLocation: function () {
             var toolboxOption = this.option.toolbox;
+            var padding = this.reformCssArray(this.option.toolbox.padding);
             var iconLength = this._iconList.length;
             var itemGap = toolboxOption.itemGap;
             var itemSize = toolboxOption.itemSize;
@@ -392,12 +390,12 @@ define(function (require) {
                     x = Math.floor((zrWidth - totalWidth) / 2);
                     break;
                 case 'left' :
-                    x = toolboxOption.padding[3] + toolboxOption.borderWidth;
+                    x = padding[3] + toolboxOption.borderWidth;
                     break;
                 case 'right' :
                     x = zrWidth
                         - totalWidth
-                        - toolboxOption.padding[1]
+                        - padding[1]
                         - toolboxOption.borderWidth;
                     break;
                 default :
@@ -410,12 +408,12 @@ define(function (require) {
             var zrHeight = this.zr.getHeight();
             switch (toolboxOption.y) {
                 case 'top' :
-                    y = toolboxOption.padding[0] + toolboxOption.borderWidth;
+                    y = padding[0] + toolboxOption.borderWidth;
                     break;
                 case 'bottom' :
                     y = zrHeight
                         - totalHeight
-                        - toolboxOption.padding[2]
+                        - padding[2]
                         - toolboxOption.borderWidth;
                     break;
                 case 'center' :
@@ -1130,10 +1128,6 @@ define(function (require) {
                 this._resetZoom();
                 
                 newOption.toolbox = this.reformOption(newOption.toolbox);
-                // 补全padding属性
-                newOption.toolbox.padding = this.reformCssArray(
-                    newOption.toolbox.padding
-                );
                 this.option = newOption;
                 
                 this.clear(true);

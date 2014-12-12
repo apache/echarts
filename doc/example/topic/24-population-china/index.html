@@ -3,7 +3,6 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <link rel="shortcut icon" href="../../../asset/ico/favicon.png">
-<script src="../../../asset/js/esl/esl.js"></script>
 <title>中国人口流动大潮</title>
 <style type="text/css">
 * {
@@ -103,23 +102,12 @@ body {
 </form></div>
 
 <div id="main" style="height:500px;border:1px solid #ccc;padding:20px;"></div>
+    <script src="../../www/js/echarts.js"></script>
     <script src="js/data-people.js"></script>
     <script type="text/javascript">
-    var fileLocation = '../../www/js/echarts-map';
     require.config({
         paths:{ 
-            echarts:fileLocation,
-            'echarts/chart/bar' : fileLocation,
-            'echarts/chart/line': fileLocation,
-            'echarts/chart/line': fileLocation,
-            'echarts/chart/bar': fileLocation,
-            'echarts/chart/scatter': fileLocation,
-            'echarts/chart/k': fileLocation,
-            'echarts/chart/pie': fileLocation,
-            'echarts/chart/radar': fileLocation,
-            'echarts/chart/map': fileLocation,
-            'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation
+            echarts: '../../www/js'
         }
     });
     var myChart;

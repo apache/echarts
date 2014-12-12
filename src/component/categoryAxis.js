@@ -2,7 +2,7 @@
  * echarts组件： 类目轴
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function (require) {
@@ -162,7 +162,9 @@ define(function (require) {
         _buildShape : function () {
             // 标签显示的挑选间隔
             this._interval = this._getInterval();
-            
+            if (!this.option.show) {
+                return;
+            }
             this.option.splitArea.show && this._buildSplitArea();
             this.option.splitLine.show && this._buildSplitLine();
             this.option.axisLine.show && this._buildAxisLine();

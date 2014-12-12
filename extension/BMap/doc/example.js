@@ -1,17 +1,9 @@
 ﻿(function () {
     require.config({
+        paths: {
+            echarts: '../../../doc/example/www/js'
+        },
         packages: [
-            {
-                name: 'echarts',
-                location: '../../../src',
-                main: 'echarts'
-            },
-            {
-                name: 'zrender',
-                //location: 'http://ecomfe.github.io/zrender/src',
-                location: '../../../../zrender/src',
-                main: 'zrender'
-            },
             {
                 name: 'BMap',
                 location: '../src',
@@ -24,8 +16,7 @@
     [
         'echarts',
         'BMap',
-        'echarts/chart/map',
-        'echarts/chart/pie'
+        'echarts/chart/map'
     ],
     function (echarts, BMapExtension) {
         $('#main').css({
@@ -223,6 +214,7 @@
             dataRange: {
                 min : 0,
                 max : 100,
+                x: 'right',
                 calculable : true,
                 color: ['#ff3333', 'orange', 'yellow','lime','aqua'],
                 textStyle:{

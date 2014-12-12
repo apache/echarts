@@ -602,12 +602,12 @@ define(function (require) {
                 vec2.add(start, start, center);
 
                 var labelShape = {
-                    zlevel: this.getZlevelBase() - 1,
+                    zlevel: this.getZlevelBase() + 1,
                     hoverable: false,
                     style: {
-                        text: node.id,
+                        text: node.data.label == null ? node.id : node.data.label,
                         textAlign: isRightSide ? 'left' : 'right',
-                        color: labelColor
+                        color: labelColor || '#000000'
                     }
                 };
                 if (rotateLabel) {

@@ -37,72 +37,97 @@ function refreshAll() {
     }
 }
 
-var developMode = false;
-if (developMode) {
-    // for develop
-    require.config({
-        packages: [
-            {
-                name: 'echarts',
-                location: '../../src',
-                main: 'echarts'
-            },
-            {
-                name: 'zrender',
-                //location: 'http://ecomfe.github.io/zrender/src',
-                location: '../../../zrender/src',
-                main: 'zrender'
-            }
-        ]
-    });
-}
-else {
-    // for echarts online home page
-    var fileLocation = './www/js/echarts-map';
-    require.config({
-        paths:{ 
-            echarts: fileLocation,
-            'echarts/chart/line': fileLocation,
-            'echarts/chart/bar': fileLocation,
-            'echarts/chart/scatter': fileLocation,
-            'echarts/chart/k': fileLocation,
-            'echarts/chart/pie': fileLocation,
-            'echarts/chart/radar': fileLocation,
-            'echarts/chart/map': fileLocation,
-            'echarts/chart/chord': fileLocation,
-            'echarts/chart/force': fileLocation,
-            'echarts/chart/gauge': fileLocation,
-            'echarts/chart/funnel': fileLocation
-        }
-    });
-}
-
 var hash = window.location.hash.replace('#','') || 'infographic';
 if ($('[name=theme-select]').val(hash).val() != hash) {
     $('[name=theme-select]').val('infographic');
     hash = 'infographic';
 }
 
-// 按需加载
-require(
-    [
-        'echarts',
-        'theme/' + hash,
-        'echarts/chart/line',
-        'echarts/chart/bar',
-        'echarts/chart/scatter',
-        'echarts/chart/k',
-        'echarts/chart/pie',
-        'echarts/chart/radar',
-        'echarts/chart/force',
-        'echarts/chart/chord',
-        'echarts/chart/map',
-        'echarts/chart/gauge',
-        'echarts/chart/funnel'
-    ],
-    requireCallback
-);
+var developMode = false;
+if (developMode) {
+    window.esl = null;
+    window.define = null;
+    window.require = null;
+    (function () {
+        var script = document.createElement('script');
+        script.async = true;
 
+        var pathname = location.pathname;
+
+        var pathSegs = pathname.slice(pathname.indexOf('doc')).split('/');
+        var pathLevelArr = new Array(pathSegs.length - 1);
+        script.src = pathLevelArr.join('../') + 'asset/js/esl/esl.js';
+        if (script.readyState) {
+            script.onreadystatechange = fireLoad;
+        }
+        else {
+            script.onload = fireLoad;
+        }
+        (document.getElementsByTagName('head')[0] || document.body).appendChild(script);
+        
+        function fireLoad() {
+            script.onload = script.onreadystatechange = null;
+            setTimeout(loadedListener,100);
+        }
+        function loadedListener() {
+            // for develop
+            require.config({
+                packages: [
+                    {
+                        name: 'echarts',
+                        location: '../../src',
+                        main: 'echarts'
+                    },
+                    {
+                        name: 'zrender',
+                        //location: 'http://ecomfe.github.io/zrender/src',
+                        location: '../../../zrender/src',
+                        main: 'zrender'
+                    }
+                ]
+            });
+            launchExample();
+        }
+    })();
+}
+else {
+    // for echarts online home page
+    require.config({
+        paths: {
+            echarts: './www/js'
+        }
+    });
+    launchExample();
+}
+
+var isExampleLaunched;
+function launchExample() {
+    if (isExampleLaunched) {
+        return;
+    }
+
+    // 按需加载
+    isExampleLaunched = 1;
+    // 按需加载
+    require(
+        [
+            'echarts',
+            'theme/' + hash,
+            'echarts/chart/line',
+            'echarts/chart/bar',
+            'echarts/chart/scatter',
+            'echarts/chart/k',
+            'echarts/chart/pie',
+            'echarts/chart/radar',
+            'echarts/chart/force',
+            'echarts/chart/chord',
+            'echarts/chart/map',
+            'echarts/chart/gauge',
+            'echarts/chart/funnel'
+        ],
+        requireCallback
+    );
+}
 
 var echarts;
 function requireCallback (ec, defaultTheme) {

@@ -2,7 +2,7 @@
  * echarts组件：数据区域缩放
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function (require) {
@@ -877,9 +877,10 @@ define(function (require) {
                 var length = data.length;
                 var start = Math.floor(this._zoom.start / 100 * length);
                 var end = Math.ceil(this._zoom.end / 100 * length);
+                end -= end >= length ? 1 : 0;
                 return {
-                    start : data[start],
-                    end : data[end]
+                    start : data[start].value != null ? data[start].value : data[start],
+                    end : data[end].value != null ? data[end].value : data[end]
                 };
             }
             

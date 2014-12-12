@@ -2,7 +2,7 @@
  * echarts组件：漫游控制器
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function (require) {
@@ -59,6 +59,9 @@ define(function (require) {
     RoamController.prototype = {
         type: ecConfig.COMPONENT_TYPE_ROAMCONTROLLER,
         _buildShape: function () {
+            if (!this.rcOption.show) {
+                return;
+            }
             // 元素组的位置参数，通过计算所得x, y, width, height
             this._itemGroupLocation = this._getItemGroupLocation();
 
@@ -174,19 +177,16 @@ define(function (require) {
         },
         
         _buildBackground: function () {
-            var pTop = this.rcOption.padding[0];
-            var pRight = this.rcOption.padding[1];
-            var pBottom = this.rcOption.padding[2];
-            var pLeft = this.rcOption.padding[3];
+            var padding = this.reformCssArray(this.rcOption.padding);
 
             this.shapeList.push(new RectangleShape({
                 zlevel: this._zlevelBase,
                 hoverable :false,
                 style: {
-                    x: this._itemGroupLocation.x - pLeft,
-                    y: this._itemGroupLocation.y - pTop,
-                    width: this._itemGroupLocation.width + pLeft + pRight,
-                    height: this._itemGroupLocation.height + pTop + pBottom,
+                    x: this._itemGroupLocation.x - padding[3],
+                    y: this._itemGroupLocation.y - padding[0],
+                    width: this._itemGroupLocation.width + padding[3] + padding[1],
+                    height: this._itemGroupLocation.height + padding[0] + padding[2],
                     brushType: this.rcOption.borderWidth === 0 ? 'fill' : 'both',
                     color: this.rcOption.backgroundColor,
                     strokeColor: this.rcOption.borderColor,
@@ -199,7 +199,7 @@ define(function (require) {
          * 根据选项计算漫游控制器实体的位置坐标
          */
         _getItemGroupLocation: function () {
-            var padding = this.rcOption.padding;
+            var padding = this.reformCssArray(this.rcOption.padding);
             var width = this.rcOption.width;
             var height = this.rcOption.height;
             
@@ -312,10 +312,6 @@ define(function (require) {
             if (newOption) {
                 this.option = newOption || this.option;
                 this.option.roamController = this.reformOption(this.option.roamController);
-                // 补全padding属性
-                this.option.roamController.padding = this.reformCssArray(
-                    this.option.roamController.padding
-                );
                 this.rcOption = this.option.roamController;
             }
             this.clear();

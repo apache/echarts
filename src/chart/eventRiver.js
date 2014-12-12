@@ -2,7 +2,7 @@
  * echarts图表类：事件河流图
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author clmtulip  (车丽美, chelimei@baidu.com)
+ * @author clmtulip  (车丽美, clmtulip@gmail.com)
  *
  */
 define(function (require) {
@@ -75,6 +75,7 @@ define(function (require) {
              
              eventRiverLayout(
                  eventRiverSeries,
+                 this._intervalX,
                  this.component.grid.getArea()
              );
              
@@ -101,13 +102,15 @@ define(function (require) {
                              evolutionList[k].timeScale = xAxis.getCoord(
                                  ecDate.getNewDate(evolutionList[k].time) - 0
                              );
-                             evolutionList[k].valueScale = evolutionList[k].value;
+                             // evolutionList[k].valueScale = evolutionList[k].value;
+                             // modified by limei.che, to normalize the value range
+                             evolutionList[k].valueScale = Math.pow(evolutionList[k].value, 0.8);
                          }
                      }
                  }
              }
              // 尾迹长度
-             this._intervalX = Math.round(this.component.grid.getWidth() / 15);
+             this._intervalX = Math.round(this.component.grid.getWidth() / 40);
          },
 
          /**
