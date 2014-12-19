@@ -502,7 +502,7 @@ define(function (require) {
                 var source = gEdge.node1;
                 var target = gEdge.node2;
 
-                var queryTarget = this._getEdgeQueryTarget(serie, gEdge);
+                var queryTarget = this._getEdgeQueryTarget(serie, link);
                 var linkType = this.deepQuery(queryTarget, 'type');
                 // TODO 暂时只有线段支持箭头
                 if (serie.linkSymbol && serie.linkSymbol !== 'none') {
@@ -515,8 +515,7 @@ define(function (require) {
                         xStart : 0,
                         yStart : 0,
                         xEnd : 0,
-                        yEnd : 0,
-                        lineWidth : 1
+                        yEnd : 0
                     },
                     clickable: this.query(serie, 'clickable'),
                     highlightStyle : {},
