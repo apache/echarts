@@ -87,7 +87,8 @@ define(function (require) {
                     x = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
                         _axisShape: 'axisTick',
-                        zlevel: this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable: false,
                         style: {
                             xStart: x,
@@ -115,7 +116,8 @@ define(function (require) {
                     y = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
                         _axisShape: 'axisTick',
-                        zlevel: this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable: false,
                         style: {
                             xStart: xPosition,
@@ -156,7 +158,8 @@ define(function (require) {
 
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
-                        zlevel: this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable: false,
                         style: {
                             x: this.getCoord(data[i]),
@@ -201,7 +204,8 @@ define(function (require) {
 
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
-                        zlevel: this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable: false,
                         style: {
                             x: xPosition,
@@ -256,7 +260,8 @@ define(function (require) {
                     // 亚像素优化
                     x = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        zlevel: this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable: false,
                         style: {
                             xStart: x,
@@ -282,7 +287,8 @@ define(function (require) {
                     // 亚像素优化
                     y = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        zlevel: this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable: false,
                         style: {
                             xStart: sx,
@@ -306,7 +312,8 @@ define(function (require) {
             if (!(color instanceof Array)) {
                 // 非数组一律认为是单一颜色的字符串，单一颜色则用一个背景，颜色错误不负责啊！！！
                 axShape = {
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     hoverable: false,
                     style: {
                         x: this.grid.getX(),
@@ -337,7 +344,8 @@ define(function (require) {
                                ? this.getCoord(data[i])
                                : this.grid.getXend();
                         axShape = {
-                            zlevel: this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             hoverable: false,
                             style: {
                                 x: lastX,
@@ -364,7 +372,8 @@ define(function (require) {
                                ? this.getCoord(data[i])
                                : this.grid.getY();
                         axShape = {
-                            zlevel: this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             hoverable: false,
                             style: {
                                 x: x,

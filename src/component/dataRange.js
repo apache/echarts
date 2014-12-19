@@ -152,7 +152,8 @@ define(function (require) {
                 if (needValueText) {
                     // 文字
                     textShape = {
-                        zlevel : this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         style : {
                             x : lastX + itemWidth + 5,
                             y : lastY,
@@ -260,7 +261,8 @@ define(function (require) {
             }
             if (this.dataRangeOption.orient == 'horizontal') {
                 itemShape = {
-                    zlevel : this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style : {
                         x : lastX,
                         y : lastY,
@@ -277,7 +279,8 @@ define(function (require) {
             }
             else {
                 itemShape = {
-                    zlevel : this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style : {
                         x : lastX,
                         y : lastY,
@@ -392,7 +395,8 @@ define(function (require) {
          */
         _buildFiller : function () {
             this._fillerShape = {
-                zlevel : this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 style : {
                     x : this._calculableLocation.x,
                     y : this._calculableLocation.y,
@@ -623,7 +627,8 @@ define(function (require) {
             };
             
             // 统一参数
-            this._startShape.zlevel              = this._endShape.zlevel    = this._zlevelBase + 1;
+            this._startShape.zlevel              = this._endShape.zlevel    = this.getZlevelBase();
+            this._startShape.z                   = this._endShape.z         = this.getZBase() + 1;
             this._startShape.draggable           = this._endShape.draggable = true;
             this._startShape.ondrift             = this._endShape.ondrift   = this._ondrift;
             this._startShape.ondragend           = this._endShape.ondragend = this._ondragend;
@@ -650,7 +655,8 @@ define(function (require) {
             var width = this._calculableLocation.width;
             var height = this._calculableLocation.height;
             this._startMask = {
-                zlevel : this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 style : {
                     x : x,
                     y : y,
@@ -663,7 +669,8 @@ define(function (require) {
                 hoverable:false
             };
             this._endMask = {
-                zlevel : this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 style : {
                     x : this.dataRangeOption.orient == 'horizontal'
                         ? x + width : x,
@@ -687,7 +694,8 @@ define(function (require) {
             var padding = this.reformCssArray(this.dataRangeOption.padding);
             
             this.shapeList.push(new RectangleShape({
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable :false,
                 style : {
                     x : this._itemGroupLocation.x - padding[3],
@@ -892,7 +900,8 @@ define(function (require) {
         // 指定文本
         _getTextShape : function (x, y, text) {
             return {
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style : {
                     x : (this.dataRangeOption.orient == 'horizontal'
                         ? x
@@ -919,7 +928,8 @@ define(function (require) {
         // 色尺legend item shape
         _getItemShape : function (x, y, width, height, color) {
             return {
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style : {
                     x : x,
                     y : y + 1,

@@ -351,7 +351,8 @@ define(function (require) {
             
             // 背景
             this.shapeList.push(new RectangleShape({
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable :false,
                 style : {
                     x : this._location.x,
@@ -456,7 +457,8 @@ define(function (require) {
             }
 
             this.shapeList.push(new PolygonShape({
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style : {
                     pointList : pointList,
                     color : this.zoomOption.dataBackgroundColor
@@ -470,7 +472,8 @@ define(function (require) {
          */
         _buildFiller : function () {
             this._fillerShae = {
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 draggable : true,
                 ondrift : this._ondrift,
                 ondragend : this._ondragend,
@@ -528,7 +531,8 @@ define(function (require) {
          */
         _buildHandle : function () {
             this._startShape = {
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 draggable : true,
                 style : {
                     iconType: 'rectangle',
@@ -580,7 +584,8 @@ define(function (require) {
             var x = this.subPixelOptimize(this._location.x, 1);
             var y = this.subPixelOptimize(this._location.y, 1);
             this._startFrameShape = {
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable :false,
                 style : {
                     x : x,

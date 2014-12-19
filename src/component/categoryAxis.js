@@ -209,7 +209,8 @@ define(function (require) {
                     );
                     axShape = {
                         _axisShape : 'axisTick',
-                        zlevel : this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable : false,
                         style : {
                             xStart : x,
@@ -239,7 +240,8 @@ define(function (require) {
                     );
                     axShape = {
                         _axisShape : 'axisTick',
-                        zlevel : this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable : false,
                         style : {
                             xStart : xPosition,
@@ -290,7 +292,8 @@ define(function (require) {
                     );
                     axShape = {
                         // shape : 'text',
-                        zlevel : this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable : false,
                         style : {
                             x : this.getCoordByIndex(i),
@@ -343,7 +346,8 @@ define(function (require) {
                     );
                     axShape = {
                         // shape : 'text',
-                        zlevel : this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable : false,
                         style : {
                             x : xPosition,
@@ -408,7 +412,8 @@ define(function (require) {
                     );
                     axShape = {
                         // shape : 'line',
-                        zlevel : this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable : false,
                         style : {
                             xStart : x,
@@ -437,7 +442,8 @@ define(function (require) {
                     );
                     axShape = {
                         // shape : 'line',
-                        zlevel : this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable : false,
                         style : {
                             xStart : sx,
@@ -462,7 +468,8 @@ define(function (require) {
                 // 非数组一律认为是单一颜色的字符串，单一颜色则用一个背景，颜色错误不负责啊！！！
                 axShape = {
                     // shape : 'rectangle',
-                    zlevel : this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     hoverable : false,
                     style : {
                         x : this.grid.getX(),
@@ -499,7 +506,8 @@ define(function (require) {
                                : this.grid.getXend();
                         axShape = {
                             // shape : 'rectangle',
-                            zlevel : this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             hoverable : false,
                             style : {
                                 x : lastX,
@@ -527,7 +535,8 @@ define(function (require) {
                                : this.grid.getY();
                         axShape = {
                             // shape : 'rectangle',
-                            zlevel : this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             hoverable : false,
                             style : {
                                 x : x,

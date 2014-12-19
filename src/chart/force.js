@@ -406,7 +406,8 @@ define(function (require) {
                             || this.deepQuery(emphasisStyleQueryTarget, 'borderWidth', 'emphasis')
                     },
                     clickable: serie.clickable,
-                    zlevel: this.getZlevelBase()
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase()
                 });
                 if (!shape.style.color) {
                     shape.style.color = category 
@@ -519,7 +520,8 @@ define(function (require) {
                     },
                     clickable: this.query(serie, 'clickable'),
                     highlightStyle : {},
-                    zlevel: this.getZlevelBase()
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase()
                 });
 
                 zrUtil.merge(

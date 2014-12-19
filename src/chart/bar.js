@@ -660,7 +660,8 @@ define(function (require) {
             var emphasis = this.deepMerge(queryTarget, 'itemStyle.emphasis');
             
             barShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: x,

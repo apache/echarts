@@ -350,14 +350,17 @@ define(function (require) {
                 'rgba(0,0,0,0)',
                 'vertical'
             );
-            itemShape.zlevel = this._zlevelBase;
+            itemShape.zlevel = this.getZlevelBase();
+            itemShape.z = this.getZBase();
+            
             itemShape._main = true;
             return itemShape;
         },
         
         _getLargeSymbol: function (pointList, nColor) {
             return new SymbolShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 _main: true,
                 hoverable: false,
                 style: {

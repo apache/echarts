@@ -161,7 +161,8 @@ define(function (require) {
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel: this._zlevelBase + 1,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase() + 1,
                     hoverable: false,
                     style: {
                         xStart: center[0] + cosAngle * r,
@@ -218,7 +219,8 @@ define(function (require) {
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel: this._zlevelBase + 1,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase() + 1,
                     hoverable: false,
                     style: {
                         xStart: center[0] + cosAngle * r,
@@ -275,7 +277,8 @@ define(function (require) {
                 cosAngle = Math.cos(angle * Math.PI / 180);
                 angle = (angle + 360) % 360;
                 this.shapeList.push(new TextShape({
-                    zlevel: this._zlevelBase + 1,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase() + 1,
                     hoverable: false,
                     style: {
                         x: center[0] + cosAngle * r0,
@@ -322,7 +325,8 @@ define(function (require) {
                         ? this._getColor(seriesIndex, value) : pointer.color;
             
             var pointShape = new GaugePointerShape({
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 style: {
                     x: center[0],
                     y: center[1],
@@ -352,7 +356,8 @@ define(function (require) {
             this.shapeList.push(pointShape);
             
             this.shapeList.push(new CircleShape({
-                zlevel: this._zlevelBase + 2,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 2,
                 hoverable: false,
                 style: {
                     x: center[0],
@@ -380,7 +385,8 @@ define(function (require) {
                 var x = params.center[0] + this.parsePercent(offsetCenter[0], params.radius[1]);
                 var y = params.center[1] + this.parsePercent(offsetCenter[1], params.radius[1]);
                 this.shapeList.push(new TextShape({
-                    zlevel: this._zlevelBase
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase()
                              + (Math.abs(x - params.center[0]) + Math.abs(y - params.center[1])) 
                                < textStyle.fontSize * 2 ? 2 : 1,
                     hoverable: false,
@@ -419,7 +425,8 @@ define(function (require) {
             var y = params.center[1] 
                     + this.parsePercent(offsetCenter[1], params.radius[1]);
             this.shapeList.push(new RectangleShape({
-                zlevel: this._zlevelBase 
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase()
                         + (Math.abs(x+detail.width/2 - params.center[0]) 
                         + Math.abs(y+detail.height/2 - params.center[1])) < textStyle.fontSize 
                           ? 2 : 1,
@@ -492,7 +499,8 @@ define(function (require) {
          */
         _getSector: function (center, r0, r, startAngle, endAngle, color, lineStyle) {
             return new SectorShape ({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable: false,
                 style: {
                     x: center[0],      // 圆心横坐标

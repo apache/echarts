@@ -21,7 +21,9 @@ define(function (require) {
         this.myChart = myChart;
         this.component = myChart.component;
         
-        this._zlevelBase = this.getZlevelBase();
+        this._zlevelBase = (this.ecTheme[this.type] || {}).zlevel;
+        this._zBase = (this.ecTheme[this.type] || {}).z;
+            
         this.shapeList = [];
         this.effectList = [];
         
@@ -54,9 +56,10 @@ define(function (require) {
         canvasSupported: require('zrender/tool/env').canvasSupported,
         /**
          * 获取zlevel基数配置
-         * @param {Object} contentType
          */
-        getZlevelBase: function (contentType) {
+        getZlevelBase: function () {
+            return this._zlevelBase;
+            /*
             contentType = contentType || this.type + '';
 
             switch (contentType) {
@@ -101,6 +104,11 @@ define(function (require) {
                 default :
                     return 0;
             }
+            */
+        },
+        
+        getZBase: function() {
+            return this._zBase;
         },
 
         /**

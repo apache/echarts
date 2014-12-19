@@ -448,6 +448,7 @@ define(function (require) {
                 var endAngle = node.layout.endAngle / Math.PI * 180 * sign;
                 var sector = new SectorShape({
                     zlevel: this.getZlevelBase(),
+                    z : this.getZBase(),
                     style: {
                         x: center[0],
                         y: center[1],
@@ -526,7 +527,7 @@ define(function (require) {
                 }
                 var iconShape = new IconShape({
                     zlevel: this.getZlevelBase(),
-                    z: 1,
+                    z: this.getZBase() + 1,
                     style: {
                         x: - node.layout.size,
                         y: - node.layout.size,
@@ -602,7 +603,8 @@ define(function (require) {
                 vec2.add(start, start, center);
 
                 var labelShape = {
-                    zlevel: this.getZlevelBase() + 1,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase() + 1,
                     hoverable: false,
                     style: {
                         text: node.data.label == null ? node.id : node.data.label,
@@ -684,6 +686,7 @@ define(function (require) {
                 );
                 var ribbon = new RibbonShape({
                     zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style: {
                         x: center[0],
                         y: center[1],
@@ -747,7 +750,7 @@ define(function (require) {
 
                 var curveShape = new BezierCurveShape({
                     zlevel: this.getZlevelBase(),
-                    z: 0,
+                    z: this.getZBase(),
                     style: {
                         xStart: shape1.position[0],
                         yStart: shape1.position[1],
@@ -852,7 +855,8 @@ define(function (require) {
                     var end = vec2.scale([], v, radius[1] + this.scaleLineLength);
                     vec2.add(end, end, center);
                     var scaleShape = new LineShape({
-                        zlevel: this.getZlevelBase() - 1,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase() - 1,
                         hoverable: false,
                         style: {
                             xStart: start[0],
@@ -892,7 +896,8 @@ define(function (require) {
                                      || theta >= 270;
 
                     var textShape = new TextShape({
-                        zlevel: this.getZlevelBase() - 1,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase() - 1,
                         hoverable: false,
                         style: {
                             x: isRightSide 

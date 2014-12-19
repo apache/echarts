@@ -182,7 +182,9 @@
                     '#fff',
                     'vertical'
                 );
-                itemShape.zlevel = this._zlevelBase + 1;
+                itemShape.zlevel = this.getZlevelBase();
+                itemShape.z = this.getZBase() + 1;
+                
                 ecData.set(itemShape, 'data', series[seriesIndex].data[dataIndex]);
                 ecData.set(itemShape, 'value', series[seriesIndex].data[dataIndex].value);
                 ecData.set(itemShape, 'dataIndex', dataIndex);
@@ -228,7 +230,8 @@
                 queryTarget, 'itemStyle.normal.areaStyle'
             );
             var shape = {
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style : {
                     pointList   : pointList,
                     brushType   : nIsAreaFill ? 'both' : 'stroke',
@@ -303,7 +306,9 @@
             );
             if (!this._dropBoxList[polarIndex]) {
                 var shape = this.component.polar.getDropBox(polarIndex);
-                shape.zlevel = this._zlevelBase;
+                shape.zlevel = this.getZlevelBase();
+                shape.z = this.getZBase();
+                
                 this.setCalculable(shape);
                 ecData.pack(shape, series, index, undefined, -1);
                 this.shapeList.push(shape);

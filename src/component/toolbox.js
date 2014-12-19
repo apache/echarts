@@ -223,7 +223,8 @@ define(function (require) {
                 // 图形
                 itemShape = {
                     type: 'icon',
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style: {
                         x: lastX,
                         y: lastY,
@@ -345,7 +346,8 @@ define(function (require) {
             var padding = this.reformCssArray(this.option.toolbox.padding);
 
             this.shapeList.push(new RectangleShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable :false,
                 style: {
                     x: this._itemGroupLocation.x - padding[3],
@@ -463,7 +465,8 @@ define(function (require) {
             var y = zrEvent.getY(param.event);
             var zoomOption = this.option.dataZoom || {};
             this._zoomShape = new RectangleShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: x,
                     y: y,
@@ -527,7 +530,8 @@ define(function (require) {
                 var x = zrEvent.getX(param.event);
                 var y = zrEvent.getY(param.event);
                 this._markShape = new LineShape({
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style: {
                         xStart: x,
                         yStart: y,

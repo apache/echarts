@@ -112,7 +112,8 @@ define(function (require) {
                     this._selected[i] = [];
                     if (this.deepQuery([series[i], this.option], 'calculable')) {
                         pieCase = {
-                            zlevel: this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             hoverable: false,
                             style: {
                                 x: center[0],          // 圆心横坐标
@@ -350,7 +351,8 @@ define(function (require) {
                 );
 
             var sector = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: center[0],          // 圆心横坐标
@@ -482,7 +484,8 @@ define(function (require) {
             data.__labelY = y;
             
             var ts = new TextShape({
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 hoverable: false,
                 style: {
                     x: x,
@@ -584,7 +587,8 @@ define(function (require) {
 
                 return new BrokenLineShape({
                     // shape: 'brokenLine',
-                    zlevel: this._zlevelBase + 1,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase() + 1,
                     hoverable: false,
                     style: {
                         pointList: [

@@ -77,7 +77,8 @@ define(function (require) {
         
         this._axisLineShape && this.zr.delShape(this._axisLineShape.id);
         this._axisLineShape = new LineShape({
-            zlevel: this._zlevelBase,
+            zlevel: this.getZlevelBase(),
+            z: this.getZBase(),
             invisible: true,
             hoverable: false
         });
@@ -86,7 +87,8 @@ define(function (require) {
         
         this._axisShadowShape && this.zr.delShape(this._axisShadowShape.id);
         this._axisShadowShape = new LineShape({
-            zlevel: 1,                      // grid上，chart下
+            zlevel: this.getZlevelBase(),
+            z: 1,                      // grid上，chart下
             invisible: true,
             hoverable: false
         });
@@ -95,7 +97,8 @@ define(function (require) {
         
         this._axisCrossShape && this.zr.delShape(this._axisCrossShape.id);
         this._axisCrossShape = new CrossShape({
-            zlevel: this._zlevelBase,
+            zlevel: this.getZlevelBase(),
+            z: this.getZBase(),
             invisible: true,
             hoverable: false
         });
@@ -1333,7 +1336,9 @@ define(function (require) {
                     this.shapeList.length = 2;
                 }
                 for (var i = 0, l = tipShape.length; i < l; i++) {
-                    tipShape[i].zlevel = this._zlevelBase;
+                    tipShape[i].zlevel = this.getZlevelBase();
+                    tipShape[i].z = this.getZBase();
+                    
                     tipShape[i].style = zrShapeBase.prototype.getHighlightStyle(
                         tipShape[i].style,
                         tipShape[i].highlightStyle

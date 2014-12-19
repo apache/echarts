@@ -621,7 +621,6 @@ define(function (require) {
         _buildMarkPoint: function (seriesIndex) {
             var attachStyle =  (this.markAttachStyle || {})[seriesIndex];
             var serie = this.series[seriesIndex];
-            var _zlevelBase = this.getZlevelBase();
             var mpData;
             var pos;
             var markPoint = zrUtil.clone(serie.markPoint);
@@ -644,7 +643,8 @@ define(function (require) {
             var shapeList = this._markPoint(seriesIndex, markPoint);
             
             for (var i = 0, l = shapeList.length; i < l; i++) {
-                shapeList[i].zlevel = _zlevelBase + 1;
+                shapeList[i].zlevel = this.getZlevelBase();
+                shapeList[i].z = this.getZBase() + 1;
                 for (var key in attachStyle) {
                     shapeList[i][key] = zrUtil.clone(attachStyle[key]);
                 }
@@ -666,7 +666,6 @@ define(function (require) {
         _buildMarkLine: function (seriesIndex) {
             var attachStyle =  (this.markAttachStyle || {})[seriesIndex];
             var serie = this.series[seriesIndex];
-            var _zlevelBase = this.getZlevelBase();
             var mlData;
             var pos;
             var markLine = zrUtil.clone(serie.markLine);
@@ -702,7 +701,8 @@ define(function (require) {
             var shapeList = this._markLine(seriesIndex, markLine);
             
             for (var i = 0, l = shapeList.length; i < l; i++) {
-                shapeList[i].zlevel = _zlevelBase + 1;
+                shapeList[i].zlevel = this.getZlevelBase();
+                shapeList[i].z = this.getZBase() + 1;
                 for (var key in attachStyle) {
                     shapeList[i][key] = zrUtil.clone(attachStyle[key]);
                 }

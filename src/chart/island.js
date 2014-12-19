@@ -146,7 +146,8 @@ define(function (require) {
                              : '';
             var font = this.getFont(this.option.island.textStyle);
             var islandShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: shape.style.x,
                     y: shape.style.y,

@@ -163,7 +163,8 @@ define(function (require) {
                 // 文字
                 textShape = {
                     // shape: 'text',
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style: {
                         x: lastX + itemWidth + 5,
                         y: lastY + itemHeight / 2,
@@ -298,7 +299,8 @@ define(function (require) {
             var padding = this.reformCssArray(this.legendOption.padding);
 
             this.shapeList.push(new RectangleShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable :false,
                 style: {
                     x: this._itemGroupLocation.x - padding[3],
@@ -517,7 +519,8 @@ define(function (require) {
         _getItemShapeByType: function (x, y, width, height, color, itemType, defaultColor) {
             var highlightColor = color === '#ccc' ? defaultColor : color;
             var itemShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     iconType: 'legendicon' + itemType,
                     x: x,

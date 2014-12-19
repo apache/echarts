@@ -503,7 +503,8 @@ define(function (require) {
                         
                         // 折线图
                         var brokenLineShape = new BrokenLineShape({
-                            zlevel: this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             style: {
                                 miterLimit: lineWidth,
                                 pointList: singlePL,
@@ -547,7 +548,8 @@ define(function (require) {
                         
                         if (isFill) {
                             var halfSmoothPolygonShape = new HalfSmoothPolygonShape({
-                                zlevel: this._zlevelBase,
+                                zlevel: this.getZlevelBase(),
+                                z: this.getZBase(),
                                 style: {
                                     miterLimit: lineWidth,
                                     pointList: zrUtil.clone(singlePL).concat([
@@ -700,7 +702,8 @@ define(function (require) {
                 '#fff',
                 orient === 'vertical' ? 'horizontal' : 'vertical' // 翻转
             );
-            itemShape.zlevel = this._zlevelBase + 1;
+            itemShape.zlevel = this.getZlevelBase();
+            itemShape.z = this.getZBase() + 1;
             
             if (this.deepQuery([data, serie, this.option], 'calculable')) {
                 this.setCalculable(itemShape);

@@ -379,7 +379,8 @@ define(function (require) {
         ) {
             var series = this.series;
             var itemShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 clickable: this.deepQuery(
                     [series[seriesIndex].data[dataIndex], series[seriesIndex]], 'clickable'
                 ),

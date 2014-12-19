@@ -91,7 +91,8 @@ define(function (require) {
             var y = this._itemGroupLocation.y + r;
             
             var sectorShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: x,          // 圆心横坐标
                     y: y,          // 圆心纵坐标
@@ -147,7 +148,8 @@ define(function (require) {
             var y = this._itemGroupLocation.y + this._itemGroupLocation.height - r;
 
             var scaleShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: x,
                     y: y,
@@ -180,7 +182,8 @@ define(function (require) {
             var padding = this.reformCssArray(this.rcOption.padding);
 
             this.shapeList.push(new RectangleShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable :false,
                 style: {
                     x: this._itemGroupLocation.x - padding[3],
