@@ -107,6 +107,9 @@ define(function (require) {
             */
         },
         
+        /**
+         * 获取z基数配置
+         */
         getZBase: function() {
             return this._zBase;
         },
@@ -183,7 +186,15 @@ define(function (require) {
                    )
                    : itemColor;
             
-        },        
+        }, 
+
+        /**
+         * @parmas {object | number} data 目标data
+         * @params {string= | number=} defaultData 无数据时默认返回
+         */
+        getDataFromOption: function (data, defaultData) {
+            return data != null ? (data.value != null ? data.value : data) : defaultData;
+        },
         
         // 亚像素优化
         subPixelOptimize: function (position, lineWidth) {
@@ -197,7 +208,7 @@ define(function (require) {
             return position;
         },
         
-        
+        // 默认resize
         resize: function () {
             this.refresh && this.refresh();
             this.clearEffectShape && this.clearEffectShape(true);

@@ -95,10 +95,8 @@ define(function (require) {
                 // 水平布局
                 width = this.zoomOption.width || grid.getWidth();
                 height = this.zoomOption.height || this._fillerSize;
-                x = this.zoomOption.x != null 
-                    ? this.zoomOption.x : grid.getX();
-                y = this.zoomOption.y != null 
-                    ? this.zoomOption.y : (this.zr.getHeight() - height - 2);
+                x = this.zoomOption.x != null ? this.zoomOption.x : grid.getX();
+                y = this.zoomOption.y != null ? this.zoomOption.y : (this.zr.getHeight() - height - 2);
             }
             else {
                 // 垂直布局
@@ -206,9 +204,8 @@ define(function (require) {
                 // 不指定接管坐标轴，则散点图、双数值轴折线图柱形图都被纳入接管范围
                 if (this.zoomOption.xAxisIndex == null
                     && this.zoomOption.yAxisIndex == null
-                    && serie.data 
-                    && serie.data[0] 
-                    && serie.data[0] instanceof Array
+                    && serie.data
+                    && this.getDataFromOption(serie.data[0]) instanceof Array
                     && (serie.type == ecConfig.CHART_TYPE_SCATTER
                         || serie.type == ecConfig.CHART_TYPE_LINE
                         || serie.type == ecConfig.CHART_TYPE_BAR)
@@ -274,9 +271,8 @@ define(function (require) {
             for (var i = 0, l = seriesIndex.length; i < l; i++) {
                 serie = series[seriesIndex[i]];
                 this._originalData.series[seriesIndex[i]] = serie.data;
-                if (serie.data 
-                    && serie.data[0] 
-                    && serie.data[0] instanceof Array
+                if (serie.data
+                    && this.getDataFromOption(serie.data[0]) instanceof Array
                     && (serie.type == ecConfig.CHART_TYPE_SCATTER
                         || serie.type == ecConfig.CHART_TYPE_LINE
                         || serie.type == ecConfig.CHART_TYPE_BAR)
@@ -386,9 +382,7 @@ define(function (require) {
             var minValue = Number.MAX_VALUE;
             var value;
             for (var i = 0, l = data.length; i < l; i++) {
-                value = data[i] != null
-                        ? (data[i].value != null ? data[i].value : data[i])
-                        : 0;
+                value = this.getDataFromOption(data[i], 0);
                 if (this.option.series[seriesIndex].type == ecConfig.CHART_TYPE_K) {
                     value = value[1];   // 收盘价
                 }
@@ -412,9 +406,7 @@ define(function (require) {
             }
             
             for (var i = 0, l = maxLength; i < l; i += step) {
-                value = data[i] != null
-                        ? (data[i].value != null ? data[i].value : data[i])
-                        : 0;
+                value = this.getDataFromOption(data[i], 0);
                 if (this.option.series[seriesIndex].type == ecConfig.CHART_TYPE_K) {
                     value = value[1];   // 收盘价
                 }
@@ -758,7 +750,9 @@ define(function (require) {
                     length = data.length;
                     start = Math.floor(this._zoom.start / 100 * length);
                     end = Math.ceil(this._zoom.end / 100 * length);
-                    if (!(data[0] instanceof Array) || this.option[key][idx].type == ecConfig.CHART_TYPE_K) {
+                    if (!(this.getDataFromOption(data[0]) instanceof Array)
+                        || this.option[key][idx].type == ecConfig.CHART_TYPE_K
+                    ) {
                         this.option[key][idx].data = data.slice(start, end);
                     }
                     else {
@@ -882,8 +876,8 @@ define(function (require) {
                 var end = Math.ceil(this._zoom.end / 100 * length);
                 end -= end >= length ? 1 : 0;
                 return {
-                    start : data[start].value != null ? data[start].value : data[start],
-                    end : data[end].value != null ? data[end].value : data[end]
+                    start : this.getDataFromOption(data[start]),
+                    end : this.getDataFromOption(data[end])
                 };
             }
             
