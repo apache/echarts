@@ -609,7 +609,7 @@ define(function (require) {
             
             var stepOpt = smartSteps(this._min, this._max, splitNumber);
             splitNumber = splitNumber != null ? splitNumber : stepOpt.secs;
-            this.option.splitNumber = splitNumber;
+            //this.option.splitNumber = splitNumber;
             this._min = stepOpt.min;
             this._max = stepOpt.max;
             this._valueList = stepOpt.pnts;

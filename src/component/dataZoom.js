@@ -758,9 +758,7 @@ define(function (require) {
                     length = data.length;
                     start = Math.floor(this._zoom.start / 100 * length);
                     end = Math.ceil(this._zoom.end / 100 * length);
-                    if (!(this.option[key][idx].data[0] instanceof Array)
-                        || this.option[key][idx].type == ecConfig.CHART_TYPE_K
-                    ) {
+                    if (!(data[0] instanceof Array) || this.option[key][idx].type == ecConfig.CHART_TYPE_K) {
                         this.option[key][idx].data = data.slice(start, end);
                     }
                     else {
@@ -799,7 +797,7 @@ define(function (require) {
             var xEnd;
             var yStart;
             var yEnd;
-            
+
             if (this.zoomOption.orient == 'horizontal') {
                 total = scale.x.max - scale.x.min;
                 xStart = this._zoom.start / 100 * total + scale.x.min;
