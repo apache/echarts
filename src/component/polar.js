@@ -725,18 +725,13 @@ define(function (require) {
             }
             if (data.length != 1) {
                 for (var i = 0; i < data.length; i ++) {
-                    value = typeof data[i].value[index].value != 'undefined'
-                            ? data[i].value[index].value : data[i].value[index];
-                    _compare(value);
+                    _compare(this.getDataFromOption(data[i].value[index]));
                 }
             }
             else {
                 one = data[0];
                 for (var i = 0; i < one.value.length; i ++) {
-                    _compare(
-                        typeof one.value[i].value != 'undefined' 
-                        ? one.value[i].value : one.value[i]
-                    );
+                    _compare(this.getDataFromOption(one.value[i]));
                 }
             }
 

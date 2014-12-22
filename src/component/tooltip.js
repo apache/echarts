@@ -641,9 +641,7 @@ define(function (require) {
                         var params = [];
                         for (var i = 0, l = seriesArray.length; i < l; i++) {
                             data = seriesArray[i].data[dataIndex];
-                            value = data != null
-                                    ? (data.value != null ? data.value : data)
-                                    : '-';
+                            value = this.getDataFromOption(data, '-');
                             
                             params.push({
                                 seriesIndex: seriesIndex[i],
@@ -680,11 +678,7 @@ define(function (require) {
                                 this._encodeHTML(categoryAxis.getNameByIndex(dataIndex))
                             );
                             data = seriesArray[i].data[dataIndex];
-                            data = data != null
-                                   ? (data.value != null
-                                       ? data.value
-                                       : data)
-                                   : '-';
+                            data = this.getDataFromOption(data, '-');
                             formatter = formatter.replace(
                                 '{c' + i + '}',
                                 data instanceof Array 
@@ -704,11 +698,7 @@ define(function (require) {
                                          + this._encodeHTML(seriesArray[i].name || '')
                                          + ' : ';
                             data = seriesArray[i].data[dataIndex];
-                            data = data != null
-                                   ? (data.value != null
-                                       ? data.value
-                                       : data)
-                                   : '-';
+                            data = this.getDataFromOption(data, '-');
                             formatter += data instanceof Array 
                                          ? data : this.numAddCommas(data);
                         }
@@ -795,8 +785,7 @@ define(function (require) {
                         data = data != null
                                ? data
                                : {name:'', value: {dataIndex:'-'}};
-                        value = data.value[dataIndex].value != null
-                                ? data.value[dataIndex].value : data.value[dataIndex];
+                        value = this.getDataFromOption(data.value[dataIndex]);
                         params.push({
                             seriesIndex: seriesIndex[i],
                             seriesName: seriesArray[i].name || '',

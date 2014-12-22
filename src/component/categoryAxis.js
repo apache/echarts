@@ -44,9 +44,7 @@ define(function (require) {
     CategoryAxis.prototype = {
         type : ecConfig.COMPONENT_TYPE_AXIS_CATEGORY,
         _getReformedLabel : function (idx) {
-            var data = typeof this.option.data[idx].value != 'undefined'
-                       ? this.option.data[idx].value
-                       : this.option.data[idx];
+            var data = this.getDataFromOption(this.option.data[idx]);
             var formatter = this.option.data[idx].formatter 
                             || this.option.axisLabel.formatter;
             if (formatter) {
@@ -594,10 +592,7 @@ define(function (require) {
             var position = this.option.boundaryGap ? (gap / 2) : 0;
 
             for (var i = 0; i < dataLength; i++) {
-                if (data[i] == value
-                    || (typeof data[i].value != 'undefined' 
-                        && data[i].value == value)
-                ) {
+                if (this.getDataFromOption(data[i]) == value) {
                     if (this.isHorizontal()) {
                         // 横向
                         position = this.grid.getX() + position;
@@ -662,14 +657,7 @@ define(function (require) {
 
         // 根据类目轴数据索引换算类目轴名称
         getNameByIndex : function (dataIndex) {
-            var data = this.option.data[dataIndex];
-            if (typeof data != 'undefined' && typeof data.value != 'undefined')
-            {
-                return data.value;
-            }
-            else {
-                return data;
-            }
+            return this.getDataFromOption(this.option.data[dataIndex]);
         },
         
         // 根据类目轴名称换算类目轴数据索引
@@ -678,10 +666,7 @@ define(function (require) {
             var dataLength = data.length;
 
             for (var i = 0; i < dataLength; i++) {
-                if (data[i] == name
-                    || (typeof data[i].value != 'undefined' 
-                        && data[i].value == name)
-                ) {
+                if (this.getDataFromOption(data[i]) == name) {
                     return i;
                 }
             }

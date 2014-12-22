@@ -144,7 +144,7 @@
 
             var value;
             for (var i = 0, l = dataArr.value.length; i < l; i++) {
-                value = dataArr.value[i].value != null ? dataArr.value[i].value : dataArr.value[i];
+                value = this.getDataFromOption(dataArr.value[i]);
                 vector = value != '-' 
                          ? polar.getVector(polarIndex, i, value)
                          : false;

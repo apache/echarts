@@ -98,11 +98,7 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null
-                                ? (data.value != null
-                                  ? data.value
-                                  : data)
-                                : '-';
+                        value = this.getDataFromOption(data, '-');
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
                                                 || {
                                                     min: Number.POSITIVE_INFINITY,
@@ -224,11 +220,7 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null
-                                ? (data.value != null
-                                  ? data.value
-                                  : data)
-                                : '-';
+                        value = this.getDataFromOption(data, '-');
                         if (value != '-') {
                             // 只关心空数据
                             continue;
@@ -325,11 +317,7 @@ define(function (require) {
 
                     for (var i = 0, l = serie.data.length; i < l; i++) {
                         var data = serie.data[i];
-                        var value = data != null
-                                    ? (data.value != null
-                                      ? data.value
-                                      : data)
-                                    : '-';
+                        var value = this.getDataFromOption(data, '-');
                         if (!(value instanceof Array)) {
                             continue;
                         }

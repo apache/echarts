@@ -505,9 +505,7 @@ define(function (require) {
                 if (this.series[i].type != ecConfig.CHART_TYPE_EVENTRIVER) {
                     oriData = this.series[i].data;
                     for (var j = 0, k = oriData.length; j < k; j++) {
-                        value = oriData[j].value != null
-                                ? oriData[j].value
-                                : oriData[j];
+                        value = this.getDataFromOption(oriData[j]);
                         if (this.series[i].type === ecConfig.CHART_TYPE_K) {
                             data[key].push(value[0]);
                             data[key].push(value[1]);
@@ -554,9 +552,7 @@ define(function (require) {
                 data[key] = data[key] || [];  // scale下还需要记录每一个量
                 oriData = this.series[i].data;
                 for (var j = 0, k = oriData.length; j < k; j++) {
-                    value = oriData[j].value != null
-                            ? oriData[j].value
-                            : oriData[j];
+                    value = this.getDataFromOption(oriData[j]);
                     if (value === '-') {
                         continue;
                     }

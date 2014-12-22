@@ -573,11 +573,7 @@ define(function (require) {
                 );
             }
             
-            var value = data != null
-                        ? (data.value != null
-                          ? data.value
-                          : data)
-                        : '-';
+            var value = this.getDataFromOption(data, '-');
             
             if (formatter) {
                 if (typeof formatter === 'function') {
@@ -750,9 +746,7 @@ define(function (require) {
                     if (data[i].x == null || data[i].y == null) {
                         continue;
                     }
-                    value = data[i] != null && data[i].value != null
-                            ? data[i].value
-                            : '';
+                    value = this.getDataFromOption(data[i], '');
                     // 图例
                     if (legend) {
                         color = legend.getColor(serie.name);
@@ -884,9 +878,7 @@ define(function (require) {
                 
                 // 组装一个mergeData
                 mergeData = this.deepMerge(data[i]);
-                value = mergeData != null && mergeData.value != null
-                        ? mergeData.value
-                        : '';
+                value = this.getDataFromOption(mergeData, '');
                 // 值域
                 if (dataRange) {
                     color = isNaN(value) ? color : dataRange.getColor(value);
@@ -972,11 +964,7 @@ define(function (require) {
             orient                  // 走向，用于默认文字定位
         ) {
             var queryTarget = [data, serie];
-            var value = data != null
-                        ? (data.value != null
-                          ? data.value
-                          : data)
-                        : '-';
+            var value = this.getDataFromOption(data, '-');
             
             symbol = this.deepQuery(queryTarget, 'symbol') || symbol;
             var symbolSize = this.deepQuery(queryTarget, 'symbolSize');
@@ -1114,16 +1102,8 @@ define(function (require) {
             xEnd, yEnd,             // 坐标
             color                   // 默认color，来自legend或dataRange全局分配
         ) {
-            var value0 = data[0] != null
-                        ? (data[0].value != null
-                          ? data[0].value
-                          : data[0])
-                        : '-';
-            var value1 = data[1] != null
-                        ? (data[1].value != null
-                          ? data[1].value
-                          : data[1])
-                        : '-';
+            var value0 = this.getDataFromOption(data[0], '-');
+            var value1 = this.getDataFromOption(data[1], '-');
             var symbol = [
                 this.query(data[0], 'symbol') || mlOption.symbol[0],
                 this.query(data[1], 'symbol') || mlOption.symbol[1]
@@ -1265,11 +1245,7 @@ define(function (require) {
             }
             // 值域
             if (dataRange) {
-                value = data[0] != null
-                        ? (data[0].value != null
-                          ? data[0].value
-                          : data[0])
-                        : '-';
+                value = this.getDataFromOption(data[0], '-');
                 color = isNaN(value) ? color : dataRange.getColor(value);
                 
                 nColor = this.deepQuery(

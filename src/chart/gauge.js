@@ -455,8 +455,7 @@ define(function (require) {
         },
         
         _getValue: function(seriesIndex) {
-            var data = this.series[seriesIndex].data[0];
-            return data.value != null ? data.value : data;
+            return this.getDataFromOption(this.series[seriesIndex].data[0]);
         },
         
         /**

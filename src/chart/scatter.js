@@ -150,11 +150,7 @@ define(function (require) {
                 pointList[seriesIndex] = [];
                 for (var i = 0, l = serie.data.length; i < l; i++) {
                     data = serie.data[i];
-                    value = data != null
-                            ? (data.value != null
-                              ? data.value
-                              : data)
-                            : '-';
+                    value = this.getDataFromOption(data, '-');
                     if (value === '-' || value.length < 2) {
                         // 数据格式不符
                         continue;
