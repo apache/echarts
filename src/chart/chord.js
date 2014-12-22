@@ -126,6 +126,11 @@ define(function (require) {
             var nodeFilter = function (n) {
                 return n.layout.size > 0;
             };
+            var createEdgeFilter = function (graph) {
+                return function (e) {
+                    return graph.getEdge(e.node2, e.node1);
+                }
+            }
             for (var i = 0; i < series.length; i++) {
                 var serie = series[i];
 
@@ -142,6 +147,10 @@ define(function (require) {
                     }
                     // 过滤输出为0的节点
                     graph.filterNode(nodeFilter, this);
+                    if (serie.ribbonType) {
+                        graph.filterEdge(createEdgeFilter(graph));
+                    }
+
                     graphs.push(graph);
 
                     graph.__serie = serie;

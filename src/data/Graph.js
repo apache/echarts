@@ -143,10 +143,10 @@ define(function(require) {
         }
 
         if (this._directed) {
+            return this._edgesMap[n1 + '-' + n2];
+        } else {
             return this._edgesMap[n1 + '-' + n2]
                 || this._edgesMap[n2 + '-' + n1];
-        } else {
-            return this._edgesMap[n1 + '-' + n2];
         }
     };
 
@@ -477,6 +477,8 @@ define(function(require) {
                 }
             }
         }
+
+        // console.log(graph.edges.map(function (e) {return e.node1.id + '-' + e.node2.id;}))
 
         return graph;
     };
