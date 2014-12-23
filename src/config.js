@@ -1380,7 +1380,7 @@ define(function() {
             ROAMCONTROLLER: 'roamController'
         },
         DRAG_ENABLE_TIME: 120,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
-        EFFECT_ZLEVEL : 1,       // 特效动画zlevel
+        EFFECT_ZLEVEL : 10,       // 特效动画zlevel
         // 主题，默认标志图形类型列表
         symbolList: [
           'circle', 'rectangle', 'triangle', 'diamond',
