@@ -43,7 +43,7 @@ define(function (require) {
          * 绘制图形
          */
         _buildShape: function () {
-            this._bulidPosition();
+            this._buildPosition();
         },
         
         _buildNormal: function(seriesArray, maxDataLength, locationMap, xMarkMap, orient) {

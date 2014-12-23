@@ -250,7 +250,7 @@ define(function (require) {
         /**
          * 折线图、柱形图公用方法
          */
-        _bulidPosition: function() {
+        _buildPosition: function() {
             this._symbol = this.option.symbolList;
             this._sIndex2ShapeMap = {};  // series拐点图形类型，seriesIndex索引到shape type
             this._sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color

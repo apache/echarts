@@ -46,7 +46,7 @@ define(function (require) {
          */
         _buildShape: function () {
             this.finalPLMap = {}; // 完成的point list(PL)
-            this._bulidPosition();
+            this._buildPosition();
         },
 
         /**
