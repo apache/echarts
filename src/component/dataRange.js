@@ -146,7 +146,10 @@ define(function (require) {
                 );
                 itemShape._idx = i;
                 itemShape.onmousemove = this._dispatchHoverLink;
-                itemShape.onclick = this._dataRangeSelected;
+                if (this.dataRangeOption.selectedMode) {
+                    itemShape.clickable = true;
+                    itemShape.onclick = this._dataRangeSelected;
+                }
                 this.shapeList.push(new RectangleShape(itemShape));
                 
                 if (needValueText) {
@@ -166,8 +169,7 @@ define(function (require) {
                         },
                         highlightStyle:{
                             brushType: 'fill'
-                        },
-                        clickable : true
+                        }
                     };
                     if (this.dataRangeOption.orient == 'vertical'
                         && this.dataRangeOption.x == 'right'
@@ -176,7 +178,11 @@ define(function (require) {
                         textShape.style.textAlign = 'right';
                     }
                     textShape._idx = i;
-                    textShape.onclick = this._dataRangeSelected;
+                    textShape.onmousemove = this._dispatchHoverLink;
+                    if (this.dataRangeOption.selectedMode) {
+                        textShape.clickable = true;
+                        textShape.onclick = this._dataRangeSelected;
+                    }
                     this.shapeList.push(new TextShape(textShape));
                 }
 
@@ -940,8 +946,7 @@ define(function (require) {
                 highlightStyle: {
                     strokeColor: color,
                     lineWidth : 1
-                },
-                clickable : true
+                }
             };
         },
         
@@ -1220,8 +1225,26 @@ define(function (require) {
 
 
         __dataRangeSelected : function (param) {
+            if (this.dataRangeOption.selectedMode === 'single') {
+                for (var k in this._selectedMap) {
+                    this._selectedMap[k] = false;
+                }
+            }
             var idx = param.target._idx;
             this._selectedMap[idx] = !this._selectedMap[idx];
+            var valueMax = (this._colorList.length - idx) * this._gap + this.dataRangeOption.min;
+            this.messageCenter.dispatch(
+                ecConfig.EVENT.DATA_RANGE_SELECTED,
+                param.event,
+                {
+                    selected: this._selectedMap,
+                    target: idx,
+                    valueMax: valueMax,
+                    valueMin: valueMax - this._gap
+                },
+                this.myChart
+            );
+
             this.messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this.myChart);
         },
         

@@ -140,6 +140,7 @@ define(function() {
             precision: 0,              // 小数精度，默认为0，无小数点
             splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变
             calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
+            selectedMode: true,        // 选择模式，默认开启值域开关
             hoverLink: true,
             realtime: true,
             color:['#006edd','#e0ffff'],//颜色 
