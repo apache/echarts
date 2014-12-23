@@ -880,7 +880,7 @@ define(function() {
         },
         
         force: {
-            zlevel: 2,                  // 一级层叠
+            zlevel: 1,                  // 一级层叠
             z: 2,                       // 二级层叠
             // 布局中心
             center: ['50%', '50%'],
