@@ -449,7 +449,7 @@ define(function (require) {
                             xEnd : ex,
                             yEnd : y,
                             strokeColor : color[(i / this._interval) % colorLength],
-                            linetype : lineType,
+                            lineType : lineType,
                             lineWidth : lineWidth
                         }
                     };
