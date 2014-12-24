@@ -6,7 +6,6 @@
  *
  */
 define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
     // 图形依赖
@@ -24,10 +23,8 @@ define(function (require) {
      * @param {Object} option 图表选项
      */
     function Island(ecTheme, messageCenter, zr, option, myChart) {
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, {}, myChart);
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
 
         this._nameConnector;
         this._valueConnector;
@@ -241,7 +238,6 @@ define(function (require) {
     };
     
     zrUtil.inherits(Island, ChartBase);
-    zrUtil.inherits(Island, ComponentBase);
     
     // 图表注册
     require('../chart').define('island', Island);

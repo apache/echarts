@@ -6,7 +6,6 @@
  */
 
  define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
      // 图形依赖
@@ -29,10 +28,8 @@
      * @exports Radar
      */
     function Radar(ecTheme, messageCenter, zr, option, myChart) {
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
 
         this.refresh(option);
     }
@@ -424,7 +421,6 @@
     };
     
     zrUtil.inherits(Radar, ChartBase);
-    zrUtil.inherits(Radar, ComponentBase);
     
     // 图表注册
     require('../chart').define('radar', Radar);

@@ -17,10 +17,15 @@ define(function (require) {
     var ecAnimation = require('../util/ecAnimation');
     var ecEffect = require('../util/ecEffect');
     var accMath = require('../util/accMath');
+    var ComponentBase = require('../component/Base');
+
     var zrUtil = require('zrender/tool/util');
     var zrArea = require('zrender/tool/area');
     
-    function Base(){
+    function Base(ecTheme, messageCenter, zr, option, myChart) {
+
+        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
+
         var self = this;
         this.selectedMap = {};
         this.lastShapeList = [];
@@ -1594,6 +1599,8 @@ define(function (require) {
             }
         }
     };
+
+    zrUtil.inherits(Base, ComponentBase);
 
     return Base;
 });

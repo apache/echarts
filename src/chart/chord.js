@@ -9,7 +9,6 @@
 define(function (require) {
     'use strict';
     
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
     // 图形依赖
@@ -28,10 +27,8 @@ define(function (require) {
     var ChordLayout = require('../layout/Chord');
     
     function Chord(ecTheme, messageCenter, zr, option, myChart) {
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
 
         this.scaleLineLength = 4;
 
@@ -985,7 +982,6 @@ define(function (require) {
     };
     
     zrUtil.inherits(Chord, ChartBase);
-    zrUtil.inherits(Chord, ComponentBase);
     
     // 图表注册
     require('../chart').define('chord', Chord);

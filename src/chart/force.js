@@ -8,7 +8,6 @@
 define(function (require) {
     'use strict';
     
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
 
     var Graph = require('../data/Graph');
@@ -35,10 +34,8 @@ define(function (require) {
      */
     function Force(ecTheme, messageCenter, zr, option, myChart) {
         var self = this;
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
 
         // 保存节点的位置，改变数据时能够有更好的动画效果
         this.__nodePositionMap = {};
@@ -844,7 +841,6 @@ define(function (require) {
     }
     
     zrUtil.inherits(Force, ChartBase);
-    zrUtil.inherits(Force, ComponentBase);
     
     // 图表注册
     require('../chart').define('force', Force);
