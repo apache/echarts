@@ -244,7 +244,7 @@ define(function() {
 
         // 提示框
         tooltip: {
-            zlevel: 0,                  // 一级层叠
+            zlevel: 1,                  // 一级层叠，频繁变化的tooltip指示器在pc上独立一层
             z: 8,                       // 二级层叠
             show: true,
             showContent: true,         // tooltip主体内容
@@ -1364,6 +1364,7 @@ define(function() {
             DATA_CHANGED: 'dataChanged',
             DATA_ZOOM: 'dataZoom',
             DATA_RANGE: 'dataRange',
+            DATA_RANGE_SELECTED: 'dataRangeSelected',
             DATA_RANGE_HOVERLINK: 'dataRangeHoverLink',
             LEGEND_SELECTED: 'legendSelected',
             LEGEND_HOVERLINK: 'legendHoverLink',
