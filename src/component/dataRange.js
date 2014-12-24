@@ -1324,7 +1324,7 @@ define(function (require) {
                         * this._calculableLocation.height
                     ];
                 }
-                this._indicatorShape.style.text = param.value;
+                this._indicatorShape.style.text = this._textFormat(param.value);
                 this._indicatorShape.style.color = this.getColor(curValue);
                 this.zr.addHoverShape(this._indicatorShape);
             }
