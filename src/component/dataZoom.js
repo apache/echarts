@@ -522,6 +522,7 @@ define(function (require) {
          * 构建拖拽手柄
          */
         _buildHandle : function () {
+            var detail = this.zoomOption.showDetail ? this._getDetail() : {start: '',end: ''};
             this._startShape = {
                 zlevel: this.getZlevelBase(),
                 z: this.getZBase(),
@@ -537,7 +538,7 @@ define(function (require) {
                     textPosition: 'inside'
                 },
                 highlightStyle: {
-                    text: '',
+                    text: detail.start,
                     brushType: 'fill',
                     textPosition: 'left'
                 },
@@ -551,6 +552,7 @@ define(function (require) {
                 
                 this._startShape.style.x = this._fillerShae.style.x - this._handleSize,
                 this._endShape.style.x = this._fillerShae.style.x + this._fillerShae.style.width;
+                this._endShape.highlightStyle.text = detail.end;
                 this._endShape.highlightStyle.textPosition = 'right';
             }
             else {
@@ -560,6 +562,7 @@ define(function (require) {
                 this._startShape.style.y = this._fillerShae.style.y - this._handleSize;
                 this._startShape.highlightStyle.textPosition = 'top';
                 this._endShape.style.y = this._fillerShae.style.y + this._fillerShae.style.height;
+                this._endShape.highlightStyle.text = detail.end;
                 this._endShape.highlightStyle.textPosition = 'bottom';
             }
             this._startShape = new IconShape(this._startShape);
@@ -874,7 +877,7 @@ define(function (require) {
                 var length = data.length;
                 var start = Math.floor(this._zoom.start / 100 * length);
                 var end = Math.ceil(this._zoom.end / 100 * length);
-                end -= end >= length ? 1 : 0;
+                end -= end > 0 ? 1 : 0;
                 return {
                     start : this.getDataFromOption(data[start]),
                     end : this.getDataFromOption(data[end])
@@ -962,9 +965,9 @@ define(function (require) {
             }
 
             if (this.zoomOption.showDetail) {
-                var deltail = this._getDetail();
-                this._startShape.style.text = this._startShape.highlightStyle.text = deltail.start;
-                this._endShape.style.text = this._endShape.highlightStyle.text = deltail.end;
+                var detail = this._getDetail();
+                this._startShape.style.text = this._startShape.highlightStyle.text = detail.start;
+                this._endShape.style.text = this._endShape.highlightStyle.text = detail.end;
                 this._startShape.style.textPosition = this._startShape.highlightStyle.textPosition;
                 this._endShape.style.textPosition = this._endShape.highlightStyle.textPosition;
             }
