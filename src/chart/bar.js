@@ -672,6 +672,11 @@ define(function (require) {
                                 ? zrColor.lift(barShape.style.color, -0.3)
                                 : barShape.style.color
                                );
+            //亚像素优化
+            barShape.style.x = Math.floor(barShape.style.x);
+            barShape.style.y = Math.floor(barShape.style.y);
+            barShape.style.height = Math.ceil(barShape.style.height);
+            barShape.style.width = Math.ceil(barShape.style.width);
             // 考虑线宽的显示优化
             if (normalBorderWidth > 0
                 && barShape.style.height > normalBorderWidth
