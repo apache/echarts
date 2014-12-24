@@ -423,7 +423,9 @@ define(function (require) {
                     shape = new ImageShape({
                         style: shape.style,
                         highlightStyle: shape.highlightStyle,
-                        clickable: shape.clickable
+                        clickable: shape.clickable,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase()
                     });
                 }
                 
