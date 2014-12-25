@@ -1388,7 +1388,11 @@ define(function() {
           'circle', 'rectangle', 'triangle', 'diamond',
           'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
         ],
+        loadingEffect: 'spin',
         loadingText: 'Loading...',
+        noDataEffect: 'bubble',
+        noDataText: 'No Data Available.',
+        // noDataLoadingOption: null,
         // 可计算特性配置，孤岛，提示颜色
         calculable: false,                      // 默认关闭可计算特性
         calculableColor: 'rgba(255,165,0,0.6)', // 拖拽提示边框颜色

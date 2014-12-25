@@ -609,11 +609,39 @@ define(function (require) {
             return;
         },
 
+        _noDataCheck: function(magicOption) {
+            var series = magicOption.series;
+            for (var i = 0, l = series.length; i < l; i++) {
+                if ((series[i].data && series[i].data.length > 0)
+                    || (series[i].markPoint && series[i].markPoint.data && series[i].markPoint.data.length > 0)
+                    || (series[i].markLine && series[i].markLine.data && series[i].markLine.data.length > 0)
+                    || (series[i].nodes && series[i].nodes.length > 0)
+                    || (series[i].links && series[i].links.length > 0)
+                    || (series[i].matrix && series[i].matrix.length > 0)
+                    || (series[i].eventList && series[i].eventList.length > 0)
+                ) {
+                    return false;   // 存在任意数据则为非空数据
+                }
+            }
+            // 空数据
+            this.clear();
+            var loadOption = this._themeConfig.noDataLoadingOption || {
+                text: this._themeConfig.noDataText,
+                effect: this._themeConfig.noDataEffect
+            };
+            this.showLoading(loadOption);
+            return true;
+        },
+
         /**
          * 图表渲染 
          */
         _render: function (magicOption) {
             this._mergeGlobalConifg(magicOption);
+
+            if (this._noDataCheck(magicOption)) {
+                return;
+            }
 
             var bgColor = magicOption.backgroundColor;
             if (bgColor) {
@@ -1549,7 +1577,7 @@ define(function (require) {
             
             var Effect = loadingOption.effect;
             if (typeof Effect === 'string' || Effect == null) {
-                Effect =  effectList[loadingOption.effect || 'spin'];
+                Effect =  effectList[loadingOption.effect || this._themeConfig.loadingEffect];
             }
             this._zr.showLoading(new Effect(loadingOption.effectOption));
             return this;
