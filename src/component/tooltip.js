@@ -72,6 +72,7 @@ define(function (require) {
         this._tDom.onmouseout = function() {
             self._mousein = false;
         };
+        this._tDom.className = 'echarts-tooltip';
         this._tDom.style.position = 'absolute';  // 不是多余的，别删！
         this.hasAppend = false;
         
