@@ -899,16 +899,16 @@ define(function (require) {
                 themeColor = this._themeConfig.color;
             }
             
+            this._zr.getColor = function (idx) {
+                var zrColor = require('zrender/tool/color');
+                return zrColor.getColor(idx, themeColor);
+            };
+            
             if (!_canvasSupported) {
                 // 不支持Canvas的强制关闭动画
                 magicOption.animation = false;
                 magicOption.addDataAnimation = false;
             }
-            
-            this._zr.getColor = function (idx) {
-                var zrColor = require('zrender/tool/color');
-                return zrColor.getColor(idx, themeColor);
-            };
         },
         
         /**
@@ -1599,10 +1599,14 @@ define(function (require) {
                if (typeof theme === 'string') {
                     // 默认主题
                     switch (theme) {
-                        // case 'themename':
-                        //     theme = require('./theme/themename');
+                        case 'macarons':
+                            theme = require('./theme/macarons');
+                            break;
+                        case 'infographic':
+                            theme = require('./theme/infographic');
+                            break;
                         default:
-                            theme = require('./theme/default');
+                            theme = {}; // require('./theme/default');
                     }
                 }
                 else {
