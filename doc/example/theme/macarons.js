@@ -23,6 +23,7 @@ var theme = {
         color: ['#2ec7c9','#b6a2de']
     },
 
+    // 工具箱
     toolbox: {
         color : ['#1e90ff', '#1e90ff', '#1e90ff', '#1e90ff'],
         effectiveColor : '#ff4500'
@@ -250,7 +251,7 @@ var theme = {
     textStyle: {
         fontFamily: '微软雅黑, Arial, Verdana, sans-serif'
     }
-}
+};
 
     return theme;
 });

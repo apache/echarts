@@ -10,16 +10,10 @@ var theme = {
 
     // 图表标题
     title: {
-        itemGap: 8,
         textStyle: {
             fontWeight: 'normal',
             color: '#27727B'          // 主标题文字颜色
         }
-    },
-    
-    // 图例
-    legend: {
-        itemGap: 8
     },
     
     // 值域
@@ -34,10 +28,9 @@ var theme = {
     toolbox: {
         color : [
             '#C1232B','#B5C334','#FCCE10','#E87C25','#27727B',
-            '#FE8463','#9BCA63','#FAD860','#F3A43B','#60C0DD',
+            '#FE8463','#9BCA63','#FAD860','#F3A43B','#60C0DD'
         ],
-        effectiveColor : '#ff4500',
-        itemGap: 8
+        effectiveColor : '#ff4500'
     },
 
     // 提示框
@@ -62,8 +55,7 @@ var theme = {
     dataZoom: {
         dataBackgroundColor: 'rgba(181,195,52,0.3)',            // 数据背景颜色
         fillerColor: 'rgba(181,195,52,0.2)',   // 填充颜色
-        handleColor: '#27727B',    // 手柄颜色
-
+        handleColor: '#27727B'    // 手柄颜色
     },
 
     // 网格
@@ -128,18 +120,6 @@ var theme = {
         },
         symbol : 'emptyCircle',
         symbolSize : 3
-    },
-
-    // 柱形图默认参数
-    bar: {
-        itemStyle: {
-            normal: {
-                barBorderRadius: 0
-            },
-            emphasis: {
-                barBorderRadius: 0
-            }
-        }
     },
 
     // 折线图默认参数
@@ -227,35 +207,28 @@ var theme = {
         itemStyle: {
             normal: {
                 linkStyle : {
-                    strokeColor : '#27727B'
+                    color : '#27727B'
                 }
             }
         }
     },
 
     chord : {
-        padding : 4,
         itemStyle : {
             normal : {
-                lineStyle : {
-                    width : 1,
-                    color : 'rgba(128, 128, 128, 0.5)'
-                },
+                borderWidth: 1,
+                borderColor: 'rgba(128, 128, 128, 0.5)',
                 chordStyle : {
                     lineStyle : {
-                        width : 1,
                         color : 'rgba(128, 128, 128, 0.5)'
                     }
                 }
             },
             emphasis : {
-                lineStyle : {
-                    width : 1,
-                    color : 'rgba(128, 128, 128, 0.5)'
-                },
+                borderWidth: 1,
+                borderColor: 'rgba(128, 128, 128, 0.5)',
                 chordStyle : {
                     lineStyle : {
-                        width : 1,
                         color : 'rgba(128, 128, 128, 0.5)'
                     }
                 }
@@ -307,7 +280,7 @@ var theme = {
           }
         },
         detail : {
-            offsetCenter: [0, 00],       // x, y，单位px
+            offsetCenter: [0, 0],       // x, y，单位px
             textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
                 color: 'auto',
                 fontSize: 40
@@ -318,7 +291,7 @@ var theme = {
     textStyle: {
         fontFamily: '微软雅黑, Arial, Verdana, sans-serif'
     }
-}
+};
 
     return theme;
 });
