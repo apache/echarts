@@ -11,29 +11,21 @@ var theme = {
 
     // 图表标题
     title: {
-        itemGap: 8,
         textStyle: {
             fontWeight: 'normal',
             color: '#008acd'          // 主标题文字颜色
         }
     },
     
-    // 图例
-    legend: {
-        itemGap: 8
-    },
-    
     // 值域
     dataRange: {
         itemWidth: 15,
-        //color:['#1e90ff','#afeeee']
         color: ['#2ec7c9','#b6a2de']
     },
 
     toolbox: {
         color : ['#1e90ff', '#1e90ff', '#1e90ff', '#1e90ff'],
-        effectiveColor : '#ff4500',
-        itemGap: 8
+        effectiveColor : '#ff4500'
     },
 
     // 提示框
@@ -156,7 +148,6 @@ var theme = {
                 color: '#d87a80',       // 阳线填充颜色
                 color0: '#2ec7c9',      // 阴线填充颜色
                 lineStyle: {
-                    width: 1,
                     color: '#d87a80',   // 阳线边框颜色
                     color0: '#2ec7c9'   // 阴线边框颜色
                 }
@@ -193,11 +184,6 @@ var theme = {
             emphasis: {                 // 也是选中样式
                 areaStyle: {
                     color: '#fe994e'
-                },
-                label: {
-                    textStyle: {
-                        color: 'rgb(100,0,0)'
-                    }
                 }
             }
         }
@@ -207,35 +193,28 @@ var theme = {
         itemStyle: {
             normal: {
                 linkStyle : {
-                    strokeColor : '#1e90ff'
+                    color : '#1e90ff'
                 }
             }
         }
     },
 
     chord : {
-        padding : 4,
         itemStyle : {
             normal : {
-                lineStyle : {
-                    width : 1,
-                    color : 'rgba(128, 128, 128, 0.5)'
-                },
+                borderWidth: 1,
+                borderColor: 'rgba(128, 128, 128, 0.5)',
                 chordStyle : {
                     lineStyle : {
-                        width : 1,
                         color : 'rgba(128, 128, 128, 0.5)'
                     }
                 }
             },
             emphasis : {
-                lineStyle : {
-                    width : 1,
-                    color : 'rgba(128, 128, 128, 0.5)'
-                },
+                borderWidth: 1,
+                borderColor: 'rgba(128, 128, 128, 0.5)',
                 chordStyle : {
                     lineStyle : {
-                        width : 1,
                         color : 'rgba(128, 128, 128, 0.5)'
                     }
                 }
@@ -244,10 +223,7 @@ var theme = {
     },
 
     gauge : {
-        startAngle: 225,
-        endAngle : -45,
         axisLine: {            // 坐标轴线
-            show: true,        // 默认显示，属性show控制显示与否
             lineStyle: {       // 属性lineStyle控制线条样式
                 color: [[0.2, '#2ec7c9'],[0.8, '#5ab1ef'],[1, '#d87a80']], 
                 width: 10
@@ -260,11 +236,6 @@ var theme = {
                 color: 'auto'
             }
         },
-        axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
-            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                color: 'auto'
-            }
-        },
         splitLine: {           // 分隔线
             length :22,         // 属性length控制线长
             lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
@@ -272,18 +243,7 @@ var theme = {
             }
         },
         pointer : {
-            width : 5,
-            color : 'auto'
-        },
-        title : {
-            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                color: '#333'
-            }
-        },
-        detail : {
-            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                color: 'auto'
-            }
+            width : 5
         }
     },
     
