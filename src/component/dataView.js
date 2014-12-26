@@ -34,7 +34,7 @@ define(function (require) {
         this._zrHeight = zr.getHeight();
         this._zrWidth = zr.getWidth();
     
-        this._tDom.className = 'echarts-dataview',
+        this._tDom.className = 'echarts-dataview';
         this.hide();
         this.dom.firstChild.appendChild(this._tDom);
 
