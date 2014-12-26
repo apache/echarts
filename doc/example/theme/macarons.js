@@ -20,7 +20,7 @@ var theme = {
     // 值域
     dataRange: {
         itemWidth: 15,
-        color: ['#2ec7c9','#b6a2de']
+        color: ['#5ab1ef','#e0ffff']
     },
 
     // 工具箱
