@@ -1408,7 +1408,7 @@ define(function (require) {
          */
         _animateMod: function (oldShape, newShape, duration, easing, delay) {
             switch (newShape.type) {
-                case 'broken-line' :
+                case 'polyline' :
                 case 'half-smooth-polygon' :
                     ecAnimation.pointList(this.zr, oldShape, newShape, duration, easing);
                     break;

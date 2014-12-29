@@ -13,7 +13,7 @@ define(function (require) {
     var RingShape = require('zrender/shape/Ring');
     var CircleShape = require('zrender/shape/Circle');
     var SectorShape = require('zrender/shape/Sector');
-    var BrokenLineShape = require('zrender/shape/BrokenLine');
+    var PolylineShape = require('zrender/shape/Polyline');
 
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
@@ -582,8 +582,7 @@ define(function (require) {
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
 
-                return new BrokenLineShape({
-                    // shape: 'brokenLine',
+                return new PolylineShape({
                     zlevel: this.getZlevelBase(),
                     z: this.getZBase() + 1,
                     hoverable: false,
@@ -888,7 +887,7 @@ define(function (require) {
                     case 'text' :
                         textMap[key] = this.shapeList[i];
                         break;
-                    case 'broken-line' :
+                    case 'polyline' :
                         lineMap[key] = this.shapeList[i];
                         break;
                 }
@@ -931,7 +930,7 @@ define(function (require) {
                         }
                     }
                     else if (backupShapeList[i].type === 'text'
-                             || backupShapeList[i].type === 'broken-line'
+                             || backupShapeList[i].type === 'polyline'
                     ) {
                         if (targeSector === 'delete') {
                             // 删除逻辑一样
@@ -952,7 +951,7 @@ define(function (require) {
                                         )
                                         .start();
                                     break;
-                                case 'broken-line':
+                                case 'polyline':
                                     targeSector = lineMap[key];
                                     this.zr.animate(backupShapeList[i].id, 'style')
                                         .when(

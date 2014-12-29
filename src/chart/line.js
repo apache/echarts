@@ -9,7 +9,7 @@ define(function (require) {
     var ChartBase = require('./base');
     
     // 图形依赖
-    var BrokenLineShape = require('zrender/shape/BrokenLine');
+    var PolylineShape = require('zrender/shape/Polyline');
     var IconShape = require('../util/shape/Icon');
     var HalfSmoothPolygonShape = require('../util/shape/HalfSmoothPolygon');
     // 组件依赖
@@ -479,7 +479,7 @@ define(function (require) {
                         }
                         
                         // 折线图
-                        var brokenLineShape = new BrokenLineShape({
+                        var brokenLineShape = new PolylineShape({
                             zlevel: this.getZlevelBase(),
                             z: this.getZBase(),
                             style: {

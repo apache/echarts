@@ -10,8 +10,8 @@ define(function (require) {
     var IconShape = require('./Icon');
     var LineShape = require('zrender/shape/Line');
     var lineInstance = new LineShape({});
-    var BrokenLineShape = require('zrender/shape/BrokenLine');
-    var brokenLineInstance = new BrokenLineShape({});
+    var PolylineShape = require('zrender/shape/Polyline');
+    var polylineInstance = new PolylineShape({});
 
     var matrix = require('zrender/tool/matrix');
     var area = require('zrender/tool/area');
@@ -358,7 +358,7 @@ define(function (require) {
                 // 矩形内
                 return this.style.smooth !== 'spline'
                        ? area.isInside(lineInstance, this.style, x, y)
-                       : area.isInside(brokenLineInstance, this.style, x, y);
+                       : area.isInside(polylineInstance, this.style, x, y);
             }
 
             return false;
