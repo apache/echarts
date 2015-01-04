@@ -756,7 +756,7 @@ define(function (require) {
                     if (data[i].x == null || data[i].y == null) {
                         continue;
                     }
-                    value = this.getDataFromOption(data[i], '');
+                    value = data[i].value != null ? data[i].value : '';
                     // 图例
                     if (legend) {
                         color = legend.getColor(serie.name);
@@ -888,7 +888,7 @@ define(function (require) {
                 
                 // 组装一个mergeData
                 mergeData = this.deepMerge(data[i]);
-                value = this.getDataFromOption(mergeData, '');
+                value = mergeData.value != null ? mergeData.value : '';
                 // 值域
                 if (dataRange) {
                     color = isNaN(value) ? color : dataRange.getColor(value);
@@ -912,7 +912,7 @@ define(function (require) {
                                      || {trigger:'item'}; // tooltip.trigger指定为item
                 data[i][0].name = data[i][0].name != null ? data[i][0].name : '';
                 data[i][1].name = data[i][1].name != null ? data[i][1].name : '';
-                data[i][0].value = data[i][0].value != null ? data[i][0].value : '';
+                data[i][0].value = value;
                 
                 itemShape = this.getLineMarkShape(
                     mlOption,                   // markLine
@@ -1113,8 +1113,8 @@ define(function (require) {
             xEnd, yEnd,             // 坐标
             color                   // 默认color，来自legend或dataRange全局分配
         ) {
-            var value0 = this.getDataFromOption(data[0], '-');
-            var value1 = this.getDataFromOption(data[1], '-');
+            var value0 = data[0].value != null ? data[0].value : '-';
+            var value1 = data[1].value != null ? data[1].value : '-';
             var symbol = [
                 this.query(data[0], 'symbol') || mlOption.symbol[0],
                 this.query(data[1], 'symbol') || mlOption.symbol[1]
@@ -1256,7 +1256,7 @@ define(function (require) {
             }
             // 值域
             if (dataRange) {
-                value = this.getDataFromOption(data[0], '-');
+                value = data[0].value != null ? data[0].value : '';
                 color = isNaN(value) ? color : dataRange.getColor(value);
                 
                 nColor = this.deepQuery(
