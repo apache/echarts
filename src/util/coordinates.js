@@ -1,13 +1,11 @@
 /**
  * echarts坐标处理方法
- * Copyright 2013 Baidu Inc. All rights reserved.
  *
- * @author Neil (杨骥, linzhifeng@baidu.com)
+ * @author Neil (杨骥, 511415343@qq.com)
  */
 
 define(
-    function(require) {
-
+    function (require) {
         var zrMath = require('zrender/tool/math');
 
         /**

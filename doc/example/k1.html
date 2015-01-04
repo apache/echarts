@@ -2,70 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>ECharts</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="ECharts">
-    <meta name="author" content="linzhifeng@baidu.com">
+    <meta name="author" content="kener.linfeng@gmail.com">
+    <title>ECharts · Example</title>
 
-    <script src="../asset/js/esl/esl.js"></script>
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+
+    <link href="../asset/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/carousel.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="./www/js/echarts.js"></script>
     <script src="../asset/js/codemirror.js"></script>
     <script src="../asset/js/javascript.js"></script>
 
-    <link href="../asset/css/bootstrap.css" rel="stylesheet">
-    <link href="../asset/css/bootstrap-responsive.css" rel="stylesheet">
     <link href="../asset/css/codemirror.css" rel="stylesheet">
     <link href="../asset/css/monokai.css" rel="stylesheet">
-    <link href="../asset/css/echartsHome.css" rel="stylesheet">
-    <link rel="shortcut icon" href="../asset/ico/favicon.png">
 </head>
 
 <body>
-    <!-- NAVBAR
-    ================================================== -->
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="brand" href="../../index.html">ECharts</a>
-          <div class="nav-collapse collapse">
-              <a id="forkme_banner" href="https://github.com/ecomfe/echarts">View on GitHub</a>
-              <ul class="nav">
-                <li><a href="../../index.html"><i class="icon-home icon-white"></i> Home</a></li>
-                <li class="active"><a href="../example.html" class="active">Example</a></li>
-                <li><a href="../doc.html" >API &amp; Doc</a></li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-download-alt icon-white"></i>Download <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a id="last-release-link" href=""> </a></li>
-                    <li><a href="https://github.com/ecomfe/echarts/archive/master.zip">ZIP (Latest)</a></li>
-                  </ul>
-                </li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Link <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="https://github.com/ecomfe" target="_blank">Ecom-FE</a></li>
-                    <li><a href="http://fe.baidu.com/doc/ecom/tech/topic/dv/index.html" target="_blank">Data Visualization</a></li>
-                    <li class="divider"></li>
-                    <!--li class="nav-header">Library</li-->
-                    <li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>
-                    
-                  </ul>
-                </li>
-              </ul>
-           </div><!--/.nav-collapse -->
-        </div><!-- /.container -->
-      </div><!-- /.navbar-inner -->
-    </div><!-- /.navbar-wrapper -->
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
+
 
     <div class="container-fluid">
-        <div class="row-fluid">
-            <div id="sidebar-code" class="span4">
+        <div class="row-fluid example">
+            <div id="sidebar-code" class="col-md-4">
                 <div class="well sidebar-nav">
-                    <div class="nav-header"><a href="#" onclick="autoResize()" class="icon-resize-full" id ="icon-resize" ></a>option</div>
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
 option = {
     title : {
@@ -73,28 +45,25 @@ option = {
     },
     tooltip : {
         trigger: 'axis',
-        formatter: function(params) {
-            var res = params[1][1];
-            res += '<br/>' + params[1][0];
-            res += '<br/>  开盘 : ' + params[1][2][0] + '  最高 : ' + params[1][2][3];
-            res += '<br/>  收盘 : ' + params[1][2][1] + '  最低 : ' + params[1][2][2];
-            res += '<br/>' + params[0][0];
-            res += ' : ' + params[0][2];
+        formatter: function (params) {
+            var res = params[0].seriesName + ' ' + params[0].name;
+            res += '<br/>  开盘 : ' + params[0].value[0] + '  最高 : ' + params[0].value[3];
+            res += '<br/>  收盘 : ' + params[0].value[1] + '  最低 : ' + params[0].value[2];
             return res;
         }
     },
     legend: {
-        data:['上证指数','成交金额(万)']
+        data:['上证指数']
     },
     toolbox: {
         show : true,
         feature : {
-            mark : true,
-            dataZoom : true,
-            dataView : {readOnly: false},
-            magicType:['line', 'bar'],
-            restore : true,
-            saveAsImage : true
+            mark : {show: true},
+            dataZoom : {show: true},
+            dataView : {show: true, readOnly: false},
+            magicType: {show: true, type: ['line', 'bar']},
+            restore : {show: true},
+            saveAsImage : {show: true}
         }
     },
     dataZoom : {
@@ -107,6 +76,8 @@ option = {
         {
             type : 'category',
             boundaryGap : true,
+            axisTick: {onGap:false},
+            splitLine: {show:false},
             data : [
                 "2013/1/24", "2013/1/25", "2013/1/28", "2013/1/29", "2013/1/30",
                 "2013/1/31", "2013/2/1", "2013/2/4", "2013/2/5", "2013/2/6", 
@@ -133,46 +104,10 @@ option = {
         {
             type : 'value',
             scale:true,
-            precision: 2,
-            splitNumber: 9,
-            boundaryGap: [0.05, 0.05],
-            splitArea : {show : true}
-        },
-        {
-            type : 'value',
-            scale:true,
-            splitNumber: 9,
-            boundaryGap: [0.05, 0.05],
-            splitArea : {show : true}
+            boundaryGap: [0.01, 0.01]
         }
     ],
     series : [
-        {
-            name:'成交金额(万)',
-            type:'line',
-            yAxisIndex: 1,
-            symbol: 'none',
-            data:[
-                13560434, 8026738.5, 11691637, 12491697, 12485603, 
-                11620504, 12555496, 15253370, 12709611, 10458354, 
-                10933507, 9896523, 10365702, 10633095, 9722230, 
-                12662783, 8757982, 7764234, 10591719, 8826293, 
-                11591827, 11153111, 14304651, 11672120, 12536480, 
-                12608589, 8843860, 7391994.5, 10063709, 7768895.5, 
-                6921859, 10157810, 8148617.5, 7551207, 11397426, 
-                10478607, 8595132, 8541862, 9181132, 8570842, 
-                10759351, 7335819, 6699753.5, 7759666.5, 6880135.5, 
-                7366616.5, 7313504, 7109021.5, 6213270, 5619688, 
-                5816217.5, 6695584.5, 5998655.5, 6188812.5, 9538301,
-                8224500, 8221751.5, 7897721, 8448324, 6525151, 
-                5987761, 7831570, 8162560.5, 7904092, 8139084.5, 
-                9116529, 8128014, 7919148, 7566047, 6665826.5, 
-                10225527, 11124881, 12884353, 11302521, 11529046, 
-                11105205, 9202153, 9992016, 12035250, 11431155, 
-                10354677, 10070399, 9164861, 9237718, 7114268, 
-                7526158.5, 8105835, 7971452.5
-            ]
-        },
         {
             name:'上证指数',
             type:'k',
@@ -272,35 +207,27 @@ option = {
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->
-            <div id="graphic" class="span8">
+            <div id="graphic" class="col-md-8">
                 <div id="main" class="main"></div>
                 <div>
-                    <button onclick="refresh(true)">Refresh ~</button>
+                    <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
+
                     <span id='wrong-message' style="color:red"></span>
                 </div>
             </div><!--/span-->
         </div><!--/row-->
-        <hr>
-        <!-- FOOTER -->
-        <footer>
-          <p class="pull-right"><a href="#">Back to top</a></p>
-          <p>&copy; 2013 ECOM-FE &middot; <a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">Terms</a> &middot; <a href="../changelog.html" target="_blank">Changelog</a></p>
-        </footer>
-    </div><!--/.fluid-container-->
+        
+        </div><!--/.fluid-container-->
 
-    <script src="../asset/js/jquery.js"></script>
-    <script src="../asset/js/bootstrap-transition.js"></script>
-    <script src="../asset/js/bootstrap-alert.js"></script>
-    <script src="../asset/js/bootstrap-modal.js"></script>
-    <script src="../asset/js/bootstrap-dropdown.js"></script>
-    <script src="../asset/js/bootstrap-scrollspy.js"></script>
-    <script src="../asset/js/bootstrap-tab.js"></script>
-    <script src="../asset/js/bootstrap-tooltip.js"></script>
-    <script src="../asset/js/bootstrap-popover.js"></script>
-    <script src="../asset/js/bootstrap-button.js"></script>
-    <script src="../asset/js/bootstrap-collapse.js"></script>
-    <script src="../asset/js/bootstrap-carousel.js"></script>
-    <script src="../asset/js/bootstrap-typeahead.js"></script>
+    <footer id="footer"></footer>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
+    <script src="../asset/js/bootstrap.min.js"></script>
     <script src="../asset/js/echartsExample.js"></script>
 </body>
 </html>

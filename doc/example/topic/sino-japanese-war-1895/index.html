@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+  <head>
+    <meta charset="utf-8">
+    <title>ECharts 甲午之殇：纪念甲午战争120周年专题</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="the Sino-Japanese War">
+    <meta name="author" content="linzhifeng@baidu.com">
+    
+	<link href="../../../asset/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../../www/js/echarts.js"></script>
+    <link href="css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/jiawu_misc.css">
+   	<link type="text/css" rel="stylesheet" href="css/easy-responsive-tabs.css" />
+    <link href="css/jiawu_style.css" rel="stylesheet"> 
+        
+	<script src="js/jquery-1.10.2.min.js"></script> 
+	<script src="js/jquery.lightbox.js"></script>
+	<script src="js/jiawu_custom.js"></script>
+    <script src="js/easyResponsiveTabs.js" type="text/javascript"></script>
+    
+  <script>
+    function showhide()
+    {
+        var div = document.getElementById("newpost");
+		if (div.style.display !== "none") 
+		{
+			div.style.display = "none";
+		}
+		else 
+		{
+			div.style.display = "block";
+		}
+    }
+  </script>
+  </head>
+  <body>
+    <!-- HEADER start -->
+	<!--
+    <div class="logocontainer">
+	-->
+	<div class="container">
+    	<div class="row" style="margin-left:0px;margin-right:0px;">
+        	<h1 style="margin-left:0px">甲午之殇：纪念甲午战争120周年</h1>
+            <div class="clear"></div>
+            <div class="templatemo_smalltitle" style="margin-left:10px">中日实力全面对比：让数据说话</div>
+       </div>
+    </div>
+	
+    <!-- HEADER end -->    
+    <div id="menu-container" class="main_menu">
+    <!-- homepage start -->
+    <div class="content homepage" id="menu-1">
+  	<div class="container">
+          	<div class="col-md-3 col-sm-6 templatemo_leftgap">
+            	<div class="templatemo_mainservice templatemo_botgap">
+                	<div class="templatemo_link"><a class="show-2 templatemo_page2" href="#" onclick="setOptionBigwar();">大海战全程</a></div>
+                	
+                </div>
+                <div class="templatemo_mainimg"><img src="images/jiawu01.jpg" alt="home img 01" style="height: 314px;"></div>
+            </div>
+            <div class="col-md-3 col-sm-6 templatemo_leftgap">
+            	<div class="templatemo_mainimg templatemo_botgap templatemo_portfotopgap"><img src="images/jiawu02.jpg" alt="home img 02" style="height: 314px;"></div>
+                <div class="templatemo_mainportfolio">
+                      <div class="templatemo_link"><a class="show-3 templatemo_page3" href="#" onclick="setOptionNation00();">国力对比篇</a></div>   	                   
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 templatemo_leftgap">
+            	<div class="templatemo_maintesti templatemo_botgap templatemo_topgap">
+                	<div class="templatemo_link"><a class="show-4 templatemo_page4" href="#" onclick="setOptionWarship00();">装备对比篇</a></div>
+                </div>
+                <div class="templatemo_mainimg"><img src="images/jiawu03.jpg" alt="home img 03" style="height: 314px;"></div>
+            </div>
+            <div class="col-md-3 col-sm-6 templatemo_leftgap">
+            	<div class="templatemo_mainimg templatemo_botgap templatemo_topgap">
+             	   <img src="images/jiawu04.jpg" alt="home img 04" style="height: 150px;">
+                </div>
+                <div class="templatemo_mainabout templatemo_botgap">
+                	<div class="templatemo_link"><a class="show-5 templatemo_page5" href="#" onclick="setOptionRelation00();">历史人物篇</a></div>
+                </div>
+                <div class="templatemo_maincontact">
+                	<div class="templatemo_link"><a class="show-6 templatemo_page6" href="#" onclick="setOptionScatter00();">殉国将领篇</a></div>
+                </div>
+            </div>
+    </div>
+
+    
+	
+   </div>
+    <!-- homepage end -->
+    <!--大海战全程 start -->
+   <div class="content services" id="menu-2">
+   
+		<div class="container">
+        	<div class="row templatemo_bordergapborder" style="padding-left:0px;padding-right:0px;">
+            	<div class="col-md-3 col-sm-12 templatemo_leftgap">
+				    <!--第一层框架 -->
+                	<div class="templatemo_mainimg templatemo_botgap">
+					
+					<img src="images/jiawu201.jpg" alt="service image">
+					</div>
+					
+					<div class="templatemo_mainimg templatemo_botgap">
+					<div class="templatemo_jiawu01">
+					<div class="templatemo_frame">
+					<h2 style="text-align:center" ><font style="font-family:'隶书'">中日-大东沟海战</font></h2>
+					<p><br>
+					大东沟海战是中日甲午战争中双方海军主力在黄海北部海域进行的一场战役规模的海战。
+					亦称中日甲午海战、黄海海战。此役北洋水师失利，自此退入威海卫，使黄海制海权落入日本联合舰队之手，决定了甲午战争的中方的战败。
+					</p>
+					</div>
+					</div>
+					</div>
+					
+					<!--第二层框架 -->
+                    <div class="templatemo_mainservice templatemo_botgap">
+                	<div class="templatemo_linkservice"><a class="show-1 templatemo_homeservice" href="#" onclick="disposeBigwar();">返回</a></div>
+                    </div>
+                </div>
+                
+                <div  class="templatemo_col75 col-sm-12 templatemo_leftgap" style="padding-right:0px;">
+                	<div class="templatemo_graybg01" style="height:655px;">
+					
+                    <div class="templatemo_frame"id="bigwarship00" style="height:610px;width:810px;">
+                	<h2>大东沟海战全程</h2>
+					
+                    <div class="clear"></div>
+                    <p>历史背景：1894年7月25日，日本联合舰队第一游击队在丰岛海域突然袭击北洋水师的济远和广甲两艘巡洋舰，即丰岛海战，甲午战争爆发。北洋水师和联合舰队面临著相同的任务：护送援军、争夺朝鲜半岛附近海域的制海权。
+					</p>
+                    </div>
+               	    </div>
+                </div>
+            </div>
+        </div>
+	
+     </div>
+	    
+  <!-- 大海战全程 end -->	
+
+	<!-- 国力对比篇 start -->
+    <div class="portfolio" id="menu-3" style="display: none;" >
+    	<div class="container">
+          	<div class="col-md-3 col-sm-6 templatemo_leftgap"style="padding-left:10px;">
+
+       	    <div class="templatemo_insideportfolio templatemo_botgap">
+               	  <div class="templatemo_portfoliotext">
+                	<h2>大清：没落的王朝</h2>
+                    <div class="clear"></div>
+                    <br>
+					两次鸦片战争失败之后，清政府中的洋务派开始着手进行改革，以“自强”和“求富”为口号进行了一场大规模学习西方工业化的运动。但这是一场在维护封建皇权的前提下进行的改良运动，没有触及政治体制。
+					</div>
+            </div>
+			<div class="templatemo_insideportfolio templatemo_botgap">
+               	  <div class="templatemo_portfoliotext">
+                	<h2>日本：崛起的帝国</h2>
+                    <div class="clear"></div>
+					<br>
+					在大清进行洋务运动的同时，邻邦日本也开启了一场学习西方之路。维新人士以“富国强兵”、“殖产兴业”、“文明开化”为理念进行改革。明治维新将一个被迫与西方签订不平等条约的日本从被殖民的边缘拉回来，走上富强之路。
+					</div>
+            </div>
+            <div class="templatemo_portfolioback">
+                	<div class="templatemo_link"><a class="show-1 templatemo_homeportfolio" href="#" onclick="disposeNation00();">返回</a></div>
+            </div>       
+            </div>
+			<div class="templatemo_col75 col-sm-6 templatemo_botgap" style="height:814px;padding-right:8px;">
+					<div class="templatemo_jiawu01">
+					<div class="templatemo_frame" id="national00" style="height:300px;width:800px;">
+					</div>
+					</div>
+					<div class="templatemo_graybg"style="height:494px;">
+					<div class="templatemo_frame" id="national00Test" style="height:400px;width:810px;">
+					</div>
+					</div>
+			</div>
+			
+    </div>
+    </div>
+	 <!-- 国力对比篇 end -->
+     <div class="copyrights">Collect from <a href="#" >ECharts@baidu</a></div>
+	 <!-- 装备对比篇 start -->
+    <div class="content testimonial" id="menu-4">
+      <div class="container">
+        	<div class="row templatemo_bordergapborder" style="padding-left:6px;padding-right:0px;">
+      		<div id="cmt">
+            <div class="col-md-3 col-sm-12 templatemo_leftgap_about">
+            <ul class="resp-tabs-list templatemo_testitab">
+                <li>体制对比</li>
+                <li>军力对比</li>
+                <li>军舰对比</li>
+				<li>造价对比</li>
+				<li>军费对比</li>
+            </ul>
+			<div class="templatemo_aboutlinkwrapper" style="width:263px;">
+     		<div class="templatemo_link"><a class="show-1 templatemo_hometestimonial" href="index.html" onclick="disposeWarship00();">返回</a></div>
+            </div>
+            </div>
+            <div class="resp-tabs-container templatemo_testicontainer">
+                <div >
+                	<div  class="templatemo_col100 templatemo_rightgap_about">
+                    	<div class="templatemo_graybg03 templatemo_botgap">
+
+                        <div class="templatemo_frame"  id="warship00" style="height:300px;width:810px;">
+                    	<h2>中日海军体制对比</h2>
+                    	<p></p>
+                        </div>
+					<div class="templatemo_mainimg templatemo_botgap">
+					<div class="templatemo_jiawu01">
+					<div class="templatemo_frame">
+					<h2 style="text-align:center" >甲午海战-体制问题是首因</h2>
+					<p><br>
+					清朝海军属于分属节制，实际上仍是一种“绿营水师”体制，分散了国家本就有限的财力，与现代海军集中建设使用的要求格格不入。
+					日本海军有海军省统一管辖，并且改革兵役制度，培养造就军事人才，对领导指挥体制进行全面改造。
+					</p>
+					</div>
+					</div>
+					</div>
+                    </div>
+                    </div>
+
+                </div>
+				<div>
+                	<div id="mainPie" class="templatemo_col10 templatemo_rightgap_about">
+                    	<div class="templatemo_graybg03 templatemo_botgap">
+                        <div class="templatemo_frame" id="warship01" style="height:300px;width:810px;">
+                    	<h2>军力对比</h2>
+                    	<p></p>
+                        </div>
+						
+						<div class="templatemo_mainimg templatemo_botgap">
+						<div class="templatemo_jiawu01">
+						<div class="templatemo_frame" id="warship01_bottom" style="height:295px;width:810px;">
+						</div>
+						</div>
+						</div>
+						
+                        </div>
+                    </div>
+
+                </div>
+				<div>
+                	<div class="templatemo_col100 templatemo_rightgap_about">
+                    	<div class="templatemo_graybg03 templatemo_botgap">
+                        <div class="templatemo_frame" id="warship02" style="height:600px;width:810px;">
+                    	<h2>军舰差距</h2>
+                    	<p> </p>
+                        </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div>
+                <div class="templatemo_col100 templatemo_rightgap_about">
+                    	<div class="templatemo_graybg03 templatemo_botgap">
+                        <div class="templatemo_frame" id="warship03" style="height:350px;width:810px;">
+						<h2>造价对比</h2>
+                        </div>
+						<div class="templatemo_mainimg templatemo_botgap">
+						<div class="templatemo_jiawu01">
+						<div class="templatemo_frame">
+						<h2 style="text-align:center" >为何会败？-缺乏长远规划和持续投入</h2>
+						<p><br>
+						北洋海军自1888年正式建军后，就再没有增添任何舰只，舰龄渐渐老化，与日本新添的战舰相比之下，火力弱，行动迟缓。1891年以后，连枪炮弹药都停止购买了。
+						1890年后，日本以国家财政收入的60％来发展海、陆军，1893年起，明治天皇决定每年从自己的宫廷经费中拨出三十万元，再从文武百官的薪金中抽出十分之一，
+						补充造船费用。举国上下士气高昂，以赶超中国为奋斗目标，准备进行一场以“国运相赌”的战争。
+						</p>
+						</div>
+						</div>
+						</div>
+                        </div>
+						
+				
+                </div>
+
+                </div>
+                <div>
+                <div class="templatemo_col100 templatemo_rightgap_about">
+                    	<div class="templatemo_graybg03 templatemo_botgap">
+                        <div class="templatemo_frame" id="warship04" style="height:300px;width:810px;">
+						
+                    	<h2>军费对比</h2>
+                    	<p></p>
+						</div>
+					<div class="templatemo_mainimg templatemo_botgap">
+					<div class="templatemo_jiawu01">
+					<div class="templatemo_frame" id="warship04_bottom" style="height:310px;width:810px;">
+					<h2 style="text-align:center" ><font style="font-family:'隶书'">中日-大东沟海战</font></h2>
+					</div>
+					</div>
+					</div>
+						
+                        </div>
+                        </div>
+                </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 templatemo_leftgap templatemo_aboutlinkwrapper1">
+                	<div class="templatemo_aboutback templatemo_botgap">
+                	<div class="templatemo_link"><a class="show-1 templatemo_hometestimonial" href="#">返回</a></div>
+                    </div>
+        </div>
+    </div>
+    </div>
+
+   
+	 <!-- 装备对比篇 end -->
+     <!-- 历史人物篇 start -->
+	 
+    <div class="content about" id="menu-5">
+    	<div class="container">
+        	<div class="row templatemo_bordergapborder" style="padding-left:4px;padding-right:0px;">
+      		<div id="ab">
+            <div class="col-md-3 col-sm-12 templatemo_leftgap_about">
+            <ul class="resp-tabs-list templatemo_tab">
+                <li>大清关键人物</li>
+                <li>日本关键人物</li>
+                <li>中日决策模式对比</li>
+            </ul>
+			<div class="templatemo_aboutlinkwrapper" style="width:264px;">
+     		<div class="templatemo_link"><a class="show-1 templatemo_homeabout" href="#">返回</a></div>
+            </div>
+            </div>
+            <div class="resp-tabs-container templatemo_aboutcontainer">
+                <div>
+                	<div class="templatemo_col80 templatemo_rightgap_about">
+                    	<div class="templatemo_graybg templatemo_botgap">
+                         <div class="templatemo_frame" id="relation00" style="height:400px;width:810px;">
+                    	<h2>大清关键人物</h2>
+                    	<p>李鸿章、邓世昌</p>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                	<div class="templatemo_col80 templatemo_rightgap_about">
+                    	<div class="templatemo_graybg templatemo_botgap">
+                        <div class="templatemo_frame" id="relation01" style="height:400px;width:810px;">
+                    	<h2>日本关键人物</h2>
+                    	<p> 伊藤博文、日本明治天皇睦仁</p>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                	<div class="templatemo_col80 templatemo_rightgap_about">
+                    	<div class="templatemo_graybg templatemo_botgap">
+                        <div class="templatemo_frame">
+                    	<h2>战争爆发：中日决策模式对比</h2><br>
+                    	<p><b>日本：即使找不到正当借口也誓要兴战</b></p>
+						<p>陆奥宗光《蹇蹇录》：川上的出兵主张得到了外相陆奥宗光、首相伊藤博文及天皇的一致认同。
+						  但在如何挑起战争这一问题上，伊藤博文与陆奥宗光等均深感为难。如陆奥宗光后来回忆，当时“既无迫切的原因，又无表面上的适当借口”，故自6月2日秘密决定对清开战，
+						  至7月25日丰岛海战爆发，“之所以需要大约两个月的时间，说穿了就是为了寻找直接开战的理由。”</p><br>
+						<p><b>清朝：内部深陷党争，无论主战、主和，均无法有效贯彻</b></p>
+						<p>
+						清国高层，其情形与日本迥然不同，和、战争执始终未休。驻朝清军将领叶志超曾向李鸿章献上中下三策：“派军增援”、“撤军回国”、“守此不动”。李鸿章欲取中策，但遭光绪反对，理由是：“彼顿兵不动，我先行撤退，既嫌示弱，且将来进剿，徒劳往返，殊属非计”。
+						</p>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+			<div class="col-sm-12 templatemo_leftgap templatemo_aboutlinkwrapper1">
+                	<div class="templatemo_aboutback templatemo_botgap">
+                	<div class="templatemo_link"><a class="show-1 templatemo_homeabout" href="#" onclick="disposeRelation00();">返回</a></div>
+                </div>
+                </div>
+    </div>
+    </div>
+    </div>
+    <!-- 历史人物篇 end -->
+    <!-- 殉国将领篇 start -->
+    <div class="content contact" id="menu-6">
+    	<div class="container">
+        	<div class="row templatemo_bordergapborder" style="padding-left:4px;padding-right:0px;">
+            	<div class="col-md-3 col-sm-12 templatemo_leftgap">
+                	<div class="templatemo_mainimg templatemo_botgap">
+					<img src="images/jiawubeiyang.jpg" alt="contact image">
+					</div>
+					<div class="templatemo_insideportfolio templatemo_botgap">
+               	    <div class="templatemo_portfoliotext">
+                	<h2>纪念北洋舰队:<br>殉国将领</h2>
+                    <div class="clear"></div>
+			
+					最初参加黄海海战的北洋水师11位高级将领中有7位是通过自杀方式“殉国”的，自杀率竟高达60%以上,其中3位将领邓世昌、黄建勋、林履中是在黄海海战中与舰同沉，其余将领多是吞鸦片自杀。
+					</div>
+                    </div>
+                    <div class="templatemo_maincontact templatemo_botgap">
+                	<div class="templatemo_linkcontact"><a class="show-1 templatemo_homecontact" href="#" onclick="disposeScatter00();">返回</a></div>
+                </div>
+                </div>
+				<div class="templatemo_col75 templatemo_rightgap_about">
+                    	<div class="templatemo_graybg03 templatemo_botgap" style="height: 678px;">
+                        <div class="templatemo_frame" id="scatter00" style="height:610px;width:810px;">
+                        </div>
+                        </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- 殉国将领篇 end --> 
+	
+    <!-- footer end -->  
+    </div>
+	 <div class="container">
+     
+    	<div class="row">
+            <div class="templatemo_footer" style="margin-right:18px;" >
+			Copyright © 2014   <a href="http://weibo.com/u/3798120772" target="_blank" >付建海 </a>(ECharts夏令营) &middot; <a href="http://weibo.com/kenerlinfeng" target="_blank">林峰</a>（百度）
+			 <p style="text-align:right;margin-right:10px;" ><a href="http://echarts.baidu.com" target="_blank">Data Visualization by ECharts</a></p>
+			</div>
+       </div>
+    </div>
+   <!-- footer end -->  
+   
+   <!--core start -->
+   <script language="JavaScript" src="js/warship01.js" charset="gbk"></script>
+   <script language="JavaScript" src="js/relation00.js" charset="gbk"></script>
+   <script language="JavaScript" src="js/national00.js" charset="gbk"></script>
+   <script language="JavaScript" src="js/bigwarship00.js" charset="gbk"></script>
+   <script language="JavaScript" src="js/scatter00.js" charset="gbk"></script>
+   <script language="JavaScript" src="js/ready.js" charset="gbk"></script>
+   <!--core end -->
+</body>
+</html>

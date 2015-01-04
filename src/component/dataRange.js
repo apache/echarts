@@ -2,10 +2,23 @@
  * echarts组件：值域
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function (require) {
+    var Base = require('./base');
+    
+    // 图形依赖
+    var TextShape = require('zrender/shape/Text');
+    var RectangleShape = require('zrender/shape/Rectangle');
+    var HandlePolygonShape = require('../util/shape/HandlePolygon');
+
+    var ecConfig = require('../config');
+    var zrUtil = require('zrender/tool/util');
+    var zrEvent = require('zrender/tool/event');
+    var zrArea = require('zrender/tool/area');
+    var zrColor = require('zrender/tool/color');
+
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -13,146 +26,160 @@ define(function (require) {
      * @param {Object} option 图表参数
      * @param {Object=} selected 用于状态保持
      */
-    function DataRange(messageCenter, zr, option) {
-        var Base = require('./base');
-        Base.call(this, zr);
-
-        var ecConfig = require('../config');
-        var zrArea = require('zrender/tool/area');
-
-        var self = this;
-        self.type = ecConfig.COMPONENT_TYPE_DATARANGE;
-
-        var dataRangeOption;                       // 值域选项，共享数据源
-        var _zlevelBase = self.getZlevelBase();
-
-        var _itemGroupLocation = {};    // 值域元素组的位置参数，通过计算所得x, y, width, height
-        var _calculableLocation;        // 可计算元素的位置缓存
+    function DataRange(ecTheme, messageCenter, zr, option, myChart) {
+        if (typeof this.query(option, 'dataRange.min') == 'undefined'
+            || typeof this.query(option, 'dataRange.max') == 'undefined'
+        ) {
+            console.error('option.dataRange.min or option.dataRange.max has not been defined.');
+            return;
+        }
         
-        var _startShape;
-        var _startMask;
-        var _endShape;
-        var _endMask;
-        var _fillerShae;
-        var _range;
-        var _syncTicket;
-
-        var _textGap = 10; // 非值文字间隔
-        var _gap;
-        var _colorList;
-        var _valueTextList;
-
-        var _selectedMap = {};
-
-        function _buildShape() {
-            _itemGroupLocation = _getItemGroupLocation();
-//            console.log(_itemGroupLocation);
-            _buildBackground();
-            if (dataRangeOption.splitNumber <= 0 
-                || dataRangeOption.calculable
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
+        
+        var self = this;
+        self._ondrift = function(dx, dy) {
+            return self.__ondrift(this, dx, dy);
+        };
+        self._ondragend = function() {
+            return self.__ondragend();
+        };
+        self._dataRangeSelected = function(param) {
+            return self.__dataRangeSelected(param);
+        };
+        self._dispatchHoverLink = function(param) {
+            return self.__dispatchHoverLink(param);
+        };
+        self._onhoverlink = function(params) {
+            return self.__onhoverlink(params);
+        };
+        this._selectedMap = {};
+        this._range = {};
+        
+        this.refresh(option);
+        
+        messageCenter.bind(ecConfig.EVENT.HOVER, this._onhoverlink);
+    }
+    
+    DataRange.prototype = {
+        type : ecConfig.COMPONENT_TYPE_DATARANGE,
+        _textGap : 10, // 非值文字间隔
+        _buildShape : function () {
+            // 值域元素组的位置参数，通过计算所得x, y, width, height
+            this._itemGroupLocation = this._getItemGroupLocation();
+            this._buildBackground();
+            if (this.dataRangeOption.splitNumber <= 0 
+                || this.dataRangeOption.calculable
             ) {
-                _buildGradient();
+                this._buildGradient();
             }
             else {
-                _buildItem();
+                this._buildItem();
             }
-
-            for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
-                zr.addShape(self.shapeList[i]);
+            
+            if (this.dataRangeOption.show) {
+                for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                    this.zr.addShape(this.shapeList[i]);
+                }
             }
-        }
+            
+            this._syncShapeFromRange();
+        },
 
         /**
          * 构建图例型的值域元素
          */
-        function _buildItem() {
-            var data = _valueTextList;
+        _buildItem : function () {
+            var data = this._valueTextList;
             var dataLength = data.length;
             var itemName;
             var itemShape;
             var textShape;
-            var font = self.getFont(dataRangeOption.textStyle);
+            var font = this.getFont(this.dataRangeOption.textStyle);
 
-            var lastX = _itemGroupLocation.x;
-            var lastY = _itemGroupLocation.y;
-            var itemWidth = dataRangeOption.itemWidth;
-            var itemHeight = dataRangeOption.itemHeight;
-            var itemGap = dataRangeOption.itemGap;
-            var textHeight = zrArea.getTextWidth('国', font);
+            var lastX = this._itemGroupLocation.x;
+            var lastY = this._itemGroupLocation.y;
+            var itemWidth = this.dataRangeOption.itemWidth;
+            var itemHeight = this.dataRangeOption.itemHeight;
+            var itemGap = this.dataRangeOption.itemGap;
+            var textHeight = zrArea.getTextHeight('国', font);
             var color;
 
-            if (dataRangeOption.orient == 'vertical'
-                && dataRangeOption.x == 'right'
+            if (this.dataRangeOption.orient == 'vertical'
+                && this.dataRangeOption.x == 'right'
             ) {
-                lastX = _itemGroupLocation.x
-                        + _itemGroupLocation.width
+                lastX = this._itemGroupLocation.x
+                        + this._itemGroupLocation.width
                         - itemWidth;
             }
             var needValueText = true;
-            if (dataRangeOption.text) {
+            if (this.dataRangeOption.text) {
                 needValueText = false;
                 // 第一个文字
-                if (dataRangeOption.text[0]) {
-                    textShape = _getTextShape(
-                        lastX, lastY, dataRangeOption.text[0]
+                if (this.dataRangeOption.text[0]) {
+                    textShape = this._getTextShape(
+                        lastX, lastY, this.dataRangeOption.text[0]
                     );
-                    if (dataRangeOption.orient == 'horizontal') {
+                    if (this.dataRangeOption.orient == 'horizontal') {
                         lastX += zrArea.getTextWidth(
-                                     dataRangeOption.text[0],
+                                     this.dataRangeOption.text[0],
                                      font
                                  )
-                                 + _textGap;
+                                 + this._textGap;
                     }
                     else {
-                        lastY += textHeight + _textGap;
+                        lastY += textHeight + this._textGap;
+                        textShape.style.y += textHeight / 2 + this._textGap;
+                        textShape.style.textBaseline = 'bottom';
                     }
-                    self.shapeList.push(textShape);
+                    this.shapeList.push(new TextShape(textShape));
                 }
             }
 
             for (var i = 0; i < dataLength; i++) {
                 itemName = data[i];
-                color = getColor((dataLength - i) * _gap + dataRangeOption.min);
+                color = this.getColorByIndex(i);
                 // 图形
-                itemShape = _getItemShape(
+                itemShape = this._getItemShape(
                     lastX, lastY,
                     itemWidth, itemHeight,
-                    (_selectedMap[i] ? color : '#ccc')
+                    (this._selectedMap[i] ? color : '#ccc')
                 );
                 itemShape._idx = i;
-                itemShape.onclick = _dataRangeSelected;
-                self.shapeList.push(itemShape);
+                itemShape.onmousemove = this._dispatchHoverLink;
+                itemShape.onclick = this._dataRangeSelected;
+                this.shapeList.push(new RectangleShape(itemShape));
                 
                 if (needValueText) {
                     // 文字
                     textShape = {
-                        shape : 'text',
-                        zlevel : _zlevelBase,
+                        zlevel : this._zlevelBase,
                         style : {
                             x : lastX + itemWidth + 5,
                             y : lastY,
-                            color : _selectedMap[i]
-                                    ? dataRangeOption.textStyle.color
+                            color : this._selectedMap[i]
+                                    ? this.dataRangeOption.textStyle.color
                                     : '#ccc',
                             text: data[i],
                             textFont: font,
                             textBaseline: 'top'
                         },
+                        highlightStyle:{
+                            brushType: 'fill'
+                        },
                         clickable : true
                     };
-                    if (dataRangeOption.orient == 'vertical'
-                        && dataRangeOption.x == 'right'
+                    if (this.dataRangeOption.orient == 'vertical'
+                        && this.dataRangeOption.x == 'right'
                     ) {
                         textShape.style.x -= (itemWidth + 10);
                         textShape.style.textAlign = 'right';
                     }
                     textShape._idx = i;
-                    textShape.onclick = _dataRangeSelected;
-                    self.shapeList.push(textShape);
+                    textShape.onclick = this._dataRangeSelected;
+                    this.shapeList.push(new TextShape(textShape));
                 }
 
-                if (dataRangeOption.orient == 'horizontal') {
+                if (this.dataRangeOption.orient == 'horizontal') {
                     lastX += itemWidth 
                              + (needValueText ? 5 : 0)
                              + (needValueText 
@@ -165,69 +192,75 @@ define(function (require) {
                 }
             }
             
-            if (!needValueText && dataRangeOption.text[1]) {
-                if (dataRangeOption.orient == 'horizontal') {
-                    lastX = lastX - itemGap + _textGap;
+            if (!needValueText && this.dataRangeOption.text[1]) {
+                if (this.dataRangeOption.orient == 'horizontal') {
+                    lastX = lastX - itemGap + this._textGap;
                 }
                 else {
-                    lastY = lastY - itemGap + _textGap;
+                    lastY = lastY - itemGap + this._textGap;
                 }
                 // 最后一个文字
-                textShape = _getTextShape(
-                    lastX, lastY, dataRangeOption.text[1]
+                textShape = this._getTextShape(
+                    lastX, lastY, this.dataRangeOption.text[1]
                 );
+                
+                if (this.dataRangeOption.orient != 'horizontal') {
+                    textShape.style.y -= 5;
+                    textShape.style.textBaseline = 'top';
+                }
 
-                self.shapeList.push(textShape);
+                this.shapeList.push(new TextShape(textShape));
             }
-        }
+        },
  
         /**
          * 构建渐变型的值域元素 
          */
-        function _buildGradient() {
+        _buildGradient : function () {
             var itemShape;
             var textShape;
-            var font = self.getFont(dataRangeOption.textStyle);
+            var font = this.getFont(this.dataRangeOption.textStyle);
 
-            var lastX = _itemGroupLocation.x;
-            var lastY = _itemGroupLocation.y;
-            var itemWidth = dataRangeOption.itemWidth;
-            var itemHeight = dataRangeOption.itemHeight;
-            var textHeight = zrArea.getTextWidth('国', font);
+            var lastX = this._itemGroupLocation.x;
+            var lastY = this._itemGroupLocation.y;
+            var itemWidth = this.dataRangeOption.itemWidth;
+            var itemHeight = this.dataRangeOption.itemHeight;
+            var textHeight = zrArea.getTextHeight('国', font);
 
             
             var needValueText = true;
-            if (dataRangeOption.text) {
+            if (this.dataRangeOption.text) {
                 needValueText = false;
                 // 第一个文字
-                if (dataRangeOption.text[0]) {
-                    textShape = _getTextShape(
-                        lastX, lastY, dataRangeOption.text[0]
+                if (this.dataRangeOption.text[0]) {
+                    textShape = this._getTextShape(
+                        lastX, lastY, this.dataRangeOption.text[0]
                     );
-                    if (dataRangeOption.orient == 'horizontal') {
+                    if (this.dataRangeOption.orient == 'horizontal') {
                         lastX += zrArea.getTextWidth(
-                                     dataRangeOption.text[0],
+                                     this.dataRangeOption.text[0],
                                      font
                                  )
-                                 + _textGap;
+                                 + this._textGap;
                     }
                     else {
-                        lastY += textHeight + _textGap;
+                        lastY += textHeight + this._textGap;
+                        textShape.style.y += textHeight / 2 + this._textGap;
+                        textShape.style.textBaseline = 'bottom';
                     }
-                    self.shapeList.push(textShape);
+                    this.shapeList.push(new TextShape(textShape));
                 } 
             }
             
             var zrColor = require('zrender/tool/color');
-            var per = 1 / (dataRangeOption.color.length - 1);
+            var per = 1 / (this.dataRangeOption.color.length - 1);
             var colorList = [];
-            for (var i = 0, l = dataRangeOption.color.length; i < l; i++) {
-                colorList.push([i * per, dataRangeOption.color[i]]);
+            for (var i = 0, l = this.dataRangeOption.color.length; i < l; i++) {
+                colorList.push([i * per, this.dataRangeOption.color[i]]);
             }
-            if (dataRangeOption.orient == 'horizontal') {
+            if (this.dataRangeOption.orient == 'horizontal') {
                 itemShape = {
-                    shape : 'rectangle',
-                    zlevel : _zlevelBase,
+                    zlevel : this._zlevelBase,
                     style : {
                         x : lastX,
                         y : lastY,
@@ -240,12 +273,11 @@ define(function (require) {
                     },
                     hoverable : false
                 };
-                lastX += itemWidth * 10 + _textGap;
+                lastX += itemWidth * 10 + this._textGap;
             }
             else {
                 itemShape = {
-                    shape : 'rectangle',
-                    zlevel : _zlevelBase,
+                    zlevel : this._zlevelBase,
                     style : {
                         x : lastX,
                         y : lastY,
@@ -258,349 +290,458 @@ define(function (require) {
                     },
                     hoverable : false
                 };
-                lastY += itemHeight * 10 + _textGap;
+                lastY += itemHeight * 10 + this._textGap;
             }
-            self.shapeList.push(itemShape);
-            if (dataRangeOption.calculable) {
-                _calculableLocation = itemShape.style;
-                _buildFiller();
-                _bulidMask();
-                _bulidHandle();
+            this.shapeList.push(new RectangleShape(itemShape));
+            // 可计算元素的位置缓存
+            this._calculableLocation = itemShape.style;
+            if (this.dataRangeOption.calculable) {
+                this._buildFiller();
+                this._bulidMask();
+                this._bulidHandle();
             }
+            this._buildIndicator();
             
-            if (!needValueText && dataRangeOption.text[1]) {
+            if (!needValueText && this.dataRangeOption.text[1]) {
                 // 最后一个文字
-                textShape = _getTextShape(
-                    lastX, lastY, dataRangeOption.text[1]
+                textShape = this._getTextShape(
+                    lastX, lastY, this.dataRangeOption.text[1]
                 );
 
-                self.shapeList.push(textShape);
+                this.shapeList.push(new TextShape(textShape));
             }
-        }
+        },
+        
+        /**
+         * 构建指示器 
+         */
+        _buildIndicator : function() {
+            var x = this._calculableLocation.x;
+            var y = this._calculableLocation.y;
+            var width = this._calculableLocation.width;
+            var height = this._calculableLocation.height;
+            
+            var size = 5;
+            var pointList;
+            var textPosition;
+            if (this.dataRangeOption.orient == 'horizontal') {
+                // 水平
+                if (this.dataRangeOption.y != 'bottom') {
+                    // 手柄统统在下方
+                    pointList = [
+                        [x, y + height],
+                        [x - size, y + height + size],
+                        [x + size, y + height + size]
+                    ];
+                    textPosition = 'bottom';
+                }
+                else {
+                    // 手柄在上方
+                    pointList = [
+                        [x, y],
+                        [x - size, y - size],
+                        [x + size, y - size]
+                    ];
+                    textPosition = 'top';
+                }
+            }
+            else {
+                // 垂直
+                if (this.dataRangeOption.x != 'right') {
+                    // 手柄统统在右侧
+                    pointList = [
+                        [x + width, y],
+                        [x + width + size, y - size],
+                        [x + width + size, y + size]
+                    ];
+                    textPosition = 'right';
+                }
+                else {
+                    // 手柄在左侧
+                    pointList = [
+                        [x, y],
+                        [x - size, y - size],
+                        [x - size, y + size]
+                    ];
+                    textPosition = 'left';
+                }
+            }
+            this._indicatorShape = {
+                style : {
+                    pointList : pointList,
+                    color : '#fff',
+                    __rect : {
+                        x : Math.min(pointList[0][0], pointList[1][0]),
+                        y : Math.min(pointList[0][1], pointList[1][1]),
+                        width : size * (this.dataRangeOption.orient == 'horizontal' ? 2 : 1),
+                        height : size * (this.dataRangeOption.orient == 'horizontal' ? 1 : 2)
+                    }
+                },
+                highlightStyle : {
+                    brushType : 'fill',
+                    textPosition : textPosition,
+                    textColor : this.dataRangeOption.textStyle.color
+                },
+                hoverable: false
+            };
+            this._indicatorShape = new HandlePolygonShape(this._indicatorShape);
+        },
         
         /**
          * 构建填充物
          */
-        function _buildFiller() {
-            _fillerShae = {
-                shape : 'rectangle',
-                zlevel : _zlevelBase + 1,
+        _buildFiller : function () {
+            this._fillerShape = {
+                zlevel : this._zlevelBase + 1,
                 style : {
-                    x : _calculableLocation.x,
-                    y : _calculableLocation.y,
-                    width : _calculableLocation.width,
-                    height : _calculableLocation.height,
-                    color : 'rgba(255,255,255,0.2)'
+                    x : this._calculableLocation.x,
+                    y : this._calculableLocation.y,
+                    width : this._calculableLocation.width,
+                    height : this._calculableLocation.height,
+                    color : 'rgba(255,255,255,0)'
+                },
+                highlightStyle : {
+                    strokeColor : 'rgba(255,255,255,0.5)',
+                    lineWidth : 1
                 },
                 draggable : true,
-                ondrift : _ondrift,
-                ondragend : _ondragend,
+                ondrift : this._ondrift,
+                ondragend : this._ondragend,
+                onmousemove : this._dispatchHoverLink,
                 _type : 'filler'
             };
-
-            self.shapeList.push(_fillerShae);
-        }
+            this._fillerShape = new RectangleShape(this._fillerShape);
+            this.shapeList.push(this._fillerShape);
+        },
         
         /**
          * 构建拖拽手柄
          */
-        function _bulidHandle() {
-            var x = _calculableLocation.x;
-            var y = _calculableLocation.y;
-            var width = _calculableLocation.width;
-            var height = _calculableLocation.height;
+        _bulidHandle : function () {
+            var x = this._calculableLocation.x;
+            var y = this._calculableLocation.y;
+            var width = this._calculableLocation.width;
+            var height = this._calculableLocation.height;
             
-            var font = self.getFont(dataRangeOption.textStyle);
-            var textHieght = zrArea.getTextWidth('国', font) + 2;
+            var font = this.getFont(this.dataRangeOption.textStyle);
+            var textHeight = zrArea.getTextHeight('国', font);
             var textWidth = Math.max(
-                    zrArea.getTextWidth(
-                        dataRangeOption.precision === 0
-                        ? dataRangeOption.max
-                        : dataRangeOption.max.toFixed(
-                            dataRangeOption.precision
-                          ),
-                        font),
-                    zrArea.getTextWidth(
-                        dataRangeOption.precision === 0
-                        ? dataRangeOption.min
-                        : dataRangeOption.min.toFixed(
-                            dataRangeOption.precision
-                          ), 
-                        font
-                    )
+                    zrArea.getTextWidth(this._textFormat(this.dataRangeOption.max), font),
+                    zrArea.getTextWidth(this._textFormat(this.dataRangeOption.min), font)
                 ) + 2;
-                            
+            
             var pointListStart;
             var textXStart;
             var textYStart;
+            var coverRectStart;
             var pointListEnd;
             var textXEnd;
             var textYEnd;
-            if (dataRangeOption.orient == 'horizontal') {
+            var coverRectEnd;
+            if (this.dataRangeOption.orient == 'horizontal') {
                 // 水平
-                if (dataRangeOption.y != 'bottom') {
+                if (this.dataRangeOption.y != 'bottom') {
                     // 手柄统统在下方
                     pointListStart = [
                         [x, y],
-                        [x, y + height + textHieght / 2 * 3],
-                        [x - textWidth, y + height + textHieght / 2 * 3],
-                        [x - textWidth, y + height + textHieght / 2],
-                        [x - textHieght / 2, y + height + textHieght / 2],
+                        [x, y + height + textHeight],
+                        [x - textHeight, y + height + textHeight],
                         [x - 1, y + height],
                         [x - 1, y]
                         
                     ];
-                    textXStart = x - textWidth / 2;
-                    textYStart = y + height + textHieght;
+                    textXStart = x - textWidth / 2 - textHeight;
+                    textYStart = y + height + textHeight / 2 + 2;
+                    coverRectStart = {
+                        x : x - textWidth - textHeight,
+                        y : y + height,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                     
                     pointListEnd = [
                         [x + width, y],
-                        [x + width, y + height + textHieght / 2 * 3],
-                        [x + width + textWidth, y + height + textHieght/2*3],
-                        [x + width + textWidth, y + height + textHieght / 2],
-                        [x + width + textHieght / 2, y + height + textHieght/2],
+                        [x + width, y + height + textHeight],
+                        [x + width + textHeight, y + height + textHeight],
                         [x + width + 1, y + height],
                         [x + width + 1, y]
                     ];
-                    textXEnd = x + width + textWidth / 2;
+                    textXEnd = x + width + textWidth / 2 + textHeight;
                     textYEnd = textYStart;
+                    coverRectEnd = {
+                        x : x + width,
+                        y : y + height,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                 }
                 else {
                     // 手柄在上方
                     pointListStart = [
                         [x, y + height],
-                        [x, y - textHieght / 2 * 3],
-                        [x - textWidth, y - textHieght / 2 * 3],
-                        [x - textWidth, y - textHieght / 2],
-                        [x - textHieght / 2, y - textHieght / 2],
+                        [x, y - textHeight],
+                        [x - textHeight, y - textHeight],
                         [x - 1, y],
                         [x - 1, y + height]
                         
                     ];
-                    textXStart = x - textWidth / 2;
-                    textYStart = y - textHieght;
+                    textXStart = x - textWidth / 2 - textHeight;
+                    textYStart = y - textHeight / 2 - 2;
+                    coverRectStart = {
+                        x : x - textWidth - textHeight,
+                        y : y - textHeight,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                     
                     pointListEnd = [
                         [x + width, y + height],
-                        [x + width, y - textHieght / 2 * 3],
-                        [x + width + textWidth, y - textHieght / 2 * 3],
-                        [x + width + textWidth, y - textHieght / 2],
-                        [x  + width + textHieght / 2, y - textHieght / 2],
+                        [x + width, y - textHeight],
+                        [x + width + textHeight, y - textHeight],
                         [x + width + 1, y],
                         [x + width + 1, y + height]
                     ];
-                    textXEnd = x + width + textWidth / 2;
+                    textXEnd = x + width + textWidth / 2 + textHeight;
                     textYEnd = textYStart;
+                    coverRectEnd = {
+                        x : x + width,
+                        y : y - textHeight,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                 }
             }
             else {
-                textWidth += textHieght;
+                textWidth += textHeight;
                 // 垂直
-                if (dataRangeOption.x != 'right') {
+                if (this.dataRangeOption.x != 'right') {
                     // 手柄统统在右侧
                     pointListStart = [
                         [x, y],
-                        [x + width + textWidth, y],
-                        [x + width + textWidth, y - textHieght],
-                        [x + width + textHieght, y - textHieght],
+                        [x + width + textHeight, y],
+                        [x + width + textHeight, y - textHeight],
                         [x + width, y - 1],
                         [x, y - 1]
                     ];
-                    textXStart = x + width + textWidth / 2 + textHieght / 2;
-                    textYStart = y - textHieght / 2;
+                    textXStart = x + width + textWidth / 2 + textHeight / 2;
+                    textYStart = y - textHeight / 2;
+                    coverRectStart = {
+                        x : x + width,
+                        y : y - textHeight,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                     
                     pointListEnd = [
                         [x, y + height],
-                        [x + width + textWidth, y + height],
-                        [x + width + textWidth, y + textHieght + height],
-                        [x + width + textHieght, y + textHieght + height],
+                        [x + width + textHeight, y + height],
+                        [x + width + textHeight, y + textHeight + height],
                         [x + width, y + 1 + height],
                         [x, y + height + 1]
                     ];
                     textXEnd = textXStart;
-                    textYEnd = y  + height + textHieght / 2;
+                    textYEnd = y  + height + textHeight / 2;
+                    coverRectEnd = {
+                        x : x + width,
+                        y : y + height,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                 }
                 else {
                     // 手柄在左侧
                     pointListStart = [
                         [x + width, y],
-                        [x - textWidth, y],
-                        [x - textWidth, y - textHieght],
-                        [x - textHieght, y - textHieght],
+                        [x - textHeight, y],
+                        [x - textHeight, y - textHeight],
                         [x, y - 1],
                         [x + width, y - 1]
                     ];
-                    textXStart = x - textWidth / 2 - textHieght / 2;
-                    textYStart = y - textHieght / 2;
+                    textXStart = x - textWidth / 2 - textHeight / 2;
+                    textYStart = y - textHeight / 2;
+                    coverRectStart = {
+                        x : x - textWidth - textHeight,
+                        y : y - textHeight,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                     
                     pointListEnd = [
                         [x + width, y + height],
-                        [x - textWidth, y + height],
-                        [x - textWidth, y + textHieght + height],
-                        [x - textHieght, y + textHieght + height],
+                        [x - textHeight, y + height],
+                        [x - textHeight, y + textHeight + height],
                         [x, y + 1 + height],
                         [x + width, y + height + 1]
                     ];
                     textXEnd = textXStart;
-                    textYEnd = y  + height + textHieght / 2;
+                    textYEnd = y  + height + textHeight / 2;
+                    coverRectEnd = {
+                        x : x - textWidth - textHeight,
+                        y : y + height,
+                        width : textWidth + textHeight,
+                        height : textHeight
+                    };
                 }
             }
             
-            _startShape = {
-                shape : 'polygon',
-                zlevel : _zlevelBase + 1,
+            this._startShape = {
                 style : {
                     pointList : pointListStart,
-                    text : dataRangeOption.max + '',
+                    text : this._textFormat(this.dataRangeOption.max),
                     textX : textXStart,
                     textY : textYStart,
-                    textPosition : 'specific',
-                    textAlign : 'center',
-                    textBaseline : 'middle ',
-                    textColor: dataRangeOption.textStyle.color,
-                    color : getColor(dataRangeOption.max),
-                    width : 0,                 // for ondrif计算统一
-                    height : 0,
+                    color : this.getColor(this.dataRangeOption.max),
+                    rect : coverRectStart,
                     x : pointListStart[0][0],
                     y : pointListStart[0][1],
                     _x : pointListStart[0][0],   // 拖拽区域控制缓存
                     _y : pointListStart[0][1]
-                },
-                draggable : true,
-                ondrift : _ondrift,
-                ondragend : _ondragend
+                }
+            };
+            this._startShape.highlightStyle = {
+                strokeColor : this._startShape.style.color,
+                lineWidth : 1
             };
             
-            _endShape = {
-                shape : 'polygon',
-                zlevel : _zlevelBase + 1,
+            this._endShape = {
                 style : {
                     pointList : pointListEnd,
-                    text : dataRangeOption.min + '',
+                    text : this._textFormat(this.dataRangeOption.min),
                     textX : textXEnd,
                     textY : textYEnd,
-                    textPosition : 'specific',
-                    textAlign : 'center',
-                    textBaseline : 'middle ',
-                    textColor: dataRangeOption.textStyle.color,
-                    color : getColor(dataRangeOption.min),
-                    width : 0,                 // for ondrif计算统一
-                    height : 0,
+                    color : this.getColor(this.dataRangeOption.min),
+                    rect : coverRectEnd,
                     x : pointListEnd[0][0],
                     y : pointListEnd[0][1],
                     _x : pointListEnd[0][0],   // 拖拽区域控制缓存
                     _y : pointListEnd[0][1]
-                },
-                draggable : true,
-                ondrift : _ondrift,
-                ondragend : _ondragend
+                }
             };
-            self.shapeList.push(_startShape);
-            self.shapeList.push(_endShape);
-        }
+            this._endShape.highlightStyle = {
+                strokeColor : this._endShape.style.color,
+                lineWidth : 1
+            };
+            
+            // 统一参数
+            this._startShape.zlevel              = this._endShape.zlevel    = this._zlevelBase + 1;
+            this._startShape.draggable           = this._endShape.draggable = true;
+            this._startShape.ondrift             = this._endShape.ondrift   = this._ondrift;
+            this._startShape.ondragend           = this._endShape.ondragend = this._ondragend;
+            
+            this._startShape.style.textColor     = this._endShape.style.textColor 
+                                                            = this.dataRangeOption.textStyle.color;
+            this._startShape.style.textAlign     = this._endShape.style.textAlign     = 'center';
+            this._startShape.style.textPosition  = this._endShape.style.textPosition  = 'specific';
+            this._startShape.style.textBaseline  = this._endShape.style.textBaseline  = 'middle';
+            // for ondrif计算统一
+            this._startShape.style.width         = this._endShape.style.width         = 0; 
+            this._startShape.style.height        = this._endShape.style.height        = 0;
+            this._startShape.style.textPosition  = this._endShape.style.textPosition  = 'specific';
+            
+            this._startShape = new HandlePolygonShape(this._startShape);
+            this._endShape = new HandlePolygonShape(this._endShape);
+            this.shapeList.push(this._startShape);
+            this.shapeList.push(this._endShape);
+        },
         
-        function _bulidMask() {
-            var x = _calculableLocation.x;
-            var y = _calculableLocation.y;
-            var width = _calculableLocation.width;
-            var height = _calculableLocation.height;
-            _startMask = {
-                shape : 'rectangle',
-                zlevel : _zlevelBase + 1,
+        _bulidMask : function () {
+            var x = this._calculableLocation.x;
+            var y = this._calculableLocation.y;
+            var width = this._calculableLocation.width;
+            var height = this._calculableLocation.height;
+            this._startMask = {
+                zlevel : this._zlevelBase + 1,
                 style : {
                     x : x,
                     y : y,
-                    width : dataRangeOption.orient == 'horizontal'
+                    width : this.dataRangeOption.orient == 'horizontal'
                             ? 0 : width,
-                    height : dataRangeOption.orient == 'horizontal'
+                    height : this.dataRangeOption.orient == 'horizontal'
                              ? height : 0,
                     color : '#ccc'
                 },
                 hoverable:false
             };
-            _endMask = {
-                shape : 'rectangle',
-                zlevel : _zlevelBase + 1,
+            this._endMask = {
+                zlevel : this._zlevelBase + 1,
                 style : {
-                    x : dataRangeOption.orient == 'horizontal'
+                    x : this.dataRangeOption.orient == 'horizontal'
                         ? x + width : x,
-                    y : dataRangeOption.orient == 'horizontal'
+                    y : this.dataRangeOption.orient == 'horizontal'
                         ? y : y + height,
-                    width : dataRangeOption.orient == 'horizontal'
+                    width : this.dataRangeOption.orient == 'horizontal'
                             ? 0 : width,
-                    height : dataRangeOption.orient == 'horizontal'
+                    height : this.dataRangeOption.orient == 'horizontal'
                              ? height : 0,
                     color : '#ccc'
                 },
                 hoverable:false
             };
-            self.shapeList.push(_startMask);
-            self.shapeList.push(_endMask);
-        }
+            this._startMask = new RectangleShape(this._startMask);
+            this._endMask = new RectangleShape(this._endMask);
+            this.shapeList.push(this._startMask);
+            this.shapeList.push(this._endMask);
+        },
         
-        function _buildBackground() {
-            var pTop = dataRangeOption.padding[0];
-            var pRight = dataRangeOption.padding[1];
-            var pBottom = dataRangeOption.padding[2];
-            var pLeft = dataRangeOption.padding[3];
-
-            self.shapeList.push({
-                shape : 'rectangle',
-                zlevel : _zlevelBase,
+        _buildBackground : function () {
+            var padding = this.reformCssArray(this.dataRangeOption.padding);
+            
+            this.shapeList.push(new RectangleShape({
+                zlevel : this._zlevelBase,
                 hoverable :false,
                 style : {
-                    x : _itemGroupLocation.x - pLeft,
-                    y : _itemGroupLocation.y - pTop,
-                    width : _itemGroupLocation.width + pLeft + pRight,
-                    height : _itemGroupLocation.height + pTop + pBottom,
-                    brushType : dataRangeOption.borderWidth === 0
+                    x : this._itemGroupLocation.x - padding[3],
+                    y : this._itemGroupLocation.y - padding[0],
+                    width : this._itemGroupLocation.width + padding[3] + padding[1],
+                    height : this._itemGroupLocation.height + padding[0] + padding[2],
+                    brushType : this.dataRangeOption.borderWidth === 0
                                 ? 'fill' : 'both',
-                    color : dataRangeOption.backgroundColor,
-                    strokeColor : dataRangeOption.borderColor,
-                    lineWidth : dataRangeOption.borderWidth
+                    color : this.dataRangeOption.backgroundColor,
+                    strokeColor : this.dataRangeOption.borderColor,
+                    lineWidth : this.dataRangeOption.borderWidth
                 }
-            });
-        }
+            }));
+        },
 
         /**
          * 根据选项计算值域实体的位置坐标
          */
-        function _getItemGroupLocation() {
-            var data = _valueTextList;
+        _getItemGroupLocation : function () {
+            var data = this._valueTextList;
             var dataLength = data.length;
-            var itemGap = dataRangeOption.itemGap;
-            var itemWidth = dataRangeOption.itemWidth;
-            var itemHeight = dataRangeOption.itemHeight;
+            var itemGap = this.dataRangeOption.itemGap;
+            var itemWidth = this.dataRangeOption.itemWidth;
+            var itemHeight = this.dataRangeOption.itemHeight;
             var totalWidth = 0;
             var totalHeight = 0;
-            var font = self.getFont(dataRangeOption.textStyle);
-            var textHeight = zrArea.getTextWidth('国', font);
+            var font = this.getFont(this.dataRangeOption.textStyle);
+            var textHeight = zrArea.getTextHeight('国', font);
 
-            if (dataRangeOption.orient == 'horizontal') {
+            if (this.dataRangeOption.orient == 'horizontal') {
                 // 水平布局，计算总宽度
-                if (dataRangeOption.text 
-                    || dataRangeOption.splitNumber <= 0
-                    || dataRangeOption.calculable
+                if (this.dataRangeOption.text 
+                    || this.dataRangeOption.splitNumber <= 0
+                    || this.dataRangeOption.calculable
                 ) {
                     // 指定文字或线性渐变
                     totalWidth = 
-                        ((dataRangeOption.splitNumber <= 0
-                          || dataRangeOption.calculable)
+                        ((this.dataRangeOption.splitNumber <= 0
+                          || this.dataRangeOption.calculable)
                           ? (itemWidth * 10 + itemGap)
                           : dataLength * (itemWidth + itemGap))
-                        + (dataRangeOption.text 
-                           && typeof dataRangeOption.text[0] != 'undefined'
+                        + (this.dataRangeOption.text 
+                           && typeof this.dataRangeOption.text[0] != 'undefined'
                            ? (zrArea.getTextWidth(
-                                  dataRangeOption.text[0],
+                                  this.dataRangeOption.text[0],
                                   font
-                              ) + _textGap)
+                              ) + this._textGap)
                            : 0)
-                        + (dataRangeOption.text
-                           && typeof dataRangeOption.text[1] != 'undefined'
+                        + (this.dataRangeOption.text
+                           && typeof this.dataRangeOption.text[1] != 'undefined'
                            ? (zrArea.getTextWidth(
-                                  dataRangeOption.text[1],
+                                  this.dataRangeOption.text[1],
                                   font
-                              ) + _textGap)
+                              ) + this._textGap)
                            : 0);
                 }
                 else {
@@ -621,33 +762,33 @@ define(function (require) {
             else {
                 // 垂直布局，计算总高度
                 var maxWidth;
-                if (dataRangeOption.text
-                    || dataRangeOption.splitNumber <= 0
-                    || dataRangeOption.calculable
+                if (this.dataRangeOption.text
+                    || this.dataRangeOption.splitNumber <= 0
+                    || this.dataRangeOption.calculable
                 ) {
                     // 指定文字或线性渐变
                     totalHeight =
-                        ((dataRangeOption.splitNumber <= 0
-                          || dataRangeOption.calculable)
+                        ((this.dataRangeOption.splitNumber <= 0
+                          || this.dataRangeOption.calculable)
                           ? (itemHeight * 10 + itemGap)
                           : dataLength * (itemHeight + itemGap))
-                        + (dataRangeOption.text
-                           && typeof dataRangeOption.text[0] != 'undefined'
-                            ? (_textGap + textHeight)
+                        + (this.dataRangeOption.text
+                           && typeof this.dataRangeOption.text[0] != 'undefined'
+                            ? (this._textGap + textHeight)
                             : 0)
-                        + (dataRangeOption.text
-                           && typeof dataRangeOption.text[1] != 'undefined'
-                            ? (_textGap + textHeight)
+                        + (this.dataRangeOption.text
+                           && typeof this.dataRangeOption.text[1] != 'undefined'
+                            ? (this._textGap + textHeight)
                             : 0);
                        
                     maxWidth = Math.max(
                         zrArea.getTextWidth(
-                            (dataRangeOption.text && dataRangeOption.text[0])
+                            (this.dataRangeOption.text && this.dataRangeOption.text[0])
                             || '',
                             font
                         ),
                         zrArea.getTextWidth(
-                            (dataRangeOption.text && dataRangeOption.text[1])
+                            (this.dataRangeOption.text && this.dataRangeOption.text[1])
                             || '',
                             font
                         )
@@ -673,70 +814,69 @@ define(function (require) {
                 totalHeight -= itemGap;     // 减去最后一个的itemGap;
             }
 
+            var padding = this.reformCssArray(this.dataRangeOption.padding);
             var x;
-            var zrWidth = zr.getWidth();
-            switch (dataRangeOption.x) {
+            var zrWidth = this.zr.getWidth();
+            switch (this.dataRangeOption.x) {
                 case 'center' :
                     x = Math.floor((zrWidth - totalWidth) / 2);
                     break;
                 case 'left' :
-                    x = dataRangeOption.padding[3] 
-                        + dataRangeOption.borderWidth;
+                    x = padding[3] + this.dataRangeOption.borderWidth;
                     break;
                 case 'right' :
                     x = zrWidth
                         - totalWidth
-                        - dataRangeOption.padding[1]
-                        - dataRangeOption.borderWidth;
+                        - padding[1]
+                        - this.dataRangeOption.borderWidth;
                     break;
                 default :
-                    x = dataRangeOption.x - 0;
+                    x = this.parsePercent(this.dataRangeOption.x, zrWidth);
                     x = isNaN(x) ? 0 : x;
                     break;
             }
 
             var y;
-            var zrHeight = zr.getHeight();
-            switch (dataRangeOption.y) {
+            var zrHeight = this.zr.getHeight();
+            switch (this.dataRangeOption.y) {
                 case 'top' :
-                    y = dataRangeOption.padding[0] 
-                        + dataRangeOption.borderWidth;
+                    y = padding[0] + this.dataRangeOption.borderWidth;
                     break;
                 case 'bottom' :
                     y = zrHeight
                         - totalHeight
-                        - dataRangeOption.padding[2]
-                        - dataRangeOption.borderWidth;
+                        - padding[2]
+                        - this.dataRangeOption.borderWidth;
                     break;
                 case 'center' :
                     y = Math.floor((zrHeight - totalHeight) / 2);
                     break;
                 default :
-                    y = dataRangeOption.y - 0;
+                    y = this.parsePercent(this.dataRangeOption.y, zrHeight);
                     y = isNaN(y) ? 0 : y;
                     break;
             }
             
-            if (dataRangeOption.calculable) {
+            if (this.dataRangeOption.calculable) {
                 // 留出手柄控件
                 var handlerWidth = Math.max(
-                    zrArea.getTextWidth(dataRangeOption.max, font),
-                    zrArea.getTextWidth(dataRangeOption.min, font)
-                );
-                if (dataRangeOption.orient == 'horizontal') {
+                    zrArea.getTextWidth(this.dataRangeOption.max, font),
+                    zrArea.getTextWidth(this.dataRangeOption.min, font)
+                ) + textHeight;
+                if (this.dataRangeOption.orient == 'horizontal') {
                     if (x < handlerWidth) {
-                        x = handlerWidth + 5;
+                        x = handlerWidth;
                     }
                     if (x + totalWidth + handlerWidth > zrWidth) {
-                        x -= handlerWidth + 5;
+                        x -= handlerWidth;
                     }
                 }
                 else {
                     if (y < textHeight) {
-                        y = textHeight + 5;
+                        y = textHeight;
                     }
                     if (y + totalHeight + textHeight > zrHeight) {
-                        y -= textHeight + 5;
+                        y -= textHeight;
                     }
                 }
             }
@@ -747,40 +887,39 @@ define(function (require) {
                 width : totalWidth,
                 height : totalHeight
             };
-        }
+        },
 
         // 指定文本
-        function _getTextShape(x, y, text) {
+        _getTextShape : function (x, y, text) {
             return {
-                shape : 'text',
-                zlevel : _zlevelBase,
+                zlevel : this._zlevelBase,
                 style : {
-                    x : (dataRangeOption.orient == 'horizontal'
+                    x : (this.dataRangeOption.orient == 'horizontal'
                         ? x
-                        : _itemGroupLocation.x 
-                          + _itemGroupLocation.width / 2 
+                        : this._itemGroupLocation.x 
+                          + this._itemGroupLocation.width / 2 
                         ),
-                    y : (dataRangeOption.orient == 'horizontal'
-                        ? _itemGroupLocation.y 
-                          + _itemGroupLocation.height / 2
+                    y : (this.dataRangeOption.orient == 'horizontal'
+                        ? this._itemGroupLocation.y 
+                          + this._itemGroupLocation.height / 2
                         : y
                         ),
-                    color : dataRangeOption.textStyle.color,
+                    color : this.dataRangeOption.textStyle.color,
                     text: text,
-                    textFont: self.getFont(dataRangeOption.textStyle),
-                    textBaseline: (dataRangeOption.orient == 'horizontal'
+                    textFont: this.getFont(this.dataRangeOption.textStyle),
+                    textBaseline: (this.dataRangeOption.orient == 'horizontal'
                                    ? 'middle' : 'top'),
-                    textAlign: (dataRangeOption.orient == 'horizontal'
+                    textAlign: (this.dataRangeOption.orient == 'horizontal'
                                ? 'left' : 'center')
-                }
+                },
+                hoverable : false
             };
-        }
+        },
 
         // 色尺legend item shape
-        function _getItemShape(x, y, width, height, color) {
+        _getItemShape : function (x, y, width, height, color) {
             return {
-                shape : 'rectangle',
-                zlevel : _zlevelBase,
+                zlevel : this._zlevelBase,
                 style : {
                     x : x,
                     y : y + 1,
@@ -788,387 +927,527 @@ define(function (require) {
                     height : height - 2,
                     color : color
                 },
+                highlightStyle: {
+                    strokeColor: color,
+                    lineWidth : 1
+                },
                 clickable : true
             };
-        }
-
+        },
+        
         /**
          * 拖拽范围控制
          */
-        function _ondrift(e, dx, dy) {
-            var x = _calculableLocation.x;
-            var y = _calculableLocation.y;
-            var width = _calculableLocation.width;
-            var height = _calculableLocation.height;
+        __ondrift : function (shape, dx, dy) {
+            var x = this._calculableLocation.x;
+            var y = this._calculableLocation.y;
+            var width = this._calculableLocation.width;
+            var height = this._calculableLocation.height;
             
-            if (dataRangeOption.orient == 'horizontal') {
-                if (e.style.x + dx <= x) {
-                    e.style.x = x;
+            if (this.dataRangeOption.orient == 'horizontal') {
+                if (shape.style.x + dx <= x) {
+                    shape.style.x = x;
                 }
-                else if (e.style.x + dx + e.style.width >= x + width) {
-                    e.style.x = x + width - e.style.width;
+                else if (shape.style.x + dx + shape.style.width >= x + width) {
+                    shape.style.x = x + width - shape.style.width;
                 }
                 else {
-                    e.style.x += dx;
+                    shape.style.x += dx;
                 }
             }
             else {
-                if (e.style.y + dy <= y) {
-                    e.style.y = y;
+                if (shape.style.y + dy <= y) {
+                    shape.style.y = y;
                 }
-                else if (e.style.y + dy + e.style.height >= y + height) {
-                    e.style.y = y + height - e.style.height;
+                else if (shape.style.y + dy + shape.style.height >= y + height) {
+                    shape.style.y = y + height - shape.style.height;
                 }
                 else {
-                    e.style.y += dy;
+                    shape.style.y += dy;
                 }
             }
 
-            if (e._type == 'filler') {
-                _syncHandleShape();
+            if (shape._type == 'filler') {
+                this._syncHandleShape();
             }
             else {
-                //e.position = [e.style.x - e.style._x, e.style.y - e.style._y];
-                _syncFillerShape(e);
+                this._syncFillerShape(shape);
             }
             
-            if (dataRangeOption.realtime) {
-                _syncData();
-            }
-            else {
-                clearTimeout(_syncTicket);
-                _syncTicket = setTimeout(_syncData, 200);
+            if (this.dataRangeOption.realtime) {
+                this._syncData();
             }
 
             return true;
-        }
+        },
         
-        function _ondragend() {
-            self.isDragend = true;
-        }
-
+        __ondragend : function () {
+            this.isDragend = true;
+        },
+        
         /**
          * 数据项被拖拽出去
          */
-        function ondragend(param, status) {
-            if (!self.isDragend || !param.target) {
+        ondragend : function (param, status) {
+            if (!this.isDragend || !param.target) {
                 // 没有在当前实例上发生拖拽行为则直接返回
                 return;
             }
 
-             _syncData();
+            !this.dataRangeOption.realtime && this._syncData();
 
             // 别status = {}赋值啊！！
             status.dragOut = true;
             status.dragIn = true;
             
-            if (!dataRangeOption.realtime) {
-                messageCenter.dispatch(ecConfig.EVENT.DATA_RANGE);
+            if (!this.dataRangeOption.realtime) {
+                this.messageCenter.dispatch(
+                    ecConfig.EVENT.DATA_RANGE,
+                    null,
+                    {
+                        range : {
+                            start : this._range.end,
+                            end : this._range.start
+                        }
+                    },
+                    this.myChart
+                );
             }
             
             status.needRefresh = false; // 会有消息触发fresh，不用再刷一遍
             // 处理完拖拽事件后复位
-            self.isDragend = false;
+            this.isDragend = false;
 
             return;
-        }
+        },
         
-        
-        function _syncHandleShape() {
-            var x = _calculableLocation.x;
-            var y = _calculableLocation.y;
-            var width = _calculableLocation.width;
-            var height = _calculableLocation.height;
+        // 外部传入range
+        _syncShapeFromRange : function () {
+            var range = this.dataRangeOption.range || {};
+            // 做一个反转
+            this._range.end = typeof this._range.end != 'undefined'
+                              ? this._range.end
+                              : (typeof range.start != 'undefined' ? range.start : 0);
+            this._range.start = typeof this._range.start != 'undefined'
+                                ? this._range.start
+                                : (typeof range.end != 'undefined' ? range.end : 100);
             
-            if (dataRangeOption.orient == 'horizontal') {
-                _startShape.style.x = _fillerShae.style.x;
-                _startMask.style.width = _startShape.style.x - x;
+            if (this._range.start != 100 || this._range.end !== 0) {
+                // 非默认满值同步一下图形
+                if (this.dataRangeOption.orient == 'horizontal') {
+                    // 横向
+                    var width = this._fillerShape.style.width;
+                    this._fillerShape.style.x +=
+                        width * (100 - this._range.start) / 100;
+                    this._fillerShape.style.width = 
+                        width * (this._range.start - this._range.end) / 100;
+                }
+                else {
+                    // 纵向
+                    var height = this._fillerShape.style.height;
+                    this._fillerShape.style.y +=
+                        height * (100 - this._range.start) / 100;
+                    this._fillerShape.style.height = 
+                        height * (this._range.start - this._range.end) / 100;
+                }
+                this.zr.modShape(this._fillerShape.id);
+                this._syncHandleShape();
+            }
+        },
+        
+        _syncHandleShape : function () {
+            var x = this._calculableLocation.x;
+            var y = this._calculableLocation.y;
+            var width = this._calculableLocation.width;
+            var height = this._calculableLocation.height;
+            
+            if (this.dataRangeOption.orient == 'horizontal') {
+                this._startShape.style.x = this._fillerShape.style.x;
+                this._startMask.style.width = this._startShape.style.x - x;
                 
-                _endShape.style.x = _fillerShae.style.x
-                                    + _fillerShae.style.width;
-                _endMask.style.x = _endShape.style.x;
-                _endMask.style.width = x + width - _endShape.style.x;
+                this._endShape.style.x = this._fillerShape.style.x
+                                    + this._fillerShape.style.width;
+                this._endMask.style.x = this._endShape.style.x;
+                this._endMask.style.width = x + width - this._endShape.style.x;
                 
-                _range.start = Math.ceil(
-                    100 - (_startShape.style.x - x) / width * 100
+                this._range.start = Math.ceil(
+                    100 - (this._startShape.style.x - x) / width * 100
                 );
-                _range.end = Math.floor(
-                    100 - (_endShape.style.x - x) / width * 100
+                this._range.end = Math.floor(
+                    100 - (this._endShape.style.x - x) / width * 100
                 );
             }
             else {
-                _startShape.style.y = _fillerShae.style.y;
-                _startMask.style.height = _startShape.style.y - y;
+                this._startShape.style.y = this._fillerShape.style.y;
+                this._startMask.style.height = this._startShape.style.y - y;
                 
-                _endShape.style.y = _fillerShae.style.y
-                                    + _fillerShae.style.height;
-                _endMask.style.y = _endShape.style.y;
-                _endMask.style.height = y + height - _endShape.style.y;
+                this._endShape.style.y = this._fillerShape.style.y
+                                    + this._fillerShape.style.height;
+                this._endMask.style.y = this._endShape.style.y;
+                this._endMask.style.height = y + height - this._endShape.style.y;
                 
-                _range.start = Math.ceil(
-                    100 - (_startShape.style.y - y) / height * 100
+                this._range.start = Math.ceil(
+                    100 - (this._startShape.style.y - y) / height * 100
                 );
-                _range.end = Math.floor(
-                    100 - (_endShape.style.y - y) / height * 100
+                this._range.end = Math.floor(
+                    100 - (this._endShape.style.y - y) / height * 100
                 );
             }
             
-            _syncShape(false);
-        }
+            this._syncShape();
+        },
 
-        function _syncFillerShape(e) {
-            var x = _calculableLocation.x;
-            var y = _calculableLocation.y;
-            var width = _calculableLocation.width;
-            var height = _calculableLocation.height;
+        _syncFillerShape : function (e) {
+            var x = this._calculableLocation.x;
+            var y = this._calculableLocation.y;
+            var width = this._calculableLocation.width;
+            var height = this._calculableLocation.height;
             
             var a;
             var b;
-            if (dataRangeOption.orient == 'horizontal') {
-                a = _startShape.style.x;
-                b = _endShape.style.x;
-                if (e.id == _startShape.id && a >= b) {
+            if (this.dataRangeOption.orient == 'horizontal') {
+                a = this._startShape.style.x;
+                b = this._endShape.style.x;
+                if (e.id == this._startShape.id && a >= b) {
                     // _startShape触发
                     b = a;
-                    _endShape.style.x = a;
+                    this._endShape.style.x = a;
                 }
-                else if (e.id == _endShape.id && a >= b) {
+                else if (e.id == this._endShape.id && a >= b) {
                     // _endShape触发
                     a = b;
-                    _startShape.style.x = a;
+                    this._startShape.style.x = a;
                 }
-                _fillerShae.style.x = a;
-                _fillerShae.style.width = b - a;
-                _startMask.style.width = a - x;
-                _endMask.style.x = b;
-                _endMask.style.width = x + width - b;
+                this._fillerShape.style.x = a;
+                this._fillerShape.style.width = b - a;
+                this._startMask.style.width = a - x;
+                this._endMask.style.x = b;
+                this._endMask.style.width = x + width - b;
                 
-                _range.start = Math.ceil(100 - (a - x) / width * 100);
-                _range.end = Math.floor(100 - (b - x) / width * 100);
+                this._range.start = Math.ceil(100 - (a - x) / width * 100);
+                this._range.end = Math.floor(100 - (b - x) / width * 100);
             }
             else {
-                a = _startShape.style.y;
-                b = _endShape.style.y;
-                if (e.id == _startShape.id && a >= b) {
+                a = this._startShape.style.y;
+                b = this._endShape.style.y;
+                if (e.id == this._startShape.id && a >= b) {
                     // _startShape触发
                     b = a;
-                    _endShape.style.y = a;
+                    this._endShape.style.y = a;
                 }
-                else if (e.id == _endShape.id && a >= b) {
+                else if (e.id == this._endShape.id && a >= b) {
                     // _endShape触发
                     a = b;
-                    _startShape.style.y = a;
+                    this._startShape.style.y = a;
                 }
-                _fillerShae.style.y = a;
-                _fillerShae.style.height = b - a;
-                _startMask.style.height = a - y;
-                _endMask.style.y = b;
-                _endMask.style.height = y + height - b;
+                this._fillerShape.style.y = a;
+                this._fillerShape.style.height = b - a;
+                this._startMask.style.height = a - y;
+                this._endMask.style.y = b;
+                this._endMask.style.height = y + height - b;
                 
-                _range.start = Math.ceil(100 - (a - y) / height * 100);
-                _range.end = Math.floor(100 - (b - y) / height * 100);
+                this._range.start = Math.ceil(100 - (a - y) / height * 100);
+                this._range.end = Math.floor(100 - (b - y) / height * 100);
             }
             
-            _syncShape(true);
-        }
+            this._syncShape();
+        },
         
-        function _syncShape(needFiller) {
-            _startShape.position = [
-                _startShape.style.x - _startShape.style._x,
-                _startShape.style.y - _startShape.style._y
+        _syncShape : function () {
+            this._startShape.position = [
+                this._startShape.style.x - this._startShape.style._x,
+                this._startShape.style.y - this._startShape.style._y
             ];
             
-            if (dataRangeOption.precision === 0) {
-                _startShape.style.text = Math.round(
-                    _gap * _range.start + dataRangeOption.min
-                ) + '';
-            } else {
-                _startShape.style.text =(
-                    _gap * _range.start + dataRangeOption.min
-                ).toFixed(dataRangeOption.precision);
-            }
-            _startShape.style.color = getColor(
-                _gap * _range.start + dataRangeOption.min
+            this._startShape.style.text = this._textFormat(
+                this._gap * this._range.start + this.dataRangeOption.min
             );
             
-            zr.modShape(_startShape.id, _startShape);
+            this._startShape.style.color 
+                = this._startShape.highlightStyle.strokeColor
+                = this.getColor(
+                    this._gap * this._range.start + this.dataRangeOption.min
+                );
             
-            _endShape.position = [
-                _endShape.style.x - _endShape.style._x,
-                _endShape.style.y - _endShape.style._y
+            this._endShape.position = [
+                this._endShape.style.x - this._endShape.style._x,
+                this._endShape.style.y - this._endShape.style._y
             ];
             
-            if (dataRangeOption.precision === 0) {
-                _endShape.style.text = Math.round(
-                    _gap * _range.end + dataRangeOption.min
-                ) + '';
-            } else {
-                _endShape.style.text = (
-                    _gap * _range.end + dataRangeOption.min
-                ).toFixed(dataRangeOption.precision);
-            }
-            _endShape.style.color = getColor(
-                _gap * _range.end + dataRangeOption.min
+            this._endShape.style.text = this._textFormat(
+                this._gap * this._range.end + this.dataRangeOption.min
             );
-            zr.modShape(_endShape.id, _endShape);
-
-            zr.modShape(_startMask.id, _startMask);
-            zr.modShape(_endMask.id, _endMask);
             
-            needFiller && zr.modShape(_fillerShae.id, _fillerShae);
-             
-            zr.refresh();
-        }
-
-        function _syncData() {
-            if (dataRangeOption.realtime) {
-                messageCenter.dispatch(ecConfig.EVENT.DATA_RANGE);
-            }
-        }
-
-
-        function _dataRangeSelected(param) {
-            var idx = param.target._idx;
-            _selectedMap[idx] = !_selectedMap[idx];
-            messageCenter.dispatch(ecConfig.EVENT.REFRESH);
-        }
-
-        function init(newOption) {
-            if (typeof self.deepQuery([newOption], 'dataRange.min') 
-                == 'undefined'
-                || typeof self.deepQuery([newOption], 'dataRange.max') 
-                == 'undefined'
-            ) {
-                return;
-            }
-
-            option = newOption;
-
-            option.dataRange = self.reformOption(option.dataRange);
-            // 补全padding属性
-            option.dataRange.padding = self.reformCssArray(
-                option.dataRange.padding
-            );
-
-            dataRangeOption = option.dataRange;
-
-            self.clear();
-
-            _selectedMap = {};
-
-            var zrColor = require('zrender/tool/color');
-            var splitNumber = dataRangeOption.splitNumber <= 0 
-                              || dataRangeOption.calculable
-                              ? 100
-                              : dataRangeOption.splitNumber;
-            _colorList = zrColor.getGradientColors(
-                dataRangeOption.color,
-                (splitNumber - dataRangeOption.color.length)
-                / (dataRangeOption.color.length - 1) + 1
-            );
-            _colorList = _colorList.slice(0, splitNumber);
-            //console.log(_colorList.length)
+            this._endShape.style.color 
+                = this._endShape.highlightStyle.strokeColor 
+                = this.getColor(
+                    this._gap * this._range.end + this.dataRangeOption.min
+                );
             
-            if (dataRangeOption.precision === 0) {
-                _gap = Math.round(
-                    (dataRangeOption.max - dataRangeOption.min)
-                    / splitNumber
-                ) || 1;
-            } else {
-                _gap = (dataRangeOption.max - dataRangeOption.min)
-                        / splitNumber;
-                _gap = _gap.toFixed(dataRangeOption.precision) - 0;
-            }
-            
-            _valueTextList = [];
-            for (var i = 0; i < splitNumber; i++) {
-                _selectedMap[i] = true;
-                _valueTextList.unshift(
-                    (i * _gap + dataRangeOption.min).toFixed(
-                        dataRangeOption.precision
-                    )
-                    + ' - ' 
-                    + ((i + 1) * _gap + dataRangeOption.min).toFixed(
-                        dataRangeOption.precision
-                    )
+            this.zr.modShape(this._startShape.id);
+            this.zr.modShape(this._endShape.id);
+            this.zr.modShape(this._startMask.id);
+            this.zr.modShape(this._endMask.id);
+            this.zr.modShape(this._fillerShape.id);
+            this.zr.refresh();
+        },
+
+        _syncData : function () {
+            if (this.dataRangeOption.realtime) {
+                this.messageCenter.dispatch(
+                    ecConfig.EVENT.DATA_RANGE,
+                    null,
+                    {
+                        range : {
+                            start : this._range.end,
+                            end : this._range.start
+                        }
+                    },
+                    this.myChart
                 );
             }
-            
-            _range = {
-                start: 100,
-                end: 0
-            };
-            // console.log(_valueTextList,_gap);
-            // console.log(_colorList);
-            
-            _buildShape();
-        }
+        },
 
+
+        __dataRangeSelected : function (param) {
+            var idx = param.target._idx;
+            this._selectedMap[idx] = !this._selectedMap[idx];
+            this.messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this.myChart);
+        },
+        
+        /**
+         * 产生hover link事件 
+         */
+        __dispatchHoverLink : function(param) {
+            var valueMin;
+            var valueMax;
+            if (this.dataRangeOption.calculable) {
+                var totalValue = this.dataRangeOption.max - this.dataRangeOption.min;
+                var curValue;
+                if (this.dataRangeOption.orient == 'horizontal') {
+                    curValue = (1 - (zrEvent.getX(param.event) - this._calculableLocation.x)
+                               / this._calculableLocation.width)
+                               * totalValue;
+                }
+                else {
+                    curValue = (1 - (zrEvent.getY(param.event) - this._calculableLocation.y)
+                               / this._calculableLocation.height) 
+                               * totalValue;
+                }
+                valueMin = curValue - totalValue * 0.05;
+                valueMax = curValue + totalValue * 0.05;
+            }
+            else {
+                var idx = param.target._idx;
+                valueMax = (this._colorList.length - idx) * this._gap + this.dataRangeOption.min;
+                valueMin = valueMax - this._gap;
+            }
+            
+            this.messageCenter.dispatch(
+                ecConfig.EVENT.DATA_RANGE_HOVERLINK, 
+                param.event,
+                {
+                    valueMin : valueMin,
+                    valueMax : valueMax
+                },
+                this.myChart
+            );
+            
+            // console.log(param,curValue);
+            return;
+        },
+        
+        __onhoverlink: function(param) {
+            if (this.dataRangeOption.show
+                && this.dataRangeOption.hoverLink
+                && this._indicatorShape
+                && param 
+                && param.seriesIndex != null && param.dataIndex != null
+            ) {
+                var curValue = param.value;
+                if (isNaN(curValue)) {
+                    return;
+                }
+                if (curValue < this.dataRangeOption.min) {
+                    curValue = this.dataRangeOption.min;
+                }
+                else if (curValue > this.dataRangeOption.max) {
+                    curValue = this.dataRangeOption.max;
+                }
+                
+                if (this.dataRangeOption.orient == 'horizontal') {
+                    this._indicatorShape.position = [
+                        (this.dataRangeOption.max - curValue) 
+                        / (this.dataRangeOption.max - this.dataRangeOption.min)
+                        * this._calculableLocation.width,
+                        0
+                    ];
+                }
+                else {
+                    this._indicatorShape.position = [
+                        0,
+                        (this.dataRangeOption.max - curValue)
+                        / (this.dataRangeOption.max - this.dataRangeOption.min)
+                        * this._calculableLocation.height
+                    ];
+                }
+                this._indicatorShape.style.text = param.value;
+                this._indicatorShape.style.color = this.getColor(curValue);
+                this.zr.addHoverShape(this._indicatorShape);
+            }
+        },
+
+        _textFormat : function(valueStart, valueEnd) {
+            valueStart = valueStart.toFixed(this.dataRangeOption.precision);
+            valueEnd = typeof valueEnd != 'undefined' 
+                       ? valueEnd.toFixed(this.dataRangeOption.precision) : '';
+            if (this.dataRangeOption.formatter) {
+                if (typeof this.dataRangeOption.formatter == 'string') {
+                    return this.dataRangeOption.formatter.replace('{value}', valueStart)
+                                                         .replace('{value2}', valueEnd);
+                }
+                else if (typeof this.dataRangeOption.formatter == 'function') {
+                    return this.dataRangeOption.formatter.call(
+                        this.myChart, valueStart, valueEnd
+                    );
+                }
+            }
+            
+            if (valueEnd !== '') {
+                return valueStart + ' - ' + valueEnd;
+            }
+
+            return valueStart;
+        },
+        
         /**
          * 刷新
          */
-        function refresh(newOption) {
+        refresh : function (newOption) {
             if (newOption) {
-                option = newOption;
-                option.dataRange = self.reformOption(option.dataRange);
-                // 补全padding属性
-                option.dataRange.padding = self.reformCssArray(
-                    option.dataRange.padding
+                this.option = newOption;
+                this.option.dataRange = this.reformOption(this.option.dataRange);
+                this.dataRangeOption = this.option.dataRange;
+                if (!this.myChart.canvasSupported) {
+                    // 不支持Canvas的强制关闭实时动画
+                    this.dataRangeOption.realtime = false;
+                }
+                
+                var splitNumber = this.dataRangeOption.splitNumber <= 0 
+                                  || this.dataRangeOption.calculable
+                                  ? 100
+                                  : this.dataRangeOption.splitNumber;
+                this._colorList = zrColor.getGradientColors(
+                    this.dataRangeOption.color,
+                    Math.max(
+                        (splitNumber - this.dataRangeOption.color.length)
+                        / (this.dataRangeOption.color.length - 1),
+                        0
+                    ) + 1
                 );
+                
+                if (this._colorList.length > splitNumber) {
+                    var len = this._colorList.length;
+                    var newColorList = [this._colorList[0]];
+                    var step = len / (splitNumber - 1);
+                    for (var i = 1; i < splitNumber - 1; i++) {
+                        newColorList.push(this._colorList[Math.floor(i * step)]);
+                    }
+                    newColorList.push(this._colorList[len - 1]);
+                    this._colorList = newColorList;
+                }
+                // console.log(this._colorList.length)
+                
+                var precision = this.dataRangeOption.precision;
+                this._gap = (this.dataRangeOption.max - this.dataRangeOption.min) / splitNumber;
+                while (this._gap.toFixed(precision) - 0 != this._gap && precision < 5) {
+                    // 精度自适应
+                    precision++;
+                }
+                this.dataRangeOption.precision = precision;
+                
+                this._gap = (
+                    (this.dataRangeOption.max - this.dataRangeOption.min) / splitNumber
+                ).toFixed(precision) - 0;
+                
+                this._valueTextList = [];
+                for (var i = 0; i < splitNumber; i++) {
+                    this._selectedMap[i] = true;
+                    this._valueTextList.unshift(
+                        this._textFormat(
+                            i * this._gap + this.dataRangeOption.min,
+                            (i + 1) * this._gap + this.dataRangeOption.min
+                        )
+                    );
+                }
             }
-            dataRangeOption = option.dataRange;
-            _range = {
-                start: 100,
-                end: 0
-            };
-            self.clear();
-            _buildShape();
-        }
+            
+            this.clear();
+            this._buildShape();
+        },
 
-        function getColor(value) {
+        getColor : function (value) {
             if (isNaN(value)) {
                 return null;
             }
             
-            if (value < dataRangeOption.min) {
-                value = dataRangeOption.min;
-            }
-            else if (value > dataRangeOption.max) {
-                value = dataRangeOption.max;
+            if (this.dataRangeOption.min == this.dataRangeOption.max) {
+                return this._colorList[0];
             }
             
-            if (dataRangeOption.calculable) {
-                if (value > _gap * _range.start + dataRangeOption.min
-                    || value < _gap * _range.end + dataRangeOption.min) {
+            if (value < this.dataRangeOption.min) {
+                value = this.dataRangeOption.min;
+            }
+            else if (value > this.dataRangeOption.max) {
+                value = this.dataRangeOption.max;
+            }
+            
+            if (this.dataRangeOption.calculable) {
+                if (value - (this._gap * this._range.start + this.dataRangeOption.min) > 0.00005
+                    || value - (this._gap * this._range.end + this.dataRangeOption.min) < -0.00005) {
                      return null;
                 }
             }
             
-            var idx = _colorList.length - Math.ceil(
-                (value - dataRangeOption.min) 
-                / (dataRangeOption.max - dataRangeOption.min)
-                * _colorList.length
+            var idx = this._colorList.length - Math.ceil(
+                (value - this.dataRangeOption.min) 
+                / (this.dataRangeOption.max - this.dataRangeOption.min)
+                * this._colorList.length
             );
-            if (idx == _colorList.length) {
+            if (idx == this._colorList.length) {
                 idx--;
             }
-            //console.log(value, idx,_colorList[idx])
-            if (_selectedMap[idx]) {
-                return _colorList[idx];
+            
+            //console.log(value, idx,this._colorList[idx])
+            if (this._selectedMap[idx]) {
+                return this._colorList[idx];
             }
             else {
                 return null;
             }
-        }
-
-        self.init = init;
-        self.refresh = refresh;
-        self.getColor = getColor;
-        self.ondragend = ondragend;
+            
+        },
         
-        init(option);
-    }
-
+        getColorByIndex : function (idx) {
+            if (idx >= this._colorList.length) {
+                idx = this._colorList.length - 1;
+            }
+            else if (idx < 0) {
+                idx = 0;
+            }
+            return this._colorList[idx];
+        },
+        
+        /**
+         * 释放后实例不可用
+         */
+        onbeforDispose : function () {
+            this.messageCenter.unbind(ecConfig.EVENT.HOVER, this._onhoverlink);
+        }
+    };
+    
+    zrUtil.inherits(DataRange, Base);
+    
     require('../component').define('dataRange', DataRange);
 
     return DataRange;

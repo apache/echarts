@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>中国经济十年时空漫游</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="China">
+    <meta name="author" content="kener.linfeng@gmail.com">
+
+    <link href="../../../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../../../asset/css/bootstrap-responsive.css" rel="stylesheet">
+    <link rel="shortcut icon" href="../../../asset/ico/favicon.png">
+    <style type="text/css">
+        * {
+            font-family: "Microsoft YaHei" !important;
+        }
+        body{
+            background-image: url(../../../asset/img/groovepaper.png);
+            background-repeat: repeat;    
+        }
+        header {
+            background-image: url(../../../asset/img/tweed.png);
+            background-repeat: repeat;
+        }
+        h1 {
+            color: #FFF;
+            font-weight : bolder;
+            margin:20px 0;
+        }
+        section {
+            background-image: url(../../../asset/img/ticks.png);
+            background-repeat: repeat;
+            padding: 10px;
+        }
+        footer {
+            height: 100px;
+            background-image: url(../../../asset/img/tweed.png);
+            background-repeat: repeat;
+            font-size: 14px;
+            color: #CCC;
+            text-align: center;
+            padding-top: 15px;
+            margin-top:15px;
+        }
+        .nav.nav-tabs.nav-justified {
+            margin-bottom:0;
+        }
+        .ctrl-wrap {
+            padding:5px 20px 20px 20px;
+            text-align: center;
+        }
+        .ctrl-content .btn{
+            width: 7%;
+        }
+        .tab-content {
+            padding:20px;
+            border: 1px solid #dddddd;
+            border-top: 0px;
+        }
+        .g2wrap {
+            height:300px;
+            width:33%;
+            float:left;
+        }
+        input[type="radio"] {
+            margin: -5px 5px 0;
+        }
+        label {
+            display: inline-block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        footer a:hover {
+            color:#62C462
+        }
+    </style>
+</head>
+
+<body>
+    <!-- HEADER -->
+    <header>
+        <div class="container">
+            <h1>中国经济十年时空漫游</h1>
+        </div>
+    </header>
+    <section>
+        <div class="container">
+            <strong>引言：</strong>进入21世纪，中国经济延续了过去30多年的火箭式发展，也同样延续了地域与经济结构的不平衡。在过去十年中，各地之间的经济差距有多大？各地的经济结构有多大差异？每个人分享到多少经济成果？都可以在时空漫游中找到答案……
+        </div>
+    </section>
+    <div class="container">
+        <!-- CONTAINER -->
+        <div class="row">
+            <div id="overview" class="span12">
+                <h3>2011年GDP：谁跻身万亿俱乐部 谁还在百亿级漂浮</h3>
+                <!--p>1949年中华人民共和国成立之前，中国犹如一个极度贫弱的巨人，近5亿人口，960万平方公里国土的国家，全国主要工业品最高年产量仅为：纱44.5万吨，布27.9亿米，原煤6188万吨，发电量60亿千瓦小时；粮食最高年产量也只有1.5亿吨，棉花84.9万吨。此为新中国经济发展的起步点。</p>
+                <p>通过有计划地进行大规模的经济建设，50余年后的今天，中国已成为世界上最具有发展潜力的经济大国之一，人民生活也整体达到小康水平。从1953年到2005年，中国已陆续完成十个“五年计划”，并取得举世瞩目的成就，为国民经济的发展打下了坚实基础；而1979年以来的改革开放，则使中国经济得到前所未有的快速增长。进入二十一世纪后，中国经济继续保持稳步高速增长，2006年，国内生产总值超过20万亿元，增长速度达10.7%。</p-->
+                <div id="g0" style="height:550px"></div>
+            </div>
+            <div id="graphic" class="span12">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs nav-justified">
+                  <li class="active">
+                      <a id = "tab1" href="#main1" data-toggle="tab">当经济成果摊到每个人身上…</a></li>
+                  <li><a id = "tab2" href="#main2" data-toggle="tab">经济发展有多不平衡？</a></li>
+                  <li><a id = "tab3" href="#main3" data-toggle="tab">房地产支撑GDP？</a></li>
+                </ul>
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div class="tab-pane active" id="main1">
+                        <p>人均指标选择：
+                            <label>
+                                <input type="radio" name="optionsRadios" id="optionsRadios1" value="GDP" checked>GDP
+                            </label>
+                            <label>
+                                <input type="radio" name="optionsRadios" id="optionsRadios2" value="Financial">金融
+                            </label>
+                            <label>
+                                <input type="radio" name="optionsRadios" id="optionsRadios3" value="Estate">房地产
+                            </label>
+                            <label>
+                                <input type="radio" name="optionsRadios" id="optionsRadios4" value="PI">第一产业
+                            </label>
+                            <label>
+                                <input type="radio" name="optionsRadios" id="optionsRadios5" value="SI">第二产业
+                            </label>
+                            <label>
+                                <input type="radio" name="optionsRadios" id="optionsRadios6" value="TI">第三产业
+                            </label>
+                        </p>
+                        <div id="g1" style="height:400px"></div>
+                        <!--ul>
+                            <li>从总量上看，中国的GDP 已经名列世界前矛，GDP 总量占世界的总量接近4%.但是中国的问题最复杂的就是有13亿人口，按照中国的人均水平我们和这些发达国家的距离就大了，到去年我们人均完成的GDP 为1200多美元，这在世界上排的位置按人均水平算大概是一个什么发展阶段呢？</li>
+                            <li>世界银行关于发展阶段有一个粗线条的划分：</li>
+                                <ol>
+                                    <li>一个国家人均GDP 的水平如果是在280美元以下，称为低收入的穷国</li>
+                                    <li>一个国家的人均GDP 达到1000美元左右，叫下中等收入的发展中国家，指这个国家摆脱了贫困的陷阱，进入了经济起飞、工业化加速的时期</li>
+                                    <li>如果到1600美元，叫中等收入的发展中国家</li>
+                                    <li>如果到3000美元，叫上中等收入的发展中国家</li>
+                                    <li>如果到了8000美元以上，叫高收入的发展中国家，指该国家以工业化为内容的现代化完成了，即所谓的现代的新兴工业化国家，再往上发展就叫后工业化时代，再做细分为中等发达国家和主要的最发达国家</li>
+                                </ol>
+                            <li>1978年我国人均GDP 是379元人民币，折算成美元为100美元多一点，在当时世界190多个国家排序中我国和当时著名的穷国扎依尔并列100多位，可以说是一个标准的穷国，经过二十几年改革开放的努力，我们实现了经济发展上的一个历史阶段性的突破，我们从最穷的国家上升到了1200多美元，被称为下中等收入的发展中国家，这个阶段转变的速度快不快？</li>
+                        </ul-->
+                    </div>
+                    <div class="tab-pane" id="main2">
+                        <div class="ctrl-wrap">
+                            <div class="ctrl-content">
+                                <button type="button" class="btn btn-success" id="2002">2002</button>
+                                <button type="button" class="btn btn-info" id="2003">2003</button>
+                                <button type="button" class="btn btn-info" id="2004">2004</button>
+                                <button type="button" class="btn btn-info" id="2005">2005</button>
+                                <button type="button" class="btn btn-info" id="2006">2006</button>
+                                <button type="button" class="btn btn-info" id="2007">2007</button>
+                                <button type="button" class="btn btn-info" id="2008">2008</button>
+                                <button type="button" class="btn btn-info" id="2009">2009</button>
+                                <button type="button" class="btn btn-info" id="2010">2010</button>
+                                <button type="button" class="btn btn-info" id="2011">2011</button>
+                            </div>
+                        </div>
+                        <div id="g20" class="g2wrap"></div>
+                        <div id="g21" class="g2wrap"></div>
+                        <div id="g22" class="g2wrap"></div>
+                        <div id="g23" class="g2wrap"></div>
+                        <div id="g24" class="g2wrap"></div>
+                        <div id="g25" class="g2wrap"></div>
+                        <!--ul style="padding-top:15px;clear:both">
+                            <li>衡量一个国家经济发展水平的方法的指标体系现在很有争议，但无论怎么争议，用GDP这个指标从数量方面来体现一个国家经济发展已经达到的水平，尽管有它的荒谬性和局限性，但也有其不可或缺性、不可替代性。</li>
+                            <li>今天我们主要从GDP水平上来看一下中国经济发展大体上现在达到的阶段。十三万六千多亿人民币按照我们现在大体上所说的1比8.3的官汇折算大约一万六千多亿美元，这样一个发展水平、总量规模在世界上大体处于什么位置呢？</li>
+                            <li>我国是排在世界第六位，第一位是美国，其完成GDP的数量在数值上和我国比较接近，是十二万多亿，不同的是计量单位不一样，它是美元，我国是人民币，我国大概相当于美国的八分之一，美国GDP 占世界总量三分之一左右，最高年份达到世界总量的32%，去年大概占28%，第二位是日本，日本大概五万多亿，第三位是德国，第四位是英国，第五位是法国，如果没有意外的话经过第十一个五年计划后估计中国在总量上超过法国应该是问题不大。 </li>
+                        </ul-->
+                        <p style="clear:both"></p>
+                    </div>
+                    <div class="tab-pane" id="main3">
+                        <div id="g3" style="height:400px"></div>
+                        <p><i>*GDP与房地产的关系、与金融业的关系，房地产与金融业的关系，第一、二、三产业间的关系……任何两项或多项数据间均可进行比较。</i></p>
+                        <!--ul>
+                            <li>衡量一个国家经济发展水平的方法的指标体系现在很有争议，但无论怎么争议，用GDP这个指标从数量方面来体现一个国家经济发展已经达到的水平，尽管有它的荒谬性和局限性，但也有其不可或缺性、不可替代性。</li>
+                            <li>今天我们主要从GDP水平上来看一下中国经济发展大体上现在达到的阶段。十三万六千多亿人民币按照我们现在大体上所说的1比8.3的官汇折算大约一万六千多亿美元，这样一个发展水平、总量规模在世界上大体处于什么位置呢？</li>
+                            <li>我国是排在世界第六位，第一位是美国，其完成GDP的数量在数值上和我国比较接近，是十二万多亿，不同的是计量单位不一样，它是美元，我国是人民币，我国大概相当于美国的八分之一，美国GDP 占世界总量三分之一左右，最高年份达到世界总量的32%，去年大概占28%，第二位是日本，日本大概五万多亿，第三位是德国，第四位是英国，第五位是法国，如果没有意外的话经过第十一个五年计划后估计中国在总量上超过法国应该是问题不大。 </li>
+                        </ul-->
+                    </div>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+    </div>
+    <!-- FOOTER -->
+    <footer>
+      <p>&copy; 2014 Data Journalism Workshop（华媒基金会 &middot; 数据新闻工作坊） &middot; 于博（新华社）  &middot; 吴楚茵（南方都市报）  &middot; <a href="http://weibo.com/kenerlinfeng" target="_blank">林峰</a>（百度）</p>
+      <p><a href="http://echarts.baidu.com" target="_blank">Data Visualization by ECharts</a></p>
+    </footer>
+
+    <script src="../../../asset/js/jquery.js"></script>
+    <script src="../../../asset/js/bootstrap-transition.js"></script>
+    <script src="../../../asset/js/bootstrap-alert.js"></script>
+    <script src="../../../asset/js/bootstrap-modal.js"></script>
+    <script src="../../../asset/js/bootstrap-dropdown.js"></script>
+    <script src="../../../asset/js/bootstrap-scrollspy.js"></script>
+    <script src="../../../asset/js/bootstrap-tab.js"></script>
+    <script src="../../../asset/js/bootstrap-tooltip.js"></script>
+    <script src="../../../asset/js/bootstrap-popover.js"></script>
+    <script src="../../../asset/js/bootstrap-button.js"></script>
+    <script src="../../../asset/js/bootstrap-collapse.js"></script>
+    <script src="../../../asset/js/bootstrap-carousel.js"></script>
+    <script src="../../../asset/js/bootstrap-typeahead.js"></script>
+    <!-- core -->
+    <script src="../../www/js/echarts.js"></script>
+    <script src="./js/data-formatter.js"></script>
+    <script src="./js/data-a-china.js"></script>
+    <script src="./js/data-china.js"></script>
+    <script src="./js/option0.js"></script>
+    <script src="./js/option1.js"></script>
+    <script src="./js/option2.js"></script>
+    <script src="./js/option3.js"></script>
+    <script src="./js/djws.js"></script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="kener.linfeng@gmail.com">
+    <title>ECharts · Example</title>
+
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+
+    <link href="../asset/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/carousel.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="./www/js/echarts.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+
+    <style type="text/css">
+        .CodeMirror {
+            height: 550px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
+
+
+    <div class="container-fluid">
+        <div class="row-fluid example">
+            <div id="sidebar-code" class="col-md-4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+var effect = {
+    show: true,
+    scaleSize: require('zrender/tool/env').canvasSupported ? 1 : 2,
+    period: 30,             // 运动周期，无单位，值越大越慢
+    color: '#fff',
+    shadowColor: 'rgba(220,220,220,0.4)',
+    shadowBlur : 5 
+};
+function itemStyle(idx) {
+    return {
+        normal: {
+            color:'#fff',
+            borderWidth:1,
+            borderColor:['rgba(30,144,255,1)','lime'][idx],
+            lineStyle: {
+                //shadowColor : ['rgba(30,144,255,1)','lime'][idx], //默认透明
+                //shadowBlur: 10,
+                //shadowOffsetX: 0,
+                //shadowOffsetY: 0,
+                type: 'solid'
+            }
+        }
+    }
+};
+option = {
+    backgroundColor: '#1b1b1b',
+    color: ['rgba(30,144,255,1)','lime'],
+    title : {
+        text: '中国铁路运输主干线',
+        subtext:'数据来自维基百科',
+        sublink: 'http://zh.wikipedia.org/wiki/%E4%B8%AD%E5%8D%8E%E4%BA%BA%E6%B0%91%E5%85%B1%E5%92%8C%E5%9B%BD%E9%93%81%E8%B7%AF%E8%BF%90%E8%BE%93',
+        x:'center',
+        textStyle : {
+            color: '#fff'
+        }
+    },
+    tooltip : {
+        trigger: 'item',
+        formatter: '{b}'
+    },
+    legend: {
+        orient: 'vertical',
+        x:'left',
+        selectedMode:'single',
+        data:['八纵通道', '八横通道'],
+        textStyle : {
+            color: '#fff'
+        }
+    },
+    toolbox: {
+        show : true,
+        orient : 'vertical',
+        x: 'right',
+        y: 'center',
+        feature : {
+            mark : {show: true},
+            dataView : {show: true, readOnly: false},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    series : [
+        {
+            name: '八纵通道',
+            type: 'map',
+            roam: true,
+            hoverable: false,
+            mapType: 'china',
+            itemStyle:{
+                normal:{
+                    borderColor:'rgba(100,149,237,1)',
+                    borderWidth:0.5,
+                    areaStyle:{
+                        color: '#1b1b1b'
+                    }
+                }
+            },
+            data:[],
+            markLine : {
+                symbol: ['circle', 'circle'],  
+                symbolSize : 1,
+                effect : effect,
+                itemStyle : itemStyle(0),
+                smooth:true,
+                data : [
+                    [{name:'北京'}, {name:'哈尔滨'}],
+                    [{name:'哈尔滨'}, {name:'满洲里'}],
+                    
+                    [{name:'沈阳'}, {name:'大连'}],
+                    [{name:'大连'}, {name:'烟台'}],
+                    [{name:'烟台'}, {name:'青岛'}],
+                    [{name:'青岛'}, {name:'淮安'}],
+                    [{name:'淮安'}, {name:'上海'}],
+                    [{name:'上海'}, {name:'杭州'}],
+                    [{name:'杭州'}, {name:'宁波'}],
+                    [{name:'宁波'}, {name:'温州'}],
+                    [{name:'温州'}, {name:'福州'}],
+                    [{name:'福州'}, {name:'厦门'}],
+                    [{name:'厦门'}, {name:'广州'}],
+                    [{name:'广州'}, {name:'湛江'}],
+                    
+                    [{name:'北京'}, {name:'天津'}],
+                    [{name:'天津'}, {name:'济南'}],
+                    [{name:'济南'}, {name:'南京'}],
+                    [{name:'南京'}, {name:'上海'}],
+                    
+                    [{name:'北京'}, {name:'南昌'}],
+                    [{name:'南昌'}, {name:'深圳'}],
+                    [{name:'深圳'}, {name:'九龙红磡'}],
+                    
+                    [{name:'北京'}, {name:'郑州'}],
+                    [{name:'郑州'}, {name:'武汉'}],
+                    [{name:'武汉'}, {name:'广州'}],
+                    
+                    [{name:'大同'}, {name:'太原'}],
+                    [{name:'太原'}, {name:'焦作'}],
+                    [{name:'焦作'}, {name:'洛阳'}],
+                    [{name:'洛阳'}, {name:'柳州'}],
+                    [{name:'柳州'}, {name:'湛江'}],
+                    
+                    [{name:'包头'}, {name:'西安'}],
+                    [{name:'西安'}, {name:'重庆'}],
+                    [{name:'重庆'}, {name:'贵阳'}],
+                    [{name:'贵阳'}, {name:'柳州'}],
+                    [{name:'柳州'}, {name:'南宁'}],
+                    
+                    [{name:'兰州'}, {name:'成都'}],
+                    [{name:'成都'}, {name:'昆明'}]
+                ]
+            }
+        },
+        {
+            name: '八横通道',
+            type: 'map',
+            mapType: 'china',
+            itedmStyle:{
+                normal:{
+                    borderColor:'rgba(100,149,237,1)',
+                    borderWidth:0.5,
+                    areaStyle:{
+                        color: '#1b1b1b'
+                    }
+                }
+            },
+            data:[],
+            markLine : {
+                symbol: ['circle', 'circle'],  
+                symbolSize : 1,
+                effect : effect,
+                itemStyle : itemStyle(1),
+                smooth:true,
+                data : [
+                    [{name:'北京'}, {name:'兰州'}],
+                    [{name:'兰州'}, {name:'拉萨'}],
+                    
+                    [{name:'大同'}, {name:'秦皇岛'}],
+                    
+                    [{name:'神木'}, {name:'黄骅'}],
+                    
+                    [{name:'太原'}, {name:'德州'}],
+                    [{name:'德州'}, {name:'龙口'}],
+                    [{name:'龙口'}, {name:'烟台'}],
+                    
+                    [{name:'太原'}, {name:'德州'}],
+                    [{name:'德州'}, {name:'济南'}],
+                    [{name:'济南'}, {name:'青岛'}],
+                    
+                    [{name:'长治'}, {name:'邯郸'}],
+                    [{name:'邯郸'}, {name:'济南'}],
+                    [{name:'济南'}, {name:'青岛'}],
+                    
+                    [{name:'瓦塘'}, {name:'临汾'}],
+                    [{name:'临汾'}, {name:'长治'}],
+                    [{name:'长治'}, {name:'汤阴'}],
+                    [{name:'汤阴'}, {name:'台前'}],
+                    [{name:'台前'}, {name:'兖州'}],
+                    [{name:'兖州'}, {name:'日照'}],
+                    
+                    [{name:'侯马'}, {name:'月山'}],
+                    [{name:'月山'}, {name:'新乡'}],
+                    [{name:'新乡'}, {name:'兖州'}],
+                    [{name:'兖州'}, {name:'日照'}],
+                    
+                    [{name:'连云港'}, {name:'郑州'}],
+                    [{name:'郑州'}, {name:'兰州'}],
+                    [{name:'兰州'}, {name:'乌鲁木齐'}],
+                    [{name:'乌鲁木齐'}, {name:'阿拉山口'}],
+                    
+                    [{name:'西安'}, {name:'南阳'}],
+                    [{name:'南阳'}, {name:'信阳'}],
+                    [{name:'信阳'}, {name:'合肥'}],
+                    [{name:'合肥'}, {name:'南京'}],
+                    [{name:'南京'}, {name:'启东'}],
+                    
+                    [{name:'重庆'}, {name:'武汉'}],
+                    [{name:'武汉'}, {name:'九江'}],
+                    [{name:'九江'}, {name:'铜陵'}],
+                    [{name:'铜陵'}, {name:'南京'}],
+                    [{name:'南京'}, {name:'上海'}],
+                    
+                    [{name:'上海'}, {name:'怀化'}],
+                    [{name:'怀化'}, {name:'重庆'}],
+                    [{name:'重庆'}, {name:'成都'}],
+                    [{name:'成都'}, {name:'贵阳'}],
+                    [{name:'贵阳'}, {name:'昆明'}],
+                    
+                    [{name:'昆明'}, {name:'南宁'}],
+                    [{name:'南宁'}, {name:'黎塘'}],
+                    [{name:'黎塘'}, {name:'湛江'}]
+                ]
+            },
+            geoCoord: {
+                '阿拉山口':[82.5757,45.1706],
+                '包头':[109.8403,40.6574],
+                '北京':[116.4075,39.9040],
+                '成都':[104.0665,30.5723],
+                '大连':[121.6147,38.9140],
+                '大同':[113.3001,40.0768],
+                '德州':[116.3575,37.4341],
+                '福州':[119.2965,26.0745],
+                '广州':[113.2644,23.1292],
+                '贵阳':[106.6302,26.6477],
+                '哈尔滨':[126.5363,45.8023],
+                '邯郸':[114.5391,36.6256],
+                '杭州':[120.1551,30.2741],
+                '合肥':[117.2272,31.8206],
+                '侯马':[111.3720,35.6191],
+                '怀化':[109.9985,27.5550],
+                '淮安':[119.0153,33.6104],
+                '黄骅':[117.3300,38.3714],
+                '济南':[117.1205,36.6510],
+                '焦作':[113.2418,35.2159],
+                '九江':[116.0019,29.7051],
+                '九龙红磡':[114.1870,22.3076],
+                '昆明':[102.8329,24.8801],
+                '拉萨':[91.1409,29.6456],
+                '兰州':[103.8343,36.0611],
+                '黎塘':[109.1363,23.2066],
+                '连云港':[119.2216,34.5967],
+                '临汾':[111.5190,36.0880],
+                '柳州':[109.4160,24.3255],
+                '龙口':[120.4778,37.6461],
+                '洛阳':[112.4540,34.6197],
+                '满洲里':[117.3787,49.5978],
+                '南昌':[115.8581,28.6832],
+                '南京':[118.7969,32.0603],
+                '南宁':[108.3661,22.8172],
+                '南阳':[112.5283,32.9908],
+                '宁波':[121.5440,29.8683],
+                '启东':[121.6574,31.8082],
+                '秦皇岛':[119.6005,39.9354],
+                '青岛':[120.3826,36.0671],
+                '日照':[119.5269,35.4164],
+                '厦门':[118.0894,24.4798],
+                '上海':[121.4737,31.2304],
+                '深圳':[114.0579,22.5431],
+                '神木':[110.4871,38.8610],
+                '沈阳':[123.4315,41.8057],
+                '台前':[115.8717,35.9701],
+                '太原':[112.5489,37.8706],
+                '汤阴':[114.3572,35.9218],
+                '天津':[117.2010,39.0842],
+                '铜陵':[117.8121,30.9454],
+                '瓦塘':[109.7600,23.3161],
+                '温州':[120.6994,27.9943],
+                '乌鲁木齐':[87.6168,43.8256],
+                '武汉':[114.3054,30.5931],
+                '西安':[108.9402,34.3416],
+                '新乡':[113.9268,35.3030],
+                '信阳':[114.0913,32.1470],
+                '烟台':[121.4479,37.4638],
+                '兖州':[116.7838,35.5531],
+                '月山':[113.0550,35.2104],
+                '湛江':[110.3594,21.2707],
+                '长治':[113.1163,36.1954],
+                '郑州':[113.6254,34.7466],
+                '重庆':[106.5516,29.5630]
+            }
+        }
+    ]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="col-md-8">
+                <div id="main" class="main" style="height: 530px;"></div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
+
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        
+        </div><!--/.fluid-container-->
+
+    <footer id="footer"></footer>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
+    <script src="../asset/js/bootstrap.min.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>

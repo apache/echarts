@@ -4,39 +4,38 @@
  * 
  * @author pissang (https://github.com/pissang/)
  */
-define(function(require) {
+define(function (require) {
 
 'use strict';
 
-require('./kwargs');
+var kwargs = require('./kwargs');
 
 var ArraySlice = Array.prototype.slice;
-var global = window;
 
 // Polyfill of Typed Array
-global.Int32Array = global.Int32Array || Array;
-global.Int16Array = global.Int16Array || Array;
-global.Int8Array = global.Int8Array || Array;
-global.Uint32Array = global.Uint32Array || Array;
-global.Uint16Array = global.Uint16Array || Array;
-global.Uint8Array = global.Uint8Array || Array;
-global.Float32Array = global.Float32Array || Array;
-global.Float64Array = global.Float64Array || Array;
+this.Int32Array = window.Int32Array || Array;
+this.Int16Array = window.Int16Array || Array;
+this.Int8Array = window.Int8Array || Array;
+this.Uint32Array = window.Uint32Array || Array;
+this.Uint16Array = window.Uint16Array || Array;
+this.Uint8Array = window.Uint8Array || Array;
+this.Float32Array = window.Float32Array || Array;
+this.Float64Array = window.Float64Array || Array;
 
 // Map of numpy dtype and typed array
 // http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html#arrays-dtypes
 // http://www.khronos.org/registry/typedarray/specs/latest/
 var ArrayConstructor = {
-    'int32' : global.Int32Array,
-    'int16' : global.Int16Array,
-    'int8' : global.Int8Array,
-    'uint32' : global.Uint32Array,
-    'uint16' : global.Uint16Array,
-    'uint8' : global.Uint8Array,
+    'int32' : this.Int32Array,
+    'int16' : this.Int16Array,
+    'int8' : this.Int8Array,
+    'uint32' : this.Uint32Array,
+    'uint16' : this.Uint16Array,
+    'uint8' : this.Uint8Array,
     // 'uint8c' is not existed in numpy
-    'uint8c' : global.Uint8ClampedArray,
-    'float32' : global.Float32Array,
-    'float64' : global.Float64Array,
+    'uint8c' : this.Uint8ClampedArray,
+    'float32' : this.Float32Array,
+    'float64' : this.Float64Array,
     'number' : Array
 };
 
@@ -97,7 +96,7 @@ function guessDataType(arr) {
  * @param {Array|NDArray}  array
  * @param {String} dtype
  */
-var NDArray = function(array) {
+var NDArray = function (array) {
     // Last argument describe the data type of ndarray
     var dtype = arguments[arguments.length-1];
     if (typeof(dtype) == 'string') {
@@ -111,7 +110,7 @@ var NDArray = function(array) {
         if (array instanceof NDArray) {
             array._dtype = this._dtype;
             return array;
-        } else if (array.length) {
+        } else if (typeof(array.length) !== 'undefined') {
             // Init from array
             this.initFromArray(array);
         } else if(typeof(array) === 'number') {
@@ -152,7 +151,7 @@ NDArray.prototype = {
      * @param  {Array} input
      * @return {NDArray} this
      */
-    initFromArray : function(input) {
+    initFromArray : function (input) {
         var dim = getDimension(input);
         var cursor = 0;
         function flatten(axis, _out, _in) {
@@ -181,7 +180,7 @@ NDArray.prototype = {
      * @param  {Array} shape 
      * @return {NDArray} this
      */
-    initFromShape : function(shape) {
+    initFromShape : function (shape) {
         if (typeof(shape) == 'number') {
             shape = Array.prototype.slice.call(arguments);
         }
@@ -207,7 +206,7 @@ NDArray.prototype = {
      * @param  {Number} value
      * @return {NDArray} this
      */
-    fill : function(value) {
+    fill : function (value) {
         var data = this._array;
         for (var i = 0; i < data.length; i++) {
             data[i] = value;
@@ -219,7 +218,7 @@ NDArray.prototype = {
      * Get ndarray shape copy.
      * @return {Array}
      */
-    shape : function() {
+    shape : function () {
         // Create a copy
         return this._shape.slice();
     },
@@ -228,7 +227,7 @@ NDArray.prototype = {
      * Get array size
      * @return {Number}
      */
-    size : function() {
+    size : function () {
         return this._size;
     },
 
@@ -244,15 +243,15 @@ NDArray.prototype = {
      * 'float64'
      * @return {String}
      */
-    dtype : function() {
+    dtype : function () {
         return this._dtype;
     },
 
     /**
      * Get array dimension.
-     * @return {[type]} [description]
+     * @return {number} [description]
      */
-    dimension : function() {
+    dimension : function () {
         return this._shape.length;
     },
 
@@ -260,7 +259,7 @@ NDArray.prototype = {
      * Tuple of bytes to step in each dimension when traversing an array.
      * @return {Array}
      */
-    strides : function() {
+    strides : function () {
         var strides = calculateDimStrides(this._shape);
         var dTypeStride = dTypeStrideMap[this._dtype];
         for (var i = 0; i < strides.length; i++) {
@@ -273,7 +272,7 @@ NDArray.prototype = {
      * @param  {Array} shape
      * @return {NDArray}
      */
-    reshape : function(shape) {
+    reshape : function (shape) {
         if (typeof(shape) == 'number') {
             shape = Array.prototype.slice.call(arguments);
         }
@@ -285,7 +284,7 @@ NDArray.prototype = {
         return this;
     },
 
-    _isShapeValid : function(shape) {
+    _isShapeValid : function (shape) {
         return getSize(shape) === this._size;
     },
 
@@ -294,7 +293,7 @@ NDArray.prototype = {
      * @param  {Array} shape
      * @return {NDArray}
      */
-    resize : function(shape) {
+    resize : function (shape) {
         if (typeof(shape) == 'number') {
             shape = Array.prototype.slice.call(arguments);
         }
@@ -335,7 +334,7 @@ NDArray.prototype = {
      * @param  {NDArray} [out]
      * @return {NDArray}
      */
-    transpose : function(axes, out) {
+    transpose : kwargs(function (axes, out) {
         var originAxes = [];
         for (var i = 0; i < this._shape.length; i++) {
             originAxes.push(i);
@@ -365,7 +364,7 @@ NDArray.prototype = {
 
         return this._transposelike(targetAxes, out);
 
-    }.kwargs(),
+    }),
 
     /**
      * Return a new array with axis1 and axis2 interchanged.
@@ -374,9 +373,9 @@ NDArray.prototype = {
      * @param  {NDArray} out
      * @return {NDArray}
      */
-    swapaxes : function(axis1, axis2, out) {
+    swapaxes : kwargs(function (axis1, axis2, out) {
         return this.transpose([axis1, axis2], out);
-    }.kwargs(),
+    }),
 
     /**
      * Roll the specified axis backwards, until it lies in a given position.
@@ -385,7 +384,7 @@ NDArray.prototype = {
      * @param  {NDArray} out
      * @return {NDArray}
      */
-    rollaxis : function(axis, start, out) {
+    rollaxis : kwargs(function (axis, start, out) {
         if (axis >= this._shape.length) {
             throw new Error(axisOutofBoundsErrorMsg(axis));
         }
@@ -399,10 +398,10 @@ NDArray.prototype = {
 
         return this._transposelike(axes, out);
 
-    }.kwargs({ start : 0}),
+    }, { start : 0}),
 
     // Base function for transpose-like operations
-    _transposelike : function(axes, out) {
+    _transposelike : function (axes, out) {
         var source = this._array;
         var shape = this._shape.slice();
         var strides = calculateDimStrides(this._shape);
@@ -476,7 +475,7 @@ NDArray.prototype = {
      * @param {NDArray} [out]
      * @return {NDArray}
      */
-    repeat : function(repeats, axis, out) {
+    repeat : kwargs(function (repeats, axis, out) {
         var shape;
         // flattened input array
         if (typeof(axis) === 'undefined') {
@@ -519,17 +518,17 @@ NDArray.prototype = {
         }
 
         return out;
-    }.kwargs(),
+    }),
 
-    choose : function() {
+    choose : function () {
         console.warn('TODO');
     },
 
-    take : function() {
+    take : function () {
         console.warn('TODO');
     },
 
-    tile : function() {
+    tile : function () {
         console.warn('TODO');
     },
 
@@ -544,7 +543,7 @@ NDArray.prototype = {
      * @param  {Function} funcFlatten
      * @return {Number|NDArray}
      */
-    _withPreprocess1 : function(axis, out, funcWithAxis, funcFlatten) {
+    _withPreprocess1 : function (axis, out, funcWithAxis, funcFlatten) {
         var source = this._array;
         if (!this._size) {
             return;
@@ -594,7 +593,7 @@ NDArray.prototype = {
      * @param  {Function} funcFlatten
      * @return {NDArray}
      */
-    _withPreprocess2 : function(axis, out, funcWithAxis, funcFlatten) {
+    _withPreprocess2 : function (axis, out, funcWithAxis, funcFlatten) {
         var source = this._array;
         if (!this._size) {
             return;
@@ -651,7 +650,7 @@ NDArray.prototype = {
      * @param  {NDArray} out  
      * @return {NDArray}
      */
-    max : (function() {
+    max : kwargs((function () {
         function withAxis(data, source, offsetStride, axisSize, stride) {
             var cursor = 0;
             for (var offset = 0; offset < this._size; offset+=offsetStride) {
@@ -678,13 +677,13 @@ NDArray.prototype = {
             }
             return max;
         }
-        return function(axis, out) {
+        return function (axis, out) {
             return this._withPreprocess1(
                 axis, out,
                 withAxis, withFlatten
             );
         };
-    })().kwargs(),
+    })()),
     
 
     /**
@@ -693,7 +692,7 @@ NDArray.prototype = {
      * @param  {NDArray} out  
      * @return {NDArray}
      */
-    min : (function() {
+    min : kwargs((function () {
         function withAxis(data, source, offsetStride, axisSize, stride) {
             var cursor = 0;
             for (var offset = 0; offset < this._size; offset+=offsetStride) {
@@ -720,13 +719,13 @@ NDArray.prototype = {
             }
             return min;
         }
-        return function(axis, out) {
+        return function (axis, out) {
             return this._withPreprocess1(
                 axis, out,
                 withAxis, withFlatten
             );
         };
-    })().kwargs(),
+    })()),
 
     /**
      * Return indices of the maximum values along an axis.
@@ -734,7 +733,7 @@ NDArray.prototype = {
      * @param  {NDArray} out  
      * @return {NDArray}
      */
-    argmax : (function() {
+    argmax : kwargs((function () {
         function withAxis(data, source, offsetStride, axisSize, stride) {
             var cursor = 0;
             for (var offset = 0; offset < this._size; offset+=offsetStride) {
@@ -765,13 +764,13 @@ NDArray.prototype = {
             }
             return idx;
         }
-        return function(axis, out) {
+        return function (axis, out) {
             return this._withPreprocess1(
                 axis, out,
                 withAxis, withFlatten
             );
         };
-    })().kwargs(),
+    })()),
 
     /**
      * Indices of the minimum values along an axis.
@@ -779,7 +778,7 @@ NDArray.prototype = {
      * @param  {NDArray} out  
      * @return {NDArray}
      */
-    argmin : (function() {
+    argmin : kwargs((function () {
         function withAxis(data, source, offsetStride, axisSize, stride) {
             var cursor = 0;
             for (var offset = 0; offset < this._size; offset+=offsetStride) {
@@ -810,13 +809,13 @@ NDArray.prototype = {
             }
             return idx;
         }
-        return function(axis, out) {
+        return function (axis, out) {
             return this._withPreprocess1(
                 axis, out,
                 withAxis, withFlatten
             );
         };
-    })().kwargs(),
+    })()),
 
     /**
      * Return the sum of the array elements over the given axis.
@@ -824,7 +823,7 @@ NDArray.prototype = {
      * @param  {NDArray} out  
      * @return {NDArray}
      */
-    sum : (function() {
+    sum : kwargs((function () {
         function withAxis(data, source, offsetStride, axisSize, stride) {
             var cursor = 0;
             for (var offset = 0; offset < this._size; offset+=offsetStride) {
@@ -846,13 +845,13 @@ NDArray.prototype = {
             }
             return sum;
         }
-        return function(axis, out) {
+        return function (axis, out) {
             return this._withPreprocess1(
                 axis, out,
                 withAxis, withFlatten
             );
         };
-    })().kwargs(),
+    })()),
 
     /**
      * Return the product of the array elements over the given axis.
@@ -860,7 +859,7 @@ NDArray.prototype = {
      * @param  {NDArray} out  
      * @return {NDArray}
      */
-    prod : (function() {
+    prod : kwargs((function () {
         function withAxis(data, source, offsetStride, axisSize, stride) {
             var cursor = 0;
             for (var offset = 0; offset < this._size; offset+=offsetStride) {
@@ -882,13 +881,13 @@ NDArray.prototype = {
             }
             return prod;
         }
-        return function(axis, out) {
+        return function (axis, out) {
             return this._withPreprocess1(
                 axis, out,
                 withAxis, withFlatten
             );
         };
-    })().kwargs(),
+    })()),
 
     /**
      * Returns the average of the array elements along given axis.
@@ -896,7 +895,7 @@ NDArray.prototype = {
      * @param  {NDArray} out  
      * @return {NDArray}
      */
-    mean : (function() {
+    mean : kwargs((function () {
         function withAxis(data, source, offsetStride, axisSize, stride) {
             var cursor = 0;
             for (var offset = 0; offset < this._size; offset+=offsetStride) {
@@ -921,13 +920,13 @@ NDArray.prototype = {
             var mean = sum / len;
             return mean;
         }
-        return function(axis, out) {
+        return function (axis, out) {
             return this._withPreprocess1(
                 axis, out,
                 withAxis, withFlatten
             );
         };
-    })().kwargs(),
+    })()),
 
     /**
      * Return the variance of the array elements over the given axis.
@@ -935,7 +934,7 @@ NDArray.prototype = {
      * @param  {NDArray} out  
      * @return {NDArray}
      */
-    'var' : (function() {
+    'var' : kwargs((function () {
         function withAxis(data, source, offsetStride, axisSize, stride) {
             var cursor = 0;
             for (var offset = 0; offset < this._size; offset+=offsetStride) {
@@ -972,13 +971,13 @@ NDArray.prototype = {
             }
             return moments / len;
         }
-        return function(axis, out) {
+        return function (axis, out) {
             return this._withPreprocess1(
                 axis, out,
                 withAxis, withFlatten
             );
         };
-    })().kwargs(),
+    })()),
     
     /**
      * Return the standard derivatione of the array elements
@@ -987,7 +986,7 @@ NDArray.prototype = {
      * @param  {NDArray} out  
      * @return {NDArray}
      */
-    std : (function() {
+    std : kwargs((function () {
         function withAxis(data, source, offsetStride, axisSize, stride) {
             var cursor = 0;
             for (var offset = 0; offset < this._size; offset+=offsetStride) {
@@ -1024,13 +1023,13 @@ NDArray.prototype = {
             }
             return Math.sqrt(moments / len);
         }
-        return function(axis, out) {
+        return function (axis, out) {
             return this._withPreprocess1(
                 axis, out,
                 withAxis, withFlatten
             );
         };
-    })().kwargs(),
+    })()),
     
     /**
      * Peak to peak (maximum - minimum) value along a given axis.
@@ -1038,7 +1037,7 @@ NDArray.prototype = {
      * @param  {NDArray} out  
      * @return {NDArray}
      */
-    ptp : (function() {
+    ptp : kwargs((function () {
         function withAxis(data, source, offsetStride, axisSize, stride) {
             var cursor = 0;
             for (var offset = 0; offset < this._size; offset+=offsetStride) {
@@ -1073,13 +1072,13 @@ NDArray.prototype = {
             }
             return max - min;
         }
-        return function(axis, out) {
+        return function (axis, out) {
             return this._withPreprocess1(
                 axis, out,
                 withAxis, withFlatten
             );
         };
-    })().kwargs(),
+    })()),
 
     /**
      * 
@@ -1090,17 +1089,17 @@ NDArray.prototype = {
      */
     // FIXME : V8 is quick sort, firefox and safari is merge sort
     // order : ascending or desc
-    sort : function(axis, order) {
+    sort : kwargs(function (axis, order) {
         if (axis < 0) {
             axis = this._shape.length + axis;
         }
         var compareFunc;
         if (order === 'ascending') {
-            compareFunc = function(a, b) {
+            compareFunc = function (a, b) {
                 return a - b;
             };
         } else if( order === 'descending') {
-            compareFunc = function(a, b) {
+            compareFunc = function (a, b) {
                 return b - a;
             };
         }
@@ -1133,7 +1132,7 @@ NDArray.prototype = {
 
         return this;
 
-    }.kwargs({axis : -1, order : 'ascending'}),
+    }, {axis : -1, order : 'ascending'}),
 
     /**
      * 
@@ -1143,7 +1142,7 @@ NDArray.prototype = {
      * @param {NDArray} [out]
      * @return {NDArray}
      */
-    argsort : function(axis, order, out) {
+    argsort : kwargs(function (axis, order, out) {
         if (axis < 0) {
             axis = this._shape.length + axis;
         }
@@ -1161,11 +1160,11 @@ NDArray.prototype = {
 
         var compareFunc;
         if (order === 'ascending') {
-            compareFunc = function(a, b) {
+            compareFunc = function (a, b) {
                 return tmp[a] - tmp[b];
             };
         } else if( order === 'descending') {
-            compareFunc = function(a, b) {
+            compareFunc = function (a, b) {
                 return tmp[b] - tmp[a];
             };
         }
@@ -1198,7 +1197,7 @@ NDArray.prototype = {
 
         return out;
 
-    }.kwargs({axis : -1, order : 'ascending'}),
+    }, {axis : -1, order : 'ascending'}),
 
     /**
      * Return the cumulative sum of the elements along the given axis.
@@ -1206,7 +1205,7 @@ NDArray.prototype = {
      * @param  {NDArray} out  
      * @return {NDArray}
      */
-    cumsum : (function() {
+    cumsum : kwargs((function () {
         function withAxis(data, source, offsetStride, axisSize, stride) {
             for (var offset = 0; offset < this._size; offset+=offsetStride) {
                 for (var i = 0; i < stride; i++) {
@@ -1228,13 +1227,13 @@ NDArray.prototype = {
                 data[i] = data[i-1] + source[i];
             }
         }
-        return function(axis, out) {
+        return function (axis, out) {
             return this._withPreprocess2(
                 axis, out,
                 withAxis, withFlatten
             );
         };
-    })().kwargs(),
+    })()),
 
     /**
      * Return the cumulative product of the elements along the given axis.
@@ -1242,7 +1241,7 @@ NDArray.prototype = {
      * @param  {NDArray} out  
      * @return {NDArray}
      */
-    cumprod : (function() {
+    cumprod : kwargs((function () {
         function withAxis(data, source, offsetStride, axisSize, stride) {
             for (var offset = 0; offset < this._size; offset+=offsetStride) {
                 for (var i = 0; i < stride; i++) {
@@ -1264,13 +1263,13 @@ NDArray.prototype = {
                 data[i] = data[i-1] * source[i];
             }
         }
-        return function(axis, out) {
+        return function (axis, out) {
             return this._withPreprocess2(
                 axis, out,
                 withAxis, withFlatten
             );
         };
-    })().kwargs(),
+    })()),
 
     /**
      * Dot product of two arrays.
@@ -1279,7 +1278,7 @@ NDArray.prototype = {
      * @param  {NDArray}        [out]
      * @return {NDArray|Number}
      */
-    dot : function() {
+    dot : function () {
         console.warn('TODO');
     },
 
@@ -1288,7 +1287,7 @@ NDArray.prototype = {
      * @param {Number} mappedMin
      * @param {Number} mappedMax
      */
-    map : function(mappedMin, mappedMax) {
+    map : function (mappedMin, mappedMax) {
         var input = this._array;
         var output = this._array;
 
@@ -1321,7 +1320,7 @@ NDArray.prototype = {
     /**
      * Add
      */
-    add : function(rightOperand, out) {
+    add : function (rightOperand, out) {
         return this.binaryOperation(
             this, rightOperand, E_ADD, out 
         );
@@ -1330,7 +1329,7 @@ NDArray.prototype = {
     /**
      * Substract
      */
-    sub : function(rightOperand, out) {
+    sub : function (rightOperand, out) {
         return this.binaryOperation(
             this, rightOperand, E_SUB, out
         );
@@ -1339,7 +1338,7 @@ NDArray.prototype = {
     /**
      * Multiply
      */
-    mul : function(rightOperand, out) {
+    mul : function (rightOperand, out) {
         return this.binaryOperation(
             this, rightOperand, E_MUL, out
         );
@@ -1348,7 +1347,7 @@ NDArray.prototype = {
     /**
      * Divide
      */
-    div : function(rightOperand, out) {
+    div : function (rightOperand, out) {
         return this.binaryOperation(
             this, rightOperand, E_DIV, out
         );
@@ -1356,7 +1355,7 @@ NDArray.prototype = {
     /**
      * mod
      */
-    mod : function(rightOperand, out) {
+    mod : function (rightOperand, out) {
         return this.binaryOperation(
             this, rightOperand, E_MOD, out
         );
@@ -1364,7 +1363,7 @@ NDArray.prototype = {
     /**
      * and
      */
-    and : function(rightOperand, out) {
+    and : function (rightOperand, out) {
         return this.binaryOperation(
             this, rightOperand, E_AND, out
         );
@@ -1372,7 +1371,7 @@ NDArray.prototype = {
     /**
      * or
      */
-    or : function(rightOperand, out) {
+    or : function (rightOperand, out) {
         return this.binaryOperation(
             this, rightOperand, E_OR, out
         );
@@ -1380,7 +1379,7 @@ NDArray.prototype = {
     /**
      * xor
      */
-    xor : function(rightOperand, out) {
+    xor : function (rightOperand, out) {
         return this.binaryOperation(
             this, rightOperand, E_XOR, out
         );
@@ -1388,13 +1387,13 @@ NDArray.prototype = {
     /**
      * equal
      */
-    equal : function(rightOperand) {
+    equal : function (rightOperand, out) {
         return this.binaryOperation(
             this, rightOperand, E_EQL, out
         );
     },
 
-    binaryOperation : function(lo, ro, op, out) {
+    binaryOperation : function (lo, ro, op, out) {
         // Broadcasting
         // http://docs.scipy.org/doc/numpy/user/basics.broadcasting.html
         var shape = [];
@@ -1563,7 +1562,7 @@ NDArray.prototype = {
     /**
      * negtive
      */
-    neg : function() {
+    neg : function () {
         var data = this._array;
         for (var i = 0; i < this._size; i++) {
             data[i] = -data[i];
@@ -1574,63 +1573,63 @@ NDArray.prototype = {
     /**
      * @return {NDArray} this
      */
-    sin : function() {
+    sin : function () {
         return this._mathAdapter(Math.sin);
     },
 
     /**
      * @return {NDArray} this
      */
-    cos : function() {
+    cos : function () {
         return this._mathAdapter(Math.cos);
     },
 
     /**
      * @return {NDArray} this
      */
-    tan : function() {
+    tan : function () {
         return this._mathAdapter(Math.tan);
     },
 
     /**
      * @return {NDArray} this
      */
-    abs : function() {
+    abs : function () {
         return this._mathAdapter(Math.abs);
     },
 
     /**
      * @return {NDArray} this
      */
-    log : function() {
+    log : function () {
         return this._mathAdapter(Math.log);
     },
 
     /**
      * @return {NDArray} this
      */
-    sqrt : function() {
+    sqrt : function () {
         return this._mathAdapter(Math.sqrt);
     },
 
     /**
      * @return {NDArray} this
      */
-    ceil : function() {
+    ceil : function () {
         return this._mathAdapter(Math.ceil);
     },
 
     /**
      * @return {NDArray} this
      */
-    floor : function() {
+    floor : function () {
         return this._mathAdapter(Math.floor);
     },
     
     /**
      * @return {NDArray} this
      */
-    pow : function(exp) {
+    pow : function (exp) {
         var data = this._array;
         for (var i = 0; i < this._size; i++) {
             data[i] = Math.pow(data[i], exp);
@@ -1638,7 +1637,7 @@ NDArray.prototype = {
         return this;
     },
 
-    _mathAdapter : function(mathFunc) {
+    _mathAdapter : function (mathFunc) {
         var data = this._array;
         for (var i = 0; i < this._size; i++) {
             data[i] = mathFunc(data[i]);
@@ -1650,7 +1649,7 @@ NDArray.prototype = {
      * @param   {Number} decimals
      * @return  {NDArray} this
      */
-    round : function(decimals) {
+    round : function (decimals) {
         decimals = Math.floor(decimals || 0);
         var offset = Math.pow(10, decimals);
         var data = this._array;
@@ -1670,7 +1669,7 @@ NDArray.prototype = {
      * @param {Number} max
      * Clip to [min, max]
      */
-    clip : function(min, max) {
+    clip : function (min, max) {
         // TODO : Support array_like param
         var data = this._array;
         for (var i = 0; i < this._size; i++) {
@@ -1691,7 +1690,7 @@ NDArray.prototype = {
      * @param {NDArray} [out]
      * @return {NDArray} New created sub array, or out if given
      */
-    get : function(index, out) {
+    get : function (index, out) {
         if (typeof(index) == 'number') {
             index = index.toString();
         }
@@ -1769,7 +1768,7 @@ NDArray.prototype = {
      * @param {NDArray} ndarray Ndarray data source
      * @return {NDArray} this
      */
-    set : function(index, narray) {
+    set : function (index, narray) {
         if (typeof(index) == 'number') {
             index = index.toString();
         }
@@ -1794,7 +1793,7 @@ NDArray.prototype = {
             var source = narray._array;
         }
         var cursor = 0;
-        var setPiece = function(axis, offset) {
+        var setPiece = function (axis, offset) {
             var range = ranges[axis];
             var stride = strides[axis];
             if (axis < len-1) {
@@ -1847,7 +1846,7 @@ NDArray.prototype = {
      * @param  {Number} [axis]
      * @return {NDArray} this
      */
-    insert : function(obj, values, axis) {
+    insert : kwargs(function (obj, values, axis) {
         var data = this._array;
         var isObjScalar = false;
         if (typeof(obj) === 'number') {
@@ -1961,11 +1960,11 @@ NDArray.prototype = {
         this._size = resSize;
 
         return this;
-    }.kwargs(),
+    }),
 
-    append : function() {
+    append : function () {
         console.warn('TODO');
-    }.kwargs(),
+    },
 
     /**
      * Delete values along the axis
@@ -1973,7 +1972,7 @@ NDArray.prototype = {
      * @param  {Number} [axis]
      * @return {NDArray} this
      */
-    'delete' : function(obj, axis) {
+    'delete' : kwargs(function (obj, axis) {
         var data = this._array;
         if (typeof(obj) === 'number') {
             obj = [obj];
@@ -2023,9 +2022,9 @@ NDArray.prototype = {
         this._size = getSize(this._shape);
 
         return this;
-    }.kwargs(),
+    }),
 
-    _parseRanges : function(index) {
+    _parseRanges : function (index) {
         var rangesStr = index.split(/\s*,\s*/);
         
         // Parse range of each axis
@@ -2064,7 +2063,7 @@ NDArray.prototype = {
      * Export normal js array
      * @return {Array}
      */
-    toArray : function() {
+    toArray : function () {
         var data = this._array;
         var cursor = 0;
 
@@ -2092,7 +2091,7 @@ NDArray.prototype = {
      * Create a copy of self
      * @return {NDArray}
      */
-    copy : function() {
+    copy : function () {
         var numArr = new NDArray();
         numArr._array = ArraySlice.call(this._array);
         numArr._shape = this._shape.slice();
@@ -2113,7 +2112,7 @@ NDArray.prototype = {
  * @param  {string} [dtype]
  * @return {NDArray}
  */
-NDArray.range = function(min, max, step, dtype) {
+NDArray.range = kwargs(function (min, max, step, dtype) {
     var args = ArraySlice.call(arguments);
     // Last argument describe the data type of ndarray
     var lastArg = args[args.length-1];
@@ -2143,7 +2142,7 @@ NDArray.range = function(min, max, step, dtype) {
 
     return ndarray;
 
-}.kwargs();
+});
 
 /**
  * 
@@ -2151,11 +2150,11 @@ NDArray.range = function(min, max, step, dtype) {
  * @param  {String} [dtype] 
  * @return {NDArray}       
  */
-NDArray.zeros = function(shape, dtype) {
+NDArray.zeros = kwargs(function (shape, dtype) {
     var ret = new NDArray(dtype);
     ret.initFromShape(shape);
     return ret;
-}.kwargs();
+});
 
 /**
  * Python like array indexing

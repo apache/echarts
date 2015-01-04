@@ -2,210 +2,178 @@
  * echarts组件： 数值轴
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, linzhifeng@baidu.com)
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
  *
  */
 define(function (require) {
+    var Base = require('./base');
+    
+    // 图形依赖
+    var TextShape = require('zrender/shape/Text');
+    var LineShape = require('zrender/shape/Line');
+    var RectangleShape = require('zrender/shape/Rectangle');
+    
+    var ecConfig = require('../config');
+    var ecDate = require('../util/date');
+    var zrUtil = require('zrender/tool/util');
+
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
      * @param {ZRender} zr zrender实例
      * @param {Object} option 类目轴参数
-     * @param {Grid} grid 网格对象
+     * @param {Object} component 组件
      * @param {Array} series 数据对象
      */
-    function ValueAxis(messageCenter, zr, option, component, series) {
-        var Base = require('./base');
-        Base.call(this, zr);
+    function ValueAxis(ecTheme, messageCenter, zr, option, myChart, axisBase, series) {
+        if (!series || series.length === 0) {
+            console.err('option.series.length == 0.');
+            return;
+        }
+        
+        Base.call(this, ecTheme, messageCenter, zr, option, myChart);
 
-        var ecConfig = require('../config');
-
-        var zrUtil = require('zrender/tool/util');
-
-        var self = this;
-        self.type = ecConfig.COMPONENT_TYPE_AXIS_VALUE;
-
-        var grid = component.grid;
-
-        var _zlevelBase = self.getZlevelBase();
-        var _min;
-        var _max;
-        var _hasData;
-        var _valueList;
-        var _valueLabel;
-
-        function _buildShape() {
-            _hasData = false;
-            _calculateValue();
-            if (!_hasData) {
+        this.series = series;
+        this.grid = this.component.grid;
+        
+        for (var method in axisBase) {
+            this[method] = axisBase[method];
+        }
+        
+        this.refresh(option, series);
+    }
+    
+    ValueAxis.prototype = {
+        type: ecConfig.COMPONENT_TYPE_AXIS_VALUE,
+        
+        _buildShape: function () {
+            this._hasData = false;
+            this._calculateValue();
+            if (!this._hasData || !this.option.show) {
                 return;
             }
-            option.splitArea.show && _buildSplitArea();
-            option.splitLine.show && _buildSplitLine();
-            option.axisLine.show && _buildAxisLine();
-            option.axisTick.show && _buildAxisTick();
-            option.axisLabel.show && _buildAxisLabel();
+            
+            this.option.splitArea.show && this._buildSplitArea();
+            this.option.splitLine.show && this._buildSplitLine();
+            this.option.axisLine.show && this._buildAxisLine();
+            this.option.axisTick.show && this._buildAxisTick();
+            this.option.axisLabel.show && this._buildAxisLabel();
 
-            for (var i = 0, l = self.shapeList.length; i < l; i++) {
-                self.shapeList[i].id = zr.newShapeId(self.type);
-                zr.addShape(self.shapeList[i]);
+            for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                this.zr.addShape(this.shapeList[i]);
             }
-        }
-
-        // 轴线
-        function _buildAxisLine() {
-            var axShape = {
-                shape : 'line',
-                zlevel : _zlevelBase + 1,
-                hoverable : false
-            };
-            switch (option.position) {
-                case 'left' :
-                    axShape.style = {
-                        xStart : grid.getX(),
-                        yStart : grid.getYend(),
-                        xEnd : grid.getX(),
-                        yEnd : grid.getY()
-                    };
-                    break;
-                case 'right' :
-                    axShape.style = {
-                        xStart : grid.getXend(),
-                        yStart : grid.getYend(),
-                        xEnd : grid.getXend(),
-                        yEnd : grid.getY()
-                    };
-                    break;
-                case 'bottom' :
-                    axShape.style = {
-                        xStart : grid.getX(),
-                        yStart : grid.getYend(),
-                        xEnd : grid.getXend(),
-                        yEnd : grid.getYend()
-                    };
-                    break;
-                case 'top' :
-                    axShape.style = {
-                        xStart : grid.getX(),
-                        yStart : grid.getY(),
-                        xEnd : grid.getXend(),
-                        yEnd : grid.getY()
-                    };
-                    break;
-            }
-            if (option.name !== '') {
-                axShape.style.text = option.name;
-                axShape.style.textPosition = option.nameLocation;
-            }
-            axShape.style.strokeColor = option.axisLine.lineStyle.color;
-            axShape.style.lineWidth = option.axisLine.lineStyle.width;
-            axShape.style.lineType = option.axisLine.lineStyle.type;
-
-            self.shapeList.push(axShape);
-        }
+        },
 
         // 小标记
-        function _buildAxisTick() {
+        _buildAxisTick: function () {
             var axShape;
-            var data       = _valueList;
-            var dataLength = _valueList.length;
-            var length     = option.axisTick.length;
-            var color      = option.axisTick.lineStyle.color;
-            var lineWidth  = option.axisTick.lineStyle.width;
+            var data       = this._valueList;
+            var dataLength = this._valueList.length;
+            var tickOption = this.option.axisTick;
+            var length     = tickOption.length;
+            var color      = tickOption.lineStyle.color;
+            var lineWidth  = tickOption.lineStyle.width;
 
-            if (option.position == 'bottom' || option.position == 'top') {
+            if (this.isHorizontal()) {
                 // 横向
-                var yPosition = option.position == 'bottom'
-                                ? grid.getYend()
-                                : (grid.getY() - length);
+                var yPosition = this.option.position === 'bottom'
+                        ? (tickOption.inside 
+                           ? (this.grid.getYend() - length - 1) : (this.grid.getYend()) + 1)
+                        : (tickOption.inside 
+                           ? (this.grid.getY() + 1) : (this.grid.getY() - length - 1));
+                var x;
                 for (var i = 0; i < dataLength; i++) {
+                    // 亚像素优化
+                    x = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        shape : 'line',
-                        zlevel : _zlevelBase,
-                        hoverable : false,
-                        style : {
-                            xStart : getCoord(data[i]),
-                            yStart : yPosition,
-                            xEnd : getCoord(data[i]),
-                            yEnd : yPosition + length,
-                            strokeColor : color,
-                            lineWidth : lineWidth
+                        _axisShape: 'axisTick',
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            xStart: x,
+                            yStart: yPosition,
+                            xEnd: x,
+                            yEnd: yPosition + length,
+                            strokeColor: color,
+                            lineWidth: lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    this.shapeList.push(new LineShape(axShape));
                 }
             }
             else {
                 // 纵向
-                var xPosition = option.position == 'left'
-                                ? (grid.getX() - length)
-                                : grid.getXend();
+                var xPosition = this.option.position === 'left'
+                    ? (tickOption.inside 
+                       ? (this.grid.getX() + 1) : (this.grid.getX() - length - 1))
+                    : (tickOption.inside 
+                       ? (this.grid.getXend() - length - 1) : (this.grid.getXend() + 1));
+
+                var y;
                 for (var i = 0; i < dataLength; i++) {
+                    // 亚像素优化
+                    y = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        shape : 'line',
-                        zlevel : _zlevelBase,
-                        hoverable : false,
-                        style : {
-                            xStart : xPosition,
-                            yStart : getCoord(data[i]),
-                            xEnd : xPosition + length,
-                            yEnd : getCoord(data[i]),
-                            strokeColor : color,
-                            lineWidth : lineWidth
+                        _axisShape: 'axisTick',
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            xStart: xPosition,
+                            yStart: y,
+                            xEnd: xPosition + length,
+                            yEnd: y,
+                            strokeColor: color,
+                            lineWidth: lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    this.shapeList.push(new LineShape(axShape));
                 }
             }
-        }
+        },
 
         // 坐标轴文本
-        function _buildAxisLabel() {
+        _buildAxisLabel: function () {
             var axShape;
-            var data       = _valueList;
-            var dataLength = _valueList.length;
-            var rotate     = option.axisLabel.rotate;
-            var margin     = option.axisLabel.margin;
-            var textStyle  = option.axisLabel.textStyle;
+            var data       = this._valueList;
+            var dataLength = this._valueList.length;
+            var rotate     = this.option.axisLabel.rotate;
+            var margin     = this.option.axisLabel.margin;
+            var clickable  = this.option.axisLabel.clickable;
+            var textStyle  = this.option.axisLabel.textStyle;
 
-            if (option.position == 'bottom' || option.position == 'top') {
+            if (this.isHorizontal()) {
                 // 横向
                 var yPosition;
                 var baseLine;
-                if (option.position == 'bottom') {
-                    yPosition = grid.getYend() + margin;
+                if (this.option.position === 'bottom') {
+                    yPosition = this.grid.getYend() + margin;
                     baseLine = 'top';
                 }
                 else {
-                    yPosition = grid.getY() - margin;
+                    yPosition = this.grid.getY() - margin;
                     baseLine = 'bottom';
                 }
 
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
-                        shape : 'text',
-                        zlevel : _zlevelBase,
-                        hoverable : false,
-                        style : {
-                            x : getCoord(data[i]),
-                            y : yPosition,
-                            color : textStyle.color,
-                            text : _valueLabel[i],
-                            textFont : self.getFont(textStyle),
-                            textAlign : (i === 0 && option.name !== '')
-                                        ? 'left'
-                                        : (i == (dataLength - 1) 
-                                           && option.name !== '')
-                                          ? 'right'
-                                          : 'center',
-                            textBaseline : baseLine
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            x: this.getCoord(data[i]),
+                            y: yPosition,
+                            color: typeof textStyle.color === 'function'
+                                   ? textStyle.color(data[i]) : textStyle.color,
+                            text: this._valueLabel[i],
+                            textFont: this.getFont(textStyle),
+                            textAlign: textStyle.align || 'center',
+                            textBaseline: textStyle.baseline || baseLine
                         }
                     };
                     if (rotate) {
                         axShape.style.textAlign = rotate > 0
-                                                  ? (option.position == 'bottom'
+                                                  ? (this.option.position === 'bottom'
                                                     ? 'right' : 'left')
-                                                  : (option.position == 'bottom'
+                                                  : (this.option.position === 'bottom'
                                                     ? 'left' : 'right');
                         axShape.rotation = [
                             rotate * Math.PI / 180,
@@ -213,40 +181,43 @@ define(function (require) {
                             axShape.style.y
                         ];
                     }
-                    self.shapeList.push(axShape);
+                    this.shapeList.push(new TextShape(
+                        this._axisLabelClickable(clickable, axShape)
+                    ));
                 }
             }
             else {
                 // 纵向
                 var xPosition;
                 var align;
-                if (option.position == 'left') {
-                    xPosition = grid.getX() - margin;
+                if (this.option.position === 'left') {
+                    xPosition = this.grid.getX() - margin;
                     align = 'right';
                 }
                 else {
-                    xPosition = grid.getXend() + margin;
+                    xPosition = this.grid.getXend() + margin;
                     align = 'left';
                 }
 
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
-                        shape : 'text',
-                        zlevel : _zlevelBase,
-                        hoverable : false,
-                        style : {
-                            x : xPosition,
-                            y : getCoord(data[i]),
-                            color : textStyle.color,
-                            text : _valueLabel[i],
-                            textFont : self.getFont(textStyle),
-                            textAlign : align,
-                            textBaseline : (i === 0 && option.name !== '')
-                                           ? 'bottom'
-                                           : (i == (dataLength - 1) 
-                                              && option.name !== '')
-                                             ? 'top'
-                                             : 'middle'
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            x: xPosition,
+                            y: this.getCoord(data[i]),
+                            color: typeof textStyle.color === 'function'
+                                   ? textStyle.color(data[i]) : textStyle.color,
+                            text: this._valueLabel[i],
+                            textFont: this.getFont(textStyle),
+                            textAlign: textStyle.align || align,
+                            textBaseline: textStyle.baseline 
+                                          || (i === 0 && this.option.name !== '')
+                                              ? 'bottom'
+                                              : (i === (dataLength - 1) 
+                                                 && this.option.name !== '')
+                                                ? 'top'
+                                                : 'middle'
                         }
                     };
                     
@@ -257,268 +228,212 @@ define(function (require) {
                             axShape.style.y
                         ];
                     }
-                    self.shapeList.push(axShape);
+                    this.shapeList.push(new TextShape(
+                        this._axisLabelClickable(clickable, axShape)
+                    ));
                 }
             }
-        }
+        },
 
-        function _buildSplitLine() {
+        _buildSplitLine: function () {
             var axShape;
-            var data       = _valueList;
-            var dataLength = _valueList.length;
-            var color = option.splitLine.lineStyle.color;
+            var data        = this._valueList;
+            var dataLength  = this._valueList.length;
+            var sLineOption = this.option.splitLine;
+            var lineType    = sLineOption.lineStyle.type;
+            var lineWidth   = sLineOption.lineStyle.width;
+            var color       = sLineOption.lineStyle.color;
             color = color instanceof Array ? color : [color];
             var colorLength = color.length;
 
-            if (option.position == 'bottom' || option.position == 'top') {
+            if (this.isHorizontal()) {
                 // 横向
-                var sy = grid.getY();
-                var ey = grid.getYend();
+                var sy = this.grid.getY();
+                var ey = this.grid.getYend();
                 var x;
 
                 for (var i = 0; i < dataLength; i++) {
-                    x = getCoord(data[i]);
+                    // 亚像素优化
+                    x = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        shape : 'line',
-                        zlevel : _zlevelBase,
-                        hoverable : false,
-                        style : {
-                            xStart : x,
-                            yStart : sy,
-                            xEnd : x,
-                            yEnd : ey,
-                            strokeColor : color[i % colorLength],
-                            lineType : option.splitLine.lineStyle.type,
-                            lineWidth : option.splitLine.lineStyle.width
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            xStart: x,
+                            yStart: sy,
+                            xEnd: x,
+                            yEnd: ey,
+                            strokeColor: color[i % colorLength],
+                            lineType: lineType,
+                            lineWidth: lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    this.shapeList.push(new LineShape(axShape));
                 }
 
             }
             else {
                 // 纵向
-                var sx = grid.getX();
-                var ex = grid.getXend();
+                var sx = this.grid.getX();
+                var ex = this.grid.getXend();
                 var y;
 
                 for (var i = 0; i < dataLength; i++) {
-                    y = getCoord(data[i]);
+                    // 亚像素优化
+                    y = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        shape : 'line',
-                        zlevel : _zlevelBase,
-                        hoverable : false,
-                        style : {
-                            xStart : sx,
-                            yStart : y,
-                            xEnd : ex,
-                            yEnd : y,
-                            strokeColor : color[i % colorLength],
-                            lineType : option.splitLine.lineStyle.type,
-                            lineWidth : option.splitLine.lineStyle.width
+                        zlevel: this._zlevelBase,
+                        hoverable: false,
+                        style: {
+                            xStart: sx,
+                            yStart: y,
+                            xEnd: ex,
+                            yEnd: y,
+                            strokeColor: color[i % colorLength],
+                            lineType: lineType,
+                            lineWidth: lineWidth
                         }
                     };
-                    self.shapeList.push(axShape);
+                    this.shapeList.push(new LineShape(axShape));
                 }
             }
-        }
+        },
 
-        function _buildSplitArea() {
+        _buildSplitArea: function () {
             var axShape;
-            var color = option.splitArea.areaStyle.color;
+            var color = this.option.splitArea.areaStyle.color;
 
             if (!(color instanceof Array)) {
                 // 非数组一律认为是单一颜色的字符串，单一颜色则用一个背景，颜色错误不负责啊！！！
                 axShape = {
-                    shape : 'rectangle',
-                    zlevel : _zlevelBase,
-                    hoverable : false,
-                    style : {
-                        x : grid.getX(),
-                        y : grid.getY(),
-                        width : grid.getWidth(),
-                        height : grid.getHeight(),
-                        color : color
-                        // type : option.splitArea.areaStyle.type,
+                    zlevel: this._zlevelBase,
+                    hoverable: false,
+                    style: {
+                        x: this.grid.getX(),
+                        y: this.grid.getY(),
+                        width: this.grid.getWidth(),
+                        height: this.grid.getHeight(),
+                        color: color
+                        // type: this.option.splitArea.areaStyle.type,
                     }
                 };
-                self.shapeList.push(axShape);
+                this.shapeList.push(new RectangleShape(axShape));
             }
             else {
                 // 多颜色
                 var colorLength = color.length;
-                var data        = _valueList;
-                var dataLength  = _valueList.length;
+                var data        = this._valueList;
+                var dataLength  = this._valueList.length;
 
-                if (option.position == 'bottom' || option.position == 'top') {
+                if (this.isHorizontal()) {
                     // 横向
-                    var y = grid.getY();
-                    var height = grid.getHeight();
-                    var lastX = grid.getX();
+                    var y = this.grid.getY();
+                    var height = this.grid.getHeight();
+                    var lastX = this.grid.getX();
                     var curX;
 
                     for (var i = 0; i <= dataLength; i++) {
                         curX = i < dataLength
-                               ? getCoord(data[i])
-                               : grid.getXend();
+                               ? this.getCoord(data[i])
+                               : this.grid.getXend();
                         axShape = {
-                            shape : 'rectangle',
-                            zlevel : _zlevelBase,
-                            hoverable : false,
-                            style : {
-                                x : lastX,
-                                y : y,
-                                width : curX - lastX,
-                                height : height,
-                                color : color[i % colorLength]
-                                // type : option.splitArea.areaStyle.type,
+                            zlevel: this._zlevelBase,
+                            hoverable: false,
+                            style: {
+                                x: lastX,
+                                y: y,
+                                width: curX - lastX,
+                                height: height,
+                                color: color[i % colorLength]
+                                // type: this.option.splitArea.areaStyle.type,
                             }
                         };
-                        self.shapeList.push(axShape);
+                        this.shapeList.push(new RectangleShape(axShape));
                         lastX = curX;
                     }
                 }
                 else {
                     // 纵向
-                    var x = grid.getX();
-                    var width = grid.getWidth();
-                    var lastYend = grid.getYend();
+                    var x = this.grid.getX();
+                    var width = this.grid.getWidth();
+                    var lastYend = this.grid.getYend();
                     var curY;
 
                     for (var i = 0; i <= dataLength; i++) {
                         curY = i < dataLength
-                               ? getCoord(data[i])
-                               : grid.getY();
+                               ? this.getCoord(data[i])
+                               : this.grid.getY();
                         axShape = {
-                            shape : 'rectangle',
-                            zlevel : _zlevelBase,
-                            hoverable : false,
-                            style : {
-                                x : x,
-                                y : curY,
-                                width : width,
-                                height : lastYend - curY,
-                                color : color[i % colorLength]
-                                // type : option.splitArea.areaStyle.type
+                            zlevel: this._zlevelBase,
+                            hoverable: false,
+                            style: {
+                                x: x,
+                                y: curY,
+                                width: width,
+                                height: lastYend - curY,
+                                color: color[i % colorLength]
+                                // type: this.option.splitArea.areaStyle.type
                             }
                         };
-                        self.shapeList.push(axShape);
+                        this.shapeList.push(new RectangleShape(axShape));
                         lastYend = curY;
                     }
                 }
             }
-        }
+        },
 
         /**
          * 极值计算
          */
-        function _calculateValue() {
-            if (isNaN(option.min) || isNaN(option.max)) {
+        _calculateValue: function () {
+            if (isNaN(this.option.min - 0) || isNaN(this.option.max - 0)) {
                 // 有一个没指定都得算
                 // 数据整形
-                var oriData;            // 原始数据
                 var data = {};          // 整形后数据抽取
-                var value;
                 var xIdx;
                 var yIdx;
-                var legend = component.legend;
-                for (var i = 0, l = series.length; i < l; i++) {
-                    if (series[i].type != ecConfig.CHART_TYPE_LINE
-                        && series[i].type != ecConfig.CHART_TYPE_BAR
-                        && series[i].type != ecConfig.CHART_TYPE_SCATTER
-                        && series[i].type != ecConfig.CHART_TYPE_K
+                var legend = this.component.legend;
+                for (var i = 0, l = this.series.length; i < l; i++) {
+                    if (this.series[i].type != ecConfig.CHART_TYPE_LINE
+                        && this.series[i].type != ecConfig.CHART_TYPE_BAR
+                        && this.series[i].type != ecConfig.CHART_TYPE_SCATTER
+                        && this.series[i].type != ecConfig.CHART_TYPE_K
+                        && this.series[i].type != ecConfig.CHART_TYPE_EVENTRIVER
                     ) {
                         // 非坐标轴支持的不算极值
                         continue;
                     }
                     // 请允许我写开，跟上面一个不是一样东西
-                    if (legend && !legend.isSelected(series[i].name)){
+                    if (legend && !legend.isSelected(this.series[i].name)){
                         continue;
                     }
 
                     // 不指定默认为第一轴线
-                    xIdx = series[i].xAxisIndex || 0;
-                    yIdx = series[i].yAxisIndex || 0;
-                    if ((option.xAxisIndex != xIdx)
-                        && (option.yAxisIndex != yIdx)
+                    xIdx = this.series[i].xAxisIndex || 0;
+                    yIdx = this.series[i].yAxisIndex || 0;
+                    if ((this.option.xAxisIndex != xIdx)
+                        && (this.option.yAxisIndex != yIdx)
                     ) {
                         // 不是自己的数据不计算极值
                         continue;
                     }
-
-                    if (!series[i].stack) {
-                        var key = series[i].name || '';
-                        data[key] = [];
-                        oriData = series[i].data;
-                        for (var j = 0, k = oriData.length; j < k; j++) {
-                            value = typeof oriData[j].value != 'undefined'
-                                    ? oriData[j].value
-                                    : oriData[j];
-                            if (series[i].type == ecConfig.CHART_TYPE_SCATTER) {
-                                if (option.xAxisIndex != -1) {
-                                    data[key].push(value[0]);
-                                }
-                                if (option.yAxisIndex != -1) {
-                                    data[key].push(value[1]);
-                                }
-                            }
-                            else if (series[i].type == ecConfig.CHART_TYPE_K) {
-                                data[key].push(value[0]);
-                                data[key].push(value[1]);
-                                data[key].push(value[2]);
-                                data[key].push(value[3]);
-                            }
-                            else {
-                                data[key].push(value);
-                            }
-                        }
-                    }
-                    else {
-                        // 堆叠数据，需要区分正负向堆叠
-                        var keyP = '__Magic_Key_Positive__' + series[i].stack;
-                        var keyN = '__Magic_Key_Negative__' + series[i].stack;
-                        data[keyP] = data[keyP] || [];
-                        data[keyN] = data[keyN] || [];
-                        oriData = series[i].data;
-                        for (var j = 0, k = oriData.length; j < k; j++) {
-                            value = typeof oriData[j].value != 'undefined'
-                                    ? oriData[j].value
-                                    : oriData[j];
-                            if (value == '-') {
-                                continue;
-                            }
-                            value = value - 0;
-                            if (value >= 0) {
-                                if (typeof data[keyP][j] != 'undefined') {
-                                    data[keyP][j] += value;
-                                }
-                                else {
-                                    data[keyP][j] = value;
-                                }
-                            }
-                            else {
-                                if (typeof data[keyN][j] != 'undefined') {
-                                    data[keyN][j] += value;
-                                }
-                                else {
-                                    data[keyN][j] = value;
-                                }
-                            }
-                        }
-                    }
+                    
+                    this._calculSum(data, i);
                 }
+                
                 // 找极值
+                var oriData;            // 原始数据
                 for (var i in data){
                     oriData = data[i];
                     for (var j = 0, k = oriData.length; j < k; j++) {
                         if (!isNaN(oriData[j])){
-                            _hasData = true;
-                            _min = oriData[j];
-                            _max = oriData[j];
+                            this._hasData = true;
+                            this._min = oriData[j];
+                            this._max = oriData[j];
                             break;
                         }
                     }
-                    if (_hasData) {
+                    if (this._hasData) {
                         break;
                     }
                 }
@@ -526,328 +441,394 @@ define(function (require) {
                     oriData = data[i];
                     for (var j = 0, k = oriData.length; j < k; j++) {
                         if (!isNaN(oriData[j])){
-                            _min = Math.min(_min, oriData[j]);
-                            _max = Math.max(_max, oriData[j]);
+                            this._min = Math.min(this._min, oriData[j]);
+                            this._max = Math.max(this._max, oriData[j]);
+                        }
+                    }
+                }
+                
+                // console.log(this._min,this._max,'vvvvv111111',this.option.type)
+                var gap = Math.abs(this._max - this._min);
+                this._min = isNaN(this.option.min - 0)
+                       ? (this._min - Math.abs(gap * this.option.boundaryGap[0]))
+                       : (this.option.min - 0);    // 指定min忽略boundaryGay[0]
+    
+                this._max = isNaN(this.option.max - 0)
+                       ? (this._max + Math.abs(gap * this.option.boundaryGap[1]))
+                       : (this.option.max - 0);    // 指定max忽略boundaryGay[1]
+                if (this._min === this._max) {
+                    if (this._max === 0) {
+                        // 修复全0数据
+                        this._max = 1;
+                    }
+                    // 修复最大值==最小值时数据整形
+                    else if (this._max > 0) {
+                        this._min = this._max / this.option.splitNumber != null ? this.option.splitNumber : 5;
+                    }
+                    else { // this._max < 0
+                        this._max = this._max / this.option.splitNumber != null ? this.option.splitNumber : 5;
+                    }
+                }
+                this.option.type != 'time' 
+                    ? this._reformValue(this.option.scale)
+                    : this._reformTimeValue();
+            }
+            else {
+                this._hasData = true;
+                // 用户指定min max就不多管闲事了
+                this._min = this.option.min - 0;    // 指定min忽略boundaryGay[0]
+                this._max = this.option.max - 0;    // 指定max忽略boundaryGay[1]
+                this.option.type != 'time' 
+                    ? this._customerValue()
+                    : this._reformTimeValue();
+            }
+        },
+
+        /**
+         * 内部使用，计算某系列下的堆叠和
+         */
+        _calculSum: function (data, i) {
+            var key = this.series[i].name || 'kener';
+            var value;
+            var oriData;
+            if (!this.series[i].stack) {
+                data[key] = data[key] || [];
+                if (this.series[i].type != ecConfig.CHART_TYPE_EVENTRIVER) {
+                    oriData = this.series[i].data;
+                    for (var j = 0, k = oriData.length; j < k; j++) {
+                        value = oriData[j].value != null
+                                ? oriData[j].value
+                                : oriData[j];
+                        if (this.series[i].type === ecConfig.CHART_TYPE_K) {
+                            data[key].push(value[0]);
+                            data[key].push(value[1]);
+                            data[key].push(value[2]);
+                            data[key].push(value[3]);
+                        }
+                        else if (value instanceof Array) {
+                            // scatter 、 不等距 line bar
+                            if (this.option.xAxisIndex != -1) {
+                                data[key].push(
+                                    this.option.type != 'time'
+                                    ? value[0] : ecDate.getNewDate(value[0])
+                                );
+                            }
+                            if (this.option.yAxisIndex != -1) {
+                                data[key].push(
+                                    this.option.type != 'time'
+                                    ? value[1] : ecDate.getNewDate(value[1])
+                                );
+                            }
+                        }
+                        else {
+                            data[key].push(value);
+                        }
+                    }
+                }
+                else {
+                    // eventRiver
+                    oriData = this.series[i].eventList;
+                    for (var j = 0, k = oriData.length; j < k; j++) {
+                        var evolution = oriData[j].evolution;
+                        for (var m = 0, n = evolution.length; m < n; m++) {
+                            data[key].push(ecDate.getNewDate(evolution[m].time));
                         }
                     }
                 }
             }
             else {
-                _hasData = true;
+                // 堆积数据，需要区分正负向堆积
+                var keyP = '__Magic_Key_Positive__' + this.series[i].stack;
+                var keyN = '__Magic_Key_Negative__' + this.series[i].stack;
+                data[keyP] = data[keyP] || [];
+                data[keyN] = data[keyN] || [];
+                data[key] = data[key] || [];  // scale下还需要记录每一个量
+                oriData = this.series[i].data;
+                for (var j = 0, k = oriData.length; j < k; j++) {
+                    value = oriData[j].value != null
+                            ? oriData[j].value
+                            : oriData[j];
+                    if (value === '-') {
+                        continue;
+                    }
+                    value = value - 0;
+                    if (value >= 0) {
+                        if (data[keyP][j] != null) {
+                            data[keyP][j] += value;
+                        }
+                        else {
+                            data[keyP][j] = value;
+                        }
+                    }
+                    else {
+                        if (data[keyN][j] != null) {
+                            data[keyN][j] += value;
+                        }
+                        else {
+                            data[keyN][j] = value;
+                        }
+                    }
+                    if (this.option.scale) {
+                        data[key].push(value);
+                    }
+                }
             }
-            //console.log(_min,_max,'vvvvv111111')
-            _min = isNaN(option.min)
-                   ? (_min - Math.abs(_min * option.boundaryGap[0]))
-                   : option.min;    // 指定min忽略boundaryGay[0]
-
-            _max = isNaN(option.max)
-                   ? (_max + Math.abs(_max * option.boundaryGap[1]))
-                   : option.max;    // 指定max忽略boundaryGay[1]
-            if (_min == _max) {
-                _max += 1;
-            }
-            _reformValue(option.scale);
-        }
-
+        },
+        
         /**
-         * 找到原始数据的极值后根据选项整形最终 _min / _max / _valueList
+         * 找到原始数据的极值后根据选项整形最终 this._min / this._max / this._valueList
          * 如果你不知道这个“整形”的用义，请不要试图去理解和修改这个方法！找我也没用，我相信我已经记不起来！
          * 如果你有更简洁的数学推导欢迎重写，后果自负~
-         * 一旦你不得不遇到了需要修改或重写的厄运，希望下面的脚手架能帮助你
-         * ps:其实我是想说别搞砸了！升级后至少得保证这些case通过！！
          *
-         * by linzhifeng@baidu.com 2013-1-8
+         * by kener.linfeng@gmail.com 2013-1-8
          * --------
-             _valueList = [];
-             option = {splitNumber:5,power:100,precision:0};
-             _min = 1; _max = 123; console.log(_min, _max); _reformValue();
-             console.log('result is :', _min, _max, _valueList);
-             console.log('should be : 0 150 [0, 30, 60, 90, 120, 150]',
-                        (_min == 0 && _max == 150) ? 'success' : 'failed');
-
-             _min = 10; _max = 1923; console.log(_min, _max); _reformValue();
-             console.log('result is :', _min, _max, _valueList);
-             console.log('should be : 0 2000 [0, 400, 800, 1200, 1600, 2000]',
-                        (_min == 0 && _max == 2000) ? 'success' : 'failed');
-
-             _min = 10; _max = 78; console.log(_min, _max); _reformValue();
-             console.log('result is :', _min, _max, _valueList);
-             console.log('should be : 0 100 [0, 20, 40, 60, 80, 100]',
-                        (_min == 0 && _max == 100) ? 'success' : 'failed');
-
-             _min = -31; _max = -3; console.log(_min, _max); _reformValue();
-             console.log('result is :', _min, _max, _valueList);
-             console.log('should be : -35 0 [-35, -28, -21, -14, -7, 0]',
-                        (_min == -35 && _max == 0) ? 'success' : 'failed');
-
-             _min = -51; _max = 203; console.log(_min, _max); _reformValue();
-             console.log('result is :', _min, _max, _valueList);
-             console.log('should be : -60 240 [-60, 0, 60, 120, 180, 240]',
-                        (_min == -60 && _max == 240) ? 'success' : 'failed');
-
-             _min = -251; _max = 23; console.log(_min, _max); _reformValue();
-             console.log('result is :', _min, _max, _valueList);
-             console.log('should be : -280 70 [-280, -210, -140, -70, 0, 70]',
-                        (_min == -280 && _max == 70) ? 'success' : 'failed');
-
-             option.precision = 2;
-             _min = 0.23; _max = 0.78; console.log(_min, _max); _reformValue();
-             console.log('result is :', _min, _max, _valueList);
-             console.log('should be : 0.00 1.00'
-                 + '["0.00", "0.20", "0.40", "0.60", "0.80", "1.00"]',
-                (_min == 0.00 && _max == 1.00) ? 'success' : 'failed');
-
-             _min = -12.23; _max = -0.78; console.log(_min, _max);
-             _reformValue();
-             console.log('result is :', _min, _max, _valueList);
-             console.log('should be : -15.00 0.00'
-                 + '["-15.00", "-12.00", "-9.00", "-6.00", "-3.00", "0.00"]',
-                (_min == -15.00 && _max == 0.00) ? 'success' : 'failed');
-
-             _min = -0.23; _max = 0.78; console.log(_min, _max); _reformValue();
-             console.log('result is :', _min, _max, _valueList);
-             console.log('should be : -0.30 1.20'
-                 + '["-0.30", "0.00", "0.30", "0.60", "0.90", "1.20"]',
-                (_min == -0.30 && _max == 1.20) ? 'success' : 'failed');
-
-             _min = -1.23; _max = 0.78; console.log(_min, _max); _reformValue();
-             console.log('result is :', _min, _max, _valueList);
-             console.log('should be : -1.50 1.00'
-                 + '["-1.50", "-1.00", "-0.50", "0.00", "0.50", "1.00"]',
-                (_min == -1.50 && _max == 1.00) ? 'success' : 'failed');
-
-             option.precision = 1;
-             _min = -2.3; _max = 0.5; console.log(_min, _max); _reformValue();
-             console.log('result is :', _min, _max, _valueList);
-             console.log('should be : -2.4 0.6'
-                 + '["-2.4", "-1.8", "-1.2", "-0.6", "0.0", "0.6"]',
-                (_min == -2.4 && _max == 0.6) ? 'success' : 'failed');
-         * --------
+         * 感谢谢世威(https://github.com/i6ma)，终于有人改这个方法了
+         * by Kener 2014-11-6
          */
-        function _reformValue(scale) {
-            var splitNumber = option.splitNumber;
-            var precision = option.precision;
-            var splitGap;
-            var power;
-            if (precision === 0) {    // 整数
-                 power = option.power;
+        _reformValue: function (scale) {
+            var smartSteps = require('../util/smartSteps');
+            var splitNumber = this.option.splitNumber;
+            
+            // 非scale下双正，修正最小值为0
+            if (!scale && this._min >= 0 && this._max >= 0) {
+                this._min = 0;
             }
-            else {                          // 小数
-                // 放大倍数后复用整数逻辑，最后再缩小回去
-                power = Math.pow(10, precision);
-                _min *= power;
-                _max *= power;
-                power = option.power;
-            }
-            // console.log(_min,_max)
-            var total;
-            if (_min >= 0 && _max >= 0) {
-                // 双正
-                if (!scale) {
-                    _min = 0;
-                }
-                // power自动降级
-                while ((_max / power < splitNumber) && power != 1) {
-                    power = power / 10;
-                }
-                total = _max - _min;
-                // 粗算
-                splitGap = Math.ceil((total / splitNumber) / power) * power;
-                if (scale) {
-                    if (precision === 0) {    // 整数
-                        _min = Math.floor(_min / splitGap) * splitGap;
-                    }
-                    // 修正
-                    if (_min + splitGap * splitNumber < _max) {
-                        splitGap = 
-                            Math.ceil(((_max - _min) / splitNumber) / power)
-                            * power;
-                    }
-                }
-                
-                _max = _min + splitGap * splitNumber;
-            }
-            else if (_min <= 0 && _max <= 0) {
-                // 双负
-                if (!scale) {
-                    _max = 0;
-                }
-                power = -power;
-                // power自动降级
-                while ((_min / power < splitNumber) && power != -1) {
-                    power = power / 10;
-                }
-                total = _min - _max;
-                splitGap = -Math.ceil((total / splitNumber) / power) * power;
-                if (scale) {
-                    if (precision === 0) {    // 整数
-                        _max = Math.ceil(_max / splitGap) * splitGap;
-                    }
-                    // 修正
-                    if (_max - splitGap * splitNumber > _min) {
-                        splitGap = 
-                            Math.ceil(((_min - _max) / splitNumber) / power)
-                            * power;
-                    }
-                }
-                
-                _min = -splitGap * splitNumber + _max;
-            }
-            else {
-                // 一正一负，确保0被选中
-                total = _max - _min;
-                // power自动降级
-                while ((total / power < splitNumber) && power != 1) {
-                    power = power/10;
-                }
-                // 正数部分的分隔数
-                var partSplitNumber = Math.round(_max / total * splitNumber);
-                // 修正数据范围极度偏正向，留给负数一个
-                partSplitNumber -= (partSplitNumber == splitNumber ? 1 : 0);
-                // 修正数据范围极度偏负向，留给正数一个
-                partSplitNumber += partSplitNumber === 0 ? 1 : 0;
-                splitGap = (Math.ceil(Math.max(
-                                          _max / partSplitNumber,
-                                          _min / (partSplitNumber - splitNumber)
-                                      )
-                           / power))
-                           * power;
-
-                _max = splitGap * partSplitNumber;
-                _min = splitGap * (partSplitNumber - splitNumber);
-            }
-            //console.log(_min,_max,'vvvvvrrrrrr')
-            _valueList = [];
-            for (var i = 0; i <= splitNumber; i++) {
-                _valueList.push(_min + splitGap * i);
-            }
-
-            if (precision !== 0) {    // 小数
-                 // 放大倍数后复用整数逻辑，最后再缩小回去
-                power = Math.pow(10, precision);
-                _min = (_min / power).toFixed(precision) - 0;
-                _max = (_max / power).toFixed(precision) - 0;
-                for (var i = 0; i <= splitNumber; i++) {
-                    _valueList[i] = (_valueList[i] / power).toFixed(precision);
-                }
+            // 非scale下双负，修正最大值为0
+            if (!scale && this._min <= 0 && this._max <= 0) {
+                this._max = 0;
             }
             
-            _reformLabelData();
-        }
-
-        function _reformLabelData() {
-            _valueLabel = [];
-            var formatter = option.axisLabel.formatter;
-            if (formatter) {
-                for (var i = 0, l = _valueList.length; i < l; i++) {
-                    if (typeof formatter == 'function') {
-                        _valueLabel.push(formatter(_valueList[i]));
+            var stepOpt = smartSteps(this._min, this._max, splitNumber);
+            splitNumber = splitNumber != null ? splitNumber : stepOpt.secs;
+            this.option.splitNumber = splitNumber;
+            this._min = stepOpt.min;
+            this._max = stepOpt.max;
+            this._valueList = stepOpt.pnts;
+            this._reformLabelData();
+        },
+        
+        /**
+         * 格式化时间值 
+         */
+        _reformTimeValue : function() {
+            var splitNumber = this.option.splitNumber != null ? this.option.splitNumber : 5;
+            
+            // 最优解
+            var curValue = ecDate.getAutoFormatter(this._min, this._max, splitNumber);
+            // 目标
+            var formatter = curValue.formatter;
+            var gapValue = curValue.gapValue;
+            
+            this._valueList = [ecDate.getNewDate(this._min)];
+            var startGap;
+            switch (formatter) {
+                case 'week' :
+                    startGap = ecDate.nextMonday(this._min);
+                    break;
+                case 'month' :
+                    startGap = ecDate.nextNthOnMonth(this._min, 1);
+                    break;
+                case 'quarter' :
+                    startGap = ecDate.nextNthOnQuarterYear(this._min, 1);
+                    break;
+                case 'half-year' :
+                    startGap = ecDate.nextNthOnHalfYear(this._min, 1);
+                    break;
+                case 'year' :
+                    startGap = ecDate.nextNthOnYear(this._min, 1);
+                    break;
+                default :
+                    // 大于2小时需要考虑时区不能直接取整
+                    if (gapValue <= 3600000 * 2) {
+                        startGap = (Math.floor(this._min / gapValue) + 1) * gapValue;
                     }
-                    else if (typeof formatter == 'string') {
-                        _valueLabel.push(
-                            formatter.replace('{value}',_valueList[i])
+                    else {
+                        startGap = ecDate.getNewDate(this._min - (-gapValue));
+                        startGap.setHours(Math.round(startGap.getHours() / 6) * 6);
+                        startGap.setMinutes(0);
+                        startGap.setSeconds(0);
+                    }
+                    break;
+            }
+            
+            if (startGap - this._min < gapValue / 2) {
+                startGap -= -gapValue;
+            }
+            
+            // console.log(startGap,gapValue,this._min, this._max,formatter)
+            curValue = ecDate.getNewDate(startGap);
+            splitNumber *= 1.5;
+            while (splitNumber-- >= 0) {
+                if (formatter == 'month' 
+                    || formatter == 'quarter' 
+                    || formatter == 'half-year'
+                    || formatter == 'year'
+                ) {
+                    curValue.setDate(1);
+                }
+                if (this._max - curValue < gapValue / 2) {
+                    break;
+                }
+                this._valueList.push(curValue);
+                curValue = ecDate.getNewDate(curValue - (-gapValue));
+            }
+            this._valueList.push(ecDate.getNewDate(this._max));
+
+            this._reformLabelData(formatter);
+        },
+        
+        _customerValue: function () {
+            var accMath = require('../util/accMath');
+            var splitNumber = this.option.splitNumber != null ? this.option.splitNumber : 5;
+            var splitGap = (this._max - this._min) / splitNumber;
+            
+            this._valueList = [];
+            for (var i = 0; i <= splitNumber; i++) {
+                this._valueList.push(accMath.accAdd(this._min, accMath.accMul(splitGap, i)));
+            }
+            this._reformLabelData();
+        },
+
+        _reformLabelData: function (timeFormatter) {
+            this._valueLabel = [];
+            var formatter = this.option.axisLabel.formatter;
+            if (formatter) {
+                for (var i = 0, l = this._valueList.length; i < l; i++) {
+                    if (typeof formatter === 'function') {
+                        this._valueLabel.push(
+                            timeFormatter
+                                ? formatter.call(this.myChart, this._valueList[i], timeFormatter)
+                                : formatter.call(this.myChart, this._valueList[i])
+                        );
+                    }
+                    else if (typeof formatter === 'string') {
+                        this._valueLabel.push(
+                            timeFormatter 
+                                ? ecDate.format(formatter, this._valueList[i])
+                                : formatter.replace('{value}',this._valueList[i])
                         );
                     }
                 }
             }
+            else if (timeFormatter) {
+                for (var i = 0, l = this._valueList.length; i < l; i++) {
+                    this._valueLabel.push(ecDate.format(timeFormatter, this._valueList[i]));
+                }
+            }
             else {
-                _valueLabel = _valueList;
+                // 每三位默认加,格式化
+                for (var i = 0, l = this._valueList.length; i < l; i++) {
+                    this._valueLabel.push(this.numAddCommas(this._valueList[i]));
+                }
             }
-
-        }
+        },
         
-        function getExtremum() {
-            _calculateValue();
+        getExtremum: function () {
+            this._calculateValue();
             return {
-                min: _min,
-                max: _max
+                min: this._min,
+                max: this._max
             };
-        }
-
-        /**
-         * 构造函数默认执行的初始化方法，也用于创建实例后动态修改
-         * @param {Object} newZr
-         * @param {Object} newOption
-         * @param {Object} newGrid
-         */
-        function init(newOption, newGrid, newSeries) {
-            if (!newSeries || newSeries.length === 0) {
-                return;
-            }
-            grid = newGrid;
-            
-            refresh(newOption, newSeries);
-        }
+        },
 
         /**
          * 刷新
          */
-        function refresh(newOption, newSeries) {
+        refresh: function (newOption, newSeries) {
             if (newOption) {
-                option = self.reformOption(newOption);
+                this.option = this.reformOption(newOption);
                 // 通用字体设置
-                option.axisLabel.textStyle = zrUtil.merge(
-                    option.axisLabel.textStyle || {},
-                    ecConfig.textStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
+                this.option.axisLabel.textStyle = zrUtil.merge(
+                    this.option.axisLabel.textStyle || {},
+                    this.ecTheme.textStyle
                 );
-                option.axisLabel.textStyle = zrUtil.merge(
-                    option.axisLabel.textStyle || {},
-                    ecConfig.textStyle,
-                    {
-                        'overwrite' : false,
-                        'recursive' : true
-                    }
-                );
-                series = newSeries;
+                this.series = newSeries;
             }
-            if (zr) {   // 数值轴的另外一个功能只是用来计算极值
-                self.clear();
-                _buildShape();
+            if (this.zr) {   // 数值轴的另外一个功能只是用来计算极值
+                this.clear();
+                this._buildShape();
             }
-        }
+        },
 
         // 根据值换算位置
-        function getCoord(value) {
-            value = value < _min ? _min : value;
-            value = value > _max ? _max : value;
+        getCoord: function (value) {
+            value = value < this._min ? this._min : value;
+            value = value > this._max ? this._max : value;
 
-            var valueRange = _max - _min;
-            var total;
             var result;
-            if (option.position == 'left' || option.position == 'right') {
+            if (!this.isHorizontal()) {
                 // 纵向
-                total = grid.getHeight();
-                result = grid.getYend() - (value - _min) / valueRange * total;
+                result = this.grid.getYend() 
+                         - (value - this._min) 
+                           / (this._max - this._min) 
+                           * this.grid.getHeight();
             }
             else {
                 // 横向
-                total = grid.getWidth();
-                result = (value - _min) / valueRange * total + grid.getX();
+                result = this.grid.getX() 
+                         + (value - this._min) 
+                           / (this._max - this._min) 
+                           * this.grid.getWidth();
             }
 
+            return result;
             // Math.floor可能引起一些偏差，但性能会更好
-            return (value == _min || value == _max)
+            /* 准确更重要
+            return (value === this._min || value === this._max)
                    ? result
                    : Math.floor(result);
+            */
+        },
+        
+        // 根据值换算绝对大小
+        getCoordSize: function (value) {
+            if (!this.isHorizontal()) {
+                // 纵向
+                return Math.abs(value / (this._max - this._min) * this.grid.getHeight());
+            }
+            else {
+                // 横向
+                return Math.abs(value / (this._max - this._min) * this.grid.getWidth());
+            }
+        },
+        
+        // 根据位置换算值
+        getValueFromCoord: function(coord) {
+            var result;
+            if (!this.isHorizontal()) {
+                // 纵向
+                coord = coord < this.grid.getY() ? this.grid.getY() : coord;
+                coord = coord > this.grid.getYend() ? this.grid.getYend() : coord;
+                result = this._max 
+                         - (coord - this.grid.getY()) 
+                           / this.grid.getHeight() 
+                           * (this._max - this._min);
+            }
+            else {
+                // 横向
+                coord = coord < this.grid.getX() ? this.grid.getX() : coord;
+                coord = coord > this.grid.getXend() ? this.grid.getXend() : coord;
+                result = this._min 
+                         + (coord - this.grid.getX()) 
+                           / this.grid.getWidth() 
+                           * (this._max - this._min);
+            }
+            
+            return result.toFixed(2) - 0;
+        },
+        
+        isMaindAxis : function (value) {
+            for (var i = 0, l = this._valueList.length; i < l; i++) {
+                if (this._valueList[i] === value) {
+                    return true;
+                }
+            }
+            return false;
         }
+    };
 
-        function getPosition() {
-            return option.position;
-        }
-
-        self.init = init;
-        self.refresh = refresh;
-        self.getExtremum = getExtremum;
-        self.getCoord = getCoord;
-        self.getPosition = getPosition;
-
-        init(option, grid, series);
-    }
-
+    zrUtil.inherits(ValueAxis, Base);
+    
     require('../component').define('valueAxis', ValueAxis);
     
     return ValueAxis;

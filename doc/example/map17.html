@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="kener.linfeng@gmail.com">
+    <title>ECharts · Example</title>
+
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+
+    <link href="../asset/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/carousel.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="./www/js/echarts.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+
+    <style type="text/css">
+        .CodeMirror {
+            height: 550px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
+
+
+    <div class="container-fluid">
+        <div class="row-fluid example">
+            <div id="sidebar-code" class="col-md-4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+// 自定义扩展图表类型：mapType = body
+require('echarts/util/mapData/params').params.football = {
+    getGeoJson: function (callback) {
+        $.ajax({
+            url: "svg/football.svg",
+            dataType: 'xml',
+            success: function(xml) {
+                callback(xml)
+            }
+        });
+    }
+}
+option = {
+    backgroundColor:'#228b22',
+    title : {
+        text : '2014世界杯',
+        subtext: '地图SVG扩展',
+        textStyle: {
+            color: '#fff'
+        }
+    },
+    tooltip : {
+        trigger: 'item'
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : {show: true},
+            dataView : {show: true, readOnly: false},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    series : [
+        {
+            name: '2014世界杯',
+            type: 'map',
+            mapType: 'football', // 自定义扩展图表类型
+            roam:true,
+            itemStyle:{
+                normal:{label:{show:true}},
+                emphasis:{label:{show:true}}
+            },
+            data:[
+                {name: '草地', hoverable: false, itemStyle:{normal:{label:{show:false}}}}
+            ],
+            textFixed : {
+                '球门区1' : [0, -20],
+                '球门区2' : [0, -20],
+                '禁区1' : [10, 20],
+                '禁区2' : [-10, 20],
+                '禁区弧线1' : [0, -20],
+                '禁区弧线2' : [0, -20],
+                '中圈' : [0, -20],
+                '开球点' : [0, 20]
+            },
+            markPoint : {
+                symbol:'circle',
+                symbolSize : 20,
+                effect : {
+                    show: true,
+                    color: 'lime'
+                },
+                data : [
+                    {name: '开球点', value: 100, geoCoord:[425.126, 296.913]}
+                ]
+            },
+            markLine : {
+                smooth:true,
+                effect : {
+                    show: true,
+                    scaleSize: 1,
+                    period: 20,
+                    color: '#fff',
+                    shadowBlur: 5
+                },
+                itemStyle : {
+                    normal: {
+                        borderWidth:1,
+                        color: 'gold',
+                        lineStyle: {
+                            type: 'solid'
+                        }
+                    }
+                },
+                data : [
+                    [
+                        {name:'1', geoCoord:[96.879, 186.983]}, 
+                        {name:'2', geoCoord:[693.786, 297.939]}
+                    ],
+                    [
+                        {name:'2', geoCoord:[753.373, 186.983]},
+                        {name:'1', geoCoord:[156.467, 296.913]}
+                    ]
+                ]
+            }
+        }
+    ]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="col-md-8">
+                <div id="main" class="main" style="height: 530px;"></div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
+
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        
+        </div><!--/.fluid-container-->
+
+    <footer id="footer"></footer>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
+    <script src="../asset/js/bootstrap.min.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>

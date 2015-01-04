@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="kener.linfeng@gmail.com">
+    <title>ECharts · Example</title>
+
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+
+    <link href="../asset/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/carousel.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="./www/js/echarts.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
+
+
+    <div class="container-fluid">
+        <div class="row-fluid example">
+            <div id="sidebar-code" class="col-md-4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+// 虚拟构造同横纵坐标的两组数据
+var sData1 = (function () {
+    var d = [];
+    var len = 40;
+    var value;
+    while (len--) {
+        d.push([
+            Math.round(Math.random()*10) * (Math.round(Math.random()*10) > 5 ? 1 : -1),
+            Math.round(Math.random()*10) * (Math.round(Math.random()*10) > 5 ? 1 : -1),
+            Math.round(Math.random()*20)
+        ]);
+    }
+    return d;
+})();
+var sData2 = (function () {
+    var d = [];
+    var len = sData1.length;
+    for (var i = 0; i < len; i++) {
+        d.push([
+            sData1[i][0],
+            sData1[i][1],
+            Math.round(Math.random()*15)
+        ]);
+    }
+    return d;
+})();
+
+option = {
+    color : ['rgba(255, 69, 0, 0.5)', 'rgba(30, 144, 255, 0.5)'],
+    title : {
+        text: '饼图代替散点',
+        subtext : '混搭'
+    },
+    tooltip : {
+        trigger: 'item',
+         formatter: "{b} : {c} ({d}%)"
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : {show: true},
+            dataView : {show: true, readOnly: false},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    xAxis : [
+        {
+            type : 'value',
+            splitNumber: 2
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value',
+            splitNumber: 2
+        }
+    ],
+    animation: false,
+    series : [
+        {
+            type:'scatter',
+            symbol: 'none',
+            data: sData1
+        },
+        {
+            type:'scatter',
+            symbol: 'none',
+            data: sData2
+        }
+    ]
+};
+
+function buildPieSeries(){
+    var xAxis = myChart.component.xAxis.getAxis(0);
+    var yAxis = myChart.component.yAxis.getAxis(0);
+    var len = sData1.length;
+    option.series = option.series.slice(0,2);
+    option.legend = {
+        data : ['系列1', '系列2']
+    };
+    while (len--) {
+        option.series.push({
+            type: 'pie',
+            itemStyle : {
+                normal : {
+                    label : {
+                        show : false
+                    },
+                    labelLine : {
+                        show : false
+                    }
+                }
+            },
+            radius : sData1[len][2] + sData2[len][2],
+            center: [
+                xAxis.getCoord(sData1[len][0]), 
+                yAxis.getCoord(sData1[len][1])
+            ],
+            data: [
+                {name: '系列1', value: sData1[len][2]},
+                {name: '系列2', value: sData2[len][2]}
+            ]
+        })
+    }
+    option.animation = true;
+    myChart.setOption(option, true);
+    window.onresize = buildPieSeries;
+}
+// 构造出一系列的饼图代替原来的散点，需要在散点画出来后才能获取到散点的坐标，setTimeout！
+setTimeout(buildPieSeries, 100);
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="col-md-8">
+                <div id="main" class="main"></div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
+
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        
+        </div><!--/.fluid-container-->
+
+    <footer id="footer"></footer>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
+    <script src="../asset/js/bootstrap.min.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>

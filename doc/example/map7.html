@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="kener.linfeng@gmail.com">
+    <title>ECharts · Example</title>
+
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+
+    <link href="../asset/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/carousel.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="./www/js/echarts.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+
+    <style type="text/css">
+        .CodeMirror {
+            height: 550px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
+
+
+    <div class="container-fluid">
+        <div class="row-fluid example">
+            <div id="sidebar-code" class="col-md-4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+// 自定义扩展图表类型：mapType = USA
+require('echarts/util/mapData/params').params.USA = {
+    getGeoJson: function (callback) {
+        $.getJSON('geoJson/USA_geo.json', callback);
+    },
+    specialArea : {
+        Alaska : {              // 把阿拉斯加移到美国主大陆左下方
+            left : -127,        // 安放位置起始点为西经113
+            top : 30,           // 北纬31度
+            width : 15,         // 区间大小宽高不大于15度
+            height : 15
+        },
+        Hawaii : {
+            left : -110,        // 夏威夷
+            top : 28,
+            width : 5,
+            height : 5
+        },
+        'Puerto Rico' : {       // 波多黎各
+            left : -76,
+            top : 26,
+            width : 2,
+            height : 2
+        }
+    }
+}
+option = {
+    title : {
+        text: 'USA Population Estimates (2012)',
+        subtext: 'Data from www.census.gov.',
+        sublink: 'http://www.census.gov/popest/data/datasets.html',
+        x:'right'
+    },
+    tooltip : {
+        trigger: 'item',
+        showDelay: 0,
+        transitionDuration: 0.2,
+        formatter : function (params) {
+            var value = (params.value + '').split('.');
+            value = value[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,');
+            return params.seriesName + '<br/>' + params.name + ' : ' + value;
+        }
+    },
+    dataRange: {
+        x : 'right',
+        min: 500000,
+        max: 38000000,
+        color: ['orangered','yellow','lightskyblue'],
+        text:['High','Low'],           // 文本，默认为数值文本
+        calculable : true
+    },
+    toolbox: {
+        show : true,
+        //orient : 'vertical',
+        x: 'left',
+        y: 'top',
+        feature : {
+            mark : {show: true},
+            dataView : {show: true, readOnly: false},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    series : [
+        {
+            name: 'USA PopEstimates',
+            type: 'map',
+            roam: true,
+            mapType: 'USA', // 自定义扩展图表类型
+            itemStyle:{
+                emphasis:{label:{show:true}}
+            },
+            // 文本位置修正
+            textFixed : {
+                Alaska : [20, -20]
+            },
+            data:[
+                {name : 'Alabama', value : 4822023},
+                {name : 'Alaska', value : 731449},
+                {name : 'Arizona', value : 6553255},
+                {name : 'Arkansas', value : 2949131},
+                {name : 'California', value : 38041430},
+                {name : 'Colorado', value : 5187582},
+                {name : 'Connecticut', value : 3590347},
+                {name : 'Delaware', value : 917092},
+                {name : 'District of Columbia', value : 632323},
+                {name : 'Florida', value : 19317568},
+                {name : 'Georgia', value : 9919945},
+                {name : 'Hawaii', value : 1392313},
+                {name : 'Idaho', value : 1595728},
+                {name : 'Illinois', value : 12875255},
+                {name : 'Indiana', value : 6537334},
+                {name : 'Iowa', value : 3074186},
+                {name : 'Kansas', value : 2885905},
+                {name : 'Kentucky', value : 4380415},
+                {name : 'Louisiana', value : 4601893},
+                {name : 'Maine', value : 1329192},
+                {name : 'Maryland', value : 5884563},
+                {name : 'Massachusetts', value : 6646144},
+                {name : 'Michigan', value : 9883360},
+                {name : 'Minnesota', value : 5379139},
+                {name : 'Mississippi', value : 2984926},
+                {name : 'Missouri', value : 6021988},
+                {name : 'Montana', value : 1005141},
+                {name : 'Nebraska', value : 1855525},
+                {name : 'Nevada', value : 2758931},
+                {name : 'New Hampshire', value : 1320718},
+                {name : 'New Jersey', value : 8864590},
+                {name : 'New Mexico', value : 2085538},
+                {name : 'New York', value : 19570261},
+                {name : 'North Carolina', value : 9752073},
+                {name : 'North Dakota', value : 699628},
+                {name : 'Ohio', value : 11544225},
+                {name : 'Oklahoma', value : 3814820},
+                {name : 'Oregon', value : 3899353},
+                {name : 'Pennsylvania', value : 12763536},
+                {name : 'Rhode Island', value : 1050292},
+                {name : 'South Carolina', value : 4723723},
+                {name : 'South Dakota', value : 833354},
+                {name : 'Tennessee', value : 6456243},
+                {name : 'Texas', value : 26059203},
+                {name : 'Utah', value : 2855287},
+                {name : 'Vermont', value : 626011},
+                {name : 'Virginia', value : 8185867},
+                {name : 'Washington', value : 6897012},
+                {name : 'West Virginia', value : 1855413},
+                {name : 'Wisconsin', value : 5726398},
+                {name : 'Wyoming', value : 576412},
+                {name : 'Puerto Rico', value : 3667084}
+            ]
+        }
+    ]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="col-md-8">
+                <div id="main" class="main" style="height: 530px;"></div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
+
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        
+        </div><!--/.fluid-container-->
+
+    <footer id="footer"></footer>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
+    <script src="../asset/js/bootstrap.min.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>
