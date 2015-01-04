@@ -443,28 +443,23 @@ define(function (require) {
                 if (!ignoreUserDefined) {
                     gap = typeof barCategoryGap === 'string' && barCategoryGap.match(/%$/)
                           // 百分比
-                          ? Math.floor(
-                              categoryAxis.getGap() 
-                              * (100 - parseFloat(barCategoryGap)) 
-                              / 100
-                            )
+                          ? ((categoryAxis.getGap() * (100 - parseFloat(barCategoryGap)) / 100).toFixed(2) - 0)
                           // 数值
                           : (categoryAxis.getGap() - barCategoryGap);
                     if (typeof barGap === 'string' && barGap.match(/%$/)) {
                         barGap = parseFloat(barGap) / 100;
-                        barWidth = Math.floor(
+                        barWidth = ((
                             (gap - sBarWidthTotal)
-                            / ((locationMap.length - 1) * barGap 
-                               + locationMap.length - sBarWidthCounter)
-                        );
-                        barGap = Math.floor(barWidth * barGap);
+                            / ((locationMap.length - 1) * barGap + locationMap.length - sBarWidthCounter)
+                        ).toFixed(2) - 0);
+                        barGap = barWidth * barGap;
                     }
                     else {
                         barGap = parseFloat(barGap);
-                        barWidth = Math.floor(
+                        barWidth = ((
                             (gap - sBarWidthTotal - barGap * (locationMap.length - 1))
                             / (locationMap.length - sBarWidthCounter)
-                        );
+                        ).toFixed(2) - 0);
                     }
                     // 无法满足用户定义的宽度设计，忽略用户宽度，打回重做
                     if (barWidth <= 0) {
@@ -475,7 +470,7 @@ define(function (require) {
                     // 忽略用户定义的宽度设定
                     gap = categoryAxis.getGap();
                     barGap = 0;
-                    barWidth = Math.floor(gap / locationMap.length);
+                    barWidth = (gap / locationMap.length).toFixed(2) - 0;
                     // 已经忽略用户定义的宽度设定依然还无法满足显示，只能硬来了;
                     if (barWidth <= 0) {
                         interval = Math.floor(locationMap.length / gap);
@@ -488,18 +483,14 @@ define(function (require) {
                 gap = sBarWidthCounter > 1
                       ? (typeof barCategoryGap === 'string' && barCategoryGap.match(/%$/))
                           // 百分比
-                          ? Math.floor(
-                              categoryAxis.getGap() 
-                              * (100 - parseFloat(barCategoryGap)) 
-                              / 100
-                            )
+                          ? ((categoryAxis.getGap() * (100 - parseFloat(barCategoryGap)) / 100).toFixed(2) - 0)
                           // 数值
                           : (categoryAxis.getGap() - barCategoryGap)
                       // 只有一个
                       : sBarWidthTotal;
                 barWidth = 0;
                 barGap = sBarWidthCounter > 1 
-                         ? Math.floor((gap - sBarWidthTotal) / (sBarWidthCounter - 1))
+                         ? (((gap - sBarWidthTotal) / (sBarWidthCounter - 1)).toFixed(2) - 0)
                          : 0;
                 if (barGap < 0) {
                     // 无法满足用户定义的宽度设计，忽略用户宽度，打回重做
