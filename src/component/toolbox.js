@@ -448,6 +448,7 @@ define(function (require) {
                     zrEvent.getY(param.event) - this._zoomShape.style.y;
                 this.zr.addHoverShape(this._zoomShape);
                 this.dom.style.cursor = 'crosshair';
+                zrEvent.stop(param.event);
             }
             if (this._zoomStart
                 && (this.dom.style.cursor != 'pointer' && this.dom.style.cursor != 'move')
