@@ -56,7 +56,7 @@ $('#head')[0].innerHTML =
             + '<span class="icon-bar"></span>'
             + '<span class="icon-bar"></span>'
           + '</button>'
-          + '<a class="navbar-brand" href="http://echarts.baidu.com/index'
+          + '<a class="navbar-brand" href="http://ecomfe.github.io/echarts/index-en.html'
           + (enVersion ? '-en': '') 
           + '.html">ECharts</a>'
         + '</div>'
@@ -94,7 +94,7 @@ $('#head')[0].innerHTML =
                 + '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.zip"> echarts-' + version + ' (from Baidu)</a></li>'
                 + '<li><a href="https://github.com/ecomfe/echarts/archive/' + version + '.zip"> echarts-' + version + ' (from GitHub)</a></li>'
                 + '<li class="divider"></li>'
-                + '<li><a href="http://echarts.baidu.com/doc/changelog'
+                + '<li><a href="http://ecomfe.github.io/echarts/doc/changelog'
                   + (enVersion ? '-en': '') 
                   + '.html">Changelog</a></li>'
               + '</ul>'
