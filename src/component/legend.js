@@ -843,7 +843,7 @@ define(function (require) {
             SectorShape.prototype.buildPath(ctx, {
                 x: x + width / 2,
                 y: y + height + 2,
-                r: height + 2,
+                r: height,
                 r0: 6,
                 startAngle: 45,
                 endAngle: 135

@@ -259,7 +259,7 @@ define(function (require) {
             var r0 = params.radius[1] 
                      - this.parsePercent(
                          serie.splitLine.length, params.radius[1]
-                     ) - 10;
+                     ) - 5;
             
             var angle;
             var sinAngle;
