@@ -445,10 +445,8 @@ define(function (require) {
                     if (xy.indexOf('x') != '-1') {
                         if (xMarkMap[seriesIndex]['counter' + valueIndex] > 0) {
                             xMarkMap[seriesIndex]['average' + valueIndex] =
-                                (xMarkMap[seriesIndex]['sum' + valueIndex]
-                                 / xMarkMap[seriesIndex]['counter' + valueIndex]
-                                ).toFixed(2)
-                                - 0;
+                                xMarkMap[seriesIndex]['sum' + valueIndex] 
+                                / xMarkMap[seriesIndex]['counter' + valueIndex];
                         }
                         
                         var x = this.component.xAxis.getAxis(series[seriesIndex].xAxisIndex || 0)
@@ -485,10 +483,8 @@ define(function (require) {
                     if (xy.indexOf('y') != '-1') {
                         if (xMarkMap[seriesIndex]['counter' + valueIndex] > 0) {
                             xMarkMap[seriesIndex]['average' + valueIndex] = 
-                                (xMarkMap[seriesIndex]['sum' + valueIndex]
-                                 / xMarkMap[seriesIndex]['counter' + valueIndex]
-                                ).toFixed(2)
-                                - 0;
+                                xMarkMap[seriesIndex]['sum' + valueIndex]
+                                / xMarkMap[seriesIndex]['counter' + valueIndex];
                         }
                         var y = this.component.yAxis.getAxis(series[seriesIndex].yAxisIndex || 0)
                                 .getCoord(xMarkMap[seriesIndex]['average' + valueIndex]);
@@ -545,6 +541,8 @@ define(function (require) {
                                               : nLabel.position;
                 tarShape.style.textColor = nTextStyle.color;
                 tarShape.style.textFont = this.getFont(nTextStyle);
+                tarShape.style.textAlign = nTextStyle.align;
+                tarShape.style.textBaseline = nTextStyle.baseline;
             }
             if (eLabel.show) {
                 tarShape.highlightStyle.text = this._getLabelText(
@@ -557,6 +555,8 @@ define(function (require) {
                         : eLabel.position);
                 tarShape.highlightStyle.textColor = eTextStyle.color;
                 tarShape.highlightStyle.textFont = this.getFont(eTextStyle);
+                tarShape.highlightStyle.textAlign = eTextStyle.align;
+                tarShape.highlightStyle.textBaseline = eTextStyle.baseline;
             }
             
             return tarShape;
@@ -611,8 +611,8 @@ define(function (require) {
         buildMark: function (seriesIndex) {
             var serie = this.series[seriesIndex];
             if (this.selectedMap[serie.name]) {
-                serie.markLine && this._buildMarkLine(seriesIndex);
                 serie.markPoint && this._buildMarkPoint(seriesIndex);
+                serie.markLine && this._buildMarkLine(seriesIndex);
             }
         },
         
@@ -679,7 +679,12 @@ define(function (require) {
                     pos = this.getMarkCoord(seriesIndex, mlData);
                     markLine.data[i] = [zrUtil.clone(mlData), {}];
                     markLine.data[i][0].name = mlData.name || mlData.type;
-                    markLine.data[i][0].value = pos[3];
+                    markLine.data[i][0].value = mlData.type !== 'average'
+                                                ? pos[3]
+                                                : pos[3].toFixed(
+                                                      markLine.precision != null 
+                                                      ? markLine.precision : this.ecTheme.markLine.precision
+                                                  ) - 0;
                     pos = pos[2];
                     mlData = [{},{}];
                 }

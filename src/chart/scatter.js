@@ -228,7 +228,7 @@ define(function (require) {
             var gridY = this.component.grid.getY();
             var gridYend = this.component.grid.getYend();
             
-            xMarkMap.average0 = (xMarkMap.sum0 / xMarkMap.counter0).toFixed(2) - 0;
+            xMarkMap.average0 = xMarkMap.sum0 / xMarkMap.counter0;
             var x = xAxis.getCoord(xMarkMap.average0); 
             // 横轴平均纵向
             xMarkMap.averageLine0 = [
@@ -244,7 +244,7 @@ define(function (require) {
                 [xMarkMap.maxX0, gridY]
             ];
             
-            xMarkMap.average1 = (xMarkMap.sum1 / xMarkMap.counter1).toFixed(2) - 0;
+            xMarkMap.average1 = xMarkMap.sum1 / xMarkMap.counter1;
             var y = yAxis.getCoord(xMarkMap.average1);
             // 纵轴平均横向
             xMarkMap.averageLine1 = [
