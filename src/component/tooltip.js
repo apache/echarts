@@ -1495,7 +1495,8 @@ define(function (require) {
                     case ecConfig.CHART_TYPE_SCATTER :
                         var dataIndex = params.dataIndex;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
-                            if (ecData.get(shapeList[i], 'seriesIndex') == seriesIndex
+                            if (shapeList[i]._mark == null
+                                && ecData.get(shapeList[i], 'seriesIndex') == seriesIndex
                                 && ecData.get(shapeList[i], 'dataIndex') == dataIndex
                             ) {
                                 this._curTarget = shapeList[i];
