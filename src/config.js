@@ -302,6 +302,7 @@ define(function() {
             dataBackgroundColor: '#eee',            // 数据背景颜色
             fillerColor: 'rgba(144,197,237,0.2)',   // 填充颜色
             handleColor: 'rgba(70,130,180,0.8)',    // 手柄颜色
+            handleSize: 8,
             showDetail: true,
             // xAxisIndex: [],         // 默认控制所有横向类目
             // yAxisIndex: [],         // 默认控制所有横向类目
@@ -539,6 +540,8 @@ define(function() {
                 }
             },
             controlStyle: {
+                itemSize: 15,
+                itemGap: 5,
                 normal: { color: '#333'},
                 emphasis: { color: '#1e90ff'}
             },
@@ -1294,6 +1297,7 @@ define(function() {
             //symbolRotate: null,
             //smooth: false,
             large: false,
+            precision: 2,
             effect: {
                 show: false,
                 loop: true,

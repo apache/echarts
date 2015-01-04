@@ -404,8 +404,8 @@ define(function (require) {
             if (timelineOption.controlPosition === 'none') {
                 return;
             }
-            var iconSize = 15;
-            var iconGap = 5;
+            var iconSize = controlStyle.itemSize;
+            var iconGap = controlStyle.itemGap;
             var x;
             if (timelineOption.controlPosition === 'left') {
                 x = this._location.x;

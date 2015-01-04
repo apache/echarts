@@ -36,7 +36,6 @@ define(function (require) {
         };
 
         this._fillerSize = 28;       // 控件大小，水平布局为高，纵向布局为宽
-        this._handleSize = 8;        // 手柄大小
         // this._fillerShae;            // 填充
         // this._startShape;            // 起始手柄
         // this._endShape;              // 结束手柄
@@ -49,6 +48,7 @@ define(function (require) {
         
         this.option.dataZoom = this.reformOption(this.option.dataZoom);
         this.zoomOption = this.option.dataZoom;
+        this._handleSize = this.zoomOption.handleSize;
         if (!this.myChart.canvasSupported) {
             // 不支持Canvas的强制关闭实时动画
             this.zoomOption.realtime = false;

@@ -233,6 +233,7 @@ define(function (require) {
             var itemWidth = this.dataRangeOption.itemWidth;
             var itemHeight = this.dataRangeOption.itemHeight;
             var textHeight = zrArea.getTextHeight('国', font);
+            var mSize = 10;
 
             
             var needValueText = true;
@@ -272,16 +273,16 @@ define(function (require) {
                     style : {
                         x : lastX,
                         y : lastY,
-                        width : itemWidth * 10,
+                        width : itemWidth * mSize,
                         height : itemHeight,
                         color : zrColor.getLinearGradient(
-                            lastX, lastY, lastX + itemWidth * 10, lastY,
+                            lastX, lastY, lastX + itemWidth * mSize, lastY,
                             colorList
                         )
                     },
                     hoverable : false
                 };
-                lastX += itemWidth * 10 + this._textGap;
+                lastX += itemWidth * mSize + this._textGap;
             }
             else {
                 itemShape = {
@@ -291,15 +292,15 @@ define(function (require) {
                         x : lastX,
                         y : lastY,
                         width : itemWidth,
-                        height : itemHeight * 10,
+                        height : itemHeight * mSize,
                         color : zrColor.getLinearGradient(
-                            lastX, lastY, lastX, lastY + itemHeight * 10,
+                            lastX, lastY, lastX, lastY + itemHeight * mSize,
                             colorList
                         )
                     },
                     hoverable : false
                 };
-                lastY += itemHeight * 10 + this._textGap;
+                lastY += itemHeight * mSize + this._textGap;
             }
             this.shapeList.push(new RectangleShape(itemShape));
             // 可计算元素的位置缓存
@@ -600,6 +601,7 @@ define(function (require) {
                     text : this._textFormat(this.dataRangeOption.max),
                     textX : textXStart,
                     textY : textYStart,
+                    textFont: font,
                     color : this.getColor(this.dataRangeOption.max),
                     rect : coverRectStart,
                     x : pointListStart[0][0],
@@ -619,6 +621,7 @@ define(function (require) {
                     text : this._textFormat(this.dataRangeOption.min),
                     textX : textXEnd,
                     textY : textYEnd,
+                    textFont: font,
                     color : this.getColor(this.dataRangeOption.min),
                     rect : coverRectEnd,
                     x : pointListEnd[0][0],
@@ -730,6 +733,7 @@ define(function (require) {
             var totalHeight = 0;
             var font = this.getFont(this.dataRangeOption.textStyle);
             var textHeight = zrArea.getTextHeight('国', font);
+            var mSize = 10;
 
             if (this.dataRangeOption.orient == 'horizontal') {
                 // 水平布局，计算总宽度
@@ -741,7 +745,7 @@ define(function (require) {
                     totalWidth = 
                         ((this.dataRangeOption.splitNumber <= 0
                           || this.dataRangeOption.calculable)
-                          ? (itemWidth * 10 + itemGap)
+                          ? (itemWidth * mSize + itemGap)
                           : dataLength * (itemWidth + itemGap))
                         + (this.dataRangeOption.text 
                            && typeof this.dataRangeOption.text[0] != 'undefined'
@@ -784,7 +788,7 @@ define(function (require) {
                     totalHeight =
                         ((this.dataRangeOption.splitNumber <= 0
                           || this.dataRangeOption.calculable)
-                          ? (itemHeight * 10 + itemGap)
+                          ? (itemHeight * mSize + itemGap)
                           : dataLength * (itemHeight + itemGap))
                         + (this.dataRangeOption.text
                            && typeof this.dataRangeOption.text[0] != 'undefined'
