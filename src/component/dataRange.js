@@ -1302,7 +1302,7 @@ define(function (require) {
                 && param.seriesIndex != null && param.dataIndex != null
             ) {
                 var curValue = param.value;
-                if (isNaN(curValue)) {
+                if (curValue == '' || isNaN(curValue)) {
                     return;
                 }
                 if (curValue < this.dataRangeOption.min) {
@@ -1336,8 +1336,7 @@ define(function (require) {
 
         _textFormat : function(valueStart, valueEnd) {
             valueStart = valueStart.toFixed(this.dataRangeOption.precision);
-            valueEnd = typeof valueEnd != 'undefined' 
-                       ? valueEnd.toFixed(this.dataRangeOption.precision) : '';
+            valueEnd = valueEnd != null ? valueEnd.toFixed(this.dataRangeOption.precision) : '';
             if (this.dataRangeOption.formatter) {
                 if (typeof this.dataRangeOption.formatter == 'string') {
                     return this.dataRangeOption.formatter.replace('{value}', valueStart)
