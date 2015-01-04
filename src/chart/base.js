@@ -611,8 +611,8 @@ define(function (require) {
         buildMark: function (seriesIndex) {
             var serie = this.series[seriesIndex];
             if (this.selectedMap[serie.name]) {
-                serie.markPoint && this._buildMarkPoint(seriesIndex);
                 serie.markLine && this._buildMarkLine(seriesIndex);
+                serie.markPoint && this._buildMarkPoint(seriesIndex);
             }
         },
         
