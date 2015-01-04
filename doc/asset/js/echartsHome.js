@@ -56,7 +56,7 @@ $('#head')[0].innerHTML =
             + '<span class="icon-bar"></span>'
             + '<span class="icon-bar"></span>'
           + '</button>'
-          + '<a class="navbar-brand" href="http://ecomfe.github.io/echarts/index-en.html'
+          + '<a class="navbar-brand" href="http://ecomfe.github.io/echarts/index'
           + (enVersion ? '-en': '') 
           + '.html">ECharts</a>'
         + '</div>'
