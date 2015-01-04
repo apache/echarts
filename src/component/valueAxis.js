@@ -159,7 +159,7 @@ define(function (require) {
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
                         zlevel: this.getZlevelBase(),
-                        z: this.getZBase(),
+                        z: this.getZBase() +3,
                         hoverable: false,
                         style: {
                             x: this.getCoord(data[i]),
@@ -205,7 +205,7 @@ define(function (require) {
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
                         zlevel: this.getZlevelBase(),
-                        z: this.getZBase(),
+                        z: this.getZBase() + 3,
                         hoverable: false,
                         style: {
                             x: xPosition,
@@ -216,12 +216,11 @@ define(function (require) {
                             textFont: this.getFont(textStyle),
                             textAlign: textStyle.align || align,
                             textBaseline: textStyle.baseline 
-                                          || (i === 0 && this.option.name !== '')
+                                          || (
+                                              (i === 0 && this.option.name !== '')
                                               ? 'bottom'
-                                              : (i === (dataLength - 1) 
-                                                 && this.option.name !== '')
-                                                ? 'top'
-                                                : 'middle'
+                                                : (i === dataLength - 1 && this.option.name !== '') ? 'top' : 'middle'
+                                          )
                         }
                     };
                     

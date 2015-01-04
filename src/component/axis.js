@@ -52,7 +52,7 @@ define(function (require) {
                 var axShape = {
                     _axisShape: 'axisLine',
                     zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    z: this.getZBase() + 3,
                     hoverable: false
                 };
                 switch (this.option.position) {

@@ -291,7 +291,7 @@ define(function (require) {
                     axShape = {
                         // shape : 'text',
                         zlevel: this.getZlevelBase(),
-                        z: this.getZBase(),
+                        z: this.getZBase() + 3,
                         hoverable : false,
                         style : {
                             x : this.getCoordByIndex(i),
@@ -345,7 +345,7 @@ define(function (require) {
                     axShape = {
                         // shape : 'text',
                         zlevel: this.getZlevelBase(),
-                        z: this.getZBase(),
+                        z: this.getZBase() + 3,
                         hoverable : false,
                         style : {
                             x : xPosition,
