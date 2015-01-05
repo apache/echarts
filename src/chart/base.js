@@ -1135,7 +1135,7 @@ define(function (require) {
             ];
             //console.log(symbol, symbolSize, symbolRotate);
             
-            var queryTarget = [data[0], mlOption];
+            var queryTarget = [data[0], data[1], mlOption];
             var normal = this.deepMerge(
                 queryTarget,
                 'itemStyle.normal'
@@ -1163,7 +1163,8 @@ define(function (require) {
             
             var itemShape = new MarkLineShape({
                 style: {
-                    smooth: mlOption.smooth ? 'spline' : false,
+                    smooth: this.deepQuery([data[0], data[1], mlOption], 'smooth') ? 'spline' : false,
+                    smoothRadian: this.deepQuery([data[0], data[1], mlOption], 'smoothRadian'),
                     symbol: symbol, 
                     symbolSize: symbolSize,
                     symbolRotate: symbolRotate,

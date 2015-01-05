@@ -1290,12 +1290,13 @@ define(function() {
         markLine: {
             clickable: true,
             // 标线起始和结束的symbol介绍类型，如果都一样，可以直接传string
-            symbol: ['circle', 'arrow'],  
+            symbol: ['circle', 'arrow'],
             // 标线起始和结束的symbol大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             symbolSize: [2, 4],
             // 标线起始和结束的symbol旋转控制
             //symbolRotate: null,
             //smooth: false,
+            smoothRadian: 0.2,    // 平滑弧度
             large: false,
             precision: 2,
             effect: {

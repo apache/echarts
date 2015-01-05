@@ -189,7 +189,7 @@ define(function (require) {
             var yEnd = style.pointList[len - 1][1];
             var delta = 0;
             if (style.smooth === 'spline') {
-                delta = 0.2 * (xStart <= xEnd ? 1 : -1); // 偏移0.2弧度
+                delta = style.smoothRadian * (xStart <= xEnd ? 1 : -1); // 偏移0.2弧度
             }
             // 原谅我吧，这三角函数实在没想明白，只能这么笨了
             var rotate = Math.atan(
@@ -264,10 +264,19 @@ define(function (require) {
             if (style.smooth === 'spline') {
                 var lastPointX = pointList[1][0];
                 var lastPointY = pointList[1][1];
-                pointList[3] = [lastPointX, lastPointY];
-                var isReverse = pointList[0][0] <= pointList[3][0];
-                pointList[1] = this.getOffetPoint(pointList[0], pointList[3], isReverse);
-                pointList[2] = this.getOffetPoint(pointList[3], pointList[0], isReverse);
+                if (style.smoothRadian <= 0.8) {
+                    pointList[3] = [lastPointX, lastPointY];
+                    var isReverse = pointList[0][0] <= pointList[3][0];
+                    pointList[1] = this.getOffetPoint(pointList[0], pointList[3], isReverse, style.smoothRadian);
+                    pointList[2] = this.getOffetPoint(pointList[3], pointList[0], isReverse, style.smoothRadian);
+                }
+                else {
+                    pointList[2] = [lastPointX, lastPointY];
+                    pointList[1] = this.getOffetPoint(
+                        pointList[0], pointList[2], pointList[0][0] <= pointList[2][0], style.smoothRadian
+                    );
+                }
+               
                 pointList = smoothSpline(pointList, false);
                 // 修正最后一点在插值产生的偏移
                 pointList[pointList.length - 1] = [lastPointX, lastPointY];
@@ -279,14 +288,14 @@ define(function (require) {
          * {Array} start point
          * {Array} end point
          */
-        getOffetPoint : function (sp, ep, isReverse) {
+        getOffetPoint : function (sp, ep, isReverse, deltaAngle) {
+            var split = (2 - Math.abs(deltaAngle)) / 0.6;
             var distance = Math.sqrt(Math.round(
                     (sp[0] - ep[0]) * (sp[0] - ep[0]) + (sp[1] - ep[1]) * (sp[1] - ep[1])
-                )) / 3;
+                )) / split;
             //console.log(delta);
             var mp = [sp[0], sp[1]];
             var angle;
-            var deltaAngle = 0.2; // 偏移0.2弧度
             if (sp[0] != ep[0] && sp[1] != ep[1]) {
                 // 斜率存在
                 var k = (ep[1] - sp[1]) / (ep[0] - sp[0]);
