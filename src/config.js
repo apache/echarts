@@ -595,7 +595,7 @@ define(function() {
                     barBorderWidth: 0,            // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -608,7 +608,7 @@ define(function() {
                     barBorderWidth: 0,                 // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -631,7 +631,7 @@ define(function() {
                     // color: 各异,
                     label: {
                         show: false
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -649,7 +649,7 @@ define(function() {
                     // color: 各异,
                     label: {
                         show: false
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -707,16 +707,8 @@ define(function() {
                 normal: {
                     // color: 各异,
                     label: {
-                        show: false,
-                        // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        formatter: function (a, b, c) {
-                            if (typeof c[2] != 'undefined') {
-                                return c[2];
-                            }
-                            else {
-                                return c[0] + ' , ' + c[1];
-                            }
-                        }
+                        show: false
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -725,16 +717,9 @@ define(function() {
                 emphasis: {
                     // color: '各异'
                     label: {
-                        show: false,
+                        show: false
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        formatter: function (a, b, c) {
-                            if (typeof c[2] != 'undefined') {
-                                return c[2];
-                            }
-                            else {
-                                return c[0] + ' , ' + c[1];
-                            }
-                        }
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -795,7 +780,7 @@ define(function() {
                     label: {
                         show: true,
                         position: 'outer'
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     labelLine: {
@@ -815,7 +800,7 @@ define(function() {
                     label: {
                         show: false
                         // position: 'outer'
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     labelLine: {
@@ -1184,7 +1169,7 @@ define(function() {
                     label: {
                         show: true,
                         position: 'outer'
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     labelLine: {

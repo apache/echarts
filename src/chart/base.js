@@ -601,7 +601,17 @@ define(function (require) {
                 }
             }
             else {
-                return this.numAddCommas(value);
+                if (value instanceof Array) {
+                    if (value[2] != null) {
+                        return this.numAddCommas(value[2]);
+                    }
+                    else {
+                        return value[0] + ' , ' + value[1];
+                    }
+                }
+                else {
+                    return this.numAddCommas(value);
+                }
             }
         },
         
