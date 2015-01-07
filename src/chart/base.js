@@ -1561,7 +1561,7 @@ define(function (require) {
         addMark: function (seriesIndex, markData, markType) {
             var serie = this.series[seriesIndex];
             if (this.selectedMap[serie.name]) {
-                var duration = 500;
+                var duration = this.query(this.option, 'animationDuration') || 500;
                 var easing = this.query(this.option, 'animationEasing');
                 // 备份，复用_buildMarkX
                 var oriMarkData = serie[markType].data;
