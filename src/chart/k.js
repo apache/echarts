@@ -475,7 +475,7 @@ define(function (require) {
                         y = 0;
                         this.zr.animate(this.shapeList[i].id, '')
                             .when(
-                                500,
+                                this.query(this.option, 'animationDurationUpdate'),
                                 { position: [ x, y ] }
                             )
                             .start();

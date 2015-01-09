@@ -879,7 +879,8 @@ define(function (require) {
                 'nameConnector', 'valueConnector',
                 
                 // 动画相关
-                'animation', 'animationThreshold', 'animationDuration',
+                'animation', 'animationThreshold',
+                'animationDuration', 'animationDurationUpdate',
                 'animationEasing', 'addDataAnimation',
                 
                 // 默认标志图形类型列表
@@ -1179,7 +1180,7 @@ define(function (require) {
                     {option: magicOption},
                     self
                 );
-            }, magicOption.addDataAnimation ? 500 : 0);
+            }, magicOption.addDataAnimation ? magicOption.animationDurationUpdate : 0);
             return this;
         },
 

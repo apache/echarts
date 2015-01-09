@@ -1333,8 +1333,10 @@ define(function (require) {
             var maxLenth = this.option.animationThreshold / (this.canvasSupported ? 2 : 4);
             var lastShapeList = this.lastShapeList;
             var shapeList = this.shapeList;
-            var duration = lastShapeList.length > 0
-                           ? 500 : this.query(this.option, 'animationDuration');
+            var isUpdate = lastShapeList.length > 0;
+            var duration = isUpdate
+                           ? this.query(this.option, 'animationDurationUpdate')
+                           : this.query(this.option, 'animationDuration');
             var easing = this.query(this.option, 'animationEasing');
             var delay;
             var key;
@@ -1377,7 +1379,9 @@ define(function (require) {
                     if (oldMap[key]) {
                         // 新旧都有 动画过渡
                         this.zr.delShape(oldMap[key].id);
-                        this._animateMod(oldMap[key], newMap[key], duration, easing);
+                        this._animateMod(
+                            oldMap[key], newMap[key], duration, easing, 0, isUpdate
+                        );
                     }
                     else {
                         // 新有旧没有  添加并动画过渡
@@ -1387,7 +1391,9 @@ define(function (require) {
                                 && key.indexOf('icon') !== 0
                                 ? duration / 2
                                 : 0;
-                        this._animateMod(false, newMap[key], duration, easing, delay);
+                        this._animateMod(
+                            false, newMap[key], duration, easing, delay, isUpdate
+                        );
                     }
                 }
                 this.zr.refresh();
@@ -1422,7 +1428,7 @@ define(function (require) {
         /**
          * 动画过渡 
          */
-        _animateMod: function (oldShape, newShape, duration, easing, delay) {
+        _animateMod: function (oldShape, newShape, duration, easing, delay, isUpdate) {
             switch (newShape.type) {
                 case 'polyline' :
                 case 'half-smooth-polygon' :
@@ -1435,7 +1441,7 @@ define(function (require) {
                     ecAnimation.icon(this.zr, oldShape, newShape, duration, easing, delay);
                     break;
                 case 'candle' :
-                    if (duration > 500) {
+                    if (!isUpdate) {
                         ecAnimation.candle(this.zr, oldShape, newShape, duration, easing);
                     }
                     else {
@@ -1445,7 +1451,7 @@ define(function (require) {
                 case 'ring' :
                 case 'sector' :
                 case 'circle' :
-                    if (duration > 500) {
+                    if (!isUpdate) {
                         // 进入动画，加旋转
                         ecAnimation.ring(
                             this.zr,
@@ -1466,7 +1472,7 @@ define(function (require) {
                     ecAnimation.text(this.zr, oldShape, newShape, duration, easing);
                     break;
                 case 'polygon' :
-                    if (duration > 500) {
+                    if (!isUpdate) {
                         ecAnimation.polygon(this.zr, oldShape, newShape, duration, easing);
                     }
                     else {
@@ -1496,7 +1502,7 @@ define(function (require) {
          * 标注动画
          * @param {number} duration 时长
          * @param {string=} easing 缓动效果
-         * @param {Array=} addShapeList 指定特效对象，不知道默认使用this.shapeList
+         * @param {Array=} addShapeList 指定特效对象，不指定默认使用this.shapeList
          */
         animationMark: function (duration , easing, addShapeList) {
             var shapeList = addShapeList || this.shapeList;
@@ -1504,7 +1510,7 @@ define(function (require) {
                 if (!shapeList[i]._mark) {
                     continue;
                 }
-                this._animateMod(false, shapeList[i], duration, easing);
+                this._animateMod(false, shapeList[i], duration, easing, 0, true);
             }
             this.animationEffect(addShapeList);
         },
@@ -1561,7 +1567,7 @@ define(function (require) {
         addMark: function (seriesIndex, markData, markType) {
             var serie = this.series[seriesIndex];
             if (this.selectedMap[serie.name]) {
-                var duration = 500;
+                var duration = this.query(this.option, 'animationDurationUpdate');
                 var easing = this.query(this.option, 'animationEasing');
                 // 备份，复用_buildMarkX
                 var oriMarkData = serie[markType].data;

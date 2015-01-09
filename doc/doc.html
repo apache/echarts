@@ -128,6 +128,9 @@
                                 <li><a href="#AddDataAnimation">addDataAnimation</a></li>
                                 <li><a href="#AnimationThreshold">animationThreshold</a></li>
                                 <li><a href="#AnimationDuration">animationDuration</a></li>
+                                <li>
+                                    <a href="#animationDurationUpdate">animationDurationUpdate</a>
+                                </li>
                                 <li><a href="#AnimationEasing">animationEasing</a></li>
                             </ul>
                             <li><a href="#图数据表示">图数据表示</a></li>
@@ -889,6 +892,9 @@ require(['echarts'], function (ec){
                                 <a href="#AddDataAnimation" title="">addDataAnimation</a>，
                                 <a href="#AnimationThreshold" title="">animationThreshold</a>，
                                 <a href="#AnimationDuration" title="">animationDuration</a>，
+                                <a href="#animationDurationUpdate" title="">
+                                    animationDurationUpdate
+                                </a>，
                                 <a href="#AnimationEasing" title="">animationEasing</a>）
                             </td>
                         </tr>
@@ -4250,10 +4256,13 @@ geoCoord : {
                     <P> <b>{number}</b> 2500，动画元素阀值，产生的图形原素超过2500不出动画，建议IE8-关闭</P>
 
                     <h4>animationDuration<a name="AnimationDuration"> </a></h4>
-                    <P> <b>{number}</b> 2000，动画时长，单位ms，支持多级控制</P>
+                    <P> <b>{number}</b> 2000，进入动画时长，单位ms</P>
+
+                    <h4>animationDurationUpdate<a name="animationDurationUpdate"> </a></h4>
+                    <P> <b>{number}</b> 500，更新动画时长，单位ms</P>
 
                     <h4>animationEasing<a name="AnimationEasing"> </a></h4>
-                    <P> <b>{string}</b> 'BounceOut'，主元素的缓动效果，支持多级控制，详见<a href="http://ecomfe.github.io/zrender/doc/doc.html#animation.easing" target="_blank">zrender.animation.easing</a>，可选有：<br/>
+                    <P> <b>{string}</b> 'BounceOut'，主元素的缓动效果，详见<a href="http://ecomfe.github.io/zrender/doc/doc.html#animation.easing" target="_blank">zrender.animation.easing</a>，可选有：<br/>
                         'Linear',<br/>
                         'QuadraticIn', 'QuadraticOut', 'QuadraticInOut',<br/>
                         'CubicIn', 'CubicOut', 'CubicInOut',<br/>

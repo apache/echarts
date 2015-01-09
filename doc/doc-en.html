@@ -128,6 +128,9 @@
                                 <li><a href="#AddDataAnimation">addDataAnimation</a></li>
                                 <li><a href="#AnimationThreshold">animationThreshold</a></li>
                                 <li><a href="#AnimationDuration">animationDuration</a></li>
+                                <li>
+                                    <a href="#animationDurationUpdate">animationDurationUpdate</a>
+                                </li>
                                 <li><a href="#AnimationEasing">animationEasing</a></li>
                             </ul>
                             <li><a href="#GraphDataStructure">Graph data structure</a></li>
@@ -888,7 +891,10 @@ require(['echarts'], function (ec){
                                 <a href="#Animation" title="">animation</a>, and other related properties like 
                                 <a href="#AddDataAnimation" title="">addDataAnimation</a>, 
                                 <a href="#AnimationThreshold" title="">animationThreshold</a>, 
-                                <a href="#AnimationDuration" title="">animationDuration</a>, 
+                                <a href="#AnimationDuration" title="">animationDuration</a>,
+                                <a href="#animationDurationUpdate" title="">
+                                    animationDurationUpdate
+                                </a> 
                                 <a href="#AnimationEasing" title="">animationEasing</a>).
                             </td>
                         </tr>
@@ -1758,7 +1764,6 @@ require(['echarts'], function (ec){
                             <td> 5 </td>
                             <td> the number of segments. Defaults to 5. Linear gradient when set to 0. When calculable is true, it is equally split into 100 parts by default. </td>
                         </tr>
-
                         <tr>
                             <td> <b>{boolean | string}</b> selectedMode </td>
                             <td> true </td>
@@ -4251,7 +4256,10 @@ geoCoord : {
                     <P> <b>{number}</b> 2500, threshold of animated elements. No animation if the graphic elements generated are over 2500. It is suggested to disable animation in IE8-. </P>
 
                     <h4>animationDuration<a name="AnimationDuration"> </a></h4>
-                    <P> <b>{number}</b> 2000, duration of the animation, in ms. Supports multi-level control. </P>
+                    <P> <b>{number}</b> 2000, duration of the enter animation, in ms. </P>
+
+                    <h4>animationDurationUpdate<a name="animationDurationUpdate"> </a></h4>
+                    <P> <b>{number}</b> 500，duration of the update animation, in ms.</P>
 
                     <h4>animationEasing<a name="AnimationEasing"> </a></h4>
                     <P> <b>{string}</b> 'BounceOut', easing effect of the main element. Supports multi-level control. See <a href="http://ecomfe.github.io/zrender/doc/doc.html#animation.easing" target="_blank">zrender.animation.easing</a>. Possible values are: <br/>
