@@ -584,9 +584,14 @@ define(function (require) {
                 if (typeof formatter === 'function') {
                     return formatter.call(
                         this.myChart,
-                        serie.name,
-                        name,
-                        value
+                        {
+                            seriesName: serie.name,
+                            series: series,
+                            name: name,
+                            value: value,
+                            data: data,
+                            status: status
+                        }
                     );
                 }
                 else if (typeof formatter === 'string') {
