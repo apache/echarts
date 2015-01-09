@@ -456,8 +456,8 @@ define(function (require) {
                 textAlign = 'center';
             }
             else if (labelControl.position === 'inner' || labelControl.position === 'inside') {
-                // 内部显示
-                radius = (radius[0] + radius[1]) / 2;
+                // 内部标签显示, 按外半径比例计算标签位置
+                radius = (radius[0] + radius[1]) * (labelControl.distance || 0.5);
                 x = Math.round(centerX + radius * zrMath.cos(midAngle, true));
                 y = Math.round(centerY - radius * zrMath.sin(midAngle, true));
                 defaultColor = '#fff';
