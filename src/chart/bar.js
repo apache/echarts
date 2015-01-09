@@ -83,6 +83,7 @@ define(function (require) {
                 orient == 'horizontal'
                     ? (x = categoryAxis.getCoordByIndex(i) - gap / 2)
                     : (y = categoryAxis.getCoordByIndex(i) + gap / 2);
+
                 for (var j = 0, k = locationMap.length; j < k; j++) {
                     // 堆积数据用第一条valueAxis
                     yAxisIndex = series[locationMap[j][0]].yAxisIndex || 0;
@@ -104,6 +105,10 @@ define(function (require) {
                                                     counter: 0,
                                                     average: 0
                                                 };
+                        curBarWidth = Math.min(
+                            barMaxWidthMap[seriesIndex] || Number.MAX_VALUE,
+                            barWidthMap[seriesIndex] || barWidth
+                        );
                         if (value === '-') {
                             // 空数据在做完后补充拖拽提示框
                             continue;
@@ -165,10 +170,6 @@ define(function (require) {
                                 lastP += barHeight;
                             }
                         }
-                        var curBarWidth = Math.min(
-                            barMaxWidthMap[seriesIndex] || Number.MAX_VALUE,
-                            barWidthMap[seriesIndex] || barWidth
-                        );
                         xMarkMap[seriesIndex][i] = orient == 'horizontal'
                                                    ? (x + curBarWidth / 2) 
                                                    : (y - curBarWidth / 2);
@@ -218,6 +219,10 @@ define(function (require) {
                         serie = series[seriesIndex];
                         data = serie.data[i];
                         value = this.getDataFromOption(data, '-');
+                        curBarWidth = Math.min(
+                            barMaxWidthMap[seriesIndex] || Number.MAX_VALUE,
+                            barWidthMap[seriesIndex] || barWidth
+                        );
                         if (value != '-') {
                             // 只关心空数据
                             continue;
@@ -233,10 +238,6 @@ define(function (require) {
                                 lastP += this.ecTheme.island.r;
                             }
                             
-                            curBarWidth = Math.min(
-                                barMaxWidthMap[seriesIndex] || Number.MAX_VALUE,
-                                barWidthMap[seriesIndex] || barWidth
-                            );
                             barShape = this._getBarItem(
                                 seriesIndex, i,
                                 categoryAxis.getNameByIndex(i),
