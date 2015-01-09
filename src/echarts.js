@@ -88,6 +88,10 @@ define(function (require) {
      * @param {HtmlElement} dom 必要
      */
     function Echarts(dom) {
+        // Fxxk IE11 for breaking initialization without a warrant;
+        // Just set something to let it be!
+        // by kener 2015-01-09
+        dom.innerHTML = '';
         this._themeConfig = zrUtil.clone(ecConfig);
 
         this.dom = dom;
