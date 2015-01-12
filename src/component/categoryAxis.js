@@ -147,8 +147,8 @@ define(function (require) {
                 }
             }
             else {
-                // 用户自定义间隔
-                interval = interval - 0 + 1;
+                // 用户自定义间隔，支持funtion
+                interval = typeof interval == 'function' ? 1 : (interval - 0 + 1);
             }
 
             return interval;
@@ -177,14 +177,23 @@ define(function (require) {
         // 小标记
         _buildAxisTick : function () {
             var axShape;
-            //var data       = this.option.data;
+            var data       = this.option.data;
             var dataLength = this.option.data.length;
             var tickOption = this.option.axisTick;
             var length     = tickOption.length;
             var color      = tickOption.lineStyle.color;
             var lineWidth  = tickOption.lineStyle.width;
-            var interval   = tickOption.interval == 'auto' 
-                             ? this._interval : (tickOption.interval - 0 + 1);
+            var intervalFunction = typeof tickOption.interval == 'function'
+                                   ? tickOption.interval 
+                                   : tickOption.interval == 'auto'
+                                     ? typeof this.option.axisLabel.interval == 'function'
+                                       ? this.option.axisLabel.interval : false
+                                     : false;
+            var interval   = intervalFunction
+                             ? 1
+                             : tickOption.interval == 'auto' 
+                               ? this._interval
+                               : (tickOption.interval - 0 + 1);
             var onGap      = tickOption.onGap;
             var optGap     = onGap 
                              ? (this.getGap() / 2) 
@@ -201,6 +210,10 @@ define(function (require) {
                            ? (this.grid.getY() + 1) : (this.grid.getY() - length - 1));
                 var x;
                 for (var i = startIndex; i < dataLength; i += interval) {
+                    if (intervalFunction && !intervalFunction(i, data[i])) {
+                        // 回调并且回调返回false则跳过渲染
+                        continue;
+                    }
                     // 亚像素优化
                     x = this.subPixelOptimize(
                         this.getCoordByIndex(i) + (i >= 0 ? optGap : 0), lineWidth
@@ -232,6 +245,10 @@ define(function (require) {
                         
                 var y;
                 for (var i = startIndex; i < dataLength; i += interval) {
+                    if (intervalFunction && !intervalFunction(i, data[i])) {
+                        // 回调并且回调返回false则中断渲染
+                        continue;
+                    }
                     // 亚像素优化
                     y = this.subPixelOptimize(
                         this.getCoordByIndex(i) - (i >= 0 ? optGap : 0), lineWidth
@@ -260,10 +277,13 @@ define(function (require) {
             var axShape;
             var data       = this.option.data;
             var dataLength = this.option.data.length;
-            var rotate     = this.option.axisLabel.rotate;
-            var margin     = this.option.axisLabel.margin;
-            var clickable  = this.option.axisLabel.clickable;
-            var textStyle  = this.option.axisLabel.textStyle;
+            var labelOption = this.option.axisLabel;
+            var rotate     = labelOption.rotate;
+            var margin     = labelOption.margin;
+            var clickable  = labelOption.clickable;
+            var textStyle  = labelOption.textStyle;
+            var intervalFunction = typeof labelOption.interval == 'function'
+                                   ? labelOption.interval : false;
             var dataTextStyle;
 
             if (this.isHorizontal()) {
@@ -280,8 +300,10 @@ define(function (require) {
                 }
 
                 for (var i = 0; i < dataLength; i += this._interval) {
-                    if (this._getReformedLabel(i) === '') {
-                        // 空文本优化
+                    if ((intervalFunction && !intervalFunction(i, data[i])) 
+                        // 回调并且回调返回false则中断渲染
+                        || this._getReformedLabel(i) === '' // 空文本优化
+                    ) {
                         continue;
                     }
                     dataTextStyle = zrUtil.merge(
@@ -334,8 +356,10 @@ define(function (require) {
                 }
 
                 for (var i = 0; i < dataLength; i += this._interval) {
-                    if (this._getReformedLabel(i) === '') {
-                        // 空文本优化
+                    if ((intervalFunction && !intervalFunction(i, data[i])) 
+                        // 回调并且回调返回false则中断渲染
+                        || this._getReformedLabel(i) === '' // 空文本优化
+                    ) {
                         continue;
                     }
                     dataTextStyle = zrUtil.merge(
@@ -380,7 +404,7 @@ define(function (require) {
         
         _buildSplitLine : function () {
             var axShape;
-            //var data       = this.option.data;
+            var data        = this.option.data;
             var dataLength  = this.option.data.length;
             var sLineOption = this.option.splitLine;
             var lineType    = sLineOption.lineStyle.type;
@@ -389,6 +413,10 @@ define(function (require) {
             color = color instanceof Array ? color : [color];
             var colorLength = color.length;
             
+            // splitLine随axisLable
+            var intervalFunction = typeof this.option.axisLabel.interval == 'function'
+                                   ? this.option.axisLabel.interval : false;
+
             var onGap      = sLineOption.onGap;
             var optGap     = onGap 
                              ? (this.getGap() / 2) 
@@ -404,6 +432,10 @@ define(function (require) {
                 var x;
 
                 for (var i = 0; i < dataLength; i += this._interval) {
+                    if (intervalFunction && !intervalFunction(i, data[i])) {
+                        // 回调并且回调返回false则跳过渲染
+                        continue;
+                    }
                     // 亚像素优化
                     x = this.subPixelOptimize(
                         this.getCoordByIndex(i) + optGap, lineWidth
@@ -434,6 +466,10 @@ define(function (require) {
                 var y;
 
                 for (var i = 0; i < dataLength; i += this._interval) {
+                    if (intervalFunction && !intervalFunction(i, data[i])) {
+                        // 回调并且回调返回false则跳过渲染
+                        continue;
+                    }
                     // 亚像素优化
                     y = this.subPixelOptimize(
                         this.getCoordByIndex(i) - optGap, lineWidth
@@ -460,6 +496,7 @@ define(function (require) {
 
         _buildSplitArea : function () {
             var axShape;
+            var data        = this.option.data;
             var sAreaOption = this.option.splitArea;
             var color = sAreaOption.areaStyle.color;
             if (!(color instanceof Array)) {
@@ -484,6 +521,10 @@ define(function (require) {
                 // 多颜色
                 var colorLength = color.length;
                 var dataLength  = this.option.data.length;
+
+                // splitArea随axisLable
+                var intervalFunction = typeof this.option.axisLabel.interval == 'function'
+                                       ? this.option.axisLabel.interval : false;
         
                 var onGap      = sAreaOption.onGap;
                 var optGap     = onGap 
@@ -499,6 +540,10 @@ define(function (require) {
                     var curX;
     
                     for (var i = 0; i <= dataLength; i += this._interval) {
+                        if (intervalFunction && !intervalFunction(i, data[i]) && i < dataLength) {
+                            // 回调并且回调返回false则跳过渲染
+                            continue;
+                        }
                         curX = i < dataLength
                                ? (this.getCoordByIndex(i) + optGap)
                                : this.grid.getXend();
@@ -528,6 +573,10 @@ define(function (require) {
                     var curY;
     
                     for (var i = 0; i <= dataLength; i += this._interval) {
+                        if (intervalFunction && !intervalFunction(i, data[i]) && i < dataLength) {
+                            // 回调并且回调返回false则跳过渲染
+                            continue;
+                        }
                         curY = i < dataLength
                                ? (this.getCoordByIndex(i) - optGap)
                                : this.grid.getY();
