@@ -395,12 +395,12 @@ define(function (require) {
                             || this.deepQuery(styleQueryTarget, 'borderWidth')
                     },
                     highlightStyle: {
-                        color: this.deepQuery(emphasisStyleQueryTarget, 'color', 'emphasis'),
+                        color: this.deepQuery(emphasisStyleQueryTarget, 'color'),
                         // 兼容原有写法
-                        strokeColor: this.deepQuery(emphasisStyleQueryTarget, 'strokeColor', 'emphasis')
-                            || this.deepQuery(emphasisStyleQueryTarget, 'borderColor', 'emphasis'),
-                        lineWidth: this.deepQuery(emphasisStyleQueryTarget, 'lineWidth', 'emphasis')
-                            || this.deepQuery(emphasisStyleQueryTarget, 'borderWidth', 'emphasis')
+                        strokeColor: this.deepQuery(emphasisStyleQueryTarget, 'strokeColor')
+                            || this.deepQuery(emphasisStyleQueryTarget, 'borderColor'),
+                        lineWidth: this.deepQuery(emphasisStyleQueryTarget, 'lineWidth')
+                            || this.deepQuery(emphasisStyleQueryTarget, 'borderWidth')
                     },
                     clickable: serie.clickable,
                     zlevel: this.getZlevelBase(),
@@ -592,11 +592,6 @@ define(function (require) {
                             brushType: 'fill',
                             // Use same style with link shape
                             color: linkShape.style.strokeColor,
-                            opacity: linkShape.style.opacity,
-                            shadowBlur: linkShape.style.shadowBlur,
-                            shadowColor: linkShape.style.shadowColor,
-                            shadowOffsetX: linkShape.style.shadowOffsetX,
-                            shadowOffsetY: linkShape.style.shadowOffsetY
                         },
                         highlightStyle: {
                             brushType: 'fill'
@@ -656,43 +651,27 @@ define(function (require) {
 
         _syncNodePositions: function() {
             var graph = this._graph;
-            // var delta = 0;
             for (var i = 0; i < graph.nodes.length; i++) {
                 var gNode = graph.nodes[i];
                 var position = gNode.layout.position;
                 var node = gNode.data;
                 var shape = gNode.shape;
-                // delta += vec2.len(shape.position, position);
-                if (shape.fixed || (node.fixX && node.fixY)) {
-                    vec2.copy(position, shape.position);
+                var fixX = shape.fixed || node.fixX;
+                var fixY = shape.fixed || node.fixY;
+                if (fixX === true) {
+                    fixX = 1;
+                } else if (isNaN(fixX)) {
+                    fixX = 0;
                 }
-                else if (node.fixX) {
-                    position[0] = shape.position[0];
-                    shape.position[1] = position[1];
+                if (fixY === true) {
+                    fixY = 1;
+                } else if (isNaN(fixY)) {
+                    fixY = 0;
                 }
-                else if (node.fixY) {
-                    position[1] = shape.position[1];
-                    shape.position[0] = position[0];
-                }
-                else if (isNaN(node.fixX - 0) == false && isNaN(node.fixY - 0) == false) {
-                    shape.position[0] += (position[0] - shape.position[0]) * node.fixX;
-                    position[0] = shape.position[0];
-                    shape.position[1] += (position[1] - shape.position[1]) * node.fixY;
-                    position[1] = shape.position[1];
-                }
-                else if (isNaN(node.fixX - 0) == false) {
-                    shape.position[0] += (position[0] - shape.position[0]) * node.fixX;
-                    position[0] = shape.position[0];
-                    shape.position[1] = position[1];
-                }
-                else if (isNaN(node.fixY - 0) == false) {
-                    shape.position[1] += (position[1] - shape.position[1]) * node.fixY;
-                    position[1] = shape.position[1];
-                    shape.position[0] = position[0];
-                }
-                else  {
-                    vec2.copy(shape.position, position);
-                }
+                shape.position[0] += (position[0] - shape.position[0]) * (1 - fixX);
+                shape.position[1] += (position[1] - shape.position[1]) * (1 - fixY);
+
+                vec2.copy(position, shape.position);
 
                 var nodeName = node.name;
                 if (nodeName) {
@@ -705,9 +684,6 @@ define(function (require) {
 
                 shape.modSelf();
             }
-            // if (delta < 1) {  // All shape stopped moving
-                // this._layout.temperature = 0;
-            // }
         },
 
         _step: function(e) {
