@@ -234,7 +234,7 @@ define(function (require) {
          * @param {Object}
          * @public
          */
-        self.setOption = function (option) {
+        self.setOption = function (option, notMerge) {
             var series = option.series || {};
 
             // 记录所有的geoCoord
@@ -268,7 +268,7 @@ define(function (require) {
                 }
             }
 
-            self._ec.setOption(option);
+            self._ec.setOption(option, notMerge);
         }
 
         /**
