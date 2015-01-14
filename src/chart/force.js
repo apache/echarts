@@ -148,11 +148,24 @@ define(function (require) {
             this._buildLinkShapes(serie, serieIdx);
             this._buildNodeShapes(serie, serieIdx);
 
+            var panable = serie.roam === true || serie.roam === 'move';
+            var zoomable = serie.roam === true || serie.roam === 'scale';
             // Enable pan and zooom
             this.zr.modLayer(this.getZlevelBase(), {
-                panable: serie.roam === true || serie.roam === 'move',
-                zoomable: serie.roam === true || serie.roam === 'scale'
+                panable: panable,
+                zoomable: zoomable
             });
+
+            if (
+                this.query('markPoint.effect.show')
+                || this.query('markLine.effect.show')
+            ) {
+                // 斗胆修改 EFFECT 层配置项
+                this.zr.modLayer(ecConfig.EFFECT_ZLEVEL, {
+                    panable: panable,
+                    zoomable: zoomable
+                });
+            }
 
             this._initLayout(serie);
 
