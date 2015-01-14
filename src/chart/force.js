@@ -104,6 +104,8 @@ define(function (require) {
                     break;
                 }
             }
+
+            this.animationEffect();
         },
 
         _getNodeCategory: function (serie, node) {
