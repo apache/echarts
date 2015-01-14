@@ -720,18 +720,26 @@ define(function (require) {
                         strokeColor: this.deepQuery(queryTargetEmphasis, 'borderColor')
                     }
                 });
-
+                var node1, node2;
+                // 从大端到小端
+                if (edge.layout.weight <= other.layout.weight) {
+                    node1 = other.node1;
+                    node2 = other.node2;
+                } else {
+                    node1 = edge.node1;
+                    node2 = edge.node2;
+                }
                 ecData.pack(
                     ribbon,
                     serie,
                     serieIdx,
                     edge.data,
                     edge.rawIndex == null ? idx : edge.rawIndex,
-                    edge.data.name || (edge.node1.id + '-' + edge.node2.id),
+                    edge.data.name || (node1.id + '-' + node2.id),
                     // special
-                    edge.node1.id,
+                    node1.id,
                     // special2
-                    edge.node2.id
+                    node2.id
                 );
 
                 this.shapeList.push(ribbon);
