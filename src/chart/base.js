@@ -586,7 +586,7 @@ define(function (require) {
                         this.myChart,
                         {
                             seriesName: serie.name,
-                            series: series,
+                            series: serie,
                             name: name,
                             value: value,
                             data: data,
