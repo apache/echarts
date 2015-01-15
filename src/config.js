@@ -668,6 +668,7 @@ define(function() {
             zlevel: 0,                  // 一级层叠
             z: 2,                       // 二级层叠
             clickable: true,
+            hoverable: true,
             legendHoverLink: false,
             xAxisIndex: 0,
             yAxisIndex: 0,
