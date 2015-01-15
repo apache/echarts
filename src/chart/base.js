@@ -17,7 +17,7 @@ define(function (require) {
     var ecAnimation = require('../util/ecAnimation');
     var ecEffect = require('../util/ecEffect');
     var accMath = require('../util/accMath');
-    var ComponentBase = require('../component/Base');
+    var ComponentBase = require('../component/base');
 
     var zrUtil = require('zrender/tool/util');
     var zrArea = require('zrender/tool/area');
