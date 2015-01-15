@@ -632,6 +632,8 @@ define(function (require) {
             }
 
             if (seriesArray.length > 0) {
+                // 复位item trigger和axis trigger间短距离来回变换时的不响应
+                this._lastItemTriggerId = -1;
                 // 相同dataIndex seriesIndex时不再触发内容更新
                 if (this._lastDataIndex != dataIndex || this._lastSeriesIndex != seriesIndex[0]) {
                     this._lastDataIndex = dataIndex;
@@ -807,6 +809,9 @@ define(function (require) {
                 if (params.length <= 0) {
                     return;
                 }
+                // 复位item trigger和axis trigger间短距离来回变换时的不响应
+                this._lastItemTriggerId = -1;
+
                 // 相同dataIndex seriesIndex时不再触发内容更新
                 if (this._lastDataIndex != dataIndex || this._lastSeriesIndex != seriesIndex[0]) {
                     this._lastDataIndex = dataIndex;
@@ -924,6 +929,10 @@ define(function (require) {
                 formatter = this.deepQuery([data, serie, this.option], 'tooltip.islandFormatter');
                 position = this.deepQuery([data, serie, this.option], 'tooltip.islandPosition');
             }
+
+            // 复位item trigger和axis trigger间短距离来回变换时的不响应
+            this._lastDataIndex = -1;
+            this._lastSeriesIndex = -1;
 
             // 相同dataIndex seriesIndex时不再触发内容更新
             if (this._lastItemTriggerId !== this._curTarget.id) {
