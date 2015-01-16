@@ -426,7 +426,7 @@ define(function (require) {
                         this._location.x + 1 + Math.round(
                             (value - minValue) / valueRange * (width - 10)
                         ),
-                        this._location.y + y * i
+                        this._location.y + y * (l - i - 1)
                     ]);
                 }
             }
@@ -441,10 +441,10 @@ define(function (require) {
             }
             else {
                 pointList.push([
-                    this._location.x, this._location.y + height
+                    this._location.x, this._location.y
                 ]);
                 pointList.push([
-                    this._location.x, this._location.y
+                    this._location.x, this._location.y + height
                 ]);
             }
 
@@ -559,11 +559,12 @@ define(function (require) {
                 this._startShape.style.width = this._location.width;
                 this._endShape = zrUtil.clone(this._startShape);
                 
-                this._startShape.style.y = this._fillerShae.style.y - this._handleSize;
-                this._startShape.highlightStyle.textPosition = 'top';
-                this._endShape.style.y = this._fillerShae.style.y + this._fillerShae.style.height;
+                this._startShape.style.y = this._fillerShae.style.y + this._fillerShae.style.height;
+                this._startShape.highlightStyle.textPosition = 'bottom';
+
+                this._endShape.style.y = this._fillerShae.style.y - this._handleSize;
                 this._endShape.highlightStyle.text = detail.end;
-                this._endShape.highlightStyle.textPosition = 'bottom';
+                this._endShape.highlightStyle.textPosition = 'top';
             }
             this._startShape = new IconShape(this._startShape);
             this._endShape = new IconShape(this._endShape);
@@ -614,13 +615,16 @@ define(function (require) {
                 ) / this._location.width * 100;
             }
             else {
-                this._startShape.style.y = this._fillerShae.style.y - this._handleSize;
-                this._endShape.style.y = this._fillerShae.style.y + this._fillerShae.style.height;
+                this._startShape.style.y = this._fillerShae.style.y + this._fillerShae.style.height;
+                this._endShape.style.y = this._fillerShae.style.y - this._handleSize;
+
                 this._zoom.start = (
-                    this._startShape.style.y - this._location.y
+                    this._location.y + this._location.height 
+                    - this._startShape.style.y
                 ) / this._location.height * 100;
                 this._zoom.end = (
-                    this._endShape.style.y + this._handleSize - this._location.y
+                    this._location.y + this._location.height
+                    - this._endShape.style.y - this._handleSize
                 ) / this._location.height * 100;
             }
             this.zr.modShape(this._startShape.id);
@@ -653,10 +657,10 @@ define(function (require) {
                 this._fillerShae.style.y = Math.min(a, b) + this._handleSize;
                 this._fillerShae.style.height = Math.abs(a - b) - this._handleSize;
                 this._zoom.start = (
-                    Math.min(a, b) - this._location.y
+                    this._location.y + this._location.height - Math.max(a, b)
                 ) / this._location.height * 100;
                 this._zoom.end = (
-                    Math.max(a, b) + this._handleSize - this._location.y
+                    this._location.y + this._location.height - Math.min(a, b) - this._handleSize
                 ) / this._location.height * 100;
             }
 
@@ -678,12 +682,12 @@ define(function (require) {
                     this._location.x + this._location.width - this._endFrameShape.style.x;
             }
             else {
-                this._startFrameShape.style.height = 
-                    this._fillerShae.style.y - this._location.y;
-                this._endFrameShape.style.y = 
+                this._startFrameShape.style.y =
                     this._fillerShae.style.y + this._fillerShae.style.height;
+                this._startFrameShape.style.height =
+                    this._location.y + this._location.height - this._startFrameShape.style.y;
                 this._endFrameShape.style.height = 
-                    this._location.y + this._location.height - this._endFrameShape.style.y;
+                    this._fillerShae.style.y - this._location.y;
             }
                     
             this.zr.modShape(this._startFrameShape.id);
@@ -708,15 +712,15 @@ define(function (require) {
                                                - this._handleSize;
             }
             else {
-                this._startShape.style.y = this._location.y
-                                           + this._zoom.start / 100 * this._location.height;
-                this._endShape.style.y   = this._location.y 
-                                           + this._zoom.end / 100 * this._location.height
+                this._startShape.style.y = this._location.y + this._location.height
+                                           - this._zoom.start / 100 * this._location.height;
+                this._endShape.style.y   = this._location.y + this._location.height
+                                           - this._zoom.end / 100 * this._location.height
                                            - this._handleSize;
                     
-                this._fillerShae.style.y      = this._startShape.style.y + this._handleSize;
-                this._fillerShae.style.height = this._endShape.style.y 
-                                                - this._startShape.style.y
+                this._fillerShae.style.y      = this._endShape.style.y + this._handleSize;
+                this._fillerShae.style.height = this._startShape.style.y 
+                                                - this._endShape.style.y
                                                 - this._handleSize;
             }
             
