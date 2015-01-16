@@ -607,7 +607,9 @@ define(function (require) {
                                          ? (style.height / 2 * 1.5) : 0)
                                ),
                 width : style.width,
-                height : style.height
+                height : style.height * (
+                    style.iconType === 'pin' ? 1.25 : 1
+                )
             };
             
             return style.__rect;
