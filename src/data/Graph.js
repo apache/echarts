@@ -1,7 +1,8 @@
 /**
- * 图数据结构
+ * Graph data structure
+ * 
  * @module echarts/data/Graph
- * @author pissang(http://www.github.com/pissang)
+ * @author Yi Shen(https://www.github.com/pissang)
  */
 define(function(require) {
 

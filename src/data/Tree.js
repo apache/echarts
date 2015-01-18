@@ -1,13 +1,32 @@
+/**
+ * Tree data structure
+ * 
+ * @module echarts/data/Tree
+ * @author Yi Shen(https://www.github.com/pissang)
+ */
 define(function(require) {
 
+    /**
+     * @constructor module:echarts/data/Tree~TreeNode
+     * @param {string} id Node ID
+     */
     function TreeNode(id) {
+        /**
+         * @type {string}
+         */
         this.id = id;
+        /**
+         * @type {number}
+         */
         this.depth = 0;
+        /**
+         * @type {number}
+         */
         this.height = 0;
+        /**
+         * @type {Array.<module:echarts/data/Tree~TreeNode>}
+         */
         this.children = [];
-
-        this.data = {};
-        this.layout = {};
     }
 
     TreeNode.prototype.traverse = function (cb, context) {
@@ -43,7 +62,15 @@ define(function(require) {
         }
     };
 
+    /**
+     * @constructor
+     * @alias module:echarts/data/Tree
+     * @param {string} id
+     */
     function Tree(id) {
+        /**
+         * @type {module:echarts/data/Tree~TreeNode}
+         */
         this.root = new TreeNode(id);
     }
 
