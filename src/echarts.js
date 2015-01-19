@@ -616,7 +616,8 @@ define(function (require) {
         _noDataCheck: function(magicOption) {
             var series = magicOption.series;
             for (var i = 0, l = series.length; i < l; i++) {
-                if ((series[i].data && series[i].data.length > 0)
+                if (series[i].type == ecConfig.CHART_TYPE_MAP
+                    || (series[i].data && series[i].data.length > 0)
                     || (series[i].markPoint && series[i].markPoint.data && series[i].markPoint.data.length > 0)
                     || (series[i].markLine && series[i].markLine.data && series[i].markLine.data.length > 0)
                     || (series[i].nodes && series[i].nodes.length > 0)
