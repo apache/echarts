@@ -1140,24 +1140,27 @@ define(function (require) {
                 }
                 
                 if (pointType === 'line') {
+                    var lineWidth = style.line.width;
+                    var isVertical = xStart == xEnd;
                     this._axisLineShape.style = {
-                        xStart: xStart,
-                        yStart: yStart,
-                        xEnd: xEnd,
-                        yEnd: yEnd,
+                        xStart: isVertical ? this.subPixelOptimize(xStart, lineWidth) : xStart,
+                        yStart: isVertical ? yStart : this.subPixelOptimize(yStart, lineWidth),
+                        xEnd: isVertical ? this.subPixelOptimize(xEnd, lineWidth) : xEnd,
+                        yEnd: isVertical ? yEnd : this.subPixelOptimize(yEnd, lineWidth),
                         strokeColor: style.line.color,
-                        lineWidth: style.line.width,
+                        lineWidth: lineWidth,
                         lineType: style.line.type
                     };
                     this._axisLineShape.invisible = false;
                     this.zr.modShape(this._axisLineShape.id);
                 }
                 else if (pointType === 'cross') {
+                    var crossWidth = style.cross.width;
                     this._axisCrossShape.style = {
                         brushType: 'stroke',
                         rect: this.component.grid.getArea(),
-                        x: x,
-                        y: y,
+                        x: this.subPixelOptimize(x, crossWidth),
+                        y: this.subPixelOptimize(y, crossWidth),
                         text: ('( ' 
                                + this.component.xAxis.getAxis(0).getValueFromCoord(x)
                                + ' , '
@@ -1166,7 +1169,7 @@ define(function (require) {
                               ).replace('  , ', ' ').replace(' ,  ', ' '),
                         textPosition: 'specific',
                         strokeColor: style.cross.color,
-                        lineWidth: style.cross.width,
+                        lineWidth: crossWidth,
                         lineType: style.cross.type
                     };
                     if (this.component.grid.getXend() - x > 100) {          // 右侧有空间
