@@ -737,7 +737,7 @@ define(function (require) {
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'playing') {
                 this._ctrPlayShape.style.status = 'playing';
                 this.zr.modShape(this._ctrPlayShape.id);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
             
             
@@ -760,7 +760,7 @@ define(function (require) {
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'stop') {
                 this._ctrPlayShape.style.status = 'stop';
                 this.zr.modShape(this._ctrPlayShape.id);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
             
             this.timelineOption.autoPlay = false;

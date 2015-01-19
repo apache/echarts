@@ -527,7 +527,7 @@ define(function (require) {
             
             // 没有相互影响，直接刷新即可
             if (this._status.needRefresh) {
-                this._zr.refresh();
+                this._zr.refreshNextFrame();
             }
         },
 

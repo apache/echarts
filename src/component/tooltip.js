@@ -244,7 +244,7 @@ define(function (require) {
                 this._lastTipShape = false;
                 this.shapeList.length = 2;
             }
-            needRefresh && this.zr.refresh();
+            needRefresh && this.zr.refreshNextFrame();
             this.showing = false;
         },
         
@@ -1021,7 +1021,7 @@ define(function (require) {
                 this.zr.modShape(this._axisLineShape.id);
                 this._axisShadowShape.invisible = true;
                 this.zr.modShape(this._axisShadowShape.id);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
             
             // don't modify, just false, showContent == undefined == true
@@ -1232,7 +1232,7 @@ define(function (require) {
                     this._axisShadowShape.invisible = false;
                     this.zr.modShape(this._axisShadowShape.id);
                 }
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
         },
 

@@ -1588,7 +1588,7 @@ define(function (require) {
                     for (var i = lastLength, l = this.shapeList.length; i < l; i++) {
                         this.zr.addShape(this.shapeList[i]);
                     }
-                    this.zr.refresh();
+                    this.zr.refreshNextFrame();
                 }
                 // 还原，复用_buildMarkX
                 serie[markType].data = oriMarkData;
@@ -1622,7 +1622,7 @@ define(function (require) {
                     }
                 }
                 
-                needRefresh && this.zr.refresh();
+                needRefresh && this.zr.refreshNextFrame();
             }
         }
     };

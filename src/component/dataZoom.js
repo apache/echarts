@@ -633,7 +633,7 @@ define(function (require) {
             // 同步边框
             this._syncFrameShape();
             
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
         },
 
         _syncFillerShape : function () {
@@ -669,7 +669,7 @@ define(function (require) {
             // 同步边框
             this._syncFrameShape();
             
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
         },
         
         _syncFrameShape : function () {
