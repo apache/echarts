@@ -60,7 +60,7 @@ define(function (require) {
             ecData.set(shape, 'name', name);
 
             self.zr.modShape(shape.id);
-            self.zr.refresh();
+            self.zr.refreshNextFrame();
             zrEvent.stop(event);
         };
     }

@@ -275,7 +275,7 @@ define(function (require) {
                 self._buildMark(mt, ms);
                 if (--self._mapDataRequireCounter <= 0) {
                     self.addShapeList();
-                    self.zr.refresh();
+                    self.zr.refreshNextFrame();
                 }
             };
         },
@@ -1121,7 +1121,7 @@ define(function (require) {
             }
             if (haveScale) {
                 zrEvent.stop(event);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
                 
                 var self = this;
                 clearTimeout(this._refreshDelayTicket);
@@ -1198,7 +1198,7 @@ define(function (require) {
             );
             
             this.clearEffectShape(true);
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
             
             this._justMove = true;
             zrEvent.stop(event);
@@ -1290,7 +1290,7 @@ define(function (require) {
             );
             
             this.clearEffectShape(true);
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
             
             clearTimeout(this.dircetionTimer);
             var self = this;
@@ -1375,7 +1375,7 @@ define(function (require) {
                 },
                 this.myChart
             );
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
             
             var self = this;
             setTimeout(function(){

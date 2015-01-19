@@ -1208,7 +1208,7 @@ define(function (require) {
             this.zr.modShape(this._startMask.id);
             this.zr.modShape(this._endMask.id);
             this.zr.modShape(this._fillerShape.id);
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
         },
 
         _syncData : function () {
