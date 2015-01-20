@@ -1,6 +1,17 @@
 
 /**
+ * echarts 值轴分段刻度计算方法
+ *
+ * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
+ * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
+ * @author xieshiwei (谢世威, i6ma@i6ma.com)
+ *
+ */
+
+
+/**
  * 最值、跨度、步长取近似值
+ * 注意：不适用于高精度需求，或者很多位有效数字的情况！！！
  * @function    smartSteps
  * @param       {Number}    min             最小值
  * @param       {Number}    max             最大值
@@ -315,8 +326,8 @@ function look4step(expMin, expMax, secs) {
     var deltaMin    = expMin.c - tmpMin;                    // 上面的计算可能会让 min 端的误差更大，下面尝试均衡误差
     var deltaMax    = tmpMax - expMax.c;
     var deltaDelta  = deltaMin - deltaMax;
-    if (deltaDelta >= tmpStep * 2) {                        // 当 min 端的误差比 max 端大很多时，考虑将 tmpMin tmpMax 同时上移
-        deltaDelta  = MATH_FLOOR(deltaDelta / tmpStep) * tmpStep;
+    if (deltaDelta >= tmpStep) {                            // 当 min 端的误差比 max 端大很多时，考虑将 tmpMin tmpMax 同时上移
+        deltaDelta  = MATH_ROUND(deltaDelta / tmpStep / 2) * tmpStep;
         tmpMin     += deltaDelta;
         tmpMax     += deltaDelta;
     }
