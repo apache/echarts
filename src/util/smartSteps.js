@@ -326,7 +326,7 @@ function look4step(expMin, expMax, secs) {
     var deltaMin    = expMin.c - tmpMin;                    // 上面的计算可能会让 min 端的误差更大，下面尝试均衡误差
     var deltaMax    = tmpMax - expMax.c;
     var deltaDelta  = deltaMin - deltaMax;
-    if (deltaDelta >= tmpStep) {                            // 当 min 端的误差比 max 端大很多时，考虑将 tmpMin tmpMax 同时上移
+    if (deltaDelta  > tmpStep * 1.1) {                      // 当 min 端的误差比 max 端大很多时，考虑将 tmpMin tmpMax 同时上移
         deltaDelta  = MATH_ROUND(deltaDelta / tmpStep / 2) * tmpStep;
         tmpMin     += deltaDelta;
         tmpMax     += deltaDelta;
