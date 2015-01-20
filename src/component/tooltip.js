@@ -1706,7 +1706,7 @@ define(function (require) {
             this.zr.un(zrConfig.EVENT.MOUSEMOVE, this._onmousemove);
             this.zr.un(zrConfig.EVENT.GLOBALOUT, this._onglobalout);
             
-            if (this.hasAppend) {
+            if (this.hasAppend && !!this.dom.firstChild) {
                 this.dom.firstChild.removeChild(this._tDom);
             }
             this._tDom = null;
