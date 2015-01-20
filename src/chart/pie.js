@@ -6,7 +6,6 @@
  *
  */
 define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
     // 图形依赖
@@ -14,7 +13,7 @@ define(function (require) {
     var RingShape = require('zrender/shape/Ring');
     var CircleShape = require('zrender/shape/Circle');
     var SectorShape = require('zrender/shape/Sector');
-    var BrokenLineShape = require('zrender/shape/BrokenLine');
+    var PolylineShape = require('zrender/shape/Polyline');
 
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
@@ -30,10 +29,8 @@ define(function (require) {
      * @param {Object} component 组件
      */
     function Pie(ecTheme, messageCenter, zr, option, myChart){
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
 
         var self = this;
         /**
@@ -112,7 +109,8 @@ define(function (require) {
                     this._selected[i] = [];
                     if (this.deepQuery([series[i], this.option], 'calculable')) {
                         pieCase = {
-                            zlevel: this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             hoverable: false,
                             style: {
                                 x: center[0],          // 圆心横坐标
@@ -350,7 +348,8 @@ define(function (require) {
                 );
 
             var sector = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: center[0],          // 圆心横坐标
@@ -457,8 +456,8 @@ define(function (require) {
                 textAlign = 'center';
             }
             else if (labelControl.position === 'inner' || labelControl.position === 'inside') {
-                // 内部显示
-                radius = (radius[0] + radius[1]) / 2;
+                // 内部标签显示, 按外半径比例计算标签位置
+                radius = (radius[0] + radius[1]) * (labelControl.distance || 0.5);
                 x = Math.round(centerX + radius * zrMath.cos(midAngle, true));
                 y = Math.round(centerY - radius * zrMath.sin(midAngle, true));
                 defaultColor = '#fff';
@@ -482,7 +481,8 @@ define(function (require) {
             data.__labelY = y;
             
             var ts = new TextShape({
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 hoverable: false,
                 style: {
                     x: x,
@@ -582,9 +582,9 @@ define(function (require) {
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
 
-                return new BrokenLineShape({
-                    // shape: 'brokenLine',
-                    zlevel: this._zlevelBase + 1,
+                return new PolylineShape({
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase() + 1,
                     hoverable: false,
                     style: {
                         pointList: [
@@ -887,7 +887,7 @@ define(function (require) {
                     case 'text' :
                         textMap[key] = this.shapeList[i];
                         break;
-                    case 'broken-line' :
+                    case 'polyline' :
                         lineMap[key] = this.shapeList[i];
                         break;
                 }
@@ -930,7 +930,7 @@ define(function (require) {
                         }
                     }
                     else if (backupShapeList[i].type === 'text'
-                             || backupShapeList[i].type === 'broken-line'
+                             || backupShapeList[i].type === 'polyline'
                     ) {
                         if (targeSector === 'delete') {
                             // 删除逻辑一样
@@ -951,7 +951,7 @@ define(function (require) {
                                         )
                                         .start();
                                     break;
-                                case 'broken-line':
+                                case 'polyline':
                                     targeSector = lineMap[key];
                                     this.zr.animate(backupShapeList[i].id, 'style')
                                         .when(
@@ -1041,12 +1041,11 @@ define(function (require) {
                 },
                 this.myChart
             );
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
         }
     };
     
     zrUtil.inherits(Pie, ChartBase);
-    zrUtil.inherits(Pie, ComponentBase);
     
     // 图表注册
     require('../chart').define('pie', Pie);

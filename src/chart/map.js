@@ -6,7 +6,6 @@
  *
  */
 define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
     // 图形依赖
@@ -39,10 +38,8 @@ define(function (require) {
      * @param {Object} component 组件
      */
     function Map(ecTheme, messageCenter, zr, option, myChart){
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         
         var self = this;
         self._onmousewheel = function(params) {
@@ -278,7 +275,7 @@ define(function (require) {
                 self._buildMark(mt, ms);
                 if (--self._mapDataRequireCounter <= 0) {
                     self.addShapeList();
-                    self.zr.refresh();
+                    self.zr.refreshNextFrame();
                 }
             };
         },
@@ -681,7 +678,8 @@ define(function (require) {
                             && legend.hasColor(series[data.seriesIndex[j]].name)
                         ) {
                             this.shapeList.push(new CircleShape({
-                                zlevel : this._zlevelBase + 1,
+                                zlevel : this.getZlevelBase(),
+                                z : this.getZBase() + 1,
                                 position : zrUtil.clone(style.position),
                                 _mapType : mapType,
                                 /*
@@ -760,7 +758,8 @@ define(function (require) {
                 font = this.deepQuery(queryTarget, 'itemStyle.normal.label.textStyle');
                 // 文字标签避免覆盖单独一个shape
                 textShape = {
-                    zlevel : this._zlevelBase + 1,
+                    zlevel : this.getZlevelBase(),
+                    z : this.getZBase() + 1,
                     //hoverable: this._hoverable[mapType],
                     //clickable: this._clickable[mapType],
                     position : zrUtil.clone(style.position),
@@ -806,7 +805,8 @@ define(function (require) {
                 }
 
                 shape = {
-                    zlevel : this._zlevelBase,
+                    zlevel : this.getZlevelBase(),
+                    z : this.getZBase(),
                     //hoverable: this._hoverable[mapType],
                     //clickable: this._clickable[mapType],
                     position : zrUtil.clone(style.position),
@@ -1121,7 +1121,7 @@ define(function (require) {
             }
             if (haveScale) {
                 zrEvent.stop(event);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
                 
                 var self = this;
                 clearTimeout(this._refreshDelayTicket);
@@ -1198,7 +1198,7 @@ define(function (require) {
             );
             
             this.clearEffectShape(true);
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
             
             this._justMove = true;
             zrEvent.stop(event);
@@ -1290,7 +1290,7 @@ define(function (require) {
             );
             
             this.clearEffectShape(true);
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
             
             clearTimeout(this.dircetionTimer);
             var self = this;
@@ -1375,7 +1375,7 @@ define(function (require) {
                 },
                 this.myChart
             );
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
             
             var self = this;
             setTimeout(function(){
@@ -1497,7 +1497,8 @@ define(function (require) {
                         ? shapeList : [shapeList];
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 if (typeof shapeList[i].zlevel == 'undefined') {
-                    shapeList[i].zlevel = this._zlevelBase + 1;
+                    shapeList[i].zlevel = this.getZlevelBase();
+                    shapeList[i].z = this.getZBase() + 1;
                 }
                 shapeList[i]._mapType = mapType;
                 this.shapeList.push(shapeList[i]);
@@ -1524,7 +1525,6 @@ define(function (require) {
     };
     
     zrUtil.inherits(Map, ChartBase);
-    zrUtil.inherits(Map, ComponentBase);
     
     // 图表注册
     require('../chart').define('map', Map);

@@ -51,7 +51,8 @@ define(function (require) {
                 var halfLineWidth = lineWidth / 2;
                 var axShape = {
                     _axisShape: 'axisLine',
-                    zlevel: this._zlevelBase + 1,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase() + 3,
                     hoverable: false
                 };
                 switch (this.option.position) {

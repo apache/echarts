@@ -13,7 +13,6 @@ var theme = {
 
     // 图表标题
     title: {
-        itemGap: 8,
         textStyle: {
             fontWeight: 'normal',
             color: '#fff'          // 主标题文字颜色
@@ -22,7 +21,6 @@ var theme = {
     
     // 图例
     legend: {
-        itemGap: 8,
         textStyle: {
             color: '#ccc'          // 图例文字颜色
         }
@@ -40,8 +38,7 @@ var theme = {
     toolbox: {
         color : ['#fff', '#fff', '#fff', '#fff'],
         effectiveColor : '#FE8463',
-        disableColor: '#666',
-        itemGap: 8
+        disableColor: '#666'
     },
 
     // 提示框
@@ -229,35 +226,28 @@ var theme = {
         itemStyle: {
             normal: {
                 linkStyle : {
-                    strokeColor : '#fff'
+                    color : '#fff'
                 }
             }
         }
     },
 
     chord : {
-        padding : 4,
         itemStyle : {
             normal : {
-                lineStyle : {
-                    width : 1,
-                    color : 'rgba(228, 228, 228, 0.2)'
-                },
+                borderWidth: 1,
+                borderColor: 'rgba(228, 228, 228, 0.2)',
                 chordStyle : {
                     lineStyle : {
-                        width : 1,
                         color : 'rgba(228, 228, 228, 0.2)'
                     }
                 }
             },
             emphasis : {
-                lineStyle : {
-                    width : 1,
-                    color : 'rgba(228, 228, 228, 0.9)'
-                },
+                borderWidth: 1,
+                borderColor: 'rgba(228, 228, 228, 0.9)',
                 chordStyle : {
                     lineStyle : {
-                        width : 1,
                         color : 'rgba(228, 228, 228, 0.9)'
                     }
                 }
@@ -266,8 +256,6 @@ var theme = {
     },
 
     gauge : {
-        startAngle: 225,
-        endAngle : -45,
         axisLine: {            // 坐标轴线
             show: true,        // 默认显示，属性show控制显示与否
             lineStyle: {       // 属性lineStyle控制线条样式
@@ -324,7 +312,7 @@ var theme = {
                 fontWeight: 'bolder',
                 color: '#fff'
             }
-        },
+        }
     },
     
     funnel : {
@@ -343,7 +331,7 @@ var theme = {
     textStyle: {
         fontFamily: '微软雅黑, Arial, Verdana, sans-serif'
     }
-}
+};
 
     return theme;
 });

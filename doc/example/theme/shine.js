@@ -9,15 +9,9 @@ var theme = {
 
     // 图表标题
     title: {
-        itemGap: 8,
         textStyle: {
             fontWeight: 'normal'
         }
-    },
-    
-    // 图例
-    legend: {
-        itemGap: 8
     },
     
     // 值域
@@ -28,8 +22,7 @@ var theme = {
 
     // 工具箱
     toolbox: {
-        color : ['#06467c','#00613c','#872d2f','#c47630'],
-        itemGap: 8
+        color : ['#06467c','#00613c','#872d2f','#c47630']
     },
 
     // 提示框
@@ -44,6 +37,7 @@ var theme = {
         handleColor: '#005eaa'     // 手柄颜色
     },
     
+    // 网格
     grid: {
         borderWidth: 0
     },
@@ -128,35 +122,28 @@ var theme = {
         itemStyle: {
             normal: {
                 linkStyle : {
-                    strokeColor : '#005eaa'
+                    color : '#005eaa'
                 }
             }
         }
     },
     
     chord : {
-        padding : 4,
         itemStyle : {
             normal : {
-                lineStyle : {
-                    width : 1,
-                    color : 'rgba(128, 128, 128, 0.5)'
-                },
+                borderWidth: 1,
+                borderColor: 'rgba(128, 128, 128, 0.5)',
                 chordStyle : {
                     lineStyle : {
-                        width : 1,
                         color : 'rgba(128, 128, 128, 0.5)'
                     }
                 }
             },
             emphasis : {
-                lineStyle : {
-                    width : 1,
-                    color : 'rgba(128, 128, 128, 0.5)'
-                },
+                borderWidth: 1,
+                borderColor: 'rgba(128, 128, 128, 0.5)',
                 chordStyle : {
                     lineStyle : {
-                        width : 1,
                         color : 'rgba(128, 128, 128, 0.5)'
                     }
                 }
@@ -165,8 +152,6 @@ var theme = {
     },
     
     gauge : {
-        startAngle: 225,
-        endAngle : -45,
         axisLine: {            // 坐标轴线
             show: true,        // 默认显示，属性show控制显示与否
             lineStyle: {       // 属性lineStyle控制线条样式
@@ -212,7 +197,7 @@ var theme = {
     textStyle: {
         fontFamily: '微软雅黑, Arial, Verdana, sans-serif'
     }
-}
+};
 
     return theme;
 });

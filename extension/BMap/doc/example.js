@@ -25,7 +25,9 @@
         });
 
         // 初始化地图
-        var BMapExt = new BMapExtension($('#main')[0], BMap, echarts);
+        var BMapExt = new BMapExtension($('#main')[0], BMap, echarts,{
+            enableMapClick: false
+        });
         var map = BMapExt.getMap();
         var container = BMapExt.getEchartsContainer();
 
@@ -402,7 +404,7 @@
                             {name:'常州',value:10}
                         ]
                     }
-                    
+
                 },
                 {
                     name:'上海',
@@ -539,7 +541,7 @@
                     data:[],
                     markLine : {
                         smooth:true,
-                        symbol: ['none', 'circle'],  
+                        symbol: ['none', 'circle'],
                         symbolSize : 1,
                         itemStyle : {
                             normal: {

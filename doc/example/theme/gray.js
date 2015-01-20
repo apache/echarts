@@ -9,7 +9,6 @@ var theme = {
 
     // 图表标题
     title: {
-        itemGap: 8,
         textStyle: {
             fontWeight: 'normal',
             color: '#757575'
@@ -51,6 +50,7 @@ var theme = {
         handleColor: '#757575'     // 手柄颜色
     },
     
+    // 网格
     grid: {
         borderWidth: 0
     },
@@ -113,6 +113,7 @@ var theme = {
             }
         }
     },
+    
     map: {
         itemStyle: {
             normal: {
@@ -142,7 +143,7 @@ var theme = {
         itemStyle: {
             normal: {
                 linkStyle : {
-                    strokeColor : '#757575'
+                    color : '#757575'
                 }
             }
         }
@@ -152,25 +153,19 @@ var theme = {
         padding : 4,
         itemStyle : {
             normal : {
-                lineStyle : {
-                    width : 1,
-                    color : 'rgba(128, 128, 128, 0.5)'
-                },
+                borderWidth: 1,
+                borderColor: 'rgba(128, 128, 128, 0.5)',
                 chordStyle : {
                     lineStyle : {
-                        width : 1,
                         color : 'rgba(128, 128, 128, 0.5)'
                     }
                 }
             },
             emphasis : {
-                lineStyle : {
-                    width : 1,
-                    color : 'rgba(128, 128, 128, 0.5)'
-                },
+                borderWidth: 1,
+                borderColor: 'rgba(128, 128, 128, 0.5)',
                 chordStyle : {
                     lineStyle : {
-                        width : 1,
                         color : 'rgba(128, 128, 128, 0.5)'
                     }
                 }
@@ -179,8 +174,6 @@ var theme = {
     },
     
     gauge : {
-        startAngle: 225,
-        endAngle : -45,
         axisLine: {            // 坐标轴线
             show: true,        // 默认显示，属性show控制显示与否
             lineStyle: {       // 属性lineStyle控制线条样式
@@ -225,7 +218,7 @@ var theme = {
     textStyle: {
         fontFamily: '微软雅黑, Arial, Verdana, sans-serif'
     }
-}
+};
 
     return theme;
 });

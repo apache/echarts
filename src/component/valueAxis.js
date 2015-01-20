@@ -87,7 +87,8 @@ define(function (require) {
                     x = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
                         _axisShape: 'axisTick',
-                        zlevel: this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable: false,
                         style: {
                             xStart: x,
@@ -115,7 +116,8 @@ define(function (require) {
                     y = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
                         _axisShape: 'axisTick',
-                        zlevel: this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable: false,
                         style: {
                             xStart: xPosition,
@@ -156,7 +158,8 @@ define(function (require) {
 
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
-                        zlevel: this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase() +3,
                         hoverable: false,
                         style: {
                             x: this.getCoord(data[i]),
@@ -201,7 +204,8 @@ define(function (require) {
 
                 for (var i = 0; i < dataLength; i++) {
                     axShape = {
-                        zlevel: this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase() + 3,
                         hoverable: false,
                         style: {
                             x: xPosition,
@@ -212,12 +216,11 @@ define(function (require) {
                             textFont: this.getFont(textStyle),
                             textAlign: textStyle.align || align,
                             textBaseline: textStyle.baseline 
-                                          || (i === 0 && this.option.name !== '')
+                                          || (
+                                              (i === 0 && this.option.name !== '')
                                               ? 'bottom'
-                                              : (i === (dataLength - 1) 
-                                                 && this.option.name !== '')
-                                                ? 'top'
-                                                : 'middle'
+                                                : (i === dataLength - 1 && this.option.name !== '') ? 'top' : 'middle'
+                                          )
                         }
                     };
                     
@@ -256,7 +259,8 @@ define(function (require) {
                     // 亚像素优化
                     x = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        zlevel: this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable: false,
                         style: {
                             xStart: x,
@@ -282,7 +286,8 @@ define(function (require) {
                     // 亚像素优化
                     y = this.subPixelOptimize(this.getCoord(data[i]), lineWidth);
                     axShape = {
-                        zlevel: this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable: false,
                         style: {
                             xStart: sx,
@@ -306,7 +311,8 @@ define(function (require) {
             if (!(color instanceof Array)) {
                 // 非数组一律认为是单一颜色的字符串，单一颜色则用一个背景，颜色错误不负责啊！！！
                 axShape = {
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     hoverable: false,
                     style: {
                         x: this.grid.getX(),
@@ -337,7 +343,8 @@ define(function (require) {
                                ? this.getCoord(data[i])
                                : this.grid.getXend();
                         axShape = {
-                            zlevel: this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             hoverable: false,
                             style: {
                                 x: lastX,
@@ -364,7 +371,8 @@ define(function (require) {
                                ? this.getCoord(data[i])
                                : this.grid.getY();
                         axShape = {
-                            zlevel: this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             hoverable: false,
                             style: {
                                 x: x,
@@ -496,9 +504,7 @@ define(function (require) {
                 if (this.series[i].type != ecConfig.CHART_TYPE_EVENTRIVER) {
                     oriData = this.series[i].data;
                     for (var j = 0, k = oriData.length; j < k; j++) {
-                        value = oriData[j].value != null
-                                ? oriData[j].value
-                                : oriData[j];
+                        value = this.getDataFromOption(oriData[j]);
                         if (this.series[i].type === ecConfig.CHART_TYPE_K) {
                             data[key].push(value[0]);
                             data[key].push(value[1]);
@@ -545,9 +551,7 @@ define(function (require) {
                 data[key] = data[key] || [];  // scale下还需要记录每一个量
                 oriData = this.series[i].data;
                 for (var j = 0, k = oriData.length; j < k; j++) {
-                    value = oriData[j].value != null
-                            ? oriData[j].value
-                            : oriData[j];
+                    value = this.getDataFromOption(oriData[j]);
                     if (value === '-') {
                         continue;
                     }
@@ -600,7 +604,7 @@ define(function (require) {
             
             var stepOpt = smartSteps(this._min, this._max, splitNumber);
             splitNumber = splitNumber != null ? splitNumber : stepOpt.secs;
-            this.option.splitNumber = splitNumber;
+            //this.option.splitNumber = splitNumber;
             this._min = stepOpt.min;
             this._max = stepOpt.max;
             this._valueList = stepOpt.pnts;

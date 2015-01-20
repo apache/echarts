@@ -223,7 +223,8 @@ define(function (require) {
                 // 图形
                 itemShape = {
                     type: 'icon',
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style: {
                         x: lastX,
                         y: lastY,
@@ -345,7 +346,8 @@ define(function (require) {
             var padding = this.reformCssArray(this.option.toolbox.padding);
 
             this.shapeList.push(new RectangleShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable :false,
                 style: {
                     x: this._itemGroupLocation.x - padding[3],
@@ -446,6 +448,7 @@ define(function (require) {
                     zrEvent.getY(param.event) - this._zoomShape.style.y;
                 this.zr.addHoverShape(this._zoomShape);
                 this.dom.style.cursor = 'crosshair';
+                zrEvent.stop(param.event);
             }
             if (this._zoomStart
                 && (this.dom.style.cursor != 'pointer' && this.dom.style.cursor != 'move')
@@ -463,7 +466,8 @@ define(function (require) {
             var y = zrEvent.getY(param.event);
             var zoomOption = this.option.dataZoom || {};
             this._zoomShape = new RectangleShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: x,
                     y: y,
@@ -504,7 +508,7 @@ define(function (require) {
                         end2: zoom.end2
                     });
                     this._iconEnable(this._iconShapeMap['dataZoomReset']);
-                    this.zr.refresh();
+                    this.zr.refreshNextFrame();
                 }
             }
             return true; // 阻塞全局事件
@@ -520,14 +524,15 @@ define(function (require) {
                 this._iconEnable(this._iconShapeMap['markUndo']);
                 this._iconEnable(this._iconShapeMap['markClear']);
                 this.zr.addShape(this._markShape);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             } 
             else if (this._markStart) {
                 this._marking = true;
                 var x = zrEvent.getX(param.event);
                 var y = zrEvent.getY(param.event);
                 this._markShape = new LineShape({
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style: {
                         xStart: x,
                         yStart: y,
@@ -556,14 +561,14 @@ define(function (require) {
             if (this._marking || this._markStart) {
                 // 取消
                 this._resetMark();
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
             else {
                 // 启用Mark
                 this._resetZoom();   // mark与dataZoom互斥
                 
                 this.zr.modShape(target.id, {style: {strokeColor: this._enableColor}});
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
                 this._markStart = true;
                 var self = this;
                 setTimeout(function (){
@@ -583,7 +588,7 @@ define(function (require) {
                 if (len >= 1) {
                     var target = this._markShapeList[len - 1];
                     this.zr.delShape(target.id);
-                    this.zr.refresh();
+                    this.zr.refreshNextFrame();
                     this._markShapeList.pop();
                     if (len === 1) {
                         this._iconDisable(this._iconShapeMap['markUndo']);
@@ -605,7 +610,7 @@ define(function (require) {
                 }
                 this._iconDisable(this._iconShapeMap['markUndo']);
                 this._iconDisable(this._iconShapeMap['markClear']);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
             return true;
         },
@@ -615,7 +620,7 @@ define(function (require) {
             if (this._zooming || this._zoomStart) {
                 // 取消
                 this._resetZoom();
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
                 this.dom.style.cursor = 'default';
             }
             else {
@@ -623,7 +628,7 @@ define(function (require) {
                 this._resetMark();   // mark与dataZoom互斥
                 
                 this.zr.modShape(target.id, {style: {strokeColor: this._enableColor}});
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
                 this._zoomStart = true;
                 var self = this;
                 setTimeout(function (){
@@ -652,7 +657,7 @@ define(function (require) {
             else {
                 this.component.dataZoom.rectZoom();
                 this._iconDisable(this._iconShapeMap['dataZoomReset']);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
             
             return true;
@@ -806,8 +811,7 @@ define(function (require) {
             );
             downloadLink.innerHTML = '<img style="vertical-align:middle" src="' + image 
                 + '" title="'
-                + (!!(window.attachEvent 
-                     && navigator.userAgent.indexOf('Opera') === -1)
+                + ((!!window.ActiveXObject || "ActiveXObject" in window)
                   ? '右键->图片另存为'
                   : (saveOption.lang ? saveOption.lang[0] : '点击保存'))
                 + '"/>';

@@ -36,7 +36,6 @@ define(function (require) {
         };
 
         this._fillerSize = 28;       // 控件大小，水平布局为高，纵向布局为宽
-        this._handleSize = 8;        // 手柄大小
         // this._fillerShae;            // 填充
         // this._startShape;            // 起始手柄
         // this._endShape;              // 结束手柄
@@ -49,6 +48,7 @@ define(function (require) {
         
         this.option.dataZoom = this.reformOption(this.option.dataZoom);
         this.zoomOption = this.option.dataZoom;
+        this._handleSize = this.zoomOption.handleSize;
         if (!this.myChart.canvasSupported) {
             // 不支持Canvas的强制关闭实时动画
             this.zoomOption.realtime = false;
@@ -95,10 +95,8 @@ define(function (require) {
                 // 水平布局
                 width = this.zoomOption.width || grid.getWidth();
                 height = this.zoomOption.height || this._fillerSize;
-                x = this.zoomOption.x != null 
-                    ? this.zoomOption.x : grid.getX();
-                y = this.zoomOption.y != null 
-                    ? this.zoomOption.y : (this.zr.getHeight() - height - 2);
+                x = this.zoomOption.x != null ? this.zoomOption.x : grid.getX();
+                y = this.zoomOption.y != null ? this.zoomOption.y : (this.zr.getHeight() - height - 2);
             }
             else {
                 // 垂直布局
@@ -206,9 +204,8 @@ define(function (require) {
                 // 不指定接管坐标轴，则散点图、双数值轴折线图柱形图都被纳入接管范围
                 if (this.zoomOption.xAxisIndex == null
                     && this.zoomOption.yAxisIndex == null
-                    && serie.data 
-                    && serie.data[0] 
-                    && serie.data[0] instanceof Array
+                    && serie.data
+                    && this.getDataFromOption(serie.data[0]) instanceof Array
                     && (serie.type == ecConfig.CHART_TYPE_SCATTER
                         || serie.type == ecConfig.CHART_TYPE_LINE
                         || serie.type == ecConfig.CHART_TYPE_BAR)
@@ -274,9 +271,8 @@ define(function (require) {
             for (var i = 0, l = seriesIndex.length; i < l; i++) {
                 serie = series[seriesIndex[i]];
                 this._originalData.series[seriesIndex[i]] = serie.data;
-                if (serie.data 
-                    && serie.data[0] 
-                    && serie.data[0] instanceof Array
+                if (serie.data
+                    && this.getDataFromOption(serie.data[0]) instanceof Array
                     && (serie.type == ecConfig.CHART_TYPE_SCATTER
                         || serie.type == ecConfig.CHART_TYPE_LINE
                         || serie.type == ecConfig.CHART_TYPE_BAR)
@@ -351,7 +347,8 @@ define(function (require) {
             
             // 背景
             this.shapeList.push(new RectangleShape({
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable :false,
                 style : {
                     x : this._location.x,
@@ -385,9 +382,7 @@ define(function (require) {
             var minValue = Number.MAX_VALUE;
             var value;
             for (var i = 0, l = data.length; i < l; i++) {
-                value = data[i] != null
-                        ? (data[i].value != null ? data[i].value : data[i])
-                        : 0;
+                value = this.getDataFromOption(data[i], 0);
                 if (this.option.series[seriesIndex].type == ecConfig.CHART_TYPE_K) {
                     value = value[1];   // 收盘价
                 }
@@ -411,9 +406,7 @@ define(function (require) {
             }
             
             for (var i = 0, l = maxLength; i < l; i += step) {
-                value = data[i] != null
-                        ? (data[i].value != null ? data[i].value : data[i])
-                        : 0;
+                value = this.getDataFromOption(data[i], 0);
                 if (this.option.series[seriesIndex].type == ecConfig.CHART_TYPE_K) {
                     value = value[1];   // 收盘价
                 }
@@ -433,7 +426,7 @@ define(function (require) {
                         this._location.x + 1 + Math.round(
                             (value - minValue) / valueRange * (width - 10)
                         ),
-                        this._location.y + y * i
+                        this._location.y + y * (l - i - 1)
                     ]);
                 }
             }
@@ -448,15 +441,16 @@ define(function (require) {
             }
             else {
                 pointList.push([
-                    this._location.x, this._location.y + height
+                    this._location.x, this._location.y
                 ]);
                 pointList.push([
-                    this._location.x, this._location.y
+                    this._location.x, this._location.y + height
                 ]);
             }
 
             this.shapeList.push(new PolygonShape({
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style : {
                     pointList : pointList,
                     color : this.zoomOption.dataBackgroundColor
@@ -470,7 +464,8 @@ define(function (require) {
          */
         _buildFiller : function () {
             this._fillerShae = {
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 draggable : true,
                 ondrift : this._ondrift,
                 ondragend : this._ondragend,
@@ -527,8 +522,10 @@ define(function (require) {
          * 构建拖拽手柄
          */
         _buildHandle : function () {
+            var detail = this.zoomOption.showDetail ? this._getDetail() : {start: '',end: ''};
             this._startShape = {
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 draggable : true,
                 style : {
                     iconType: 'rectangle',
@@ -541,7 +538,7 @@ define(function (require) {
                     textPosition: 'inside'
                 },
                 highlightStyle: {
-                    text: '',
+                    text: detail.start,
                     brushType: 'fill',
                     textPosition: 'left'
                 },
@@ -555,16 +552,19 @@ define(function (require) {
                 
                 this._startShape.style.x = this._fillerShae.style.x - this._handleSize,
                 this._endShape.style.x = this._fillerShae.style.x + this._fillerShae.style.width;
+                this._endShape.highlightStyle.text = detail.end;
                 this._endShape.highlightStyle.textPosition = 'right';
             }
             else {
                 this._startShape.style.width = this._location.width;
                 this._endShape = zrUtil.clone(this._startShape);
                 
-                this._startShape.style.y = this._fillerShae.style.y - this._handleSize;
-                this._startShape.highlightStyle.textPosition = 'top';
-                this._endShape.style.y = this._fillerShae.style.y + this._fillerShae.style.height;
-                this._endShape.highlightStyle.textPosition = 'bottom';
+                this._startShape.style.y = this._fillerShae.style.y + this._fillerShae.style.height;
+                this._startShape.highlightStyle.textPosition = 'bottom';
+
+                this._endShape.style.y = this._fillerShae.style.y - this._handleSize;
+                this._endShape.highlightStyle.text = detail.end;
+                this._endShape.highlightStyle.textPosition = 'top';
             }
             this._startShape = new IconShape(this._startShape);
             this._endShape = new IconShape(this._endShape);
@@ -580,7 +580,8 @@ define(function (require) {
             var x = this.subPixelOptimize(this._location.x, 1);
             var y = this.subPixelOptimize(this._location.y, 1);
             this._startFrameShape = {
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable :false,
                 style : {
                     x : x,
@@ -606,26 +607,25 @@ define(function (require) {
                 this._startShape.style.x = this._fillerShae.style.x - this._handleSize;
                 this._endShape.style.x = this._fillerShae.style.x + this._fillerShae.style.width;
                 
-                this._zoom.start = Math.floor(
-                    (this._startShape.style.x - this._location.x)
-                    / this._location.width * 100
-                );
-                this._zoom.end = Math.ceil(
-                    (this._endShape.style.x + this._handleSize - this._location.x)
-                    / this._location.width * 100
-                );
+                this._zoom.start = (
+                    this._startShape.style.x - this._location.x
+                ) / this._location.width * 100;
+                this._zoom.end = (
+                    this._endShape.style.x + this._handleSize - this._location.x
+                ) / this._location.width * 100;
             }
             else {
-                this._startShape.style.y = this._fillerShae.style.y - this._handleSize;
-                this._endShape.style.y = this._fillerShae.style.y + this._fillerShae.style.height;
-                this._zoom.start = Math.floor(
-                    (this._startShape.style.y - this._location.y)
-                    / this._location.height * 100
-                );
-                this._zoom.end = Math.ceil(
-                    (this._endShape.style.y + this._handleSize - this._location.y)
-                    / this._location.height * 100
-                );
+                this._startShape.style.y = this._fillerShae.style.y + this._fillerShae.style.height;
+                this._endShape.style.y = this._fillerShae.style.y - this._handleSize;
+
+                this._zoom.start = (
+                    this._location.y + this._location.height 
+                    - this._startShape.style.y
+                ) / this._location.height * 100;
+                this._zoom.end = (
+                    this._location.y + this._location.height
+                    - this._endShape.style.y - this._handleSize
+                ) / this._location.height * 100;
             }
             this.zr.modShape(this._startShape.id);
             this.zr.modShape(this._endShape.id);
@@ -633,7 +633,7 @@ define(function (require) {
             // 同步边框
             this._syncFrameShape();
             
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
         },
 
         _syncFillerShape : function () {
@@ -644,28 +644,24 @@ define(function (require) {
                 b = this._endShape.style.x;
                 this._fillerShae.style.x = Math.min(a, b) + this._handleSize;
                 this._fillerShae.style.width = Math.abs(a - b) - this._handleSize;
-                this._zoom.start = Math.floor(
-                    (Math.min(a, b) - this._location.x)
-                    / this._location.width * 100
-                );
-                this._zoom.end = Math.ceil(
-                    (Math.max(a, b) + this._handleSize - this._location.x)
-                    / this._location.width * 100
-                );
+                this._zoom.start = (
+                    Math.min(a, b) - this._location.x
+                ) / this._location.width * 100;
+                this._zoom.end = (
+                    Math.max(a, b) + this._handleSize - this._location.x
+                ) / this._location.width * 100;
             }
             else {
                 a = this._startShape.style.y;
                 b = this._endShape.style.y;
                 this._fillerShae.style.y = Math.min(a, b) + this._handleSize;
                 this._fillerShae.style.height = Math.abs(a - b) - this._handleSize;
-                this._zoom.start = Math.floor(
-                    (Math.min(a, b) - this._location.y)
-                    / this._location.height * 100
-                );
-                this._zoom.end = Math.ceil(
-                    (Math.max(a, b) + this._handleSize - this._location.y)
-                    / this._location.height * 100
-                );
+                this._zoom.start = (
+                    this._location.y + this._location.height - Math.max(a, b)
+                ) / this._location.height * 100;
+                this._zoom.end = (
+                    this._location.y + this._location.height - Math.min(a, b) - this._handleSize
+                ) / this._location.height * 100;
             }
 
             this.zr.modShape(this._fillerShae.id);
@@ -673,7 +669,7 @@ define(function (require) {
             // 同步边框
             this._syncFrameShape();
             
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
         },
         
         _syncFrameShape : function () {
@@ -686,12 +682,12 @@ define(function (require) {
                     this._location.x + this._location.width - this._endFrameShape.style.x;
             }
             else {
-                this._startFrameShape.style.height = 
-                    this._fillerShae.style.y - this._location.y;
-                this._endFrameShape.style.y = 
+                this._startFrameShape.style.y =
                     this._fillerShae.style.y + this._fillerShae.style.height;
+                this._startFrameShape.style.height =
+                    this._location.y + this._location.height - this._startFrameShape.style.y;
                 this._endFrameShape.style.height = 
-                    this._location.y + this._location.height - this._endFrameShape.style.y;
+                    this._fillerShae.style.y - this._location.y;
             }
                     
             this.zr.modShape(this._startFrameShape.id);
@@ -716,15 +712,15 @@ define(function (require) {
                                                - this._handleSize;
             }
             else {
-                this._startShape.style.y = this._location.y
-                                           + this._zoom.start / 100 * this._location.height;
-                this._endShape.style.y   = this._location.y 
-                                           + this._zoom.end / 100 * this._location.height
+                this._startShape.style.y = this._location.y + this._location.height
+                                           - this._zoom.start / 100 * this._location.height;
+                this._endShape.style.y   = this._location.y + this._location.height
+                                           - this._zoom.end / 100 * this._location.height
                                            - this._handleSize;
                     
-                this._fillerShae.style.y      = this._startShape.style.y + this._handleSize;
-                this._fillerShae.style.height = this._endShape.style.y 
-                                                - this._startShape.style.y
+                this._fillerShae.style.y      = this._endShape.style.y + this._handleSize;
+                this._fillerShae.style.height = this._startShape.style.y 
+                                                - this._endShape.style.y
                                                 - this._handleSize;
             }
             
@@ -753,7 +749,7 @@ define(function (require) {
                     length = data.length;
                     start = Math.floor(this._zoom.start / 100 * length);
                     end = Math.ceil(this._zoom.end / 100 * length);
-                    if (!(this.option[key][idx].data[0] instanceof Array)
+                    if (!(this.getDataFromOption(data[0]) instanceof Array)
                         || this.option[key][idx].type == ecConfig.CHART_TYPE_K
                     ) {
                         this.option[key][idx].data = data.slice(start, end);
@@ -794,7 +790,7 @@ define(function (require) {
             var xEnd;
             var yStart;
             var yEnd;
-            
+
             if (this.zoomOption.orient == 'horizontal') {
                 total = scale.x.max - scale.x.min;
                 xStart = this._zoom.start / 100 * total + scale.x.min;
@@ -877,10 +873,10 @@ define(function (require) {
                 var length = data.length;
                 var start = Math.floor(this._zoom.start / 100 * length);
                 var end = Math.ceil(this._zoom.end / 100 * length);
-                end -= end >= length ? 1 : 0;
+                end -= end > 0 ? 1 : 0;
                 return {
-                    start : data[start].value != null ? data[start].value : data[start],
-                    end : data[end].value != null ? data[end].value : data[end]
+                    start : this.getDataFromOption(data[start]),
+                    end : this.getDataFromOption(data[end])
                 };
             }
             
@@ -965,9 +961,9 @@ define(function (require) {
             }
 
             if (this.zoomOption.showDetail) {
-                var deltail = this._getDetail();
-                this._startShape.style.text = this._startShape.highlightStyle.text = deltail.start;
-                this._endShape.style.text = this._endShape.highlightStyle.text = deltail.end;
+                var detail = this._getDetail();
+                this._startShape.style.text = this._startShape.highlightStyle.text = detail.start;
+                this._endShape.style.text = this._endShape.highlightStyle.text = detail.end;
                 this._startShape.style.textPosition = this._startShape.highlightStyle.textPosition;
                 this._endShape.style.textPosition = this._endShape.highlightStyle.textPosition;
             }

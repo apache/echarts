@@ -163,7 +163,8 @@ define(function (require) {
                 // 文字
                 textShape = {
                     // shape: 'text',
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style: {
                         x: lastX + itemWidth + 5,
                         y: lastY + itemHeight / 2,
@@ -298,7 +299,8 @@ define(function (require) {
             var padding = this.reformCssArray(this.legendOption.padding);
 
             this.shapeList.push(new RectangleShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable :false,
                 style: {
                     x: this._itemGroupLocation.x - padding[3],
@@ -338,36 +340,31 @@ define(function (require) {
                 for (var i = 0; i < dataLength; i++) {
                     if (this._getName(data[i]) === '') {
                         temp -= itemGap;
-                        if (temp > zrWidth) {
-                            totalWidth = zrWidth;
-                            totalHeight += itemHeight + itemGap;
-                        }
-                        else {
-                            totalWidth = Math.max(totalWidth, temp);
-                        }
+                        totalWidth = Math.max(totalWidth, temp);
                         totalHeight += itemHeight + itemGap;
                         temp = 0;
                         continue;
                     }
-                    temp += itemWidth
-                            + zrArea.getTextWidth(
-                                  this._getFormatterNameFromData(data[i]),
-                                  data[i].textStyle 
-                                  ? this.getFont(zrUtil.merge(
-                                        data[i].textStyle || {},
-                                        textStyle
-                                    ))
-                                  : font
-                              )
-                            + itemGap;
-                }
-                totalHeight = Math.max(totalHeight, itemHeight);
-                temp -= itemGap;    // 减去最后一个的itemGap
-                if (temp > zrWidth) {
-                    totalWidth = zrWidth;
-                    totalHeight += itemHeight + itemGap;
-                } else {
-                    totalWidth = Math.max(totalWidth, temp);
+                    var tempTextWidth = zrArea.getTextWidth(
+                        this._getFormatterNameFromData(data[i]),
+                        data[i].textStyle 
+                        ? this.getFont(zrUtil.merge(
+                            data[i].textStyle || {},
+                            textStyle
+                          ))
+                        : font
+                    );
+                    if (temp + itemWidth + tempTextWidth + itemGap > zrWidth) {
+                        // new line
+                        temp -= itemGap;  // 减去最后一个的itemGap
+                        totalWidth = Math.max(totalWidth, temp);
+                        totalHeight += itemHeight + itemGap;
+                        temp = 0;
+                    }
+                    else {
+                        temp += itemWidth + tempTextWidth + itemGap;
+                        totalWidth = Math.max(totalWidth, temp - itemGap);
+                    }
                 }
             }
             else {
@@ -390,27 +387,23 @@ define(function (require) {
                 totalWidth = maxWidth;
                 for (var i = 0; i < dataLength; i++) {
                     if (this._getName(data[i]) === '') {
-                        temp -= itemGap;
-                        if (temp > zrHeight) {
-                            totalHeight = zrHeight;
-                            totalWidth += maxWidth + itemGap;
-                        }
-                        else {
-                            totalHeight = Math.max(totalHeight, temp);
-                        }
                         totalWidth += maxWidth + itemGap;
+                        temp -= itemGap;  // 减去最后一个的itemGap
+                        totalHeight = Math.max(totalHeight, temp);
                         temp = 0;
                         continue;
                     }
-                    temp += itemHeight + itemGap;
-                }
-                totalWidth = Math.max(totalWidth, maxWidth);
-                temp -= itemGap;    // 减去最后一个的itemGap
-                if (temp > zrHeight) {
-                    totalHeight = zrHeight;
-                    totalWidth += maxWidth + itemGap;
-                } else {
-                    totalHeight = Math.max(totalHeight, temp);
+                    if (temp + itemHeight + itemGap > zrHeight) {
+                        // new line
+                        totalWidth += maxWidth + itemGap;
+                        temp -= itemGap;  // 减去最后一个的itemGap
+                        totalHeight = Math.max(totalHeight, temp);
+                        temp = 0;
+                    }
+                    else {
+                        temp += itemHeight + itemGap;
+                        totalHeight = Math.max(totalHeight, temp - itemGap);
+                    }
                 }
             }
 
@@ -517,7 +510,8 @@ define(function (require) {
         _getItemShapeByType: function (x, y, width, height, color, itemType, defaultColor) {
             var highlightColor = color === '#ccc' ? defaultColor : color;
             var itemShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     iconType: 'legendicon' + itemType,
                     x: x,
@@ -840,7 +834,7 @@ define(function (require) {
             SectorShape.prototype.buildPath(ctx, {
                 x: x + width / 2,
                 y: y + height + 2,
-                r: height + 2,
+                r: height,
                 r0: 6,
                 startAngle: 45,
                 endAngle: 135

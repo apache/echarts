@@ -10,7 +10,7 @@
 
     <link rel="shortcut icon" href="./asset/ico/favicon.png">
 
-    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="./asset/css/font-awesome.min.css" rel="stylesheet">
     <link href="./asset/css/bootstrap.css" rel="stylesheet">
     <link href="./asset/css/carousel.css" rel="stylesheet">
     <link href="./asset/css/echartsHome.css" rel="stylesheet">
@@ -128,6 +128,9 @@
                                 <li><a href="#AddDataAnimation">addDataAnimation</a></li>
                                 <li><a href="#AnimationThreshold">animationThreshold</a></li>
                                 <li><a href="#AnimationDuration">animationDuration</a></li>
+                                <li>
+                                    <a href="#animationDurationUpdate">animationDurationUpdate</a>
+                                </li>
                                 <li><a href="#AnimationEasing">animationEasing</a></li>
                             </ul>
                             <li><a href="#图数据表示">图数据表示</a></li>
@@ -621,7 +624,7 @@ require.config({
                         <tr>
                             <td> <b>{ECharts}</b> init </td>
                             <td> <b>{dom}</b> dom, <br/><b>{string | Object =}</b> theme </td>
-                            <td> 初始化接口，返回ECharts实例，其中dom为图表所在节点，theme为可选的主题，内置主题（暂无）直接传入名称，自定义扩展主题可传入主题对象</td>
+                            <td> 初始化接口，返回ECharts实例，其中dom为图表所在节点，theme为可选的主题，内置主题（'macarons', 'infographic'）直接传入名称，自定义扩展主题可传入主题对象</td>
                         </tr>
                     </table>
                     <p>图表实例可用方法见<a href="#方法">方法</a></p>
@@ -889,6 +892,9 @@ require(['echarts'], function (ec){
                                 <a href="#AddDataAnimation" title="">addDataAnimation</a>，
                                 <a href="#AnimationThreshold" title="">animationThreshold</a>，
                                 <a href="#AnimationDuration" title="">animationDuration</a>，
+                                <a href="#animationDurationUpdate" title="">
+                                    animationDurationUpdate
+                                </a>，
                                 <a href="#AnimationEasing" title="">animationEasing</a>）
                             </td>
                         </tr>
@@ -1532,7 +1538,7 @@ require(['echarts'], function (ec){
                                         <li><b>力导向图, 和弦图</b> : 
                                             <ul>
                                                 <li>节点 : a（系列名称），b（节点名称），c（节点值）, d(节点类目索引)</li>
-                                                <li>边 : a（系列名称），b（边名称，默认为源名称-目标名称），c（边权重）, d(源节点name或者index), e(目标节点name或者index)</li>
+                                                <li>边 : a（系列名称），b（边名称，默认为大端节点名称-小端节点名称），c（边权重）, d(大端节点 name 或者 index), e(小端节点 name 或者 index)</li>
                                             </ul>
                                         </li>
                                     </ul>
@@ -1759,6 +1765,11 @@ require(['echarts'], function (ec){
                             <td> 分割段数，默认为5，为0时为线性渐变，calculable为true是默认均分100份 </td>
                         </tr>
                         <tr>
+                            <td> <b>{boolean | string}</b> selectedMode </td>
+                            <td> true </td>
+                            <td> 选择模式，默认开启值域开关，可选single，multiple </td>
+                        </tr>
+                        <tr>
                             <td> <b>{boolean}</b> calculable </td>
                             <td> false </td>
                             <td> 是否启用值域漫游，启用后无视splitNumber，值域显示为线性渐变 </td>
@@ -1781,7 +1792,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td> <b>{string | Function}</b> formatter </td>
                             <td> null </td>
-                            <td> 内容格式器：<b>{string}</b>（Template） | <b>{Function}</b>，模板变量为'{value}'和'{value2}'，代表数值起始值和结束值，函数参数两个，含义同模板变量，<a href="example/dataRange.html" target="_blank">try this »</a></td>
+                            <td> 内容格式器：<b>{string}</b>（Template） | <b>{Function}</b>，模板变量为'{value}'和'{value2}'，代表数值起始值和结束值，函数参数两个，含义同模板变量，当calculable为true时模板变量仅有'{value}'，<a href="example/dataRange.html" target="_blank">try this »</a></td>
                         </tr>
                         <tr>
                             <td> <b>{Array}</b> text </td>
@@ -3079,25 +3090,6 @@ indicator : [
                             <td> false </td>
                             <td> 显示是否顺时针 </td>
                         </tr>
-                        <tr>
-                            <td> <b>{Array}</b> matrix </td>
-                            <td>[[]]</td>
-                            <td> 关系数据，用二维数组表示，项 [i][j] 的数值表示 i 到 j 的关系数据 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{Array}</b> nodes </td>
-                            <td> [] </td>
-                            <td> 和弦图的顶点数据, 每一项：
-                                <table cellspacing="0" class="ADoc_table full">
-                                </table>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{Array}</b> links </td>
-                            <td> [] </td>
-                            <td> 和弦图的边数据, 每一项
-                            </td>
-                        </tr>
                     </table>
 
                     <h5>series（仪表盘）<a name="SeriesGauge"> </a></h5>
@@ -3813,13 +3805,13 @@ geoCoord : {
                             <td> <b>{Object}</b> nodeStyle </td>
                             <td> 图表各异 </td>
                             <td> 力导向图</td>
-                            <td> 弦样式，详见<a href="#NodeStyle" title="">nodeStyle</a></td>
+                            <td> 节点样式，详见<a href="#NodeStyle" title="">nodeStyle</a></td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> linkStyle </td>
                             <td> 图表各异 </td>
                             <td> 力导向图</td>
-                            <td> 弦样式，详见<a href="#LinkStyle" title="">linkStyle</a></td>
+                            <td> 边样式，详见<a href="#LinkStyle" title="">linkStyle</a></td>
                         </tr>
                         <tr>
                             <td> <b>{string}</b> borderColor </td>
@@ -3895,7 +3887,9 @@ geoCoord : {
                         <tr>
                             <td> <b>{number}</b> distance </td>
                             <td> 10 </td>
-                            <td> 和弦图有效，文本标签旋转后于弦的间隔</td>
+                            <td> 和弦图: 文本标签旋转后于弦的间隔
+                              <br/>饼图: 当label position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数，默认为0.5。
+                            </td>
                         </tr>
                         <tr>
                             <td> <b>{string | Function}</b> formatter </td>
@@ -4105,12 +4099,12 @@ geoCoord : {
                             <td> 线条类型，可选为：'curve'（曲线） | 'line'（直线） </td>
                         </tr>
                         <tr>
-                            <td> <b>{color}</b> borderColor</td>
+                            <td> <b>{color}</b> color</td>
                             <td> '#5182ab' </td>
                             <td> 线条颜色 </td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> borderWidth </td>
+                            <td> <b>{number}</b> width </td>
                             <td> 1 </td>
                             <td> 线宽 </td>
                         </tr>
@@ -4262,10 +4256,13 @@ geoCoord : {
                     <P> <b>{number}</b> 2500，动画元素阀值，产生的图形原素超过2500不出动画，建议IE8-关闭</P>
 
                     <h4>animationDuration<a name="AnimationDuration"> </a></h4>
-                    <P> <b>{number}</b> 2000，动画时长，单位ms，支持多级控制</P>
+                    <P> <b>{number}</b> 2000，进入动画时长，单位ms</P>
+
+                    <h4>animationDurationUpdate<a name="animationDurationUpdate"> </a></h4>
+                    <P> <b>{number}</b> 500，更新动画时长，单位ms</P>
 
                     <h4>animationEasing<a name="AnimationEasing"> </a></h4>
-                    <P> <b>{string}</b> 'BounceOut'，主元素的缓动效果，支持多级控制，详见<a href="http://ecomfe.github.io/zrender/doc/doc.html#animation.easing" target="_blank">zrender.animation.easing</a>，可选有：<br/>
+                    <P> <b>{string}</b> 'BounceOut'，主元素的缓动效果，详见<a href="http://ecomfe.github.io/zrender/doc/doc.html#animation.easing" target="_blank">zrender.animation.easing</a>，可选有：<br/>
                         'Linear',<br/>
                         'QuadraticIn', 'QuadraticOut', 'QuadraticInOut',<br/>
                         'CubicIn', 'CubicOut', 'CubicInOut',<br/>
@@ -4307,7 +4304,7 @@ geoCoord : {
                         <tr>
                             <td> itemStyle </td>
                             <td></td>
-                            <td> 详见 <a href="#ItemStyle">itemStyle</a> </td>
+                            <td> 详见 <a href="#ItemStyle">itemStyle</a>，注意力导向图单个 category 的 itemStyle 中没有 nodeStyle 的配置项，而是直接使用 normal(emphasis) 下的 color, borderWidth 和 borderColor</td>
                         </tr>
                     </table>
 
@@ -4356,7 +4353,7 @@ geoCoord : {
                         <tr>
                             <td> itemStyle </td>
                             <td></td>
-                            <td> 详见 <a href="#ItemStyle">itemStyle</a> </td>
+                            <td> 详见 <a href="#ItemStyle">itemStyle</a>，注意力导向图单个节点的 itemStyle 中没有 nodeStyle 的配置项，而是直接使用 normal(emphasis) 下的 color, borderWidth 和 borderColor</td>
                         </tr>
                     </table>
 
@@ -4385,7 +4382,7 @@ geoCoord : {
                         <tr>
                             <td> itemStyle </td>
                             <td></td>
-                            <td> see <a href="#ItemStyle">itemStyle</a> </td>
+                            <td> see <a href="#LinkStyle">linkStyle</a> </td>
                         </tr>
                     </table>
                     <h5>matrix<a name="GraphMatrix"></a></h5>

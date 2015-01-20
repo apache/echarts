@@ -17,10 +17,15 @@ define(function (require) {
     var ecAnimation = require('../util/ecAnimation');
     var ecEffect = require('../util/ecEffect');
     var accMath = require('../util/accMath');
+    var ComponentBase = require('../component/base');
+
     var zrUtil = require('zrender/tool/util');
     var zrArea = require('zrender/tool/area');
     
-    function Base(){
+    function Base(ecTheme, messageCenter, zr, option, myChart) {
+
+        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
+
         var self = this;
         this.selectedMap = {};
         this.lastShapeList = [];
@@ -250,7 +255,7 @@ define(function (require) {
         /**
          * 折线图、柱形图公用方法
          */
-        _bulidPosition: function() {
+        _buildPosition: function() {
             this._symbol = this.option.symbolList;
             this._sIndex2ShapeMap = {};  // series拐点图形类型，seriesIndex索引到shape type
             this._sIndex2ColorMap = {};  // series默认颜色索引，seriesIndex索引到color
@@ -440,10 +445,8 @@ define(function (require) {
                     if (xy.indexOf('x') != '-1') {
                         if (xMarkMap[seriesIndex]['counter' + valueIndex] > 0) {
                             xMarkMap[seriesIndex]['average' + valueIndex] =
-                                (xMarkMap[seriesIndex]['sum' + valueIndex]
-                                 / xMarkMap[seriesIndex]['counter' + valueIndex]
-                                ).toFixed(2)
-                                - 0;
+                                xMarkMap[seriesIndex]['sum' + valueIndex] 
+                                / xMarkMap[seriesIndex]['counter' + valueIndex];
                         }
                         
                         var x = this.component.xAxis.getAxis(series[seriesIndex].xAxisIndex || 0)
@@ -480,10 +483,8 @@ define(function (require) {
                     if (xy.indexOf('y') != '-1') {
                         if (xMarkMap[seriesIndex]['counter' + valueIndex] > 0) {
                             xMarkMap[seriesIndex]['average' + valueIndex] = 
-                                (xMarkMap[seriesIndex]['sum' + valueIndex]
-                                 / xMarkMap[seriesIndex]['counter' + valueIndex]
-                                ).toFixed(2)
-                                - 0;
+                                xMarkMap[seriesIndex]['sum' + valueIndex]
+                                / xMarkMap[seriesIndex]['counter' + valueIndex];
                         }
                         var y = this.component.yAxis.getAxis(series[seriesIndex].yAxisIndex || 0)
                                 .getCoord(xMarkMap[seriesIndex]['average' + valueIndex]);
@@ -540,6 +541,8 @@ define(function (require) {
                                               : nLabel.position;
                 tarShape.style.textColor = nTextStyle.color;
                 tarShape.style.textFont = this.getFont(nTextStyle);
+                tarShape.style.textAlign = nTextStyle.align;
+                tarShape.style.textBaseline = nTextStyle.baseline;
             }
             if (eLabel.show) {
                 tarShape.highlightStyle.text = this._getLabelText(
@@ -552,6 +555,8 @@ define(function (require) {
                         : eLabel.position);
                 tarShape.highlightStyle.textColor = eTextStyle.color;
                 tarShape.highlightStyle.textFont = this.getFont(eTextStyle);
+                tarShape.highlightStyle.textAlign = eTextStyle.align;
+                tarShape.highlightStyle.textBaseline = eTextStyle.baseline;
             }
             
             return tarShape;
@@ -573,19 +578,20 @@ define(function (require) {
                 );
             }
             
-            var value = data != null
-                        ? (data.value != null
-                          ? data.value
-                          : data)
-                        : '-';
+            var value = this.getDataFromOption(data, '-');
             
             if (formatter) {
                 if (typeof formatter === 'function') {
                     return formatter.call(
                         this.myChart,
-                        serie.name,
-                        name,
-                        value
+                        {
+                            seriesName: serie.name,
+                            series: serie,
+                            name: name,
+                            value: value,
+                            data: data,
+                            status: status
+                        }
                     );
                 }
                 else if (typeof formatter === 'string') {
@@ -600,7 +606,17 @@ define(function (require) {
                 }
             }
             else {
-                return this.numAddCommas(value);
+                if (value instanceof Array) {
+                    if (value[2] != null) {
+                        return this.numAddCommas(value[2]);
+                    }
+                    else {
+                        return value[0] + ' , ' + value[1];
+                    }
+                }
+                else {
+                    return this.numAddCommas(value);
+                }
             }
         },
         
@@ -610,8 +626,8 @@ define(function (require) {
         buildMark: function (seriesIndex) {
             var serie = this.series[seriesIndex];
             if (this.selectedMap[serie.name]) {
-                serie.markPoint && this._buildMarkPoint(seriesIndex);
                 serie.markLine && this._buildMarkLine(seriesIndex);
+                serie.markPoint && this._buildMarkPoint(seriesIndex);
             }
         },
         
@@ -621,7 +637,6 @@ define(function (require) {
         _buildMarkPoint: function (seriesIndex) {
             var attachStyle =  (this.markAttachStyle || {})[seriesIndex];
             var serie = this.series[seriesIndex];
-            var _zlevelBase = this.getZlevelBase();
             var mpData;
             var pos;
             var markPoint = zrUtil.clone(serie.markPoint);
@@ -644,7 +659,8 @@ define(function (require) {
             var shapeList = this._markPoint(seriesIndex, markPoint);
             
             for (var i = 0, l = shapeList.length; i < l; i++) {
-                shapeList[i].zlevel = _zlevelBase + 1;
+                shapeList[i].zlevel = this.getZlevelBase();
+                shapeList[i].z = this.getZBase() + 1;
                 for (var key in attachStyle) {
                     shapeList[i][key] = zrUtil.clone(attachStyle[key]);
                 }
@@ -666,7 +682,6 @@ define(function (require) {
         _buildMarkLine: function (seriesIndex) {
             var attachStyle =  (this.markAttachStyle || {})[seriesIndex];
             var serie = this.series[seriesIndex];
-            var _zlevelBase = this.getZlevelBase();
             var mlData;
             var pos;
             var markLine = zrUtil.clone(serie.markLine);
@@ -679,7 +694,12 @@ define(function (require) {
                     pos = this.getMarkCoord(seriesIndex, mlData);
                     markLine.data[i] = [zrUtil.clone(mlData), {}];
                     markLine.data[i][0].name = mlData.name || mlData.type;
-                    markLine.data[i][0].value = pos[3];
+                    markLine.data[i][0].value = mlData.type !== 'average'
+                                                ? pos[3]
+                                                : pos[3].toFixed(
+                                                      markLine.precision != null 
+                                                      ? markLine.precision : this.ecTheme.markLine.precision
+                                                  ) - 0;
                     pos = pos[2];
                     mlData = [{},{}];
                 }
@@ -702,7 +722,8 @@ define(function (require) {
             var shapeList = this._markLine(seriesIndex, markLine);
             
             for (var i = 0, l = shapeList.length; i < l; i++) {
-                shapeList[i].zlevel = _zlevelBase + 1;
+                shapeList[i].zlevel = this.getZlevelBase();
+                shapeList[i].z = this.getZBase() + 1;
                 for (var key in attachStyle) {
                     shapeList[i][key] = zrUtil.clone(attachStyle[key]);
                 }
@@ -750,9 +771,7 @@ define(function (require) {
                     if (data[i].x == null || data[i].y == null) {
                         continue;
                     }
-                    value = data[i] != null && data[i].value != null
-                            ? data[i].value
-                            : '';
+                    value = data[i].value != null ? data[i].value : '';
                     // 图例
                     if (legend) {
                         color = legend.getColor(serie.name);
@@ -884,9 +903,7 @@ define(function (require) {
                 
                 // 组装一个mergeData
                 mergeData = this.deepMerge(data[i]);
-                value = mergeData != null && mergeData.value != null
-                        ? mergeData.value
-                        : '';
+                value = mergeData.value != null ? mergeData.value : '';
                 // 值域
                 if (dataRange) {
                     color = isNaN(value) ? color : dataRange.getColor(value);
@@ -905,11 +922,12 @@ define(function (require) {
                 }
                 
                 // 标准化一些参数
-                data[i][0].tooltip = mergeData.tooltip 
+                data[i][0].tooltip = mergeData.tooltip
+                                     || mlOption.tooltip
                                      || {trigger:'item'}; // tooltip.trigger指定为item
                 data[i][0].name = data[i][0].name != null ? data[i][0].name : '';
                 data[i][1].name = data[i][1].name != null ? data[i][1].name : '';
-                data[i][0].value = data[i][0].value != null ? data[i][0].value : '';
+                data[i][0].value = value;
                 
                 itemShape = this.getLineMarkShape(
                     mlOption,                   // markLine
@@ -972,11 +990,7 @@ define(function (require) {
             orient                  // 走向，用于默认文字定位
         ) {
             var queryTarget = [data, serie];
-            var value = data != null
-                        ? (data.value != null
-                          ? data.value
-                          : data)
-                        : '-';
+            var value = this.getDataFromOption(data, '-');
             
             symbol = this.deepQuery(queryTarget, 'symbol') || symbol;
             var symbolSize = this.deepQuery(queryTarget, 'symbolSize');
@@ -1114,16 +1128,8 @@ define(function (require) {
             xEnd, yEnd,             // 坐标
             color                   // 默认color，来自legend或dataRange全局分配
         ) {
-            var value0 = data[0] != null
-                        ? (data[0].value != null
-                          ? data[0].value
-                          : data[0])
-                        : '-';
-            var value1 = data[1] != null
-                        ? (data[1].value != null
-                          ? data[1].value
-                          : data[1])
-                        : '-';
+            var value0 = data[0].value != null ? data[0].value : '-';
+            var value1 = data[1].value != null ? data[1].value : '-';
             var symbol = [
                 this.query(data[0], 'symbol') || mlOption.symbol[0],
                 this.query(data[1], 'symbol') || mlOption.symbol[1]
@@ -1144,7 +1150,7 @@ define(function (require) {
             ];
             //console.log(symbol, symbolSize, symbolRotate);
             
-            var queryTarget = [data[0], mlOption];
+            var queryTarget = [data[0], data[1], mlOption];
             var normal = this.deepMerge(
                 queryTarget,
                 'itemStyle.normal'
@@ -1172,7 +1178,8 @@ define(function (require) {
             
             var itemShape = new MarkLineShape({
                 style: {
-                    smooth: mlOption.smooth ? 'spline' : false,
+                    smooth: this.deepQuery([data[0], data[1], mlOption], 'smooth') ? 'spline' : false,
+                    smoothRadian: this.deepQuery([data[0], data[1], mlOption], 'smoothRadian'),
                     symbol: symbol, 
                     symbolSize: symbolSize,
                     symbolRotate: symbolRotate,
@@ -1265,11 +1272,7 @@ define(function (require) {
             }
             // 值域
             if (dataRange) {
-                value = data[0] != null
-                        ? (data[0].value != null
-                          ? data[0].value
-                          : data[0])
-                        : '-';
+                value = data[0].value != null ? data[0].value : '';
                 color = isNaN(value) ? color : dataRange.getColor(value);
                 
                 nColor = this.deepQuery(
@@ -1335,8 +1338,10 @@ define(function (require) {
             var maxLenth = this.option.animationThreshold / (this.canvasSupported ? 2 : 4);
             var lastShapeList = this.lastShapeList;
             var shapeList = this.shapeList;
-            var duration = lastShapeList.length > 0
-                           ? 500 : this.query(this.option, 'animationDuration');
+            var isUpdate = lastShapeList.length > 0;
+            var duration = isUpdate
+                           ? this.query(this.option, 'animationDurationUpdate')
+                           : this.query(this.option, 'animationDuration');
             var easing = this.query(this.option, 'animationEasing');
             var delay;
             var key;
@@ -1379,7 +1384,9 @@ define(function (require) {
                     if (oldMap[key]) {
                         // 新旧都有 动画过渡
                         this.zr.delShape(oldMap[key].id);
-                        this._animateMod(oldMap[key], newMap[key], duration, easing);
+                        this._animateMod(
+                            oldMap[key], newMap[key], duration, easing, 0, isUpdate
+                        );
                     }
                     else {
                         // 新有旧没有  添加并动画过渡
@@ -1389,7 +1396,9 @@ define(function (require) {
                                 && key.indexOf('icon') !== 0
                                 ? duration / 2
                                 : 0;
-                        this._animateMod(false, newMap[key], duration, easing, delay);
+                        this._animateMod(
+                            false, newMap[key], duration, easing, delay, isUpdate
+                        );
                     }
                 }
                 this.zr.refresh();
@@ -1424,9 +1433,9 @@ define(function (require) {
         /**
          * 动画过渡 
          */
-        _animateMod: function (oldShape, newShape, duration, easing, delay) {
+        _animateMod: function (oldShape, newShape, duration, easing, delay, isUpdate) {
             switch (newShape.type) {
-                case 'broken-line' :
+                case 'polyline' :
                 case 'half-smooth-polygon' :
                     ecAnimation.pointList(this.zr, oldShape, newShape, duration, easing);
                     break;
@@ -1437,7 +1446,7 @@ define(function (require) {
                     ecAnimation.icon(this.zr, oldShape, newShape, duration, easing, delay);
                     break;
                 case 'candle' :
-                    if (duration > 500) {
+                    if (!isUpdate) {
                         ecAnimation.candle(this.zr, oldShape, newShape, duration, easing);
                     }
                     else {
@@ -1447,7 +1456,7 @@ define(function (require) {
                 case 'ring' :
                 case 'sector' :
                 case 'circle' :
-                    if (duration > 500) {
+                    if (!isUpdate) {
                         // 进入动画，加旋转
                         ecAnimation.ring(
                             this.zr,
@@ -1468,7 +1477,7 @@ define(function (require) {
                     ecAnimation.text(this.zr, oldShape, newShape, duration, easing);
                     break;
                 case 'polygon' :
-                    if (duration > 500) {
+                    if (!isUpdate) {
                         ecAnimation.polygon(this.zr, oldShape, newShape, duration, easing);
                     }
                     else {
@@ -1498,7 +1507,7 @@ define(function (require) {
          * 标注动画
          * @param {number} duration 时长
          * @param {string=} easing 缓动效果
-         * @param {Array=} addShapeList 指定特效对象，不知道默认使用this.shapeList
+         * @param {Array=} addShapeList 指定特效对象，不指定默认使用this.shapeList
          */
         animationMark: function (duration , easing, addShapeList) {
             var shapeList = addShapeList || this.shapeList;
@@ -1506,7 +1515,7 @@ define(function (require) {
                 if (!shapeList[i]._mark) {
                     continue;
                 }
-                this._animateMod(false, shapeList[i], duration, easing);
+                this._animateMod(false, shapeList[i], duration, easing, 0, true);
             }
             this.animationEffect(addShapeList);
         },
@@ -1563,7 +1572,7 @@ define(function (require) {
         addMark: function (seriesIndex, markData, markType) {
             var serie = this.series[seriesIndex];
             if (this.selectedMap[serie.name]) {
-                var duration = 500;
+                var duration = this.query(this.option, 'animationDurationUpdate');
                 var easing = this.query(this.option, 'animationEasing');
                 // 备份，复用_buildMarkX
                 var oriMarkData = serie[markType].data;
@@ -1579,7 +1588,7 @@ define(function (require) {
                     for (var i = lastLength, l = this.shapeList.length; i < l; i++) {
                         this.zr.addShape(this.shapeList[i]);
                     }
-                    this.zr.refresh();
+                    this.zr.refreshNextFrame();
                 }
                 // 还原，复用_buildMarkX
                 serie[markType].data = oriMarkData;
@@ -1613,10 +1622,12 @@ define(function (require) {
                     }
                 }
                 
-                needRefresh && this.zr.refresh();
+                needRefresh && this.zr.refreshNextFrame();
             }
         }
     };
+
+    zrUtil.inherits(Base, ComponentBase);
 
     return Base;
 });

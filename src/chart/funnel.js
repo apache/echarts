@@ -6,7 +6,6 @@
  *
  */
 define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
     // 图形依赖
@@ -28,11 +27,9 @@ define(function (require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Funnel(ecTheme, messageCenter, zr, option, myChart){
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
+    function Funnel(ecTheme, messageCenter, zr, option, myChart) {
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         this.refresh(option);
     }
     
@@ -394,7 +391,8 @@ define(function (require) {
                     break;
             }
             var polygon = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     pointList: [
@@ -470,7 +468,8 @@ define(function (require) {
             }
             
             var textShape = {
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 style: {
                     x: this._getLabelPoint(
                            labelControl.position, x, location,
@@ -593,7 +592,8 @@ define(function (require) {
                                     || itemStyle.normal.label.position;
 
             var lineShape = {
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 hoverable: false,
                 style: {
                     xStart: this._getLabelLineStartPoint(x, location, topWidth, bottomWidth, align),
@@ -728,7 +728,6 @@ define(function (require) {
     };
     
     zrUtil.inherits(Funnel, ChartBase);
-    zrUtil.inherits(Funnel, ComponentBase);
     
     // 图表注册
     require('../chart').define('funnel', Funnel);

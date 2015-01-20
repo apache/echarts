@@ -141,7 +141,8 @@ define(function (require) {
                 this._y = this.subPixelOptimize(this._y, gridOption.borderWidth);
     
                 this.shapeList.push(new RectangleShape({
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     hoverable: false,
                     style: {
                         x: this._x,

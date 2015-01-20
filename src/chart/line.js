@@ -6,11 +6,10 @@
  *
  */
 define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
     // 图形依赖
-    var BrokenLineShape = require('zrender/shape/BrokenLine');
+    var PolylineShape = require('zrender/shape/Polyline');
     var IconShape = require('../util/shape/Icon');
     var HalfSmoothPolygonShape = require('../util/shape/HalfSmoothPolygon');
     // 组件依赖
@@ -31,10 +30,8 @@ define(function (require) {
      * @param {Object} component 组件
      */
     function Line(ecTheme, messageCenter, zr, option, myChart){
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
 
         this.refresh(option);
     }
@@ -46,7 +43,7 @@ define(function (require) {
          */
         _buildShape: function () {
             this.finalPLMap = {}; // 完成的point list(PL)
-            this._bulidPosition();
+            this._buildPosition();
         },
 
         /**
@@ -87,11 +84,7 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null
-                                ? (data.value != null
-                                  ? data.value
-                                  : data)
-                                : '-';
+                        value = this.getDataFromOption(data, '-');
                         curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
                                                 || {
@@ -156,11 +149,7 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null
-                                ? (data.value != null
-                                  ? data.value
-                                  : data)
-                                : '-';
+                        value = this.getDataFromOption(data, '-');
                         if (value != '-') {
                             // 只关心空数据
                             continue;
@@ -233,11 +222,7 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null
-                                ? (data.value != null
-                                  ? data.value
-                                  : data)
-                                : '-';
+                        value = this.getDataFromOption(data, '-');
                         curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
                                                 || {
@@ -302,11 +287,7 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null
-                                ? (data.value != null
-                                  ? data.value
-                                  : data)
-                                : '-';
+                        value = this.getDataFromOption(data, '-');
                         if (value != '-') {
                             // 只关心空数据
                             continue;
@@ -377,11 +358,7 @@ define(function (require) {
                     
                     for (var i = 0, l = serie.data.length; i < l; i++) {
                         var data = serie.data[i];
-                        var value = data != null
-                                    ? (data.value != null
-                                      ? data.value
-                                      : data)
-                                    : '-';
+                        var value = this.getDataFromOption(data, '-');
                         if (!(value instanceof Array)) {
                             continue;
                         }
@@ -502,8 +479,9 @@ define(function (require) {
                         }
                         
                         // 折线图
-                        var brokenLineShape = new BrokenLineShape({
-                            zlevel: this._zlevelBase,
+                        var brokenLineShape = new PolylineShape({
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             style: {
                                 miterLimit: lineWidth,
                                 pointList: singlePL,
@@ -547,7 +525,8 @@ define(function (require) {
                         
                         if (isFill) {
                             var halfSmoothPolygonShape = new HalfSmoothPolygonShape({
-                                zlevel: this._zlevelBase,
+                                zlevel: this.getZlevelBase(),
+                                z: this.getZBase(),
                                 style: {
                                     miterLimit: lineWidth,
                                     pointList: zrUtil.clone(singlePL).concat([
@@ -700,7 +679,8 @@ define(function (require) {
                 '#fff',
                 orient === 'vertical' ? 'horizontal' : 'vertical' // 翻转
             );
-            itemShape.zlevel = this._zlevelBase + 1;
+            itemShape.zlevel = this.getZlevelBase();
+            itemShape.z = this.getZBase() + 1;
             
             if (this.deepQuery([data, serie, this.option], 'calculable')) {
                 this.setCalculable(itemShape);
@@ -870,7 +850,7 @@ define(function (require) {
                     this.shapeList[i].position = [0, 0];
                     this.zr.animate(this.shapeList[i].id, '')
                         .when(
-                            500,
+                            this.query(this.option, 'animationDurationUpdate'),
                             { position: [ x, y ] }
                         )
                         .start();
@@ -946,7 +926,6 @@ define(function (require) {
     IconShape.prototype.iconLibrary['legendLineIcon'] = legendLineIcon;
     
     zrUtil.inherits(Line, ChartBase);
-    zrUtil.inherits(Line, ComponentBase);
     
     // 图表注册
     require('../chart').define('line', Line);

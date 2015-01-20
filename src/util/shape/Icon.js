@@ -298,9 +298,10 @@ define(function (require) {
         var width = style.width;
         var height = style.height;
         var dy = Math.round(height / 3);
+        var delta = Math.round((dy - 2) / 2);
         var len = 3;
         while (len--) {
-            ctx.rect(x, y + dy * len + 2, width, 2);
+            ctx.rect(x, y + dy * len + delta, width, 2);
         }
     }
     
@@ -310,9 +311,10 @@ define(function (require) {
         var width = style.width;
         var height = style.height;
         var dx = Math.round(width / 3);
+        var delta = Math.round((dx - 2) / 2);
         var len = 3;
         while (len--) {
-            ctx.rect(x + dx * len, y, 2, height);
+            ctx.rect(x + dx * len + delta, y, 2, height);
         }
     }
     
@@ -605,7 +607,9 @@ define(function (require) {
                                          ? (style.height / 2 * 1.5) : 0)
                                ),
                 width : style.width,
-                height : style.height
+                height : style.height * (
+                    style.iconType === 'pin' ? 1.25 : 1
+                )
             };
             
             return style.__rect;

@@ -72,12 +72,14 @@ define(function (require) {
         this._tDom.onmouseout = function() {
             self._mousein = false;
         };
+        this._tDom.className = 'echarts-tooltip';
         this._tDom.style.position = 'absolute';  // 不是多余的，别删！
         this.hasAppend = false;
         
         this._axisLineShape && this.zr.delShape(this._axisLineShape.id);
         this._axisLineShape = new LineShape({
-            zlevel: this._zlevelBase,
+            zlevel: this.getZlevelBase(),
+            z: this.getZBase(),
             invisible: true,
             hoverable: false
         });
@@ -86,7 +88,8 @@ define(function (require) {
         
         this._axisShadowShape && this.zr.delShape(this._axisShadowShape.id);
         this._axisShadowShape = new LineShape({
-            zlevel: 1,                      // grid上，chart下
+            zlevel: this.getZlevelBase(),
+            z: 1,                      // grid上，chart下
             invisible: true,
             hoverable: false
         });
@@ -95,7 +98,8 @@ define(function (require) {
         
         this._axisCrossShape && this.zr.delShape(this._axisCrossShape.id);
         this._axisCrossShape = new CrossShape({
-            zlevel: this._zlevelBase,
+            zlevel: this.getZlevelBase(),
+            z: this.getZBase(),
             invisible: true,
             hoverable: false
         });
@@ -240,7 +244,7 @@ define(function (require) {
                 this._lastTipShape = false;
                 this.shapeList.length = 2;
             }
-            needRefresh && this.zr.refresh();
+            needRefresh && this.zr.refreshNextFrame();
             this.showing = false;
         },
         
@@ -628,6 +632,8 @@ define(function (require) {
             }
 
             if (seriesArray.length > 0) {
+                // 复位item trigger和axis trigger间短距离来回变换时的不响应
+                this._lastItemTriggerId = -1;
                 // 相同dataIndex seriesIndex时不再触发内容更新
                 if (this._lastDataIndex != dataIndex || this._lastSeriesIndex != seriesIndex[0]) {
                     this._lastDataIndex = dataIndex;
@@ -638,9 +644,7 @@ define(function (require) {
                         var params = [];
                         for (var i = 0, l = seriesArray.length; i < l; i++) {
                             data = seriesArray[i].data[dataIndex];
-                            value = data != null
-                                    ? (data.value != null ? data.value : data)
-                                    : '-';
+                            value = this.getDataFromOption(data, '-');
                             
                             params.push({
                                 seriesIndex: seriesIndex[i],
@@ -677,11 +681,7 @@ define(function (require) {
                                 this._encodeHTML(categoryAxis.getNameByIndex(dataIndex))
                             );
                             data = seriesArray[i].data[dataIndex];
-                            data = data != null
-                                   ? (data.value != null
-                                       ? data.value
-                                       : data)
-                                   : '-';
+                            data = this.getDataFromOption(data, '-');
                             formatter = formatter.replace(
                                 '{c' + i + '}',
                                 data instanceof Array 
@@ -701,11 +701,7 @@ define(function (require) {
                                          + this._encodeHTML(seriesArray[i].name || '')
                                          + ' : ';
                             data = seriesArray[i].data[dataIndex];
-                            data = data != null
-                                   ? (data.value != null
-                                       ? data.value
-                                       : data)
-                                   : '-';
+                            data = this.getDataFromOption(data, '-');
                             formatter += data instanceof Array 
                                          ? data : this.numAddCommas(data);
                         }
@@ -792,8 +788,7 @@ define(function (require) {
                         data = data != null
                                ? data
                                : {name:'', value: {dataIndex:'-'}};
-                        value = data.value[dataIndex].value != null
-                                ? data.value[dataIndex].value : data.value[dataIndex];
+                        value = this.getDataFromOption(data.value[dataIndex]);
                         params.push({
                             seriesIndex: seriesIndex[i],
                             seriesName: seriesArray[i].name || '',
@@ -814,6 +809,9 @@ define(function (require) {
                 if (params.length <= 0) {
                     return;
                 }
+                // 复位item trigger和axis trigger间短距离来回变换时的不响应
+                this._lastItemTriggerId = -1;
+
                 // 相同dataIndex seriesIndex时不再触发内容更新
                 if (this._lastDataIndex != dataIndex || this._lastSeriesIndex != seriesIndex[0]) {
                     this._lastDataIndex = dataIndex;
@@ -932,6 +930,10 @@ define(function (require) {
                 position = this.deepQuery([data, serie, this.option], 'tooltip.islandPosition');
             }
 
+            // 复位item trigger和axis trigger间短距离来回变换时的不响应
+            this._lastDataIndex = -1;
+            this._lastSeriesIndex = -1;
+
             // 相同dataIndex seriesIndex时不再触发内容更新
             if (this._lastItemTriggerId !== this._curTarget.id) {
                 this._lastItemTriggerId = this._curTarget.id;
@@ -1014,12 +1016,25 @@ define(function (require) {
                 }
             }
 
-            if (!this._axisLineShape.invisible || !this._axisShadowShape.invisible) {
-                this._axisLineShape.invisible = true;
-                this.zr.modShape(this._axisLineShape.id);
-                this._axisShadowShape.invisible = true;
-                this.zr.modShape(this._axisShadowShape.id);
-                this.zr.refresh();
+            var x = zrEvent.getX(this._event);
+            var y = zrEvent.getY(this._event);
+
+            var axisPointer = this.query(this.option, 'tooltip.trigger') == 'item' 
+                              && this.option.tooltip.axisPointer;
+            axisPointer = (this.query(serie, 'tooltip.trigger') == 'item' 
+                           && serie.tooltip.axisPointer)
+                          || axisPointer;
+            axisPointer = (this.query(data, 'tooltip.trigger') == 'item'
+                           && data.tooltip.axisPointer)
+                          || axisPointer;
+
+            if (axisPointer && this.component.grid) {
+                this._styleAxisPointer(
+                    [serie],
+                    this.component.grid.getX(), y, 
+                    this.component.grid.getXend(), y,
+                    0, x, y
+                );
             }
             
             // don't modify, just false, showContent == undefined == true
@@ -1035,12 +1050,7 @@ define(function (require) {
                 this.hasAppend = true;
             }
             
-            this._show(
-                position,
-                zrEvent.getX(this._event) + 20,
-                zrEvent.getY(this._event) - 20,
-                specialCssText
-            );
+            this._show(position, x + 20, y - 20, specialCssText);
         },
 
         _itemFormatter: {
@@ -1116,7 +1126,7 @@ define(function (require) {
                     style[pType].type = axisPointer[pType + 'Style'].type;
                 }
                 for (var i = 0, l = seriesArray.length; i < l; i++) {
-                    if (this.deepQuery([seriesArray[i], this.option], 'tooltip.trigger') === 'axis') {
+                    //if (this.deepQuery([seriesArray[i], this.option], 'tooltip.trigger') === 'axis') {
                         queryTarget = seriesArray[i];
                         curType = this.query(queryTarget, 'tooltip.axisPointer.type');
                         pointType = curType || pointType; 
@@ -1134,28 +1144,31 @@ define(function (require) {
                                 'tooltip.axisPointer.' + curType + 'Style.type'
                             ) || style[curType].type;
                         }
-                    }
+                    //}
                 }
                 
                 if (pointType === 'line') {
+                    var lineWidth = style.line.width;
+                    var isVertical = xStart == xEnd;
                     this._axisLineShape.style = {
-                        xStart: xStart,
-                        yStart: yStart,
-                        xEnd: xEnd,
-                        yEnd: yEnd,
+                        xStart: isVertical ? this.subPixelOptimize(xStart, lineWidth) : xStart,
+                        yStart: isVertical ? yStart : this.subPixelOptimize(yStart, lineWidth),
+                        xEnd: isVertical ? this.subPixelOptimize(xEnd, lineWidth) : xEnd,
+                        yEnd: isVertical ? yEnd : this.subPixelOptimize(yEnd, lineWidth),
                         strokeColor: style.line.color,
-                        lineWidth: style.line.width,
+                        lineWidth: lineWidth,
                         lineType: style.line.type
                     };
                     this._axisLineShape.invisible = false;
                     this.zr.modShape(this._axisLineShape.id);
                 }
                 else if (pointType === 'cross') {
+                    var crossWidth = style.cross.width;
                     this._axisCrossShape.style = {
                         brushType: 'stroke',
                         rect: this.component.grid.getArea(),
-                        x: x,
-                        y: y,
+                        x: this.subPixelOptimize(x, crossWidth),
+                        y: this.subPixelOptimize(y, crossWidth),
                         text: ('( ' 
                                + this.component.xAxis.getAxis(0).getValueFromCoord(x)
                                + ' , '
@@ -1164,7 +1177,7 @@ define(function (require) {
                               ).replace('  , ', ' ').replace(' ,  ', ' '),
                         textPosition: 'specific',
                         strokeColor: style.cross.color,
-                        lineWidth: style.cross.width,
+                        lineWidth: crossWidth,
                         lineType: style.cross.type
                     };
                     if (this.component.grid.getXend() - x > 100) {          // 右侧有空间
@@ -1230,7 +1243,7 @@ define(function (require) {
                     this._axisShadowShape.invisible = false;
                     this.zr.modShape(this._axisShadowShape.id);
                 }
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
         },
 
@@ -1333,7 +1346,9 @@ define(function (require) {
                     this.shapeList.length = 2;
                 }
                 for (var i = 0, l = tipShape.length; i < l; i++) {
-                    tipShape[i].zlevel = this._zlevelBase;
+                    tipShape[i].zlevel = this.getZlevelBase();
+                    tipShape[i].z = this.getZBase();
+                    
                     tipShape[i].style = zrShapeBase.prototype.getHighlightStyle(
                         tipShape[i].style,
                         tipShape[i].highlightStyle
@@ -1500,7 +1515,8 @@ define(function (require) {
                     case ecConfig.CHART_TYPE_SCATTER :
                         var dataIndex = params.dataIndex;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
-                            if (ecData.get(shapeList[i], 'seriesIndex') == seriesIndex
+                            if (shapeList[i]._mark == null
+                                && ecData.get(shapeList[i], 'seriesIndex') == seriesIndex
                                 && ecData.get(shapeList[i], 'dataIndex') == dataIndex
                             ) {
                                 this._curTarget = shapeList[i];

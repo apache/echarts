@@ -13,7 +13,7 @@ define(function() {
 
 
 
-var mySteps     = [10, 25, 50];
+var mySteps     = [10, 20, 25, 50];
 var mySections  = [4, 5, 6];
 
 var custOpts;
@@ -83,6 +83,11 @@ function makeResult(newMin, newMax, section, expon) {
     var expMin  = expNum(newMin, -1, 1);                    // 锁定的最值有效数位可能很多，需要全精度保留
     var expMax  = expNum(newMax, -1);
     var minExp  = MT.min(expStep.e, expMin.e, expMax.e);    // 这个值实际上就是各值整数部分尾部多余的 0 的个数
+    if (expMin.c === 0) {                                   // 0 可以有任意多个尾0
+        minExp  = MT.min(expStep.e, expMax.e);
+    } else if (expMax.c === 0) {
+        minExp  = MT.min(expStep.e, expMin.e);
+    }
     expFixTo(expStep, {c: 0, e: minExp});
     expFixTo(expMin, expStep, 1);
     expFixTo(expMax, expStep);
@@ -277,7 +282,13 @@ function look4sections(expMin, expMax) {
             span:   tmpMax - tmpMin                         // 步长的误差被 段数 成倍放大，可能会给跨度造成更大的误差，使最后的段数大于预置的最大值
         };
     }
-    reference.sort(function (a, b) {return a.span - b.span;}); // 分段调整之后的跨度，一定不小于原跨度，所以越小越好
+    reference.sort(function (a, b) {
+        var delta = a.span - b.span;                        // 分段调整之后的跨度，一定不小于原跨度，所以越小越好
+        if (delta === 0) {
+            delta = a.step - b.step;                        // 跨度相同时，步长小者胜出
+        }
+        return delta;
+    });
     reference   = reference[0];
     section     = reference.span / reference.step;
     expMin.c    = reference.min;

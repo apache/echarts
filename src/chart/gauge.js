@@ -6,7 +6,6 @@
  *
  */
 define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
     // 图形依赖
@@ -29,11 +28,9 @@ define(function (require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function Gauge(ecTheme, messageCenter, zr, option, myChart){
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
+    function Gauge(ecTheme, messageCenter, zr, option, myChart) {
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         this.refresh(option);
     }
     
@@ -161,7 +158,8 @@ define(function (require) {
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel: this._zlevelBase + 1,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase() + 1,
                     hoverable: false,
                     style: {
                         xStart: center[0] + cosAngle * r,
@@ -218,7 +216,8 @@ define(function (require) {
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel: this._zlevelBase + 1,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase() + 1,
                     hoverable: false,
                     style: {
                         xStart: center[0] + cosAngle * r,
@@ -260,7 +259,7 @@ define(function (require) {
             var r0 = params.radius[1] 
                      - this.parsePercent(
                          serie.splitLine.length, params.radius[1]
-                     ) - 10;
+                     ) - 5;
             
             var angle;
             var sinAngle;
@@ -275,7 +274,8 @@ define(function (require) {
                 cosAngle = Math.cos(angle * Math.PI / 180);
                 angle = (angle + 360) % 360;
                 this.shapeList.push(new TextShape({
-                    zlevel: this._zlevelBase + 1,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase() + 1,
                     hoverable: false,
                     style: {
                         x: center[0] + cosAngle * r0,
@@ -322,7 +322,9 @@ define(function (require) {
                         ? this._getColor(seriesIndex, value) : pointer.color;
             
             var pointShape = new GaugePointerShape({
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
+                clickable: this.query(serie, 'clickable'),
                 style: {
                     x: center[0],
                     y: center[1],
@@ -352,7 +354,8 @@ define(function (require) {
             this.shapeList.push(pointShape);
             
             this.shapeList.push(new CircleShape({
-                zlevel: this._zlevelBase + 2,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 2,
                 hoverable: false,
                 style: {
                     x: center[0],
@@ -380,7 +383,8 @@ define(function (require) {
                 var x = params.center[0] + this.parsePercent(offsetCenter[0], params.radius[1]);
                 var y = params.center[1] + this.parsePercent(offsetCenter[1], params.radius[1]);
                 this.shapeList.push(new TextShape({
-                    zlevel: this._zlevelBase
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase()
                              + (Math.abs(x - params.center[0]) + Math.abs(y - params.center[1])) 
                                < textStyle.fontSize * 2 ? 2 : 1,
                     hoverable: false,
@@ -419,7 +423,8 @@ define(function (require) {
             var y = params.center[1] 
                     + this.parsePercent(offsetCenter[1], params.radius[1]);
             this.shapeList.push(new RectangleShape({
-                zlevel: this._zlevelBase 
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase()
                         + (Math.abs(x+detail.width/2 - params.center[0]) 
                         + Math.abs(y+detail.height/2 - params.center[1])) < textStyle.fontSize 
                           ? 2 : 1,
@@ -448,8 +453,7 @@ define(function (require) {
         },
         
         _getValue: function(seriesIndex) {
-            var data = this.series[seriesIndex].data[0];
-            return data.value != null ? data.value : data;
+            return this.getDataFromOption(this.series[seriesIndex].data[0]);
         },
         
         /**
@@ -492,7 +496,8 @@ define(function (require) {
          */
         _getSector: function (center, r0, r, startAngle, endAngle, color, lineStyle) {
             return new SectorShape ({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable: false,
                 style: {
                     x: center[0],      // 圆心横坐标
@@ -541,7 +546,6 @@ define(function (require) {
     };
     
     zrUtil.inherits(Gauge, ChartBase);
-    zrUtil.inherits(Gauge, ComponentBase);
     
     // 图表注册
     require('../chart').define('gauge', Gauge);

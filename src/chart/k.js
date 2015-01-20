@@ -6,7 +6,6 @@
  *
  */
 define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
     // 图形依赖
@@ -27,11 +26,9 @@ define(function (require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function K(ecTheme, messageCenter, zr, option, myChart){
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
+    function K(ecTheme, messageCenter, zr, option, myChart) {
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
 
         this.refresh(option);
     }
@@ -168,11 +165,7 @@ define(function (require) {
                     }
                     
                     data = serie.data[i];
-                    value = data != null
-                            ? (data.value != null
-                              ? data.value
-                              : data)
-                            : '-';
+                    value = this.getDataFromOption(data, '-');
                     if (value === '-' || value.length != 4) {
                         // 数据格式不符
                         continue;
@@ -379,9 +372,13 @@ define(function (require) {
         ) {
             var series = this.series;
             var itemShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 clickable: this.deepQuery(
                     [series[seriesIndex].data[dataIndex], series[seriesIndex]], 'clickable'
+                ),
+                hoverable: this.deepQuery(
+                    [series[seriesIndex].data[dataIndex], series[seriesIndex]], 'hoverable'
                 ),
                 style: {
                     x: x,
@@ -481,7 +478,7 @@ define(function (require) {
                         y = 0;
                         this.zr.animate(this.shapeList[i].id, '')
                             .when(
-                                500,
+                                this.query(this.option, 'animationDurationUpdate'),
                                 { position: [ x, y ] }
                             )
                             .start();
@@ -492,7 +489,6 @@ define(function (require) {
     };
     
     zrUtil.inherits(K, ChartBase);
-    zrUtil.inherits(K, ComponentBase);
     
     // 图表注册
     require('../chart').define('k', K);

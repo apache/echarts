@@ -10,7 +10,7 @@
 
     <link rel="shortcut icon" href="../asset/ico/favicon.png">
 
-    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../asset/css/font-awesome.min.css" rel="stylesheet">
     <link href="../asset/css/bootstrap.css" rel="stylesheet">
     <link href="../asset/css/carousel.css" rel="stylesheet">
     <link href="../asset/css/echartsHome.css" rel="stylesheet">
@@ -45,11 +45,13 @@ option = {
         subtext : 'dataZoom支持'
     },
     tooltip : {
-        trigger: 'item',
-        formatter : function (params) {
-            return params.seriesName + ' （'  + '类目' + params.value[0] + '）<br/>'
-                   + params.value[1] + ', ' 
-                   + params.value[2];
+        trigger: 'axis',
+        axisPointer:{
+            type : 'cross',
+            lineStyle: {
+                type : 'dashed',
+                width : 1
+            }
         }
     },
     toolbox: {
@@ -98,6 +100,29 @@ option = {
         {
             name:'series1',
             type:'scatter',
+            tooltip : {
+                trigger: 'axis',
+                formatter : function (params) {
+                    var date = new Date(params.value[0]);
+                    return params.seriesName 
+                           + ' （'
+                           + date.getFullYear() + '-'
+                           + (date.getMonth() + 1) + '-'
+                           + date.getDate() + ' '
+                           + date.getHours() + ':'
+                           + date.getMinutes()
+                           +  '）<br/>'
+                           + params.value[1] + ', ' 
+                           + params.value[2];
+                },
+                axisPointer:{
+                    type : 'cross',
+                    lineStyle: {
+                        type : 'dashed',
+                        width : 1
+                    }
+                }
+            },
             symbolSize: function (value){
                 return Math.round(value[2]/10);
             },

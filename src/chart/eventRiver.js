@@ -6,7 +6,6 @@
  *
  */
 define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
 
     var eventRiverLayout = require('../layout/eventRiver');
@@ -33,10 +32,8 @@ define(function (require) {
      * @param {Object} component 组件
      */
      function EventRiver(ecTheme, messageCenter, zr, option, myChart) {
-         // 基类
-         ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-         // 图表基类
-         ChartBase.call(this);
+        // 图表基类
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
          
          var self = this;
          self._ondragend = function () {
@@ -158,7 +155,8 @@ define(function (require) {
              var pts = this._calculateControlPoints(oneEvent);
              
              var eventBubbleShape = {
-                 zlevel: this._zlevelBase,
+                 zlevel: this.getZlevelBase(),
+                 z: this.getZBase(),
                  clickable: this.deepQuery(queryTarget, 'clickable'),
                  style: {
                      pointList: pts,
@@ -269,7 +267,6 @@ define(function (require) {
      };
 
      zrUtil.inherits(EventRiver, ChartBase);
-     zrUtil.inherits(EventRiver, ComponentBase);
 
      // 图表注册
      require('../chart').define('eventRiver', EventRiver);

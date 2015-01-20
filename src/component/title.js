@@ -62,7 +62,8 @@ define(function (require) {
             var height = this._itemGroupLocation.height;
             
             var textShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     y: y,
                     color: this.titleOption.textStyle.color,
@@ -90,7 +91,8 @@ define(function (require) {
             }
             
             var subtextShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     y: y + height,
                     color: this.titleOption.subtextStyle.color,
@@ -153,7 +155,8 @@ define(function (require) {
             var padding = this.reformCssArray(this.titleOption.padding);
 
             this.shapeList.push(new RectangleShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable :false,
                 style: {
                     x: this._itemGroupLocation.x - padding[3],

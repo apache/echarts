@@ -379,7 +379,8 @@ define(function (require) {
             ) {
                 // 背景
                 this.shapeList.push(new RectangleShape({
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     hoverable :false,
                     style: {
                         x: this._location.x - padding[3],
@@ -403,8 +404,8 @@ define(function (require) {
             if (timelineOption.controlPosition === 'none') {
                 return;
             }
-            var iconSize = 15;
-            var iconGap = 5;
+            var iconSize = controlStyle.itemSize;
+            var iconGap = controlStyle.itemGap;
             var x;
             if (timelineOption.controlPosition === 'left') {
                 x = this._location.x;
@@ -417,7 +418,8 @@ define(function (require) {
             
             var y = this._location.y;
             var iconStyle = {
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 style: {
                     iconType: 'timelineControl',
                     symbol: 'last',
@@ -477,7 +479,8 @@ define(function (require) {
             var timelineOption = this.timelineOption;
             var lineStyle = timelineOption.lineStyle;
             this._timelineShae = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: this._location.x,
                     y: this.subPixelOptimize(this._location.y, lineStyle.width),
@@ -507,7 +510,8 @@ define(function (require) {
             symbolSize = symbolSize < 5 ? 5 : symbolSize;
             
             this._handleShape = {
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 hoverable: false,
                 draggable: true,
                 style: {
@@ -733,7 +737,7 @@ define(function (require) {
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'playing') {
                 this._ctrPlayShape.style.status = 'playing';
                 this.zr.modShape(this._ctrPlayShape.id);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
             
             
@@ -756,7 +760,7 @@ define(function (require) {
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'stop') {
                 this._ctrPlayShape.style.status = 'stop';
                 this.zr.modShape(this._ctrPlayShape.id);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
             
             this.timelineOption.autoPlay = false;

@@ -6,7 +6,6 @@
  *
  */
 define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
     // 图形依赖
@@ -29,10 +28,8 @@ define(function (require) {
      * @param {Object} component 组件
      */
     function Bar(ecTheme, messageCenter, zr, option, myChart){
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         
         this.refresh(option);
     }
@@ -43,7 +40,7 @@ define(function (require) {
          * 绘制图形
          */
         _buildShape: function () {
-            this._bulidPosition();
+            this._buildPosition();
         },
         
         _buildNormal: function(seriesArray, maxDataLength, locationMap, xMarkMap, orient) {
@@ -86,6 +83,7 @@ define(function (require) {
                 orient == 'horizontal'
                     ? (x = categoryAxis.getCoordByIndex(i) - gap / 2)
                     : (y = categoryAxis.getCoordByIndex(i) + gap / 2);
+
                 for (var j = 0, k = locationMap.length; j < k; j++) {
                     // 堆积数据用第一条valueAxis
                     yAxisIndex = series[locationMap[j][0]].yAxisIndex || 0;
@@ -98,11 +96,7 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null
-                                ? (data.value != null
-                                  ? data.value
-                                  : data)
-                                : '-';
+                        value = this.getDataFromOption(data, '-');
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] 
                                                 || {
                                                     min: Number.POSITIVE_INFINITY,
@@ -111,6 +105,10 @@ define(function (require) {
                                                     counter: 0,
                                                     average: 0
                                                 };
+                        curBarWidth = Math.min(
+                            barMaxWidthMap[seriesIndex] || Number.MAX_VALUE,
+                            barWidthMap[seriesIndex] || barWidth
+                        );
                         if (value === '-') {
                             // 空数据在做完后补充拖拽提示框
                             continue;
@@ -172,10 +170,6 @@ define(function (require) {
                                 lastP += barHeight;
                             }
                         }
-                        var curBarWidth = Math.min(
-                            barMaxWidthMap[seriesIndex] || Number.MAX_VALUE,
-                            barWidthMap[seriesIndex] || barWidth
-                        );
                         xMarkMap[seriesIndex][i] = orient == 'horizontal'
                                                    ? (x + curBarWidth / 2) 
                                                    : (y - curBarWidth / 2);
@@ -224,11 +218,11 @@ define(function (require) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null
-                                ? (data.value != null
-                                  ? data.value
-                                  : data)
-                                : '-';
+                        value = this.getDataFromOption(data, '-');
+                        curBarWidth = Math.min(
+                            barMaxWidthMap[seriesIndex] || Number.MAX_VALUE,
+                            barWidthMap[seriesIndex] || barWidth
+                        );
                         if (value != '-') {
                             // 只关心空数据
                             continue;
@@ -244,10 +238,6 @@ define(function (require) {
                                 lastP += this.ecTheme.island.r;
                             }
                             
-                            curBarWidth = Math.min(
-                                barMaxWidthMap[seriesIndex] || Number.MAX_VALUE,
-                                barWidthMap[seriesIndex] || barWidth
-                            );
                             barShape = this._getBarItem(
                                 seriesIndex, i,
                                 categoryAxis.getNameByIndex(i),
@@ -325,11 +315,7 @@ define(function (require) {
 
                     for (var i = 0, l = serie.data.length; i < l; i++) {
                         var data = serie.data[i];
-                        var value = data != null
-                                    ? (data.value != null
-                                      ? data.value
-                                      : data)
-                                    : '-';
+                        var value = this.getDataFromOption(data, '-');
                         if (!(value instanceof Array)) {
                             continue;
                         }
@@ -458,28 +444,23 @@ define(function (require) {
                 if (!ignoreUserDefined) {
                     gap = typeof barCategoryGap === 'string' && barCategoryGap.match(/%$/)
                           // 百分比
-                          ? Math.floor(
-                              categoryAxis.getGap() 
-                              * (100 - parseFloat(barCategoryGap)) 
-                              / 100
-                            )
+                          ? ((categoryAxis.getGap() * (100 - parseFloat(barCategoryGap)) / 100).toFixed(2) - 0)
                           // 数值
                           : (categoryAxis.getGap() - barCategoryGap);
                     if (typeof barGap === 'string' && barGap.match(/%$/)) {
                         barGap = parseFloat(barGap) / 100;
-                        barWidth = Math.floor(
+                        barWidth = ((
                             (gap - sBarWidthTotal)
-                            / ((locationMap.length - 1) * barGap 
-                               + locationMap.length - sBarWidthCounter)
-                        );
-                        barGap = Math.floor(barWidth * barGap);
+                            / ((locationMap.length - 1) * barGap + locationMap.length - sBarWidthCounter)
+                        ).toFixed(2) - 0);
+                        barGap = barWidth * barGap;
                     }
                     else {
                         barGap = parseFloat(barGap);
-                        barWidth = Math.floor(
+                        barWidth = ((
                             (gap - sBarWidthTotal - barGap * (locationMap.length - 1))
                             / (locationMap.length - sBarWidthCounter)
-                        );
+                        ).toFixed(2) - 0);
                     }
                     // 无法满足用户定义的宽度设计，忽略用户宽度，打回重做
                     if (barWidth <= 0) {
@@ -490,7 +471,7 @@ define(function (require) {
                     // 忽略用户定义的宽度设定
                     gap = categoryAxis.getGap();
                     barGap = 0;
-                    barWidth = Math.floor(gap / locationMap.length);
+                    barWidth = (gap / locationMap.length).toFixed(2) - 0;
                     // 已经忽略用户定义的宽度设定依然还无法满足显示，只能硬来了;
                     if (barWidth <= 0) {
                         interval = Math.floor(locationMap.length / gap);
@@ -503,18 +484,14 @@ define(function (require) {
                 gap = sBarWidthCounter > 1
                       ? (typeof barCategoryGap === 'string' && barCategoryGap.match(/%$/))
                           // 百分比
-                          ? Math.floor(
-                              categoryAxis.getGap() 
-                              * (100 - parseFloat(barCategoryGap)) 
-                              / 100
-                            )
+                          ? ((categoryAxis.getGap() * (100 - parseFloat(barCategoryGap)) / 100).toFixed(2) - 0)
                           // 数值
                           : (categoryAxis.getGap() - barCategoryGap)
                       // 只有一个
                       : sBarWidthTotal;
                 barWidth = 0;
                 barGap = sBarWidthCounter > 1 
-                         ? Math.floor((gap - sBarWidthTotal) / (sBarWidthCounter - 1))
+                         ? (((gap - sBarWidthTotal) / (sBarWidthCounter - 1)).toFixed(2) - 0)
                          : 0;
                 if (barGap < 0) {
                     // 无法满足用户定义的宽度设计，忽略用户宽度，打回重做
@@ -660,7 +637,8 @@ define(function (require) {
             var emphasis = this.deepMerge(queryTarget, 'itemStyle.emphasis');
             
             barShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: x,
@@ -686,6 +664,11 @@ define(function (require) {
                                 ? zrColor.lift(barShape.style.color, -0.3)
                                 : barShape.style.color
                                );
+            //亚像素优化
+            barShape.style.x = Math.floor(barShape.style.x);
+            barShape.style.y = Math.floor(barShape.style.y);
+            barShape.style.height = Math.ceil(barShape.style.height);
+            barShape.style.width = Math.ceil(barShape.style.width);
             // 考虑线宽的显示优化
             if (normalBorderWidth > 0
                 && barShape.style.height > normalBorderWidth
@@ -878,7 +861,7 @@ define(function (require) {
                         this.shapeList[i].position = [0, 0];
                         this.zr.animate(this.shapeList[i].id, '')
                             .when(
-                                500,
+                                this.query(this.option, 'animationDurationUpdate'),
                                 { position: [x, y] }
                             )
                             .start();
@@ -889,7 +872,6 @@ define(function (require) {
     };
     
     zrUtil.inherits(Bar, ChartBase);
-    zrUtil.inherits(Bar, ComponentBase);
     
     // 图表注册
     require('../chart').define('bar', Bar);

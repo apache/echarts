@@ -52,6 +52,8 @@ define(function() {
 
         // 图表标题
         title: {
+            zlevel: 0,                  // 一级层叠
+            z: 6,                       // 二级层叠
             text: '',
             // link: null,             // 超链接跳转
             // target: null,           // 仅支持self | blank
@@ -83,6 +85,8 @@ define(function() {
         
         // 图例
         legend: {
+            zlevel: 0,                  // 一级层叠
+            z: 4,                       // 二级层叠
             show: true,
             orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
@@ -111,6 +115,8 @@ define(function() {
         
         // 值域
         dataRange: {
+            zlevel: 0,                  // 一级层叠
+            z: 4,                       // 二级层叠
             show: true,
             orient: 'vertical',        // 布局方式，默认为垂直布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
@@ -134,6 +140,7 @@ define(function() {
             precision: 0,              // 小数精度，默认为0，无小数点
             splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变
             calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
+            selectedMode: true,        // 选择模式，默认开启值域开关
             hoverLink: true,
             realtime: true,
             color:['#006edd','#e0ffff'],//颜色 
@@ -145,6 +152,8 @@ define(function() {
         },
 
         toolbox: {
+            zlevel: 0,                  // 一级层叠
+            z: 6,                       // 二级层叠
             show: false,
             orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
@@ -235,6 +244,8 @@ define(function() {
 
         // 提示框
         tooltip: {
+            zlevel: 1,                  // 一级层叠，频繁变化的tooltip指示器在pc上独立一层
+            z: 8,                       // 二级层叠
             show: true,
             showContent: true,         // tooltip主体内容
             trigger: 'item',           // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
@@ -276,6 +287,8 @@ define(function() {
 
         // 区域缩放控制器
         dataZoom: {
+            zlevel: 0,                  // 一级层叠
+            z: 4,                       // 二级层叠
             show: false,
             orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
@@ -289,6 +302,7 @@ define(function() {
             dataBackgroundColor: '#eee',            // 数据背景颜色
             fillerColor: 'rgba(144,197,237,0.2)',   // 填充颜色
             handleColor: 'rgba(70,130,180,0.8)',    // 手柄颜色
+            handleSize: 8,
             showDetail: true,
             // xAxisIndex: [],         // 默认控制所有横向类目
             // yAxisIndex: [],         // 默认控制所有横向类目
@@ -300,6 +314,8 @@ define(function() {
 
         // 网格
         grid: {
+            zlevel: 0,                  // 一级层叠
+            z: 0,                       // 二级层叠
             x: 80,
             y: 60,
             x2: 80,
@@ -313,6 +329,8 @@ define(function() {
 
         // 类目轴
         categoryAxis: {
+            zlevel: 0,                  // 一级层叠
+            z: 0,                       // 二级层叠
             show: true,
             position: 'bottom',    // 位置
             name: '',              // 坐标轴名字，默认为空
@@ -370,6 +388,8 @@ define(function() {
 
         // 数值型坐标轴默认参数
         valueAxis: {
+            zlevel: 0,                  // 一级层叠
+            z: 0,                       // 二级层叠
             show: true,
             position: 'left',      // 位置
             name: '',              // 坐标轴名字，默认为空
@@ -425,6 +445,8 @@ define(function() {
         },
 
         polar: {
+            zlevel: 0,                  // 一级层叠
+            z: 0,                       // 二级层叠
             center: ['50%', '50%'],    // 默认全局居中
             radius: '75%',
             startAngle: 90,
@@ -470,6 +492,8 @@ define(function() {
         },
 
         timeline: {
+            zlevel: 0,                  // 一级层叠
+            z: 4,                       // 二级层叠
             show: true,
             type: 'time',  // 模式是时间类型，支持 number
             notMerge: false,
@@ -516,6 +540,8 @@ define(function() {
                 }
             },
             controlStyle: {
+                itemSize: 15,
+                itemGap: 5,
                 normal: { color: '#333'},
                 emphasis: { color: '#1e90ff'}
             },
@@ -526,6 +552,8 @@ define(function() {
         },
         
         roamController: {
+            zlevel: 0,                  // 一级层叠
+            z: 4,                       // 二级层叠
             show: true,
             x: 'left',                 // 水平安放位置，默认为全图左对齐，可选为：
                                        // 'center' ¦ 'left' ¦ 'right'
@@ -548,6 +576,8 @@ define(function() {
         
         // 柱形图默认参数
         bar: {
+            zlevel: 0,                  // 一级层叠
+            z: 2,                       // 二级层叠
             clickable: true,
             legendHoverLink: true,
             // stack: null
@@ -565,7 +595,7 @@ define(function() {
                     barBorderWidth: 0,            // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -578,7 +608,7 @@ define(function() {
                     barBorderWidth: 0,                 // 柱条边线线宽，单位px，默认为1
                     label: {
                         show: false
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -589,6 +619,8 @@ define(function() {
 
         // 折线图默认参数
         line: {
+            zlevel: 0,                  // 一级层叠
+            z: 2,                       // 二级层叠
             clickable: true,
             legendHoverLink: true,
             // stack: null
@@ -599,7 +631,7 @@ define(function() {
                     // color: 各异,
                     label: {
                         show: false
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -617,7 +649,7 @@ define(function() {
                     // color: 各异,
                     label: {
                         show: false
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -633,7 +665,10 @@ define(function() {
         
         // K线图默认参数
         k: {
+            zlevel: 0,                  // 一级层叠
+            z: 2,                       // 二级层叠
             clickable: true,
+            hoverable: true,
             legendHoverLink: false,
             xAxisIndex: 0,
             yAxisIndex: 0,
@@ -658,6 +693,8 @@ define(function() {
         
         // 散点图默认参数
         scatter: {
+            zlevel: 0,                  // 一级层叠
+            z: 2,                       // 二级层叠
             clickable: true,
             legendHoverLink: true,
             xAxisIndex: 0,
@@ -671,16 +708,8 @@ define(function() {
                 normal: {
                     // color: 各异,
                     label: {
-                        show: false,
-                        // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        formatter: function (a, b, c) {
-                            if (typeof c[2] != 'undefined') {
-                                return c[2];
-                            }
-                            else {
-                                return c[0] + ' , ' + c[1];
-                            }
-                        }
+                        show: false
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -689,16 +718,9 @@ define(function() {
                 emphasis: {
                     // color: '各异'
                     label: {
-                        show: false,
+                        show: false
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
-                        formatter: function (a, b, c) {
-                            if (typeof c[2] != 'undefined') {
-                                return c[2];
-                            }
-                            else {
-                                return c[0] + ' , ' + c[1];
-                            }
-                        }
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
@@ -709,6 +731,8 @@ define(function() {
 
         // 雷达图默认参数
         radar: {
+            zlevel: 0,                  // 一级层叠
+            z: 2,                       // 二级层叠
             clickable: true,
             legendHoverLink: true,
             polarIndex: 0,
@@ -737,6 +761,8 @@ define(function() {
 
         // 饼图默认参数
         pie: {
+            zlevel: 0,                  // 一级层叠
+            z: 2,                       // 二级层叠
             clickable: true,
             legendHoverLink: true,
             center: ['50%', '50%'],     // 默认全局居中
@@ -755,8 +781,9 @@ define(function() {
                     label: {
                         show: true,
                         position: 'outer'
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                        // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数
                     },
                     labelLine: {
                         show: true,
@@ -775,8 +802,9 @@ define(function() {
                     label: {
                         show: false
                         // position: 'outer'
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                        // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数
                     },
                     labelLine: {
                         show: false,
@@ -792,6 +820,8 @@ define(function() {
         },
         
         map: {
+            zlevel: 0,                  // 一级层叠
+            z: 2,                       // 二级层叠
             mapType: 'china',   // 各省的mapType暂时都用中文
             //mapLocation: {
                 // x: 'center' | 'left' | 'right' | 'x%' | {number},
@@ -842,6 +872,8 @@ define(function() {
         },
         
         force: {
+            zlevel: 1,                  // 一级层叠
+            z: 2,                       // 二级层叠
             // 布局中心
             center: ['50%', '50%'],
 
@@ -949,6 +981,8 @@ define(function() {
         },
 
         chord: {
+            zlevel: 0,                  // 一级层叠
+            z: 2,                       // 二级层叠
             clickable: true,
             radius: ['65%', '75%'],
             center: ['50%', '50%'],
@@ -1038,7 +1072,10 @@ define(function() {
         },
 
         gauge: {
+            zlevel: 0,                  // 一级层叠
+            z: 2,                       // 二级层叠
             center: ['50%', '50%'],    // 默认全局居中
+            clickable: true,
             legendHoverLink: true,
             radius: '75%',
             startAngle: 225,
@@ -1111,6 +1148,8 @@ define(function() {
         },
         
         funnel: {
+            zlevel: 0,                  // 一级层叠
+            z: 2,                       // 二级层叠
             clickable: true,
             legendHoverLink: true,
             x: 80,
@@ -1134,7 +1173,7 @@ define(function() {
                     label: {
                         show: true,
                         position: 'outer'
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持回调
+                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     },
                     labelLine: {
@@ -1162,6 +1201,8 @@ define(function() {
         },
         
         eventRiver: {
+            zlevel: 0,                  // 一级层叠
+            z: 2,                       // 二级层叠
             clickable: true,
             legendHoverLink: true,
             itemStyle: {
@@ -1188,6 +1229,8 @@ define(function() {
         },
         
         island: {
+            zlevel: 0,                  // 一级层叠
+            z: 5,                       // 二级层叠
             r: 15,
             calculateStep: 0.1  // 滚轮可计算步长 0.1 = 10%
         },
@@ -1236,13 +1279,15 @@ define(function() {
         markLine: {
             clickable: true,
             // 标线起始和结束的symbol介绍类型，如果都一样，可以直接传string
-            symbol: ['circle', 'arrow'],  
+            symbol: ['circle', 'arrow'],
             // 标线起始和结束的symbol大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             symbolSize: [2, 4],
             // 标线起始和结束的symbol旋转控制
             //symbolRotate: null,
             //smooth: false,
+            smoothRadian: 0.2,    // 平滑弧度
             large: false,
+            precision: 2,
             effect: {
                 show: false,
                 loop: true,
@@ -1313,6 +1358,7 @@ define(function() {
             DATA_CHANGED: 'dataChanged',
             DATA_ZOOM: 'dataZoom',
             DATA_RANGE: 'dataRange',
+            DATA_RANGE_SELECTED: 'dataRangeSelected',
             DATA_RANGE_HOVERLINK: 'dataRangeHoverLink',
             LEGEND_SELECTED: 'legendSelected',
             LEGEND_HOVERLINK: 'legendHoverLink',
@@ -1330,13 +1376,17 @@ define(function() {
             ROAMCONTROLLER: 'roamController'
         },
         DRAG_ENABLE_TIME: 120,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
-        EFFECT_ZLEVEL: 7,
+        EFFECT_ZLEVEL : 10,       // 特效动画zlevel
         // 主题，默认标志图形类型列表
         symbolList: [
           'circle', 'rectangle', 'triangle', 'diamond',
           'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
         ],
+        loadingEffect: 'spin',
         loadingText: 'Loading...',
+        noDataEffect: 'bubble',
+        noDataText: 'No Data Available.',
+        // noDataLoadingOption: null,
         // 可计算特性配置，孤岛，提示颜色
         calculable: false,                      // 默认关闭可计算特性
         calculableColor: 'rgba(255,165,0,0.6)', // 拖拽提示边框颜色
@@ -1346,7 +1396,8 @@ define(function() {
         animation: true,                // 过渡动画是否开启
         addDataAnimation: true,         // 动态数据接口是否开启动画效果
         animationThreshold: 2000,       // 动画元素阀值，产生的图形原素超过2000不出动画
-        animationDuration: 2000,
+        animationDuration: 2000,        // 过渡动画参数：进入
+        animationDurationUpdate: 500,   // 过渡动画参数：更新
         animationEasing: 'ExponentialOut'    //BounceOut
     };
 

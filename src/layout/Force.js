@@ -64,8 +64,6 @@ define(function(require) {
         this._layout = null;
         this._layoutWorker = null;
 
-        this._token = 0;
-
         var self = this;
         var _$onupdate = this._$onupdate;
         this._$onupdate = function(e) {
@@ -162,8 +160,6 @@ define(function(require) {
             edgeWeightArr[i] = edge.layout.weight || 1;
         }
 
-        this._token = getToken();
-
         if (this._layoutWorker) {
 
             this._layoutWorker.postMessage({
@@ -172,12 +168,10 @@ define(function(require) {
                 nodesMass: massArr,
                 nodesSize: sizeArr,
                 edges: edgeArr,
-                edgesWeight: edgeWeightArr,
-                token: this._token
+                edgesWeight: edgeWeightArr
             });
         }
         else {
-            this._layout.setToken(this._token);
             this._layout.initNodes(positionArr, massArr, sizeArr);
             this._layout.initEdges(edgeArr, edgeWeightArr);   
         }
@@ -189,11 +183,11 @@ define(function(require) {
         var nodes = this.graph.nodes;
         if (this._layoutWorker) {
             // Sync back
-            var positionArr = new ArrayCtor(nodes.length * 2 + 1);
+            var positionArr = new ArrayCtor(nodes.length * 2);
             for (var i = 0; i < nodes.length; i++) {
                 var n = nodes[i];
-                positionArr[i * 2 + 1] = n.layout.position[0];
-                positionArr[i * 2 + 2] = n.layout.position[1];
+                positionArr[i * 2] = n.layout.position[0];
+                positionArr[i * 2 + 1] = n.layout.position[1];
             }
             this._layoutWorker.postMessage(positionArr.buffer, [positionArr.buffer]);
 
@@ -226,25 +220,19 @@ define(function(require) {
     ForceLayout.prototype._$onupdate = function (e) {
         if (this._layoutWorker) {
             var positionArr = new Float32Array(e.data);
-            var token = positionArr[0];
-            // If token is from current layout instance
-            if (token === this._token) {
-                for (var i = 0; i < this.graph.nodes.length; i++) {
-                    var n = this.graph.nodes[i];
-                    n.layout.position[0] = positionArr[i * 2 + 1];
-                    n.layout.position[1] = positionArr[i * 2 + 2];
-                }
-                this.onupdate && this.onupdate();
+            for (var i = 0; i < this.graph.nodes.length; i++) {
+                var n = this.graph.nodes[i];
+                n.layout.position[0] = positionArr[i * 2];
+                n.layout.position[1] = positionArr[i * 2 + 1];
             }
+            this.onupdate && this.onupdate();
         }
         else if (this._layout) {
-            if (this._layout.tokenMatch(this._token)) {
-                for (var i = 0; i < this.graph.nodes.length; i++) {
-                    var n = this.graph.nodes[i];
-                    vec2.copy(n.layout.position, this._layout.nodes[i].position);
-                }
-                this.onupdate && this.onupdate();
+            for (var i = 0; i < this.graph.nodes.length; i++) {
+                var n = this.graph.nodes[i];
+                vec2.copy(n.layout.position, this._layout.nodes[i].position);
             }
+            this.onupdate && this.onupdate();
         }
     };
 
@@ -254,7 +242,6 @@ define(function(require) {
         }
         this._layoutWorker = null;
         this._layout = null;
-        this._token = 0;
     };
 
     return ForceLayout;

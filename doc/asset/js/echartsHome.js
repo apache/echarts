@@ -91,7 +91,8 @@ $('#head')[0].innerHTML =
             + '<li class="dropdown">'
               + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + (enVersion ? 'Download' : '下载') + '<b class="caret"></b></a>'
               + '<ul class="dropdown-menu">'
-                + '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.zip"> echarts-' + version + '</a></li>'
+                + '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.zip"> echarts-' + version + ' (from Baidu)</a></li>'
+                + '<li><a href="https://github.com/ecomfe/echarts/archive/' + version + '.zip"> echarts-' + version + ' (from GitHub)</a></li>'
                 + '<li class="divider"></li>'
                 + '<li><a href="http://echarts.baidu.com/doc/changelog'
                   + (enVersion ? '-en': '') 
@@ -159,7 +160,7 @@ $('#footer')[0].innerHTML =
             + '</div>'
         + '</div>'
         + '<p class="pull-right"><a href="javascript:void(0)" onclick="back2Top()" >Back to top</a></p>'
-        + '<p>&copy; 2014 <a href="http://www.baidu.com/" target="_blank">Baidu</a></p>'
+        + '<p>&copy; 2015 <a href="http://www.baidu.com/" target="_blank">Baidu</a></p>'
     + '</div>';
 
 

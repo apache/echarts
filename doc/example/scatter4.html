@@ -10,7 +10,7 @@
 
     <link rel="shortcut icon" href="../asset/ico/favicon.png">
 
-    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../asset/css/font-awesome.min.css" rel="stylesheet">
     <link href="../asset/css/bootstrap.css" rel="stylesheet">
     <link href="../asset/css/carousel.css" rel="stylesheet">
     <link href="../asset/css/echartsHome.css" rel="stylesheet">
@@ -58,6 +58,17 @@ option = {
             title : {
                 'text':'2002全国宏观经济关联分析（GDP vs 房地产）',
                 'subtext':'数据来自国家统计局'
+            },
+            tooltip : {
+                trigger: 'axis',
+                showDelay : 0,
+                axisPointer:{
+                    type : 'cross',
+                    lineStyle: {
+                        type : 'dashed',
+                        width : 1
+                    }
+                }
             },
             toolbox : {
                 'show':true, 

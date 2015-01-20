@@ -10,7 +10,7 @@
 
     <link rel="shortcut icon" href="./asset/ico/favicon.png">
 
-    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="./asset/css/font-awesome.min.css" rel="stylesheet">
     <link href="./asset/css/bootstrap.css" rel="stylesheet">
     <link href="./asset/css/carousel.css" rel="stylesheet">
     <link href="./asset/css/echartsHome.css" rel="stylesheet">
@@ -128,6 +128,9 @@
                                 <li><a href="#AddDataAnimation">addDataAnimation</a></li>
                                 <li><a href="#AnimationThreshold">animationThreshold</a></li>
                                 <li><a href="#AnimationDuration">animationDuration</a></li>
+                                <li>
+                                    <a href="#animationDurationUpdate">animationDurationUpdate</a>
+                                </li>
                                 <li><a href="#AnimationEasing">animationEasing</a></li>
                             </ul>
                             <li><a href="#GraphDataStructure">Graph data structure</a></li>
@@ -621,7 +624,7 @@ require.config({
                         <tr>
                             <td> <b>{ECharts}</b> init </td>
                             <td> <b>{dom}</b> dom, <br/><b>{string | Object =}</b> theme </td>
-                            <td> Initialization interface, returns ECharts instances. Dom is the node for charts. Theme is optional. For built-in themes (currently unavailable), directly pass in name. For custom extended themes, pass in the theme object. </td>
+                            <td> Initialization interface, returns ECharts instances. Dom is the node for charts. Theme is optional. For built-in themes ('macarons', 'infographic'), directly pass in name. For custom extended themes, pass in the theme object. </td>
                         </tr>
                     </table>
                     <p>For available methods of chart instances, see <a href="#Methods">Methods</a>. </p>
@@ -888,7 +891,10 @@ require(['echarts'], function (ec){
                                 <a href="#Animation" title="">animation</a>, and other related properties like 
                                 <a href="#AddDataAnimation" title="">addDataAnimation</a>, 
                                 <a href="#AnimationThreshold" title="">animationThreshold</a>, 
-                                <a href="#AnimationDuration" title="">animationDuration</a>, 
+                                <a href="#AnimationDuration" title="">animationDuration</a>,
+                                <a href="#animationDurationUpdate" title="">
+                                    animationDurationUpdate
+                                </a> 
                                 <a href="#AnimationEasing" title="">animationEasing</a>).
                             </td>
                         </tr>
@@ -1532,7 +1538,7 @@ require(['echarts'], function (ec){
                                         <li><b>force, chord</b> : 
                                             <ul>
                                                 <li>node : a (series name)，b (node name)，c (node value), d (node index), e</li>
-                                                <li>link : a (series name)，b (link name, default sourceName-targetName)，c(link weight), d(name or index of source node), e(name or index of target node)</li>
+                                                <li>link : a (series name)，b (link name, default bigEndNodeName-smallEndNodeName)，c(link weight), d(name or index of big end node), e(name or index of small end node)</li>
                                             </ul>
                                         </li>
                                     </ul>
@@ -1759,6 +1765,11 @@ require(['echarts'], function (ec){
                             <td> the number of segments. Defaults to 5. Linear gradient when set to 0. When calculable is true, it is equally split into 100 parts by default. </td>
                         </tr>
                         <tr>
+                            <td> <b>{boolean | string}</b> selectedMode </td>
+                            <td> true </td>
+                            <td> selection mode. Enable dataRange switch by default. Can be one of: single, multiple </td>
+                        </tr>
+                        <tr>
                             <td> <b>{boolean}</b> calculable </td>
                             <td> false </td>
                             <td> Specifies whether the scale roaming feature will be enabled. When enabled, ignore splitNumber, dataRange shows as linear gradient. </td>
@@ -1781,7 +1792,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td> <b>{string | Function}</b> formatter </td>
                             <td> null </td>
-                            <td> content formatter：<b>{string}</b> (Template) | <b>{Function}</b>, the template's variables are {value}' and '{value2}', which stand for start value ​​and end value. There are two function parameters, whose meanings are the same as template variables. <a href="example/dataRange.html#-en" target="_blank">Try this »</a></td>
+                            <td> content formatter：<b>{string}</b> (Template) | <b>{Function}</b>, the template's variables are {value}' and '{value2}', which stand for start value ​​and end value. There are two function parameters, whose meanings are the same as template variables. One parameter '{value}' only when calculable is true. <a href="example/dataRange.html#-en" target="_blank">Try this »</a></td>
                         </tr>
                         <tr>
                             <td> <b>{Array}</b> text </td>
@@ -3079,25 +3090,6 @@ indicator : [
                             <td> false </td>
                             <td> Specifies whether it is displayed in clockwise direction. </td>
                         </tr>
-                        <tr>
-                            <td> <b>{Array}</b> matrix </td>
-                            <td>[[]]</td>
-                            <td> 关系数据，用二维数组表示，项 [i][j] 的数值表示 i 到 j 的关系数据 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{Array}</b> nodes </td>
-                            <td> [] </td>
-                            <td> 和弦图的顶点数据, 每一项：
-                                <table cellspacing="0" class="ADoc_table full">
-                                </table>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{Array}</b> links </td>
-                            <td> [] </td>
-                            <td> 和弦图的边数据, 每一项
-                            </td>
-                        </tr>
                     </table>
 
                     <h5>series (gauge)<a name="SeriesGauge"> </a></h5>
@@ -3895,7 +3887,9 @@ geoCoord : {
                         <tr>
                             <td> <b>{number}</b> distance </td>
                             <td> 10 </td>
-                            <td> applicable to chord. Label's distance from chord after it rotates automatically. </td>
+                            <td> In chord, Label's distance from chord after it rotates automatically.
+                              <br/> In pie, this distance means the factor of label distance and pie radius(In ring chart, is sum of inner and outer radius), default to <b>0.5</b>.
+                            </td>
                         </tr>
                         <tr>
                             <td> <b>{string | Function}</b> formatter </td>
@@ -4105,12 +4099,12 @@ geoCoord : {
                             <td> line style, can be: 'curve' | 'line' </td>
                         </tr>
                         <tr>
-                            <td> <b>{color}</b> borderColor</td>
+                            <td> <b>{color}</b> color</td>
                             <td> '#5182ab' </td>
                             <td> color of the line </td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> borderWidth </td>
+                            <td> <b>{number}</b> width</td>
                             <td> 1 </td>
                             <td> width of the line </td>
                         </tr>
@@ -4262,7 +4256,10 @@ geoCoord : {
                     <P> <b>{number}</b> 2500, threshold of animated elements. No animation if the graphic elements generated are over 2500. It is suggested to disable animation in IE8-. </P>
 
                     <h4>animationDuration<a name="AnimationDuration"> </a></h4>
-                    <P> <b>{number}</b> 2000, duration of the animation, in ms. Supports multi-level control. </P>
+                    <P> <b>{number}</b> 2000, duration of the enter animation, in ms. </P>
+
+                    <h4>animationDurationUpdate<a name="animationDurationUpdate"> </a></h4>
+                    <P> <b>{number}</b> 500，duration of the update animation, in ms.</P>
 
                     <h4>animationEasing<a name="AnimationEasing"> </a></h4>
                     <P> <b>{string}</b> 'BounceOut', easing effect of the main element. Supports multi-level control. See <a href="http://ecomfe.github.io/zrender/doc/doc.html#animation.easing" target="_blank">zrender.animation.easing</a>. Possible values are: <br/>
@@ -4307,7 +4304,7 @@ geoCoord : {
                         <tr>
                             <td> itemStyle </td>
                             <td></td>
-                            <td> 详见 <a href="#ItemStyle">itemStyle</a> </td>
+                            <td> see <a href="#ItemStyle">itemStyle</a>. Notice that itemStyle in thecategory of force has no nodeStyle under the normal(emphasis) option. Instead itemStyle.normal(emphasis).color|borderWidth|borderColor will be used</td>
                         </tr>
                     </table>
 
@@ -4356,7 +4353,7 @@ geoCoord : {
                         <tr>
                             <td> itemStyle </td>
                             <td></td>
-                            <td> see <a href="#ItemStyle">itemStyle</a> </td>
+                            <td> see <a href="#ItemStyle">itemStyle</a>. Notice that itemStyle in a single node of force has no nodeStyle under the normal(emphasis) option. Instead itemStyle.normal(emphasis).color|borderWidth|borderColor will be used</td>
                         </tr>
                     </table>
 
@@ -4385,7 +4382,7 @@ geoCoord : {
                         <tr>
                             <td> itemStyle </td>
                             <td></td>
-                            <td> see <a href="#ItemStyle">itemStyle</a> </td>
+                            <td> see <a href="#LinkStyle">linkStyle</a> </td>
                         </tr>
                     </table>
                     <h5>matrix<a name="GraphMatrix"></a></h5>
