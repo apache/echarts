@@ -324,6 +324,7 @@ define(function (require) {
             var pointShape = new GaugePointerShape({
                 zlevel: this.getZlevelBase(),
                 z: this.getZBase() + 1,
+                clickable: this.query(serie, 'clickable'),
                 style: {
                     x: center[0],
                     y: center[1],

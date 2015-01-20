@@ -1075,6 +1075,7 @@ define(function() {
             zlevel: 0,                  // 一级层叠
             z: 2,                       // 二级层叠
             center: ['50%', '50%'],    // 默认全局居中
+            clickable: true,
             legendHoverLink: true,
             radius: '75%',
             startAngle: 225,
