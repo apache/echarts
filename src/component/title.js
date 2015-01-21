@@ -32,6 +32,9 @@ define(function (require) {
     Title.prototype = {
         type: ecConfig.COMPONENT_TYPE_TITLE,
         _buildShape: function () {
+            if (!this.titleOption.show) {
+                return;
+            }
             // 标题元素组的位置参数，通过计算所得x, y, width, height
             this._itemGroupLocation = this._getItemGroupLocation();
 
