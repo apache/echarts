@@ -630,10 +630,14 @@ define(function (require) {
             }
             // 空数据
             this.clear();
-            var loadOption = this._themeConfig.noDataLoadingOption || {
-                text: this._themeConfig.noDataText,
-                effect: this._themeConfig.noDataEffect
-            };
+            var loadOption = (this._option && this._option.noDataLoadingOption)
+                || this._themeConfig.noDataLoadingOption 
+                || {
+                    text: (this._option && this._option.noDataText)
+                          || this._themeConfig.noDataText,
+                    effect: (this._option && this._option.noDataEffect)
+                            || this._themeConfig.noDataEffect
+                };
             this.showLoading(loadOption);
             return true;
         },
@@ -1569,7 +1573,9 @@ define(function (require) {
                                  + finalTextStyle.fontSize + 'px '
                                  + finalTextStyle.fontFamily;
 
-            textStyle.text = loadingOption.text || this._themeConfig.loadingText;
+            textStyle.text = loadingOption.text 
+                             || (this._option && this._option.loadingText)
+                             || this._themeConfig.loadingText;
 
             if (loadingOption.x != null) {
                 textStyle.x = loadingOption.x;
@@ -1583,7 +1589,9 @@ define(function (require) {
             
             var Effect = loadingOption.effect;
             if (typeof Effect === 'string' || Effect == null) {
-                Effect =  effectList[loadingOption.effect || this._themeConfig.loadingEffect];
+                Effect =  effectList[loadingOption.effect
+                          || (this._option && this._option.loadingEffect)
+                          || this._themeConfig.loadingEffect];
             }
             this._zr.showLoading(new Effect(loadingOption.effectOption));
             return this;

@@ -54,6 +54,7 @@ define(function() {
         title: {
             zlevel: 0,                  // 一级层叠
             z: 6,                       // 二级层叠
+            show: true,
             text: '',
             // link: null,             // 超链接跳转
             // target: null,           // 仅支持self | blank
@@ -1383,9 +1384,9 @@ define(function() {
           'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
         ],
         loadingEffect: 'spin',
-        loadingText: 'Loading...',
+        loadingText: '数据读取中...',
         noDataEffect: 'bubble',
-        noDataText: 'No Data Available.',
+        noDataText: '暂无数据',
         // noDataLoadingOption: null,
         // 可计算特性配置，孤岛，提示颜色
         calculable: false,                      // 默认关闭可计算特性
