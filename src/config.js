@@ -1246,10 +1246,10 @@ define(function() {
                 show: false,
                 loop: true,
                 period: 15,             // 运动周期，无单位，值越大越慢
-                scaleSize: 2            // 放大倍数，以markPoint点size为基准
+                scaleSize: 2,           // 放大倍数，以markPoint点size为基准
                 // color: 'gold',
                 // shadowColor: 'rgba(255,215,0,0.8)',
-                // shadowBlur: 0          // 炫光模糊
+                shadowBlur: 0          // 炫光模糊
             },
             itemStyle: {
                 normal: {
@@ -1287,7 +1287,6 @@ define(function() {
             //symbolRotate: null,
             //smooth: false,
             smoothRadian: 0.2,    // 平滑弧度
-            large: false,
             precision: 2,
             effect: {
                 show: false,
