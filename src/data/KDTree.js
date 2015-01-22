@@ -19,14 +19,15 @@ define(function (require) {
     /**
      * @constructor
      * @alias module:echarts/data/KDTree
-     * @param {Array} points List of points
+     * @param {Array} points List of points.
+     * each point needs an array property to repesent the actual data
      * @param {Number} [dimension]
      *        Point dimension.
      *        Default will use the first point's length as dimensiont
      */
     var KDTree = function (points, dimension) {
         if (!dimension && points.length > 0) {
-            dimension = points[0].length;
+            dimension = points[0].array.length;
         }
         this.dimension = dimension;
         this.root = this._buildTree(points, 0, points.length - 1, 0);
@@ -43,11 +44,15 @@ define(function (require) {
      * Resursively build the tree
      */
     KDTree.prototype._buildTree = function (points, left, right, axis) {
+        if (right < left) {
+            return null;
+        }
+
         var medianIndex = Math.floor((left + right) / 2);
         medianIndex = quickSelect(
             points, left, right, medianIndex,
             function (a, b) {
-                return a[axis] - b[axis];
+                return a.array[axis] - b.array[axis];
             }
         );
         var median = points[medianIndex];
@@ -56,7 +61,7 @@ define(function (require) {
 
         axis = (axis + 1) % this.dimension;
         if (right > left) {
-            node.left = this._buildTree(points, left, medianIndex, axis);
+            node.left = this._buildTree(points, left, medianIndex - 1, axis);
             node.right = this._buildTree(points, medianIndex + 1, right, axis);   
         }
 
@@ -76,7 +81,7 @@ define(function (require) {
         var minDist = squaredDistance(curr.data, target);
         var nearestNode = curr;
 
-        if (target[curr.axis] < curr.data[curr.axis]) {
+        if (target.array[curr.axis] < curr.data.array[curr.axis]) {
             // Left first
             curr.right && (stack[idx++] = curr.right);
             curr.left && (stack[idx++] = curr.left);
@@ -89,7 +94,7 @@ define(function (require) {
 
         while (idx--) {
             curr = stack[idx];
-            var currDist = target[curr.axis] - curr.data[curr.axis];
+            var currDist = target.array[curr.axis] - curr.data.array[curr.axis];
             var isLeft = currDist < 0;
             var needsCheckOtherSide = false;
             currDist = currDist * currDist;
@@ -171,7 +176,7 @@ define(function (require) {
         var found = 1;
         this._addNearest(found, currDist, curr);
 
-        if (target[curr.axis] < curr.data[curr.axis]) {
+        if (target.array[curr.axis] < curr.data.array[curr.axis]) {
             // Left first
             curr.right && (stack[idx++] = curr.right);
             curr.left && (stack[idx++] = curr.left);
@@ -184,7 +189,7 @@ define(function (require) {
 
         while (idx--) {
             curr = stack[idx];
-            var currDist = target[curr.axis] - curr.data[curr.axis];
+            var currDist = target.array[curr.axis] - curr.data.array[curr.axis];
             var isLeft = currDist < 0;
             var needsCheckOtherSide = false;
             currDist = currDist * currDist;
