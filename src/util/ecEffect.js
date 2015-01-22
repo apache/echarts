@@ -23,38 +23,49 @@ define(function (require) {
         var shadowBlur = typeof effect.shadowBlur != 'undefined'
                          ? effect.shadowBlur : size;
 
-        var effectShape = new IconShape({
-            zlevel : zlevel,
-            style : {
-                brushType : 'stroke',
-                iconType : (shape.style.iconType != 'pin' 
-                            && shape.style.iconType != 'droplet')
-                           ? shape.style.iconType
-                           : 'circle',
-                x : shadowBlur + 1, // 线宽
-                y : shadowBlur + 1,
-                n : shape.style.n,
-                width : shape.style._width * size,
-                height : shape.style._height * size,
-                lineWidth : 1,
-                strokeColor : color,
-                shadowColor : shadowColor,
-                shadowBlur : shadowBlur
-            },
-            draggable : false,
-            hoverable : false
-        });
-        
-        if (canvasSupported) {  // 提高性能，换成image
-            effectShape.style.image = zr.shapeToImage(
-                effectShape, 
-                effectShape.style.width + shadowBlur * 2 + 2, 
-                effectShape.style.height + shadowBlur * 2 + 2
-            ).style.image;
+        var effectShape;
+        if (shape.type !== 'image') {
+            effectShape = new IconShape({
+                zlevel : zlevel,
+                style : {
+                    brushType : 'stroke',
+                    iconType : (shape.style.iconType != 'pin' 
+                                && shape.style.iconType != 'droplet')
+                               ? shape.style.iconType
+                               : 'circle',
+                    x : shadowBlur + 1, // 线宽
+                    y : shadowBlur + 1,
+                    n : shape.style.n,
+                    width : shape.style._width * size,
+                    height : shape.style._height * size,
+                    lineWidth : 1,
+                    strokeColor : color,
+                    shadowColor : shadowColor,
+                    shadowBlur : shadowBlur
+                },
+                draggable : false,
+                hoverable : false
+            });
             
+            if (canvasSupported) {  // 提高性能，换成image
+                effectShape.style.image = zr.shapeToImage(
+                    effectShape, 
+                    effectShape.style.width + shadowBlur * 2 + 2, 
+                    effectShape.style.height + shadowBlur * 2 + 2
+                ).style.image;
+                
+                effectShape = new ImageShape({
+                    zlevel : effectShape.zlevel,
+                    style : effectShape.style,
+                    draggable : false,
+                    hoverable : false
+                });
+            }
+        }
+        else {
             effectShape = new ImageShape({
-                zlevel : effectShape.zlevel,
-                style : effectShape.style,
+                zlevel : zlevel,
+                style : shape.style,
                 draggable : false,
                 hoverable : false
             });
@@ -71,6 +82,7 @@ define(function (require) {
         var offset = (effectShape.style.width / devicePixelRatio - shape.style._width) / 2;
         effectShape.style.x = shape.style._x - offset;
         effectShape.style.y = shape.style._y - offset;
+        //console.log(shape.style._x , offset, effectShape.style.width)
         var duration = (effect.period + Math.random() * 10) * 100;
         
         zr.modShape(

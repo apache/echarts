@@ -1442,6 +1442,7 @@ define(function (require) {
                 case 'rectangle' :
                     ecAnimation.rectangle(this.zr, oldShape, newShape, duration, easing);
                     break;
+                case 'image' :
                 case 'icon' :
                     ecAnimation.icon(this.zr, oldShape, newShape, duration, easing, delay);
                     break;

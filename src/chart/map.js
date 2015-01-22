@@ -1095,7 +1095,9 @@ define(function (require) {
                                 this.shapeList[i]._x = this.shapeList[i].style.xEnd = geoAndPos[0];
                                 this.shapeList[i]._y = this.shapeList[i].style.yEnd = geoAndPos[1];
                             }
-                            else if  (this.shapeList[i].type == 'icon') {
+                            else if (this.shapeList[i].type == 'icon'
+                                     || this.shapeList[i].type == 'image'
+                            ) {
                                 geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo);
                                 this.shapeList[i].style.x = this.shapeList[i].style._x =
                                     geoAndPos[0] - this.shapeList[i].style.width / 2;
