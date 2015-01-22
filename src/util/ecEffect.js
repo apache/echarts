@@ -78,11 +78,10 @@ define(function (require) {
         effectList.push(effectShape);
         zr.addShape(effectShape);
         
-        var devicePixelRatio = window.devicePixelRatio || 1;
+        var devicePixelRatio = shape.type !== 'image' ? (window.devicePixelRatio || 1) : 1;
         var offset = (effectShape.style.width / devicePixelRatio - shape.style._width) / 2;
         effectShape.style.x = shape.style._x - offset;
         effectShape.style.y = shape.style._y - offset;
-        //console.log(shape.style._x , offset, effectShape.style.width)
         var duration = (effect.period + Math.random() * 10) * 100;
         
         zr.modShape(
