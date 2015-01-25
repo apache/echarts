@@ -115,6 +115,7 @@
                                 <li><a href="#AreaStyle">areaStyle</a></li>
                                 <li><a href="#TextStyle">textStyle</a></li>
                                 <li><a href="#Loadingoption">loadingOption</a></li>
+                                <li><a href="#NoDataLoadingOption">noDataLoadingOption</a></li>
                                 <li><a href="#BackgroundColor">backgroundColor</a></li>
                                 <li><a href="#Color">color</a></li>
                                 <li><a href="#SymbolList">symbolList</a></li>
@@ -295,6 +296,14 @@
                             <td> Including World Map, China Map, Map of China Provinces &amp; Cities, and extended maps on GeoJSON format. Supports SVG extension, such as body composition, football pitch, interior space, etc. </td>
                         </tr>
                         <tr>
+                            <td> gauge </td>
+                            <td> Often used to display the key index in a BI system. </td>
+                        </tr>
+                        <tr>
+                            <td> funnel </td>
+                            <td> Often used to display the data change in a data process, like filtered, combined etd, common in BI system.</td>
+                        </tr>
+                        <tr>
                             <td> evnetRiver </td>
                             <td> EventRiver is commonly used to display multiple events with time attribute, the evolution of events can be shown by time sequence.</td>
                         </tr>
@@ -470,7 +479,7 @@
                     <p>We offer you various ways to import the ECharts library in your page, so that you can always choose the right one for your project. </p>
                     
                     <h3>modular package import <a name="Import-ECharts1"> </a></h3>
-                    <P>If you are familiar with modular programming, and your project is modular and follows the AMD module specification, then it will be fairly easy to import echarts in your page; Import a module loader, like <a href="https://github.com/ecomfe/esl" target="_blank">esl.js</a>, and configure the packet path to point to src, and you will enjoy the chart’s maximum flexibility, such as load-on-demand. Since ECharts is based on ZRender, you also need to download <a href="https://github.com/ecomfe/zrender" target="_blank">ZRender</a> locally. Reference is made to <a href="example/demo.html#-en" target="_blank">demo</a>. Now you need to configure as follows.</p>
+                    <P>If you are familiar with modular programming, and your project is modular and follows the AMD module specification, then it will be fairly easy to import echarts in your page; Import a module loader, like <a href="https://github.com/ecomfe/esl" target="_blank">esl.js</a>, and configure the packages path to point to src, and you will enjoy the chart’s maximum flexibility, such as load-on-demand. Since ECharts is based on ZRender, you also need to download <a href="https://github.com/ecomfe/zrender" target="_blank">ZRender</a> locally. Reference is made to <a href="example/demo.html#-en" target="_blank">demo</a>. Now you need to configure as follows.</p>
                     <p>Please note: although package import maximizes flexibility in the development phase, it is not intended for going online directly. Reducing the number of documents requested is the most fundamental rule of front-end optimization, so please be sure to compress files when you go on line. </P>
                     <div class="code">
                         <pre>//from echarts example
@@ -584,6 +593,7 @@ require.config({
                         <li>Configure a ECharts path for the module loader, and link to echarts.js from the current page, see above.</li>
                         <li>Dynamically load ECharts and use callback function to initialize it. (PS: if you want to use ECharts on a page where you've already loaded it, just require('echarts').init(dom).) </li>
                     </ol>
+                    <p>see <a href="./start.html" target="_blank" style="margin-right: 50px;">Getting started »</a></p>
 
                     <h3>plain single file import <a name="Import-ECharts3"> </a></h3>
                     <P>The 1.3.5 release added support for plain import. If your project is not based on modularity, or it’s based on CMD specification (such as using sea.js), then it may not be appropriate for you to include the modular AMD-based ECharts. Therefore it is recommended that you use script plain import. Forget about require, you can directly use two global namespaces - ECharts, ZRender - after script plain import. Reference is made to <a href="example/www2/index.html" target="_blank">ECharts plain import</a>. Note that excanvas judges Canvas support by inserting the body tag into Canvas node, so if you put the script tag of ECharts into the head tag, IE8- browsers would give an error; the solution is to move the script tag into (behind) the body tag.</p>
@@ -609,6 +619,7 @@ require.config({
                         <li>dist/echarts-all.js : a compressed library of all the chart types, including World Map, China Map and Map of China Provinces &amp; Cities.</li>
                         <li>source/echarts-all.js : an uncompressed library of all the chart types, including World Map, China Map and Map of China Provinces &amp; Cities. Available for debugging purposes.</li>
                     </ul>
+                    <p>see <a href="./start.html" target="_blank" style="margin-right: 50px;">Getting started »</a></p>
                         
                     <h3>Custom Build ECharts Single File <a name="Custom-Build-Echarts-Single-File"></a></h3>
                     <p>More detail about echarts-optimizer can be found at <a href="https://github.com/ecomfe/echarts-optimizer/blob/master/README.md" target="_blank">README.md</a></p>
@@ -624,7 +635,9 @@ require.config({
                         <tr>
                             <td> <b>{ECharts}</b> init </td>
                             <td> <b>{dom}</b> dom, <br/><b>{string | Object =}</b> theme </td>
-                            <td> Initialization interface, returns ECharts instances. Dom is the node for charts. Theme is optional. For built-in themes ('macarons', 'infographic'), directly pass in name. For custom extended themes, pass in the theme object. </td>
+                            <td> Initialization interface, returns ECharts instances. Dom is the node for charts. Theme is optional. For built-in themes ('macarons', 'infographic'), directly pass in name. For custom extended themes, pass in the theme object. Like this :
+                                <br/>var myCharts = echarts.init(document.getElementById('main'), 'macarons')；
+                            </td>
                         </tr>
                     </table>
                     <p>For available methods of chart instances, see <a href="#Methods">Methods</a>. </p>
@@ -698,7 +711,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td><b>{self}</b> setSeries</td>
                             <td><b>{Array}</b> series, <br/><b>{boolean=}</b> notMerge</td>
-                            <td>Data interface, the data array generated by data-driven chart. (see <a href="#Series" title="">series</a>), same result as calling setOption({series : {...}}). </td>
+                            <td>Data interface, the data array generated by data-driven chart. (see <a href="#Series" title="">series</a>), same result as calling setOption({series : {...}}, notMerge). </td>
                         </tr>
                         <tr>
                             <td><b>{Object}</b> getSeries</td>
@@ -763,20 +776,38 @@ require(['echarts'], function (ec){
                             </td>
                             <td>delete a single markLine interface, which includes
                                 <br/>seriesIdx: series index
-                                <br/>markName: [markLine] name
+                                <br/>markName: [markLine] name. The default makeLine name is the starting point's name in the makeLine's data. While the ending point is named too, like the map, both point's name would be joined as the default name like this "nameStart > nameEnd", such as
+                                <br/>[{name:'Beijing', value:100}, {name:'Shanghai'}]
+                                <br/>In this case, markName is "Beijing > notMerge"
                             </td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> on</td>
                             <td><b>{string}</b> eventName, <br/><b>{Function}</b> eventListener</td>
                             <td>event bind, mount all the event naming on require ('echarts/config'). EVENT (echarts.config.EVENT for non-modular) namespace. It is recommended that you use this namespace as the event name to include. Events supported by the current version are:
-                                <br/>REFRESH, RESTORE, RESIZE, CLICK, DBLCLICK, HOVER, 
-                                <br/>DATA_CHANGED, DATA_VIEW_CHANGED, 
-                                <br/>MAGIC_TYPE_CHANGED, TIMELINE_CHANGED, 
-                                <br/>DATA_ZOOM, DATA_RANGE, MAP_ROAM,
-                                <br/>DATA_RANGE_HOVERLINK, LEGEND_HOVERLINK,
-                                <br/>LEGEND_SELECTED, MAP_SELECTED, PIE_SELECTED,
-                                <br/>FORCE_LAYOUT_END
+                                <br/>-----------------------Base Evetn-----------------------
+                                <br/>REFRESH,
+                                <br/>RESTORE,
+                                <br/>RESIZE,
+                                <br/>CLICK,
+                                <br/>DBLCLICK,
+                                <br/>HOVER,
+                                <br/>MOUSEOUT,
+                                <br/>-------------------Interactive Event--------------------
+                                <br/>DATA_CHANGED,
+                                <br/>DATA_VIEW_CHANGED,
+                                <br/>MAGIC_TYPE_CHANGED,
+                                <br/>TIMELINE_CHANGED,
+                                <br/>DATA_ZOOM,
+                                <br/>DATA_RANGE,
+                                <br/>DATA_RANGE_SELECTED,
+                                <br/>DATA_RANGE_HOVERLINK,
+                                <br/>LEGEND_SELECTED,
+                                <br/>LEGEND_HOVERLINK,
+                                <br/>MAP_ROAM,
+                                <br/>MAP_SELECTED,
+                                <br/>PIE_SELECTED,
+                                <br/>FORCE_LAYOUT_END,
                                 <br/><a href="./example/event.html#-en" target="_blank">event debugging » </a>
                             </td>
                         </tr>
@@ -788,7 +819,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td><b>{self}</b> setTheme</td>
                             <td><b>{string | Object}</b> theme</td>
-                            <td> Set the theme. For built-in themes (not available now), pass in the name directly. For custom extended themes, pass in the theme object. </td>
+                            <td> Set the theme. For built-in themes ('macarons', 'infographic'), pass in the name directly. For custom extended themes, pass in the theme object. </td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> connect</td>
@@ -822,7 +853,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td><b>{string}</b> getDataURL</td>
                             <td><b>{string=}</b> imgType</td>
-                            <td>Get the current chart's Base64 image dataURL, imgType: image type. Supports png|jpeg. Defaults to png. </td>
+                            <td>Get the current chart's Base64 image dataURL, not supported on IE8-, imgType: image type. Supports png|jpeg. Defaults to png. </td>
                         </tr>
                         <tr>
                             <td><b>{Dom}</b> getImage</td>
@@ -832,7 +863,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td><b>{self}</b> resize</td>
                             <td><b>{void}</b></td>
-                            <td>ECharts does not bind the resize event, and the internal system do not know whether the size of the display area changes or not. So you can bind the events you need, update the area by calling resize. </td>
+                            <td>ECharts does not bind the resize event, and the internal system do not know whether the size of the display area changes or not. So you can bind the events you need, update the area by calling resize. Like window.onresize = myChart.resize.</td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> refresh</td>
@@ -866,7 +897,7 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr class='bgGreen'>
                             <td> <b>{color}</b> backgroundColor </td>
-                            <td> The background color or gradient for the outer chart area, (see <a href="#BackgroundColor" title="">backgroundColor</a>). Defaults to null, transprent. </td>
+                            <td> The background color or gradient for the outer chart area, (see <a href="#BackgroundColor" title="">backgroundColor</a>). Support rgba and defaults to null, transprent. </td>
                         </tr>
                         <tr class='bgGreen'>
                             <td> <b>{Array}</b> color </td>
@@ -964,6 +995,16 @@ require(['echarts'], function (ec){
                             <td>Specifies whether to show timeline. Valid values are: true (show) | false (hide). </td>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> The first grade cascading control. Every zlevel will be allocated to a independent canvas, charts and components with the same zlevel will be rendered in the same canvas. The higher zlevel the closer to the top. More canvas dom will need more memory and performance, so never set too many zlevel. Most of the time, the second grade cascading control 'z' is recommended.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 4 </td>
+                            <td> The second grade cascading control, In the same canvas (zlevel), the higher z the closer to the top.</td>
+                        </tr>
+                        <tr>
                             <td> <b>{string}</b> type </td>
                             <td> 'time' </td>
                             <td> When the type is time, interval of the timeline is calculated based on the time span. Can also be: 'number'. </td>
@@ -1051,7 +1092,11 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>
-                            <td> {color: '#666', width: 1, type: 'dashed'} </td>
+                            <td><pre>{
+    color: '#666',
+    width: 1,
+    type: 'dashed'
+}                           </pre></td>
                             <td> Sets the line style of the timeline, (see <a href="#LineStyle" title="">lineStyle</a>). </td>
                         </tr>
                         <tr>
@@ -1100,10 +1145,16 @@ require(['echarts'], function (ec){
                         <tr>
                             <td> <b>{Object}</b> controlStyle </td>
                             <td><pre>{
-    normal : { color : '#333'},
-    emphasis : { color : '#1e90ff'}
+    itemSize: 15,
+    itemGap: 5,
+    normal : {
+        color : '#333'
+    },
+    emphasis : {
+        color : '#1e90ff'
+    }
 }                               </pre></td>
-                            <td> the style of timeline controller. Both normal and highlight color can be specified. 
+                            <td> the style of timeline controller. ItemSize, itemGap and both normal and highlight color can be specified. 
                             </td>
                         </tr>
                         <tr>
@@ -1137,6 +1188,21 @@ require(['echarts'], function (ec){
                             <th> Property </th>
                             <th> Default </th>
                             <th> Description </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> show </td>
+                            <td> true </td>
+                            <td>Specifies whether to show timeline. Valid values are: true (show) | false (hide). </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> The first grade cascading control. Every zlevel will be allocated to a independent canvas, charts and components with the same zlevel will be rendered in the same canvas. The higher zlevel the closer to the top. More canvas dom will need more memory and performance, so never set too many zlevel. Most of the time, the second grade cascading control 'z' is recommended.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 6 </td>
+                            <td> The second grade cascading control, In the same canvas (zlevel), the higher z the closer to the top.</td>
                         </tr>
                         <tr>
                             <td> <b>{string}</b> text </td>
@@ -1212,12 +1278,18 @@ require(['echarts'], function (ec){
                         
                         <tr>
                             <td> <b>{Object}</b> textStyle </td>
-                            <td> {<br/>fontSize: 18, <br/>fontWeight: 'bolder', <br/>color: '#333'<br/>} </td>
+                            <td><pre>{
+    fontSize: 18,
+    fontWeight: 'bolder',
+    color: '#333'
+}                           </pre></td>
                             <td> the style of title text, (see <a href="#TextStyle" title="">textStyle</a>). </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> subtextStyle </td>
-                            <td> {color: '#aaa'} </td>
+                            <td><pre>{
+    color: '#aaa'
+}                           </pre> </td>
                             <td> the style of subtitle text, (see <a href="#TextStyle" title="">textStyle</a>). </td>
                         </tr>
                         
@@ -1237,6 +1309,16 @@ require(['echarts'], function (ec){
                             <td> <b>{boolean}</b> show </td>
                             <td> false </td>
                             <td> Specifies whether to show toolbox. Valid values are: true (show) | false (hide). </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> The first grade cascading control. Every zlevel will be allocated to a independent canvas, charts and components with the same zlevel will be rendered in the same canvas. The higher zlevel the closer to the top. More canvas dom will need more memory and performance, so never set too many zlevel. Most of the time, the second grade cascading control 'z' is recommended.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 6 </td>
+                            <td> The second grade cascading control, In the same canvas (zlevel), the higher z the closer to the top.</td>
                         </tr>
                         <tr>
                             <td> <b>{string}</b> orient </td>
@@ -1433,6 +1515,16 @@ require(['echarts'], function (ec){
                             <td>Specifies whether to show tooltip. Valid values are: true (show) | false (hide). </td>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 1 </td>
+                            <td> The first grade cascading control. Every zlevel will be allocated to a independent canvas, charts and components with the same zlevel will be rendered in the same canvas. The higher zlevel the closer to the top. More canvas dom will need more memory and performance, so never set too many zlevel. Most of the time, the second grade cascading control 'z' is recommended.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 8 </td>
+                            <td> The second grade cascading control, In the same canvas (zlevel), the higher z the closer to the top.</td>
+                        </tr>
+                        <tr>
                             <td> <b>{boolean}</b> showContent </td>
                             <td> true </td>
                             <td> Specifies whether to show the content of tooltip. Set it to false when you just need the tooltip to trigger events or show axisPointer. <br/>. Valid values are: true (show) | false (hide). </td>
@@ -1500,13 +1592,24 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> axisPointer </td>
-                            <td> {<br/>
-                                type: 'line',<br/>
-                                lineStyle: {<br/>&nbsp;&nbsp;color: '#48b',<br/>&nbsp;&nbsp;width: 2,<br/>&nbsp;&nbsp;type: 'solid'<br/>},<br/>
-                                crossStyle: {<br/>&nbsp;&nbsp;color: '#1e90ff',<br/>&nbsp;&nbsp;width: 1,<br/>&nbsp;&nbsp;type: 'dashed'<br/>},<br/>
-                                shadowStyle: {<br/>&nbsp;&nbsp;size: 'auto',<br/>&nbsp;&nbsp;color: 'rgba(150,150,150,0.3)'<br/>}<br/>
-                                } 
-                            </td>
+                            <td><pre>{
+    type: 'line',
+    lineStyle: {
+        color: '#48b',
+        width: 2,
+        type: 'solid'
+    },
+    crossStyle: {
+        color: '#1e90ff',
+        width: 1,
+        type: 'dashed'
+    },
+    shadowStyle: {
+        color: 'rgba(150,150,150,0.3)',
+        width: 'auto',
+        type: 'default'
+    }
+}                           </pre></td>
                             <td> axis pointer, triggered by axis. Default type is line. Valid types are: 'line' | 'cross' | 'shadow' | 'none'. Each type has its corresponding style, see below.
                                  <br/>lineStyle: style for line pointer, (see <a href="#LineStyle" title="">lineStyle</a>),
                                  <br/>crossStyle: style for crosshairs pointer, (see <a href="#LineStyle" title="">lineStyle</a>),
@@ -1546,7 +1649,7 @@ require(['echarts'], function (ec){
                             </ul>
                         </li>
                         <li>
-                            <b>{Function}</b>, the list of parameters passed in is as follows: 
+                            <b>{Function}</b>, the list of parameters passed in is [params, ticket, callback], detail as follows: 
                             <ul>
                                 <li>&lt;Array&gt; params : array content and template varaibles are the same<pre>[
     {
@@ -1598,6 +1701,16 @@ require(['echarts'], function (ec){
                             <td> <b>{boolean}</b> show </td>
                             <td> true </td>
                             <td>Specifies whether to show. Valid values are: true (show) | false (hide). </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> The first grade cascading control. Every zlevel will be allocated to a independent canvas, charts and components with the same zlevel will be rendered in the same canvas. The higher zlevel the closer to the top. More canvas dom will need more memory and performance, so never set too many zlevel. Most of the time, the second grade cascading control 'z' is recommended.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 4 </td>
+                            <td> The second grade cascading control, In the same canvas (zlevel), the higher z the closer to the top.</td>
                         </tr>
                         <tr>
                             <td> <b>{string}</b> orient </td>
@@ -1693,6 +1806,16 @@ require(['echarts'], function (ec){
                             <td> <b>{boolean}</b> show </td>
                             <td> true </td>
                             <td>Specifies whether to show. Valid values are: true (show) | false (hide). </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> The first grade cascading control. Every zlevel will be allocated to a independent canvas, charts and components with the same zlevel will be rendered in the same canvas. The higher zlevel the closer to the top. More canvas dom will need more memory and performance, so never set too many zlevel. Most of the time, the second grade cascading control 'z' is recommended.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 4 </td>
+                            <td> The second grade cascading control, In the same canvas (zlevel), the higher z the closer to the top.</td>
                         </tr>
                         <tr>
                             <td> <b>{string}</b> orient </td>
@@ -1816,6 +1939,16 @@ require(['echarts'], function (ec){
                             <th> Description </th>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> The first grade cascading control. Every zlevel will be allocated to a independent canvas, charts and components with the same zlevel will be rendered in the same canvas. The higher zlevel the closer to the top. More canvas dom will need more memory and performance, so never set too many zlevel. Most of the time, the second grade cascading control 'z' is recommended.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 4 </td>
+                            <td> The second grade cascading control, In the same canvas (zlevel), the higher z the closer to the top.</td>
+                        </tr>
+                        <tr>
                             <td> <b>{boolean}</b> show </td>
                             <td> false </td>
                             <td> Specifies whether to show dataZoom. If true, take over all the series of data using specified category axis. If unspecified, take over all the Cartesian coordinate system data. </td>
@@ -1852,8 +1985,8 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{color}</b> dataBackgroundColor </td>
-                            <td> '#ccc' </td>
-                            <td> The color of the dataZoom's background. </td>
+                            <td> '#eee' </td>
+                            <td> The color of the dataZoom's background. Only the first series would be rendered as data background.</td>
                         </tr>
                         <tr>
                             <td> <b>{color}</b> fillerColor </td>
@@ -1864,6 +1997,11 @@ require(['echarts'], function (ec){
                             <td> <b>{color}</b> handleColor </td>
                             <td> 'rgba(70,130,180,0.8)' </td>
                             <td> The color of the control handle. </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> handleSize </td>
+                            <td> 8</td>
+                            <td> The size of the control handle.  </td>
                         </tr>
                         <tr>
                             <td> <b>{Array | number}</b> xAxisIndex </td>
@@ -1915,6 +2053,16 @@ require(['echarts'], function (ec){
                             <td> <b>{boolean}</b> show </td>
                             <td> true </td>
                             <td>Specifies whether to show. Valid values are: true (show) | false (hide). </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> The first grade cascading control. Every zlevel will be allocated to a independent canvas, charts and components with the same zlevel will be rendered in the same canvas. The higher zlevel the closer to the top. More canvas dom will need more memory and performance, so never set too many zlevel. Most of the time, the second grade cascading control 'z' is recommended.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 4 </td>
+                            <td> The second grade cascading control, In the same canvas (zlevel), the higher z the closer to the top.</td>
                         </tr>
                         <tr>
                             <td> <b>{string | number}</b> x </td>
@@ -1986,6 +2134,16 @@ require(['echarts'], function (ec){
                             <th> Property </th>
                             <th> Default </th>
                             <th> Description </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> The first grade cascading control. Every zlevel will be allocated to a independent canvas, charts and components with the same zlevel will be rendered in the same canvas. The higher zlevel the closer to the top. More canvas dom will need more memory and performance, so never set too many zlevel. Most of the time, the second grade cascading control 'z' is recommended.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 0 </td>
+                            <td> The second grade cascading control, In the same canvas (zlevel), the higher z the closer to the top.</td>
                         </tr>
                         <tr>
                             <td> <b>{number | string}</b> x </td>
@@ -2073,6 +2231,18 @@ require(['echarts'], function (ec){
                             <td>Specifies whether to show axis. Valid values are: true (show) | false (hide). </td>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> universal </td>
+                            <td> The first grade cascading control. Every zlevel will be allocated to a independent canvas, charts and components with the same zlevel will be rendered in the same canvas. The higher zlevel the closer to the top. More canvas dom will need more memory and performance, so never set too many zlevel. Most of the time, the second grade cascading control 'z' is recommended.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 0 </td>
+                            <td> universal </td>
+                            <td> The second grade cascading control, In the same canvas (zlevel), the higher z the closer to the top.</td>
+                        </tr>
+                        <tr>
                             <td> <b>{string}</b> position </td>
                             <td> 'bottom' | 'left' </td>
                             <td> universal </td>
@@ -2134,33 +2304,33 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> axisLine </td>
-                            <td> {show : true} </td>
+                            <td> varying </td>
                             <td> universal </td>
-                            <td> Axis line. Defaults to show. The property "show" specifies whether to show axisLine or not. The property "lineStyle" (see <a href="#LineStyle" title="">lineStyle</a>) controls line style for axisLine. </td>
+                            <td> Axis line. Default to show. See below.</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> axisTick </td>
                             <td> varying </td>
                             <td> universal </td>
-                            <td> Axis tick. Defaults to hide. The property "show" specifies whether to show axisTick or not. The property "length" controls line length for axisTick. The property "lineStyle" (see <a href="#LineStyle" title="">lineStyle</a>) controls line style for axisTick. </td>
+                            <td> Axis tick. Defaults to hide. See below.</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> axisLabel </td>
-                            <td> {show : true} </td>
+                            <td> varying </td>
                             <td> universal </td>
-                            <td> Axis text label, see<a href="#AxisAxislabel" title="">axis.axisLabel</a>. </td>
+                            <td> Axis text label. See below.</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> splitLine </td>
-                            <td> {show : true} </td>
+                            <td> varying </td>
                             <td> universal </td>
-                            <td> Split line. Defaults to show. The property "show" specifies whether to show splitLine or not. The property "lineStyle" (see <a href="#LineStyle" title="">lineStyle</a>) controls line style for splitLine. </td>
+                            <td> Split line. Defaults to show. See below.</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> splitArea </td>
-                            <td> {show : false} </td>
+                            <td> varying </td>
                             <td> universal </td>
-                            <td> Split area. Defaults to hide. The property "show" specifies whether to show splitArea or not. The property "areaStyle" (see <a href="#AreaStyle" title="">areaStyle</a>) controls area style for splitArea. </td>
+                            <td> Split area. Defaults to hide. See below.</td>
                         </tr>
                         <tr>
                             <td> <b>{Array}</b> data </td>
@@ -2221,7 +2391,11 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>
-                            <td> {color: '#48b', width: 2, type: 'solid'} </td>
+                            <td> <pre>{
+    color: '#48b',
+    width: 2,
+    type: 'solid'
+}                           </pre> </td>
                             <td> both </td>
                             <td> controls the line style, (see <a href="#LineStyle" title="">lineStyle</a>). </td>
                         </tr>
@@ -2243,11 +2417,14 @@ require(['echarts'], function (ec){
                             <td> Specifies whether to show axisTick. Defaults to false. The following properties will be set by default values When it is true. </td>
                         </tr>
                         <tr>
-                            <td> <b>{string | number}</b> interval </td>
+                            <td> <b>{string | number | function}</b> interval </td>
                             <td> 'auto' </td>
                             <td> category axis </td>
                             <td> specifies the interval between axisTicks. Defaults to 'auto'. Valid values are: 
-                                 <br/>'auto' (automatically hide those that cannot be displayed) | 0 (unhide all) | <b>{number}</b>(specified by the user). </td>
+                                 <br/>'auto' (automatically hide those that cannot be displayed) | 0 (unhide all) |
+                                 <br/><b>{number}</b>(specified by the user). 
+                                 <br/><b>{function}</b>callback, paramater is [index，data[index]], return true to show and false to hide
+                            </td>
                         </tr>
                         <tr>
                             <td> <b>{boolean}</b> onGap </td>
@@ -2269,7 +2446,10 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>
-                            <td> {color: '#333', width: 1} </td>
+                            <td> <pre>{
+    color: '#333',
+    width: 1
+}                           </pres></td>
                             <td> both </td>
                             <td> controls the line style, (see<a href="#LineStyle" title="">lineStyle</a>). </td>
                         </tr>
@@ -2291,10 +2471,14 @@ require(['echarts'], function (ec){
                             <td> Specifies whether to show axisLabel. Defaults to true, which is a prerequisite for the following properties. </td>
                         </tr>
                         <tr>
-                            <td> <b>{string | number}</b> interval </td>
+                            <td> <b>{string | number | function}</b> interval </td>
                             <td> 'auto' </td>
                             <td> category axis </td>
-                            <td> specifies the interval between axisLabels. Defaults to 'auto'. Valid values are: 'auto' (automatically hide those that cannot be displayed) | 0 (unhide all) | <b>{number}</b>(specified by the user). </td>
+                            <td> specifies the interval between axisLabels. Defaults to 'auto'. Valid values are:
+                                <br/>'auto' (automatically hide those that cannot be displayed) | 0 (unhide all) | 
+                                <br/><b>{number}</b>(specified by the user).  
+                                <br/><b>{function}</b>callback, paramater is [index，data[index]], return true to show and false to hide
+                           </td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> rotate </td>
@@ -2322,7 +2506,9 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> textStyle </td>
-                            <td> {color: '#333'} </td>
+                            <td><pre>{
+    color: '#333'
+}                           </pre> </td>
                             <td> universal </td>
                             <td> text style (see <a href="#TextStyle" title="">textStyle</a>). If the axis is value or time axis, color accepts method callback to achieve custom color definition, support <a href="https://github.com/ecomfe/echarts/issues/226" target="_blank">#226 »</a> </td>
                         </tr>
@@ -2373,7 +2559,11 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>
-                            <td> {color: ['#ccc'], width: 1, type: 'solid'} </td>
+                            <td><pre>{
+    color: ['#ccc'],
+    width: 1,
+    type: 'solid'
+}                           </pre></td>
                             <td> universal </td>
                             <td> controls the line style ,(see <a href="#LineStyle" title="">lineStyle</a>). </td>
                         </tr>
@@ -2402,7 +2592,12 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> areaStyle </td>
-                            <td> {color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']} </td>
+                            <td><pre>{
+    color: [
+        'rgba(250,250,250,0.3)',
+        'rgba(200,200,200,0.3)'
+    ]
+}                           </pre> </td>
                             <td> universal </td>
                             <td> the property "areaStyle" (see <a href="#AreaStyle" title="">areaStyle</a>), controls area style, the color array will be changed at intervals. </td>
                         </tr>
@@ -2438,6 +2633,16 @@ require(['echarts'], function (ec){
                             <th> Description </th>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> The first grade cascading control. Every zlevel will be allocated to a independent canvas, charts and components with the same zlevel will be rendered in the same canvas. The higher zlevel the closer to the top. More canvas dom will need more memory and performance, so never set too many zlevel. Most of the time, the second grade cascading control 'z' is recommended.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 0 </td>
+                            <td> The second grade cascading control, In the same canvas (zlevel), the higher z the closer to the top.</td>
+                        </tr>
+                        <tr>
                             <td> <b>{Array}</b> center </td>
                             <td> ['50%', '50%'] </td>
                             <td> coordinate of the center, in pixels or percent. The formula for calculating percent: min(width, height) * 50%. </td>
@@ -2459,8 +2664,13 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> name </td>
-                            <td> {<br/> show:true, <br/>formatter:null,<br/>textStyle:{color:#333}<br/>}
-                            </td>
+                            <td><pre>{
+    show: true,
+    formatter: null,
+    textStyle: {
+        color:#333
+    }
+}                           </pre></td>
                             <td> name of coordinate axis. </td>
                         </tr>
                         <tr>
@@ -2526,6 +2736,25 @@ indicator : [
                             <th> Description </th>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> The first grade cascading control. Every zlevel will be allocated to a independent canvas, charts and components with the same zlevel will be rendered in the same canvas. The higher zlevel the closer to the top. More canvas dom will need more memory and performance, so never set too many zlevel. Most of the time, the second grade cascading control 'z' is recommended.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 2 </td>
+                            <td> The second grade cascading control, In the same canvas (zlevel), the higher z the closer to the top.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> type </td>
+                            <td> null </td>
+                            <td> universal </td>
+                            <td> chart type. Required parameter. If null or unsupported type, the data of this series will not be shown. Valid values are: 
+                                <br/>'line' | 'bar' | 'scatter' | 'candlestick'
+                                <br/> 'pie' | 'radar' | 'chord' | 'force' | 'map'
+                            </td>
+                        </tr>
+                        <tr>
                             <td> <b>{string}</b> name </td>
                             <td> null </td>
                             <td> universal </td>
@@ -2536,15 +2765,6 @@ indicator : [
                             <td> null </td>
                             <td> universal </td>
                             <td> style of the tooltip. Applicable to this series only. If unspecified, use option.tooltip (See <a href="#Tooltip" title="">tooltip</a>), a small "hover box" with detailed information about the item being hovered over. </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{string}</b> type </td>
-                            <td> null </td>
-                            <td> universal </td>
-                            <td> chart type. Required parameter. If null or unsupported type, the data of this series will not be shown. Valid values are: 
-                                <br/>'line' | 'bar' | 'scatter' | 'candlestick'
-                                <br/> 'pie' | 'radar' | 'chord' | 'force' | 'map'
-                            </td>
                         </tr>
                         <tr>
                             <td> <b>{boolean}</b> clickable </td>
@@ -2669,7 +2889,7 @@ indicator : [
                             <td> <b>{boolean}</b> smooth </td>
                             <td> false </td>
                             <td> line  </td>
-                            <td> smoothed line. 
+                            <td> smoothed line, while smooth is true, lineStyle.type can not be dashed. 
                         </tr>
                         <tr>
                             <td> <b>{boolean}</b> large </td>
@@ -3527,6 +3747,11 @@ indicator : [
                             <th> Description </th>
                         </tr>
                         <tr>
+                            <td> <b>{boolean}</b> clickable </td>
+                            <td> true </td>
+                            <td> Specifies data graphic clickable or not, default to true, recommend to false when you do not have a click event handler.</td>
+                        </tr>
+                        <tr>
                             <td> <b>{string}</b> symbol </td>
                             <td> 'pin' </td>
                             <td> the symbol of markPoint, same as series' <a href="#Series">symbol</a>. </td>
@@ -3548,16 +3773,15 @@ indicator : [
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> effect </td>
-                            <td> {
-                                <br/>show: false,
-                                <br/>loop: true,
-                                <br/>period: 15,
-                                <br/>scaleSize : 2,
-                                <br/>color : null,
-                                <br/>shadowColor : null,
-                                <br/>shadowBlur : 0
-                                <br/>}
-                            </td>
+                            <td><pre>{
+    show: false,
+    loop: true,
+    period: 15,
+    scaleSize : 2,
+    color : null,
+    shadowColor : null,
+    shadowBlur : 0
+}                           </pre></td>
                             <td> glow effect for markPoint symbol:
                                 <br/>show: specifies whether to show glow effect or not. Defaults to false. 
                                 <br/>loop: specifies whether to play the animation in a loop. Defaults to true.
@@ -3635,6 +3859,11 @@ geoCoord : {
                             <th> Description </th>
                         </tr>
                         <tr>
+                            <td> <b>{boolean}</b> clickable </td>
+                            <td> true </td>
+                            <td> Specifies data graphic clickable or not, default to true, recommend to false when you do not have a click event handler.</td>
+                        </tr>
+                        <tr>
                             <td> <b>{Array | string}</b> symbol </td>
                             <td> ['circle', 'arrow'] </td>
                             <td> symbols of the start and end of markLine. If the two are the same, string can be directly passed in. Same as series' <a href="#Series">symbol</a>. </td>
@@ -3650,17 +3879,31 @@ geoCoord : {
                             <td> angles by which the start and end markLine symbols rotate, same as series' <a href="#Series">symbolRotate</a>. </td>
                         </tr>
                         <tr>
+                            <td> <b>{boolean}</b> smooth </td>
+                            <td> false </td>
+                            <td> smoothed line, while smooth is true, lineStyle.type can not be dashed.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> smoothRadian </td>
+                            <td> 0.2 </td>
+                            <td> radian of the smoothed line.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> precision </td>
+                            <td> 2 </td>
+                            <td> precision, use for the average markLine.</td>
+                        </tr>
+                        <tr>
                             <td> <b>{Object}</b> effect </td>
-                            <td> {
-                                <br/>show: false,
-                                <br/>loop: true,
-                                <br/>period: 15,
-                                <br/>scaleSize : 2,
-                                <br/>color : null,
-                                <br/>shadowColor : null,
-                                <br/>shadowBlur : null
-                                <br/>}
-                            </td>
+                            <td><pre>{
+    show: false,
+    loop: true,
+    period: 15,
+    scaleSize : 2,
+    color : null,
+    shadowColor : null,
+    shadowBlur : null
+}                           </pre></td>
                             <td> glow effect for markLine symbol: 
                                 <br/>show: specifies whether to show. Defaults to false.  
                                 <br/>loop: specifies whether to play the animation in a loop. Defaults to true. 
@@ -3845,7 +4088,10 @@ geoCoord : {
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> label </td>
-                            <td> {show: true,  position:'outer'} </td>
+                            <td><pre>{
+    show: true,
+    position:'outer'
+}                           </pre></td>
                             <td> line, column, candlestick, scatter, pie, map, force, markPoint, markLine</td>
                             <td> In pie, displayed on the outside by default. labelLine.length controls the label's distance from the pie. In map, the location of labels cannot be specified. 
                                  <br/> position can be specified in line, column, candlestick, scatter. See below.
@@ -4170,7 +4416,7 @@ geoCoord : {
                         </tr>
                         <tr>
                             <td> <b>{string}</b> text </td>
-                            <td> 'Loading...' </td>
+                            <td> '数据读取中...' </td>
                             <td> The loading text that appears when the chart is set into the loading state. \n' represents a line feed. </td>
                         </tr>
                         <tr>
@@ -4191,6 +4437,51 @@ geoCoord : {
                         <tr>
                             <td> <b>{string | Function}</b> effect </td>
                             <td> 'spin' </td>
+                            <td> loading effect. Valid values are: 'spin' | 'bar' | 'ring' | 'whirling' | 'dynamicLine' | 'bubble'. Supports external loading. </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> effectOption </td>
+                            <td> null </td>
+                            <td> option for loading effect, see zrender. </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> progress </td>
+                            <td> null </td>
+                            <td> Specifies the current progress [0~1]. Applicable to specific effects. </td>
+                        </tr>
+                    </table>
+
+                    <h4>noDataLoadingOption<a name="NoDataLoadingOption"> </a></h4>
+                    <P> The loading options for none data control the appearance of the loading screen that covers the plot area on chart operations. <a href="example/loading.html#-en" target="_blank">Try this »</a></P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> Property </th>
+                            <th> Default </th>
+                            <th> Description </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> text </td>
+                            <td> '暂无数据' </td>
+                            <td> The loading text that appears when the chart is set into the loading state. \n' represents a line feed. </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | number}</b> x </td>
+                            <td> 'center' </td>
+                            <td> horizontal position. Defaults to center. Valid values are: 'center' | 'left' | 'right' | <b>{number}</b>(x-coordinate, in px). </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | number}</b> y </td>
+                            <td> 'center' </td>
+                            <td> vertical position. Defaults to center. Valid values are: 'center' | 'bottom' | 'top' | <b>{number}</b>(y-coordinate, in px). </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> textStyle </td>
+                            <td> null </td>
+                            <td> style for the loading text, (see <a href="#TextStyle" title="">textStyle</a>). </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | Function}</b> effect </td>
+                            <td> 'bubble' </td>
                             <td> loading effect. Valid values are: 'spin' | 'bar' | 'ring' | 'whirling' | 'dynamicLine' | 'bubble'. Supports external loading. </td>
                         </tr>
                         <tr>
