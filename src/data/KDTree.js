@@ -26,7 +26,11 @@ define(function (require) {
      *        Default will use the first point's length as dimensiont
      */
     var KDTree = function (points, dimension) {
-        if (!dimension && points.length > 0) {
+        if (!points.length) {
+            return;
+        }
+
+        if (!dimension) {
             dimension = points[0].array.length;
         }
         this.dimension = dimension;
@@ -78,8 +82,12 @@ define(function (require) {
         var curr = this.root;
         var stack = this._stack;
         var idx = 0;
-        var minDist = squaredDistance(curr.data, target);
-        var nearestNode = curr;
+        var minDist = Infinity;
+        var nearestNode = null;
+        if (curr.data !== target) {
+            minDist = squaredDistance(curr.data, target);
+            nearestNode = curr;
+        }
 
         if (target.array[curr.axis] < curr.data.array[curr.axis]) {
             // Left first
@@ -101,7 +109,7 @@ define(function (require) {
             // Intersecting right hyperplane with minDist hypersphere
             if (currDist < minDist) {
                 currDist = squaredDistance(curr.data, target);
-                if (currDist < minDist) {
+                if (currDist < minDist && curr.data !== target) {
                     minDist = currDist;
                     nearestNode = curr;
                 }
@@ -173,8 +181,11 @@ define(function (require) {
         }
         var currDist = squaredDistance(curr.data, target);
 
-        var found = 1;
-        this._addNearest(found, currDist, curr);
+        var found = 0;
+        if (curr.data !== target) {
+            found++;
+            this._addNearest(found, currDist, curr);
+        }
 
         if (target.array[curr.axis] < curr.data.array[curr.axis]) {
             // Left first
@@ -194,10 +205,12 @@ define(function (require) {
             var needsCheckOtherSide = false;
             currDist = currDist * currDist;
             // Intersecting right hyperplane with minDist hypersphere
-            var maxInMinDist = nearestNList[found - 1].dist;
-            if (found < N || currDist < maxInMinDist) {
+            if (found < N || currDist < nearestNList[found - 1].dist) {
                 currDist = squaredDistance(curr.data, target);
-                if (found < N || currDist < maxInMinDist) {
+                if (
+                    (found < N || currDist < nearestNList[found - 1].dist)
+                    && curr.data !== target
+                ) {
                     if (found < N) {
                         found++;
                     }
