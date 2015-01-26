@@ -479,7 +479,7 @@ define(function (require) {
                         }
                         
                         // 折线图
-                        var brokenLineShape = new PolylineShape({
+                        var polylineShape = new PolylineShape({
                             zlevel: this.getZlevelBase(),
                             z: this.getZBase(),
                             style: {
@@ -516,12 +516,12 @@ define(function (require) {
                         });
                         
                         ecData.pack(
-                            brokenLineShape,
+                            polylineShape,
                             series[seriesIndex], seriesIndex,
                             0, i, series[seriesIndex].name
                         );
                         
-                        this.shapeList.push(brokenLineShape);
+                        this.shapeList.push(polylineShape);
                         
                         if (isFill) {
                             var halfSmoothPolygonShape = new HalfSmoothPolygonShape({
