@@ -20,6 +20,7 @@ define(function (require) {
         var color = effect.color || shape.style.strokeColor || shape.style.color;
         var shadowColor = effect.shadowColor || color;
         var size = effect.scaleSize;
+        var distance = effect.bounceDistance;
         var shadowBlur = typeof effect.shadowBlur != 'undefined'
                          ? effect.shadowBlur : size;
 
@@ -29,8 +30,7 @@ define(function (require) {
                 zlevel : zlevel,
                 style : {
                     brushType : 'stroke',
-                    iconType : (shape.style.iconType != 'pin' 
-                                && shape.style.iconType != 'droplet')
+                    iconType : shape.style.iconType != 'droplet'
                                ? shape.style.iconType
                                : 'circle',
                     x : shadowBlur + 1, // 线宽
@@ -46,7 +46,10 @@ define(function (require) {
                 draggable : false,
                 hoverable : false
             });
-            
+            if (shape.style.iconType == 'pin') {
+                effectShape.style.y += effectShape.style.height / 2 * 1.5;
+            }
+
             if (canvasSupported) {  // 提高性能，换成image
                 effectShape.style.image = zr.shapeToImage(
                     effectShape, 
@@ -82,6 +85,11 @@ define(function (require) {
         var offset = (effectShape.style.width / devicePixelRatio - shape.style._width) / 2;
         effectShape.style.x = shape.style._x - offset;
         effectShape.style.y = shape.style._y - offset;
+
+        if (shape.style.iconType == 'pin') {
+            effectShape.style.y -= shape.style.height / 2 * 1.5;
+        }
+
         var duration = (effect.period + Math.random() * 10) * 100;
         
         zr.modShape(
@@ -91,25 +99,50 @@ define(function (require) {
         
         var centerX = effectShape.style.x + (effectShape.style.width) / 2 / devicePixelRatio;
         var centerY = effectShape.style.y + (effectShape.style.height) / 2 / devicePixelRatio;
-        zr.modShape(
-            effectShape.id, 
-            {
-                scale : [0.1, 0.1, centerX, centerY]
-            }
-        );
-        
-        zr.animate(effectShape.id, '', effect.loop)
-            .when(
-                duration,
+
+        if (effect.type === 'scale') {
+            // 放大效果
+            zr.modShape(
+                effectShape.id, 
                 {
-                    scale : [1, 1, centerX, centerY]
+                    scale : [0.1, 0.1, centerX, centerY]
                 }
-            )
-            .done(function() {
-                shape.effect.show = false;
-                zr.delShape(effectShape.id);
-            })
-            .start();
+            );
+            
+            zr.animate(effectShape.id, '', effect.loop)
+                .when(
+                    duration,
+                    {
+                        scale : [1, 1, centerX, centerY]
+                    }
+                )
+                .done(function() {
+                    shape.effect.show = false;
+                    zr.delShape(effectShape.id);
+                })
+                .start();
+        }
+        else {
+            zr.animate(effectShape.id, 'style', effect.loop)
+                .when(
+                    duration,
+                    {
+                        y : effectShape.style.y - distance
+                    }
+                )
+                .when(
+                    duration * 2,
+                    {
+                        y : effectShape.style.y
+                    }
+                )
+                .done(function() {
+                    shape.effect.show = false;
+                    zr.delShape(effectShape.id);
+                })
+                .start();
+        }
+        
     }
     
     function largePoint(zr, effectList, shape, zlevel) {
