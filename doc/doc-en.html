@@ -3775,18 +3775,22 @@ indicator : [
                             <td> <b>{Object}</b> effect </td>
                             <td><pre>{
     show: false,
+    type: 'scale',
     loop: true,
     period: 15,
     scaleSize : 2,
+    bounceDistance: 10,
     color : null,
     shadowColor : null,
     shadowBlur : 0
 }                           </pre></td>
                             <td> glow effect for markPoint symbol:
                                 <br/>show: specifies whether to show glow effect or not. Defaults to false. 
+                                <br/>type effect type, default to 'scale', can be 'bounce'.
                                 <br/>loop: specifies whether to play the animation in a loop. Defaults to true.
                                 <br/>period: animation period. No units. The larger the value, the slower. Defaults to 15.
-                                <br/>scaleSize: magnification. Based on markPoint symbolSize.
+                                <br/>scaleSize: magnification. Based on markPoint symbolSize, available when type is scale.
+                                <br/>bounceDistance bouncing distance, in px, available when type is bounce.
                                 <br/>color: color of the glow. The default value is pulled from the markPoint itemStyle array.
                                 <br/>shadowColor: color of the shadow. The default value is pulled from the color array.
                                 <br/>shadowBlur: blur degree of shadow. Defaults to 0.

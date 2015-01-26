@@ -3775,18 +3775,22 @@ indicator : [
                             <td> <b>{Object}</b> effect </td>
                             <td><pre>{
     show: false,
+    type: 'scale',
     loop: true,
     period: 15,
     scaleSize : 2,
+    bounceDistance: 10,
     color : null,
     shadowColor : null,
     shadowBlur : 0
 }                           </pre></td>
                             <td> 标注图形炫光特效:
                                 <br/>show 是否开启，默认关闭
+                                <br/>type 特效类型，默认为'scale'（放大），可选还有'bounce'（跳动）
                                 <br/>loop 循环动画，默认开启,
                                 <br/>period 运动周期，无单位，值越大越慢，默认为15
-                                <br/>scaleSize 放大倍数，以markPoint symbolSize为基准
+                                <br/>scaleSize 放大倍数，以markPoint symbolSize为基准，type为scale时有效
+                                <br/>bounceDistance 跳动距离，单位为px，type为bounce时有效
                                 <br/>color 炫光颜色，默认跟随markPoint itemStyle定义颜色,
                                 <br/>shadowColor 光影颜色，默认跟随color
                                 <br/>shadowBlur 光影模糊度，默认为0
