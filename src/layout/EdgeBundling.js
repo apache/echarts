@@ -79,7 +79,7 @@ define(function (require) {
      * @alias module:echarts/layout/EdgeBundling
      */
     function EdgeBundling() {
-        this.maxNearestEdge = 4;
+        this.maxNearestEdge = 3;
         this.maxTurningAngle = Math.PI / 4;
     }
 
@@ -90,7 +90,7 @@ define(function (require) {
         run: function (rawEdges) {
             var res = this._iterate(rawEdges);
             var nIterate = 0;
-            while (nIterate++ < 10) {
+            while (nIterate++ < 20) {
                 var coarsenedEdges = [];
                 for (var i = 0; i < res.groups.length; i++) {
                     coarsenedEdges.push(new CoarsenedEdge(res.groups[i]));
@@ -146,6 +146,12 @@ define(function (require) {
 
             buildNewEdges(res.groups);
 
+            for (var i = 0; i < newEdges.length; i++) {
+                newEdges[i] = {
+                    points: newEdges[i],
+                    rawEdge: rawEdges[i]
+                }
+            }
             return newEdges;
         },
 
@@ -180,16 +186,15 @@ define(function (require) {
                 var mostSavingInkEdge = null;
                 for (var j = 0; j < nearests.length; j++) {
                     var nearest = nearests[j];
-                    var ink = this._calculateSavedInk(
-                        edge, nearest
-                    );
-                    if (
-                        ink > maxSavedInk
-                        // Not the mirror edge
-                        && nearest.mirrorEdge !== edge
-                    ) {
-                        maxSavedInk = ink;
-                        mostSavingInkEdge = nearest;
+                    // Not the mirror edge
+                    if (nearest.mirrorEdge !== edge) {
+                        var savedInk = this._calculateSavedInk(
+                            edge, nearest
+                        );
+                        if (savedInk > maxSavedInk) {
+                            maxSavedInk = savedInk;
+                            mostSavingInkEdge = nearest;
+                        }
                     }
                 }
                 if (mostSavingInkEdge) {
@@ -311,6 +316,7 @@ define(function (require) {
             var v10 = v2Create();
             var vTmp = v2Create();
             var project = v2Create();
+            var tmpOut = v2Create();
             return function (pointSet, p0, p1, out) {
                 // Limit the max turning angle
                 var maxTurningAngleCos = Math.cos(this.maxTurningAngle);
@@ -322,31 +328,31 @@ define(function (require) {
                 // Simply copy the centroid point if no need to turn the angle
                 vec2.copy(out, p0);
 
-                var turningAngleCosMin = 1;
+                var maxMovement = 0;
                 for (var i = 0; i < pointSet.length; i++) {
                     var p = pointSet[i];
                     vec2.sub(vTmp, p, p0);
                     var len = vec2.len(vTmp);
                     vec2.scale(vTmp, vTmp, 1 / len);
                     var turningAngleCos = vec2.dot(vTmp, v10);
-                    if (
-                        // Turning angle is to large
-                        turningAngleCos < maxTurningAngleCos
-                        // Get a larger turning angle
-                        && turningAngleCos < turningAngleCosMin
-                    ) {
-                        turningAngleCosMin = turningAngleCos;
-                        // Calculat p0's project point on vector p1-p0 
+                    // Turning angle is to large
+                    if (turningAngleCos < maxTurningAngleCos) {
+                        // Calculat p's project point on vector p1-p0 
                         // and distance to the vector
-                        vec2.scaleAndAdd(project, p0, v10, turningAngleCos * len);
-                        var turningAngleSin = Math.sqrt(
-                            1 - turningAngleCos * turningAngleCos
+                        vec2.scaleAndAdd(
+                            project, p0, v10, len * turningAngleCos
                         );
-                        var distance = len * turningAngleSin;
+                        var distance = vec2.dist(project, p);
 
                         // Use the max turning angle to calculate the new meet point
-                        var tmp = distance / maxTurningAngleTan;
-                        vec2.scaleAndAdd(out, project, v10, -tmp);
+                        var d = distance / maxTurningAngleTan;
+                        vec2.scaleAndAdd(tmpOut, project, v10, -d);
+
+                        var movement = vec2.distSquare(tmpOut, p0);
+                        if (movement > maxMovement) {
+                            maxMovement = movement;
+                            vec2.copy(out, tmpOut);
+                        }
                     }
                 }
             };
