@@ -36,11 +36,9 @@ define(function (require) {
      */
     self.init = function (dom, theme) {
         var zrender = require('zrender');
-        if (((zrender.version || '1.0.3').replace('.', '') - 0)
-            < (self.dependencies.zrender.replace('.', '') - 0)
-        ) {
+        if ((zrender.version.replace('.', '') - 0) < (self.dependencies.zrender.replace('.', '') - 0)) {
             console.error(
-                'ZRender ' + (zrender.version || '1.0.3-') 
+                'ZRender ' + zrender.version
                 + ' is too old for ECharts ' + self.version 
                 + '. Current version need ZRender ' 
                 + self.dependencies.zrender + '+'
