@@ -1587,9 +1587,12 @@ define(function (require) {
             
             var Effect = loadingOption.effect;
             if (typeof Effect === 'string' || Effect == null) {
-                Effect =  effectList[loadingOption.effect
-                          || (this._option && this._option.loadingEffect)
-                          || this._themeConfig.loadingEffect];
+                Effect =  effectList[
+                              loadingOption.effect
+                              || (this._option && this._option.loadingEffect)
+                              || this._themeConfig.loadingEffect
+                          ]
+                          || effectList.spin;
             }
             this._zr.showLoading(new Effect(loadingOption.effectOption));
             return this;
