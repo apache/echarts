@@ -35,7 +35,7 @@ define(function (require) {
             return self.__ondragend();
         };
 
-        this._fillerSize = 28;       // 控件大小，水平布局为高，纵向布局为宽
+        this._fillerSize = 30;       // 控件大小，水平布局为高，纵向布局为宽
         // this._fillerShae;            // 填充
         // this._startShape;            // 起始手柄
         // this._endShape;              // 结束手柄
