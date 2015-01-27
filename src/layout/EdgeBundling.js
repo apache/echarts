@@ -11,6 +11,9 @@ define(function (require) {
     var KDTree = require('../data/KDTree');
     var vec2 = require('zrender/tool/vector');
     var v2Create = vec2.create;
+    var v2DistSquare = vec2.distSquare;
+    var v2Dist = vec2.dist;
+    var v2Copy = vec2.copy;
 
     function sqaredDistance(a, b) {
         a = a.array;
@@ -32,28 +35,38 @@ define(function (require) {
         this.group = group;
     };
 
-    function Edge(edge, flip) {
+    function Edge(edge) {
         var points = edge.points;
+        // Sort on y
+        if (
+            points[0][1] < points[1][1]
+            // If coarsened edge is flipped, the final composition of meet point
+            // will be unordered
+            || edge instanceof CoarsenedEdge
+        ) {
+            this.array = [points[0][0], points[0][1], points[1][0], points[1][1]];
+            this._startPoint = points[0];
+            this._endPoint = points[1];
+        }
+        else {
+            this.array = [points[1][0], points[1][1], points[0][0], points[0][1]];
+            this._startPoint = points[1];
+            this._endPoint = points[0];
+        }
 
-        this.array = flip
-            ? [points[1][0], points[1][1], points[0][0], points[0][1]]
-            : [points[0][0], points[0][1], points[1][0], points[1][1]];
+        this.ink = v2Dist(points[0], points[1]);
 
         this.edge = edge;
 
-        this.flip = flip;
-
         this.group = null;
-
-        this.mirrorEdge = null;
     }
 
     Edge.prototype.getStartPoint = function () {
-        return this.flip ? this.edge.points[1] : this.edge.points[0];
+        return this._startPoint;
     };
 
     Edge.prototype.getEndPoint = function () {
-        return this.flip ? this.edge.points[0] : this.edge.points[1];
+        return this._endPoint;
     };
 
     function BundledEdgeGroup() {
@@ -62,6 +75,8 @@ define(function (require) {
 
         this.mp0 = v2Create();
         this.mp1 = v2Create();
+
+        this.ink = 0;
     }
 
     BundledEdgeGroup.prototype.addEdge = function (edge) {
@@ -79,8 +94,9 @@ define(function (require) {
      * @alias module:echarts/layout/EdgeBundling
      */
     function EdgeBundling() {
-        this.maxNearestEdge = 3;
+        this.maxNearestEdge = 6;
         this.maxTurningAngle = Math.PI / 4;
+        this.maxIteration = 10;
     }
 
     EdgeBundling.prototype = {
@@ -90,7 +106,7 @@ define(function (require) {
         run: function (rawEdges) {
             var res = this._iterate(rawEdges);
             var nIterate = 0;
-            while (nIterate++ < 20) {
+            while (nIterate++ < this.maxIteration) {
                 var coarsenedEdges = [];
                 for (var i = 0; i < res.groups.length; i++) {
                     coarsenedEdges.push(new CoarsenedEdge(res.groups[i]));
@@ -152,6 +168,7 @@ define(function (require) {
                     rawEdge: rawEdges[i]
                 }
             }
+
             return newEdges;
         },
 
@@ -160,22 +177,24 @@ define(function (require) {
             var groups = [];
             var totalSavedInk = 0;
             for (var i = 0; i < rawEdges.length; i++) {
-                var edge = new Edge(rawEdges[i], true);
-                var edge2 = new Edge(rawEdges[i], false);
-                edge.mirrorEdge = edge2;
-                edge2.mirrorEdge = edge;
+                var edge = new Edge(rawEdges[i]);
                 edges.push(edge);
-                edges.push(edge2);
             }
 
             var tree = new KDTree(edges, 4);
 
             var nearests = [];
+
+            var _mp0 = v2Create();
+            var _mp1 = v2Create();
+            var _newGroupInk = 0;
+            var mp0 = v2Create();
+            var mp1 = v2Create();
+            var newGroupInk = 0;
             for (var i = 0; i < edges.length; i++) {
                 var edge = edges[i];
-                if (edge.group || edge.mirrorEdge.group) {
+                if (edge.group) {
                     // Edge have been groupped
-                    // PENDING
                     continue;
                 }
                 tree.nearestN(
@@ -184,17 +203,31 @@ define(function (require) {
                 );
                 var maxSavedInk = 0;
                 var mostSavingInkEdge = null;
+                var lastCheckedGroup = null;
                 for (var j = 0; j < nearests.length; j++) {
                     var nearest = nearests[j];
-                    // Not the mirror edge
-                    if (nearest.mirrorEdge !== edge) {
-                        var savedInk = this._calculateSavedInk(
-                            edge, nearest
-                        );
-                        if (savedInk > maxSavedInk) {
-                            maxSavedInk = savedInk;
-                            mostSavingInkEdge = nearest;
+                    var savedInk = 0;
+                    if (nearest.group) {
+                        if (nearest.group !== lastCheckedGroup) {
+                            lastCheckedGroup = nearest.group;
+                            _newGroupInk = this._calculateGroupEdgeInk(
+                                nearest.group, edge, _mp0, _mp1
+                            );
+                            savedInk = nearest.group.ink + edge.ink - _newGroupInk;
                         }
+                    }
+                    else {
+                        _newGroupInk = this._calculateEdgeEdgeInk(
+                            edge, nearest, _mp0, _mp1
+                        );
+                        savedInk = nearest.ink + edge.ink - _newGroupInk;
+                    }
+                    if (savedInk > maxSavedInk) {
+                        maxSavedInk = savedInk;
+                        mostSavingInkEdge = nearest;
+                        v2Copy(mp1, _mp1);
+                        v2Copy(mp0, _mp0);
+                        newGroupInk = _newGroupInk;
                     }
                 }
                 if (mostSavingInkEdge) {
@@ -204,19 +237,21 @@ define(function (require) {
                         groups.push(group);
                         group.addEdge(mostSavingInkEdge);
                     }
-                    var group = mostSavingInkEdge.group;
-                    group.addEdge(edge);
+                    group = mostSavingInkEdge.group;
+                    // Use the meet point and group ink calculated before
+                    v2Copy(group.mp0, mp0);
+                    v2Copy(group.mp1, mp1);
+                    group.ink = newGroupInk;
+                    mostSavingInkEdge.group.addEdge(edge);
                 }
                 else {
                     var group = new BundledEdgeGroup();
                     groups.push(group);
+                    v2Copy(group.mp0, edge.getStartPoint());
+                    v2Copy(group.mp1, edge.getEndPoint());
+                    group.ink = edge.ink;
                     group.addEdge(edge);
                 }
-            }
-
-            for (var i = 0; i < groups.length; i++) {
-                var group = groups[i];
-                this._calculateGroupMeetPoints(group);
             }
 
             return {
@@ -226,53 +261,50 @@ define(function (require) {
             }
         },
 
-        _calculateSavedInk: (function () {
-            var mp0 = v2Create();
-            var mp1 = v2Create();
-            var startPointSet = [v2Create(), v2Create()];
-            var endPointSet = [v2Create(), v2Create()];
-            return function (e0, e1) {
-                var e0arr = e0.array;
-                var e1arr = e1.array;
-                var v2Dist = vec2.dist;
-                var v2Set = vec2.set;
-                v2Set(startPointSet[0], e0arr[0], e0arr[1]);
-                v2Set(startPointSet[1], e1arr[0], e1arr[1]);
-                v2Set(endPointSet[0], e0arr[2], e0arr[3]);
-                v2Set(endPointSet[1], e1arr[2], e1arr[3]);
+        _calculateEdgeEdgeInk: (function () {
+            var startPointSet = [];
+            var endPointSet = [];
+            return function (e0, e1, mp0, mp1) {
+                startPointSet[0] = e0.getStartPoint();
+                startPointSet[1] = e1.getStartPoint();
+                endPointSet[0] = e0.getEndPoint();
+                endPointSet[1] = e1.getEndPoint();
+
                 this._calculateMeetPoints(
                     startPointSet, endPointSet, mp0, mp1
                 );
-                var ink = v2Dist(startPointSet[0], endPointSet[0])
-                    + v2Dist(startPointSet[1], endPointSet[1]);
-                var newInk = v2Dist(startPointSet[0], mp0)
+                var ink = v2Dist(startPointSet[0], mp0)
                     + v2Dist(mp0, mp1)
                     + v2Dist(mp1, endPointSet[0])
                     + v2Dist(startPointSet[1], mp0)
                     + v2Dist(mp1, endPointSet[1]);
 
-                return ink - newInk;
+                return ink;
             };
         })(),
 
-        _calculateGroupMeetPoints: function (group) {
+        _calculateGroupEdgeInk: function (group, edgeTryAdd, mp0, mp1) {
             var startPointSet = [];
             var endPointSet = [];
-
             for (var i = 0; i < group.edgeList.length; i++) {
                 var edge = group.edgeList[i];
-                var points = edge.edge.points;
-                if (edge.flip) {
-                    startPointSet.push(points[1]);
-                    endPointSet.push(points[0]);
-                } else {
-                    startPointSet.push(points[0]);
-                    endPointSet.push(points[1]);
-                }
+                startPointSet.push(edge.getStartPoint());
+                endPointSet.push(edge.getEndPoint());
             }
+            startPointSet.push(edgeTryAdd.getStartPoint());
+            endPointSet.push(edgeTryAdd.getEndPoint());
+
             this._calculateMeetPoints(
-                startPointSet, endPointSet, group.mp0, group.mp1
+                startPointSet, endPointSet, mp0, mp1
             );
+
+            var ink = v2Dist(mp0, mp1);
+            for (var i = 0; i < startPointSet.length; i++) {
+                ink += v2Dist(startPointSet[i], mp0)
+                    + v2Dist(endPointSet[i], mp1);
+            }
+
+            return ink;
         },
 
         /**
@@ -342,13 +374,13 @@ define(function (require) {
                         vec2.scaleAndAdd(
                             project, p0, v10, len * turningAngleCos
                         );
-                        var distance = vec2.dist(project, p);
+                        var distance = v2Dist(project, p);
 
                         // Use the max turning angle to calculate the new meet point
                         var d = distance / maxTurningAngleTan;
                         vec2.scaleAndAdd(tmpOut, project, v10, -d);
 
-                        var movement = vec2.distSquare(tmpOut, p0);
+                        var movement = v2DistSquare(tmpOut, p0);
                         if (movement > maxMovement) {
                             maxMovement = movement;
                             vec2.copy(out, tmpOut);
