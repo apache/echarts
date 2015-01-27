@@ -16,6 +16,66 @@ define(function (require) {
     var PolylineShape = require('zrender/shape/Polyline');
 
     var ecConfig = require('../config');
+    // 饼图默认参数
+    ecConfig.pie = {
+        zlevel: 0,                  // 一级层叠
+        z: 2,                       // 二级层叠
+        clickable: true,
+        legendHoverLink: true,
+        center: ['50%', '50%'],     // 默认全局居中
+        radius: [0, '75%'],
+        clockWise: true,            // 默认顺时针
+        startAngle: 90,
+        minAngle: 0,                // 最小角度改为0
+        selectedOffset: 10,         // 选中是扇区偏移量
+        // selectedMode: false,     // 选择模式，默认关闭，可选single，multiple
+        // roseType: null,          // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
+        itemStyle: {
+            normal: {
+                // color: 各异,
+                borderColor: 'rgba(0,0,0,0)',
+                borderWidth: 1,
+                label: {
+                    show: true,
+                    position: 'outer'
+                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数
+                },
+                labelLine: {
+                    show: true,
+                    length: 20,
+                    lineStyle: {
+                        // color: 各异,
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            emphasis: {
+                // color: 各异,
+                borderColor: 'rgba(0,0,0,0)',
+                borderWidth: 1,
+                label: {
+                    show: false
+                    // position: 'outer'
+                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数
+                },
+                labelLine: {
+                    show: false,
+                    length: 20,
+                    lineStyle: {
+                        // color: 各异,
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            }
+        }
+    };
+
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrMath = require('zrender/tool/math');
@@ -97,8 +157,7 @@ define(function (require) {
                     this.legendHoverLink = series[i].legendHoverLink || this.legendHoverLink;
                     serieName = series[i].name || '';
                     // 系列图例开关
-                    this.selectedMap[serieName] = 
-                        legend ? legend.isSelected(serieName) : true;
+                    this.selectedMap[serieName] = legend ? legend.isSelected(serieName) : true;
                     if (!this.selectedMap[serieName]) {
                         continue;
                     }
@@ -122,14 +181,15 @@ define(function (require) {
                                 lineWidth: 1,
                                 strokeColor: series[i].calculableHolderColor
                                              || this.ecTheme.calculableHolderColor
+                                             || ecConfig.calculableHolderColor
                             }
                         };
                         ecData.pack(pieCase, series[i], i, undefined, -1);
                         this.setCalculable(pieCase);
                         
                         pieCase = radius[0] <= 10 
-                            ? new CircleShape(pieCase) 
-                            : new RingShape(pieCase);
+                                  ? new CircleShape(pieCase) 
+                                  : new RingShape(pieCase);
                         this.shapeList.push(pieCase);
                     }
                     this._buildSinglePie(i);
@@ -793,18 +853,18 @@ define(function (require) {
             // 常用方法快捷方式
             var _merge = zrUtil.merge;
             opt = _merge(
-                      opt || {},
-                      this.ecTheme.pie
+                      _merge(
+                          opt || {}, zrUtil.clone(this.ecTheme.pie || {})
+                      ),
+                      zrUtil.clone(ecConfig.pie)
                   );
 
             // 通用字体设置
-            opt.itemStyle.normal.label.textStyle = _merge(
-                opt.itemStyle.normal.label.textStyle || {},
-                this.ecTheme.textStyle
+            opt.itemStyle.normal.label.textStyle = this.getTextStyle(
+                opt.itemStyle.normal.label.textStyle
             );
-            opt.itemStyle.emphasis.label.textStyle = _merge(
-                opt.itemStyle.emphasis.label.textStyle || {},
-                this.ecTheme.textStyle
+            opt.itemStyle.emphasis.label.textStyle = this.getTextStyle(
+                opt.itemStyle.emphasis.label.textStyle
             );
 
             return opt;

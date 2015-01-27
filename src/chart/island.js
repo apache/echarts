@@ -12,6 +12,13 @@ define(function (require) {
     var CircleShape = require('zrender/shape/Circle');
     
     var ecConfig = require('../config');
+    ecConfig.island = {
+        zlevel: 0,                  // 一级层叠
+        z: 5,                       // 二级层叠
+        r: 15,
+        calculateStep: 0.1  // 滚轮可计算步长 0.1 = 10%
+    };
+
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrEvent = require('zrender/tool/event');
@@ -46,12 +53,9 @@ define(function (require) {
 
             var value = ecData.get(shape, 'value');
             var dvalue = value * self.option.island.calculateStep;
-            if (dvalue > 1) {
-                value = Math.round(value - dvalue * delta);
-            }
-            else {
-                value = (value - dvalue * delta).toFixed(2) - 0;
-            }
+            value = dvalue > 1
+                    ? (Math.round(value - dvalue * delta))
+                    : +(value - dvalue * delta).toFixed(2);
 
             var name = ecData.get(shape, 'name');
             shape.style.text = name + ':' + value;

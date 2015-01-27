@@ -14,6 +14,66 @@ define(function (require) {
     var ChainShape = require('../util/shape/Chain');
     
     var ecConfig = require('../config');
+    ecConfig.timeline = {
+        zlevel: 0,                  // 一级层叠
+        z: 4,                       // 二级层叠
+        show: true,
+        type: 'time',  // 模式是时间类型，支持 number
+        notMerge: false,
+        realtime: true,
+        x: 80,
+        // y: {number},
+        x2: 80,
+        y2: 0,
+        // width: {totalWidth} - x - x2,
+        height: 50,
+        backgroundColor: 'rgba(0,0,0,0)',   // 时间轴背景颜色
+        borderColor: '#ccc',               // 时间轴边框颜色
+        borderWidth: 0,                    // 时间轴边框线宽，单位px，默认为0（无边框）
+        padding: 5,                        // 时间轴内边距，单位px，默认各方向内边距为5，
+        controlPosition: 'left',           // 'right' | 'none'
+        autoPlay: false,
+        loop: true,
+        playInterval: 2000,                // 播放时间间隔，单位ms
+        lineStyle: {
+            width: 1,
+            color: '#666',
+            type: 'dashed'
+        },
+        label: {                            // 文本标签
+            show: true,
+            interval: 'auto',
+            rotate: 0,
+            // formatter: null,
+            textStyle: {                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                color: '#333'
+            }
+        },
+        checkpointStyle: {
+            symbol: 'auto',
+            symbolSize: 'auto',
+            color: 'auto',
+            borderColor: 'auto',
+            borderWidth: 'auto',
+            label: {                            // 文本标签
+                show: false,
+                textStyle: {                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: 'auto'
+                }
+            }
+        },
+        controlStyle: {
+            itemSize: 15,
+            itemGap: 5,
+            normal: { color: '#333'},
+            emphasis: { color: '#1e90ff'}
+        },
+        symbol: 'emptyDiamond',
+        symbolSize: 4,
+        currentIndex: 0
+        // data: []
+    };
+
     var zrUtil = require('zrender/tool/util');
     var zrArea = require('zrender/tool/area');
     var zrEvent = require('zrender/tool/event');
@@ -108,7 +168,9 @@ define(function (require) {
                 function() {
                     self.play();
                 },
-                this.ecTheme.animationDuration
+                this.ecTheme.animationDuration != null
+                ? this.ecTheme.animationDuration
+                : ecConfig.animationDuration
             );
         }
     }
@@ -784,13 +846,11 @@ define(function (require) {
         setTheme: function(needRefresh) {
             this.timelineOption = this.reformOption(zrUtil.clone(this.option.timeline));
             // 通用字体设置
-            this.timelineOption.label.textStyle = zrUtil.merge(
-                this.timelineOption.label.textStyle || {},
-                this.ecTheme.textStyle
+            this.timelineOption.label.textStyle = this.getTextStyle(
+                this.timelineOption.label.textStyle
             );
-            this.timelineOption.checkpointStyle.label.textStyle = zrUtil.merge(
-                this.timelineOption.checkpointStyle.label.textStyle || {},
-                this.ecTheme.textStyle
+            this.timelineOption.checkpointStyle.label.textStyle = this.getTextStyle(
+                this.timelineOption.checkpointStyle.label.textStyle
             );
             if (!this.myChart.canvasSupported) {
                 // 不支持Canvas的强制关闭实时动画

@@ -14,6 +14,33 @@ define(function (require) {
     var IconShape = require('../util/shape/Icon');
     
     var ecConfig = require('../config');
+    // 区域缩放控制器
+    ecConfig.dataZoom = {
+        zlevel: 0,                  // 一级层叠
+        z: 4,                       // 二级层叠
+        show: false,
+        orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
+                                   // 'horizontal' ¦ 'vertical'
+        // x: {number},            // 水平安放位置，默认为根据grid参数适配，可选为：
+                                   // {number}（x坐标，单位px）
+        // y: {number},            // 垂直安放位置，默认为根据grid参数适配，可选为：
+                                   // {number}（y坐标，单位px）
+        // width: {number},        // 指定宽度，横向布局时默认为根据grid参数适配
+        // height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
+        backgroundColor: 'rgba(0,0,0,0)',       // 背景颜色
+        dataBackgroundColor: '#eee',            // 数据背景颜色
+        fillerColor: 'rgba(144,197,237,0.2)',   // 填充颜色
+        handleColor: 'rgba(70,130,180,0.8)',    // 手柄颜色
+        handleSize: 8,
+        showDetail: true,
+        // xAxisIndex: [],         // 默认控制所有横向类目
+        // yAxisIndex: [],         // 默认控制所有横向类目
+        // start: 0,               // 默认为0
+        // end: 100,               // 默认为全部 100%
+        realtime: true
+        // zoomLock: false         // 是否锁定选择区域大小
+    };
+
     var ecDate = require('../util/date');
     var zrUtil = require('zrender/tool/util');
 

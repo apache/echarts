@@ -14,6 +14,36 @@
     require('../component/polar');
     
     var ecConfig = require('../config');
+    // 雷达图默认参数
+    ecConfig.radar = {
+        zlevel: 0,                  // 一级层叠
+        z: 2,                       // 二级层叠
+        clickable: true,
+        legendHoverLink: true,
+        polarIndex: 0,
+        itemStyle: {
+            normal: {
+                // color: 各异,
+                label: {
+                    show: false
+                },
+                lineStyle: {
+                    width: 2,
+                    type: 'solid'
+                }
+            },
+            emphasis: {
+                // color: 各异,
+                label: {
+                    show: false
+                }
+            }
+        },
+        // symbol: null,            // 拐点图形类型
+        symbolSize: 2               // 可计算特性参数，空数据拖拽提示图形大小
+        // symbolRotate: null,      // 图形旋转控制
+    };
+
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');

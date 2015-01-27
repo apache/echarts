@@ -46,7 +46,8 @@ define(function (require) {
                 var lineWidth = highlightStyle.lineWidth;
                 
                 highlightStyle.brushType = 'stroke';
-                highlightStyle.strokeColor = self.ecTheme.calculableColor;
+                highlightStyle.strokeColor = self.ecTheme.calculableColor
+                                             || ecConfig.calculableColor;
                 highlightStyle.lineWidth = calculableShape.type === 'icon' ? 30 : 10;
                 
                 self.zr.addHoverShape(calculableShape);
@@ -82,7 +83,7 @@ define(function (require) {
          * 图形拖拽特性 
          */
         setCalculable: function (shape) {
-            shape.dragEnableTime = this.ecTheme.DRAG_ENABLE_TIME;
+            shape.dragEnableTime = this.ecTheme.DRAG_ENABLE_TIME || ecConfig.DRAG_ENABLE_TIME;
             shape.ondragover = this.shapeHandler.ondragover;
             shape.ondragend = this.shapeHandler.ondragend;
             shape.ondrop = this.shapeHandler.ondrop;
@@ -668,14 +669,18 @@ define(function (require) {
                 ) {
                     // 特殊值内置支持
                     pos = this.getMarkCoord(seriesIndex, mlData);
-                    mlData = [zrUtil.clone(mlData), {}];
-                    mlData[0].name = mlData.name || mlData.type;
-                    mlData[0].value = mlData.type !== 'average'
-                            ? pos[3]
-                            : +pos[3].toFixed(
-                                  markLine.precision != null 
-                                  ? markLine.precision : this.ecTheme.markLine.precision
-                              );
+                    markLine.data[i] = [zrUtil.clone(mlData), {}];
+                    markLine.data[i][0].name = mlData.name || mlData.type;
+                    markLine.data[i][0].value = mlData.type !== 'average'
+                                                ? pos[3]
+                                                : +pos[3].toFixed(
+                                                      markLine.precision != null 
+                                                      ? markLine.precision 
+                                                      : this.deepQuery(
+                                                            [this.ecTheme, ecConfig],
+                                                            'markLine.precision'
+                                                        )
+                                                  );
                     pos = pos[2];
                     mlData = [{},{}];
                 }
@@ -689,10 +694,10 @@ define(function (require) {
                     // 不在显示区域内
                     continue;
                 }
-                mlData[0].x = mlData[0].x != null ? mlData[0].x : pos[0][0];
-                mlData[0].y = mlData[0].y != null ? mlData[0].y : pos[0][1];
-                mlData[1].x = mlData[1].x != null ? mlData[1].x : pos[1][0];
-                mlData[1].y = mlData[1].y != null ? mlData[1].y : pos[1][1];
+                markLine.data[i][0].x = mlData[0].x != null ? mlData[0].x : pos[0][0];
+                markLine.data[i][0].y = mlData[0].y != null ? mlData[0].y : pos[0][1];
+                markLine.data[i][1].x = mlData[1].x != null ? mlData[1].x : pos[1][0];
+                markLine.data[i][1].y = mlData[1].y != null ? mlData[1].y : pos[1][1];
             }
             
             var shapeList = this._markLine(seriesIndex, markLine);
@@ -723,9 +728,13 @@ define(function (require) {
             var serie = this.series[seriesIndex];
             var component = this.component;
             zrUtil.merge(
-                mpOption,
-                this.ecTheme.markPoint
+                zrUtil.merge(
+                    mpOption,
+                    zrUtil.clone(this.ecTheme.markPoint || {})
+                ),
+                zrUtil.clone(ecConfig.markPoint)
             );
+
             mpOption.name = serie.name;
                    
             var pList = [];
@@ -828,9 +837,13 @@ define(function (require) {
             var serie = this.series[seriesIndex];
             var component = this.component;
             zrUtil.merge(
-                mlOption,
-                this.ecTheme.markLine
+                zrUtil.merge(
+                    mlOption,
+                    zrUtil.clone(this.ecTheme.markLine || {})
+                ),
+                zrUtil.clone(ecConfig.markLine)
             );
+
             // 标准化一些同时支持Array和String的参数
             mlOption.symbol = mlOption.symbol instanceof Array
                       ? mlOption.symbol.length > 1 

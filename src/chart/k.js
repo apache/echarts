@@ -16,6 +16,34 @@ define(function (require) {
     require('../component/dataZoom');
     
     var ecConfig = require('../config');
+    // K线图默认参数
+    ecConfig.k = {
+        zlevel: 0,                  // 一级层叠
+        z: 2,                       // 二级层叠
+        clickable: true,
+        hoverable: true,
+        legendHoverLink: false,
+        xAxisIndex: 0,
+        yAxisIndex: 0,
+        // barWidth: null               // 默认自适应
+        // barMaxWidth: null            // 默认自适应 
+        itemStyle: {
+            normal: {
+                color: '#fff',          // 阳线填充颜色
+                color0: '#00aa11',      // 阴线填充颜色
+                lineStyle: {
+                    width: 1,
+                    color: '#ff3200',   // 阳线边框颜色
+                    color0: '#00aa11'   // 阴线边框颜色
+                }
+            },
+            emphasis: {
+                // color: 各异,
+                // color0: 各异
+            }
+        }
+    };
+
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     
@@ -106,12 +134,10 @@ define(function (require) {
             for (var i = 0, l = seriesArray.length; i < l; i++) {
                 serie = series[seriesArray[i]];
                 serieName = serie.name;
-                if (legend){
-                    this.selectedMap[serieName] = legend.isSelected(serieName);
-                } else {
-                    this.selectedMap[serieName] = true;
-                }
-
+                this.selectedMap[serieName] = legend 
+                                              ? legend.isSelected(serieName)
+                                              : true;
+                
                 if (this.selectedMap[serieName]) {
                     locationMap.push(seriesArray[i]);
                 }

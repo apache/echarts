@@ -119,6 +119,7 @@ define(function (require) {
             var barShape;
             var data;
             var value;
+            var islandR = this.deepQuery([this.ecTheme, ecConfig], 'island.r');
             for (var i = 0, l = maxDataLength; i < l; i++) {
                 if (categoryAxis.getNameByIndex(i) == null) {
                     // 系列数据超出类目轴长度
@@ -274,12 +275,12 @@ define(function (require) {
 
                         if (this.deepQuery([data, serie, this.option], 'calculable')) {
                             if (isHorizontal) {
-                                lastP -= this.ecTheme.island.r;
+                                lastP -= islandR;
                                 y = lastP;
                             }
                             else {
                                 x = lastP;
-                                lastP += this.ecTheme.island.r;
+                                lastP += islandR;
                             }
                             
                             barShape = this._getBarItem(
@@ -287,8 +288,8 @@ define(function (require) {
                                 categoryAxis.getNameByIndex(i),
                                 x,
                                 y - (isHorizontal ? 0 : curBarWidth),
-                                isHorizontal ? curBarWidth : this.ecTheme.island.r,
-                                isHorizontal ? this.ecTheme.island.r : curBarWidth,
+                                isHorizontal ? curBarWidth : islandR,
+                                isHorizontal ? islandR : curBarWidth,
                                 isHorizontal ? 'vertical' : 'horizontal'
                             );
                             barShape.hoverable = false;
@@ -296,7 +297,8 @@ define(function (require) {
                             barShape.style.lineWidth = 1;
                             barShape.style.brushType = 'stroke';
                             barShape.style.strokeColor = serie.calculableHolderColor
-                                                         || this.ecTheme.calculableHolderColor;
+                                                         || this.ecTheme.calculableHolderColor
+                                                         || ecConfig.calculableHolderColor;
 
                             this.shapeList.push(new RectangleShape(barShape));
                         }

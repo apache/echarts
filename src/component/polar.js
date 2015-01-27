@@ -16,6 +16,53 @@ define(function (require) {
     var Ring = require('zrender/shape/Ring');
 
     var ecConfig = require('../config');
+    ecConfig.polar = {
+        zlevel: 0,                  // 一级层叠
+        z: 0,                       // 二级层叠
+        center: ['50%', '50%'],    // 默认全局居中
+        radius: '75%',
+        startAngle: 90,
+        boundaryGap: [0, 0],   // 数值起始和结束两端空白策略
+        splitNumber: 5,
+        name: {
+            show: true,
+            // formatter: null,
+            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                color: '#333'
+            }
+        },
+        axisLine: {            // 坐标轴线
+            show: true,        // 默认显示，属性show控制显示与否
+            lineStyle: {       // 属性lineStyle控制线条样式
+                color: '#ccc',
+                width: 1,
+                type: 'solid'
+            }
+        },
+        axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
+            show: false,
+            // formatter: null,
+            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                color: '#333'
+            }
+        },
+        splitArea: {
+            show: true,
+            areaStyle: {
+                color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']
+            }
+        },
+        splitLine: {
+            show: true,
+            lineStyle: {
+                width: 1,
+                color: '#ccc'
+            }
+        },
+        type: 'polygon'
+        // indicator: []
+    };
+
     var zrUtil = require('zrender/tool/util');
     var ecCoordinates = require('../util/coordinates');
 

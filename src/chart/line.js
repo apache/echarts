@@ -18,6 +18,52 @@ define(function (require) {
     require('../component/dataZoom');
     
     var ecConfig = require('../config');
+    // 折线图默认参数
+    ecConfig.line = {
+        zlevel: 0,                  // 一级层叠
+        z: 2,                       // 二级层叠
+        clickable: true,
+        legendHoverLink: true,
+        // stack: null
+        xAxisIndex: 0,
+        yAxisIndex: 0,
+        itemStyle: {
+            normal: {
+                // color: 各异,
+                label: {
+                    show: false
+                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
+                    //           'inside'|'left'|'right'|'top'|'bottom'
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                },
+                lineStyle: {
+                    width: 2,
+                    type: 'solid',
+                    shadowColor: 'rgba(0,0,0,0)', //默认透明
+                    shadowBlur: 0,
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 0
+                }
+            },
+            emphasis: {
+                // color: 各异,
+                label: {
+                    show: false
+                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
+                    //           'inside'|'left'|'right'|'top'|'bottom'
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                }
+            }
+        },
+        // smooth: false,
+        // symbol: null,         // 拐点图形类型
+        symbolSize: 2,           // 拐点图形大小
+        // symbolRotate: null,   // 拐点图形旋转控制
+        showAllSymbol: false     // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
+    };
+
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
@@ -54,9 +100,7 @@ define(function (require) {
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
             var serie = series[seriesIndex];
-            var xAxisIndex = serie.xAxisIndex;
-            var categoryAxis = this.component.xAxis.getAxis(xAxisIndex);
-            var yAxisIndex; // 数值轴各异
+            var categoryAxis = this.component.xAxis.getAxis(serie.xAxisIndex || 0);
             var valueAxis;  // 数值轴各异
 
             var x;
@@ -77,8 +121,9 @@ define(function (require) {
                 x = categoryAxis.getCoordByIndex(i);
                 for (var j = 0, k = locationMap.length; j < k; j++) {
                     // 堆积数据用第一条valueAxis
-                    yAxisIndex = series[locationMap[j][0]].yAxisIndex || 0;
-                    valueAxis = this.component.yAxis.getAxis(yAxisIndex);
+                    valueAxis = this.component.yAxis.getAxis(
+                        series[locationMap[j][0]].yAxisIndex || 0
+                    );
                     baseYP = lastYP = baseYN = lastYN = valueAxis.getCoord(0);
                     for (var m = 0, n = locationMap[j].length; m < n; m++) {
                         seriesIndex = locationMap[j][m];
@@ -192,9 +237,7 @@ define(function (require) {
             // 确定类目轴和数值轴，同一方向随便找一个即可
             var seriesIndex = locationMap[0][0];
             var serie = series[seriesIndex];
-            var yAxisIndex = serie.yAxisIndex;
-            var categoryAxis = this.component.yAxis.getAxis(yAxisIndex);
-            var xAxisIndex; // 数值轴各异
+            var categoryAxis = this.component.yAxis.getAxis(serie.yAxisIndex || 0);
             var valueAxis;  // 数值轴各异
 
             var x;
@@ -215,8 +258,9 @@ define(function (require) {
                 y = categoryAxis.getCoordByIndex(i);
                 for (var j = 0, k = locationMap.length; j < k; j++) {
                     // 堆积数据用第一条valueAxis
-                    xAxisIndex = series[locationMap[j][0]].xAxisIndex || 0;
-                    valueAxis = this.component.xAxis.getAxis(xAxisIndex);
+                    valueAxis = this.component.xAxis.getAxis(
+                        series[locationMap[j][0]].xAxisIndex || 0
+                    );
                     baseXP = lastXP = baseXN = lastXN = valueAxis.getCoord(0);
                     for (var m = 0, n = locationMap[j].length; m < n; m++) {
                         seriesIndex = locationMap[j][m];
@@ -329,16 +373,12 @@ define(function (require) {
             var series = this.series;
             var curPLMap = {};   // 正在记录的point list(PL)
             
-            var xAxis;
-            var yAxis;
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     var seriesIndex = locationMap[j][m];
                     var serie = series[seriesIndex];
-                    var xAxisIndex = serie.xAxisIndex || 0;
-                    xAxis = this.component.xAxis.getAxis(xAxisIndex);
-                    var yAxisIndex = serie.yAxisIndex || 0;
-                    yAxis = this.component.yAxis.getAxis(yAxisIndex);
+                    var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex || 0);
+                    var yAxis = this.component.yAxis.getAxis(serie.yAxisIndex || 0);
                     var baseY = yAxis.getCoord(0);
                     
                     curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
@@ -647,7 +687,8 @@ define(function (require) {
         _getCalculableItem: function (seriesIndex, dataIndex, name, x, y, orient) {
             var series = this.series;
             var color = series[seriesIndex].calculableHolderColor
-                        || this.ecTheme.calculableHolderColor;
+                        || this.ecTheme.calculableHolderColor
+                        || ecConfig.calculableHolderColor;
 
             var itemShape = this._getSymbol(
                 seriesIndex, dataIndex, name,

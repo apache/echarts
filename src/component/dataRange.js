@@ -14,6 +14,44 @@ define(function (require) {
     var HandlePolygonShape = require('../util/shape/HandlePolygon');
 
     var ecConfig = require('../config');
+    // 值域
+    ecConfig.dataRange = {
+        zlevel: 0,                  // 一级层叠
+        z: 4,                       // 二级层叠
+        show: true,
+        orient: 'vertical',        // 布局方式，默认为垂直布局，可选为：
+                                   // 'horizontal' ¦ 'vertical'
+        x: 'left',                 // 水平安放位置，默认为全图左对齐，可选为：
+                                   // 'center' ¦ 'left' ¦ 'right'
+                                   // ¦ {number}（x坐标，单位px）
+        y: 'bottom',               // 垂直安放位置，默认为全图底部，可选为：
+                                   // 'top' ¦ 'bottom' ¦ 'center'
+                                   // ¦ {number}（y坐标，单位px）
+        backgroundColor: 'rgba(0,0,0,0)',
+        borderColor: '#ccc',       // 值域边框颜色
+        borderWidth: 0,            // 值域边框线宽，单位px，默认为0（无边框）
+        padding: 5,                // 值域内边距，单位px，默认各方向内边距为5，
+                                   // 接受数组分别设定上右下左边距，同css
+        itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
+                                   // 横向布局时为水平间隔，纵向布局时为纵向间隔
+        itemWidth: 20,             // 值域图形宽度，线性渐变水平布局宽度为该值 * 10
+        itemHeight: 14,            // 值域图形高度，线性渐变垂直布局高度为该值 * 10
+        // min: null,              // 最小值
+        // max: null,              // 最大值
+        precision: 0,              // 小数精度，默认为0，无小数点
+        splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变
+        calculable: false,         // 是否值域漫游，启用后无视splitNumber，线性渐变
+        selectedMode: true,        // 选择模式，默认开启值域开关
+        hoverLink: true,
+        realtime: true,
+        color:['#006edd','#e0ffff'],//颜色 
+        // formatter: null,
+        // text:['高','低'],         // 文本，默认为数值文本
+        textStyle: {
+            color: '#333'          // 值域文字颜色
+        }
+    };
+
     var zrUtil = require('zrender/tool/util');
     var zrEvent = require('zrender/tool/event');
     var zrArea = require('zrender/tool/area');
