@@ -400,7 +400,7 @@ define(function() {
             // min: null,          // 最小值
             // max: null,          // 最大值
             // scale: false,       // 脱离0值比例，放大聚焦到最终_min，_max区间
-            //splitNumber: 5,        // 分割段数，默认为5
+            // splitNumber: 5,        // 分割段数，默认为5
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
                 onZero: true,
@@ -720,7 +720,6 @@ define(function() {
                     // color: '各异'
                     label: {
                         show: false
-                        // 标签文本格式器，同Tooltip.formatter，不支持回调
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                         //           'inside'|'left'|'right'|'top'|'bottom'
