@@ -144,8 +144,11 @@ define(function (require) {
          */
         getTextStyle: function(targetStyle) {
             return zrUtil.merge(
-                       targetStyle || {},
-                       this.ecTheme.textStyle || ecConfig.textStyle
+                       zrUtil.merge(
+                           targetStyle || {},
+                           this.ecTheme.textStyle
+                       ),
+                       ecConfig.textStyle
                    );
         },
         
