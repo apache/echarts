@@ -132,9 +132,13 @@ option = {
         {
             name:'遮罩',
             type:'pie',
+            clickable:false,
             tooltip: {show:false},
             radius : [100, 180],
-            itemStyle: {normal: {color: '#fff',label:{show:false},labelLine:{show:false}}},
+            itemStyle: {
+                normal: {color: '#fff',label:{show:false},labelLine:{show:false}},
+                emphasis: {color:'rgba(0,0,0,0)'}
+            },
             data:[
               {value:100, name:'直接访问'}
             ]
@@ -150,7 +154,7 @@ option = {
                   itemStyle: {normal: {
                       label:{
                           position:'inside',
-                          formatter: '\n{b} : {c}\n( {d}% )',
+                          formatter: '\n{b} : {c}\n\n( {d}% )',
                           textStyle: {
                               fontSize: 15,
                               baseline: 'top',
