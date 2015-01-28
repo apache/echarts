@@ -812,8 +812,10 @@ define(function (require) {
                     }
                     
                     sList[i]._rect.x = sList[i].style.x = x + deltaX * direction;
-                    sList[i]._labelLine.style.pointList[2][0] = x + (deltaX - 5) * direction;
-                    sList[i]._labelLine.style.pointList[1][0] = x + (deltaX - 20) *direction;
+                    if (sList[i]._labelLine) {
+                        sList[i]._labelLine.style.pointList[2][0] = x + (deltaX - 5) * direction;
+                        sList[i]._labelLine.style.pointList[1][0] = x + (deltaX - 20) *direction;
+                    }
                     lastDeltaX = deltaX;
                 }
             }
