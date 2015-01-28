@@ -716,7 +716,7 @@ define(function (require) {
                             iconType: serie.linkSymbol,
                             brushType: 'fill',
                             // Use same style with link shape
-                            color: linkShape.style.strokeColor,
+                            color: linkShape.style.strokeColor
                         },
                         highlightStyle: {
                             brushType: 'fill'

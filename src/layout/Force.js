@@ -17,9 +17,9 @@ define(function(require) {
 
     var workerUrl;
 
-    function getToken() {
-        return Math.round((new Date()).getTime() / 100) % 10000000;
-    }
+    // function getToken() {
+    //     return Math.round((new Date()).getTime() / 100) % 10000000;
+    // }
 
     function createWorkerUrl() {
         if (

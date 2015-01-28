@@ -902,7 +902,7 @@ define(function (require) {
             );
             downloadLink.innerHTML = '<img style="vertical-align:middle" src="' + image 
                 + '" title="'
-                + ((!!window.ActiveXObject || "ActiveXObject" in window)
+                + ((!!window.ActiveXObject || 'ActiveXObject' in window)
                   ? '右键->图片另存为'
                   : (saveOption.lang ? saveOption.lang[0] : '点击保存'))
                 + '"/>';

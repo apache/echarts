@@ -271,7 +271,7 @@ define(function (require) {
 
             var width = gridOption.width == null
                         ? (zrWidth - x - this.parsePercent(gridOption.x2, zrWidth))
-                        : this.parsePercent(gridOption.width, zrWidth)
+                        : this.parsePercent(gridOption.width, zrWidth);
 
             return {
                 x: x,

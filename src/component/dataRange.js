@@ -1326,7 +1326,7 @@ define(function (require) {
                 && param.seriesIndex != null && param.dataIndex != null
             ) {
                 var curValue = param.value;
-                if (curValue == '' || isNaN(curValue)) {
+                if (curValue === '' || isNaN(curValue)) {
                     return;
                 }
                 if (curValue < this.dataRangeOption.min) {

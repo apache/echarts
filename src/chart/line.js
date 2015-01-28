@@ -372,12 +372,13 @@ define(function (require) {
         _buildOther: function(seriesArray, maxDataLength, locationMap, xMarkMap) {
             var series = this.series;
             var curPLMap = {};   // 正在记录的point list(PL)
+            var xAxis;
             
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     var seriesIndex = locationMap[j][m];
                     var serie = series[seriesIndex];
-                    var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex || 0);
+                    xAxis = this.component.xAxis.getAxis(serie.xAxisIndex || 0);
                     var yAxis = this.component.yAxis.getAxis(serie.yAxisIndex || 0);
                     var baseY = yAxis.getCoord(0);
                     

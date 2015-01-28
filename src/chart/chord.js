@@ -218,8 +218,8 @@ define(function (require) {
             var createEdgeFilter = function (graph) {
                 return function (e) {
                     return graph.getEdge(e.node2, e.node1);
-                }
-            }
+                };
+            };
             for (var i = 0; i < series.length; i++) {
                 var serie = series[i];
 

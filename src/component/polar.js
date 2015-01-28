@@ -755,7 +755,6 @@ define(function (require) {
         _findValue : function (data, index, splitNumber, boundaryGap) {
             var max;
             var min;
-            var value;
             var one;
 
             if (!data || data.length === 0) {
