@@ -27,9 +27,9 @@ define(function (require) {
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
-    self.version = '2.1.10';
+    self.version = '2.2.0';
     self.dependencies = {
-        zrender: '2.0.6'
+        zrender: '2.0.7'
     };
     /**
      * 入口方法 
@@ -1082,7 +1082,6 @@ define(function (require) {
                 dataGrow = params[i][3];
                 additionData = params[i][4];
 
-                
                 var seriesItem = optionRestore.series[seriesIdx];
                 var inMethod = isHead ? 'unshift' : 'push';
                 var outMethod = isHead ? 'pop' : 'shift';
@@ -1096,7 +1095,6 @@ define(function (require) {
                         seriesItemData[outMethod]();
                         data = mSeriesItemData[outMethod]();
                     }
-                    
                     
                     if (additionData != null) {
                         var legend;
