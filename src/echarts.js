@@ -1566,9 +1566,13 @@ define(function (require) {
             loadingOption.textStyle = textStyle;
 
             var finalTextStyle = zrUtil.merge(
-                zrUtil.clone(textStyle),
-                this._themeConfig.textStyle || ecConfig.textStyle
+                zrUtil.merge(
+                    zrUtil.clone(textStyle),
+                    this._themeConfig.textStyle
+                ),
+                ecConfig.textStyle
             );
+            
             textStyle.textFont = finalTextStyle.fontStyle + ' '
                                  + finalTextStyle.fontWeight + ' '
                                  + finalTextStyle.fontSize + 'px '
