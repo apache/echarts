@@ -1032,7 +1032,7 @@ define(function (require) {
             }
             
             if (this.dataRangeOption.realtime) {
-                this._syncData();
+                this._dispatchDataRange();
             }
 
             return true;
@@ -1051,24 +1051,12 @@ define(function (require) {
                 return;
             }
 
-            !this.dataRangeOption.realtime && this._syncData();
-
             // 别status = {}赋值啊！！
             status.dragOut = true;
             status.dragIn = true;
             
             if (!this.dataRangeOption.realtime) {
-                this.messageCenter.dispatch(
-                    ecConfig.EVENT.DATA_RANGE,
-                    null,
-                    {
-                        range : {
-                            start : this._range.end,
-                            end : this._range.start
-                        }
-                    },
-                    this.myChart
-                );
+                this._dispatchDataRange();
             }
             
             status.needRefresh = false; // 会有消息触发fresh，不用再刷一遍
@@ -1249,20 +1237,18 @@ define(function (require) {
             this.zr.refreshNextFrame();
         },
 
-        _syncData : function () {
-            if (this.dataRangeOption.realtime) {
-                this.messageCenter.dispatch(
-                    ecConfig.EVENT.DATA_RANGE,
-                    null,
-                    {
-                        range : {
-                            start : this._range.end,
-                            end : this._range.start
-                        }
-                    },
-                    this.myChart
-                );
-            }
+        _dispatchDataRange : function () {
+            this.messageCenter.dispatch(
+                ecConfig.EVENT.DATA_RANGE,
+                null,
+                {
+                    range : {
+                        start : this._range.end,
+                        end : this._range.start
+                    }
+                },
+                this.myChart
+            );
         },
 
 
