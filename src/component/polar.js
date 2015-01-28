@@ -292,8 +292,8 @@ define(function (require) {
                     textAlign = 'center';
                 }
 
-                if (!name.margin) {
-                    vector = this._mapVector(vector, center, 1.2);
+                if (name.margin == null) {
+                    vector = this._mapVector(vector, center, 1.1);
                 }
                 else {
                     margin = name.margin;
