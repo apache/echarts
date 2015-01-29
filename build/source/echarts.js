@@ -11112,6 +11112,10 @@ define('zrender/zrender', [
     }
     var Painter = function (root, storage) {
         this.root = root;
+        root.style['-webkit-tap-highlight-color'] = 'transparent';
+        root.style['-webkit-user-select'] = 'none';
+        root.style['user-select'] = 'none';
+        root.style['-webkit-touch-callout'] = 'none';
         this.storage = storage;
         root.innerHTML = '';
         this._width = this._getWidth();
