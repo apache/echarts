@@ -95,9 +95,10 @@ $('#head')[0].innerHTML =
                 + '<li><a href="https://github.com/ecomfe/echarts/archive/' + version + '.zip"> echarts-' + version + ' (from GitHub)</a></li>'
                 + '<li><a href="http://echarts.baidu.com/build/echarts-m-1.0.0.zip"> echarts-m-1.0.0 (beta)</a></li>'
                 + '<li class="divider"></li>'
-                + '<li><a href="http://echarts.baidu.com/doc/changelog'
-                  + (enVersion ? '-en': '') 
-                  + '.html">Changelog</a></li>'
+                + (enVersion 
+                    ? '<li><a href="http://ecomfe.github.io/echarts/doc/changelog-en.html">Changelog</a></li>'
+                    : '<li><a href="http://echarts.baidu.com/doc/changelog.html">Changelog</a></li>'
+                )
               + '</ul>'
             + '</li>'
             //+ '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.rar">下载</a></li>'
