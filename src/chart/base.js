@@ -1344,7 +1344,14 @@ define(function (require) {
                     }
                     else {
                         key += lastShapeList[i].type;
-                        oldMap[key] = lastShapeList[i];
+                        // https://github.com/ecomfe/echarts/issues/1219#issuecomment-71987602
+                        // 响应中断可能产生的重复元素
+                        if (oldMap[key]) {
+                            this.zr.delShape(lastShapeList[i].id);
+                        }
+                        else {
+                            oldMap[key] = lastShapeList[i];
+                        }
                     }
                 }
                 for (var i = 0, l = shapeList.length; i < l; i++) {
