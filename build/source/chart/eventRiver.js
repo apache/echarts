@@ -1,6 +1,5 @@
 define('echarts/chart/eventRiver', [
     'require',
-    '../component/base',
     './base',
     '../layout/eventRiver',
     'zrender/shape/Polygon',
@@ -14,7 +13,6 @@ define('echarts/chart/eventRiver', [
     'zrender/tool/color',
     '../chart'
 ], function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     var eventRiverLayout = require('../layout/eventRiver');
     var PolygonShape = require('zrender/shape/Polygon');
@@ -22,13 +20,34 @@ define('echarts/chart/eventRiver', [
     require('../component/grid');
     require('../component/dataZoom');
     var ecConfig = require('../config');
+    ecConfig.eventRiver = {
+        zlevel: 0,
+        z: 2,
+        clickable: true,
+        legendHoverLink: true,
+        itemStyle: {
+            normal: {
+                borderColor: 'rgba(0,0,0,0)',
+                borderWidth: 1,
+                label: {
+                    show: true,
+                    position: 'inside',
+                    formatter: '{b}'
+                }
+            },
+            emphasis: {
+                borderColor: 'rgba(0,0,0,0)',
+                borderWidth: 1,
+                label: { show: true }
+            }
+        }
+    };
     var ecData = require('../util/ecData');
     var ecDate = require('../util/date');
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
     function EventRiver(ecTheme, messageCenter, zr, option, myChart) {
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         var self = this;
         self._ondragend = function () {
             self.isDragend = true;
@@ -106,7 +125,8 @@ define('echarts/chart/eventRiver', [
             var emphasisColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data) || (typeof normalColor === 'string' ? zrColor.lift(normalColor, -0.2) : normalColor);
             var pts = this._calculateControlPoints(oneEvent);
             var eventBubbleShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     pointList: pts,
@@ -195,7 +215,6 @@ define('echarts/chart/eventRiver', [
         }
     };
     zrUtil.inherits(EventRiver, ChartBase);
-    zrUtil.inherits(EventRiver, ComponentBase);
     require('../chart').define('eventRiver', EventRiver);
     return EventRiver;
 });define('echarts/layout/eventRiver', ['require'], function (require) {

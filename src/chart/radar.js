@@ -6,7 +6,6 @@
  */
 
  define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
      // 图形依赖
@@ -15,6 +14,36 @@
     require('../component/polar');
     
     var ecConfig = require('../config');
+    // 雷达图默认参数
+    ecConfig.radar = {
+        zlevel: 0,                  // 一级层叠
+        z: 2,                       // 二级层叠
+        clickable: true,
+        legendHoverLink: true,
+        polarIndex: 0,
+        itemStyle: {
+            normal: {
+                // color: 各异,
+                label: {
+                    show: false
+                },
+                lineStyle: {
+                    width: 2,
+                    type: 'solid'
+                }
+            },
+            emphasis: {
+                // color: 各异,
+                label: {
+                    show: false
+                }
+            }
+        },
+        // symbol: null,            // 拐点图形类型
+        symbolSize: 2               // 可计算特性参数，空数据拖拽提示图形大小
+        // symbolRotate: null,      // 图形旋转控制
+    };
+
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
@@ -29,10 +58,8 @@
      * @exports Radar
      */
     function Radar(ecTheme, messageCenter, zr, option, myChart) {
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
 
         this.refresh(option);
     }
@@ -144,7 +171,7 @@
 
             var value;
             for (var i = 0, l = dataArr.value.length; i < l; i++) {
-                value = dataArr.value[i].value != null ? dataArr.value[i].value : dataArr.value[i];
+                value = this.getDataFromOption(dataArr.value[i]);
                 vector = value != '-' 
                          ? polar.getVector(polarIndex, i, value)
                          : false;
@@ -182,7 +209,9 @@
                     '#fff',
                     'vertical'
                 );
-                itemShape.zlevel = this._zlevelBase + 1;
+                itemShape.zlevel = this.getZlevelBase();
+                itemShape.z = this.getZBase() + 1;
+                
                 ecData.set(itemShape, 'data', series[seriesIndex].data[dataIndex]);
                 ecData.set(itemShape, 'value', series[seriesIndex].data[dataIndex].value);
                 ecData.set(itemShape, 'dataIndex', dataIndex);
@@ -228,7 +257,8 @@
                 queryTarget, 'itemStyle.normal.areaStyle'
             );
             var shape = {
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style : {
                     pointList   : pointList,
                     brushType   : nIsAreaFill ? 'both' : 'stroke',
@@ -303,7 +333,9 @@
             );
             if (!this._dropBoxList[polarIndex]) {
                 var shape = this.component.polar.getDropBox(polarIndex);
-                shape.zlevel = this._zlevelBase;
+                shape.zlevel = this.getZlevelBase();
+                shape.z = this.getZBase();
+                
                 this.setCalculable(shape);
                 ecData.pack(shape, series, index, undefined, -1);
                 this.shapeList.push(shape);
@@ -419,7 +451,6 @@
     };
     
     zrUtil.inherits(Radar, ChartBase);
-    zrUtil.inherits(Radar, ComponentBase);
     
     // 图表注册
     require('../chart').define('radar', Radar);

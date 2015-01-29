@@ -1,4 +1,4 @@
-var version = '2.1.10';
+var version = '2.2.0';
 var sp = location.href.lastIndexOf('/');
 var ep = location.href.lastIndexOf('.html');
 var curPage = sp < ep ? location.href.slice(sp + 1, ep) : 'index';
@@ -56,7 +56,7 @@ $('#head')[0].innerHTML =
             + '<span class="icon-bar"></span>'
             + '<span class="icon-bar"></span>'
           + '</button>'
-          + '<a class="navbar-brand" href="http://ecomfe.github.io/echarts/index'
+          + '<a class="navbar-brand" href="http://echarts.baidu.com/index'
           + (enVersion ? '-en': '') 
           + '.html">ECharts</a>'
         + '</div>'
@@ -93,8 +93,9 @@ $('#head')[0].innerHTML =
               + '<ul class="dropdown-menu">'
                 + '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.zip"> echarts-' + version + ' (from Baidu)</a></li>'
                 + '<li><a href="https://github.com/ecomfe/echarts/archive/' + version + '.zip"> echarts-' + version + ' (from GitHub)</a></li>'
+                + '<li><a href="http://echarts.baidu.com/build/echarts-m-1.0.0.zip"> echarts-m-1.0.0 (beta)</a></li>'
                 + '<li class="divider"></li>'
-                + '<li><a href="http://ecomfe.github.io/echarts/doc/changelog'
+                + '<li><a href="http://echarts.baidu.com/doc/changelog'
                   + (enVersion ? '-en': '') 
                   + '.html">Changelog</a></li>'
               + '</ul>'

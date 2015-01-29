@@ -15,6 +15,97 @@ define(function (require) {
     var IconShape = require('../util/shape/Icon');
     
     var ecConfig = require('../config');
+    ecConfig.toolbox = {
+        zlevel: 0,                  // 一级层叠
+        z: 6,                       // 二级层叠
+        show: false,
+        orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
+                                   // 'horizontal' ¦ 'vertical'
+        x: 'right',                // 水平安放位置，默认为全图右对齐，可选为：
+                                   // 'center' ¦ 'left' ¦ 'right'
+                                   // ¦ {number}（x坐标，单位px）
+        y: 'top',                  // 垂直安放位置，默认为全图顶端，可选为：
+                                   // 'top' ¦ 'bottom' ¦ 'center'
+                                   // ¦ {number}（y坐标，单位px）
+        color: ['#1e90ff','#22bb22','#4b0082','#d2691e'],
+        disableColor: '#ddd',
+        effectiveColor: 'red',
+        backgroundColor: 'rgba(0,0,0,0)', // 工具箱背景颜色
+        borderColor: '#ccc',       // 工具箱边框颜色
+        borderWidth: 0,            // 工具箱边框线宽，单位px，默认为0（无边框）
+        padding: 5,                // 工具箱内边距，单位px，默认各方向内边距为5，
+                                   // 接受数组分别设定上右下左边距，同css
+        itemGap: 10,               // 各个item之间的间隔，单位px，默认为10，
+                                   // 横向布局时为水平间隔，纵向布局时为纵向间隔
+        itemSize: 16,              // 工具箱图形宽度
+        showTitle: true,
+        // textStyle: {},
+        feature: {
+            mark: {
+                show: false,
+                title: {
+                    mark: '辅助线开关',
+                    markUndo: '删除辅助线',
+                    markClear: '清空辅助线'
+                },
+                lineStyle: {
+                    width: 1,
+                    color: '#1e90ff',
+                    type: 'dashed'
+                }
+            },
+            dataZoom: {
+                show: false,
+                title: {
+                    dataZoom: '区域缩放',
+                    dataZoomReset: '区域缩放后退'
+                }
+            },
+            dataView: {
+                show: false,
+                title: '数据视图',
+                readOnly: false,
+                lang: ['数据视图', '关闭', '刷新']
+            },
+            magicType: {
+                show: false,
+                title: {
+                    line: '折线图切换',
+                    bar: '柱形图切换',
+                    stack: '堆积',
+                    tiled: '平铺',
+                    force: '力导向布局图切换',
+                    chord: '和弦图切换',
+                    pie: '饼图切换',
+                    funnel: '漏斗图切换'
+                },
+                /*
+                option: {
+                    line: {},
+                    bar: {},
+                    stack: {},
+                    tiled: {},
+                    force: {},
+                    chord: {},
+                    pie: {},
+                    funnel: {}
+                },
+                */
+                type: [] // 'line', 'bar', 'stack', 'tiled', 'force', 'chord', 'pie', 'funnel'
+            },
+            restore: {
+                show: false,
+                title: '还原'
+            },
+            saveAsImage: {
+                show: false,
+                title: '保存为图片',
+                type: 'png',
+                lang: ['点击保存'] 
+            }
+        }
+    };
+
     var zrUtil = require('zrender/tool/util');
     var zrConfig = require('zrender/config');
     var zrEvent = require('zrender/tool/event');
@@ -223,7 +314,8 @@ define(function (require) {
                 // 图形
                 itemShape = {
                     type: 'icon',
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style: {
                         x: lastX,
                         y: lastY,
@@ -345,7 +437,8 @@ define(function (require) {
             var padding = this.reformCssArray(this.option.toolbox.padding);
 
             this.shapeList.push(new RectangleShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable :false,
                 style: {
                     x: this._itemGroupLocation.x - padding[3],
@@ -446,6 +539,7 @@ define(function (require) {
                     zrEvent.getY(param.event) - this._zoomShape.style.y;
                 this.zr.addHoverShape(this._zoomShape);
                 this.dom.style.cursor = 'crosshair';
+                zrEvent.stop(param.event);
             }
             if (this._zoomStart
                 && (this.dom.style.cursor != 'pointer' && this.dom.style.cursor != 'move')
@@ -463,7 +557,8 @@ define(function (require) {
             var y = zrEvent.getY(param.event);
             var zoomOption = this.option.dataZoom || {};
             this._zoomShape = new RectangleShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: x,
                     y: y,
@@ -504,7 +599,7 @@ define(function (require) {
                         end2: zoom.end2
                     });
                     this._iconEnable(this._iconShapeMap['dataZoomReset']);
-                    this.zr.refresh();
+                    this.zr.refreshNextFrame();
                 }
             }
             return true; // 阻塞全局事件
@@ -520,14 +615,15 @@ define(function (require) {
                 this._iconEnable(this._iconShapeMap['markUndo']);
                 this._iconEnable(this._iconShapeMap['markClear']);
                 this.zr.addShape(this._markShape);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             } 
             else if (this._markStart) {
                 this._marking = true;
                 var x = zrEvent.getX(param.event);
                 var y = zrEvent.getY(param.event);
                 this._markShape = new LineShape({
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style: {
                         xStart: x,
                         yStart: y,
@@ -556,14 +652,14 @@ define(function (require) {
             if (this._marking || this._markStart) {
                 // 取消
                 this._resetMark();
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
             else {
                 // 启用Mark
                 this._resetZoom();   // mark与dataZoom互斥
                 
                 this.zr.modShape(target.id, {style: {strokeColor: this._enableColor}});
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
                 this._markStart = true;
                 var self = this;
                 setTimeout(function (){
@@ -583,7 +679,7 @@ define(function (require) {
                 if (len >= 1) {
                     var target = this._markShapeList[len - 1];
                     this.zr.delShape(target.id);
-                    this.zr.refresh();
+                    this.zr.refreshNextFrame();
                     this._markShapeList.pop();
                     if (len === 1) {
                         this._iconDisable(this._iconShapeMap['markUndo']);
@@ -605,7 +701,7 @@ define(function (require) {
                 }
                 this._iconDisable(this._iconShapeMap['markUndo']);
                 this._iconDisable(this._iconShapeMap['markClear']);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
             return true;
         },
@@ -615,7 +711,7 @@ define(function (require) {
             if (this._zooming || this._zoomStart) {
                 // 取消
                 this._resetZoom();
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
                 this.dom.style.cursor = 'default';
             }
             else {
@@ -623,7 +719,7 @@ define(function (require) {
                 this._resetMark();   // mark与dataZoom互斥
                 
                 this.zr.modShape(target.id, {style: {strokeColor: this._enableColor}});
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
                 this._zoomStart = true;
                 var self = this;
                 setTimeout(function (){
@@ -652,7 +748,7 @@ define(function (require) {
             else {
                 this.component.dataZoom.rectZoom();
                 this._iconDisable(this._iconShapeMap['dataZoomReset']);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
             
             return true;
@@ -806,8 +902,7 @@ define(function (require) {
             );
             downloadLink.innerHTML = '<img style="vertical-align:middle" src="' + image 
                 + '" title="'
-                + (!!(window.attachEvent 
-                     && navigator.userAgent.indexOf('Opera') === -1)
+                + ((!!window.ActiveXObject || 'ActiveXObject' in window)
                   ? '右键->图片另存为'
                   : (saveOption.lang ? saveOption.lang[0] : '点击保存'))
                 + '"/>';

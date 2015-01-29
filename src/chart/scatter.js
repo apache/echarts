@@ -6,7 +6,6 @@
  *
  */
 define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
     // 图形依赖
@@ -18,6 +17,43 @@ define(function (require) {
     require('../component/dataRange');
     
     var ecConfig = require('../config');
+    // 散点图默认参数
+    ecConfig.scatter = {
+        zlevel: 0,                  // 一级层叠
+        z: 2,                       // 二级层叠
+        clickable: true,
+        legendHoverLink: true,
+        xAxisIndex: 0,
+        yAxisIndex: 0,
+        // symbol: null,        // 图形类型
+        symbolSize: 4,          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+        // symbolRotate: null,  // 图形旋转控制
+        large: false,           // 大规模散点图
+        largeThreshold: 2000,   // 大规模阀值，large为true且数据量>largeThreshold才启用大规模模式
+        itemStyle: {
+            normal: {
+                // color: 各异,
+                label: {
+                    show: false
+                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
+                    //           'inside'|'left'|'right'|'top'|'bottom'
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                }
+            },
+            emphasis: {
+                // color: '各异'
+                label: {
+                    show: false
+                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
+                    //           'inside'|'left'|'right'|'top'|'bottom'
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                }
+            }
+        }
+    };
+
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
     
@@ -29,10 +65,8 @@ define(function (require) {
      * @param {Object} component 组件
      */
     function Scatter(ecTheme, messageCenter, zr, option, myChart){
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
 
         this.refresh(option);
     }
@@ -150,11 +184,7 @@ define(function (require) {
                 pointList[seriesIndex] = [];
                 for (var i = 0, l = serie.data.length; i < l; i++) {
                     data = serie.data[i];
-                    value = data != null
-                            ? (data.value != null
-                              ? data.value
-                              : data)
-                            : '-';
+                    value = this.getDataFromOption(data, '-');
                     if (value === '-' || value.length < 2) {
                         // 数据格式不符
                         continue;
@@ -235,7 +265,7 @@ define(function (require) {
             var gridY = this.component.grid.getY();
             var gridYend = this.component.grid.getYend();
             
-            xMarkMap.average0 = (xMarkMap.sum0 / xMarkMap.counter0).toFixed(2) - 0;
+            xMarkMap.average0 = xMarkMap.sum0 / xMarkMap.counter0;
             var x = xAxis.getCoord(xMarkMap.average0); 
             // 横轴平均纵向
             xMarkMap.averageLine0 = [
@@ -251,7 +281,7 @@ define(function (require) {
                 [xMarkMap.maxX0, gridY]
             ];
             
-            xMarkMap.average1 = (xMarkMap.sum1 / xMarkMap.counter1).toFixed(2) - 0;
+            xMarkMap.average1 = xMarkMap.sum1 / xMarkMap.counter1;
             var y = yAxis.getCoord(xMarkMap.average1);
             // 纵轴平均横向
             xMarkMap.averageLine1 = [
@@ -350,14 +380,17 @@ define(function (require) {
                 'rgba(0,0,0,0)',
                 'vertical'
             );
-            itemShape.zlevel = this._zlevelBase;
+            itemShape.zlevel = this.getZlevelBase();
+            itemShape.z = this.getZBase();
+            
             itemShape._main = true;
             return itemShape;
         },
         
         _getLargeSymbol: function (pointList, nColor) {
             return new SymbolShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 _main: true,
                 hoverable: false,
                 style: {
@@ -435,7 +468,6 @@ define(function (require) {
     };
     
     zrUtil.inherits(Scatter, ChartBase);
-    zrUtil.inherits(Scatter, ComponentBase);
     
     // 图表注册
     require('../chart').define('scatter', Scatter);

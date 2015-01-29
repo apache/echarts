@@ -59,11 +59,15 @@ define(function (require) {
         }
 
         zr.addShape(newShape);
+        newShape._animating = true;
         zr.animate(newShape.id, 'style')
             .when(
                 duration,
                 { pointList: newPointList }
             )
+            .done(function() {
+                newShape._animating = false;
+            })
             .start(easing);
     }
     
@@ -133,6 +137,7 @@ define(function (require) {
                 .start(easing);
         }
         
+        newShape._animating = true;
         zr.animate(newShape.id, 'style')
             .when(
                 duration,
@@ -143,6 +148,9 @@ define(function (require) {
                     height: newHeight
                 }
             )
+            .done(function() {
+                newShape._animating = false;
+            })
             .start(easing);
     }
     
@@ -164,11 +172,15 @@ define(function (require) {
         var newY = newShape.style.y;
         newShape.style.y = oldShape.style.y;
         zr.addShape(newShape);
+        newShape._animating = true;
         zr.animate(newShape.id, 'style')
             .when(
                 duration,
                 { y: newY }
             )
+            .done(function() {
+                newShape._animating = false;
+            })
             .start(easing);
     }
     
@@ -187,6 +199,8 @@ define(function (require) {
         var r0 = newShape.style.r0;
         var r = newShape.style.r;
         
+        newShape._animating = true;
+
         if (newShape._animationAdd != 'r') {
             newShape.style.r0 = 0;
             newShape.style.r = 0;
@@ -201,6 +215,9 @@ define(function (require) {
                         r : r
                     }
                 )
+                .done(function() {
+                    newShape._animating = false;
+                })
                 .start(easing);
             zr.animate(newShape.id, '')
                 .when(
@@ -220,6 +237,9 @@ define(function (require) {
                         r0 : r0
                     }
                 )
+                .done(function() {
+                    newShape._animating = false;
+                })
                 .start(easing);
         }
     }
@@ -257,6 +277,7 @@ define(function (require) {
         );
         
         zr.addShape(newShape);
+        newShape._animating = true;
         zr.animate(newShape.id, 'style')
             .when(
                 duration,
@@ -265,6 +286,9 @@ define(function (require) {
                     endAngle : endAngle
                 }
             )
+            .done(function() {
+                newShape._animating = false;
+            })
             .start(easing);
     }
     
@@ -298,6 +322,7 @@ define(function (require) {
         );
         
         zr.addShape(newShape);
+        newShape._animating = true;
         zr.animate(newShape.id, 'style')
             .when(
                 duration,
@@ -306,6 +331,9 @@ define(function (require) {
                     y : y
                 }
             )
+            .done(function() {
+                newShape._animating = false;
+            })
             .start(easing);
     }
     
@@ -325,6 +353,7 @@ define(function (require) {
         
         newShape.scale = [0.1, 0.1, x, y];
         zr.addShape(newShape);
+        newShape._animating = true;
         zr.animate(newShape.id, '')
             .when(
                 duration,
@@ -332,6 +361,9 @@ define(function (require) {
                     scale : [1, 1, x, y]
                 }
             )
+            .done(function() {
+                newShape._animating = false;
+            })
             .start(easing);
     }
     
@@ -369,6 +401,7 @@ define(function (require) {
         }
         
         zr.addShape(newShape);
+        newShape._animating = true;
         zr.animate(newShape.id, 'style')
             .when(
                 duration,
@@ -379,6 +412,9 @@ define(function (require) {
                     target1 : target1
                 }
             )
+            .done(function() {
+                newShape._animating = false;
+            })
             .start(easing);
     }
     
@@ -403,6 +439,7 @@ define(function (require) {
         var angle = newShape.style.angle;
         newShape.style.angle = oldShape.style.angle;
         zr.addShape(newShape);
+        newShape._animating = true;
         zr.animate(newShape.id, 'style')
             .when(
                 duration,
@@ -410,6 +447,9 @@ define(function (require) {
                     angle : angle
                 }
             )
+            .done(function() {
+                newShape._animating = false;
+            })
             .start(easing);
     }
     
@@ -434,12 +474,16 @@ define(function (require) {
             var y = newShape._y || 0;
             newShape.scale = [0.01, 0.01, x, y];
             zr.addShape(newShape);
+            newShape._animating = true;
             zr.animate(newShape.id, '')
                 .delay(delay)
                 .when(
                     duration,
                     {scale : [1, 1, x, y]}
                 )
+                .done(function() {
+                    newShape._animating = false;
+                })
                 .start(easing || 'QuinticOut');
         }
         else {              // mod
@@ -479,6 +523,7 @@ define(function (require) {
         );
 
         zr.addShape(newShape);
+        newShape._animating = true;
         zr.animate(newShape.id, 'style')
             .when(
                 duration,
@@ -489,6 +534,9 @@ define(function (require) {
                     yEnd: yEnd
                 }
             )
+            .done(function() {
+                newShape._animating = false;
+            })
             .start(easing);
     }
     
@@ -510,6 +558,7 @@ define(function (require) {
                 ]
                 : oldShape.style.pointList;
             zr.addShape(newShape);
+            newShape._animating = true;
             zr.animate(newShape.id, 'style')
                 .when(
                     duration,
@@ -525,6 +574,9 @@ define(function (require) {
                         ]
                     }
                 )
+                .done(function() {
+                    newShape._animating = false;
+                })
                 .start(easing || 'QuinticOut');
         }
         else {
@@ -533,6 +585,7 @@ define(function (require) {
                 // 新增
                 newShape.style.pointListLength = 1;
                 zr.addShape(newShape);
+                newShape._animating = true;
                 newShape.style.pointList = newShape.style.pointList 
                                            || newShape.getPointList(newShape.style);
                 zr.animate(newShape.id, 'style')
@@ -542,6 +595,9 @@ define(function (require) {
                             pointListLength : newShape.style.pointList.length
                         }
                     )
+                    .done(function() {
+                        newShape._animating = false;
+                    })
                     .start(easing || 'QuinticOut');
             }
             else {

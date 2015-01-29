@@ -705,14 +705,6 @@ define(function __echartsForceLayoutWorker(require) {
         return str.slice(str.indexOf('{') + 1, str.lastIndexOf('return'));
     };
 
-    ForceLayout.prototype.setToken = function(token) {
-        this._token = token;
-    };
-
-    ForceLayout.prototype.tokenMatch = function(token) {
-        return token === this._token;
-    };
-
     /****************************
      * Main process
      ***************************/
@@ -727,11 +719,11 @@ define(function __echartsForceLayoutWorker(require) {
                 if (!forceLayout) return;
 
                 var positionArr = new Float32Array(e.data);
-                var nNodes = (positionArr.length - 1) / 2;
+                var nNodes = positionArr.length / 2;
                 for (var i = 0; i < nNodes; i++) {
                     var node = forceLayout.nodes[i];
-                    node.position[0] = positionArr[i * 2 + 1];
-                    node.position[1] = positionArr[i * 2 + 2];
+                    node.position[0] = positionArr[i * 2];
+                    node.position[1] = positionArr[i * 2 + 1];
                 }
                 return;
             }
@@ -743,7 +735,6 @@ define(function __echartsForceLayoutWorker(require) {
                     }
                     forceLayout.initNodes(e.data.nodesPosition, e.data.nodesMass, e.data.nodesSize);
                     forceLayout.initEdges(e.data.edges, e.data.edgesWeight);
-                    forceLayout._token = e.data.token;
                     break;
                 case 'updateConfig':
                     if (forceLayout) {
@@ -757,7 +748,7 @@ define(function __echartsForceLayoutWorker(require) {
 
                     if (forceLayout) {
                         var nNodes = forceLayout.nodes.length;
-                        var positionArr = new Float32Array(nNodes * 2 + 1);
+                        var positionArr = new Float32Array(nNodes * 2);
 
                         forceLayout.temperature = e.data.temperature;
 
@@ -768,11 +759,9 @@ define(function __echartsForceLayoutWorker(require) {
                         // Callback
                         for (var i = 0; i < nNodes; i++) {
                             var node = forceLayout.nodes[i];
-                            positionArr[i * 2 + 1] = node.position[0];
-                            positionArr[i * 2 + 2] = node.position[1];
+                            positionArr[i * 2] = node.position[0];
+                            positionArr[i * 2 + 1] = node.position[1];
                         }
-
-                        positionArr[0] = forceLayout._token;
 
                         self.postMessage(positionArr.buffer, [positionArr.buffer]);
                     }

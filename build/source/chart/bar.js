@@ -1,6 +1,5 @@
 define('echarts/chart/bar', [
     'require',
-    '../component/base',
     './base',
     'zrender/shape/Rectangle',
     '../component/axis',
@@ -12,33 +11,57 @@ define('echarts/chart/bar', [
     'zrender/tool/color',
     '../chart'
 ], function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     var RectangleShape = require('zrender/shape/Rectangle');
     require('../component/axis');
     require('../component/grid');
     require('../component/dataZoom');
     var ecConfig = require('../config');
+    ecConfig.bar = {
+        zlevel: 0,
+        z: 2,
+        clickable: true,
+        legendHoverLink: true,
+        xAxisIndex: 0,
+        yAxisIndex: 0,
+        barMinHeight: 0,
+        barGap: '30%',
+        barCategoryGap: '20%',
+        itemStyle: {
+            normal: {
+                barBorderColor: '#fff',
+                barBorderRadius: 0,
+                barBorderWidth: 0,
+                label: { show: false }
+            },
+            emphasis: {
+                barBorderColor: '#fff',
+                barBorderRadius: 0,
+                barBorderWidth: 0,
+                label: { show: false }
+            }
+        }
+    };
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
     function Bar(ecTheme, messageCenter, zr, option, myChart) {
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         this.refresh(option);
     }
     Bar.prototype = {
         type: ecConfig.CHART_TYPE_BAR,
         _buildShape: function () {
-            this._bulidPosition();
+            this._buildPosition();
         },
         _buildNormal: function (seriesArray, maxDataLength, locationMap, xMarkMap, orient) {
             var series = this.series;
             var seriesIndex = locationMap[0][0];
             var serie = series[seriesIndex];
-            var xAxisIndex = serie.xAxisIndex;
-            var yAxisIndex = serie.yAxisIndex;
-            var categoryAxis = orient == 'horizontal' ? this.component.xAxis.getAxis(xAxisIndex) : this.component.yAxis.getAxis(yAxisIndex);
+            var isHorizontal = orient == 'horizontal';
+            var xAxis = this.component.xAxis;
+            var yAxis = this.component.yAxis;
+            var categoryAxis = isHorizontal ? xAxis.getAxis(serie.xAxisIndex) : yAxis.getAxis(serie.yAxisIndex);
             var valueAxis;
             var size = this._mapSize(categoryAxis, locationMap);
             var gap = size.gap;
@@ -59,21 +82,25 @@ define('echarts/chart/bar', [
             var barShape;
             var data;
             var value;
+            var islandR = this.deepQuery([
+                this.ecTheme,
+                ecConfig
+            ], 'island.r');
             for (var i = 0, l = maxDataLength; i < l; i++) {
                 if (categoryAxis.getNameByIndex(i) == null) {
                     break;
                 }
-                orient == 'horizontal' ? x = categoryAxis.getCoordByIndex(i) - gap / 2 : y = categoryAxis.getCoordByIndex(i) + gap / 2;
+                isHorizontal ? x = categoryAxis.getCoordByIndex(i) - gap / 2 : y = categoryAxis.getCoordByIndex(i) + gap / 2;
                 for (var j = 0, k = locationMap.length; j < k; j++) {
-                    yAxisIndex = series[locationMap[j][0]].yAxisIndex || 0;
-                    xAxisIndex = series[locationMap[j][0]].xAxisIndex || 0;
-                    valueAxis = orient == 'horizontal' ? this.component.yAxis.getAxis(yAxisIndex) : this.component.xAxis.getAxis(xAxisIndex);
+                    var yAxisIndex = series[locationMap[j][0]].yAxisIndex || 0;
+                    var xAxisIndex = series[locationMap[j][0]].xAxisIndex || 0;
+                    valueAxis = isHorizontal ? yAxis.getAxis(yAxisIndex) : xAxis.getAxis(xAxisIndex);
                     baseP = lastP = baseN = lastN = valueAxis.getCoord(0);
                     for (var m = 0, n = locationMap[j].length; m < n; m++) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null ? data.value != null ? data.value : data : '-';
+                        value = this.getDataFromOption(data, '-');
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] || {
                             min: Number.POSITIVE_INFINITY,
                             max: Number.NEGATIVE_INFINITY,
@@ -81,15 +108,16 @@ define('echarts/chart/bar', [
                             counter: 0,
                             average: 0
                         };
+                        curBarWidth = Math.min(barMaxWidthMap[seriesIndex] || Number.MAX_VALUE, barWidthMap[seriesIndex] || barWidth);
                         if (value === '-') {
                             continue;
                         }
                         if (value > 0) {
-                            barHeight = m > 0 ? valueAxis.getCoordSize(value) : orient == 'horizontal' ? baseP - valueAxis.getCoord(value) : valueAxis.getCoord(value) - baseP;
+                            barHeight = m > 0 ? valueAxis.getCoordSize(value) : isHorizontal ? baseP - valueAxis.getCoord(value) : valueAxis.getCoord(value) - baseP;
                             if (n === 1 && barMinHeightMap[seriesIndex] > barHeight) {
                                 barHeight = barMinHeightMap[seriesIndex];
                             }
-                            if (orient == 'horizontal') {
+                            if (isHorizontal) {
                                 lastP -= barHeight;
                                 y = lastP;
                             } else {
@@ -97,11 +125,11 @@ define('echarts/chart/bar', [
                                 lastP += barHeight;
                             }
                         } else if (value < 0) {
-                            barHeight = m > 0 ? valueAxis.getCoordSize(value) : orient == 'horizontal' ? valueAxis.getCoord(value) - baseN : baseN - valueAxis.getCoord(value);
+                            barHeight = m > 0 ? valueAxis.getCoordSize(value) : isHorizontal ? valueAxis.getCoord(value) - baseN : baseN - valueAxis.getCoord(value);
                             if (n === 1 && barMinHeightMap[seriesIndex] > barHeight) {
                                 barHeight = barMinHeightMap[seriesIndex];
                             }
-                            if (orient == 'horizontal') {
+                            if (isHorizontal) {
                                 y = lastN;
                                 lastN += barHeight;
                             } else {
@@ -110,7 +138,7 @@ define('echarts/chart/bar', [
                             }
                         } else {
                             barHeight = 0;
-                            if (orient == 'horizontal') {
+                            if (isHorizontal) {
                                 lastP -= barHeight;
                                 y = lastP;
                             } else {
@@ -118,11 +146,10 @@ define('echarts/chart/bar', [
                                 lastP += barHeight;
                             }
                         }
-                        var curBarWidth = Math.min(barMaxWidthMap[seriesIndex] || Number.MAX_VALUE, barWidthMap[seriesIndex] || barWidth);
-                        xMarkMap[seriesIndex][i] = orient == 'horizontal' ? x + curBarWidth / 2 : y - curBarWidth / 2;
+                        xMarkMap[seriesIndex][i] = isHorizontal ? x + curBarWidth / 2 : y - curBarWidth / 2;
                         if (xMarkMap[seriesIndex].min > value) {
                             xMarkMap[seriesIndex].min = value;
-                            if (orient == 'horizontal') {
+                            if (isHorizontal) {
                                 xMarkMap[seriesIndex].minY = y;
                                 xMarkMap[seriesIndex].minX = xMarkMap[seriesIndex][i];
                             } else {
@@ -132,7 +159,7 @@ define('echarts/chart/bar', [
                         }
                         if (xMarkMap[seriesIndex].max < value) {
                             xMarkMap[seriesIndex].max = value;
-                            if (orient == 'horizontal') {
+                            if (isHorizontal) {
                                 xMarkMap[seriesIndex].maxY = y;
                                 xMarkMap[seriesIndex].maxX = xMarkMap[seriesIndex][i];
                             } else {
@@ -143,7 +170,7 @@ define('echarts/chart/bar', [
                         xMarkMap[seriesIndex].sum += value;
                         xMarkMap[seriesIndex].counter++;
                         if (i % interval === 0) {
-                            barShape = this._getBarItem(seriesIndex, i, categoryAxis.getNameByIndex(i), x, y - (orient == 'horizontal' ? 0 : curBarWidth), orient == 'horizontal' ? curBarWidth : barHeight, orient == 'horizontal' ? barHeight : curBarWidth, orient == 'horizontal' ? 'vertical' : 'horizontal');
+                            barShape = this._getBarItem(seriesIndex, i, categoryAxis.getNameByIndex(i), x, y - (isHorizontal ? 0 : curBarWidth), isHorizontal ? curBarWidth : barHeight, isHorizontal ? barHeight : curBarWidth, isHorizontal ? 'vertical' : 'horizontal');
                             this.shapeList.push(new RectangleShape(barShape));
                         }
                     }
@@ -151,7 +178,8 @@ define('echarts/chart/bar', [
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null ? data.value != null ? data.value : data : '-';
+                        value = this.getDataFromOption(data, '-');
+                        curBarWidth = Math.min(barMaxWidthMap[seriesIndex] || Number.MAX_VALUE, barWidthMap[seriesIndex] || barWidth);
                         if (value != '-') {
                             continue;
                         }
@@ -160,27 +188,26 @@ define('echarts/chart/bar', [
                                 serie,
                                 this.option
                             ], 'calculable')) {
-                            if (orient == 'horizontal') {
-                                lastP -= this.ecTheme.island.r;
+                            if (isHorizontal) {
+                                lastP -= islandR;
                                 y = lastP;
                             } else {
                                 x = lastP;
-                                lastP += this.ecTheme.island.r;
+                                lastP += islandR;
                             }
-                            curBarWidth = Math.min(barMaxWidthMap[seriesIndex] || Number.MAX_VALUE, barWidthMap[seriesIndex] || barWidth);
-                            barShape = this._getBarItem(seriesIndex, i, categoryAxis.getNameByIndex(i), x + 0.5, y + 0.5 - (orient == 'horizontal' ? 0 : curBarWidth), (orient == 'horizontal' ? curBarWidth : this.ecTheme.island.r) - 1, (orient == 'horizontal' ? this.ecTheme.island.r : curBarWidth) - 1, orient == 'horizontal' ? 'vertical' : 'horizontal');
+                            barShape = this._getBarItem(seriesIndex, i, categoryAxis.getNameByIndex(i), x, y - (isHorizontal ? 0 : curBarWidth), isHorizontal ? curBarWidth : islandR, isHorizontal ? islandR : curBarWidth, isHorizontal ? 'vertical' : 'horizontal');
                             barShape.hoverable = false;
                             barShape.draggable = false;
                             barShape.style.lineWidth = 1;
                             barShape.style.brushType = 'stroke';
-                            barShape.style.strokeColor = serie.calculableHolderColor || this.ecTheme.calculableHolderColor;
+                            barShape.style.strokeColor = serie.calculableHolderColor || this.ecTheme.calculableHolderColor || ecConfig.calculableHolderColor;
                             this.shapeList.push(new RectangleShape(barShape));
                         }
                     }
-                    orient == 'horizontal' ? x += curBarWidth + barGap : y -= curBarWidth + barGap;
+                    isHorizontal ? x += curBarWidth + barGap : y -= curBarWidth + barGap;
                 }
             }
-            this._calculMarkMapXY(xMarkMap, locationMap, orient == 'horizontal' ? 'y' : 'x');
+            this._calculMarkMapXY(xMarkMap, locationMap, isHorizontal ? 'y' : 'x');
         },
         _buildHorizontal: function (seriesArray, maxDataLength, locationMap, xMarkMap) {
             return this._buildNormal(seriesArray, maxDataLength, locationMap, xMarkMap, 'horizontal');
@@ -214,7 +241,7 @@ define('echarts/chart/bar', [
                     };
                     for (var i = 0, l = serie.data.length; i < l; i++) {
                         var data = serie.data[i];
-                        var value = data != null ? data.value != null ? data.value : data : '-';
+                        var value = this.getDataFromOption(data, '-');
                         if (!(value instanceof Array)) {
                             continue;
                         }
@@ -297,14 +324,14 @@ define('echarts/chart/bar', [
             var interval = 1;
             if (locationMap.length != sBarWidthCounter) {
                 if (!ignoreUserDefined) {
-                    gap = typeof barCategoryGap === 'string' && barCategoryGap.match(/%$/) ? Math.floor(categoryAxis.getGap() * (100 - parseFloat(barCategoryGap)) / 100) : categoryAxis.getGap() - barCategoryGap;
+                    gap = typeof barCategoryGap === 'string' && barCategoryGap.match(/%$/) ? (categoryAxis.getGap() * (100 - parseFloat(barCategoryGap)) / 100).toFixed(2) - 0 : categoryAxis.getGap() - barCategoryGap;
                     if (typeof barGap === 'string' && barGap.match(/%$/)) {
                         barGap = parseFloat(barGap) / 100;
-                        barWidth = Math.floor((gap - sBarWidthTotal) / ((locationMap.length - 1) * barGap + locationMap.length - sBarWidthCounter));
-                        barGap = Math.floor(barWidth * barGap);
+                        barWidth = +((gap - sBarWidthTotal) / ((locationMap.length - 1) * barGap + locationMap.length - sBarWidthCounter)).toFixed(2);
+                        barGap = barWidth * barGap;
                     } else {
                         barGap = parseFloat(barGap);
-                        barWidth = Math.floor((gap - sBarWidthTotal - barGap * (locationMap.length - 1)) / (locationMap.length - sBarWidthCounter));
+                        barWidth = +((gap - sBarWidthTotal - barGap * (locationMap.length - 1)) / (locationMap.length - sBarWidthCounter)).toFixed(2);
                     }
                     if (barWidth <= 0) {
                         return this._mapSize(categoryAxis, locationMap, true);
@@ -312,16 +339,16 @@ define('echarts/chart/bar', [
                 } else {
                     gap = categoryAxis.getGap();
                     barGap = 0;
-                    barWidth = Math.floor(gap / locationMap.length);
+                    barWidth = +(gap / locationMap.length).toFixed(2);
                     if (barWidth <= 0) {
                         interval = Math.floor(locationMap.length / gap);
                         barWidth = 1;
                     }
                 }
             } else {
-                gap = sBarWidthCounter > 1 ? typeof barCategoryGap === 'string' && barCategoryGap.match(/%$/) ? Math.floor(categoryAxis.getGap() * (100 - parseFloat(barCategoryGap)) / 100) : categoryAxis.getGap() - barCategoryGap : sBarWidthTotal;
+                gap = sBarWidthCounter > 1 ? typeof barCategoryGap === 'string' && barCategoryGap.match(/%$/) ? +(categoryAxis.getGap() * (100 - parseFloat(barCategoryGap)) / 100).toFixed(2) : categoryAxis.getGap() - barCategoryGap : sBarWidthTotal;
                 barWidth = 0;
-                barGap = sBarWidthCounter > 1 ? Math.floor((gap - sBarWidthTotal) / (sBarWidthCounter - 1)) : 0;
+                barGap = sBarWidthCounter > 1 ? +((gap - sBarWidthTotal) / (sBarWidthCounter - 1)).toFixed(2) : 0;
                 if (barGap < 0) {
                     return this._mapSize(categoryAxis, locationMap, true);
                 }
@@ -421,13 +448,12 @@ define('echarts/chart/bar', [
                 data,
                 serie
             ];
-            var normalColor = this.deepQuery(queryTarget, 'itemStyle.normal.color') || defaultColor;
-            var emphasisColor = this.deepQuery(queryTarget, 'itemStyle.emphasis.color');
             var normal = this.deepMerge(queryTarget, 'itemStyle.normal');
-            var normalBorderWidth = normal.barBorderWidth;
             var emphasis = this.deepMerge(queryTarget, 'itemStyle.emphasis');
+            var normalBorderWidth = normal.barBorderWidth;
             barShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: x,
@@ -435,60 +461,66 @@ define('echarts/chart/bar', [
                     width: width,
                     height: height,
                     brushType: 'both',
-                    color: this.getItemStyleColor(normalColor, seriesIndex, dataIndex, data),
+                    color: this.getItemStyleColor(this.deepQuery(queryTarget, 'itemStyle.normal.color') || defaultColor, seriesIndex, dataIndex, data),
                     radius: normal.barBorderRadius,
                     lineWidth: normalBorderWidth,
                     strokeColor: normal.barBorderColor
                 },
                 highlightStyle: {
-                    color: this.getItemStyleColor(emphasisColor, seriesIndex, dataIndex, data),
+                    color: this.getItemStyleColor(this.deepQuery(queryTarget, 'itemStyle.emphasis.color'), seriesIndex, dataIndex, data),
                     radius: emphasis.barBorderRadius,
                     lineWidth: emphasis.barBorderWidth,
                     strokeColor: emphasis.barBorderColor
                 },
                 _orient: orient
             };
-            barShape.highlightStyle.color = barShape.highlightStyle.color || (typeof barShape.style.color === 'string' ? zrColor.lift(barShape.style.color, -0.3) : barShape.style.color);
-            if (normalBorderWidth > 0 && barShape.style.height > normalBorderWidth && barShape.style.width > normalBorderWidth) {
-                barShape.style.y += normalBorderWidth / 2;
-                barShape.style.height -= normalBorderWidth;
-                barShape.style.x += normalBorderWidth / 2;
-                barShape.style.width -= normalBorderWidth;
+            var barShapeStyle = barShape.style;
+            barShape.highlightStyle.color = barShape.highlightStyle.color || (typeof barShapeStyle.color === 'string' ? zrColor.lift(barShapeStyle.color, -0.3) : barShapeStyle.color);
+            barShapeStyle.x = Math.floor(barShapeStyle.x);
+            barShapeStyle.y = Math.floor(barShapeStyle.y);
+            barShapeStyle.height = Math.ceil(barShapeStyle.height);
+            barShapeStyle.width = Math.ceil(barShapeStyle.width);
+            if (normalBorderWidth > 0 && barShapeStyle.height > normalBorderWidth && barShapeStyle.width > normalBorderWidth) {
+                barShapeStyle.y += normalBorderWidth / 2;
+                barShapeStyle.height -= normalBorderWidth;
+                barShapeStyle.x += normalBorderWidth / 2;
+                barShapeStyle.width -= normalBorderWidth;
             } else {
-                barShape.style.brushType = 'fill';
+                barShapeStyle.brushType = 'fill';
             }
             barShape.highlightStyle.textColor = barShape.highlightStyle.color;
             barShape = this.addLabel(barShape, serie, data, name, orient);
-            if (barShape.style.textPosition === 'insideLeft' || barShape.style.textPosition === 'insideRight' || barShape.style.textPosition === 'insideTop' || barShape.style.textPosition === 'insideBottom') {
+            var textPosition = barShapeStyle.textPosition;
+            if (textPosition === 'insideLeft' || textPosition === 'insideRight' || textPosition === 'insideTop' || textPosition === 'insideBottom') {
                 var gap = 5;
-                switch (barShape.style.textPosition) {
+                switch (textPosition) {
                 case 'insideLeft':
-                    barShape.style.textX = barShape.style.x + gap;
-                    barShape.style.textY = barShape.style.y + barShape.style.height / 2;
-                    barShape.style.textAlign = 'left';
-                    barShape.style.textBaseline = 'middle';
+                    barShapeStyle.textX = barShapeStyle.x + gap;
+                    barShapeStyle.textY = barShapeStyle.y + barShapeStyle.height / 2;
+                    barShapeStyle.textAlign = 'left';
+                    barShapeStyle.textBaseline = 'middle';
                     break;
                 case 'insideRight':
-                    barShape.style.textX = barShape.style.x + barShape.style.width - gap;
-                    barShape.style.textY = barShape.style.y + barShape.style.height / 2;
-                    barShape.style.textAlign = 'right';
-                    barShape.style.textBaseline = 'middle';
+                    barShapeStyle.textX = barShapeStyle.x + barShapeStyle.width - gap;
+                    barShapeStyle.textY = barShapeStyle.y + barShapeStyle.height / 2;
+                    barShapeStyle.textAlign = 'right';
+                    barShapeStyle.textBaseline = 'middle';
                     break;
                 case 'insideTop':
-                    barShape.style.textX = barShape.style.x + barShape.style.width / 2;
-                    barShape.style.textY = barShape.style.y + gap / 2;
-                    barShape.style.textAlign = 'center';
-                    barShape.style.textBaseline = 'top';
+                    barShapeStyle.textX = barShapeStyle.x + barShapeStyle.width / 2;
+                    barShapeStyle.textY = barShapeStyle.y + gap / 2;
+                    barShapeStyle.textAlign = 'center';
+                    barShapeStyle.textBaseline = 'top';
                     break;
                 case 'insideBottom':
-                    barShape.style.textX = barShape.style.x + barShape.style.width / 2;
-                    barShape.style.textY = barShape.style.y + barShape.style.height - gap / 2;
-                    barShape.style.textAlign = 'center';
-                    barShape.style.textBaseline = 'bottom';
+                    barShapeStyle.textX = barShapeStyle.x + barShapeStyle.width / 2;
+                    barShapeStyle.textY = barShapeStyle.y + barShapeStyle.height - gap / 2;
+                    barShapeStyle.textAlign = 'center';
+                    barShapeStyle.textBaseline = 'bottom';
                     break;
                 }
-                barShape.style.textPosition = 'specific';
-                barShape.style.textColor = barShape.style.textColor || '#fff';
+                barShapeStyle.textPosition = 'specific';
+                barShapeStyle.textColor = barShapeStyle.textColor || '#fff';
             }
             if (this.deepQuery([
                     data,
@@ -582,7 +614,7 @@ define('echarts/chart/bar', [
                             0,
                             0
                         ];
-                        this.zr.animate(this.shapeList[i].id, '').when(500, {
+                        this.zr.animate(this.shapeList[i].id, '').when(this.query(this.option, 'animationDurationUpdate'), {
                             position: [
                                 x,
                                 y
@@ -594,7 +626,6 @@ define('echarts/chart/bar', [
         }
     };
     zrUtil.inherits(Bar, ChartBase);
-    zrUtil.inherits(Bar, ComponentBase);
     require('../chart').define('bar', Bar);
     return Bar;
 });

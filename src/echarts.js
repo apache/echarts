@@ -1,7 +1,7 @@
 /*!
  * ECharts, a javascript interactive chart library.
  *  
- * Copyright (c) 2014, Baidu Inc.
+ * Copyright (c) 2015, Baidu Inc.
  * All rights reserved.
  * 
  * LICENSE
@@ -27,20 +27,18 @@ define(function (require) {
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
-    self.version = '2.1.10';
+    self.version = '2.2.0';
     self.dependencies = {
-        zrender: '2.0.6'
+        zrender: '2.0.7'
     };
     /**
      * 入口方法 
      */
     self.init = function (dom, theme) {
         var zrender = require('zrender');
-        if (((zrender.version || '1.0.3').replace('.', '') - 0)
-            < (self.dependencies.zrender.replace('.', '') - 0)
-        ) {
+        if ((zrender.version.replace('.', '') - 0) < (self.dependencies.zrender.replace('.', '') - 0)) {
             console.error(
-                'ZRender ' + (zrender.version || '1.0.3-') 
+                'ZRender ' + zrender.version
                 + ' is too old for ECharts ' + self.version 
                 + '. Current version need ZRender ' 
                 + self.dependencies.zrender + '+'
@@ -88,7 +86,11 @@ define(function (require) {
      * @param {HtmlElement} dom 必要
      */
     function Echarts(dom) {
-        this._themeConfig = zrUtil.clone(ecConfig);
+        // Fxxk IE11 for breaking initialization without a warrant;
+        // Just set something to let it be!
+        // by kener 2015-01-09
+        dom.innerHTML = '';
+        this._themeConfig = {}; // zrUtil.clone(ecConfig);
 
         this.dom = dom;
         // this._zr;
@@ -227,18 +229,18 @@ define(function (require) {
             var Island = require('./chart/island');
             this._island = new Island(this._themeConfig, this._messageCenter, _zr, {}, this);
             this.chart.island = this._island;
-            
+
             // 内置通用组件
             // 工具箱
             var Toolbox = require('./component/toolbox');
             this._toolbox = new Toolbox(this._themeConfig, this._messageCenter, _zr, {}, this);
             this.component.toolbox = this._toolbox;
-            
+
             var componentLibrary = require('./component');
             componentLibrary.define('title', require('./component/title'));
             componentLibrary.define('tooltip', require('./component/tooltip'));
             componentLibrary.define('legend', require('./component/legend'));
-            
+
             if (_zr.getWidth() === 0 || _zr.getHeight() === 0) {
                 console.error('Dom’s width & height should be ready before init.');
             }
@@ -523,7 +525,7 @@ define(function (require) {
             
             // 没有相互影响，直接刷新即可
             if (this._status.needRefresh) {
-                this._zr.refresh();
+                this._zr.refreshNextFrame();
             }
         },
 
@@ -609,11 +611,47 @@ define(function (require) {
             return;
         },
 
+        _noDataCheck: function(magicOption) {
+            var series = magicOption.series;
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (series[i].type == ecConfig.CHART_TYPE_MAP
+                    || (series[i].data && series[i].data.length > 0)
+                    || (series[i].markPoint && series[i].markPoint.data && series[i].markPoint.data.length > 0)
+                    || (series[i].markLine && series[i].markLine.data && series[i].markLine.data.length > 0)
+                    || (series[i].nodes && series[i].nodes.length > 0)
+                    || (series[i].links && series[i].links.length > 0)
+                    || (series[i].matrix && series[i].matrix.length > 0)
+                    || (series[i].eventList && series[i].eventList.length > 0)
+                ) {
+                    return false;   // 存在任意数据则为非空数据
+                }
+            }
+            // 空数据
+            this.clear();
+            var loadOption = (this._option && this._option.noDataLoadingOption)
+                || this._themeConfig.noDataLoadingOption
+                || ecConfig.noDataLoadingOption
+                || {
+                    text: (this._option && this._option.noDataText)
+                          || this._themeConfig.noDataText
+                          || ecConfig.noDataText,
+                    effect: (this._option && this._option.noDataEffect)
+                            || this._themeConfig.noDataEffect
+                            || ecConfig.noDataEffect
+                };
+            this.showLoading(loadOption);
+            return true;
+        },
+
         /**
          * 图表渲染 
          */
         _render: function (magicOption) {
             this._mergeGlobalConifg(magicOption);
+
+            if (this._noDataCheck(magicOption)) {
+                return;
+            }
 
             var bgColor = magicOption.backgroundColor;
             if (bgColor) {
@@ -847,7 +885,8 @@ define(function (require) {
                 'nameConnector', 'valueConnector',
                 
                 // 动画相关
-                'animation', 'animationThreshold', 'animationDuration',
+                'animation', 'animationThreshold',
+                'animationDuration', 'animationDurationUpdate',
                 'animationEasing', 'addDataAnimation',
                 
                 // 默认标志图形类型列表
@@ -861,26 +900,28 @@ define(function (require) {
             while (len--) {
                 var mergeItem = mergeList[len];
                 if (magicOption[mergeItem] == null) {
-                    magicOption[mergeItem] = this._themeConfig[mergeItem];
+                    magicOption[mergeItem] = this._themeConfig[mergeItem] != null
+                        ? this._themeConfig[mergeItem]
+                        : ecConfig[mergeItem];
                 }
             }
             
             // 数值系列的颜色列表，不传则采用内置颜色，可配数组，借用zrender实例注入，会有冲突风险，先这样
             var themeColor = magicOption.color;
             if (!(themeColor && themeColor.length)) {
-                themeColor = this._themeConfig.color;
-            }
-            
-            if (!_canvasSupported) {
-                // 不支持Canvas的强制关闭动画
-                magicOption.animation = false;
-                magicOption.addDataAnimation = false;
+                themeColor = this._themeConfig.color || ecConfig.color;
             }
             
             this._zr.getColor = function (idx) {
                 var zrColor = require('zrender/tool/color');
                 return zrColor.getColor(idx, themeColor);
             };
+            
+            if (!_canvasSupported) {
+                // 不支持Canvas的强制关闭动画
+                magicOption.animation = false;
+                magicOption.addDataAnimation = false;
+            }
         },
         
         /**
@@ -1041,7 +1082,6 @@ define(function (require) {
                 dataGrow = params[i][3];
                 additionData = params[i][4];
 
-                
                 var seriesItem = optionRestore.series[seriesIdx];
                 var inMethod = isHead ? 'unshift' : 'push';
                 var outMethod = isHead ? 'pop' : 'shift';
@@ -1055,7 +1095,6 @@ define(function (require) {
                         seriesItemData[outMethod]();
                         data = mSeriesItemData[outMethod]();
                     }
-                    
                     
                     if (additionData != null) {
                         var legend;
@@ -1147,7 +1186,7 @@ define(function (require) {
                     {option: magicOption},
                     self
                 );
-            }, magicOption.addDataAnimation ? 500 : 0);
+            }, magicOption.addDataAnimation ? magicOption.animationDurationUpdate : 0);
             return this;
         },
 
@@ -1527,15 +1566,22 @@ define(function (require) {
             loadingOption.textStyle = textStyle;
 
             var finalTextStyle = zrUtil.merge(
-                zrUtil.clone(textStyle),
-                this._themeConfig.textStyle
+                zrUtil.merge(
+                    zrUtil.clone(textStyle),
+                    this._themeConfig.textStyle
+                ),
+                ecConfig.textStyle
             );
+            
             textStyle.textFont = finalTextStyle.fontStyle + ' '
                                  + finalTextStyle.fontWeight + ' '
                                  + finalTextStyle.fontSize + 'px '
                                  + finalTextStyle.fontFamily;
 
-            textStyle.text = loadingOption.text || this._themeConfig.loadingText;
+            textStyle.text = loadingOption.text 
+                             || (this._option && this._option.loadingText)
+                             || this._themeConfig.loadingText
+                             || ecConfig.loadingText;
 
             if (loadingOption.x != null) {
                 textStyle.x = loadingOption.x;
@@ -1549,7 +1595,13 @@ define(function (require) {
             
             var Effect = loadingOption.effect;
             if (typeof Effect === 'string' || Effect == null) {
-                Effect =  effectList[loadingOption.effect || 'spin'];
+                Effect =  effectList[
+                              loadingOption.effect
+                              || (this._option && this._option.loadingEffect)
+                              || this._themeConfig.loadingEffect
+                              || ecConfig.loadingEffect
+                          ]
+                          || effectList.spin;
             }
             this._zr.showLoading(new Effect(loadingOption.effectOption));
             return this;
@@ -1571,38 +1623,48 @@ define(function (require) {
                if (typeof theme === 'string') {
                     // 默认主题
                     switch (theme) {
-                        // case 'themename':
-                        //     theme = require('./theme/themename');
+                        case 'macarons':
+                            theme = require('./theme/macarons');
+                            break;
+                        case 'infographic':
+                            theme = require('./theme/infographic');
+                            break;
                         default:
-                            theme = require('./theme/default');
+                            theme = {}; // require('./theme/default');
                     }
                 }
                 else {
                     theme = theme || {};
                 }
                 
-                // 复位默认配置
-                // this._themeConfig会被别的对象引用持有
-                // 所以不能改成this._themeConfig = {};
-                for (var key in this._themeConfig) {
-                    delete this._themeConfig[key];
-                }
-                for (var key in ecConfig) {
-                    this._themeConfig[key] = zrUtil.clone(ecConfig[key]);
-                }
+                // // 复位默认配置
+                // // this._themeConfig会被别的对象引用持有
+                // // 所以不能改成this._themeConfig = {};
+                // for (var key in this._themeConfig) {
+                //     delete this._themeConfig[key];
+                // }
+                // for (var key in ecConfig) {
+                //     this._themeConfig[key] = zrUtil.clone(ecConfig[key]);
+                // }
                 
-                // 颜色数组随theme，不merge
-                theme.color && (this._themeConfig.color = []);
+                // // 颜色数组随theme，不merge
+                // theme.color && (this._themeConfig.color = []);
                 
-                // 默认标志图形类型列表，不merge
-                theme.symbolList && (this._themeConfig.symbolList = []);
+                // // 默认标志图形类型列表，不merge
+                // theme.symbolList && (this._themeConfig.symbolList = []);
                 
-                // 应用新主题
-                zrUtil.merge(this._themeConfig, zrUtil.clone(theme), true);
+                // // 应用新主题
+                // zrUtil.merge(this._themeConfig, zrUtil.clone(theme), true);
+                this._themeConfig = theme;
             }
             
             if (!_canvasSupported) {   // IE8-
-                this._themeConfig.textStyle.fontFamily = this._themeConfig.textStyle.fontFamily2;
+                var textStyle = this._themeConfig.textStyle;
+                textStyle && textStyle.fontFamily && textStyle.fontFamily2
+                    && (textStyle.fontFamily = textStyle.fontFamily2);
+                
+                textStyle = ecConfig.textStyle;
+                textStyle.fontFamily = textStyle.fontFamily2;
             }
             
             this._timeline && this._timeline.setTheme(true);

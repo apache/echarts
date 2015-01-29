@@ -1,6 +1,5 @@
 define('echarts/chart/scatter', [
     'require',
-    '../component/base',
     './base',
     '../util/shape/Symbol',
     '../component/axis',
@@ -12,7 +11,6 @@ define('echarts/chart/scatter', [
     'zrender/tool/color',
     '../chart'
 ], function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     var SymbolShape = require('../util/shape/Symbol');
     require('../component/axis');
@@ -20,11 +18,25 @@ define('echarts/chart/scatter', [
     require('../component/dataZoom');
     require('../component/dataRange');
     var ecConfig = require('../config');
+    ecConfig.scatter = {
+        zlevel: 0,
+        z: 2,
+        clickable: true,
+        legendHoverLink: true,
+        xAxisIndex: 0,
+        yAxisIndex: 0,
+        symbolSize: 4,
+        large: false,
+        largeThreshold: 2000,
+        itemStyle: {
+            normal: { label: { show: false } },
+            emphasis: { label: { show: false } }
+        }
+    };
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
     function Scatter(ecTheme, messageCenter, zr, option, myChart) {
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         this.refresh(option);
     }
     Scatter.prototype = {
@@ -111,7 +123,7 @@ define('echarts/chart/scatter', [
                 pointList[seriesIndex] = [];
                 for (var i = 0, l = serie.data.length; i < l; i++) {
                     data = serie.data[i];
-                    value = data != null ? data.value != null ? data.value : data : '-';
+                    value = this.getDataFromOption(data, '-');
                     if (value === '-' || value.length < 2) {
                         continue;
                     }
@@ -174,7 +186,7 @@ define('echarts/chart/scatter', [
             var gridXend = this.component.grid.getXend();
             var gridY = this.component.grid.getY();
             var gridYend = this.component.grid.getYend();
-            xMarkMap.average0 = (xMarkMap.sum0 / xMarkMap.counter0).toFixed(2) - 0;
+            xMarkMap.average0 = xMarkMap.sum0 / xMarkMap.counter0;
             var x = xAxis.getCoord(xMarkMap.average0);
             xMarkMap.averageLine0 = [
                 [
@@ -206,7 +218,7 @@ define('echarts/chart/scatter', [
                     gridY
                 ]
             ];
-            xMarkMap.average1 = (xMarkMap.sum1 / xMarkMap.counter1).toFixed(2) - 0;
+            xMarkMap.average1 = xMarkMap.sum1 / xMarkMap.counter1;
             var y = yAxis.getCoord(xMarkMap.average1);
             xMarkMap.averageLine1 = [
                 [
@@ -275,13 +287,15 @@ define('echarts/chart/scatter', [
                 rangColor = this._sIndex2ColorMap[seriesIndex];
             }
             var itemShape = this.getSymbolShape(serie, seriesIndex, data, dataIndex, name, x, y, this._sIndex2ShapeMap[seriesIndex], rangColor, 'rgba(0,0,0,0)', 'vertical');
-            itemShape.zlevel = this._zlevelBase;
+            itemShape.zlevel = this.getZlevelBase();
+            itemShape.z = this.getZBase();
             itemShape._main = true;
             return itemShape;
         },
         _getLargeSymbol: function (pointList, nColor) {
             return new SymbolShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 _main: true,
                 hoverable: false,
                 style: {
@@ -331,7 +345,6 @@ define('echarts/chart/scatter', [
         }
     };
     zrUtil.inherits(Scatter, ChartBase);
-    zrUtil.inherits(Scatter, ComponentBase);
     require('../chart').define('scatter', Scatter);
     return Scatter;
 });define('echarts/component/dataRange', [
@@ -352,6 +365,32 @@ define('echarts/chart/scatter', [
     var RectangleShape = require('zrender/shape/Rectangle');
     var HandlePolygonShape = require('../util/shape/HandlePolygon');
     var ecConfig = require('../config');
+    ecConfig.dataRange = {
+        zlevel: 0,
+        z: 4,
+        show: true,
+        orient: 'vertical',
+        x: 'left',
+        y: 'bottom',
+        backgroundColor: 'rgba(0,0,0,0)',
+        borderColor: '#ccc',
+        borderWidth: 0,
+        padding: 5,
+        itemGap: 10,
+        itemWidth: 20,
+        itemHeight: 14,
+        precision: 0,
+        splitNumber: 5,
+        calculable: false,
+        selectedMode: true,
+        hoverLink: true,
+        realtime: true,
+        color: [
+            '#006edd',
+            '#e0ffff'
+        ],
+        textStyle: { color: '#333' }
+    };
     var zrUtil = require('zrender/tool/util');
     var zrEvent = require('zrender/tool/event');
     var zrArea = require('zrender/tool/area');
@@ -439,11 +478,15 @@ define('echarts/chart/scatter', [
                 itemShape = this._getItemShape(lastX, lastY, itemWidth, itemHeight, this._selectedMap[i] ? color : '#ccc');
                 itemShape._idx = i;
                 itemShape.onmousemove = this._dispatchHoverLink;
-                itemShape.onclick = this._dataRangeSelected;
+                if (this.dataRangeOption.selectedMode) {
+                    itemShape.clickable = true;
+                    itemShape.onclick = this._dataRangeSelected;
+                }
                 this.shapeList.push(new RectangleShape(itemShape));
                 if (needValueText) {
                     textShape = {
-                        zlevel: this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         style: {
                             x: lastX + itemWidth + 5,
                             y: lastY,
@@ -452,15 +495,18 @@ define('echarts/chart/scatter', [
                             textFont: font,
                             textBaseline: 'top'
                         },
-                        highlightStyle: { brushType: 'fill' },
-                        clickable: true
+                        highlightStyle: { brushType: 'fill' }
                     };
                     if (this.dataRangeOption.orient == 'vertical' && this.dataRangeOption.x == 'right') {
                         textShape.style.x -= itemWidth + 10;
                         textShape.style.textAlign = 'right';
                     }
                     textShape._idx = i;
-                    textShape.onclick = this._dataRangeSelected;
+                    textShape.onmousemove = this._dispatchHoverLink;
+                    if (this.dataRangeOption.selectedMode) {
+                        textShape.clickable = true;
+                        textShape.onclick = this._dataRangeSelected;
+                    }
                     this.shapeList.push(new TextShape(textShape));
                 }
                 if (this.dataRangeOption.orient == 'horizontal') {
@@ -492,6 +538,7 @@ define('echarts/chart/scatter', [
             var itemWidth = this.dataRangeOption.itemWidth;
             var itemHeight = this.dataRangeOption.itemHeight;
             var textHeight = zrArea.getTextHeight('国', font);
+            var mSize = 10;
             var needValueText = true;
             if (this.dataRangeOption.text) {
                 needValueText = false;
@@ -518,30 +565,32 @@ define('echarts/chart/scatter', [
             }
             if (this.dataRangeOption.orient == 'horizontal') {
                 itemShape = {
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style: {
                         x: lastX,
                         y: lastY,
-                        width: itemWidth * 10,
+                        width: itemWidth * mSize,
                         height: itemHeight,
-                        color: zrColor.getLinearGradient(lastX, lastY, lastX + itemWidth * 10, lastY, colorList)
+                        color: zrColor.getLinearGradient(lastX, lastY, lastX + itemWidth * mSize, lastY, colorList)
                     },
                     hoverable: false
                 };
-                lastX += itemWidth * 10 + this._textGap;
+                lastX += itemWidth * mSize + this._textGap;
             } else {
                 itemShape = {
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style: {
                         x: lastX,
                         y: lastY,
                         width: itemWidth,
-                        height: itemHeight * 10,
-                        color: zrColor.getLinearGradient(lastX, lastY, lastX, lastY + itemHeight * 10, colorList)
+                        height: itemHeight * mSize,
+                        color: zrColor.getLinearGradient(lastX, lastY, lastX, lastY + itemHeight * mSize, colorList)
                     },
                     hoverable: false
                 };
-                lastY += itemHeight * 10 + this._textGap;
+                lastY += itemHeight * mSize + this._textGap;
             }
             this.shapeList.push(new RectangleShape(itemShape));
             this._calculableLocation = itemShape.style;
@@ -655,7 +704,8 @@ define('echarts/chart/scatter', [
         },
         _buildFiller: function () {
             this._fillerShape = {
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 style: {
                     x: this._calculableLocation.x,
                     y: this._calculableLocation.y,
@@ -948,6 +998,7 @@ define('echarts/chart/scatter', [
                     text: this._textFormat(this.dataRangeOption.max),
                     textX: textXStart,
                     textY: textYStart,
+                    textFont: font,
                     color: this.getColor(this.dataRangeOption.max),
                     rect: coverRectStart,
                     x: pointListStart[0][0],
@@ -966,6 +1017,7 @@ define('echarts/chart/scatter', [
                     text: this._textFormat(this.dataRangeOption.min),
                     textX: textXEnd,
                     textY: textYEnd,
+                    textFont: font,
                     color: this.getColor(this.dataRangeOption.min),
                     rect: coverRectEnd,
                     x: pointListEnd[0][0],
@@ -978,7 +1030,8 @@ define('echarts/chart/scatter', [
                 strokeColor: this._endShape.style.color,
                 lineWidth: 1
             };
-            this._startShape.zlevel = this._endShape.zlevel = this._zlevelBase + 1;
+            this._startShape.zlevel = this._endShape.zlevel = this.getZlevelBase();
+            this._startShape.z = this._endShape.z = this.getZBase() + 1;
             this._startShape.draggable = this._endShape.draggable = true;
             this._startShape.ondrift = this._endShape.ondrift = this._ondrift;
             this._startShape.ondragend = this._endShape.ondragend = this._ondragend;
@@ -1000,7 +1053,8 @@ define('echarts/chart/scatter', [
             var width = this._calculableLocation.width;
             var height = this._calculableLocation.height;
             this._startMask = {
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 style: {
                     x: x,
                     y: y,
@@ -1011,7 +1065,8 @@ define('echarts/chart/scatter', [
                 hoverable: false
             };
             this._endMask = {
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 style: {
                     x: this.dataRangeOption.orient == 'horizontal' ? x + width : x,
                     y: this.dataRangeOption.orient == 'horizontal' ? y : y + height,
@@ -1029,7 +1084,8 @@ define('echarts/chart/scatter', [
         _buildBackground: function () {
             var padding = this.reformCssArray(this.dataRangeOption.padding);
             this.shapeList.push(new RectangleShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable: false,
                 style: {
                     x: this._itemGroupLocation.x - padding[3],
@@ -1053,9 +1109,10 @@ define('echarts/chart/scatter', [
             var totalHeight = 0;
             var font = this.getFont(this.dataRangeOption.textStyle);
             var textHeight = zrArea.getTextHeight('国', font);
+            var mSize = 10;
             if (this.dataRangeOption.orient == 'horizontal') {
                 if (this.dataRangeOption.text || this.dataRangeOption.splitNumber <= 0 || this.dataRangeOption.calculable) {
-                    totalWidth = (this.dataRangeOption.splitNumber <= 0 || this.dataRangeOption.calculable ? itemWidth * 10 + itemGap : dataLength * (itemWidth + itemGap)) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[0] != 'undefined' ? zrArea.getTextWidth(this.dataRangeOption.text[0], font) + this._textGap : 0) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[1] != 'undefined' ? zrArea.getTextWidth(this.dataRangeOption.text[1], font) + this._textGap : 0);
+                    totalWidth = (this.dataRangeOption.splitNumber <= 0 || this.dataRangeOption.calculable ? itemWidth * mSize + itemGap : dataLength * (itemWidth + itemGap)) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[0] != 'undefined' ? zrArea.getTextWidth(this.dataRangeOption.text[0], font) + this._textGap : 0) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[1] != 'undefined' ? zrArea.getTextWidth(this.dataRangeOption.text[1], font) + this._textGap : 0);
                 } else {
                     itemWidth += 5;
                     for (var i = 0; i < dataLength; i++) {
@@ -1067,7 +1124,7 @@ define('echarts/chart/scatter', [
             } else {
                 var maxWidth;
                 if (this.dataRangeOption.text || this.dataRangeOption.splitNumber <= 0 || this.dataRangeOption.calculable) {
-                    totalHeight = (this.dataRangeOption.splitNumber <= 0 || this.dataRangeOption.calculable ? itemHeight * 10 + itemGap : dataLength * (itemHeight + itemGap)) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[0] != 'undefined' ? this._textGap + textHeight : 0) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[1] != 'undefined' ? this._textGap + textHeight : 0);
+                    totalHeight = (this.dataRangeOption.splitNumber <= 0 || this.dataRangeOption.calculable ? itemHeight * mSize + itemGap : dataLength * (itemHeight + itemGap)) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[0] != 'undefined' ? this._textGap + textHeight : 0) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[1] != 'undefined' ? this._textGap + textHeight : 0);
                     maxWidth = Math.max(zrArea.getTextWidth(this.dataRangeOption.text && this.dataRangeOption.text[0] || '', font), zrArea.getTextWidth(this.dataRangeOption.text && this.dataRangeOption.text[1] || '', font));
                     totalWidth = Math.max(itemWidth, maxWidth);
                 } else {
@@ -1143,7 +1200,8 @@ define('echarts/chart/scatter', [
         },
         _getTextShape: function (x, y, text) {
             return {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: this.dataRangeOption.orient == 'horizontal' ? x : this._itemGroupLocation.x + this._itemGroupLocation.width / 2,
                     y: this.dataRangeOption.orient == 'horizontal' ? this._itemGroupLocation.y + this._itemGroupLocation.height / 2 : y,
@@ -1158,7 +1216,8 @@ define('echarts/chart/scatter', [
         },
         _getItemShape: function (x, y, width, height, color) {
             return {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: x,
                     y: y + 1,
@@ -1169,8 +1228,7 @@ define('echarts/chart/scatter', [
                 highlightStyle: {
                     strokeColor: color,
                     lineWidth: 1
-                },
-                clickable: true
+                }
             };
         },
         __ondrift: function (shape, dx, dy) {
@@ -1201,7 +1259,7 @@ define('echarts/chart/scatter', [
                 this._syncFillerShape(shape);
             }
             if (this.dataRangeOption.realtime) {
-                this._syncData();
+                this._dispatchDataRange();
             }
             return true;
         },
@@ -1212,16 +1270,10 @@ define('echarts/chart/scatter', [
             if (!this.isDragend || !param.target) {
                 return;
             }
-            !this.dataRangeOption.realtime && this._syncData();
             status.dragOut = true;
             status.dragIn = true;
             if (!this.dataRangeOption.realtime) {
-                this.messageCenter.dispatch(ecConfig.EVENT.DATA_RANGE, null, {
-                    range: {
-                        start: this._range.end,
-                        end: this._range.start
-                    }
-                }, this.myChart);
+                this._dispatchDataRange();
             }
             status.needRefresh = false;
             this.isDragend = false;
@@ -1331,21 +1383,31 @@ define('echarts/chart/scatter', [
             this.zr.modShape(this._startMask.id);
             this.zr.modShape(this._endMask.id);
             this.zr.modShape(this._fillerShape.id);
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
         },
-        _syncData: function () {
-            if (this.dataRangeOption.realtime) {
-                this.messageCenter.dispatch(ecConfig.EVENT.DATA_RANGE, null, {
-                    range: {
-                        start: this._range.end,
-                        end: this._range.start
-                    }
-                }, this.myChart);
-            }
+        _dispatchDataRange: function () {
+            this.messageCenter.dispatch(ecConfig.EVENT.DATA_RANGE, null, {
+                range: {
+                    start: this._range.end,
+                    end: this._range.start
+                }
+            }, this.myChart);
         },
         __dataRangeSelected: function (param) {
+            if (this.dataRangeOption.selectedMode === 'single') {
+                for (var k in this._selectedMap) {
+                    this._selectedMap[k] = false;
+                }
+            }
             var idx = param.target._idx;
             this._selectedMap[idx] = !this._selectedMap[idx];
+            var valueMax = (this._colorList.length - idx) * this._gap + this.dataRangeOption.min;
+            this.messageCenter.dispatch(ecConfig.EVENT.DATA_RANGE_SELECTED, param.event, {
+                selected: this._selectedMap,
+                target: idx,
+                valueMax: valueMax,
+                valueMin: valueMax - this._gap
+            }, this.myChart);
             this.messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this.myChart);
         },
         __dispatchHoverLink: function (param) {
@@ -1375,7 +1437,7 @@ define('echarts/chart/scatter', [
         __onhoverlink: function (param) {
             if (this.dataRangeOption.show && this.dataRangeOption.hoverLink && this._indicatorShape && param && param.seriesIndex != null && param.dataIndex != null) {
                 var curValue = param.value;
-                if (isNaN(curValue)) {
+                if (curValue === '' || isNaN(curValue)) {
                     return;
                 }
                 if (curValue < this.dataRangeOption.min) {
@@ -1394,14 +1456,14 @@ define('echarts/chart/scatter', [
                         (this.dataRangeOption.max - curValue) / (this.dataRangeOption.max - this.dataRangeOption.min) * this._calculableLocation.height
                     ];
                 }
-                this._indicatorShape.style.text = param.value;
+                this._indicatorShape.style.text = this._textFormat(param.value);
                 this._indicatorShape.style.color = this.getColor(curValue);
                 this.zr.addHoverShape(this._indicatorShape);
             }
         },
         _textFormat: function (valueStart, valueEnd) {
             valueStart = valueStart.toFixed(this.dataRangeOption.precision);
-            valueEnd = typeof valueEnd != 'undefined' ? valueEnd.toFixed(this.dataRangeOption.precision) : '';
+            valueEnd = valueEnd != null ? valueEnd.toFixed(this.dataRangeOption.precision) : '';
             if (this.dataRangeOption.formatter) {
                 if (typeof this.dataRangeOption.formatter == 'string') {
                     return this.dataRangeOption.formatter.replace('{value}', valueStart).replace('{value2}', valueEnd);

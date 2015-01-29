@@ -1,8 +1,7 @@
 define('echarts/chart/line', [
     'require',
-    '../component/base',
     './base',
-    'zrender/shape/BrokenLine',
+    'zrender/shape/Polyline',
     '../util/shape/Icon',
     '../util/shape/HalfSmoothPolygon',
     '../component/axis',
@@ -14,36 +13,56 @@ define('echarts/chart/line', [
     'zrender/tool/color',
     '../chart'
 ], function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
-    var BrokenLineShape = require('zrender/shape/BrokenLine');
+    var PolylineShape = require('zrender/shape/Polyline');
     var IconShape = require('../util/shape/Icon');
     var HalfSmoothPolygonShape = require('../util/shape/HalfSmoothPolygon');
     require('../component/axis');
     require('../component/grid');
     require('../component/dataZoom');
     var ecConfig = require('../config');
+    ecConfig.line = {
+        zlevel: 0,
+        z: 2,
+        clickable: true,
+        legendHoverLink: true,
+        xAxisIndex: 0,
+        yAxisIndex: 0,
+        itemStyle: {
+            normal: {
+                label: { show: false },
+                lineStyle: {
+                    width: 2,
+                    type: 'solid',
+                    shadowColor: 'rgba(0,0,0,0)',
+                    shadowBlur: 0,
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 0
+                }
+            },
+            emphasis: { label: { show: false } }
+        },
+        symbolSize: 2,
+        showAllSymbol: false
+    };
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
     function Line(ecTheme, messageCenter, zr, option, myChart) {
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         this.refresh(option);
     }
     Line.prototype = {
         type: ecConfig.CHART_TYPE_LINE,
         _buildShape: function () {
             this.finalPLMap = {};
-            this._bulidPosition();
+            this._buildPosition();
         },
         _buildHorizontal: function (seriesArray, maxDataLength, locationMap, xMarkMap) {
             var series = this.series;
             var seriesIndex = locationMap[0][0];
             var serie = series[seriesIndex];
-            var xAxisIndex = serie.xAxisIndex;
-            var categoryAxis = this.component.xAxis.getAxis(xAxisIndex);
-            var yAxisIndex;
+            var categoryAxis = this.component.xAxis.getAxis(serie.xAxisIndex || 0);
             var valueAxis;
             var x;
             var y;
@@ -60,14 +79,13 @@ define('echarts/chart/line', [
                 }
                 x = categoryAxis.getCoordByIndex(i);
                 for (var j = 0, k = locationMap.length; j < k; j++) {
-                    yAxisIndex = series[locationMap[j][0]].yAxisIndex || 0;
-                    valueAxis = this.component.yAxis.getAxis(yAxisIndex);
+                    valueAxis = this.component.yAxis.getAxis(series[locationMap[j][0]].yAxisIndex || 0);
                     baseYP = lastYP = baseYN = lastYN = valueAxis.getCoord(0);
                     for (var m = 0, n = locationMap[j].length; m < n; m++) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null ? data.value != null ? data.value : data : '-';
+                        value = this.getDataFromOption(data, '-');
                         curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] || {
                             min: Number.POSITIVE_INFINITY,
@@ -120,7 +138,7 @@ define('echarts/chart/line', [
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null ? data.value != null ? data.value : data : '-';
+                        value = this.getDataFromOption(data, '-');
                         if (value != '-') {
                             continue;
                         }
@@ -154,9 +172,7 @@ define('echarts/chart/line', [
             var series = this.series;
             var seriesIndex = locationMap[0][0];
             var serie = series[seriesIndex];
-            var yAxisIndex = serie.yAxisIndex;
-            var categoryAxis = this.component.yAxis.getAxis(yAxisIndex);
-            var xAxisIndex;
+            var categoryAxis = this.component.yAxis.getAxis(serie.yAxisIndex || 0);
             var valueAxis;
             var x;
             var y;
@@ -173,14 +189,13 @@ define('echarts/chart/line', [
                 }
                 y = categoryAxis.getCoordByIndex(i);
                 for (var j = 0, k = locationMap.length; j < k; j++) {
-                    xAxisIndex = series[locationMap[j][0]].xAxisIndex || 0;
-                    valueAxis = this.component.xAxis.getAxis(xAxisIndex);
+                    valueAxis = this.component.xAxis.getAxis(series[locationMap[j][0]].xAxisIndex || 0);
                     baseXP = lastXP = baseXN = lastXN = valueAxis.getCoord(0);
                     for (var m = 0, n = locationMap[j].length; m < n; m++) {
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null ? data.value != null ? data.value : data : '-';
+                        value = this.getDataFromOption(data, '-');
                         curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
                         xMarkMap[seriesIndex] = xMarkMap[seriesIndex] || {
                             min: Number.POSITIVE_INFINITY,
@@ -233,7 +248,7 @@ define('echarts/chart/line', [
                         seriesIndex = locationMap[j][m];
                         serie = series[seriesIndex];
                         data = serie.data[i];
-                        value = data != null ? data.value != null ? data.value : data : '-';
+                        value = this.getDataFromOption(data, '-');
                         if (value != '-') {
                             continue;
                         }
@@ -267,15 +282,12 @@ define('echarts/chart/line', [
             var series = this.series;
             var curPLMap = {};
             var xAxis;
-            var yAxis;
             for (var j = 0, k = locationMap.length; j < k; j++) {
                 for (var m = 0, n = locationMap[j].length; m < n; m++) {
                     var seriesIndex = locationMap[j][m];
                     var serie = series[seriesIndex];
-                    var xAxisIndex = serie.xAxisIndex || 0;
-                    xAxis = this.component.xAxis.getAxis(xAxisIndex);
-                    var yAxisIndex = serie.yAxisIndex || 0;
-                    yAxis = this.component.yAxis.getAxis(yAxisIndex);
+                    xAxis = this.component.xAxis.getAxis(serie.xAxisIndex || 0);
+                    var yAxis = this.component.yAxis.getAxis(serie.yAxisIndex || 0);
                     var baseY = yAxis.getCoord(0);
                     curPLMap[seriesIndex] = curPLMap[seriesIndex] || [];
                     xMarkMap[seriesIndex] = xMarkMap[seriesIndex] || {
@@ -292,7 +304,7 @@ define('echarts/chart/line', [
                     };
                     for (var i = 0, l = serie.data.length; i < l; i++) {
                         var data = serie.data[i];
-                        var value = data != null ? data.value != null ? data.value : data : '-';
+                        var value = this.getDataFromOption(data, '-');
                         if (!(value instanceof Array)) {
                             continue;
                         }
@@ -383,8 +395,9 @@ define('echarts/chart/line', [
                         } else {
                             singlePL = this._getLargePointList(orient, singlePL);
                         }
-                        var brokenLineShape = new BrokenLineShape({
-                            zlevel: this._zlevelBase,
+                        var polylineShape = new PolylineShape({
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             style: {
                                 miterLimit: lineWidth,
                                 pointList: singlePL,
@@ -403,11 +416,12 @@ define('echarts/chart/line', [
                             _seriesIndex: seriesIndex,
                             _orient: orient
                         });
-                        ecData.pack(brokenLineShape, series[seriesIndex], seriesIndex, 0, i, series[seriesIndex].name);
-                        this.shapeList.push(brokenLineShape);
+                        ecData.pack(polylineShape, series[seriesIndex], seriesIndex, 0, i, series[seriesIndex].name);
+                        this.shapeList.push(polylineShape);
                         if (isFill) {
                             var halfSmoothPolygonShape = new HalfSmoothPolygonShape({
-                                zlevel: this._zlevelBase,
+                                zlevel: this.getZlevelBase(),
+                                z: this.getZBase(),
                                 style: {
                                     miterLimit: lineWidth,
                                     pointList: zrUtil.clone(singlePL).concat([
@@ -491,7 +505,7 @@ define('echarts/chart/line', [
         },
         _getCalculableItem: function (seriesIndex, dataIndex, name, x, y, orient) {
             var series = this.series;
-            var color = series[seriesIndex].calculableHolderColor || this.ecTheme.calculableHolderColor;
+            var color = series[seriesIndex].calculableHolderColor || this.ecTheme.calculableHolderColor || ecConfig.calculableHolderColor;
             var itemShape = this._getSymbol(seriesIndex, dataIndex, name, x, y, orient);
             itemShape.style.color = color;
             itemShape.style.strokeColor = color;
@@ -509,7 +523,8 @@ define('echarts/chart/line', [
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
             var itemShape = this.getSymbolShape(serie, seriesIndex, data, dataIndex, name, x, y, this._sIndex2ShapeMap[seriesIndex], this._sIndex2ColorMap[seriesIndex], '#fff', orient === 'vertical' ? 'horizontal' : 'vertical');
-            itemShape.zlevel = this._zlevelBase + 1;
+            itemShape.zlevel = this.getZlevelBase();
+            itemShape.z = this.getZBase() + 1;
             if (this.deepQuery([
                     data,
                     serie,
@@ -620,7 +635,7 @@ define('echarts/chart/line', [
                         0,
                         0
                     ];
-                    this.zr.animate(this.shapeList[i].id, '').when(500, {
+                    this.zr.animate(this.shapeList[i].id, '').when(this.query(this.option, 'animationDurationUpdate'), {
                         position: [
                             x,
                             y
@@ -683,7 +698,6 @@ define('echarts/chart/line', [
     }
     IconShape.prototype.iconLibrary['legendLineIcon'] = legendLineIcon;
     zrUtil.inherits(Line, ChartBase);
-    zrUtil.inherits(Line, ComponentBase);
     require('../chart').define('line', Line);
     return Line;
 });define('echarts/util/shape/HalfSmoothPolygon', [

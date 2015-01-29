@@ -115,6 +115,7 @@
                                 <li><a href="#AreaStyle">areaStyle</a></li>
                                 <li><a href="#TextStyle">textStyle</a></li>
                                 <li><a href="#Loadingoption">loadingOption</a></li>
+                                <li><a href="#NoDataLoadingOption">noDataLoadingOption</a></li>
                                 <li><a href="#BackgroundColor">backgroundColor</a></li>
                                 <li><a href="#Color">color</a></li>
                                 <li><a href="#SymbolList">symbolList</a></li>
@@ -128,6 +129,9 @@
                                 <li><a href="#AddDataAnimation">addDataAnimation</a></li>
                                 <li><a href="#AnimationThreshold">animationThreshold</a></li>
                                 <li><a href="#AnimationDuration">animationDuration</a></li>
+                                <li>
+                                    <a href="#animationDurationUpdate">animationDurationUpdate</a>
+                                </li>
                                 <li><a href="#AnimationEasing">animationEasing</a></li>
                             </ul>
                             <li><a href="#图数据表示">图数据表示</a></li>
@@ -214,7 +218,7 @@
                         </tr>
                         <tr>
                             <td> grid </td>
-                            <td> 直角坐标系中除坐标轴外的绘图网格 </td>
+                            <td> 直角坐标系中除坐标轴外的绘图网格，用于定义直角系整体布局 </td>
                         </tr>
                         <tr>
                             <td> legend </td>
@@ -226,7 +230,7 @@
                         </tr>
                         <tr>
                             <td> dataZoom </td>
-                            <td> 数据区域缩放，常用于展现大数据时选择可视范围 </td>
+                            <td> 数据区域缩放，常用于展现大量数据时选择可视范围 </td>
                         </tr>
                         <tr>
                             <td> roamController </td>
@@ -242,7 +246,7 @@
                         </tr>
                         <tr>
                             <td> timeline </td>
-                            <td> 时间轴，常用于展现同一组数据在时间维度上的多份数据 </td>
+                            <td> 时间轴，常用于展现同一系列数据在时间维度上的多份数据 </td>
                         </tr>
                         <tr>
                             <td> series </td>
@@ -290,6 +294,14 @@
                         <tr>
                             <td> map </td>
                             <td> 地图。内置世界地图、中国及中国34个省市自治区地图数据、可通过标准GeoJson扩展地图类型。支持svg扩展类地图应用，如室内地图、运动场、物件构造等。 </td>
+                        </tr>
+                        <tr>
+                            <td> gauge </td>
+                            <td> 仪表盘。用于展现关键指标数据，常见于BI类系统。 </td>
+                        </tr>
+                        <tr>
+                            <td> funnel </td>
+                            <td> 漏斗图。用于展现数据经过筛选、过滤等流程处理后发生的数据变化，常见于BI类系统。</td>
                         </tr>
                         <tr>
                             <td> evnetRiver </td>
@@ -467,7 +479,7 @@
                     <p>echarts提供多种引入方式，请根据你的项目类型选择合适的方式：</p>
                     
                     <h3>模块化包引入<a name="引入ECharts1"> </a></h3>
-                    <P>如果你熟悉模块化开发，你的项目本身就是模块化且遵循AMD规范的，那引入echarts将很简单，使用一个符合AMD规范的模块加载器，如<a href="https://github.com/ecomfe/esl" target="_blank">esl.js</a>，只需要配置好packet路径指向src即可，你将享受到图表的按需加载等最大的灵活性，由于echarts依赖底层zrender，你需要同时下载<a href="https://github.com/ecomfe/zrender" target="_blank">zrender</a>到本地，可参考<a href="example/demo.html" target="_blank">demo</a>，你需要配置如下。</p>
+                    <P>如果你熟悉模块化开发，你的项目本身就是模块化且遵循AMD规范的，那引入echarts将很简单，使用一个符合AMD规范的模块加载器，如<a href="https://github.com/ecomfe/esl" target="_blank">esl.js</a>，只需要配置好packages路径指向src即可，你将享受到图表的按需加载等最大的灵活性，由于echarts依赖底层zrender，你需要同时下载<a href="https://github.com/ecomfe/zrender" target="_blank">zrender</a>到本地，可参考<a href="example/demo.html" target="_blank">demo</a>，你需要配置如下。</p>
                     <p>需要注意的是，包引入提供了开发阶段最大的灵活性，但并不适合直接上线，减少请求的文件数量是前端性能优化中最基本但很重要的规则，务必在上线时做文件的连接压缩。</P>
                     <div class="code">
                         <pre>//from echarts example
@@ -581,9 +593,10 @@ require.config({
                         <li>为模块加载器配置echarts的路径，从当前页面链接到echarts.js所在目录，见上述说明</li>
                         <li>动态加载echarts及所需图表然后在回调函数中开始使用（容我罗嗦一句，当你确保同一页面已经加载过echarts，再使用时直接require('echarts').init(dom)就行）</li>
                     </ol>
+                    <p>详见<a href="./start.html" target="_blank" style="margin-right: 50px;">入门教程 ( Getting started ) »</a></p>
 
                     <h3>标签式单文件引入<a name="引入ECharts3"> </a></h3>
-                    <P>自1.3.5开始，ECharts提供标签式引入。如果你的项目本身并不是基于模块化开发的，或者是基于CMD规范（如使用的是seajs），那么引入基于AMD模块化的echarts可能并不方便，我们建议你采用srcipt标签式引入，忘掉require，srcipt标签引入echarts后将可以直接使用两个全局的命名空间：echarts，zrender，可参考<a href="example/www2/index.html" target="_blank">ECharts标签式引入</a>，需要注意的是excanvas依赖body标签插入Canvas节点去判断Canvas的支持，如果你把引用echarts的script标签放置head内在IE8-的浏览器中会出现报错，解决的办法就是把标签移动到body内（后）。</p>
+                    <P>自1.3.5开始，ECharts提供标签式引入。如果你的项目本身并不是基于模块化开发的，或者是基于CMD规范（如使用的是seajs），那么引入基于AMD模块化的echarts可能并不方便，我们建议你采用srcipt标签式引入，忘掉require。Srcipt标签引入echarts后将可以直接使用两个全局的命名空间：echarts，zrender，可参考<a href="example/www2/index.html" target="_blank">ECharts标签式引入</a>，需要注意的是excanvas依赖body标签插入Canvas节点去判断Canvas的支持，如果你把引用echarts的script标签放置head内在IE8-的浏览器中会出现报错，解决的办法就是把标签移动到body内（后）。</p>
                     <p>标签式引入环境中，常用模块的引用可通过命名空间直取，同模块化下的路径结构，如：<br/>echarts.config = require('echarts/config')， zrender.tool.color = require('zrender/tool/color')</p>
                     <div class="code">
                         <pre>//from echarts example
@@ -606,12 +619,13 @@ require.config({
                         <li>dist/echarts-all.js : 经过压缩，全图表，包含world，china以及34个省市级地图数据</li>
                         <li>source/echarts-all.js : 未压缩，全图表，包含world，china以及34个省市级地图数据，可用于调试</li>
                     </ul>
+                    <p>详见<a href="./start.html" target="_blank" style="margin-right: 50px;">入门教程 ( Getting started ) »</a></p>
                         
                     <h3>自定义构建echarts单文件<a name="自定义构建echarts单文件"></a></h3>
                     <p>详见 echarts-optimizer 安装使用说明：<a href="https://github.com/ecomfe/echarts-optimizer/blob/master/README.md" target="_blank">README.md</a></p>
 
                     <h3>初始化<a name="初始化"> </a></h3>
-                    <p>通过require获得echarts接口后（或者命名空间上）可实例化图表，echarts接口仅有一个方法init，执行init时传入一个具备大小的dom节点（width、height可被计算得到即可，不一定可见）后即可实例化出图表对象，图表库实现为多实例的，同一页面可在多个dom上init出多个图表，同一个dom上多次init将自动释放已有实例（1.4.0+）。init方法说明如下：</p>
+                    <p>通过require获得echarts接口（或者命名空间）后可实例化图表，echarts接口仅有一个方法init，执行init时传入一个具备大小的dom节点（width、height可被计算得到即可，不一定可见）后即可实例化出图表对象，图表库实现为多实例的，同一页面可在多个dom上init出多个图表，同一个dom上多次init将自动释放已有实例（1.4.0+）。init方法说明如下：</p>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
                             <th> 名称 </th>
@@ -621,7 +635,9 @@ require.config({
                         <tr>
                             <td> <b>{ECharts}</b> init </td>
                             <td> <b>{dom}</b> dom, <br/><b>{string | Object =}</b> theme </td>
-                            <td> 初始化接口，返回ECharts实例，其中dom为图表所在节点，theme为可选的主题，内置主题（'macarons', 'infographic'）直接传入名称，自定义扩展主题可传入主题对象</td>
+                            <td> 初始化接口，返回ECharts实例，其中dom为图表所在节点，theme为可选的主题，内置主题（'macarons', 'infographic'）直接传入名称，自定义扩展主题可传入主题对象。如：
+                                <br/>var myCharts = echarts.init(document.getElementById('main'), 'macarons')；
+                            </td>
                         </tr>
                     </table>
                     <p>图表实例可用方法见<a href="#方法">方法</a></p>
@@ -695,12 +711,12 @@ require(['echarts'], function (ec){
                         <tr>
                             <td><b>{self}</b> setSeries</td>
                             <td><b>{Array}</b> series, <br/><b>{boolean=}</b> notMerge</td>
-                            <td>数据接口，驱动图表生成的数据内容（详见<a href="#Series" title="">series</a>），效果等同调用setOption({series : {...}}) </td>
+                            <td>数据接口，驱动图表生成的数据内容（详见<a href="#Series" title="">series</a>），效果等同调用 setOption({series : {...}}, notMerge) </td>
                         </tr>
                         <tr>
                             <td><b>{Object}</b> getSeries</td>
                             <td><b>{void}</b></td>
-                            <td>返回内部持有的当前显示series克隆（拷贝），效果同return getOption().series</td>
+                            <td>返回内部持有的当前显示series克隆（拷贝），效果同 getOption().series</td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> addData</td>
@@ -760,19 +776,37 @@ require(['echarts'], function (ec){
                             </td>
                             <td>删除单个标线接口，其中
                                 <br/>seriesIdx 系列索引
-                                <br/>markName [标线]名称
+                                <br/>markName [标线]名称，已构建的标线名称默认为markLine数据中起始点的name，如果同时终点也有name属性，如地图标线，则标线名称等于“nameStart > nameEnd”，如markLine的data为
+                                <br/>[{name:'北京', value:100}, {name:'上海'}]
+                                <br/>则删除该标线时传入的markName为 "北京 > 上海"
                             </td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> on</td>
                             <td><b>{string}</b> eventName, <br/><b>{Function}</b> eventListener</td>
                             <td>事件绑定，事件命名统一挂载到require('echarts/config').EVENT（非模块化为echarts.config.EVENT）命名空间下，建议使用此命名空间作为事件名引用，当前版本支持事件有：
-                                <br/>REFRESH（刷新），RESTORE（还原），RESIZE（显示空间变化），CLICK（点击），DBLCLICK（双击），HOVER（悬浮），
-                                <br/>DATA_CHANGED（数据修改），DATA_VIEW_CHANGED（数据视图修改），
-                                <br/>MAGIC_TYPE_CHANGED（动态类型切换），TIMELINE_CHANGED（时间轴变化），
-                                <br/>DATA_ZOOM（数据区域缩放），DATA_RANGE（值域漫游），MAP_ROAM（地图漫游），
-                                <br/>DATA_RANGE_HOVERLINK（值域漫游hover），LEGEND_HOVERLINK（图例hover），
-                                <br/>LEGEND_SELECTED（图例选择），MAP_SELECTED（地图选择），PIE_SELECTED（饼图选择），
+                                <br/>-----------------------基础事件-----------------------
+                                <br/>REFRESH（刷新），
+                                <br/>RESTORE（还原），
+                                <br/>RESIZE（显示空间变化），
+                                <br/>CLICK（点击），
+                                <br/>DBLCLICK（双击），
+                                <br/>HOVER（悬浮），
+                                <br/>MOUSEOUT（鼠标离开数据图形），
+                                <br/>---------------------交互逻辑事件--------------------
+                                <br/>DATA_CHANGED（数据修改，如拖拽重计算），
+                                <br/>DATA_VIEW_CHANGED（数据视图修改），
+                                <br/>MAGIC_TYPE_CHANGED（动态类型切换），
+                                <br/>TIMELINE_CHANGED（时间轴变化），
+                                <br/>DATA_ZOOM（数据区域缩放），
+                                <br/>DATA_RANGE（值域漫游），
+                                <br/>DATA_RANGE_SELECTED（值域开关选择），
+                                <br/>DATA_RANGE_HOVERLINK（值域漫游hover），
+                                <br/>LEGEND_SELECTED（图例开关选择），
+                                <br/>LEGEND_HOVERLINK（图例hover），
+                                <br/>MAP_ROAM（地图漫游），
+                                <br/>MAP_SELECTED（地图选择），
+                                <br/>PIE_SELECTED（饼图选择），
                                 <br/>FORCE_LAYOUT_END（力导向布局结束）
                                 <br/><a href="./example/event.html" target="_blank">事件调试 » </a>
                             </td>
@@ -785,7 +819,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td><b>{self}</b> setTheme</td>
                             <td><b>{string | Object}</b> theme</td>
-                            <td> 设置主题，内置主题（暂无）直接传入名称，自定义扩展主题可传入主题对象 </td>
+                            <td> 设置主题，内置主题（'macarons', 'infographic'）直接传入名称，自定义扩展主题可传入主题对象 </td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> connect</td>
@@ -819,7 +853,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td><b>{string}</b> getDataURL</td>
                             <td><b>{string=}</b> imgType</td>
-                            <td>获取当前图表的Base64图片dataURL，imgType 图片类型，支持png|jpeg，默认为png</td>
+                            <td>获取当前图表的Base64图片dataURL，IE8-不支持，imgType 图片类型，支持png|jpeg，默认为png</td>
                         </tr>
                         <tr>
                             <td><b>{Dom}</b> getImage</td>
@@ -829,7 +863,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td><b>{self}</b> resize</td>
                             <td><b>{void}</b></td>
-                            <td>ECharts没有绑定resize事件，显示区域大小发生改变内部并不知道，使用方可以根据自己的需求绑定关心的事件，主动调用resize达到区域更新的效果。</td>
+                            <td>ECharts没有绑定resize事件，显示区域大小发生改变内部并不知道，使用方可以根据自己的需求绑定关心的事件，主动调用resize达到自适应的效果，常见如window.onresize = myChart.resize。</td>
                         </tr>
                         <tr>
                             <td><b>{self}</b> refresh</td>
@@ -863,7 +897,7 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr class='bgGreen'>
                             <td> <b>{color}</b> backgroundColor </td>
-                            <td> 全图默认背景，（详见<a href="#BackgroundColor" title="">backgroundColor</a>），默认为无，透明</td>
+                            <td> 全图默认背景，（详见<a href="#BackgroundColor" title="">backgroundColor</a>），支持rgba，默认为无，透明</td>
                         </tr>
                         <tr class='bgGreen'>
                             <td> <b>{Array}</b> color </td>
@@ -889,6 +923,9 @@ require(['echarts'], function (ec){
                                 <a href="#AddDataAnimation" title="">addDataAnimation</a>，
                                 <a href="#AnimationThreshold" title="">animationThreshold</a>，
                                 <a href="#AnimationDuration" title="">animationDuration</a>，
+                                <a href="#animationDurationUpdate" title="">
+                                    animationDurationUpdate
+                                </a>，
                                 <a href="#AnimationEasing" title="">animationEasing</a>）
                             </td>
                         </tr>
@@ -958,9 +995,19 @@ require(['echarts'], function (ec){
                             <td> 显示策略，可选为：true（显示） | false（隐藏） </td>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> 一级层叠控制。每一个不同的zlevel将产生一个独立的canvas，相同zlevel的组件或图标将在同一个canvas上渲染。zlevel越高越靠顶层，canvas对象增多会消耗更多的内存和性能，并不建议设置过多的zlevel，大部分情况可以通过二级层叠控制z实现层叠控制。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 4 </td>
+                            <td> 二级层叠控制，同一个canvas（相同zlevel）上z越高约靠顶层。 </td>
+                        </tr>
+                        <tr>
                             <td> <b>{string}</b> type </td>
                             <td> 'time' </td>
-                            <td> 模式是时间类型，时间轴间隔根据时间跨度计算，可选为：'number' </td>
+                            <td> 模式是时间类型，时间轴间隔根据时间跨度自动计算，可选为：'number' </td>
                         </tr>
                         <tr>
                             <td> <b>{boolean}</b> notMerge </td>
@@ -1045,7 +1092,11 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>
-                            <td> {color: '#666', width: 1, type: 'dashed'} </td>
+                            <td><pre>{
+    color: '#666',
+    width: 1,
+    type: 'dashed'
+}                           </pre></td>
                             <td> 时间轴轴线样式，lineStyle控制线条样式，（详见<a href="#LineStyle" title="">lineStyle</a>） </td>
                         </tr>
                         <tr>
@@ -1094,10 +1145,16 @@ require(['echarts'], function (ec){
                         <tr>
                             <td> <b>{Object}</b> controlStyle </td>
                             <td><pre>{
-    normal : { color : '#333'},
-    emphasis : { color : '#1e90ff'}
+    itemSize: 15,
+    itemGap: 5,
+    normal : {
+        color : '#333'
+    },
+    emphasis : {
+        color : '#1e90ff'
+    }
 }                               </pre></td>
-                            <td> 时间轴控制器样式，可指定正常和高亮颜色
+                            <td> 时间轴控制器样式，可指定itemSize按钮大小，itemGap按钮间隔，normal.color正常和emphasis.color高亮颜色
                             </td>
                         </tr>
                         <tr>
@@ -1131,6 +1188,21 @@ require(['echarts'], function (ec){
                             <th> 名称 </th>
                             <th> 默认值 </th>
                             <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{boolean}</b> show </td>
+                            <td> true </td>
+                            <td> 显示策略，可选为：true（显示） | false（隐藏） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> 一级层叠控制。每一个不同的zlevel将产生一个独立的canvas，相同zlevel的组件或图标将在同一个canvas上渲染。zlevel越高越靠顶层，canvas对象增多会消耗更多的内存和性能，并不建议设置过多的zlevel，大部分情况可以通过二级层叠控制z实现层叠控制。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 6 </td>
+                            <td> 二级层叠控制，同一个canvas（相同zlevel）上z越高约靠顶层。 </td>
                         </tr>
                         <tr>
                             <td> <b>{string}</b> text </td>
@@ -1206,12 +1278,18 @@ require(['echarts'], function (ec){
                         
                         <tr>
                             <td> <b>{Object}</b> textStyle </td>
-                            <td> {<br/>fontSize: 18, <br/>fontWeight: 'bolder', <br/>color: '#333'<br/>} </td>
+                            <td><pre>{
+    fontSize: 18,
+    fontWeight: 'bolder',
+    color: '#333'
+}                           </pre></td>
                             <td> 主标题文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> subtextStyle </td>
-                            <td> {color: '#aaa'} </td>
+                            <td><pre>{
+    color: '#aaa'
+}                           </pre> </td>
                             <td> 副标题文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
                         
@@ -1231,6 +1309,16 @@ require(['echarts'], function (ec){
                             <td> <b>{boolean}</b> show </td>
                             <td> false </td>
                             <td> 显示策略，可选为：true（显示） | false（隐藏） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> 一级层叠控制。每一个不同的zlevel将产生一个独立的canvas，相同zlevel的组件或图标将在同一个canvas上渲染。zlevel越高越靠顶层，canvas对象增多会消耗更多的内存和性能，并不建议设置过多的zlevel，大部分情况可以通过二级层叠控制z实现层叠控制。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 6 </td>
+                            <td> 二级层叠控制，同一个canvas（相同zlevel）上z越高约靠顶层。 </td>
                         </tr>
                         <tr>
                             <td> <b>{string}</b> orient </td>
@@ -1427,6 +1515,16 @@ require(['echarts'], function (ec){
                             <td> 显示策略，可选为：true（显示） | false（隐藏） </td>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 1 </td>
+                            <td> 一级层叠控制。每一个不同的zlevel将产生一个独立的canvas，相同zlevel的组件或图标将在同一个canvas上渲染。zlevel越高越靠顶层，canvas对象增多会消耗更多的内存和性能，并不建议设置过多的zlevel，大部分情况可以通过二级层叠控制z实现层叠控制。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 8 </td>
+                            <td> 二级层叠控制，同一个canvas（相同zlevel）上z越高约靠顶层。 </td>
+                        </tr>
+                        <tr>
                             <td> <b>{boolean}</b> showContent </td>
                             <td> true </td>
                             <td> tooltip主体内容显示策略，只需tooltip触发事件或显示axisPointer而不需要显示内容时可配置该项为false，<br/>可选为：true（显示） | false（隐藏） </td>
@@ -1494,14 +1592,25 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> axisPointer </td>
-                            <td> {<br/>
-                                type : 'line',<br/>
-                                lineStyle : {<br/>&nbsp;&nbsp;color: '#48b',<br/>&nbsp;&nbsp;width: 2,<br/>&nbsp;&nbsp;type: 'solid'<br/>},<br/>
-                                crossStyle : {<br/>&nbsp;&nbsp;color: '#1e90ff',<br/>&nbsp;&nbsp;width: 1,<br/>&nbsp;&nbsp;type: 'dashed'<br/>},<br/>
-                                shadowStyle : {<br/>&nbsp;&nbsp;size: 'auto',<br/>&nbsp;&nbsp;color: 'rgba(150,150,150,0.3)'<br/>}<br/>
-                                } 
-                            </td>
-                            <td> 坐标轴指示器，坐标轴触发有效，默认type为line，可选为：'line' | 'cross' | 'shadow' | 'none'(无)，指定type后对应style生效，见下
+                            <td><pre>{
+    type: 'line',
+    lineStyle: {
+        color: '#48b',
+        width: 2,
+        type: 'solid'
+    },
+    crossStyle: {
+        color: '#1e90ff',
+        width: 1,
+        type: 'dashed'
+    },
+    shadowStyle: {
+        color: 'rgba(150,150,150,0.3)',
+        width: 'auto',
+        type: 'default'
+    }
+}                           </pre></td>
+                            <td> 坐标轴指示器，默认type为line，可选为：'line' | 'cross' | 'shadow' | 'none'(无)，指定type后对应style生效，见下
                                  <br/>lineStyle设置直线指示器（详见<a href="#LineStyle" title="">lineStyle</a>）,
                                  <br/>crossStyle设置十字准星指示器（详见<a href="#LineStyle" title="">lineStyle</a>）,
                                  <br/>shadowStyle设置阴影指示器（详见<a href="#AreaStyle" title="">areaStyle</a>），areaStyle.size默认为'auto'自动计算，可指定具体宽度</td>
@@ -1532,7 +1641,7 @@ require(['echarts'], function (ec){
                                         <li><b>力导向图, 和弦图</b> : 
                                             <ul>
                                                 <li>节点 : a（系列名称），b（节点名称），c（节点值）, d(节点类目索引)</li>
-                                                <li>边 : a（系列名称），b（边名称，默认为源名称-目标名称），c（边权重）, d(源节点name或者index), e(目标节点name或者index)</li>
+                                                <li>边 : a（系列名称），b（边名称，默认为大端节点名称-小端节点名称），c（边权重）, d(大端节点 name 或者 index), e(小端节点 name 或者 index)</li>
                                             </ul>
                                         </li>
                                     </ul>
@@ -1540,7 +1649,7 @@ require(['echarts'], function (ec){
                             </ul>
                         </li>
                         <li>
-                            <b>{Function}</b>，传递参数列表如下：
+                            <b>{Function}</b>，传递参数列表为[params, ticket, callback]，详见下：
                             <ul>
                                 <li>&lt;Array&gt; params : 数组内容同模板变量，<pre>[
     {
@@ -1592,6 +1701,16 @@ require(['echarts'], function (ec){
                             <td> <b>{boolean}</b> show </td>
                             <td> true </td>
                             <td> 显示策略，可选为：true（显示） | false（隐藏） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> 一级层叠控制。每一个不同的zlevel将产生一个独立的canvas，相同zlevel的组件或图标将在同一个canvas上渲染。zlevel越高越靠顶层，canvas对象增多会消耗更多的内存和性能，并不建议设置过多的zlevel，大部分情况可以通过二级层叠控制z实现层叠控制。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 4 </td>
+                            <td> 二级层叠控制，同一个canvas（相同zlevel）上z越高约靠顶层。 </td>
                         </tr>
                         <tr>
                             <td> <b>{string}</b> orient </td>
@@ -1668,7 +1787,7 @@ require(['echarts'], function (ec){
                             <td> [ ] </td>
                             <td> 图例内容数组，数组项通常为<b>{string}</b>，每一项代表一个系列的name，默认布局到达边缘会自动分行（列），传入空字符串''可实现手动分行（列）。
                                 <br/>使用根据该值索引<a href="#Series" title="">series</a>中同名系列所用的图表类型和itemStyle，如果索引不到，该item将默认为没启用状态。
-                                <br/>如需个性化图例文字样式，可把数组项改为<b>{Object}</b>，知道文本样式和个性化图例icon，格式为
+                                <br/>如需个性化图例文字样式，可把数组项改为<b>{Object}</b>，指定文本样式和个性化图例icon，格式为
                                 <br/>{<br/>&nbsp;&nbsp;name : <b>{string}</b>, <br/>&nbsp;&nbsp;textStyle : <b>{Object}</b>, <br/>&nbsp;&nbsp;icon : <b>{string}</b><br/>}
                             </td>
                         </tr>
@@ -1687,6 +1806,16 @@ require(['echarts'], function (ec){
                             <td> <b>{boolean}</b> show </td>
                             <td> true </td>
                             <td> 显示策略，可选为：true（显示） | false（隐藏） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> 一级层叠控制。每一个不同的zlevel将产生一个独立的canvas，相同zlevel的组件或图标将在同一个canvas上渲染。zlevel越高越靠顶层，canvas对象增多会消耗更多的内存和性能，并不建议设置过多的zlevel，大部分情况可以通过二级层叠控制z实现层叠控制。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 4 </td>
+                            <td> 二级层叠控制，同一个canvas（相同zlevel）上z越高约靠顶层。 </td>
                         </tr>
                         <tr>
                             <td> <b>{string}</b> orient </td>
@@ -1810,6 +1939,16 @@ require(['echarts'], function (ec){
                             <th> 描述 </th>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> 一级层叠控制。每一个不同的zlevel将产生一个独立的canvas，相同zlevel的组件或图标将在同一个canvas上渲染。zlevel越高越靠顶层，canvas对象增多会消耗更多的内存和性能，并不建议设置过多的zlevel，大部分情况可以通过二级层叠控制z实现层叠控制。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 4 </td>
+                            <td> 二级层叠控制，同一个canvas（相同zlevel）上z越高约靠顶层。 </td>
+                        </tr>
+                        <tr>
                             <td> <b>{boolean}</b> show </td>
                             <td> false </td>
                             <td> 是否显示，当show为true时则接管使用指定类目轴的全部系列数据，如不指定则接管全部直角坐标系数据。 </td>
@@ -1846,8 +1985,8 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{color}</b> dataBackgroundColor </td>
-                            <td> '#ccc' </td>
-                            <td> 数据缩略背景颜色 </td>
+                            <td> '#eee' </td>
+                            <td> 数据缩略背景颜色，仅以第一个系列的数据作为缩量图显示</td>
                         </tr>
                         <tr>
                             <td> <b>{color}</b> fillerColor </td>
@@ -1858,6 +1997,11 @@ require(['echarts'], function (ec){
                             <td> <b>{color}</b> handleColor </td>
                             <td> 'rgba(70,130,180,0.8)' </td>
                             <td> 控制手柄颜色  </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> handleSize </td>
+                            <td> 8</td>
+                            <td> 控制手柄大小  </td>
                         </tr>
                         <tr>
                             <td> <b>{Array | number}</b> xAxisIndex </td>
@@ -1909,6 +2053,16 @@ require(['echarts'], function (ec){
                             <td> <b>{boolean}</b> show </td>
                             <td> true </td>
                             <td> 显示策略，可选为：true（显示） | false（隐藏）。 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> 一级层叠控制。每一个不同的zlevel将产生一个独立的canvas，相同zlevel的组件或图标将在同一个canvas上渲染。zlevel越高越靠顶层，canvas对象增多会消耗更多的内存和性能，并不建议设置过多的zlevel，大部分情况可以通过二级层叠控制z实现层叠控制。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 4 </td>
+                            <td> 二级层叠控制，同一个canvas（相同zlevel）上z越高约靠顶层。 </td>
                         </tr>
                         <tr>
                             <td> <b>{string | number}</b> x </td>
@@ -1982,6 +2136,16 @@ require(['echarts'], function (ec){
                             <th> 描述 </th>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> 一级层叠控制。每一个不同的zlevel将产生一个独立的canvas，相同zlevel的组件或图标将在同一个canvas上渲染。zlevel越高越靠顶层，canvas对象增多会消耗更多的内存和性能，并不建议设置过多的zlevel，大部分情况可以通过二级层叠控制z实现层叠控制。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 0 </td>
+                            <td> 二级层叠控制，同一个canvas（相同zlevel）上z越高约靠顶层。 </td>
+                        </tr>
+                        <tr>
                             <td> <b>{number | string}</b> x </td>
                             <td> 80 </td>
                             <td> 直角坐标系内绘图网格左上角横坐标，数值单位px，支持百分比（字符串），如'50%'(显示区域横向中心) </td>
@@ -2010,7 +2174,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td> <b>{number}</b> height </td>
                             <td> 自适应 </td>
-                            <td> 直角坐标系内绘图网格（不含坐标轴）高度，默认为总宽度 - y - y2，数值单位px，指定height后将忽略y2，见下图。
+                            <td> 直角坐标系内绘图网格（不含坐标轴）高度，默认为总高度 - y - y2，数值单位px，指定height后将忽略y2，见下图。
                                  <br/>支持百分比（字符串），如'50%'(显示区域一半的高度) </td>
                         </tr>
                         <tr>
@@ -2032,11 +2196,11 @@ require(['echarts'], function (ec){
                     <p><img src="./asset/img/doc/grid.jpg" title="" alt="绘图网格"/></P>
 
                     <h4>xAxis<a name="Xaxis"> </a></h4>
-                    <P>直角坐标系中横轴数组，数组中每一项代表一条横轴坐标轴，仅有一条时可省略数值。最多同时存在2条横轴，单条横轴时可指定安放于<a href="#Grid" title="">grid</a>的底部（默认）或顶部，2条同时存在时位置互斥，默认第一条安放于底部，第二条安放于顶部。</p>
+                    <P>直角坐标系中横轴数组，数组中每一项代表一条横轴坐标轴，仅有一条时可省略数组。最多同时存在2条横轴，单条横轴时可指定安放于<a href="#Grid" title="">grid</a>的底部（默认）或顶部，2条同时存在时位置互斥，默认第一条安放于底部，第二条安放于顶部。</p>
                     <p>坐标轴有三种类型，类目型、数值型和时间型（区别详见<a href="#Axis" title="">axis</a>），横轴通常为类目型，但条形图时则横轴为数值型，散点图时则横纵均为数值型，具体参数详见<a href="#Axis" title="">axis</a>。</P>
 
                     <h4>yAxis<a name="Yaxis"> </a></h4>
-                    <P>直角坐标系中纵轴数组，数组中每一项代表一条纵轴坐标轴，仅有一条时可省略数值。最多同时存在2条纵轴，单条纵轴时可指定安放于<a href="#Grid" title="">grid</a>的左侧（默认）或右侧，2条同时存在时位置互斥，默认第一条安放于左侧，第二条安放于右侧。</p>
+                    <P>直角坐标系中纵轴数组，数组中每一项代表一条纵轴坐标轴，仅有一条时可省略数组。最多同时存在2条纵轴，单条纵轴时可指定安放于<a href="#Grid" title="">grid</a>的左侧（默认）或右侧，2条同时存在时位置互斥，默认第一条安放于左侧，第二条安放于右侧。</p>
                     <p>坐标轴有三种类型，类目型、数值型和时间型（区别详见<a href="#Axis" title="">axis</a>），纵轴通常为数值型，但条形图时则纵轴为类目型，具体参数详见<a href="#Axis" title="">axis</a>。</P>
 
                     <h4>axis<a name="Axis"> </a><a name="CategoryAxis"> </a><a name="ValueAxis"> </a></h4>
@@ -2051,7 +2215,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <th> 名称 </th>
                             <th> 默认值 </th>
-                            <th> 适用类型 </th>
+                            <th style="width:70px"> 适用类型 </th>
                             <th> 描述 </th>
                         </tr>
                         <tr>
@@ -2065,6 +2229,18 @@ require(['echarts'], function (ec){
                             <td> true </td>
                             <td> 通用 </td>
                             <td> 显示策略，可选为：true（显示） | false（隐藏） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> 通用 </td>
+                            <td> 一级层叠控制。每一个不同的zlevel将产生一个独立的canvas，相同zlevel的组件或图标将在同一个canvas上渲染。zlevel越高越靠顶层，canvas对象增多会消耗更多的内存和性能，并不建议设置过多的zlevel，大部分情况可以通过二级层叠控制z实现层叠控制。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 0 </td>
+                            <td> 通用 </td>
+                            <td> 二级层叠控制，同一个canvas（相同zlevel）上z越高约靠顶层。 </td>
                         </tr>
                         <tr>
                             <td> <b>{string}</b> position </td>
@@ -2124,37 +2300,37 @@ require(['echarts'], function (ec){
                             <td> <b>{number}</b> splitNumber </td>
                             <td> null </td>
                             <td> 数值型，时间型 </td>
-                            <td> 分割段数，不指定时根据min、max算法调整。 </td>
+                            <td> 分割段数，不指定时根据min、max算法调整</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> axisLine </td>
-                            <td> {show : true} </td>
+                            <td> 各异</td>
                             <td> 通用 </td>
-                            <td> 坐标轴线，默认显示，属性show控制显示与否，属性lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式 </td>
+                            <td> 坐标轴线，默认显示，详见下方 </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> axisTick </td>
                             <td> 各异 </td>
                             <td> 通用 </td>
-                            <td> 坐标轴小标记，默认不显示，属性show控制显示与否，属性length控制线长，属性lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式 </td>
+                            <td> 坐标轴小标记，默认不显示，详见下方</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> axisLabel </td>
-                            <td> {show : true} </td>
+                            <td> 各异 </td>
                             <td> 通用 </td>
-                            <td> 坐标轴文本标签，详见<a href="#AxisAxislabel" title="">axis.axisLabel</a></td>
+                            <td> 坐标轴文本标签，详见下方</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> splitLine </td>
-                            <td> {show : true} </td>
+                            <td> 各异 </td>
                             <td> 通用 </td>
-                            <td> 分隔线，默认显示，属性show控制显示与否，属性lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式 </td>
+                            <td> 分隔线，默认显示，，详见下方</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> splitArea </td>
-                            <td> {show : false} </td>
+                            <td> 各异 </td>
                             <td> 通用 </td>
-                            <td> 分隔区域，默认不显示，属性show控制显示与否，属性areaStyle（详见<a href="#AreaStyle" title="">areaStyle</a>）控制区域样式 </td>
+                            <td> 分隔区域，默认不显示，详见下方 </td>
                         </tr>
                         <tr>
                             <td> <b>{Array}</b> data </td>
@@ -2215,7 +2391,11 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>
-                            <td> {color: '#48b', width: 2, type: 'solid'} </td>
+                            <td> <pre>{
+    color: '#48b',
+    width: 2,
+    type: 'solid'
+}                           </pre> </td>
                             <td> 通用 </td>
                             <td> 属性lineStyle控制线条样式，（详见<a href="#LineStyle" title="">lineStyle</a>） </td>
                         </tr>
@@ -2237,11 +2417,14 @@ require(['echarts'], function (ec){
                             <td> 是否显示，默认为false，设为true后下面为默认样式 </td>
                         </tr>
                         <tr>
-                            <td> <b>{string | number}</b> interval </td>
+                            <td> <b>{string | number | function}</b> interval </td>
                             <td> 'auto' </td>
                             <td> 类目型 </td>
                             <td> 小标记显示挑选间隔，默认为'auto'，可选为：
-                                 <br/>'auto'（自动隐藏显示不下的） | 0（全部显示） | <b>{number}</b>（用户指定选择间隔） </td>
+                                 <br/>'auto'（随axisLabel，自动隐藏显示不下的） | 0（全部显示） | 
+                                 <br/><b>{number}</b>（用户指定选择间隔） 
+                                 <br/><b>{function}</b>函数回调，传递参数[index，data[index]]，返回true显示，返回false隐藏
+                             </td>
                         </tr>
                         <tr>
                             <td> <b>{boolean}</b> onGap </td>
@@ -2263,7 +2446,10 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>
-                            <td> {color: '#333', width: 1} </td>
+                            <td> <pre>{
+    color: '#333',
+    width: 1
+}                           </pres></td>
                             <td> 通用 </td>
                             <td> 属性lineStyle控制线条样式，（详见<a href="#LineStyle" title="">lineStyle</a>） </td>
                         </tr>
@@ -2285,10 +2471,14 @@ require(['echarts'], function (ec){
                             <td> 是否显示，默认为true，设为false后下面都没意义了 </td>
                         </tr>
                         <tr>
-                            <td> <b>{string | number}</b> interval </td>
+                            <td> <b>{string | number | function}</b> interval </td>
                             <td> 'auto' </td>
                             <td> 类目型 </td>
-                            <td> 标签显示挑选间隔，默认为'auto'，可选为：'auto'（自动隐藏显示不下的） | 0（全部显示） | <b>{number}</b>（用户指定选择间隔） </td>
+                            <td> 标签显示挑选间隔，默认为'auto'，可选为：
+                                <br/>'auto'（自动隐藏显示不下的） | 0（全部显示） | 
+                                <br/><b>{number}</b>（用户指定选择间隔）
+                                <br/><b>{function}</b>函数回调，传递参数[index，data[index]]，返回true显示，返回false隐藏
+                            </td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> rotate </td>
@@ -2316,7 +2506,9 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> textStyle </td>
-                            <td> {color: '#333'} </td>
+                            <td><pre>{
+    color: '#333'
+}                           </pre> </td>
                             <td> 通用 </td>
                             <td> 文本样式（详见<a href="#TextStyle" title="">textStyle</a>），其中当坐标轴为数值型和时间型时，color接受方法回调，实现个性化的颜色定义，support <a href="https://github.com/ecomfe/echarts/issues/226" target="_blank">#226 »</a> </td>
                         </tr>
@@ -2367,7 +2559,11 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>
-                            <td> {color: ['#ccc'], width: 1, type: 'solid'} </td>
+                            <td><pre>{
+    color: ['#ccc'],
+    width: 1,
+    type: 'solid'
+}                           </pre></td>
                             <td> 通用 </td>
                             <td> 属性lineStyle控制线条样式，（详见<a href="#LineStyle" title="">lineStyle</a>） </td>
                         </tr>
@@ -2396,7 +2592,12 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> areaStyle </td>
-                            <td> {color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']} </td>
+                            <td><pre>{
+    color: [
+        'rgba(250,250,250,0.3)',
+        'rgba(200,200,200,0.3)'
+    ]
+}                           </pre> </td>
                             <td> 通用 </td>
                             <td> 属性areaStyle（详见<a href="#AreaStyle" title="">areaStyle</a>）控制区域样式，颜色数组实现间隔变换。 </td>
                         </tr>
@@ -2432,6 +2633,16 @@ require(['echarts'], function (ec){
                             <th> 描述 </th>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> 一级层叠控制。每一个不同的zlevel将产生一个独立的canvas，相同zlevel的组件或图标将在同一个canvas上渲染。zlevel越高越靠顶层，canvas对象增多会消耗更多的内存和性能，并不建议设置过多的zlevel，大部分情况可以通过二级层叠控制z实现层叠控制。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 0 </td>
+                            <td> 二级层叠控制，同一个canvas（相同zlevel）上z越高约靠顶层。 </td>
+                        </tr>
+                        <tr>
                             <td> <b>{Array}</b> center </td>
                             <td> ['50%', '50%'] </td>
                             <td> 圆心坐标，支持绝对值（px）和百分比，百分比计算min(width, height) * 50% </td>
@@ -2453,8 +2664,13 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> name </td>
-                            <td> {<br/> show:true, <br/>formatter:null,<br/>textStyle:{color:#333}<br/>}
-                            </td>
+                            <td><pre>{
+    show: true,
+    formatter: null,
+    textStyle: {
+        color:#333
+    }
+}                           </pre></td>
                             <td> 坐标轴名称</td>
                         </tr>
                         <tr>
@@ -2520,6 +2736,25 @@ indicator : [
                             <th> 描述 </th>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> zlevel </td>
+                            <td> 0 </td>
+                            <td> 一级层叠控制。每一个不同的zlevel将产生一个独立的canvas，相同zlevel的组件或图标将在同一个canvas上渲染。zlevel越高越靠顶层，canvas对象增多会消耗更多的内存和性能，并不建议设置过多的zlevel，大部分情况可以通过二级层叠控制z实现层叠控制。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> z </td>
+                            <td> 2 </td>
+                            <td> 二级层叠控制，同一个canvas（相同zlevel）上z越高约靠顶层。 </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> type </td>
+                            <td> null </td>
+                            <td> 通用 </td>
+                            <td> 图表类型，必要参数！如为空或不支持类型，则该系列数据不被显示。可选为：
+                                <br/>'line'（折线图） | 'bar'（柱状图） | 'scatter'（散点图） | 'k'（K线图）
+                                <br/> 'pie'（饼图） | 'radar'（雷达图） | 'chord'（和弦图） | 'force'（力导向布局图） | 'map'（地图） 
+                            </td>
+                        </tr>
+                        <tr>
                             <td> <b>{string}</b> name </td>
                             <td> null </td>
                             <td> 通用 </td>
@@ -2530,15 +2765,6 @@ indicator : [
                             <td> null </td>
                             <td> 通用 </td>
                             <td> 提示框样式，仅对本系列有效，如不设则用option.tooltip（详见<a href="#Tooltip" title="">tooltip</a>）,鼠标悬浮交互时的信息提示 </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{string}</b> type </td>
-                            <td> null </td>
-                            <td> 通用 </td>
-                            <td> 图表类型，必要参数！如为空或不支持类型，则该系列数据不被显示。可选为：
-                                <br/>'line'（折线图） | 'bar'（柱状图） | 'scatter'（散点图） | 'k'（K线图）
-                                <br/> 'pie'（饼图） | 'radar'（雷达图） | 'chord'（和弦图） | 'force'（力导向布局图） | 'map'（地图） 
-                            </td>
                         </tr>
                         <tr>
                             <td> <b>{boolean}</b> clickable </td>
@@ -3305,7 +3531,7 @@ indicator : [
                         <tr>
                             <td> <b>{number | string}</b> height </td>
                             <td> null </td>
-                            <td> 总宽度，默认为绘图区总高度 - y - y2，数值单位px，指定width后将忽略x2，支持百分比（字符串），如'50%'(显示区域一半的高度) </td>
+                            <td> 总高度，默认为绘图区总高度 - y - y2，数值单位px，指定height后将忽略y2，支持百分比（字符串），如'50%'(显示区域一半的高度) </td>
                         </tr>
                         <tr>
                             <td> <b>{string}</b> funnelAlign </td>
@@ -3521,6 +3747,11 @@ indicator : [
                             <th> 描述 </th>
                         </tr>
                         <tr>
+                            <td> <b>{boolean}</b> clickable </td>
+                            <td> true </td>
+                            <td> 数据图形是否可点击，默认开启，如果没有click事件响应可以关闭 </td>
+                        </tr>
+                        <tr>
                             <td> <b>{string}</b> symbol </td>
                             <td> 'pin' </td>
                             <td> 标注类型，同series中的<a href="#Series">symbol</a> </td>
@@ -3542,21 +3773,24 @@ indicator : [
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> effect </td>
-                            <td> {
-                                <br/>show: false,
-                                <br/>loop: true,
-                                <br/>period: 15,
-                                <br/>scaleSize : 2,
-                                <br/>color : null,
-                                <br/>shadowColor : null,
-                                <br/>shadowBlur : 0
-                                <br/>}
-                            </td>
+                            <td><pre>{
+    show: false,
+    type: 'scale',
+    loop: true,
+    period: 15,
+    scaleSize : 2,
+    bounceDistance: 10,
+    color : null,
+    shadowColor : null,
+    shadowBlur : 0
+}                           </pre></td>
                             <td> 标注图形炫光特效:
                                 <br/>show 是否开启，默认关闭
+                                <br/>type 特效类型，默认为'scale'（放大），可选还有'bounce'（跳动）
                                 <br/>loop 循环动画，默认开启,
                                 <br/>period 运动周期，无单位，值越大越慢，默认为15
-                                <br/>scaleSize 放大倍数，以markPoint symbolSize为基准
+                                <br/>scaleSize 放大倍数，以markPoint symbolSize为基准，type为scale时有效
+                                <br/>bounceDistance 跳动距离，单位为px，type为bounce时有效
                                 <br/>color 炫光颜色，默认跟随markPoint itemStyle定义颜色,
                                 <br/>shadowColor 光影颜色，默认跟随color
                                 <br/>shadowBlur 光影模糊度，默认为0
@@ -3629,6 +3863,11 @@ geoCoord : {
                             <th> 描述 </th>
                         </tr>
                         <tr>
+                            <td> <b>{boolean}</b> clickable </td>
+                            <td> true </td>
+                            <td> 数据图形是否可点击，默认开启，如果没有click事件响应可以关闭 </td>
+                        </tr>
+                        <tr>
                             <td> <b>{Array | string}</b> symbol </td>
                             <td> ['circle', 'arrow'] </td>
                             <td> 标线起始和结束的symbol介绍类型，如果都一样，可以直接传string，同series中的<a href="#Series">symbol</a></td>
@@ -3644,17 +3883,31 @@ geoCoord : {
                             <td> 标线起始和结束的symbol旋转控制，同series中的<a href="#Series">symbolRotate</a> </td>
                         </tr>
                         <tr>
+                            <td> <b>{boolean}</b> smooth </td>
+                            <td> false </td>
+                            <td> 平滑曲线显示，smooth为true时lineStyle不支持虚线</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> smoothRadian </td>
+                            <td> 0.2 </td>
+                            <td> 平滑曲线弧度，smooth为true时有效，指定平滑曲线弧度</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> precision </td>
+                            <td> 2 </td>
+                            <td> 小数精度，使用开箱即用的均线markLine时有效</td>
+                        </tr>
+                        <tr>
                             <td> <b>{Object}</b> effect </td>
-                            <td> {
-                                <br/>show: false,
-                                <br/>loop: true,
-                                <br/>period: 15,
-                                <br/>scaleSize : 2,
-                                <br/>color : null,
-                                <br/>shadowColor : null,
-                                <br/>shadowBlur : null
-                                <br/>}
-                            </td>
+                            <td><pre>{
+    show: false,
+    loop: true,
+    period: 15,
+    scaleSize : 2,
+    color : null,
+    shadowColor : null,
+    shadowBlur : null
+}                           </pre></td>
                             <td> 标线图形炫光特效:
                                 <br/>show 是否开启，默认关闭
                                 <br/>loop 循环动画，默认开启,
@@ -3839,7 +4092,10 @@ geoCoord : {
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> label </td>
-                            <td> {show: true,  position:'outer'} </td>
+                            <td><pre>{
+    show: true,
+    position:'outer'
+}                           </pre></td>
                             <td> 折线图，柱形图，K线图，散点图，饼图 ，地图，力导向，markPoint，markLine</td>
                             <td> 标签，饼图默认显示在外部，离饼图距离由labelLine.length决定，地图标签不可指定位置
                                  <br/> 折线图，柱形图，K线图，散点图可指定position见下
@@ -3881,7 +4137,9 @@ geoCoord : {
                         <tr>
                             <td> <b>{number}</b> distance </td>
                             <td> 10 </td>
-                            <td> 和弦图有效，文本标签旋转后于弦的间隔</td>
+                            <td> 和弦图: 文本标签旋转后于弦的间隔
+                              <br/>饼图: 当label position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数，默认为0.5。
+                            </td>
                         </tr>
                         <tr>
                             <td> <b>{string | Function}</b> formatter </td>
@@ -4162,7 +4420,7 @@ geoCoord : {
                         </tr>
                         <tr>
                             <td> <b>{string}</b> text </td>
-                            <td> 'Loading...' </td>
+                            <td> '数据读取中...' </td>
                             <td> 显示话术 ，'\n'指定换行</td>
                         </tr>
                         <tr>
@@ -4183,6 +4441,51 @@ geoCoord : {
                         <tr>
                             <td> <b>{string | Function}</b> effect </td>
                             <td> 'spin' </td>
+                            <td> loading效果，可选为：'spin' | 'bar' | 'ring' | 'whirling' | 'dynamicLine' | 'bubble'，支持外部装载</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> effectOption </td>
+                            <td> null </td>
+                            <td> loading效果选项，详见zrender</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> progress </td>
+                            <td> null </td>
+                            <td> 指定当前进度[0~1]，个别效果有效。</td>
+                        </tr>
+                    </table>
+
+                    <h4>noDataLoadingOption<a name="NoDataLoadingOption"> </a></h4>
+                    <P> 无数据提示，loading动画选项。</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> text </td>
+                            <td> '暂无数据' </td>
+                            <td> 显示话术 ，'\n'指定换行</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | number}</b> x </td>
+                            <td> 'center' </td>
+                            <td> 水平安放位置，默认为全图居中，可选为：'center' | 'left' | 'right' | <b>{number}</b>（x坐标，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | number}</b> y </td>
+                            <td> 'center' </td>
+                            <td> 垂直安放位置，默认为全图居中，可选为：'center' | 'bottom' | 'top' | <b>{number}</b>（y坐标，单位px） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> textStyle </td>
+                            <td> null </td>
+                            <td> 显示话术的文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string | Function}</b> effect </td>
+                            <td> 'bubble' </td>
                             <td> loading效果，可选为：'spin' | 'bar' | 'ring' | 'whirling' | 'dynamicLine' | 'bubble'，支持外部装载</td>
                         </tr>
                         <tr>
@@ -4248,10 +4551,13 @@ geoCoord : {
                     <P> <b>{number}</b> 2500，动画元素阀值，产生的图形原素超过2500不出动画，建议IE8-关闭</P>
 
                     <h4>animationDuration<a name="AnimationDuration"> </a></h4>
-                    <P> <b>{number}</b> 2000，动画时长，单位ms，支持多级控制</P>
+                    <P> <b>{number}</b> 2000，进入动画时长，单位ms</P>
+
+                    <h4>animationDurationUpdate<a name="animationDurationUpdate"> </a></h4>
+                    <P> <b>{number}</b> 500，更新动画时长，单位ms</P>
 
                     <h4>animationEasing<a name="AnimationEasing"> </a></h4>
-                    <P> <b>{string}</b> 'BounceOut'，主元素的缓动效果，支持多级控制，详见<a href="http://ecomfe.github.io/zrender/doc/doc.html#animation.easing" target="_blank">zrender.animation.easing</a>，可选有：<br/>
+                    <P> <b>{string}</b> 'BounceOut'，主元素的缓动效果，详见<a href="http://ecomfe.github.io/zrender/doc/doc.html#animation.easing" target="_blank">zrender.animation.easing</a>，可选有：<br/>
                         'Linear',<br/>
                         'QuadraticIn', 'QuadraticOut', 'QuadraticInOut',<br/>
                         'CubicIn', 'CubicOut', 'CubicInOut',<br/>
@@ -4293,7 +4599,7 @@ geoCoord : {
                         <tr>
                             <td> itemStyle </td>
                             <td></td>
-                            <td> 详见 <a href="#ItemStyle">itemStyle</a> </td>
+                            <td> 详见 <a href="#ItemStyle">itemStyle</a>，注意力导向图单个 category 的 itemStyle 中没有 nodeStyle 的配置项，而是直接使用 normal(emphasis) 下的 color, borderWidth 和 borderColor</td>
                         </tr>
                     </table>
 
@@ -4342,7 +4648,7 @@ geoCoord : {
                         <tr>
                             <td> itemStyle </td>
                             <td></td>
-                            <td> 详见 <a href="#NodeStyle">nodeStyle</a> </td>
+                            <td> 详见 <a href="#ItemStyle">itemStyle</a>，注意力导向图单个节点的 itemStyle 中没有 nodeStyle 的配置项，而是直接使用 normal(emphasis) 下的 color, borderWidth 和 borderColor</td>
                         </tr>
                     </table>
 

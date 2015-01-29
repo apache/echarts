@@ -1,6 +1,5 @@
 define('echarts/chart/funnel', [
     'require',
-    '../component/base',
     './base',
     'zrender/shape/Text',
     'zrender/shape/Line',
@@ -13,20 +12,59 @@ define('echarts/chart/funnel', [
     'zrender/tool/area',
     '../chart'
 ], function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     var TextShape = require('zrender/shape/Text');
     var LineShape = require('zrender/shape/Line');
     var PolygonShape = require('zrender/shape/Polygon');
     var ecConfig = require('../config');
+    ecConfig.funnel = {
+        zlevel: 0,
+        z: 2,
+        clickable: true,
+        legendHoverLink: true,
+        x: 80,
+        y: 60,
+        x2: 80,
+        y2: 60,
+        min: 0,
+        max: 100,
+        minSize: '0%',
+        maxSize: '100%',
+        sort: 'descending',
+        gap: 0,
+        funnelAlign: 'center',
+        itemStyle: {
+            normal: {
+                borderColor: '#fff',
+                borderWidth: 1,
+                label: {
+                    show: true,
+                    position: 'outer'
+                },
+                labelLine: {
+                    show: true,
+                    length: 10,
+                    lineStyle: {
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            emphasis: {
+                borderColor: 'rgba(0,0,0,0)',
+                borderWidth: 1,
+                label: { show: true },
+                labelLine: { show: true }
+            }
+        }
+    };
     var ecData = require('../util/ecData');
     var number = require('../util/number');
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
     var zrArea = require('zrender/tool/area');
     function Funnel(ecTheme, messageCenter, zr, option, myChart) {
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         this.refresh(option);
     }
     Funnel.prototype = {
@@ -67,11 +105,7 @@ define('echarts/chart/funnel', [
             var selectedData = [];
             for (var i = 0, l = data.length; i < l; i++) {
                 itemName = data[i].name;
-                if (legend) {
-                    this.selectedMap[itemName] = legend.isSelected(itemName);
-                } else {
-                    this.selectedMap[itemName] = true;
-                }
+                this.selectedMap[itemName] = legend ? legend.isSelected(itemName) : true;
                 if (this.selectedMap[itemName] && !isNaN(data[i].value)) {
                     selectedData.push(data[i]);
                     total++;
@@ -187,7 +221,7 @@ define('echarts/chart/funnel', [
                         ],
                         brushType: 'stroke',
                         lineWidth: 1,
-                        strokeColor: serie.calculableHolderColor || this.ecTheme.calculableHolderColor
+                        strokeColor: serie.calculableHolderColor || this.ecTheme.calculableHolderColor || ecConfig.calculableHolderColor
                     }
                 };
                 ecData.pack(funnelCase, serie, seriesIndex, undefined, -1);
@@ -203,23 +237,12 @@ define('echarts/chart/funnel', [
             var zrHeight = this.zr.getHeight();
             var x = this.parsePercent(gridOption.x, zrWidth);
             var y = this.parsePercent(gridOption.y, zrHeight);
-            var width;
-            if (gridOption.width == null) {
-                width = zrWidth - x - this.parsePercent(gridOption.x2, zrWidth);
-            } else {
-                width = this.parsePercent(gridOption.width, zrWidth);
-            }
-            var height;
-            if (gridOption.height == null) {
-                height = zrHeight - y - this.parsePercent(gridOption.y2, zrHeight);
-            } else {
-                height = this.parsePercent(gridOption.height, zrHeight);
-            }
+            var width = gridOption.width == null ? zrWidth - x - this.parsePercent(gridOption.x2, zrWidth) : this.parsePercent(gridOption.width, zrWidth);
             return {
                 x: x,
                 y: y,
                 width: width,
-                height: height,
+                height: gridOption.height == null ? zrHeight - y - this.parsePercent(gridOption.y2, zrHeight) : this.parsePercent(gridOption.height, zrHeight),
                 centerX: x + width / 2
             };
         },
@@ -310,7 +333,8 @@ define('echarts/chart/funnel', [
                 break;
             }
             var polygon = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     pointList: [
@@ -375,7 +399,8 @@ define('echarts/chart/funnel', [
                 textAlign = 'left';
             }
             var textShape = {
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 style: {
                     x: this._getLabelPoint(labelControl.position, x, location, topWidth, bottomWidth, lineLength, align),
                     y: y + height / 2,
@@ -424,8 +449,7 @@ define('echarts/chart/funnel', [
                 if (typeof formatter === 'function') {
                     return formatter.call(this.myChart, serie.name, data.name, data.value);
                 } else if (typeof formatter === 'string') {
-                    formatter = formatter.replace('{a}', '{a0}').replace('{b}', '{b0}').replace('{c}', '{c0}');
-                    formatter = formatter.replace('{a0}', serie.name).replace('{b0}', data.name).replace('{c0}', data.value);
+                    formatter = formatter.replace('{a}', '{a0}').replace('{b}', '{b0}').replace('{c}', '{c0}').replace('{a0}', serie.name).replace('{b0}', data.name).replace('{c0}', data.value);
                     return formatter;
                 }
             } else {
@@ -444,7 +468,8 @@ define('echarts/chart/funnel', [
             var labelControl = itemStyle[status].label;
             labelControl.position = labelControl.position || itemStyle.normal.label.position;
             var lineShape = {
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 hoverable: false,
                 style: {
                     xStart: this._getLabelLineStartPoint(x, location, topWidth, bottomWidth, align),
@@ -515,7 +540,6 @@ define('echarts/chart/funnel', [
         }
     };
     zrUtil.inherits(Funnel, ChartBase);
-    zrUtil.inherits(Funnel, ComponentBase);
     require('../chart').define('funnel', Funnel);
     return Funnel;
 });

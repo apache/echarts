@@ -48,6 +48,55 @@
         <span>[+]新增 [-]删除 [^]升级 [#]修复 【】重要</span>
         <div class="row-fluid">
             <div>
+                <h3>2.2.0<small>（2015-01-30）</small></h3>
+                <ul>
+                    <li>【+】 ECharts-m ( ECharts Mobile ) 1.0.0 发布</li>
+                    <li>【^】 层叠控制由多层zlevel转单层z，zleve和z主题可控，可自定义层叠控制</li>
+                    <li>【^】 mobile设备优化，touch事件优化</li>
+                    <li>【^】 [markLine]支持双向弧度配置，smoothRadian，查看 <a href="./example/map21.html" target="_blank">this »</a></li>
+                    <li>【^】 统一文本（label）格式化（formatter）函数回调参数为对象，披露更多内容，格式同tooltip</li>
+                    <li>[+] 无数据自动判断，支持配置noDataText和noDataEffect自动显示，support <a href="https://github.com/ecomfe/echarts/issues/1040" target="_blank">#1040 »</a></li>
+                    <li>[+] [tooltip]详情dom上增加css类定义'echarts-tooltip'，可通过css附加样式</li>
+                    <li>[+] 新增过渡动画时效控制animationDurationUpdate，support <a href="https://github.com/ecomfe/echarts/issues/1126" target="_blank">#1126 »</a></li>
+                    <li>[+] [markPoint]支持symbol为pin特效，新增跳动效果，effect.type = 'bounce'，详见文档</li>
+                    <li>[+] [k]新增hoverable控制</li>
+                    <li>[^] [markLine]均值标线支持precision</li>
+                    <li>[^] [dataZoom]纵向dataZoom交互一致性优化，support <a href="https://github.com/ecomfe/echarts/issues/1124" target="_blank">#1124 »</a></li>
+                    <li>[^] [categoryAxis]间隔支持函数回调，support <a href="https://github.com/ecomfe/echarts/issues/1093" target="_blank">#1093 »</a></li>
+                    <li>[^] [dataRange][dataZoom][timeline]增加组件大小配置</li>
+                    <li>[^] [extension][BMap]增加百度地图初始化参数传入，修复动态addMark坐标转换问题。</li>
+                    <li>[^] [pie]图形内文本位置增加distance配置，support <a href="https://github.com/ecomfe/echarts/issues/1122" target="_blank">#1122 »</a></li>
+                    <li>[^] [chord][tooltip]详情显示默认从大端到小端</li>
+                    <li>[#] 修复legendHoverLink在动画过渡时显示问题，fix <a href="https://github.com/ecomfe/echarts/issues/896" target="_blank">#896 »</a>，<a href="https://github.com/ecomfe/echarts/issues/974" target="_blank">#974 »</a></li>
+                    <li>[#] [scatter][radar][k]data级数据为对象时读取value异常，fix <a href="https://github.com/ecomfe/echarts/issues/1031" target="_blank">#1031 »</a></li>
+                    <li>[#] [force]修复line宽度设置</li>
+                    <li>[#] [bar]多维度堆积下类目间隔优化</li>
+                    <li>[#] [tooltip][markLine]修复多级控制无效</li>
+                    <li>[#] [valueAxis]数值间隔自动调整算法优化，
+                        fix <a href="https://github.com/ecomfe/echarts/issues/1012" target="_blank">#1012 »</a>, 
+                        <a href="https://github.com/ecomfe/echarts/issues/1021" target="_blank">#1021 »</a>
+                    </li>
+                    <li>[#] 若干issues，fix
+                        <a href="https://github.com/ecomfe/echarts/issues/1045" target="_blank">#1045（dataRange开关）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/1051" target="_blank">#1051（yAxis间隔线虚线样式）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/1076" target="_blank">#1076（dataRange指示器formatter）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/1078" target="_blank">#1079（dataZoom取值错误）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/1079" target="_blank">#1079（bar填充亚像素优化）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/1089" target="_blank">#1089（showTip接口异常）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/1129" target="_blank">#1129（堆积空值异常）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/1130" target="_blank">#1130（IE11下多图表异常）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/1141" target="_blank">#1141（tooltip亚像素优化）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/1142" target="_blank">#1142（tooltip位置缓存错误）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/1146" target="_blank">#1146（多行Legend定位计算错误）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/1150" target="_blank">#1150（dataZoom回调star和end参数不该取整）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/1176" target="_blank">#1176（gauge可点击修复）»</a>
+                        <a href="https://github.com/ecomfe/echarts/issues/1218" target="_blank">#1218（标签布局算法对labelLine依赖错误）»</a>
+                    </li>
+                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.0.7+</li>
+                </ul>
+            </div>
+
+            <div>
                 <h3>2.1.9<small>（2014-12-08）</small></h3>
                 <ul>
                     <li>[+] [force][chord]节点加入label属性， support <a href="https://github.com/ecomfe/echarts/issues/963" target="_blank">#963 »</a></li>

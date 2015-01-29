@@ -409,11 +409,9 @@ option = {
             },
             markLine : {
                 data : [
-                    [
-                        {type : 'average', name : '平均值'},
-                        {type : 'max'},
-                        {type : 'min'}
-                    ]
+                    {type : 'average', name : '平均值'},
+                    {type : 'max'},
+                    {type : 'min'}
                 ]
             }
         }
@@ -829,7 +827,8 @@ option = {
                 normal : {
                     label : {
                         position : 'inner',
-                        formatter : function (a,b,c,d) {return (d - 0).toFixed(0) + '%'}
+                        formatter : function (a,b,c,d) {return (d - 0).toFixed(0) + '%'},
+                        distance : 0.7
                     },
                     labelLine : {
                         show : false
@@ -838,7 +837,8 @@ option = {
                 emphasis : {
                     label : {
                         show : true,
-                        formatter : "{b}\n{d}%"
+                        formatter : "{b}\n{d}%",
+                        distance : 0.6
                     }
                 }
                 

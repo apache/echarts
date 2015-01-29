@@ -12,6 +12,21 @@ define(function (require) {
     var RectangleShape = require('zrender/shape/Rectangle');
     
     var ecConfig = require('../config');
+    // 网格
+    ecConfig.grid = {
+        zlevel: 0,                  // 一级层叠
+        z: 0,                       // 二级层叠
+        x: 80,
+        y: 60,
+        x2: 80,
+        y2: 60,
+        // width: {totalWidth} - x - x2,
+        // height: {totalHeight} - y - y2,
+        backgroundColor: 'rgba(0,0,0,0)',
+        borderWidth: 1,
+        borderColor: '#ccc'
+    };
+
     var zrUtil = require('zrender/tool/util');
 
     /**
@@ -141,7 +156,8 @@ define(function (require) {
                 this._y = this.subPixelOptimize(this._y, gridOption.borderWidth);
     
                 this.shapeList.push(new RectangleShape({
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     hoverable: false,
                     style: {
                         x: this._x,

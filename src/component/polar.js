@@ -16,6 +16,53 @@ define(function (require) {
     var Ring = require('zrender/shape/Ring');
 
     var ecConfig = require('../config');
+    ecConfig.polar = {
+        zlevel: 0,                  // 一级层叠
+        z: 0,                       // 二级层叠
+        center: ['50%', '50%'],    // 默认全局居中
+        radius: '75%',
+        startAngle: 90,
+        boundaryGap: [0, 0],   // 数值起始和结束两端空白策略
+        splitNumber: 5,
+        name: {
+            show: true,
+            // formatter: null,
+            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                color: '#333'
+            }
+        },
+        axisLine: {            // 坐标轴线
+            show: true,        // 默认显示，属性show控制显示与否
+            lineStyle: {       // 属性lineStyle控制线条样式
+                color: '#ccc',
+                width: 1,
+                type: 'solid'
+            }
+        },
+        axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
+            show: false,
+            // formatter: null,
+            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                color: '#333'
+            }
+        },
+        splitArea: {
+            show: true,
+            areaStyle: {
+                color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']
+            }
+        },
+        splitLine: {
+            show: true,
+            lineStyle: {
+                width: 1,
+                color: '#ccc'
+            }
+        },
+        type: 'polygon'
+        // indicator: []
+    };
+
     var zrUtil = require('zrender/tool/util');
     var ecCoordinates = require('../util/coordinates');
 
@@ -172,7 +219,8 @@ define(function (require) {
                                      + Math.sin(theta) * offset + center[1];
 
                         this.shapeList.push(new TextShape({
-                            zlevel : this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             style : newStyle,
                             draggable : false,
                             hoverable : false
@@ -244,8 +292,8 @@ define(function (require) {
                     textAlign = 'center';
                 }
 
-                if (!name.margin) {
-                    vector = this._mapVector(vector, center, 1.2);
+                if (name.margin == null) {
+                    vector = this._mapVector(vector, center, 1.1);
                 }
                 else {
                     margin = name.margin;
@@ -273,7 +321,8 @@ define(function (require) {
                 }
                 
                 this.shapeList.push(new TextShape({
-                    zlevel : this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style : style,
                     draggable : false,
                     hoverable : false,
@@ -385,7 +434,8 @@ define(function (require) {
         ) {
             var radius = this._getRadius();
             return new Circle({
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: center[0],
                     y: center[1],
@@ -412,7 +462,8 @@ define(function (require) {
         _getRing : function (color, scale0, scale1, center) {
             var radius = this._getRadius();
             return new Ring({
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style : {
                     x : center[0],
                     y : center[1],
@@ -460,7 +511,8 @@ define(function (require) {
             pointList, brushType, color, strokeColor, lineWidth
         ) {
             return new PolygonShape({
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style : {
                     pointList   : pointList,
                     brushType   : brushType,
@@ -594,7 +646,8 @@ define(function (require) {
             xStart, yStart, xEnd, yEnd, strokeColor, lineWidth, lineType
         ) {
             return new LineShape({
-                zlevel : this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style : {
                     xStart : xStart,
                     yStart : yStart,
@@ -702,7 +755,6 @@ define(function (require) {
         _findValue : function (data, index, splitNumber, boundaryGap) {
             var max;
             var min;
-            var value;
             var one;
 
             if (!data || data.length === 0) {
@@ -719,18 +771,13 @@ define(function (require) {
             }
             if (data.length != 1) {
                 for (var i = 0; i < data.length; i ++) {
-                    value = typeof data[i].value[index].value != 'undefined'
-                            ? data[i].value[index].value : data[i].value[index];
-                    _compare(value);
+                    _compare(this.getDataFromOption(data[i].value[index]));
                 }
             }
             else {
                 one = data[0];
                 for (var i = 0; i < one.value.length; i ++) {
-                    _compare(
-                        typeof one.value[i].value != 'undefined' 
-                        ? one.value[i].value : one.value[i]
-                    );
+                    _compare(this.getDataFromOption(one.value[i]));
                 }
             }
 

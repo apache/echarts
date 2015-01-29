@@ -14,6 +14,29 @@ define(function (require) {
     var CircleShape = require('zrender/shape/Circle');
     
     var ecConfig = require('../config');
+    ecConfig.roamController = {
+        zlevel: 0,                  // 一级层叠
+        z: 4,                       // 二级层叠
+        show: true,
+        x: 'left',                 // 水平安放位置，默认为全图左对齐，可选为：
+                                   // 'center' ¦ 'left' ¦ 'right'
+                                   // ¦ {number}（x坐标，单位px）
+        y: 'top',                  // 垂直安放位置，默认为全图顶端，可选为：
+                                   // 'top' ¦ 'bottom' ¦ 'center'
+                                   // ¦ {number}（y坐标，单位px）
+        width: 80,
+        height: 120,
+        backgroundColor: 'rgba(0,0,0,0)',
+        borderColor: '#ccc',       // 图例边框颜色
+        borderWidth: 0,            // 图例边框线宽，单位px，默认为0（无边框）
+        padding: 5,                // 图例内边距，单位px，默认各方向内边距为5，
+                                   // 接受数组分别设定上右下左边距，同css
+        handleColor: '#6495ed',
+        fillerColor: '#fff',
+        step: 15,                  // 移动幅度
+        mapTypeControl: null
+    };
+
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
     var zrEvent = require('zrender/tool/event');
@@ -91,7 +114,8 @@ define(function (require) {
             var y = this._itemGroupLocation.y + r;
             
             var sectorShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: x,          // 圆心横坐标
                     y: y,          // 圆心纵坐标
@@ -147,7 +171,8 @@ define(function (require) {
             var y = this._itemGroupLocation.y + this._itemGroupLocation.height - r;
 
             var scaleShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: x,
                     y: y,
@@ -180,7 +205,8 @@ define(function (require) {
             var padding = this.reformCssArray(this.rcOption.padding);
 
             this.shapeList.push(new RectangleShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 hoverable :false,
                 style: {
                     x: this._itemGroupLocation.x - padding[3],

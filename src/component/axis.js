@@ -51,79 +51,82 @@ define(function (require) {
                 var halfLineWidth = lineWidth / 2;
                 var axShape = {
                     _axisShape: 'axisLine',
-                    zlevel: this._zlevelBase + 1,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase() + 3,
                     hoverable: false
                 };
+                var grid = this.grid;
                 switch (this.option.position) {
                     case 'left' :
                         axShape.style = {
-                            xStart: this.grid.getX() - halfLineWidth,
-                            yStart: this.grid.getYend(),
-                            xEnd: this.grid.getX() - halfLineWidth,
-                            yEnd: this.grid.getY(),
+                            xStart: grid.getX() - halfLineWidth,
+                            yStart: grid.getYend(),
+                            xEnd: grid.getX() - halfLineWidth,
+                            yEnd: grid.getY(),
                             lineCap: 'round'
                         };
                         break;
                     case 'right' :
                         axShape.style = {
-                            xStart: this.grid.getXend() + halfLineWidth,
-                            yStart: this.grid.getYend(),
-                            xEnd: this.grid.getXend() + halfLineWidth,
-                            yEnd: this.grid.getY(),
+                            xStart: grid.getXend() + halfLineWidth,
+                            yStart: grid.getYend(),
+                            xEnd: grid.getXend() + halfLineWidth,
+                            yEnd: grid.getY(),
                             lineCap: 'round'
                         };
                         break;
                     case 'bottom' :
                         axShape.style = {
-                            xStart: this.grid.getX(),
-                            yStart: this.grid.getYend() + halfLineWidth,
-                            xEnd: this.grid.getXend(),
-                            yEnd: this.grid.getYend() + halfLineWidth,
+                            xStart: grid.getX(),
+                            yStart: grid.getYend() + halfLineWidth,
+                            xEnd: grid.getXend(),
+                            yEnd: grid.getYend() + halfLineWidth,
                             lineCap: 'round'
                         };
                         break;
                     case 'top' :
                         axShape.style = {
-                            xStart: this.grid.getX(),
-                            yStart: this.grid.getY() - halfLineWidth,
-                            xEnd: this.grid.getXend(),
-                            yEnd: this.grid.getY() - halfLineWidth,
+                            xStart: grid.getX(),
+                            yStart: grid.getY() - halfLineWidth,
+                            xEnd: grid.getXend(),
+                            yEnd: grid.getY() - halfLineWidth,
                             lineCap: 'round'
                         };
                         break;
                 }
+                var style = axShape.style;
                 if (this.option.name !== '') { // 别帮我代码规范
-                    axShape.style.text = this.option.name;
-                    axShape.style.textPosition = this.option.nameLocation;
-                    axShape.style.textFont = this.getFont(this.option.nameTextStyle);
+                    style.text = this.option.name;
+                    style.textPosition = this.option.nameLocation;
+                    style.textFont = this.getFont(this.option.nameTextStyle);
                     if (this.option.nameTextStyle.align) {
-                        axShape.style.textAlign = this.option.nameTextStyle.align;
+                        style.textAlign = this.option.nameTextStyle.align;
                     }
                     if (this.option.nameTextStyle.baseline) {
-                        axShape.style.textBaseline = this.option.nameTextStyle.baseline;
+                        style.textBaseline = this.option.nameTextStyle.baseline;
                     }
                     if (this.option.nameTextStyle.color) {
-                        axShape.style.textColor = this.option.nameTextStyle.color;
+                        style.textColor = this.option.nameTextStyle.color;
                     }
                 }
-                axShape.style.strokeColor = this.option.axisLine.lineStyle.color;
+                style.strokeColor = this.option.axisLine.lineStyle.color;
                 
-                axShape.style.lineWidth = lineWidth;
+                style.lineWidth = lineWidth;
                 // 亚像素优化
                 if (this.isHorizontal()) {
                     // 横向布局，优化y
-                    axShape.style.yStart 
-                        = axShape.style.yEnd 
-                        = this.subPixelOptimize(axShape.style.yEnd, lineWidth);
+                    style.yStart 
+                        = style.yEnd 
+                        = this.subPixelOptimize(style.yEnd, lineWidth);
                 }
                 else {
                     // 纵向布局，优化x
-                    axShape.style.xStart 
-                        = axShape.style.xEnd 
-                        = this.subPixelOptimize(axShape.style.xEnd, lineWidth);
+                    style.xStart 
+                        = style.xEnd 
+                        = this.subPixelOptimize(style.xEnd, lineWidth);
                 }
                 
-                axShape.style.lineType = this.option.axisLine.lineStyle.type;
+                style.lineType = this.option.axisLine.lineStyle.type;
                 
                 axShape = new LineShape(axShape);
                 this.shapeList.push(axShape);

@@ -47,7 +47,13 @@ option = {
     tooltip : {
         trigger: 'item',
         formatter : function (params) {
-            return params.value[0] + ' :<br/>'
+            var date = new Date(params.value[0]);
+            data = date.getFullYear() + '-'
+                   + (date.getMonth() + 1) + '-'
+                   + date.getDate() + ' '
+                   + date.getHours() + ':'
+                   + date.getMinutes();
+            return data + '<br/>'
                    + params.value[1] + ', ' 
                    + params.value[2];
         }

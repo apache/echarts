@@ -14,6 +14,66 @@ define(function (require) {
     var ChainShape = require('../util/shape/Chain');
     
     var ecConfig = require('../config');
+    ecConfig.timeline = {
+        zlevel: 0,                  // 一级层叠
+        z: 4,                       // 二级层叠
+        show: true,
+        type: 'time',  // 模式是时间类型，支持 number
+        notMerge: false,
+        realtime: true,
+        x: 80,
+        // y: {number},
+        x2: 80,
+        y2: 0,
+        // width: {totalWidth} - x - x2,
+        height: 50,
+        backgroundColor: 'rgba(0,0,0,0)',   // 时间轴背景颜色
+        borderColor: '#ccc',               // 时间轴边框颜色
+        borderWidth: 0,                    // 时间轴边框线宽，单位px，默认为0（无边框）
+        padding: 5,                        // 时间轴内边距，单位px，默认各方向内边距为5，
+        controlPosition: 'left',           // 'right' | 'none'
+        autoPlay: false,
+        loop: true,
+        playInterval: 2000,                // 播放时间间隔，单位ms
+        lineStyle: {
+            width: 1,
+            color: '#666',
+            type: 'dashed'
+        },
+        label: {                            // 文本标签
+            show: true,
+            interval: 'auto',
+            rotate: 0,
+            // formatter: null,
+            textStyle: {                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                color: '#333'
+            }
+        },
+        checkpointStyle: {
+            symbol: 'auto',
+            symbolSize: 'auto',
+            color: 'auto',
+            borderColor: 'auto',
+            borderWidth: 'auto',
+            label: {                            // 文本标签
+                show: false,
+                textStyle: {                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: 'auto'
+                }
+            }
+        },
+        controlStyle: {
+            itemSize: 15,
+            itemGap: 5,
+            normal: { color: '#333'},
+            emphasis: { color: '#1e90ff'}
+        },
+        symbol: 'emptyDiamond',
+        symbolSize: 4,
+        currentIndex: 0
+        // data: []
+    };
+
     var zrUtil = require('zrender/tool/util');
     var zrArea = require('zrender/tool/area');
     var zrEvent = require('zrender/tool/event');
@@ -108,7 +168,9 @@ define(function (require) {
                 function() {
                     self.play();
                 },
-                this.ecTheme.animationDuration
+                this.ecTheme.animationDuration != null
+                ? this.ecTheme.animationDuration
+                : ecConfig.animationDuration
             );
         }
     }
@@ -379,7 +441,8 @@ define(function (require) {
             ) {
                 // 背景
                 this.shapeList.push(new RectangleShape({
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     hoverable :false,
                     style: {
                         x: this._location.x - padding[3],
@@ -403,8 +466,8 @@ define(function (require) {
             if (timelineOption.controlPosition === 'none') {
                 return;
             }
-            var iconSize = 15;
-            var iconGap = 5;
+            var iconSize = controlStyle.itemSize;
+            var iconGap = controlStyle.itemGap;
             var x;
             if (timelineOption.controlPosition === 'left') {
                 x = this._location.x;
@@ -417,7 +480,8 @@ define(function (require) {
             
             var y = this._location.y;
             var iconStyle = {
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 style: {
                     iconType: 'timelineControl',
                     symbol: 'last',
@@ -477,7 +541,8 @@ define(function (require) {
             var timelineOption = this.timelineOption;
             var lineStyle = timelineOption.lineStyle;
             this._timelineShae = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: this._location.x,
                     y: this.subPixelOptimize(this._location.y, lineStyle.width),
@@ -507,7 +572,8 @@ define(function (require) {
             symbolSize = symbolSize < 5 ? 5 : symbolSize;
             
             this._handleShape = {
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 hoverable: false,
                 draggable: true,
                 style: {
@@ -733,7 +799,7 @@ define(function (require) {
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'playing') {
                 this._ctrPlayShape.style.status = 'playing';
                 this.zr.modShape(this._ctrPlayShape.id);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
             
             
@@ -756,7 +822,7 @@ define(function (require) {
             if (this._ctrPlayShape && this._ctrPlayShape.style.status != 'stop') {
                 this._ctrPlayShape.style.status = 'stop';
                 this.zr.modShape(this._ctrPlayShape.id);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
             }
             
             this.timelineOption.autoPlay = false;
@@ -780,13 +846,11 @@ define(function (require) {
         setTheme: function(needRefresh) {
             this.timelineOption = this.reformOption(zrUtil.clone(this.option.timeline));
             // 通用字体设置
-            this.timelineOption.label.textStyle = zrUtil.merge(
-                this.timelineOption.label.textStyle || {},
-                this.ecTheme.textStyle
+            this.timelineOption.label.textStyle = this.getTextStyle(
+                this.timelineOption.label.textStyle
             );
-            this.timelineOption.checkpointStyle.label.textStyle = zrUtil.merge(
-                this.timelineOption.checkpointStyle.label.textStyle || {},
-                this.ecTheme.textStyle
+            this.timelineOption.checkpointStyle.label.textStyle = this.getTextStyle(
+                this.timelineOption.checkpointStyle.label.textStyle
             );
             if (!this.myChart.canvasSupported) {
                 // 不支持Canvas的强制关闭实时动画

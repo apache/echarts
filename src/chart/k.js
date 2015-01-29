@@ -6,7 +6,6 @@
  *
  */
 define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
     // 图形依赖
@@ -17,6 +16,34 @@ define(function (require) {
     require('../component/dataZoom');
     
     var ecConfig = require('../config');
+    // K线图默认参数
+    ecConfig.k = {
+        zlevel: 0,                  // 一级层叠
+        z: 2,                       // 二级层叠
+        clickable: true,
+        hoverable: true,
+        legendHoverLink: false,
+        xAxisIndex: 0,
+        yAxisIndex: 0,
+        // barWidth: null               // 默认自适应
+        // barMaxWidth: null            // 默认自适应 
+        itemStyle: {
+            normal: {
+                color: '#fff',          // 阳线填充颜色
+                color0: '#00aa11',      // 阴线填充颜色
+                lineStyle: {
+                    width: 1,
+                    color: '#ff3200',   // 阳线边框颜色
+                    color0: '#00aa11'   // 阴线边框颜色
+                }
+            },
+            emphasis: {
+                // color: 各异,
+                // color0: 各异
+            }
+        }
+    };
+
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     
@@ -27,11 +54,9 @@ define(function (require) {
      * @param {Object} series 数据
      * @param {Object} component 组件
      */
-    function K(ecTheme, messageCenter, zr, option, myChart){
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
+    function K(ecTheme, messageCenter, zr, option, myChart) {
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
 
         this.refresh(option);
     }
@@ -109,12 +134,10 @@ define(function (require) {
             for (var i = 0, l = seriesArray.length; i < l; i++) {
                 serie = series[seriesArray[i]];
                 serieName = serie.name;
-                if (legend){
-                    this.selectedMap[serieName] = legend.isSelected(serieName);
-                } else {
-                    this.selectedMap[serieName] = true;
-                }
-
+                this.selectedMap[serieName] = legend 
+                                              ? legend.isSelected(serieName)
+                                              : true;
+                
                 if (this.selectedMap[serieName]) {
                     locationMap.push(seriesArray[i]);
                 }
@@ -168,11 +191,7 @@ define(function (require) {
                     }
                     
                     data = serie.data[i];
-                    value = data != null
-                            ? (data.value != null
-                              ? data.value
-                              : data)
-                            : '-';
+                    value = this.getDataFromOption(data, '-');
                     if (value === '-' || value.length != 4) {
                         // 数据格式不符
                         continue;
@@ -379,9 +398,13 @@ define(function (require) {
         ) {
             var series = this.series;
             var itemShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 clickable: this.deepQuery(
                     [series[seriesIndex].data[dataIndex], series[seriesIndex]], 'clickable'
+                ),
+                hoverable: this.deepQuery(
+                    [series[seriesIndex].data[dataIndex], series[seriesIndex]], 'hoverable'
                 ),
                 style: {
                     x: x,
@@ -481,7 +504,7 @@ define(function (require) {
                         y = 0;
                         this.zr.animate(this.shapeList[i].id, '')
                             .when(
-                                500,
+                                this.query(this.option, 'animationDurationUpdate'),
                                 { position: [ x, y ] }
                             )
                             .start();
@@ -492,7 +515,6 @@ define(function (require) {
     };
     
     zrUtil.inherits(K, ChartBase);
-    zrUtil.inherits(K, ComponentBase);
     
     // 图表注册
     require('../chart').define('k', K);

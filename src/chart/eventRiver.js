@@ -6,7 +6,6 @@
  *
  */
 define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
 
     var eventRiverLayout = require('../layout/eventRiver');
@@ -20,6 +19,35 @@ define(function (require) {
     require('../component/dataZoom');
 
     var ecConfig = require('../config');
+    // 事件河流图默认参数
+    ecConfig.eventRiver = {
+        zlevel: 0,                  // 一级层叠
+        z: 2,                       // 二级层叠
+        clickable: true,
+        legendHoverLink: true,
+        itemStyle: {
+            normal: {
+                // color: 各异,
+                borderColor: 'rgba(0,0,0,0)',
+                borderWidth: 1,
+                label: {
+                    show: true,
+                    position: 'inside',     // 可选为'left'|'right'|'top'|'bottom'
+                    formatter: '{b}'
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                }
+            },
+            emphasis: {
+                // color: 各异,
+                borderColor: 'rgba(0,0,0,0)',
+                borderWidth: 1,
+                label: {
+                    show: true
+                }
+            }
+        }
+    };
+    
     var ecData = require('../util/ecData');
     var ecDate = require('../util/date');
     var zrUtil = require('zrender/tool/util');
@@ -33,10 +61,8 @@ define(function (require) {
      * @param {Object} component 组件
      */
      function EventRiver(ecTheme, messageCenter, zr, option, myChart) {
-         // 基类
-         ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-         // 图表基类
-         ChartBase.call(this);
+        // 图表基类
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
          
          var self = this;
          self._ondragend = function () {
@@ -158,7 +184,8 @@ define(function (require) {
              var pts = this._calculateControlPoints(oneEvent);
              
              var eventBubbleShape = {
-                 zlevel: this._zlevelBase,
+                 zlevel: this.getZlevelBase(),
+                 z: this.getZBase(),
                  clickable: this.deepQuery(queryTarget, 'clickable'),
                  style: {
                      pointList: pts,
@@ -269,7 +296,6 @@ define(function (require) {
      };
 
      zrUtil.inherits(EventRiver, ChartBase);
-     zrUtil.inherits(EventRiver, ComponentBase);
 
      // 图表注册
      require('../chart').define('eventRiver', EventRiver);

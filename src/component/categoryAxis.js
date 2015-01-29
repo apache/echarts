@@ -14,6 +14,65 @@ define(function (require) {
     var RectangleShape = require('zrender/shape/Rectangle');
     
     var ecConfig = require('../config');
+    // 类目轴
+    ecConfig.categoryAxis =  {
+        zlevel: 0,                  // 一级层叠
+        z: 0,                       // 二级层叠
+        show: true,
+        position: 'bottom',    // 位置
+        name: '',              // 坐标轴名字，默认为空
+        nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
+        nameTextStyle: {},     // 坐标轴文字样式，默认取全局样式
+        boundaryGap: true,     // 类目起始和结束两端空白策略
+        axisLine: {            // 坐标轴线
+            show: true,        // 默认显示，属性show控制显示与否
+            onZero: true,
+            lineStyle: {       // 属性lineStyle控制线条样式
+                color: '#48b',
+                width: 2,
+                type: 'solid'
+            }
+        },
+        axisTick: {            // 坐标轴小标记
+            show: true,        // 属性show控制显示与否，默认不显示
+            interval: 'auto',
+            inside: false,    // 控制小标记是否在grid里 
+            // onGap: null,
+            length :5,         // 属性length控制线长
+            lineStyle: {       // 属性lineStyle控制线条样式
+                color: '#333',
+                width: 1
+            }
+        },
+        axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
+            show: true,
+            interval: 'auto',
+            rotate: 0,
+            margin: 8,
+            // clickable: false,
+            // formatter: null,
+            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                color: '#333'
+            }
+        },
+        splitLine: {           // 分隔线
+            show: true,        // 默认显示，属性show控制显示与否
+            // onGap: null,
+            lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
+                color: ['#ccc'],
+                width: 1,
+                type: 'solid'
+            }
+        },
+        splitArea: {           // 分隔区域
+            show: false,       // 默认不显示，属性show控制显示与否
+            // onGap: null,
+            areaStyle: {       // 属性areaStyle（详见areaStyle）控制区域样式
+                color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']
+            }
+        }
+    };
+
     var zrUtil = require('zrender/tool/util');
     var zrArea = require('zrender/tool/area');
     
@@ -44,9 +103,7 @@ define(function (require) {
     CategoryAxis.prototype = {
         type : ecConfig.COMPONENT_TYPE_AXIS_CATEGORY,
         _getReformedLabel : function (idx) {
-            var data = typeof this.option.data[idx].value != 'undefined'
-                       ? this.option.data[idx].value
-                       : this.option.data[idx];
+            var data = this.getDataFromOption(this.option.data[idx]);
             var formatter = this.option.data[idx].formatter 
                             || this.option.axisLabel.formatter;
             if (formatter) {
@@ -149,8 +206,8 @@ define(function (require) {
                 }
             }
             else {
-                // 用户自定义间隔
-                interval = interval - 0 + 1;
+                // 用户自定义间隔，支持funtion
+                interval = typeof interval == 'function' ? 1 : (interval - 0 + 1);
             }
 
             return interval;
@@ -179,14 +236,23 @@ define(function (require) {
         // 小标记
         _buildAxisTick : function () {
             var axShape;
-            //var data       = this.option.data;
+            var data       = this.option.data;
             var dataLength = this.option.data.length;
             var tickOption = this.option.axisTick;
             var length     = tickOption.length;
             var color      = tickOption.lineStyle.color;
             var lineWidth  = tickOption.lineStyle.width;
-            var interval   = tickOption.interval == 'auto' 
-                             ? this._interval : (tickOption.interval - 0 + 1);
+            var intervalFunction = typeof tickOption.interval == 'function'
+                                   ? tickOption.interval 
+                                   : tickOption.interval == 'auto'
+                                     ? typeof this.option.axisLabel.interval == 'function'
+                                       ? this.option.axisLabel.interval : false
+                                     : false;
+            var interval   = intervalFunction
+                             ? 1
+                             : tickOption.interval == 'auto' 
+                               ? this._interval
+                               : (tickOption.interval - 0 + 1);
             var onGap      = tickOption.onGap;
             var optGap     = onGap 
                              ? (this.getGap() / 2) 
@@ -203,13 +269,18 @@ define(function (require) {
                            ? (this.grid.getY() + 1) : (this.grid.getY() - length - 1));
                 var x;
                 for (var i = startIndex; i < dataLength; i += interval) {
+                    if (intervalFunction && !intervalFunction(i, data[i])) {
+                        // 回调并且回调返回false则跳过渲染
+                        continue;
+                    }
                     // 亚像素优化
                     x = this.subPixelOptimize(
                         this.getCoordByIndex(i) + (i >= 0 ? optGap : 0), lineWidth
                     );
                     axShape = {
                         _axisShape : 'axisTick',
-                        zlevel : this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable : false,
                         style : {
                             xStart : x,
@@ -233,13 +304,18 @@ define(function (require) {
                         
                 var y;
                 for (var i = startIndex; i < dataLength; i += interval) {
+                    if (intervalFunction && !intervalFunction(i, data[i])) {
+                        // 回调并且回调返回false则中断渲染
+                        continue;
+                    }
                     // 亚像素优化
                     y = this.subPixelOptimize(
                         this.getCoordByIndex(i) - (i >= 0 ? optGap : 0), lineWidth
                     );
                     axShape = {
                         _axisShape : 'axisTick',
-                        zlevel : this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable : false,
                         style : {
                             xStart : xPosition,
@@ -260,10 +336,13 @@ define(function (require) {
             var axShape;
             var data       = this.option.data;
             var dataLength = this.option.data.length;
-            var rotate     = this.option.axisLabel.rotate;
-            var margin     = this.option.axisLabel.margin;
-            var clickable  = this.option.axisLabel.clickable;
-            var textStyle  = this.option.axisLabel.textStyle;
+            var labelOption = this.option.axisLabel;
+            var rotate     = labelOption.rotate;
+            var margin     = labelOption.margin;
+            var clickable  = labelOption.clickable;
+            var textStyle  = labelOption.textStyle;
+            var intervalFunction = typeof labelOption.interval == 'function'
+                                   ? labelOption.interval : false;
             var dataTextStyle;
 
             if (this.isHorizontal()) {
@@ -280,8 +359,10 @@ define(function (require) {
                 }
 
                 for (var i = 0; i < dataLength; i += this._interval) {
-                    if (this._getReformedLabel(i) === '') {
-                        // 空文本优化
+                    if ((intervalFunction && !intervalFunction(i, data[i])) 
+                        // 回调并且回调返回false则中断渲染
+                        || this._getReformedLabel(i) === '' // 空文本优化
+                    ) {
                         continue;
                     }
                     dataTextStyle = zrUtil.merge(
@@ -290,7 +371,8 @@ define(function (require) {
                     );
                     axShape = {
                         // shape : 'text',
-                        zlevel : this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase() + 3,
                         hoverable : false,
                         style : {
                             x : this.getCoordByIndex(i),
@@ -333,8 +415,10 @@ define(function (require) {
                 }
 
                 for (var i = 0; i < dataLength; i += this._interval) {
-                    if (this._getReformedLabel(i) === '') {
-                        // 空文本优化
+                    if ((intervalFunction && !intervalFunction(i, data[i])) 
+                        // 回调并且回调返回false则中断渲染
+                        || this._getReformedLabel(i) === '' // 空文本优化
+                    ) {
                         continue;
                     }
                     dataTextStyle = zrUtil.merge(
@@ -343,7 +427,8 @@ define(function (require) {
                     );
                     axShape = {
                         // shape : 'text',
-                        zlevel : this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase() + 3,
                         hoverable : false,
                         style : {
                             x : xPosition,
@@ -378,7 +463,7 @@ define(function (require) {
         
         _buildSplitLine : function () {
             var axShape;
-            //var data       = this.option.data;
+            var data        = this.option.data;
             var dataLength  = this.option.data.length;
             var sLineOption = this.option.splitLine;
             var lineType    = sLineOption.lineStyle.type;
@@ -387,6 +472,10 @@ define(function (require) {
             color = color instanceof Array ? color : [color];
             var colorLength = color.length;
             
+            // splitLine随axisLable
+            var intervalFunction = typeof this.option.axisLabel.interval == 'function'
+                                   ? this.option.axisLabel.interval : false;
+
             var onGap      = sLineOption.onGap;
             var optGap     = onGap 
                              ? (this.getGap() / 2) 
@@ -402,13 +491,18 @@ define(function (require) {
                 var x;
 
                 for (var i = 0; i < dataLength; i += this._interval) {
+                    if (intervalFunction && !intervalFunction(i, data[i])) {
+                        // 回调并且回调返回false则跳过渲染
+                        continue;
+                    }
                     // 亚像素优化
                     x = this.subPixelOptimize(
                         this.getCoordByIndex(i) + optGap, lineWidth
                     );
                     axShape = {
                         // shape : 'line',
-                        zlevel : this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable : false,
                         style : {
                             xStart : x,
@@ -431,13 +525,18 @@ define(function (require) {
                 var y;
 
                 for (var i = 0; i < dataLength; i += this._interval) {
+                    if (intervalFunction && !intervalFunction(i, data[i])) {
+                        // 回调并且回调返回false则跳过渲染
+                        continue;
+                    }
                     // 亚像素优化
                     y = this.subPixelOptimize(
                         this.getCoordByIndex(i) - optGap, lineWidth
                     );
                     axShape = {
                         // shape : 'line',
-                        zlevel : this._zlevelBase,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase(),
                         hoverable : false,
                         style : {
                             xStart : sx,
@@ -445,7 +544,7 @@ define(function (require) {
                             xEnd : ex,
                             yEnd : y,
                             strokeColor : color[(i / this._interval) % colorLength],
-                            linetype : lineType,
+                            lineType : lineType,
                             lineWidth : lineWidth
                         }
                     };
@@ -456,13 +555,15 @@ define(function (require) {
 
         _buildSplitArea : function () {
             var axShape;
+            var data        = this.option.data;
             var sAreaOption = this.option.splitArea;
             var color = sAreaOption.areaStyle.color;
             if (!(color instanceof Array)) {
                 // 非数组一律认为是单一颜色的字符串，单一颜色则用一个背景，颜色错误不负责啊！！！
                 axShape = {
                     // shape : 'rectangle',
-                    zlevel : this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     hoverable : false,
                     style : {
                         x : this.grid.getX(),
@@ -479,6 +580,10 @@ define(function (require) {
                 // 多颜色
                 var colorLength = color.length;
                 var dataLength  = this.option.data.length;
+
+                // splitArea随axisLable
+                var intervalFunction = typeof this.option.axisLabel.interval == 'function'
+                                       ? this.option.axisLabel.interval : false;
         
                 var onGap      = sAreaOption.onGap;
                 var optGap     = onGap 
@@ -494,12 +599,17 @@ define(function (require) {
                     var curX;
     
                     for (var i = 0; i <= dataLength; i += this._interval) {
+                        if (intervalFunction && !intervalFunction(i, data[i]) && i < dataLength) {
+                            // 回调并且回调返回false则跳过渲染
+                            continue;
+                        }
                         curX = i < dataLength
                                ? (this.getCoordByIndex(i) + optGap)
                                : this.grid.getXend();
                         axShape = {
                             // shape : 'rectangle',
-                            zlevel : this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             hoverable : false,
                             style : {
                                 x : lastX,
@@ -522,12 +632,17 @@ define(function (require) {
                     var curY;
     
                     for (var i = 0; i <= dataLength; i += this._interval) {
+                        if (intervalFunction && !intervalFunction(i, data[i]) && i < dataLength) {
+                            // 回调并且回调返回false则跳过渲染
+                            continue;
+                        }
                         curY = i < dataLength
                                ? (this.getCoordByIndex(i) - optGap)
                                : this.grid.getY();
                         axShape = {
                             // shape : 'rectangle',
-                            zlevel : this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             hoverable : false,
                             style : {
                                 x : x,
@@ -552,9 +667,8 @@ define(function (require) {
             if (newOption) {
                 this.option = this.reformOption(newOption);
                 // 通用字体设置
-                this.option.axisLabel.textStyle = zrUtil.merge(
-                    this.option.axisLabel.textStyle || {},
-                    this.ecTheme.textStyle
+                this.option.axisLabel.textStyle = this.getTextStyle(
+                    this.option.axisLabel.textStyle
                 );
             }
             this.clear();
@@ -585,10 +699,7 @@ define(function (require) {
             var position = this.option.boundaryGap ? (gap / 2) : 0;
 
             for (var i = 0; i < dataLength; i++) {
-                if (data[i] == value
-                    || (typeof data[i].value != 'undefined' 
-                        && data[i].value == value)
-                ) {
+                if (this.getDataFromOption(data[i]) == value) {
                     if (this.isHorizontal()) {
                         // 横向
                         position = this.grid.getX() + position;
@@ -653,14 +764,7 @@ define(function (require) {
 
         // 根据类目轴数据索引换算类目轴名称
         getNameByIndex : function (dataIndex) {
-            var data = this.option.data[dataIndex];
-            if (typeof data != 'undefined' && typeof data.value != 'undefined')
-            {
-                return data.value;
-            }
-            else {
-                return data;
-            }
+            return this.getDataFromOption(this.option.data[dataIndex]);
         },
         
         // 根据类目轴名称换算类目轴数据索引
@@ -669,10 +773,7 @@ define(function (require) {
             var dataLength = data.length;
 
             for (var i = 0; i < dataLength; i++) {
-                if (data[i] == name
-                    || (typeof data[i].value != 'undefined' 
-                        && data[i].value == name)
-                ) {
+                if (this.getDataFromOption(data[i]) == name) {
                     return i;
                 }
             }

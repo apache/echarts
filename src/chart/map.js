@@ -6,7 +6,6 @@
  *
  */
 define(function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     
     // 图形依赖
@@ -22,6 +21,59 @@ define(function (require) {
     require('../component/roamController');
     
     var ecConfig = require('../config');
+    // 地图默认参数
+    ecConfig.map = {
+        zlevel: 0,                  // 一级层叠
+        z: 2,                       // 二级层叠
+        mapType: 'china',   // 各省的mapType暂时都用中文
+        //mapLocation: {
+            // x: 'center' | 'left' | 'right' | 'x%' | {number},
+            // y: 'center' | 'top' | 'bottom' | 'x%' | {number}
+            // width    // 自适应
+            // height   // 自适应
+        //},
+        // mapValueCalculation: 'sum',  // 数值合并方式，默认加和，可选为：
+                                        // 'sum' | 'average' | 'max' | 'min' 
+        mapValuePrecision: 0,           // 地图数值计算结果小数精度
+        showLegendSymbol: true,         // 显示图例颜色标识（系列标识的小圆点），存在legend时生效
+        // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
+        dataRangeHoverLink: true,
+        hoverable: true,
+        clickable: true,
+        // roam: false,                 // 是否开启缩放及漫游模式
+        // scaleLimit: null,
+        itemStyle: {
+            normal: {
+                // color: 各异,
+                borderColor: 'rgba(0,0,0,0)',
+                borderWidth: 1,
+                areaStyle: {
+                    color: '#ccc'
+                },
+                label: {
+                    show: false,
+                    textStyle: {
+                        color: 'rgb(139,69,19)'
+                    }
+                }
+            },
+            emphasis: {                 // 也是选中样式
+                // color: 各异,
+                borderColor: 'rgba(0,0,0,0)',
+                borderWidth: 1,
+                areaStyle: {
+                    color: 'rgba(255,215,0,0.8)'
+                },
+                label: {
+                    show: false,
+                    textStyle: {
+                        color: 'rgb(100,0,0)'
+                    }
+                }
+            }
+        }
+    };
+
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrConfig = require('zrender/config');
@@ -39,10 +91,8 @@ define(function (require) {
      * @param {Object} component 组件
      */
     function Map(ecTheme, messageCenter, zr, option, myChart){
-        // 基类
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         // 图表基类
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         
         var self = this;
         self._onmousewheel = function(params) {
@@ -278,7 +328,7 @@ define(function (require) {
                 self._buildMark(mt, ms);
                 if (--self._mapDataRequireCounter <= 0) {
                     self.addShapeList();
-                    self.zr.refresh();
+                    self.zr.refreshNextFrame();
                 }
             };
         },
@@ -651,7 +701,6 @@ define(function (require) {
             var data;
             var value;
             var queryTarget;
-            var defaultOption = this.ecTheme.map;
             
             var color;
             var font;
@@ -681,7 +730,8 @@ define(function (require) {
                             && legend.hasColor(series[data.seriesIndex[j]].name)
                         ) {
                             this.shapeList.push(new CircleShape({
-                                zlevel : this._zlevelBase + 1,
+                                zlevel : this.getZlevelBase(),
+                                z : this.getZBase() + 1,
                                 position : zrUtil.clone(style.position),
                                 _mapType : mapType,
                                 /*
@@ -701,7 +751,6 @@ define(function (require) {
                             }));
                         }
                     }
-                    queryTarget.push(defaultOption); // level 1
                     value = data.value;
                 }
                 else {
@@ -711,9 +760,10 @@ define(function (require) {
                     for (var key in mapSeries) {
                         queryTarget.push(series[key]);
                     }
-                    queryTarget.push(defaultOption);
                     value = '-';
                 }
+                this.ecTheme.map && queryTarget.push(this.ecTheme.map); // level 1
+                queryTarget.push(ecConfig);      // level 1
                 
                 // 值域控件控制
                 color = (dataRange && !isNaN(value))
@@ -760,7 +810,8 @@ define(function (require) {
                 font = this.deepQuery(queryTarget, 'itemStyle.normal.label.textStyle');
                 // 文字标签避免覆盖单独一个shape
                 textShape = {
-                    zlevel : this._zlevelBase + 1,
+                    zlevel : this.getZlevelBase(),
+                    z : this.getZBase() + 1,
                     //hoverable: this._hoverable[mapType],
                     //clickable: this._clickable[mapType],
                     position : zrUtil.clone(style.position),
@@ -806,7 +857,8 @@ define(function (require) {
                 }
 
                 shape = {
-                    zlevel : this._zlevelBase,
+                    zlevel : this.getZlevelBase(),
+                    z : this.getZBase(),
                     //hoverable: this._hoverable[mapType],
                     //clickable: this._clickable[mapType],
                     position : zrUtil.clone(style.position),
@@ -1095,7 +1147,9 @@ define(function (require) {
                                 this.shapeList[i]._x = this.shapeList[i].style.xEnd = geoAndPos[0];
                                 this.shapeList[i]._y = this.shapeList[i].style.yEnd = geoAndPos[1];
                             }
-                            else if  (this.shapeList[i].type == 'icon') {
+                            else if (this.shapeList[i].type == 'icon'
+                                     || this.shapeList[i].type == 'image'
+                            ) {
                                 geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo);
                                 this.shapeList[i].style.x = this.shapeList[i].style._x =
                                     geoAndPos[0] - this.shapeList[i].style.width / 2;
@@ -1121,7 +1175,7 @@ define(function (require) {
             }
             if (haveScale) {
                 zrEvent.stop(event);
-                this.zr.refresh();
+                this.zr.refreshNextFrame();
                 
                 var self = this;
                 clearTimeout(this._refreshDelayTicket);
@@ -1198,7 +1252,7 @@ define(function (require) {
             );
             
             this.clearEffectShape(true);
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
             
             this._justMove = true;
             zrEvent.stop(event);
@@ -1290,7 +1344,7 @@ define(function (require) {
             );
             
             this.clearEffectShape(true);
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
             
             clearTimeout(this.dircetionTimer);
             var self = this;
@@ -1375,7 +1429,7 @@ define(function (require) {
                 },
                 this.myChart
             );
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
             
             var self = this;
             setTimeout(function(){
@@ -1497,7 +1551,8 @@ define(function (require) {
                         ? shapeList : [shapeList];
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 if (typeof shapeList[i].zlevel == 'undefined') {
-                    shapeList[i].zlevel = this._zlevelBase + 1;
+                    shapeList[i].zlevel = this.getZlevelBase();
+                    shapeList[i].z = this.getZBase() + 1;
                 }
                 shapeList[i]._mapType = mapType;
                 this.shapeList.push(shapeList[i]);
@@ -1524,7 +1579,6 @@ define(function (require) {
     };
     
     zrUtil.inherits(Map, ChartBase);
-    zrUtil.inherits(Map, ComponentBase);
     
     // 图表注册
     require('../chart').define('map', Map);
