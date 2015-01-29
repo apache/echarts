@@ -7,10 +7,11 @@ body { font: 1.5em "Microsoft Yahei",verdana;}
     bottom: 0;
     height: 40px;
     width: 100%;
-    line-height: 40px;
+    line-height: 30px;
     text-align: center;
     color: #666;
     border-top: 1px solid #ccc;
+    padding-top:2px;
     font-size:0.51em;
 }
 .page .page-down-center {
@@ -18,8 +19,8 @@ body { font: 1.5em "Microsoft Yahei",verdana;}
 }
 .page .page-up, .page .page-down {
     width: 48%;
-    height: 28px;
-    margin-top:2px;
+    height: 35px;
+    margin-top:4px;
     display: inline-block;
     -webkit-tap-highlight-color: #fff;
 }
