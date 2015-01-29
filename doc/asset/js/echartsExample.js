@@ -125,7 +125,7 @@ function needMap() {
 }
 
 var echarts;
-var developMode = true;
+var developMode = false;
 
 if (developMode) {
     window.esl = null;
