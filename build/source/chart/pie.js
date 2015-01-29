@@ -1,12 +1,11 @@
 define('echarts/chart/pie', [
     'require',
-    '../component/base',
     './base',
     'zrender/shape/Text',
     'zrender/shape/Ring',
     'zrender/shape/Circle',
     'zrender/shape/Sector',
-    'zrender/shape/BrokenLine',
+    'zrender/shape/Polyline',
     '../config',
     '../util/ecData',
     'zrender/tool/util',
@@ -14,21 +13,68 @@ define('echarts/chart/pie', [
     'zrender/tool/color',
     '../chart'
 ], function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     var TextShape = require('zrender/shape/Text');
     var RingShape = require('zrender/shape/Ring');
     var CircleShape = require('zrender/shape/Circle');
     var SectorShape = require('zrender/shape/Sector');
-    var BrokenLineShape = require('zrender/shape/BrokenLine');
+    var PolylineShape = require('zrender/shape/Polyline');
     var ecConfig = require('../config');
+    ecConfig.pie = {
+        zlevel: 0,
+        z: 2,
+        clickable: true,
+        legendHoverLink: true,
+        center: [
+            '50%',
+            '50%'
+        ],
+        radius: [
+            0,
+            '75%'
+        ],
+        clockWise: true,
+        startAngle: 90,
+        minAngle: 0,
+        selectedOffset: 10,
+        itemStyle: {
+            normal: {
+                borderColor: 'rgba(0,0,0,0)',
+                borderWidth: 1,
+                label: {
+                    show: true,
+                    position: 'outer'
+                },
+                labelLine: {
+                    show: true,
+                    length: 20,
+                    lineStyle: {
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            emphasis: {
+                borderColor: 'rgba(0,0,0,0)',
+                borderWidth: 1,
+                label: { show: false },
+                labelLine: {
+                    show: false,
+                    length: 20,
+                    lineStyle: {
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            }
+        }
+    };
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrMath = require('zrender/tool/math');
     var zrColor = require('zrender/tool/color');
     function Pie(ecTheme, messageCenter, zr, option, myChart) {
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         var self = this;
         self.shapeHandler.onmouseover = function (param) {
             var shape = param.target;
@@ -84,7 +130,8 @@ define('echarts/chart/pie', [
                             this.option
                         ], 'calculable')) {
                         pieCase = {
-                            zlevel: this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             hoverable: false,
                             style: {
                                 x: center[0],
@@ -93,7 +140,7 @@ define('echarts/chart/pie', [
                                 r: radius[1] + 10,
                                 brushType: 'stroke',
                                 lineWidth: 1,
-                                strokeColor: series[i].calculableHolderColor || this.ecTheme.calculableHolderColor
+                                strokeColor: series[i].calculableHolderColor || this.ecTheme.calculableHolderColor || ecConfig.calculableHolderColor
                             }
                         };
                         ecData.pack(pieCase, series[i], i, undefined, -1);
@@ -217,7 +264,8 @@ define('echarts/chart/pie', [
             var normalColor = this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data) || defaultColor;
             var emphasisColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data) || (typeof normalColor === 'string' ? zrColor.lift(normalColor, -0.2) : normalColor);
             var sector = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: center[0],
@@ -294,7 +342,7 @@ define('echarts/chart/pie', [
                 y = centerY;
                 textAlign = 'center';
             } else if (labelControl.position === 'inner' || labelControl.position === 'inside') {
-                radius = (radius[0] + radius[1]) / 2;
+                radius = (radius[0] + radius[1]) * (labelControl.distance || 0.5);
                 x = Math.round(centerX + radius * zrMath.cos(midAngle, true));
                 y = Math.round(centerY - radius * zrMath.sin(midAngle, true));
                 defaultColor = '#fff';
@@ -311,7 +359,8 @@ define('echarts/chart/pie', [
             data.__labelX = x - (textAlign === 'left' ? 5 : -5);
             data.__labelY = y;
             var ts = new TextShape({
-                zlevel: this._zlevelBase + 1,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase() + 1,
                 hoverable: false,
                 style: {
                     x: x,
@@ -366,8 +415,9 @@ define('echarts/chart/pie', [
                 var maxRadius = this.parseRadius(this.zr, serie.radius)[1] - -labelLineControl.length;
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
-                return new BrokenLineShape({
-                    zlevel: this._zlevelBase + 1,
+                return new PolylineShape({
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase() + 1,
                     hoverable: false,
                     style: {
                         pointList: [
@@ -473,8 +523,10 @@ define('echarts/chart/pie', [
                         deltaX = lastDeltaX + 10;
                     }
                     sList[i]._rect.x = sList[i].style.x = x + deltaX * direction;
-                    sList[i]._labelLine.style.pointList[2][0] = x + (deltaX - 5) * direction;
-                    sList[i]._labelLine.style.pointList[1][0] = x + (deltaX - 20) * direction;
+                    if (sList[i]._labelLine) {
+                        sList[i]._labelLine.style.pointList[2][0] = x + (deltaX - 5) * direction;
+                        sList[i]._labelLine.style.pointList[1][0] = x + (deltaX - 20) * direction;
+                    }
                     lastDeltaX = deltaX;
                 }
             }
@@ -505,9 +557,9 @@ define('echarts/chart/pie', [
         },
         reformOption: function (opt) {
             var _merge = zrUtil.merge;
-            opt = _merge(opt || {}, this.ecTheme.pie);
-            opt.itemStyle.normal.label.textStyle = _merge(opt.itemStyle.normal.label.textStyle || {}, this.ecTheme.textStyle);
-            opt.itemStyle.emphasis.label.textStyle = _merge(opt.itemStyle.emphasis.label.textStyle || {}, this.ecTheme.textStyle);
+            opt = _merge(_merge(opt || {}, zrUtil.clone(this.ecTheme.pie || {})), zrUtil.clone(ecConfig.pie));
+            opt.itemStyle.normal.label.textStyle = this.getTextStyle(opt.itemStyle.normal.label.textStyle);
+            opt.itemStyle.emphasis.label.textStyle = this.getTextStyle(opt.itemStyle.emphasis.label.textStyle);
             return opt;
         },
         refresh: function (newOption) {
@@ -567,7 +619,7 @@ define('echarts/chart/pie', [
                 case 'text':
                     textMap[key] = this.shapeList[i];
                     break;
-                case 'broken-line':
+                case 'polyline':
                     lineMap[key] = this.shapeList[i];
                     break;
                 }
@@ -592,7 +644,7 @@ define('echarts/chart/pie', [
                         } else {
                             this.zr.animate(backupShapeList[i].id, 'style').when(400, deltaIdxMap[seriesIndex] < 0 ? { startAngle: backupShapeList[i].style.startAngle } : { endAngle: backupShapeList[i].style.endAngle }).start();
                         }
-                    } else if (backupShapeList[i].type === 'text' || backupShapeList[i].type === 'broken-line') {
+                    } else if (backupShapeList[i].type === 'text' || backupShapeList[i].type === 'polyline') {
                         if (targeSector === 'delete') {
                             this.zr.delShape(backupShapeList[i].id);
                         } else {
@@ -604,7 +656,7 @@ define('echarts/chart/pie', [
                                     y: targeSector.style.y
                                 }).start();
                                 break;
-                            case 'broken-line':
+                            case 'polyline':
                                 targeSector = lineMap[key];
                                 this.zr.animate(backupShapeList[i].id, 'style').when(400, { pointList: targeSector.style.pointList }).start();
                                 break;
@@ -660,11 +712,10 @@ define('echarts/chart/pie', [
                 selected: this._selected,
                 target: ecData.get(target, 'name')
             }, this.myChart);
-            this.zr.refresh();
+            this.zr.refreshNextFrame();
         }
     };
     zrUtil.inherits(Pie, ChartBase);
-    zrUtil.inherits(Pie, ComponentBase);
     require('../chart').define('pie', Pie);
     return Pie;
 });

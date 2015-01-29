@@ -1,6 +1,5 @@
 define('echarts/chart/radar', [
     'require',
-    '../component/base',
     './base',
     'zrender/shape/Polygon',
     '../component/polar',
@@ -11,17 +10,33 @@ define('echarts/chart/radar', [
     '../util/accMath',
     '../chart'
 ], function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     var PolygonShape = require('zrender/shape/Polygon');
     require('../component/polar');
     var ecConfig = require('../config');
+    ecConfig.radar = {
+        zlevel: 0,
+        z: 2,
+        clickable: true,
+        legendHoverLink: true,
+        polarIndex: 0,
+        itemStyle: {
+            normal: {
+                label: { show: false },
+                lineStyle: {
+                    width: 2,
+                    type: 'solid'
+                }
+            },
+            emphasis: { label: { show: false } }
+        },
+        symbolSize: 2
+    };
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
     function Radar(ecTheme, messageCenter, zr, option, myChart) {
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         this.refresh(option);
     }
     Radar.prototype = {
@@ -95,7 +110,7 @@ define('echarts/chart/radar', [
             var polar = this.component.polar;
             var value;
             for (var i = 0, l = dataArr.value.length; i < l; i++) {
-                value = dataArr.value[i].value != null ? dataArr.value[i].value : dataArr.value[i];
+                value = this.getDataFromOption(dataArr.value[i]);
                 vector = value != '-' ? polar.getVector(polarIndex, i, value) : false;
                 if (vector) {
                     pointList.push(vector);
@@ -112,7 +127,8 @@ define('echarts/chart/radar', [
                     series[seriesIndex].data[dataIndex],
                     series[seriesIndex]
                 ]), seriesIndex, series[seriesIndex].data[dataIndex].value[i], i, polar.getIndicatorText(polarIndex, i), pointList[i][0], pointList[i][1], this._symbol[this._radarDataCounter % this._symbol.length], defaultColor, '#fff', 'vertical');
-                itemShape.zlevel = this._zlevelBase + 1;
+                itemShape.zlevel = this.getZlevelBase();
+                itemShape.z = this.getZBase() + 1;
                 ecData.set(itemShape, 'data', series[seriesIndex].data[dataIndex]);
                 ecData.set(itemShape, 'value', series[seriesIndex].data[dataIndex].value);
                 ecData.set(itemShape, 'dataIndex', dataIndex);
@@ -132,7 +148,8 @@ define('echarts/chart/radar', [
             var nAreaColor = this.deepQuery(queryTarget, 'itemStyle.normal.areaStyle.color');
             var nIsAreaFill = this.deepQuery(queryTarget, 'itemStyle.normal.areaStyle');
             var shape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     pointList: pointList,
                     brushType: nIsAreaFill ? 'both' : 'stroke',
@@ -162,7 +179,8 @@ define('echarts/chart/radar', [
             var polarIndex = this.deepQuery(this._queryTarget, 'polarIndex');
             if (!this._dropBoxList[polarIndex]) {
                 var shape = this.component.polar.getDropBox(polarIndex);
-                shape.zlevel = this._zlevelBase;
+                shape.zlevel = this.getZlevelBase();
+                shape.z = this.getZBase();
                 this.setCalculable(shape);
                 ecData.pack(shape, series, index, undefined, -1);
                 this.shapeList.push(shape);
@@ -228,7 +246,6 @@ define('echarts/chart/radar', [
         }
     };
     zrUtil.inherits(Radar, ChartBase);
-    zrUtil.inherits(Radar, ComponentBase);
     require('../chart').define('radar', Radar);
     return Radar;
 });define('echarts/component/polar', [
@@ -253,6 +270,54 @@ define('echarts/chart/radar', [
     var Circle = require('zrender/shape/Circle');
     var Ring = require('zrender/shape/Ring');
     var ecConfig = require('../config');
+    ecConfig.polar = {
+        zlevel: 0,
+        z: 0,
+        center: [
+            '50%',
+            '50%'
+        ],
+        radius: '75%',
+        startAngle: 90,
+        boundaryGap: [
+            0,
+            0
+        ],
+        splitNumber: 5,
+        name: {
+            show: true,
+            textStyle: { color: '#333' }
+        },
+        axisLine: {
+            show: true,
+            lineStyle: {
+                color: '#ccc',
+                width: 1,
+                type: 'solid'
+            }
+        },
+        axisLabel: {
+            show: false,
+            textStyle: { color: '#333' }
+        },
+        splitArea: {
+            show: true,
+            areaStyle: {
+                color: [
+                    'rgba(250,250,250,0.3)',
+                    'rgba(200,200,200,0.3)'
+                ]
+            }
+        },
+        splitLine: {
+            show: true,
+            lineStyle: {
+                width: 1,
+                color: '#ccc'
+            }
+        },
+        type: 'polygon'
+    };
     var zrUtil = require('zrender/tool/util');
     var ecCoordinates = require('../util/coordinates');
     function Polar(ecTheme, messageCenter, zr, option, myChart) {
@@ -359,7 +424,8 @@ define('echarts/chart/radar', [
                         newStyle.x = j * vector[0] / splitNumber + Math.cos(theta) * offset + center[0];
                         newStyle.y = j * vector[1] / splitNumber + Math.sin(theta) * offset + center[1];
                         this.shapeList.push(new TextShape({
-                            zlevel: this._zlevelBase,
+                            zlevel: this.getZlevelBase(),
+                            z: this.getZBase(),
                             style: newStyle,
                             draggable: false,
                             hoverable: false
@@ -415,8 +481,8 @@ define('echarts/chart/radar', [
                 } else {
                     textAlign = 'center';
                 }
-                if (!name.margin) {
-                    vector = this._mapVector(vector, center, 1.2);
+                if (name.margin == null) {
+                    vector = this._mapVector(vector, center, 1.1);
                 } else {
                     margin = name.margin;
                     x = vector[0] > 0 ? margin : -margin;
@@ -442,7 +508,8 @@ define('echarts/chart/radar', [
                     ];
                 }
                 this.shapeList.push(new TextShape({
-                    zlevel: this._zlevelBase,
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
                     style: style,
                     draggable: false,
                     hoverable: false,
@@ -500,7 +567,8 @@ define('echarts/chart/radar', [
         _getCircle: function (strokeColor, lineWidth, scale, center, brushType, color) {
             var radius = this._getRadius();
             return new Circle({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: center[0],
                     y: center[1],
@@ -517,7 +585,8 @@ define('echarts/chart/radar', [
         _getRing: function (color, scale0, scale1, center) {
             var radius = this._getRadius();
             return new Ring({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     x: center[0],
                     y: center[1],
@@ -542,7 +611,8 @@ define('echarts/chart/radar', [
         },
         _getShape: function (pointList, brushType, color, strokeColor, lineWidth) {
             return new PolygonShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     pointList: pointList,
                     brushType: brushType,
@@ -613,7 +683,8 @@ define('echarts/chart/radar', [
         },
         _getLine: function (xStart, yStart, xEnd, yEnd, strokeColor, lineWidth, lineType) {
             return new LineShape({
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 style: {
                     xStart: xStart,
                     yStart: yStart,
@@ -689,7 +760,6 @@ define('echarts/chart/radar', [
         _findValue: function (data, index, splitNumber, boundaryGap) {
             var max;
             var min;
-            var value;
             var one;
             if (!data || data.length === 0) {
                 return;
@@ -703,13 +773,12 @@ define('echarts/chart/radar', [
             }
             if (data.length != 1) {
                 for (var i = 0; i < data.length; i++) {
-                    value = typeof data[i].value[index].value != 'undefined' ? data[i].value[index].value : data[i].value[index];
-                    _compare(value);
+                    _compare(this.getDataFromOption(data[i].value[index]));
                 }
             } else {
                 one = data[0];
                 for (var i = 0; i < one.value.length; i++) {
-                    _compare(typeof one.value[i].value != 'undefined' ? one.value[i].value : one.value[i]);
+                    _compare(this.getDataFromOption(one.value[i]));
                 }
             }
             var gap = Math.abs(max - min);

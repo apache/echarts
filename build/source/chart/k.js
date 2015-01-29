@@ -1,6 +1,5 @@
 define('echarts/chart/k', [
     'require',
-    '../component/base',
     './base',
     '../util/shape/Candle',
     '../component/axis',
@@ -11,18 +10,37 @@ define('echarts/chart/k', [
     'zrender/tool/util',
     '../chart'
 ], function (require) {
-    var ComponentBase = require('../component/base');
     var ChartBase = require('./base');
     var CandleShape = require('../util/shape/Candle');
     require('../component/axis');
     require('../component/grid');
     require('../component/dataZoom');
     var ecConfig = require('../config');
+    ecConfig.k = {
+        zlevel: 0,
+        z: 2,
+        clickable: true,
+        hoverable: true,
+        legendHoverLink: false,
+        xAxisIndex: 0,
+        yAxisIndex: 0,
+        itemStyle: {
+            normal: {
+                color: '#fff',
+                color0: '#00aa11',
+                lineStyle: {
+                    width: 1,
+                    color: '#ff3200',
+                    color0: '#00aa11'
+                }
+            },
+            emphasis: {}
+        }
+    };
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     function K(ecTheme, messageCenter, zr, option, myChart) {
-        ComponentBase.call(this, ecTheme, messageCenter, zr, option, myChart);
-        ChartBase.call(this);
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         this.refresh(option);
     }
     K.prototype = {
@@ -74,11 +92,7 @@ define('echarts/chart/k', [
             for (var i = 0, l = seriesArray.length; i < l; i++) {
                 serie = series[seriesArray[i]];
                 serieName = serie.name;
-                if (legend) {
-                    this.selectedMap[serieName] = legend.isSelected(serieName);
-                } else {
-                    this.selectedMap[serieName] = true;
-                }
+                this.selectedMap[serieName] = legend ? legend.isSelected(serieName) : true;
                 if (this.selectedMap[serieName]) {
                     locationMap.push(seriesArray[i]);
                 }
@@ -120,7 +134,7 @@ define('echarts/chart/k', [
                         break;
                     }
                     data = serie.data[i];
-                    value = data != null ? data.value != null ? data.value : data : '-';
+                    value = this.getDataFromOption(data, '-');
                     if (value === '-' || value.length != 4) {
                         continue;
                     }
@@ -201,11 +215,16 @@ define('echarts/chart/k', [
         _getCandle: function (seriesIndex, dataIndex, name, x, width, y0, y1, y2, y3, nColor, nLinewidth, nLineColor, eColor, eLinewidth, eLineColor) {
             var series = this.series;
             var itemShape = {
-                zlevel: this._zlevelBase,
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
                 clickable: this.deepQuery([
                     series[seriesIndex].data[dataIndex],
                     series[seriesIndex]
                 ], 'clickable'),
+                hoverable: this.deepQuery([
+                    series[seriesIndex].data[dataIndex],
+                    series[seriesIndex]
+                ], 'hoverable'),
                 style: {
                     x: x,
                     y: [
@@ -276,7 +295,7 @@ define('echarts/chart/k', [
                         dx = this.component.xAxis.getAxis(serie.xAxisIndex || 0).getGap();
                         x = aniMap[seriesIndex][2] ? dx : -dx;
                         y = 0;
-                        this.zr.animate(this.shapeList[i].id, '').when(500, {
+                        this.zr.animate(this.shapeList[i].id, '').when(this.query(this.option, 'animationDurationUpdate'), {
                             position: [
                                 x,
                                 y
@@ -288,7 +307,6 @@ define('echarts/chart/k', [
         }
     };
     zrUtil.inherits(K, ChartBase);
-    zrUtil.inherits(K, ComponentBase);
     require('../chart').define('k', K);
     return K;
 });
