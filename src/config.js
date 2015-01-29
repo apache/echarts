@@ -62,10 +62,10 @@ define(function() {
                 period: 15,             // 运动周期，无单位，值越大越慢
                 type: 'scale',          // 可用为 scale | bounce
                 scaleSize: 2,           // 放大倍数，以markPoint点size为基准
-                bounceDistance: 10,     // 跳动距离，单位px
+                bounceDistance: 10     // 跳动距离，单位px
                 // color: 'gold',
                 // shadowColor: 'rgba(255,215,0,0.8)',
-                shadowBlur: 0          // 炫光模糊
+                // shadowBlur: 0          // 炫光模糊
             },
             itemStyle: {
                 normal: {
