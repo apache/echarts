@@ -35,7 +35,10 @@ define(function (require) {
                            || self.type == ecConfig.CHART_TYPE_FUNNEL
                            ? ecData.get(self.shapeList[i], 'name')
                            : (ecData.get(self.shapeList[i], 'series') || {}).name;
-                    if (name == targetName && !self.shapeList[i].invisible) {
+                    if (name == targetName 
+                        && !self.shapeList[i].invisible 
+                        && !self.shapeList[i]._animating
+                    ) {
                         self.zr.addHoverShape(self.shapeList[i]);
                     }
                 }
