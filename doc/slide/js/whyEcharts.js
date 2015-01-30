@@ -3607,3 +3607,7 @@ var optionMap = {
     })(),
     adddddd : {}
 }
+if (document.location.href.indexOf('local') == -1) {
+    var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+    document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3Fb78830c9a5dad062d08b90b2bc0cf5da' type='text/javascript'%3E%3C/script%3E"));   
+}
